@@ -1,0 +1,170 @@
+.navbar .logo {
+	margin:4px 18px;
+	float:left;
+}
+.navbar .logo img {
+	height:36px;
+}
+.navbar-inverse input.search {
+	width:400px;
+}
+
+
+.table-products .table div {
+	vertical-align:top;
+	padding:0px;
+}
+.table-products .table .product-img, .table-products .table .product-descr {
+	display:inline-block;
+}
+.table-products .table .product-img {
+	margin-top:2px;
+    margin-right: 12px;
+	background:white;
+    border: 1px solid #dfe4eb;
+}
+.table-products .table .product-img .img {
+    height: 28px;
+    width: 28px;
+	margin:3px;
+    text-align: center;
+	border:0px;
+}
+.table-products .table .product-descr a {
+	padding:0px;
+	margin:0px;
+}
+.table-products .table .product-descr .description {
+	font-size:10px;
+	color:#888;
+}
+.table-products .table .product-search {
+	border:0px;
+	background-color:transparent;
+	font-weight:bold;
+}
+.descr-row {
+	height:48px !important;
+}
+
+.table-products .table .market-row {
+	padding:0px;
+}
+.qty-header {
+	padding-right:20px;
+}
+.product-results .qty {
+	font-weight:bold;
+	vertical-align:middle;
+	margin:8px 20px 8px 4px;
+	display:inline-block;
+}
+.price-header, .product-results .price {
+	padding-right:12px;
+	display:inline-block;
+	text-align:right;
+}
+.price-header, .product-results .descr-row .price {
+	float:right;
+}
+.product-results .product-actions .price {
+	float:left;
+}
+.price .form-group input {
+	text-align:right;
+	cursor:pointer;
+}
+.form-group input.buy {
+	background-color:#fafafa;
+	color:#aaa;
+	border-color:#b94a48;
+}
+.form-group input.buy:focus {
+	border-color:#953b39;
+}
+.form-group input.sell {
+	border-color:#468847;
+}
+.form-group input.sell:focus {
+	border-color:#356635;
+}
+
+/*	color:#aa6708;*/
+
+.market-table {
+	font-size:11px;
+	height:220px;
+	overflow:hidden;
+}
+.market-table hr {
+	margin:8px 0px;
+}
+.market-table tr td, .market-table tr:hover td {
+	vertical-align:top !important;
+}
+.market-table tr:hover td.price {
+	background-color:#fff;
+}
+.market-table tr:hover td.bg-demand, .bg-demand, .bg-demand:hover {
+	background-color:#fff;
+}
+.market-table tr:hover td.bg-availability, .bg-availability, .bg-availability:hover {
+	background-color:#fff;
+}
+.market-table tr:hover td.bg-sales, .bg-sales, .bg-sales:hover {
+	background-color:#f7fff0;
+    background: -webkit-linear-gradient(#f7fff0, #fff); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#f7fff0, #fff); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#f7fff0, #fff); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#f7fff0, #fff); /* Standard syntax */
+}
+.market-table tr:hover td.bg-purchases, .bg-purchases, .bg-purchases:hover {
+	background-color:#e0c5a0;
+    background: -webkit-linear-gradient(#e0c5a0, #fff); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#e0c5a0, #fff); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#e0c5a0, #fff); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#e0c5a0, #fff); /* Standard syntax */
+}
+
+
+#market-results {
+	line-height:10px;
+}
+.market-data, .date-group {
+	text-align:left;
+	font-size:10px;
+	line-height:10px;
+	padding:0px;
+	margin:0px;
+	margin-bottom:2px;
+}
+.market-data > a, .date-group a {
+	padding:0px !important;
+	margin:0px !important;
+	text-decoration:none !important;
+}
+.market-title {
+	padding:0px 0px 4px 0px !important;
+	margin:0px !important;
+}
+.date-group {
+	font-weight:bold;
+	text-align:left;
+}
+.bot-icon {
+	height:10px;
+	vertical-align:middle;
+	margin-bottom:2px;
+}
+.fa-chevron-up {
+	color:#20cb27;
+}
+.fa-chevron-down {
+	color:#cb2027;
+}
+.fa-circle-o {
+	color:transparent;
+}
+.pa {
+	color:#000;
+}
