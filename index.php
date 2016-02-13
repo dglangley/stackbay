@@ -39,6 +39,7 @@
 
 	<?php include 'inc/modal-results.php'; ?>
 	<?php include 'inc/navbar.php'; ?>
+	<?php include 'inc/keywords.php'; ?>
 
 	<form class="form-inline">
 
@@ -72,7 +73,7 @@
                                     Product Description
 									<span class="price-header">Sell</span>
                                 </th>
-                                <th class="col-md-6">
+                                <th class="col-md-6 text-center">
                                     <span class="line"></span>Market
                                 </th>
                                 <th class="col-md-2">
@@ -83,14 +84,29 @@
                             </tr>
                         </thead>
                         <tbody>
+<?php
+	$lines = explode(chr(10),$s);
+	foreach ($lines as $n => $line) {
+		$terms = preg_split('/[[:space:]]+/',$line);
+		$search_str = trim($terms[$search_index]);
+?>
                             <!-- row -->
                             <tr class="first">
                                 <td>
-									<input type="text" value="090-42140-13" class="product-search text-primary" />
+									<input type="text" value="<?php echo $search_str; ?>" class="product-search text-primary" />
 								</td>
                                 <td> </td>
                                 <td> </td>
 							</tr>
+<?php
+		$results = hecidb($search_str);
+		$num_results = count($results);
+
+		$k = 0;
+		foreach ($results as $partid => $P) {
+//			print "<pre>".print_r($P,true)."</pre>";
+//                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
+?>
                             <!-- row -->
                             <tr class="product-results">
                                 <td class="descr-row">
@@ -100,8 +116,8 @@
                                         <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
                                     </div>
                                     <div class="product-descr">
-										090-42140-13-ISS-C-REV-S &nbsp; D0PQAEP1AA<br/>
-                                    	<span class="description">SYMMETRICOM DCD GPS TIMING INTERFACE</span>
+										<?php echo $P['Part']; ?> &nbsp; <?php echo $P['HECI']; ?><br/>
+                                    	<span class="description"><?php echo $P['manf'].' '.$P['system'].' '.$P['description']; ?></span>
 									</div>
 									<div class="price">
 										<div class="form-group">
@@ -109,8 +125,12 @@
 										</div>
 									</div>
                                 </td>
+<?php
+			// if on the first result, build out the market column that runs down all rows of results
+			if ($k==0) {
+?>
 								<!-- market-row for all items within search result section -->
-                                <td rowspan="3" class="market-row">
+                                <td rowspan="<?php echo ($num_results+1); ?>" class="market-row">
 									<table class="table market-table">
 										<tr>
 											<td class="bg-sales">
@@ -138,6 +158,10 @@
 										</tr>
 									</table>
                                 </td>
+<?php
+			}
+			$k++;
+?>
                                 <td class="product-actions">
 									<div class="price">
 										<div class="form-group">
@@ -150,41 +174,17 @@
                                     </ul>
                                 </td>
                             </tr>
+<?php
+		}
+?>
                             <!-- row -->
-                            <tr class="product-results">
-                                <td class="descr-row">
-                                    <input type="checkbox" checked>
-									<div class="qty">1</div>
-                                    <div class="product-img">
-                                        <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
-                                    </div>
-                                    <div class="product-descr">
-										090-42140-13-REV-R &nbsp; D0PQAC81AA<br/>
-                                    	<span class="description">SYMMETRICOM DCD GPS TIMING INTERFACE</span>
-									</div>
-									<div class="price">
-										<div class="form-group">
-											<input type="text" value="1200.00" size="6" placeholder="Sell" class="input-sm form-control sell" />
-										</div>
-									</div>
-                                </td>
-                                <td class="product-actions">
-									<div class="price">
-										<div class="form-group">
-											<input type="text" value="350.00" size="6" placeholder="Buy" class="input-sm form-control buy" />
-										</div>
-									</div>
-                                    <ul class="actions">
-                                        <li><i class="table-settings"></i></li>
-                                        <li class="last"><i class="table-delete"></i></li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <!-- row -->
-                            <tr class="product-results">
+                            <tr>
                                 <td> </td>
                                 <td> </td>
                             </tr>
+<?php
+	}
+?>
                         </tbody>
                     </table>
                 </div>

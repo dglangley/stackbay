@@ -1,3 +1,16 @@
+<?php
+	include_once 'dbconnect.php';
+
+	$s = trim($_REQUEST['s']);
+	if (! isset($search_field)) { $search_field = 1; }
+	if (! isset($qty_field)) { $qty_field = 2; }
+	if (! isset($price_field)) { $price_field = 3; }
+
+	$search_index = $search_field-1;
+	$qty_index = $qty_field-1;
+	$price_index = $price_field-1;
+?>
+
     <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
         <div class="navbar-header">
@@ -13,7 +26,18 @@
         </div>
         <ul class="nav navbar-nav pull-right hidden-xs">
             <li class="hidden-xs hidden-sm">
-                <input class="search" type="text" />
+				<form method="post" action="/" class="form-inline search-form">
+
+				<div class="form-group">
+					<div class="input-group">
+		                <input class="form-control" type="text" name="s" id="s" value="<?php echo $s; ?>" placeholder="Search..." />
+	                	<span class="input-group-btn">
+		                  <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+		                </span>
+	                </div><!-- /input-group -->
+                </div><!-- /form-group -->
+
+				</form>
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">

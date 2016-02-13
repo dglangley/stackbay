@@ -1,6 +1,5 @@
 <?php
-/*
-	include 'inc/mconnect.php';
+	include '../inc/dbconnect.php';
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
@@ -36,7 +35,7 @@
 //			$companies[] = array('id'=>$cid,'text'=>$name);
 		}
 	}
-*/
+/*
 $companies = array(
 	array('id'=>'4','text'=>'Bell Enterprise'),
 	array('id'=>'3','text'=>'Sector Supply'),
@@ -44,6 +43,7 @@ $companies = array(
 	array('id'=>'1','text'=>'Ventura Telephone'),
 	array('id'=>'2','text'=>'WestWorld Telecom'),
 );
+*/
 
 	if ($add_custom) {
 		$companies[] = array('id'=>ucwords($q),'text'=>'Add '.ucwords($q).'...');

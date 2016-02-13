@@ -1,4 +1,16 @@
     $(document).ready(function() {
+		$(".market-table").each(function() {
+			var parentBody = $(this).closest("tbody");
+			var marketTable = $(this);
+			var tableHeight = 0;
+			parentBody.find(".product-results").each(function() {
+				tableHeight += $(this).height();
+			});
+			if (tableHeight>marketTable.css('min-height')) {
+				marketTable.height(tableHeight);
+			}
+		});
+
         $("body").on('click','a.modal-results',function() {
             $('#myModal').modal('toggle');
         });
