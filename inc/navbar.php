@@ -30,23 +30,35 @@
 
 				<div class="form-group">
 					<div class="input-group">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc"></i></sup></button>
+						</span>
 		                <input class="form-control" type="text" name="s" id="s" value="<?php echo $s; ?>" placeholder="Search..." />
 	                	<span class="input-group-btn">
-		                  <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+		                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
 		                </span>
 	                </div><!-- /input-group -->
                 </div><!-- /form-group -->
 
 				</form>
             </li>
+            <li class="hidden-xs hidden-sm">
+				<a href="#"><i class="fa fa-wrench"></i> Repair Home</a>
+			</li>
+            <li class="hidden-xs hidden-sm">
+				<a href="#"><i class="fa fa-truck"></i> Shipping Home</a>
+			</li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
                     <i class="fa fa-signal"></i>
                     <span>Reports</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="#"> Revenue Report</a></li>
+                    <li><a href="#"> Inventory Export</a></li>
                     <li><a href="#"> Profits &amp; Loss</a></li>
+                    <li><a href="#"> Requests Report</a></li>
+                    <li><a href="#"> Revenue Report</a></li>
+                    <li><a href="#"> RMA Report</a></li>
 				</ul>
 			</li>
             <li class="notification-dropdown hidden-xs hidden-sm">

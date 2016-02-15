@@ -29,16 +29,19 @@
     <link rel="stylesheet" type="text/css" href="css/overrides.css?id=<?php echo $V; ?>" />
 
     <!-- open sans font -->
+<!--
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
+-->
+    <link href='css/OpenSans.css' rel='stylesheet' type='text/css' />
 
     <!-- lato font -->
-    <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
+    <link href='css/Lato.css' rel='stylesheet' type='text/css' />
 
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 </head>
-<body>
+<body class="index">
 
 	<?php include 'inc/modal-results.php'; ?>
 	<?php include 'inc/navbar.php'; ?>
@@ -46,6 +49,29 @@
 
 	<form class="form-inline">
 
+        <table class="table table-header">
+			<tr>
+				<td class="col-md-2">
+               		<i class="fa fa-star-o fa-lg"></i> &nbsp;
+               		<i class="fa fa-pencil fa-lg"></i>
+				</td>
+				<td class="text-center col-md-6">
+					<div class="form-group">
+						<input type="text" name="list_name" class="input-xs form-control" value="" placeholder="List Name" />
+					</div>
+					<label for="inventory-file">Choose your file, then click "Upload Now"...</label>
+					<input name="invfile" type="file" id="inventory-file">
+				</td>
+				<td class="col-md-3">
+					<div class="pull-right form-group">
+						<select name="companyid" id="companyid" style="width:280px">
+							<option value="">- Select a Company -</option>
+						</select>
+						<button class="btn btn-primary btn-sm" type="button">Submit Data</button>
+					</div>
+				</td>
+			</tr>
+		</table>
 
         <div id="pad-wrapper">
 
@@ -53,25 +79,11 @@
             <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
             <div class="table-products">
                 <div class="row">
-                    <table class="table">
-						<tr>
-							<td>
-	                    		<i class="fa fa-pencil fa-lg"></i>
-							</td>
-							<td>
-								<div class="pull-right">
-									<select name="companyid" id="companyid" style="width:280px">
-										<option value="">- Select a Company -</option>
-									</select>
-								</div>
-							</td>
-						</tr>
-					</table>
                     <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th class="col-md-4">
-                                    <input type="checkbox" checked>
+                                    <input type="checkbox" id="checkAll" checked>
 									<span class="qty-header">Qty</span>
                                     Product Description
 									<span class="price-header">Sell</span>
@@ -86,25 +98,36 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
 <?php
+	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
 	$lines = explode(chr(10),$s);
 	foreach ($lines as $n => $line) {
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = trim($terms[$search_index]);
+
+		$results = hecidb($search_str);
+		$num_results = count($results);
+		$s = '';
+		if ($num_results<>1) { $s = 's'; }
 ?>
+                        <tbody>
                             <!-- row -->
                             <tr class="first">
                                 <td>
-									<input type="text" value="<?php echo $search_str; ?>" class="product-search text-primary" />
+									<input type="text" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
+									<?php echo $num_results.' result'.$s; ?>
 								</td>
-                                <td> </td>
+                                <td>
+									<div class="row">
+										<div class="col-sm-3 text-center"><?php echo rand(0,200); ?> day(s)<br/><span class="info">shelflife</span></div>
+										<div class="col-sm-3 text-center"><?php echo rand(1,9); ?>:1<br/><span class="info">quotes-to-sale</span></div>
+										<div class="col-sm-3 text-center">$ 2,087.41<br/><span class="info">avg cost</span></div>
+										<div class="col-sm-3 text-center"><?php echo '$'.rand(200,400).'-$'.rand(550,1300); ?><br/><span class="info">market pricing</span></div>
+									</div>
+								</td>
                                 <td> </td>
 							</tr>
 <?php
-		$results = hecidb($search_str);
-		$num_results = count($results);
-
 		$k = 0;
 		foreach ($results as $partid => $P) {
 //			print "<pre>".print_r($P,true)."</pre>";
@@ -114,17 +137,26 @@
                             <tr class="product-results">
                                 <td class="descr-row">
                                     <input type="checkbox" checked>
-									<div class="qty">1</div>
+									<div class="qty">
+										<div class="form-group">
+											<input type="text" value="1" size="2" placeholder="Qty" class="input-xs form-control" />
+										</div>
+									</div>
                                     <div class="product-img">
                                         <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
                                     </div>
                                     <div class="product-descr">
 										<?php echo $P['Part']; ?> &nbsp; <?php echo $P['HECI']; ?><br/>
-                                    	<span class="description"><?php echo $P['manf'].' '.$P['system'].' '.$P['description']; ?></span>
+                                    	<div class="description"><?php echo $P['manf'].' '.$P['system'].' '.$P['description']; ?></div>
 									</div>
 									<div class="price">
 										<div class="form-group">
-											<input type="text" value="1200.00" size="6" placeholder="Sell" class="input-sm form-control sell" />
+											<div class="input-group sell">
+												<span class="input-group-btn">
+													<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+												</span>
+												<input type="text" value="1200.00" size="6" placeholder="Sell" class="input-xs form-control price-control" />
+											</div>
 										</div>
 									</div>
                                 </td>
@@ -136,12 +168,12 @@
                                 <td rowspan="<?php echo ($num_results+1); ?>" class="market-row">
 									<table class="table market-table">
 										<tr>
-											<td class="bg-sales">
+											<td class="col-sm-3 bg-sales">
 												<a href="#" class="market-title">Sales</a>
 												<div class="date-group"><a href="#" class="modal-results">Jan 14: 2 <i class="fa fa-list-alt"></i></a></div>
 												<div class="market-data"><span class="pa">2</span> &nbsp; <a href="#">Jupiter</a> <span class="pa">$29.50</span></div>
 											</td>
-											<td class="bg-demand">
+											<td class="col-sm-3 bg-demand">
 												<a href="#" class="market-title">Demand</a>
 												<div class="date-group"><a href="#" class="modal-results">Jan 12: 2 <i class="fa fa-list-alt"></i></a></div>
 												<div class="market-data"><span class="pa">2</span> &nbsp; <a href="#">Jupiter</a> <span class="pa">$35.00</span></div>
@@ -149,12 +181,12 @@
 												<div class="market-data"><span class="pa">2x</span> &nbsp; Dec</div>
 												<div class="market-data"><span class="pa">1x</span> &nbsp; Aug</div>
 											</td>
-											<td class="bg-purchases">
+											<td class="col-sm-3 bg-purchases">
 												<a href="#" class="market-title">Purchases</a>
 												<div class="date-group"><a href="#" class="modal-results">Dec 3: 2 <i class="fa fa-list-alt"></i></a></div>
 												<div class="market-data"><span class="pa">2</span> &nbsp; <a href="#">WestWorld</a> <span class="pa">$12.00</span></div>
 											</td>
-											<td class="bg-availability">
+											<td class="col-sm-3 bg-availability">
 												<a href="#" class="market-title">Availability</a>
 												<div id="market-results"></div>
 											</td>
@@ -163,17 +195,27 @@
                                 </td>
 <?php
 			}
+			$hl_flag = 'star-o';
+if ($k==1) { $hl_flag = 'star text-danger'; }
+else if ($k==2) { $hl_flag = 'star-half-o text-danger'; }
+
 			$k++;
 ?>
                                 <td class="product-actions">
 									<div class="price">
 										<div class="form-group">
-											<input type="text" value="350.00" size="6" placeholder="Buy" class="input-sm form-control buy" />
+											<div class="input-group buy">
+												<span class="input-group-btn">
+													<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+												</span>
+												<input type="text" value="350.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+											</div>
 										</div>
 									</div>
                                     <ul class="actions">
-                                        <li><i class="table-settings"></i></li>
-                                        <li class="last"><i class="table-delete"></i></li>
+                                        <li><i class="fa fa-sticky-note-o fa-lg"></i></li>
+                                        <li><i class="fa fa-<?php echo $hl_flag; ?> fa-lg"></i></li>
+                                        <li class="last"><i class="fa fa-pencil fa-lg"></i></li>
                                     </ul>
                                 </td>
                             </tr>
@@ -185,10 +227,10 @@
                                 <td> </td>
                                 <td> </td>
                             </tr>
+                        </tbody>
 <?php
 	}
 ?>
-                        </tbody>
                     </table>
                 </div>
                 <ul class="pagination">
@@ -207,7 +249,7 @@
 
 
 	<!-- scripts -->
-    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
     <!-- knob -->

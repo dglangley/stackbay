@@ -6,7 +6,7 @@
 			parentBody.find(".product-results").each(function() {
 				tableHeight += $(this).height();
 			});
-			if (tableHeight>marketTable.css('min-height')) {
+			if (tableHeight>marketTable.css('min-height').replace('px','')) {
 				marketTable.height(tableHeight);
 			}
 		});
@@ -17,6 +17,31 @@
         $(".checkAll").on('click',function(){
             jQuery(this).closest('form').find(':checkbox').not(this).prop('checked', this.checked);
         });
+
+		$(".price-control").change(function() {
+			var priceMaster = $(this);
+			// confirm padlock isn't unlocked, which would make this a unique price change
+			var priceLocked = false;
+			priceMaster.closest(".sell").find(".fa").each(function() {
+				if ($(this).hasClass("fa-lock")) { priceLocked = true; }
+			});
+			if (priceLocked===false) { return; }
+
+			var parentBody = priceMaster.closest("tbody");
+			var controlPrice,controlLock;
+			var allPrices = parentBody.find(".price-control").not(this).each(function() {
+				controlPrice = $(this);
+				controlLock = controlPrice.closest(".sell").find(".fa-lock").each(function() {
+					controlPrice.val(priceMaster.val().trim());
+				});
+			});
+		});
+		$(".control-toggle").click(function() {
+			$(this).find(".fa").each(function() {
+				if ($(this).hasClass('fa-lock')) { $(this).removeClass('fa-lock').addClass('fa-unlock'); }
+				else { $(this).removeClass('fa-unlock').addClass('fa-lock'); }
+			});
+		});
 
         // build jquery plugin for remote ajax call
         var attempt = 0;
@@ -127,3 +152,7 @@
 		escapeMarkup: function (markup) { return markup; },//let our custom formatter work
         minimumInputLength: 2
     });
+
+	$("#checkAll").click(function(){
+	    $('input:checkbox').not(this).prop('checked', this.checked);
+	});
