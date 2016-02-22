@@ -14,9 +14,65 @@
         $("body").on('click','a.modal-results',function() {
             $('#myModal').modal('toggle');
         });
+        $("body").on('focus','input.price-control',function() {
+			toggleNotes($(this));
+		});
+		// close notes when switching to a diff input text field
+        $('input[type="text"]').focus(function() {
+        	if (! $(this).hasClass('price-control')) {
+				closeModal($("#modalNotes"));
+			}
+		});
+		$(".item-notes").click(function() {
+			toggleNotes($(this));
+		});
+		function toggleNotes(e) {
+			var notes = $("#modalNotes");
+//            notes.modal('toggle');
+
+			var parentBody = e.closest("tbody");
+			var marketBody = parentBody.find(".market-table:first");
+			var pos = marketBody.position();
+			var width = marketBody.outerWidth();
+			var height = marketBody.outerHeight();
+
+			notes.css({
+				display: "block",
+				visibility: "visible",
+				top:pos.top+"px",
+				left:pos.left+"px",
+				width: width,
+				height: height,
+			}).show();
+
+        }
+		jQuery.expr[':'].focus = function(elem) {
+		  return elem === document.activeElement && (elem.type || elem.href);
+		};
+		$(".notes-close").on('click',function() {
+			closeModal($(this).closest(".modalNotes"));
+		});
+/*
+		$(".modal-close").on('click',function() {
+			closeModal($(this).closest(".modal"));
+		});
+*/
+		function closeModal(e) {
+			e.css({
+				display: "none",
+				visibility: "hidden",
+			});
+		}
+
         $(".checkAll").on('click',function(){
-            jQuery(this).closest('form').find(':checkbox').not(this).prop('checked', this.checked);
+            jQuery(this).closest('tbody').find('.item-check:checkbox').not(this).prop('checked', this.checked);
         });
+
+/*
+		$(".checkAll").click(function(){
+		    $('input:checkbox').not(this).prop('checked', this.checked);
+		});
+*/
 
 		$(".price-control").change(function() {
 			var priceMaster = $(this);
@@ -46,6 +102,8 @@
         // build jquery plugin for remote ajax call
         var attempt = 0;
         jQuery.fn.loadResults = function() {
+			if ($("#market-results").length==0) { return; }
+
             console.log("Getting results, attempt "+attempt+"...");
             var newHtml = '';
             var rowHtml = '';
@@ -153,6 +211,61 @@
         minimumInputLength: 2
     });
 
-	$("#checkAll").click(function(){
-	    $('input:checkbox').not(this).prop('checked', this.checked);
+	$(".advanced-search").click(function() {
+		$("#advanced-search-options").toggleClass('hidden');
+		$("#s2").focus();
+		$("#s2").val($("#s").val());
+		$("#s").val('');
+		$(this).find('.options-toggle').each(function() {
+			if ($(this).hasClass('fa-sort-desc')) { $(this).toggleClass('fa-sort-desc fa-sort-asc'); }
+			else { $(this).toggleClass('fa-sort-asc fa-sort-desc'); }
+		});
+	});
+	$("#s").focus(function() {
+		if (! $("#advanced-search-options").hasClass('hidden')) {
+			$("#advanced-search-options").toggleClass('hidden');
+			$("#s").val($("#s2").val().replace(/\r\n|\r|\n/g," "));
+		} else {
+		}
+	});
+
+    $('#dp1').datepicker().on('changeDate', function(ev){
+        if (ev.date.valueOf() > endDate.valueOf()){
+            $('#alert').show().find('strong').text('The start date can not be greater than the end date');
+        } else {
+            $('#alert').hide();
+            startDate = new Date(ev.date);
+            $('#startDateLabel').text($('#dp1').data('date'));
+            $('#startDate').val($('#dp1').data('date'));
+        }
+        $('#dp1').datepicker('hide');
+    });
+    $('#dp2').datepicker().on('changeDate', function(ev){
+        if (ev.date.valueOf() < startDate.valueOf()){
+            $('#alert').show().find('strong').text('The end date can not be less than the start date');
+        } else {
+            $('#alert').hide();
+            endDate = new Date(ev.date);
+            $('#endDateLabel').text($('#dp2').data('date'));
+            $('#endDate').val($('#dp2').data('date'));
+        }
+        $('#dp2').datepicker('hide');
+    });
+
+	$(".results-form").submit(function() {
+		var cid = $("#companyid").val();
+		if (! cid) {
+	        $('#modal-alert').modal('toggle');
+			$('#alert-continue').data('form',$(this));
+		} else {
+			$(this).data('form').submit();
+		}
+
+		event.preventDefault();
+	});
+	$('#alert-continue').click(function() {
+		$(this).data('form').submit();
+	});
+	$(".qty input[type='text']").click(function() {
+		$(this).select();
 	});

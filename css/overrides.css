@@ -2,7 +2,7 @@
 	position:fixed;
 	top:0px;
 	width:100%;
-	z-index:1002;
+	z-index:1003;
 }
 .navbar .logo {
 	margin:4px 18px;
@@ -37,8 +37,57 @@
   border-radius: 3px;
 }
 
-.index #pad-wrapper {
+.sub-nav #pad-wrapper {
 	margin-top:120px;
+}
+
+.input-primary {
+	border-color:#357ebd;
+}
+
+.modalNotes {
+	display:none;
+	visibility:hidden;
+	position:absolute;
+	z-index:1000;
+	overflow:visible;
+}
+.modalNotes .modal-content {
+	background-color:#f6f7de;
+}
+.modalNotes .modal-footer {
+	text-align:left !important;
+}
+.modalNotes .modal-header, .modal-footer {
+	padding:8px;
+}
+.modalNotes .modal-body, .modalNotes .modal-body .table {
+	margin:0px;
+	padding:0px;
+}
+.modalNotes .modal-header {
+	position:relative;
+	inline-block;
+}
+.modalNotes .modal-header .notes-text {
+	width:100%;
+}
+
+/* BUTTONS POSITIONED WITHIN TEXTAREA */
+.modalNotes .modal-header .btn-notes {
+	position:absolute;
+	bottom:8px;
+	right:8px;
+}
+#advanced-search-options .btn-submit {
+	position:absolute;
+	bottom:-1px;
+	right:14px;
+}
+
+.source {
+	float:right;
+	font-style:italic;
 }
 
 
@@ -46,9 +95,17 @@
 	vertical-align:top;
 	padding:0px;
 }
-.table-products .table .product-img, .table-products .table .product-descr {
+.table-products .table .product-img, .table-products .table .product-descr, .first .qty, .table .product-action {
 	font-size:11px;
 	display:inline-block;
+}
+.table .product-action div input[type="checkbox"] {
+	position:relative;
+	top:-6px;
+	left:33%;
+}
+.first .product-descr {
+	margin-left:12px;
 }
 .table-products .table .product-img {
 	margin-top:2px;
@@ -68,7 +125,7 @@
 	margin:0px;
 }
 .table-products .table .product-descr {
-	width:260px;
+	width:400px;
 }
 .table-products .table .product-descr .description {
 	font-size:10px;
@@ -88,6 +145,7 @@
 	vertical-align:top !important;
 }
 .qty-header {
+	padding-left:48px;
 	padding-right:20px;
 }
 .first td {
@@ -103,6 +161,11 @@
 	vertical-align:middle;
 	margin:4px 12px 4px 4px;
 	display:inline-block;
+}
+.search-qty {
+	width:40px;
+	margin-left:4px;
+	font-weight:bold;
 }
 .price-header, .product-results .price {
 	padding-right:12px;
@@ -150,13 +213,76 @@
 	padding-left:3px;
 	padding-right:3px;
 }
+.field-box {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 0;
+	float: left;
+	width: 100%;
+}
+.inline-form.order-form .field-box textarea {
+	width:60%;
+}
+.ui-select {
+	width:180px;
+}
+.ui-select.addresses {
+	width:320px;
+}
 
-.search-form .form-group {
+.search-form .search-group {
 	width:320px;
 	margin:6px 36px;
 }
 #s, .product-search {
 	text-transform:uppercase;
+}
+#advanced-search-options {
+	position:absolute;
+	top:-7px;
+	width:100% !important;
+	margin-left:auto !important;
+	margin-right:auto !important;
+	text-align:center;
+	z-index:1002;
+	background-color:rgba(0, 0, 0, 0.8);
+	box-shadow: 2px 3px 2px #888;
+}
+.sub-nav #advanced-search-options {
+	top:-72px;
+}
+#advanced-search-options.animated {
+	-webkit-animation-duration: .3s;
+	-o-linear-animation-duration: .3s;
+	-moz-animation-duration: .3s;
+}
+#advanced-search-options div textarea {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+	width:100%;
+}
+.freeform-text {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+	width:100%;
+	background:none;
+	border:0px;
+	min-height:400px;
+}
+#advanced-search-options div {
+	color:#fff;
+}
+#advanced-search-options div p input {
+	margin-right:8px;
+}
+#advanced-search-options .options-group > div {
+	padding-top:12px;
+}
+#advanced-search-options .options-group div label {
+	padding-bottom:0px;
+	margin-bottom:0px;
 }
 
 /*	color:#aa6708;*/
@@ -236,6 +362,9 @@
 .fa-circle-o {
 	color:transparent;
 }
+.options-toggle.fa-sort-asc {
+	vertical-align:bottom;
+}
 .pa {
 	color:#000;
 }
@@ -246,4 +375,19 @@
 .info {
 	font-weight:normal;
 	color:#999;
+}
+
+
+.datepicker {
+	z-index:2003;
+	margin-top:-120px;
+}
+
+.file-upload {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
 }
