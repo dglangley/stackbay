@@ -131,7 +131,7 @@
 		$revs = $GLOBALS['revs'];
 		$rev_kit = $GLOBALS['rev_kit'];
 
-		if ($GLOBALS['test']) { echo $part.' = '.preg_match('/^'.$rev_kit.'$/',$part).' (manfid '.$manfid.') ::: '; }
+//		if ($GLOBALS['test']) { echo $part.' = '.preg_match('/^'.$rev_kit.'$/',$part).' (manfid '.$manfid.') ::: '; }
 
 		// Force 'Unknown' to search universals
 		if ($manfid==146) { $manfid = 0; }
@@ -171,7 +171,7 @@
 //			echo $part.' = '.$base_part.' === '.$revs.'<BR>';
 		}
 //		$base_part = preg_replace('/(S[-]?([0-9]{1,2}[:])?[[:alnum:]]{1,2})*$/','',$part);
-		if ($GLOBALS['test']) { echo $base_part.'<BR>'; }
+//		if ($GLOBALS['test']) { echo $base_part.'<BR>'; }
 
 		return ($base_part);
 	}

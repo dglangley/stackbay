@@ -83,8 +83,20 @@
 
 		return ($market_str);
 	}
+
+	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
+	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
+	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 	function format_dateTitle($order_date,$dated_qty) {
-		$dtitle = '<div class="date-group"><a href="#" class="modal-results">'.format_date($order_date,'M j').': '.
+		global $today,$yesterday;
+
+		if ($order_date==$today) { $date = 'Today'; }
+		else if ($order_date==$yesterday) { $date = 'Yesterday'; }
+		else if ($order_date>$lastWeek) { $date = format_date($order_date,'D'); }
+		else if ($order_date>=$lastYear) { $date = format_date($order_date,'M j'); }
+		else { $date = format_date($order_date,'M j, y'); }
+
+		$dtitle = '<div class="date-group"><a href="#" class="modal-results">'.$date.': '.
 			$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
@@ -100,52 +112,69 @@
 </head>
 <body class="sub-nav">
 
-	<?php include 'modal/results.php'; ?>
-	<?php include 'modal/notes.php'; ?>
-	<?php include 'inc/navbar.php'; ?>
-	<?php include 'inc/keywords.php'; ?>
-	<?php include 'inc/dictionary.php'; ?>
-	<?php include 'inc/logSearch.php'; ?>
-	<?php include 'inc/format_price.php'; ?>
+	<?php include_once 'modal/results.php'; ?>
+	<?php include_once 'modal/notes.php'; ?>
+	<?php include_once 'inc/navbar.php'; ?>
+	<?php include_once 'inc/keywords.php'; ?>
+	<?php include_once 'inc/dictionary.php'; ?>
+	<?php include_once 'inc/logSearch.php'; ?>
+	<?php include_once 'inc/format_price.php'; ?>
+	<?php include_once 'inc/format_price.php'; ?>
+	<?php require('vendor/autoload.php'); ?>
 
 <?php
+    // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
+	if (! $DEV_ENV) {
+		$s3 = Aws\S3\S3Client::factory();
+		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
+	}
+
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['invfile']) && $_FILES['invfile']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['invfile']['tmp_name'])) {
         try {
 			$cid = 0;
-			if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $cid = $_REQUEST['companyid']; }
+			if (isset($_REQUEST['inv-companyid']) AND is_numeric($_REQUEST['inv-companyid'])) { $cid = $_REQUEST['inv-companyid']; }
 
             // key the filename on aws using today's date, companyid and the filename
             $filename = 'inv'.date("Ymd").'_'.$cid.'_'.$_FILES['invfile']['name'];
 
             // check for file existing already
-/*
-            $s3->registerStreamWrapper();
-            $keyExists = file_exists("s3://".$bucket."/".$filename);
+			$keyExists = false;
+			if (! $DEV_ENV) {
+	            $s3->registerStreamWrapper();
+				$keyExists = file_exists("s3://".$bucket."/".$filename);
+			}
 
             if ($keyExists) {//file has already been uploaded
                 $ALERT = array('code'=>14,'message'=>$E[14]['message']);
+die('file already is uploaded');
             } else {
-                $upload = $s3->upload($bucket, $filename, fopen($_FILES['invfile']['tmp_name'], 'rb'), 'public-read');
+				if ($DEV_ENV) {
+					$temp_dir = sys_get_temp_dir();
+					$temp_file = $temp_dir.preg_replace('/[^[:alnum:]]+/','-',$_FILES['invfile']['name']);
 
-                $replace_inventory = 'T';
-                if (isset($_REQUEST['replace_inventory']) AND $_REQUEST['replace_inventory']<>1) { $replace_inventory = 'F'; }
-                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, replace_inventory, processed, link) ";
-                $query .= "VALUES ('".res($_FILES['invfile']['name'])."','".res($U['id'])."','".res($cid)."',";
-                $query .= "'".res($GLOBALS['now'])."','".res($replace_inventory)."',";
-                $query .= "NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
-*/
+					// store uploaded file in temp dir so we can use it later
+					if (move_uploaded_file($_FILES['invfile']['tmp_name'], $temp_file)) {
+						echo "File is valid, and was successfully uploaded.\n";
+					} else {
+						die('file did not save');
+					}
 
-                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, replace_inventory, processed, link) ";
-                $query .= "VALUES ('".res($_FILES['invfile']['name'])."','0','".res($cid)."',";
-                $query .= "'".res($GLOBALS['now'])."','N',";
-                $query .= "NULL,'".$filename."'); ";
-echo '<BR><BR><BR><BR><BR><BR>'.$query.'<BR>';
-//                $result = qdb($query);
+                	$query = "INSERT INTO uploads (filename, userid, companyid, datetime, processed, link) ";
+                	$query .= "VALUES ('".res($_FILES['invfile']['name'])."','1','".res($cid)."',";
+                	$query .= "'".res($GLOBALS['now'])."',NULL,'".htmlspecialchars($temp_file)."'); ";
+				} else {
+	                $upload = $s3->upload($bucket, $filename, fopen($_FILES['invfile']['tmp_name'], 'rb'), 'public-read');
+
+	                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, processed, link) ";
+	                $query .= "VALUES ('".res($_FILES['invfile']['name'])."','".res($U['id'])."','".res($cid)."',";
+	                $query .= "'".res($GLOBALS['now'])."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
+				}
+                $result = qdb($query) OR die(qe().' '.$query);
 
 /*
                 $ALERT = array('code'=>0,'message'=>'Success! Processing can take up to 20 mins...');
-            }
 */
+            }
         } catch(Exception $e) {
 //            $ALERT = array('code'=>18,'message'=>$E[18]['message']);
 die('died');
@@ -181,7 +210,7 @@ die('died');
 			<td class="col-md-4">
 				<div class="pull-right form-group">
 					<input class="btn btn-success btn-sm" type="submit" name="save-demand" value="Customer Request">
-					<select name="companyid" id="companyid" style="width:280px">
+					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 					</select>
 					<input class="btn btn-warning btn-sm" type="submit" name="save-availability" value="Supplier Offer">
@@ -225,7 +254,7 @@ die('died');
 			$search_qty = trim($terms[$qty_index]);
 		}
 
-		$results = hecidb($search_str);
+		$results = hecidb(format_part($search_str));
 		$num_results = count($results);
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
@@ -349,7 +378,7 @@ die('died');
 										</td>
 										<td class="col-sm-3 bg-availability">
 											<a href="#" class="market-title">Availability</a>
-											<div id="market-results"></div>
+											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>"></div>
 										</td>
 									</tr>
 								</table>

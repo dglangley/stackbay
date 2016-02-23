@@ -62,9 +62,9 @@
 
 //		print "<pre>".print_r($row,true)."</pre>";
 		$list_qty = 1;
-		if (isset($search_qtys[$ln]) AND is_numeric($search_qtys[$ln]) AND $search_qtys[$ln]>0) { $list_qty = trim($search_qtys[$ln]); }
+		if (isset($_REQUEST['search_qtys'][$ln]) AND is_numeric($_REQUEST['search_qtys'][$ln]) AND $_REQUEST['search_qtys'][$ln]>0) { $list_qty = trim($_REQUEST['search_qtys'][$ln]); }
 		$list_price = false;
-		if (isset($search_prices[$ln])) { $list_price = trim($search_prices[$ln]); }
+		if (isset($_REQUEST['search_prices'][$ln])) { $list_price = trim($_REQUEST['search_prices'][$ln]); }
 
 		$sellqty[$ln] = array();
 		if (isset($_REQUEST['sellqty'][$ln]) AND is_array($_REQUEST['sellqty'][$ln])) { $sellqty[$ln] = $_REQUEST['sellqty'][$ln]; }

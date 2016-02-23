@@ -121,9 +121,10 @@
 		$companyid = $r['companyid'];
 		if ($test) { echo $filename.', cid '.$companyid.', (date '.$dt.')<BR>'.chr(10); }
 
-		$curated = array();
+		// condense the table of results by stripping white space
+		$condensed = array();
 		// use this loop to eliminate empty rows
-		foreach ($lines as $key => $L) {
+		foreach ($lines as $n => $L) {
 			// verify that there's data within the array
 			$verified = false;
 			if (! is_array($L)) {
@@ -133,14 +134,16 @@
 					if (trim($d)) { $verified = true; }
 				}
 			}
-			if ($verified) { $curated[] = $L; }
+			if ($verified) { $condensed[] = $L; }
 		}
 
-		$num_lines = count($curated);
-//		print "<pre>".print_r($curated,true)."</pre>";
+		$num_lines = count($condensed);
+//		print "<pre>".print_r($condensed,true)."</pre>";
 
+		// identify the columns and curate the results by removing punctuations
+		$curated = array();
 		$report = '';
-		foreach ($curated as $key => $L) {
+		foreach ($condensed as $n => $L) {
 			// make array out of fields if not already
 			if (! is_array($L)) {
 				$data = explode(' ',$L);// ?????
@@ -152,7 +155,7 @@
 //			print "<pre>".print_r($L,true)."</pre>";
 
 			// is this a header row? try to find out
-			if ($key==0) {
+			if ($n==0) {
 				$line_lower = array_map('strtolower',$L);
 				$part_col = array_find('part',$line_lower);
 				if ($part_col===false) { $part_col = array_find('model',$line_lower); }
@@ -191,7 +194,7 @@
 					else if ($ff3[1]!==false) { $heci_col = $ff3[1]; }
 				}
 			}
-			if ($test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
+			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
 			if ($part_col===false OR $qty_col===false) {
 				$email = getUser($r['userid'],'id','email');
@@ -220,11 +223,36 @@ $email = 'davidglangley@gmail.com';
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = strtoupper(trim($L[$heci_col]));
 			if (! $part AND ! $heci) { continue; }
-			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
-continue;
+
+//			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
+			$partKey = preg_replace('/[^[:alnum:]]+/','',$part);
+			if ($heci) { $partKey .= '.'.$heci; }
+//			if ($test) { echo $partKey.' '.$qty.'<BR>'; }
+
+			if (! isset($curated)) { $curated[$partKey] = 0; }
+			$curated[$partKey] += $qty;
+//			if ($n>10000) { break; }
+		}
+		unset($condensed);
+
+		// further consolidate results by tapping the db for partid's, and keying on that id to get summed qtys
+//		echo count($curated).' curated<br>';
+		$consolidated = array();
+		foreach ($curated as $partKey => $qty) {
+			$keys = explode('.',$partKey);
+			$part = $keys[0];
+			$heci = $keys[1];
 
 			$partid = getPartId($part,$heci);
 
+			if (! isset($consolidated[$partid])) { $consolidated[$partid] = 0; }
+			$consolidated[$partid] += $qty;
+		}
+		unset($curated);
+//		echo count($consolidated).' consolidated<br>';
+
+		foreach ($consolidated as $partid => $qty) {
+//			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
 			if (! $qty OR ! $partid) {
 				$status = '';
@@ -239,7 +267,7 @@ continue;
 
 			insertMarket($partid,$qty,$companyid,$dt,$r['uploadid']);
 		}
-die('hi');
+
 		if ($report) {
 			$report = '"Part","HECI","Qty","Status"'.chr(10).$report;
 
@@ -261,7 +289,7 @@ die('hi');
 			$mail_msg = 'Please see attached'.chr(10).chr(10).chr(10).chr(10);
 			if (! $test) {
 $email = 'davidglangley@gmail.com';
-				mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
+//				mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
 			}
 
 			$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($r['uploadid'])."' LIMIT 1; ";

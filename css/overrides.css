@@ -125,7 +125,7 @@
 	margin:0px;
 }
 .table-products .table .product-descr {
-	width:400px;
+	width:370px;
 }
 .table-products .table .product-descr .description {
 	font-size:10px;
@@ -284,6 +284,14 @@
 	padding-bottom:0px;
 	margin-bottom:0px;
 }
+#advanced-search-options .options-group p {
+	margin-top:4px;
+	margin-bottom:4px;
+}
+
+.company-selector {
+	width:280px;
+}
 
 /*	color:#aa6708;*/
 
@@ -293,6 +301,11 @@
 	min-height:140px;
 	overflow:hidden;
 }
+.market-results {
+	position:absolute;
+	overflow:hidden;
+}
+
 .market-table hr {
 	margin:8px 0px;
 }
@@ -339,6 +352,16 @@
 	padding:0px !important;
 	margin:0px !important;
 	text-decoration:none !important;
+}
+.market-data > .pa {
+	display:inline-block;
+	width:12px;
+}
+.market-company {
+	width:90px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 }
 .market-title {
 	padding:0px 0px 4px 0px !important;

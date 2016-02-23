@@ -150,17 +150,24 @@
 	                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
 				</div>
 				<div class="text-center">
-					List Upload:<br/>
+					<p>
+						List Upload:
+					</p>
 					<div class="form-group">
 						<input type="text" name="list_name" class="input-xs form-control" value="" size="14" placeholder="Name (optional)" />
 					</div>
 					<div class="form-group">
-						<label for="inventory-file"><a class="btn btn-default btn-xs">Select .xls/.xlsx/.csv/.txt</a></label>
+						<label for="inventory-file" id="invfile-label"><a class="btn btn-default btn-xs">Select .xls/.xlsx/.csv/.txt</a></label>
 						<input name="invfile" type="file" id="inventory-file" class="file-upload">
 					</div>
-					<div class="form-group">
-						<button type="submit" class="btn btn-primary btn-xs">Upload</button>
-					</div>
+					<p>
+						<select name="inv-companyid" id="inv-companyid" class="company-selector">
+							<option value="">- Select a Company -</option>
+						</select>
+					</p>
+					<p>
+						<button type="submit" class="btn btn-primary btn-sm">Upload</button>
+					</p>
 				</div>
 			</div>
 			<div class="col-sm-6">

@@ -35,6 +35,9 @@
 
 	date_default_timezone_set('America/Los_Angeles');
 
+	$DEV_ENV = false;
+	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
+
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
 /*
