@@ -10,7 +10,7 @@
 		if ($res===false) { return ($PS_ERROR); }
 //		echo $res;exit;
 
-		$resArray = parse_ps($res,false);
+		$resArray = parse_ps($res);
 //		print_r($resArray);
 
 		return false;

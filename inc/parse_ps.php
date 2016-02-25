@@ -6,6 +6,8 @@
 	include_once 'getCompany.php';
 
 	function parse_ps($res,$return_type='db') {
+		if (! $res) { return false; }
+
 		$resArray = array();
 
 		$newDom = new domDocument;
@@ -15,6 +17,8 @@
 		$formContents = $newDom->getElementById('SubmitRfq');
 		$rows = (object)array();
 		try {
+			if (! $formContents OR ! $formContents->getElementsByTagName('tr')) { return false; }
+
 			$rows = $formContents->getElementsByTagName('tr');
 		} catch(Exception $e) {
 //			echo $e;

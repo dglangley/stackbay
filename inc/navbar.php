@@ -38,7 +38,7 @@
     if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
 ?>
 
-	<form class="form-inline search-form" method="post" action="/index.php" enctype="multipart/form-data" >
+	<form class="form-inline search-form" method="post" action="/" enctype="multipart/form-data" >
 
     <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">

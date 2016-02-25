@@ -23,7 +23,6 @@
 		if ($getpost=='GET') {
 			curl_setopt($ch, CURLOPT_POST, false);
 			curl_setopt($ch, CURLOPT_HTTPGET, true);
-			if ($params[0]<>'?') { $params = '?'.$params; }
 			curl_setopt($ch, CURLOPT_URL, $base.$params);
 		} else {
 			curl_setopt($ch, CURLOPT_POST, true);

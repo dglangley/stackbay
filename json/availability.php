@@ -2,6 +2,7 @@
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_date.php';
 	include_once '../inc/format_price.php';
+	include_once '../inc/ps.php';
 	include_once '../inc/bb.php';
 	include_once '../inc/te.php';
 	include_once '../inc/logRemotes.php';
@@ -81,7 +82,9 @@
 	}
 
 	// string unique searches now into single line-separated string
+	$psstr = '';
 	$bbstr = '';
+	$ps_err = '';
 	$bb_err = '';
 	$te_err = '';
 	foreach ($searches as $keyword => $bool) {
@@ -94,6 +97,7 @@
 			$RLOG = logRemotes($keyword,'00000');
 		}
 
+		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
 		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
 //		$bbstr .= $keyword.chr(10);
 
@@ -108,6 +112,13 @@
 	}
 
 	if ($attempt>=1) {
+		if ($psstr) {
+			$ps_err = ps($psstr);
+			if ($ps_err) {
+				$err[] = 'ps';
+				$errmsgs[] = $ps_err;
+			}
+		}
 		if ($bbstr) {
 			$bb_err = bb($bbstr);
 			if ($bb_err) {

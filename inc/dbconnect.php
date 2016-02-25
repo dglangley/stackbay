@@ -141,5 +141,5 @@
 */
 
 	// version control for css and js includes
-	$V = '20160212';
+	$V = '20160224';
 ?>

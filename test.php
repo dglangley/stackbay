@@ -1,6 +1,6 @@
 <?php
-	include 'inc/ps.php';
+	include 'inc/bb.php';
 
-	$ps_err = ps('090-72050-11');
-echo $ps_err;
+	$bb_err = bb('090-72050-11');
+echo $bb_err;
 ?>

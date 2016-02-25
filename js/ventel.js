@@ -1,4 +1,6 @@
     $(document).ready(function() {
+		$("#s").select();
+
 		// adjust height dynamically to size of the rows within section
 		$(".market-table").each(function() {
 			var parentBody = $(this).closest("tbody");
@@ -74,25 +76,27 @@
 			});
 		});
 
-		var attempts = 0;
+		var attempts = [];
+		var max_lim = 3;
 		// keeps count of the iterative cycles in loadResults() so we don't pound remote sites beyond the first few results
 		var result_index = 0;
         // build jquery plugin for remote ajax call
         jQuery.fn.loadResults = function() {
 //			if ($("#market-results").length==0) { return; }
 
-			if (result_index>=5) { return; }
-			result_index++;
-
-            console.log("Getting results, attempt "+attempts+"...");
             var newHtml = '';
             var rowHtml = '';
             var qtyTotal = 0;
             var container = $(this);
+			var thisId = container.attr('id');
+			var doneFlag = '';
+
+			if (! attempts[thisId]) { attempts[thisId] = 0; }
+            console.log(window.location.origin+"/json/availability.php?attempt="+attempts[thisId]+"&partids="+$(this).data('partids')+"...");
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': attempts, 'partids': $(this).data('partids')},
+                data: {'attempt': attempts[thisId], 'partids': $(this).data('partids')},
                 success: function(json, status) {
                     $.each(json.results, function(dateKey, item) {
                         qtyTotal = 0;
@@ -112,6 +116,9 @@
                             rowHtml += '</div>';
                         });
 
+						doneFlag = json.done;
+						if (result_index>=max_lim) { doneFlag = 1; }//call it done/golden after the first several results
+
                         /* add section header of date and qty total */
                         newHtml += addDateGroup(dateKey,qtyTotal,json.done)+rowHtml;
                     });
@@ -122,10 +129,10 @@
 						$("#remote-"+remote).removeClass('hidden');
 					});
 
-                    if (! json.done) {
-                        attempts++;
-                        //setTimeout("$('#market-results').loadResults()",2000);
-                        setTimeout("$('#"+container.attr('id')+"').loadResults()",2000);
+                    if (! json.done && attempts[thisId]<1 && result_index<max_lim) {
+                        attempts[thisId]++;
+                        //setTimeout("$('#market-results').loadResults()",1000);
+						setTimeout("$('#"+container.attr('id')+"').loadResults()",1000);
                     }
                 },
                 error: function(xhr, desc, err) {
@@ -133,6 +140,8 @@
                     console.log("Details: " + desc + "\nError:" + err);
                 }
             }); // end ajax call
+
+			result_index++;
 
             return;
         };

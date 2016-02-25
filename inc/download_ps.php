@@ -87,7 +87,7 @@
 
 			curl_close($PS_CH);
 		} else if ($search) {/***** PART SEARCH *****/
-			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'POST',$PS_CH);
+			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
 		}
 
 		/***** FAILED LOGIN, DELETE CREDENTIALS FILE AND RETRY *****/
@@ -101,7 +101,7 @@
 			$res = call_remote($ps_base,$PS_CREDS,$cookiefile,$cookiejarfile,'POST',$PS_CH);
 
 			if ($search) {
-				$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'POST',$PS_CH);
+				$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
 
 				if (! $res OR $logout OR strstr($res,'Login Failed') OR strstr($res,'Access Denied')) {
 					$PS_ERROR = "There was a problem validating your PowerSource session, please check your credentials or contact Technical Support";
