@@ -2,23 +2,42 @@
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_date.php';
 	include_once '../inc/format_price.php';
+	include_once '../inc/bb.php';
+	include_once '../inc/te.php';
+	include_once '../inc/logRemotes.php';
 
 	function array_append(&$arr1,$arr2) {
 		foreach ($arr2 as $date => $arr) {
 			if (! isset($arr1[$date])) { $arr1[$date] = array(); }
 
+			if (! is_array($arr)) { $arr = array(); }
 			foreach ($arr as $result) {
 				foreach ($result as $r) {
+					$r['price'] = format_price($r['price'],false);
 					$arr1[$date][] = $r;
 				}
 			}
 		}
 	}
+	function array_stristr(&$haystack,$needle) {
+		foreach ($haystack as $straw => $bool) {
+//			echo $straw.':'.$needle.':'.stripos($straw,$needle).'<BR>';
+			if (stripos($straw,$needle)!==false) {
+				unset($haystack[$straw]);
+//				break;
+			}
+		}
+	}
 
+	$done = '';
 	$attempt = 0;
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
-	$partid = 0;
-	if (isset($_REQUEST['partid']) AND is_numeric($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
+	$partids = "";
+	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
+	$metaid = 0;
+	if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
+	$ln = 0;
+	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 
 	$today = date("Y-m-d");
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
@@ -26,13 +45,98 @@
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 
 	$matches = array();
+	$partid_array = explode(",",$partids);
+	$partid_str = "";
+	foreach ($partid_array as $partid) {
+		if ($partid_str) { $partid_str .= "OR "; }
+		$partid_str .= "partid = '".$partid."' ";
+	}
 
-	$keys = array();//prevent duplicate results on same day
+	$err = array();
+	$errmsgs = array();
+	if (! $partid_str) {
+		$newResults = array('results'=>array(),'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
+		header("Content-Type: application/json", true);
+		echo json_encode($newResults);
+		exit;
+	}
+
+	// for now (feb 2016) we have results in market and availability tables; get from both by storing in single array
+	$results = array();
+
+	// stash all searches in strings for each remote
+	$searches = array();
+
+	$query = "SELECT keyword FROM keywords, parts_index WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
+	$query .= "ORDER BY LENGTH(keyword) DESC; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
+		if (isset($searches[$r['keyword']])) { continue; }
+
+		array_stristr($searches,$r['keyword']);
+		$searches[$r['keyword']] = true;
+
+//		echo $r['keyword'].'<BR>';
+	}
+
+	// string unique searches now into single line-separated string
+	$bbstr = '';
+	$bb_err = '';
+	$te_err = '';
+	foreach ($searches as $keyword => $bool) {
+		// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
+		// statically-stored db results
+		if ($attempt>=1) {
+			// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
+			$RLOG = logRemotes($keyword);
+		} else {
+			$RLOG = logRemotes($keyword,'00000');
+		}
+
+		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
+//		$bbstr .= $keyword.chr(10);
+
+		// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
+		if ($RLOG['te']) {
+			$te = te($keyword);
+			if ($te_err) {
+				$err[] = 'te';
+				$errmsgs[] = $te_err;
+			}
+		}
+	}
+
+	if ($attempt>=1) {
+		if ($bbstr) {
+			$bb_err = bb($bbstr);
+			if ($bb_err) {
+				$err[] = 'bb';
+				$errmsgs[] = $bb_err;
+			}
+		}
+		$done = 1;
+	}
+
+	$query = "SELECT companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid ";
+	$query .= "FROM availability, search_meta, companies ";
+	$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
+	$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$results[] = $r;
+	}
+
 	$query = "SELECT name, datetime, SUM(qty) qty, price, source, companyid FROM market, companies ";
-	$query .= "WHERE partid = '".$partid."' AND market.companyid = companies.id ";
+	$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
 	$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
+		$results[] = $r;
+	}
+
+	$keys = array();//prevent duplicate results on same day
+	foreach ($results as $r) {
 		$date = substr($r['datetime'],0,10);
 
 		// log based on keyed result to avoid duplicates
@@ -59,7 +163,10 @@
 
 		if ($source) { $matches[$date][$r['companyid']]['sources'][] = $source; }
 	}
+	unset($results);
 	unset($keys);
+
+	krsort($matches);
 
 	$priced = array();
 	$standard = array();
@@ -76,79 +183,14 @@
 		}
 	}
 
-	$market = array();
+	$market = array($today=>array());//always have today's date preset in case there are no results, since we still need the header
 	array_append($market,$priced);
 	array_append($market,$standard);
 
 	unset($priced);
 	unset($standard);
 
-/*
-	$market = array(
-		$today => array(
-			0 => array(
-				'company' => 'Pics Telecom',
-				'qty' => 8,
-				'price' => false,
-				'changeFlag' => 'chevron-up',
-				'sources' => array(
-					'bb',
-				),
-			),
-			1 => array(
-				'company' => 'WestWorld',
-				'qty' => 5,
-				'price' => false,
-				'changeFlag' => 'circle-o',
-				'sources' => array(
-					'bb',
-					'ps',
-				),
-			),
-			2 => array(
-				'company' => 'Excel Computers',
-				'qty' => 1,
-				'price' => false,
-				'changeFlag' => 'chevron-down',
-				'sources' => array(
-					'et',
-				),
-			),
-		),
-		$yesterday => array(
-			0 => array(
-				'company' => 'Alcatel-Lucent',
-				'qty' => 1,
-				'price' => 550,
-				'changeFlag' => 'circle-o',
-				'sources' => array(
-					'alu',
-				),
-			),
-			1 => array(
-				'company' => 'WestWorld',
-				'qty' => 5,
-				'price' => false,
-				'changeFlag' => 'circle-o',
-				'sources' => array(
-					'bb',
-					'ps',
-				),
-			),
-			2 => array(
-				'company' => 'Excel Computers',
-				'qty' => 3,
-				'price' => false,
-				'changeFlag' => 'circle-o',
-				'sources' => array(
-					'et',
-				),
-			),
-		),
-	);
-*/
-
-	$newResults = array('results'=>array(),'done'=>true);
+	$newResults = array('results'=>array(),'done'=>$done,'err'=>$err,'errmsgs'=>$errmsgs);
 	$n = 0;
 	foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates

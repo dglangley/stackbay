@@ -75,20 +75,24 @@
 		});
 
 		var attempts = 0;
+		// keeps count of the iterative cycles in loadResults() so we don't pound remote sites beyond the first few results
+		var result_index = 0;
         // build jquery plugin for remote ajax call
         jQuery.fn.loadResults = function() {
 //			if ($("#market-results").length==0) { return; }
+
+			if (result_index>=5) { return; }
+			result_index++;
 
             console.log("Getting results, attempt "+attempts+"...");
             var newHtml = '';
             var rowHtml = '';
             var qtyTotal = 0;
             var container = $(this);
-			var keys = $(this).attr('id').split('-');
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': attempts, 'partid': keys[1]},
+                data: {'attempt': attempts, 'partids': $(this).data('partids')},
                 success: function(json, status) {
                     $.each(json.results, function(dateKey, item) {
                         qtyTotal = 0;
@@ -100,10 +104,10 @@
                             rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
                                 '<a href="#" class="market-company">'+row.company+'</a> &nbsp; ';
                             $.each(row.sources, function(i, src) {
-                                rowHtml += '<img src="img/'+src+'.png" class="bot-icon" />';
+                                rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
                             });
                             if (row.price) {
-                                rowHtml += '&nbsp; <span class="pa">$'+row.price+'</span>';
+                                rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
                             }
                             rowHtml += '</div>';
                         });
@@ -112,10 +116,16 @@
                         newHtml += addDateGroup(dateKey,qtyTotal,json.done)+rowHtml;
                     });
                     container.html(newHtml);
+
+					// alert the user when there are errors with any/all remotes by unhiding alert buttons
+					$.each(json.err, function(i, remote) {
+						$("#remote-"+remote).removeClass('hidden');
+					});
+
                     if (! json.done) {
                         attempts++;
-                        //setTimeout("$('#market-results').loadResults()",3000);
-                        setTimeout("$('#"+container.attr('id')+"').loadResults()",3000);
+                        //setTimeout("$('#market-results').loadResults()",2000);
+                        setTimeout("$('#"+container.attr('id')+"').loadResults()",2000);
                     }
                 },
                 error: function(xhr, desc, err) {
@@ -182,6 +192,9 @@
 			} else {
 			}
 		});
+		$("#s").change(function() {
+				$("#s2").val("");
+		});
 	
 	    $('#dp1').datepicker().on('changeDate', function(ev){
 	        if (ev.date.valueOf() > endDate.valueOf()){
@@ -209,6 +222,8 @@
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
 			if (! cid) {
+				$('#modalAlertTitle').html('No Company Selected!');
+				$('#modalAlertBody').html('Your data will not be saved without a company selected! Do you really want to proceed?');
 		        $('#modal-alert').modal('toggle');
 				$('#alert-continue').data('form',$(this));
 			} else {
@@ -233,7 +248,7 @@
 
     function addDateGroup(dateKey,qtyTotal,doneFlag) {
         var groupStr = '<div class="date-group"><a href="#" class="modal-results">'+
-            dateKey+': '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
+            dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
         if (! doneFlag && dateKey=='Today') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
         }

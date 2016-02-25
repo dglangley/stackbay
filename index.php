@@ -204,16 +204,17 @@ die('died');
     <table class="table table-header">
 		<tr>
 			<td class="col-md-2">
+				<div id="remote-warnings"><a class="btn btn-danger btn-sm hidden" id="remote-bb"><img src="/img/bb.png" /></a></div>
 			</td>
 			<td class="text-center col-md-5">
 			</td>
 			<td class="col-md-4">
 				<div class="pull-right form-group">
-					<input class="btn btn-success btn-sm" type="submit" name="save-demand" value="Customer Request">
+					<input class="btn btn-success btn-sm" type="submit" name="save-demand" value="SALES REQUEST">
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 					</select>
-					<input class="btn btn-warning btn-sm" type="submit" name="save-availability" value="Supplier Offer">
+					<input class="btn btn-warning btn-sm" type="submit" name="save-availability" value="AVAILABILITY">
 				</div>
 			</td>
 		</tr>
@@ -292,7 +293,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="350.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
 										<span class="info">target price</span>
 									</div>
@@ -302,9 +303,12 @@ die('died');
 <?php
 		// gather all partid's first
 		$partid_str = "";
+		$partids = "";//comma-separated for data-partids tag
 		foreach ($results as $partid => $P) {
 			if ($partid_str) { $partid_str .= "OR "; }
 			$partid_str .= "partid = '".$partid."' ";
+			if ($partids) { $partids .= ","; }
+			$partids .= $partid;
 		}
 
 		$k = 0;
@@ -378,7 +382,7 @@ die('died');
 										</td>
 										<td class="col-sm-3 bg-availability">
 											<a href="#" class="market-title">Availability</a>
-											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>"></div>
+											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>"></div>
 										</td>
 									</tr>
 								</table>
@@ -396,7 +400,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="350.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
 -->
 									</div>

@@ -304,6 +304,7 @@
 .market-results {
 	position:absolute;
 	overflow:hidden;
+	width:100%;
 }
 
 .market-table hr {
@@ -358,7 +359,7 @@
 	width:12px;
 }
 .market-company {
-	width:90px;
+	width:110px;
 	overflow:hidden;
 	text-overflow:ellipsis;
 	white-space:nowrap;
@@ -413,4 +414,8 @@
 	overflow: hidden;
 	position: absolute;
 	z-index: -1;
+}
+
+#remote-warnings img {
+	height:20px;
 }

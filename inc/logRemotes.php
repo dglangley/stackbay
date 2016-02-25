@@ -1,6 +1,6 @@
 <?php
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
-	$past_time = format_date($now,'Y-m-d H:i:s',array('i'=>-360));//60 mins
+	$past_time = format_date($now,'Y-m-d H:i:s',array('i'=>-360));//6 hours
 	$REMPOS = array();
 	$SEARCHES = array();
 
@@ -8,21 +8,28 @@
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$REMPOS[$r['id']] = $r['remote'];
-		$REMOTES[$r['remote']] = array('setting'=>'Y');
+		$REMOTES[$r['remote']] = array('setting'=>'N');
+
+		// session exists, assume it's valid by turning setting on / activating
+		$query2 = "SELECT * FROM remote_sessions WHERE remoteid = '".$r['id']."'; ";
+		$result2 = qdb($query2);
+		if (mysqli_num_rows($result2)>0) {
+			$REMOTES[$r['remote']] = array('setting'=>'Y');
+		}
 	}
 
 	function logRemotes($search,$user_remotes='') {
 		global $SEARCHES;
 
 		$pos = $GLOBALS['REMPOS'];
-		// set defaults as 0's across all remotes
 		$def = array();
 		$R = $GLOBALS['REMOTES'];
-//		$user_remotes = '';//storing in search log below
 
 		// set the most recent datetime for this search
 		if (! isset($SEARCHES[$search])) { $SEARCHES[$search] = array(); }
 
+		// if remotes are not preset (forced) into function, define them based on db settings;
+		// set defaults as 0's across all remotes
 		if (! $user_remotes) {
 			foreach ($pos as $k => $s) {
 				$def[$s] = false;
@@ -39,7 +46,6 @@
 		// and also check for user's same search within time frame for logging purposes
 		$logid = 0;
 		$query = "SELECT id, datetime, scan, userid FROM searches WHERE search = '".res($search)."' ";
-//		$query .= "AND datetime >= '".$GLOBALS['past_time']."' ";
 		$query .= "ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		$expired_time = false;//once set to true, we know the ordered results are all expired

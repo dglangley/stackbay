@@ -7,7 +7,6 @@
 	$s2 = '';
 	if (isset($_REQUEST['s'])) { $s = trim($_REQUEST['s']); }
 	if (isset($_REQUEST['s2'])) { $s2 = trim($_REQUEST['s2']); }
-	if ($s2) { $s = $s2; }
 
 	if (! isset($search_field)) { $search_field = 1; }
 	if (! isset($qty_field)) { $qty_field = 2; }
@@ -61,7 +60,7 @@
 						<span class="input-group-btn">
 							<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
 						</span>
-		                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($_REQUEST['s']); ?>" placeholder="Search..." autofocus />
+		                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." autofocus />
 	                	<span class="input-group-btn">
 		                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
 		                </span>
@@ -171,7 +170,7 @@
 				</div>
 			</div>
 			<div class="col-sm-6">
-				<textarea name="s2" id="s2" rows="12" placeholder="Enter multi-line searches here"><?php echo trim($_REQUEST['s2']); ?></textarea>
+				<textarea name="s2" id="s2" rows="12" placeholder="Enter multi-line searches here"><?php echo trim($s2); ?></textarea>
 				<button class="btn btn-primary btn-submit" type="submit">Search</button>
 			</div>
 			<div class="col-sm-3 options-group text-left">
@@ -213,3 +212,6 @@
 	</div>
 
 	</form>
+<?php
+	if ($s2) { $s = $s2; }
+?>
