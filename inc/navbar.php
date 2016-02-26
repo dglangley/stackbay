@@ -178,7 +178,7 @@
 					<div class="col-sm-4 text-center">
 						Search:<br/>
 						<div class="form-group">
-		                   <input type="text" name="search_field" value="<?php echo $search_field; ?>" class="form-control input-xs" size="2">
+		                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
 						</div>
 						<div class="form-group">
 		                   <label for="searchFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="search_from_right" id="searchFromRight" value="1"></label>
@@ -187,7 +187,7 @@
 					<div class="col-sm-4 text-center">
 						Qty:<br/>
 						<div class="form-group">
-		                  	<input type="text" name="qty_field" value="<?php echo $qty_field; ?>" class="form-control input-xs" size="2">
+		                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
 						</div>
 						<div class="form-group">
 		                  	<label for="qtyFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="qty_from_right" id="qtyFromRight" value="1"></label>

@@ -32,6 +32,7 @@
 
 	$done = '';
 	$attempt = 0;
+	$max_ln = 2;
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
 	$partids = "";
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
@@ -40,7 +41,6 @@
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 
-	$today = date("Y-m-d");
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
@@ -55,8 +55,23 @@
 
 	$err = array();
 	$errmsgs = array();
+
+
+/* for testing purposes
+		$results = array();
+		if ($ln<=$max_ln) { $results = array($today=>array()); }
+		$newResults = array('results'=>$results,'done'=>'','err'=>$err,'errmsgs'=>$errmsgs);
+		header("Content-Type: application/json", true);
+		echo json_encode($newResults);
+		exit;
+*/
+
+
 	if (! $partid_str) {
-		$newResults = array('results'=>array(),'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
+		// limit today's results (and broker searches below) to the first few lines
+		$results = array();
+		if ($ln<=$max_ln) { $results = array($today=>array()); }
+		$newResults = array('results'=>$results,'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 		header("Content-Type: application/json", true);
 		echo json_encode($newResults);
 		exit;
@@ -90,7 +105,7 @@
 	foreach ($searches as $keyword => $bool) {
 		// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 		// statically-stored db results
-		if ($attempt>=1) {
+		if ($attempt>=1 AND $ln<=$max_ln) {
 			// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
 			$RLOG = logRemotes($keyword);
 		} else {
@@ -189,12 +204,17 @@
 				$standard[$date][$r['qty']][] = $r;
 			}
 			// sort descending by keys
-			krsort($priced[$date]);
-			krsort($standard[$date]);
+			if (isset($priced[$date])) { krsort($priced[$date]); }
+			if (isset($standard[$date])) { krsort($standard[$date]); }
 		}
 	}
 
-	$market = array($today=>array());//always have today's date preset in case there are no results, since we still need the header
+	$market = array();
+	// include today's date preset in case there are no results, since we still need the header, so long as
+	// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
+	if ($ln<=$max_ln) {
+		$market = array($today=>array());
+	}
 	array_append($market,$priced);
 	array_append($market,$standard);
 

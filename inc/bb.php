@@ -10,6 +10,7 @@
 		if ($res===false) { return ($BB_ERROR); }
 
 		$resArray = parse_bb($res);
+//print_r($resArray);
 
 		return false;
 	}

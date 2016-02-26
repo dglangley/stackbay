@@ -382,7 +382,7 @@ die('died');
 										</td>
 										<td class="col-sm-3 bg-availability">
 											<a href="#" class="market-title">Availability</a>
-											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>"></div>
+											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $n; ?>"></div>
 										</td>
 									</tr>
 								</table>

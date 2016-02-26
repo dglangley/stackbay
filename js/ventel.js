@@ -76,14 +76,8 @@
 			});
 		});
 
-		var attempts = [];
-		var max_lim = 3;
-		// keeps count of the iterative cycles in loadResults() so we don't pound remote sites beyond the first few results
-		var result_index = 0;
         // build jquery plugin for remote ajax call
-        jQuery.fn.loadResults = function() {
-//			if ($("#market-results").length==0) { return; }
-
+        jQuery.fn.loadResults = function(attempt) {
             var newHtml = '';
             var rowHtml = '';
             var qtyTotal = 0;
@@ -91,12 +85,11 @@
 			var thisId = container.attr('id');
 			var doneFlag = '';
 
-			if (! attempts[thisId]) { attempts[thisId] = 0; }
-            console.log(window.location.origin+"/json/availability.php?attempt="+attempts[thisId]+"&partids="+$(this).data('partids')+"...");
+            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': attempts[thisId], 'partids': $(this).data('partids')},
+                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': $(this).data('ln')},
                 success: function(json, status) {
                     $.each(json.results, function(dateKey, item) {
                         qtyTotal = 0;
@@ -117,10 +110,9 @@
                         });
 
 						doneFlag = json.done;
-						if (result_index>=max_lim) { doneFlag = 1; }//call it done/golden after the first several results
 
                         /* add section header of date and qty total */
-                        newHtml += addDateGroup(dateKey,qtyTotal,json.done)+rowHtml;
+                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag)+rowHtml;
                     });
                     container.html(newHtml);
 
@@ -129,10 +121,9 @@
 						$("#remote-"+remote).removeClass('hidden');
 					});
 
-                    if (! json.done && attempts[thisId]<1 && result_index<max_lim) {
-                        attempts[thisId]++;
+                    if (! json.done && attempt==0) {
                         //setTimeout("$('#market-results').loadResults()",1000);
-						setTimeout("$('#"+container.attr('id')+"').loadResults()",1000);
+						setTimeout("$('#"+container.attr('id')+"').loadResults("+(attempt+1)+")",1000);
                     }
                 },
                 error: function(xhr, desc, err) {
@@ -141,12 +132,10 @@
                 }
             }); // end ajax call
 
-			result_index++;
-
             return;
         };
         $(".market-results").each(function() {
-			$(this).loadResults();
+			$(this).loadResults(0);
 		});
 
 	    // select2 plugin for select elements

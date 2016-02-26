@@ -16,6 +16,8 @@
 	);
 
 	function parse_bb($res,$return_type='db') {
+		if (! $res) { return false; }
+
 		$F = $GLOBALS['F'];
 
 		$resArray = array();
@@ -28,9 +30,10 @@
 			if ($div->getAttribute('class')<>'main') { continue; }
 			$table = $div->getElementsByTagName('table')->item(0);
 			if (! $table) { continue; }
+//print "<pre>".print_r($div->getElementsByTagName('table')->item(0),true)."</pre>";
 
-//			print "<pre>".print_r($table,true)."</pre>";
 			if ($table->getAttribute('class')<>'rowHighlight') { continue; }
+//			print "<pre>".print_r($table,true)."</pre>";
 
 			$rows = $table->getElementsByTagName('tr');
 			foreach ($rows as $j => $row) {
@@ -85,7 +88,8 @@
 				}
 			}
 
-			break;//there are multiple tables of same class, just break after the first one, which is the real one
+//commented this 2-25-16 because in multiple-search submissions, we DO want more than just the first table
+//			break;//there are multiple tables of same class, just break after the first one, which is the real one
 		}
 
 		if ($return_type=='db') { return true; }
