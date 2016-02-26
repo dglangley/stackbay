@@ -5,7 +5,6 @@
 	include_once 'setPart.php';
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
-	require('../vendor/autoload.php');
 
 	$te_cols = array(
 		1 => 'Company',

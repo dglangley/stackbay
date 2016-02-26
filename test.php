@@ -1,6 +1,6 @@
 <?php
-	include 'inc/bb.php';
+	include 'inc/excel.php';
 
-	$bb_err = bb('090-72050-11');
-echo $bb_err;
+	$excel_err = excel('SNRT7E0');
+echo $excel_err;
 ?>
