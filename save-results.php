@@ -64,7 +64,7 @@
 		$list_qty = 1;
 		if (isset($_REQUEST['search_qtys'][$ln]) AND is_numeric($_REQUEST['search_qtys'][$ln]) AND $_REQUEST['search_qtys'][$ln]>0) { $list_qty = trim($_REQUEST['search_qtys'][$ln]); }
 		$list_price = false;
-		if (isset($_REQUEST['search_prices'][$ln])) { $list_price = trim($_REQUEST['search_prices'][$ln]); }
+		if (isset($_REQUEST['buyprice'][$ln])) { $list_price = trim($_REQUEST['buyprice'][$ln]); }
 
 		$sellqty[$ln] = array();
 		if (isset($_REQUEST['sellqty'][$ln]) AND is_array($_REQUEST['sellqty'][$ln])) { $sellqty[$ln] = $_REQUEST['sellqty'][$ln]; }
@@ -76,7 +76,8 @@
 		foreach ($row as $n => $partid) {
 			//defaults
 			$response_qty = 0;
-			if (isset($sellqty[$ln][$n]) AND is_numeric($sellqty[$ln][$n]) AND $sellqty[$ln][$n]>0) { $response_qty = $sellqty[$ln][$n]; }
+			if ($submit_type=='availability') { $response_qty = $list_qty; }
+			else if (isset($sellqty[$ln][$n]) AND is_numeric($sellqty[$ln][$n]) AND $sellqty[$ln][$n]>0) { $response_qty = $sellqty[$ln][$n]; }
 			$response_price = false;
 			if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
 

@@ -20,6 +20,9 @@
         $("body").on('focus','input.price-control',function() {
 			toggleNotes($(this));
 		});
+        $("body").on('click','input.price-control',function() {
+			$(this).select();
+		});
 		// close notes when switching to a diff input text field
         $('input[type="text"]').focus(function() {
         	if (! $(this).hasClass('price-control')) {
@@ -68,6 +71,104 @@
 					controlPrice.val(priceMaster.val().trim());
 				});
 			});
+		});
+		$(".parts-edit").click(function() {
+			var tbody = $(this).closest("tbody");
+			var partid;
+			tbody.find(".item-check:checked").each(function() {
+				partid = $(this).val();
+				tbody.find(".product-descr").each(function() {
+					if ($(this).data('partid')!=partid) { return; }
+					$(this).find(".descr-label").each(function() { $(this).toggleClass("hidden"); });
+					$(this).find(".descr-edit").each(function() { $(this).toggleClass("hidden"); });
+
+				    $(this).find(".manf-selector").each(function() {
+						$(this).select2({
+					        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+					            url: "/json/manfs.php",
+					            dataType: 'json',
+								/*delay: 250,*/
+					            data: function (params) {
+					                return {
+					                    add_custom: '1',
+					                    q: params.term,//search term
+										page: params.page
+					                };
+					            },
+						        processResults: function (data, params) { // parse the results into the format expected by Select2.
+						            // since we are using custom formatting functions we do not need to alter remote JSON data
+									// except to indicate that infinite scrolling can be used
+									params.page = params.page || 1;
+						            return {
+										results: $.map(data, function(obj) {
+											return { id: obj.id, text: obj.text };
+										})
+									};
+								},
+								cache: true
+					        },
+							escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+					        minimumInputLength: 2
+					    });
+					});
+				    $(this).find(".system-selector").each(function() {
+						var manfid = $(this).closest(".product-descr").find(".manf-selector:first").val();
+						$(this).select2({
+					        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+					            url: "/json/systems.php",
+					            dataType: 'json',
+								/*delay: 250,*/
+					            data: function (params) {
+					                return {
+					                    q: params.term,//search term
+										manfid: manfid,
+										page: params.page
+					                };
+					            },
+						        processResults: function (data, params) { // parse the results into the format expected by Select2.
+						            // since we are using custom formatting functions we do not need to alter remote JSON data
+									// except to indicate that infinite scrolling can be used
+									params.page = params.page || 1;
+						            return {
+										results: $.map(data, function(obj) {
+											return { id: obj.id, text: obj.text };
+										})
+									};
+								},
+								cache: true
+					        },
+							escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+					        minimumInputLength: 0
+					    });
+					});
+				});
+			});
+		});
+		$(".descr-edit input, .descr-edit select").on("keypress",function(e) {
+			if (e.keyCode == 13) {
+				e.preventDefault();
+				$(this).blur();
+			}
+		});
+		$(".descr-edit input").change(function() {
+            console.log(window.location.origin+"/json/save-parts.php?partid="+$(this).data('partid')+"&field="+$(this).data('field')+"&new_value="+encodeURIComponent($(this).val()));
+            $.ajax({
+                url: 'json/save-parts.php',
+                type: 'get',
+                data: {'partid': $(this).data('partid'), 'field': $(this).data('field'), 'new_value': encodeURIComponent($(this).val())},
+				dataType: 'json',
+                success: function(json, status) {
+					if (json.message!='Success') {
+						alert(json.message);
+					}
+                },
+                error: function(xhr, desc, err) {
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+            }); // end ajax call
+
+			return;
 		});
 		$(".control-toggle").click(function() {
 			$(this).find(".fa").each(function() {

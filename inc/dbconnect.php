@@ -37,6 +37,7 @@
 
 	$DEV_ENV = false;
 	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
+$DEV_ENV = true;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
@@ -141,5 +142,5 @@
 */
 
 	// version control for css and js includes
-	$V = '20160224';
+	$V = '20160225';
 ?>

@@ -267,7 +267,7 @@ die('died');
 								<div class="product-action">
 	                                <div><input type="checkbox" class="checkAll" checked></div>
 					          		<i class="fa fa-star-o fa-lg"></i> 
-					           		<i class="fa fa-pencil fa-lg"></i>
+					           		<a href="#" class="parts-edit"><i class="fa fa-pencil fa-lg"></i></a>
 								</div>
 								<div class="qty">
 									<input type="text" name="search_qtys[<?php echo $n; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
@@ -293,7 +293,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+											<input name="buyprice[<?php echo $n; ?>]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
 										<span class="info">target price</span>
 									</div>
@@ -345,9 +345,36 @@ die('died');
                                 <div class="product-img">
                                     <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
                                 </div>
-                                <div class="product-descr">
-									<?php echo $P['Part']; ?> &nbsp; <?php echo $P['HECI']; ?><br/>
-                                   	<div class="description"><?php echo dictionary($P['manf'].' '.$P['system'].' '.$P['description']); ?></div>
+                                <div class="product-descr" data-partid="<?php echo $partid; ?>">
+									<span class="descr-label"><span class="part-label"><?php echo $P['Part']; ?></span> &nbsp; <span class="heci-label"><?php echo $P['HECI']; ?></span></span>
+                                   	<div class="description descr-label"><span class="manf-label"><?php echo dictionary($P['manf']); ?></span> <?php echo dictionary($P['system']); ?></span> <span class="description-label"><?php echo dictionary($P['description']); ?></span></div>
+
+									<div class="descr-edit hidden">
+										<p>
+		        							<button type="button" class="close parts-edit"><span>&times;</span></button>
+											<div class="form-group">
+												<input type="text" value="<?php echo $P['Part']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="part">
+											</div>
+											<div class="form-group">
+												<input type="text" value="<?php echo $P['HECI']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="heci">
+											</div>
+										</p>
+										<p>
+											<input type="text" name="descr[]" value="<?php echo $P['description']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="description">
+										</p>
+										<p>
+											<div class="form-group">
+												<select name="manfid[]" class="manf-selector" data-partid="<?php echo $partid; ?>" data-field="manfid">
+													<option value="<?php echo $P['manfid']; ?>"><?php echo $P['manf']; ?></option>
+												</select>
+											</div>
+											<div class="form-group">
+												<select name="systemid[]" class="system-selector" data-partid="<?php echo $partid; ?>" data-field="systemid">
+													<option value="<?php echo $P['systemid']; ?>"><?php echo $P['system']; ?></option>
+												</select>
+											</div>
+										</p>
+									</div>
 								</div>
 								<div class="price">
 									<div class="form-group">
@@ -355,7 +382,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input type="text" name="sellprice[<?php echo $n; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="Sell" class="input-xs form-control price-control" />
+											<input type="text" name="sellprice[<?php echo $n; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="Sell" class="input-xs form-control price-control sell-price" />
 										</div>
 									</div>
 								</div>

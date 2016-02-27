@@ -127,7 +127,13 @@
 .table-products .table .product-descr {
 	width:370px;
 }
-.table-products .table .product-descr .description {
+.table-products .table .product-descr .descr-edit input {
+	height: 20px;
+	padding: 2px 3px 2px 4px !important;
+	font-size: 11px !important;
+	line-height: 1.1;
+}
+.table-products .table .product-descr .description, .table-products .table .product-descr .description .descr-edit input {
 	font-size:10px;
 	color:#888;
 }
@@ -234,7 +240,7 @@
 	width:320px;
 	margin:6px 36px;
 }
-#s, .product-search {
+#s, .product-search, .descr-edit input {
 	text-transform:uppercase;
 }
 #advanced-search-options {
@@ -291,6 +297,12 @@
 
 .company-selector {
 	width:280px;
+}
+.manf-selector {
+	width:180px;
+}
+.system-selector {
+	width:180px;
 }
 
 /*	color:#aa6708;*/

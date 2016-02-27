@@ -5,6 +5,7 @@
 	include_once '../inc/ps.php';
 	include_once '../inc/bb.php';
 	include_once '../inc/te.php';
+	include_once '../inc/excel.php';
 	include_once '../inc/logRemotes.php';
 
 	function array_append(&$arr1,$arr2) {
@@ -99,9 +100,11 @@
 	// string unique searches now into single line-separated string
 	$psstr = '';
 	$bbstr = '';
+	$excelstr = '';
 	$ps_err = '';
 	$bb_err = '';
 	$te_err = '';
+	$excel_err = '';
 	foreach ($searches as $keyword => $bool) {
 		// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 		// statically-stored db results
@@ -114,6 +117,7 @@
 
 		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
 		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
+		if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //		$bbstr .= $keyword.chr(10);
 
 		// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
@@ -141,12 +145,20 @@
 				$errmsgs[] = $bb_err;
 			}
 		}
+		if ($excelstr) {
+			$excel_err = excel($excelstr);
+			if ($excel_err) {
+				$err[] = 'excel';
+				$errmsgs[] = $excel_err;
+			}
+		}
 		$done = 1;
 	}
 
 	$query = "SELECT companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid ";
 	$query .= "FROM availability, search_meta, companies ";
 	$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
+$query .= "AND companies.id <> '1118' ";
 	$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -155,6 +167,7 @@
 
 	$query = "SELECT name, datetime, SUM(qty) qty, price, source, companyid FROM market, companies ";
 	$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
+$query .= "AND companies.id <> '1118' ";
 	$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
