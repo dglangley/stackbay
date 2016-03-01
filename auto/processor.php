@@ -229,7 +229,7 @@ $email = 'davidglangley@gmail.com';
 			if ($heci) { $partKey .= '.'.$heci; }
 //			if ($test) { echo $partKey.' '.$qty.'<BR>'; }
 
-			if (! isset($curated)) { $curated[$partKey] = 0; }
+			if (! isset($curated[$partKey])) { $curated[$partKey] = 0; }
 			$curated[$partKey] += $qty;
 //			if ($n>10000) { break; }
 		}
@@ -240,8 +240,10 @@ $email = 'davidglangley@gmail.com';
 		$consolidated = array();
 		foreach ($curated as $partKey => $qty) {
 			$keys = explode('.',$partKey);
-			$part = $keys[0];
-			$heci = $keys[1];
+			$part = '';
+			$heci = '';
+			if (isset($keys[0])) { $part = $keys[0]; }
+			if (isset($keys[1])) { $heci = $keys[1]; }
 
 			$partid = getPartId($part,$heci);
 
@@ -273,10 +275,12 @@ $email = 'davidglangley@gmail.com';
 
 			// once complete with items added, and if uploaded to replace all previous inventory,
 			// set all current inventory as 'expired'
+/*
 			if ($r['replace_inventory']=='T') {
 				$query2 = "UPDATE market SET expired = 'T' WHERE companyid = '".res($companyid)."' AND source <> '".$r['uploadid']."'; ";
 				$result2 = qdb($query2);
 			}
+*/
 
 			// create temp file name in temp directory
 			$attachment = sys_get_temp_dir()."/inv-report-".date("ymdHis").".csv";
@@ -285,12 +289,14 @@ $email = 'davidglangley@gmail.com';
 			fwrite($handle, $report);
 			fclose($handle);
 
+/*
 			$email = getUser($r['userid'],'id','email');
 			$mail_msg = 'Please see attached'.chr(10).chr(10).chr(10).chr(10);
 			if (! $test) {
 $email = 'davidglangley@gmail.com';
 //				mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
 			}
+*/
 
 			$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($r['uploadid'])."' LIMIT 1; ";
 			if (! $test) { $result2 = qdb($query2); }

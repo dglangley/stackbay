@@ -114,11 +114,9 @@
 
 	<?php include_once 'modal/results.php'; ?>
 	<?php include_once 'modal/notes.php'; ?>
-	<?php include_once 'inc/navbar.php'; ?>
 	<?php include_once 'inc/keywords.php'; ?>
 	<?php include_once 'inc/dictionary.php'; ?>
 	<?php include_once 'inc/logSearch.php'; ?>
-	<?php include_once 'inc/format_price.php'; ?>
 	<?php include_once 'inc/format_price.php'; ?>
 	<?php require('vendor/autoload.php'); ?>
 
@@ -150,11 +148,11 @@ die('file already is uploaded');
             } else {
 				if ($DEV_ENV) {
 					$temp_dir = sys_get_temp_dir();
-					$temp_file = $temp_dir.preg_replace('/[^[:alnum:]]+/','-',$_FILES['invfile']['name']);
+					$temp_file = $temp_dir.'/'.preg_replace('/[^[:alnum:].]+/','-',$_FILES['invfile']['name']);
 
 					// store uploaded file in temp dir so we can use it later
 					if (move_uploaded_file($_FILES['invfile']['tmp_name'], $temp_file)) {
-						echo "File is valid, and was successfully uploaded.\n";
+//						echo "File is valid, and was successfully uploaded.\n";
 					} else {
 						die('file did not save');
 					}
@@ -182,10 +180,12 @@ die('died');
     }
 ?>
 
+	<?php include_once 'inc/navbar.php'; ?>
+
 	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
 
 <?php
-	if (! $s) {
+	if (! $s AND ! $invlistid) {
 ?>
     <div id="pad-wrapper">
 
@@ -198,7 +198,8 @@ die('died');
 	</table>
 <?php
 	} else {
-		$searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right);
+		$searchlistid = 0;
+		if ($s) { $searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right); }
 ?>
 	<input type="hidden" name="searchlistid" value="<?php echo $searchlistid; ?>">
     <table class="table table-header">
@@ -246,8 +247,26 @@ die('died');
 <?php
 //	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
 
-	$lines = explode(chr(10),$s);
+	$lines = array();
+	if ($invlistid) {
+		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($invlistid)."' AND parts.id = market.partid; ";
+		$result = qdb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$linestr = '';
+			if ($r['heci']) { $linestr = substr($r['heci'],0,7); }
+			else { $linestr = $r['part']; }
+			if (array_search($linestr,$lines)!==false) { continue; }
+
+			$lines[] = $linestr;
+		}
+	} else {
+		$lines = explode(chr(10),$s);
+	}
+
 	foreach ($lines as $n => $line) {
+		$line = trim($line);
+		if (! $line) { continue; }
+
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = trim($terms[$search_index]);
 		$search_qty = 1;//default
@@ -256,10 +275,43 @@ die('died');
 		}
 
 		$results = hecidb(format_part($search_str));
+
+		$k = 0;
+		// gather all partid's first
+		$partid_str = "";
+		$partids = "";//comma-separated for data-partids tag
+
+		$favs = array();
+		$num_favs = 0;
+
+		// pre-process results so that we can build a partid string for this group as well as to group results
+		// if the user is showing just favorites
+		foreach ($results as $partid => $P) {
+//			print "<pre>".print_r($P,true)."</pre>";
+//                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
+			if ($partid_str) { $partid_str .= "OR "; }
+			$partid_str .= "partid = '".$partid."' ";
+			if ($partids) { $partids .= ","; }
+			$partids .= $partid;
+
+			// check favorites
+			$favs[$partid] = 'star-o';
+			$query = "SELECT * FROM favorites WHERE partid = '".$partid."'; ";
+			$result = qdb($query);
+			$num_favs += mysqli_num_rows($result);
+			while ($r = mysqli_fetch_assoc($result)) {
+				if ($r['userid']==$userid) { $favs[$partid] = 'star text-danger'; }
+				else if ($favs[$partid]<>'star text-danger') { $favs[$partid] = 'star-half-o text-danger'; }
+			}
+		}
+
+		if ($favorites AND $num_favs==0) { continue; }
+
 		$num_results = count($results);
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
 ?>
+
                     <tbody>
                         <!-- row -->
                         <tr class="first">
@@ -300,42 +352,22 @@ die('died');
 								</div>
 							</td>
 						</tr>
-<?php
-		// gather all partid's first
-		$partid_str = "";
-		$partids = "";//comma-separated for data-partids tag
-		foreach ($results as $partid => $P) {
-			if ($partid_str) { $partid_str .= "OR "; }
-			$partid_str .= "partid = '".$partid."' ";
-			if ($partids) { $partids .= ","; }
-			$partids .= $partid;
-		}
 
-		$k = 0;
+<?php
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
 			$itemprice = "0.00";
-
-//			print "<pre>".print_r($P,true)."</pre>";
-//                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
-			// check favorites
-			$fav_flag = 'star-o';
-			$query = "SELECT * FROM favorites WHERE partid = '".$partid."'; ";
-			$result = qdb($query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['userid']==$userid) { $fav_flag = 'star text-danger'; }
-				else if ($fav_flag<>'star text-danger') { $fav_flag = 'star-half-o text-danger'; }
-			}
+			$fav_flag = $favs[$partid];
 
 			$chkd = '';
 			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
 ?>
                         <!-- row -->
-                        <tr class="product-results">
+                        <tr class="product-results" id="row-<?php echo $partid; ?>">
                             <td class="descr-row">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items[<?php echo $n; ?>][]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
-                                    <i class="fa fa-<?php echo $fav_flag; ?> fa-lg"></i>
+                                    <a href="#" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
 								</div>
 								<div class="qty">
 									<div class="form-group">

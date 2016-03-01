@@ -273,6 +273,32 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 2
 	    });
+	    $(".lists-selector").select2({
+	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+	            url: "/json/lists.php",
+	            dataType: 'json',
+				/*delay: 250,*/
+	            data: function (params) {
+	                return {
+	                    q: params.term,//search term
+						page: params.page
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+	        },
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+	        minimumInputLength: 0
+		});
 
 		$(".advanced-search").click(function() {
 			$("#advanced-search-options").toggleClass('hidden');
@@ -293,6 +319,28 @@
 		});
 		$("#s").change(function() {
 				$("#s2").val("");
+		});
+
+		$(".btn-favorites").click(function() {
+			if ($(this).hasClass('btn-default')) {
+				$(this).removeClass('btn-default').addClass('btn-danger');
+				$("#favorites").attr('checked',true);
+			} else {
+				$(this).removeClass('btn-danger').addClass('btn-default');
+				$("#favorites").attr('checked',false);
+			}
+		});
+		$(".fav-icon").click(function() {
+			var partid = $(this).data('partid');
+			if ($(this).hasClass('fa-star-half-o')) {
+				$('#modalAlertTitle').html("Favorites Alert");
+				$('#modalAlertBody').html("You are removing this from someone else's favorites! Do you really want to proceed?");
+	        	$('#modal-alert').modal('toggle');
+				$('#alert-continue').data('callback','toggleFav');
+				$('#alert-continue').data('element',$(this).data('partid'));
+			} else {
+				toggleFav($(this).data('partid'));
+			}
 		});
 	
 	    $('#dp1').datepicker().on('changeDate', function(ev){
@@ -332,7 +380,8 @@
 			event.preventDefault();
 		});
 		$('#alert-continue').click(function() {
-			$(this).data('form').submit();
+			if ($(this).data('form')!='') { $(this).data('form').submit(); }
+			else if ($(this).data('callback')!='') { window[$(this).data('callback')]($(this).data('element')); }
 		});
 		$(".qty input[type='text']").click(function() {
 			$(this).select();
@@ -345,6 +394,33 @@
     });/* close $(document).ready */
 
 
+	function toggleFav(partid) {
+        console.log(window.location.origin+"/json/favorites.php?partid="+partid);
+        $.ajax({
+            url: 'json/favorites.php',
+            type: 'get',
+            data: {'partid': partid},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.message=='Success') {
+					// change favorites icon
+					if (json.favorite==1) {
+						$("#row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star-o text-danger').addClass('fa-star text-danger');
+					} else {
+						$("#row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star text-danger').addClass('fa-star-o');
+					}
+				} else {
+					alert(json.message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
+
+		return;
+	}
     function addDateGroup(dateKey,qtyTotal,doneFlag) {
         var groupStr = '<div class="date-group"><a href="#" class="modal-results">'+
             dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';

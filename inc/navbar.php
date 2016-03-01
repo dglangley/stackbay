@@ -36,6 +36,18 @@
     if (isset($_REQUEST['startDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['startDate'])) { $startDate = $_REQUEST['startDate']; }
     $endDate = format_date($today,'m-d-Y');
     if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
+
+	$favorites = 0;
+	if (isset($_REQUEST['favorites'])) { $favorites = 1; }
+	$invlistid = 0;
+	if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
+		// validate id in uploads table
+		$query = "SELECT * FROM uploads WHERE id = '".res($_REQUEST['invlistid'])."'; ";
+		$result = qdb($query);
+		if (mysqli_num_rows($result)==1) {
+			$invlistid = $_REQUEST['invlistid'];
+		}
+	}
 ?>
 
 	<form class="form-inline search-form" method="post" action="/" enctype="multipart/form-data" >
@@ -148,15 +160,15 @@
 	                <a href="javascript:void(0);" class="btn btn-default btn-sm" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="endDateLabel"><?php echo $endDate; ?></span></a>
 	                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
 				</div>
-				<div class="text-center">
+				<div class="text-center lists-manager">
 					<p>
-						List Upload:
+						Lists Manager:
 					</p>
 					<div class="form-group">
 						<input type="text" name="list_name" class="input-xs form-control" value="" size="14" placeholder="Name (optional)" />
 					</div>
 					<div class="form-group">
-						<label for="inventory-file" id="invfile-label"><a class="btn btn-default btn-xs">Select .xls/.xlsx/.csv/.txt</a></label>
+						<label for="inventory-file" id="invfile-label"><a class="btn btn-default btn-xs">Upload .xls/.xlsx/.csv/.txt</a></label>
 						<input name="invfile" type="file" id="inventory-file" class="file-upload">
 					</div>
 					<p>
@@ -165,7 +177,14 @@
 						</select>
 					</p>
 					<p>
-						<button type="submit" class="btn btn-primary btn-sm">Upload</button>
+						<button type="submit" class="btn btn-primary btn-sm">Save</button>
+					</p>
+				</div>
+				<div class="text-center">
+					<p>
+						<select name="invlistid" id="invlistid" class="lists-selector">
+							<option value="">- Select a List -</option>
+						</select>
 					</p>
 				</div>
 			</div>
@@ -203,10 +222,28 @@
 						</div>
 					</div>
 				</div>
-				<br/>
-				<p><label><input type="radio">ERB3 qty2 &nbsp; T3PQAE7</label></p>
-				<p><label><input type="radio">qty2- ERB3 &nbsp; T3PQAE7</label></p>
-				<p><label><input type="radio">ERB3 &nbsp; T3PQAE7 &nbsp; qty2</label></p>
+				<div class="row">
+					<div class="col-sm-12">
+						<p><label><input type="radio">ERB3 qty2 &nbsp; T3PQAE7</label></p>
+						<p><label><input type="radio">qty2- ERB3 &nbsp; T3PQAE7</label></p>
+						<p><label><input type="radio">ERB3 &nbsp; T3PQAE7 &nbsp; qty2</label></p>
+					</div>
+				</div>
+				<hr>
+				<div class="row">
+					<div class="col-sm-6">
+						<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
+						<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
+					</div>
+					<div class="col-sm-6">
+						<div class="form-group">
+		                  	<input type="text" name="value_min" value="" class="form-control input-xs" size="6" placeholder="min price">
+						</div>
+						<div class="form-group">
+		                  	<input type="text" name="value_max" value="" class="form-control input-xs" size="6" placeholder="max price">
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

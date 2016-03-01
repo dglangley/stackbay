@@ -5,6 +5,7 @@
 	function res($str) { return (mysqli_real_escape_string($GLOBALS['WLI'],$str)); }
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir) OR ! $root_dir) { $root_dir = '/var/www/html'; }
+	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
 	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('could not connect to host'.chr(10)); }
 
@@ -38,6 +39,7 @@
 	$DEV_ENV = false;
 	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
 $DEV_ENV = true;
+$userid = 1;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");

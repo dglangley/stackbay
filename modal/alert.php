@@ -8,7 +8,7 @@
       <div class="modal-body" id="modalAlertBody"></div>
       <div class="modal-footer text-center">
    		<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancel</button>
-   		<button type="button" class="btn btn-primary btn-sm" id="alert-continue" data-dismiss="modal" data-form="">Continue</button>
+   		<button type="button" class="btn btn-primary btn-sm" id="alert-continue" data-dismiss="modal" data-form="" data-callback="" data-element="">Continue</button>
 	  </div>
 	</div>
   </div>
