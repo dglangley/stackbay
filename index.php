@@ -16,7 +16,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(request_qty) qty, AVG(request_qty*quote_price) price FROM demand, search_meta";
+				$query2 = "SELECT datetime, SUM(request_qty) qty, AVG(request_qty*quote_price) price FROM demand, search_meta ";
 				$query2 .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -28,7 +28,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM purchase_items, purchase_orders";
+				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM purchase_items, purchase_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -41,7 +41,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM sales_items, sales_orders";
+				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM sales_items, sales_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -68,7 +68,7 @@
 			$market_str = format_dateTitle($order_date,$dated_qty).$market_str;
 		}
 
-		$result = qdb($query2);
+		$result = qdb($query2) OR die(qe().' '.$query2);
 		$num_summaries = mysqli_num_rows($result);
 		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -316,10 +316,10 @@ die('died');
                         <!-- row -->
                         <tr class="first">
                             <td>
-								<div class="product-action">
+								<div class="product-action text-center">
 	                                <div><input type="checkbox" class="checkAll" checked></div>
-					          		<i class="fa fa-star-o fa-lg"></i> 
-					           		<a href="#" class="parts-edit"><i class="fa fa-pencil fa-lg"></i></a>
+					           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
+					           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
 								</div>
 								<div class="qty">
 									<input type="text" name="search_qtys[<?php echo $n; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
@@ -367,7 +367,7 @@ die('died');
                             <td class="descr-row">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items[<?php echo $n; ?>][]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
-                                    <a href="#" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
+                                    <a href="javascript:void(0);" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
 								</div>
 								<div class="qty">
 									<div class="form-group">
@@ -440,7 +440,7 @@ die('died');
 											<?php echo $purchases_col; ?>
 										</td>
 										<td class="col-sm-3 bg-availability">
-											<a href="#" class="market-title">Availability</a>
+											<a href="javascript:void(0);" class="market-title">Availability</a>
 											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $n; ?>"></div>
 										</td>
 									</tr>

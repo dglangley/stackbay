@@ -38,7 +38,7 @@
 	}
 
 	$query = "UPDATE parts SET ".$field." = '".$new_value."' WHERE id = '".$partid."' LIMIT 1; ";
-	$result = qdb($query) OR repotError(qe().' '.$query);
+	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	// update keywords index for this part
 	indexer($partid,'id');

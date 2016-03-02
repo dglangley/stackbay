@@ -72,6 +72,15 @@
 				});
 			});
 		});
+		$(".parts-merge").click(function() {
+			var tbody = $(this).closest("tbody");
+			var checked_rows = tbody.find(".item-check:checked").length;
+			if (checked_rows!=2) {
+				modalAlertShow("Parts Merge Alert","You can merge two and only two items at a time!",false);
+				return;
+			}
+			modalAlertShow("Merging Parts is Permanent","You cannot undo this action! This action will also reload your current page. Do you really want to proceed?",true,'mergeParts',tbody.find(".item-check:checked"));
+		});
 		$(".parts-edit").click(function() {
 			var tbody = $(this).closest("tbody");
 			var partid;
@@ -333,11 +342,7 @@
 		$(".fav-icon").click(function() {
 			var partid = $(this).data('partid');
 			if ($(this).hasClass('fa-star-half-o')) {
-				$('#modalAlertTitle').html("Favorites Alert");
-				$('#modalAlertBody').html("You are removing this from someone else's favorites! Do you really want to proceed?");
-	        	$('#modal-alert').modal('toggle');
-				$('#alert-continue').data('callback','toggleFav');
-				$('#alert-continue').data('element',$(this).data('partid'));
+				modalAlertShow("Favorites Alert","You are removing this from someone else's favorites! Do you really want to proceed?",true,'toggleFav',$(this).data('partid'));
 			} else {
 				toggleFav($(this).data('partid'));
 			}
@@ -369,10 +374,8 @@
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
 			if (! cid) {
-				$('#modalAlertTitle').html('No Company Selected!');
-				$('#modalAlertBody').html('Your data will not be saved without a company selected! Do you really want to proceed?');
-		        $('#modal-alert').modal('toggle');
 				$('#alert-continue').data('form',$(this));
+				modalAlertShow("Company Alert","Your data will not be saved without a company selected! Do you really want to proceed?",true);
 			} else {
 				$(this).data('form').submit();
 			}
@@ -394,6 +397,41 @@
     });/* close $(document).ready */
 
 
+	function mergeParts(rows) {
+		var partids = [];
+		rows.each(function() {
+			partids.push($(this).val());
+		});
+        console.log(window.location.origin+"/json/merge-parts.php?partids="+partids);
+        $.ajax({
+            url: 'json/merge-parts.php',
+            type: 'get',
+            data: {'partids': partids},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.message=='Success') {
+					location.reload();
+				} else {
+					alert(json.message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
+	}
+	function modalAlertShow(header,body,show_continue,callback,arg1) {
+		$('#modalAlertTitle').html(header);
+		$('#modalAlertBody').html(body);
+		if (show_continue===true) { $('#alert-continue').removeClass('hidden'); }
+		else { $('#alert-continue').removeClass('hidden').addClass('hidden'); }
+		if (! callback) { var callback = ''; }
+		$('#alert-continue').data('callback',callback);
+		if (! arg1) { var arg1 = ''; }
+		$('#alert-continue').data('element',arg1);
+       	$('#modal-alert').modal('toggle');
+	}
 	function toggleFav(partid) {
         console.log(window.location.origin+"/json/favorites.php?partid="+partid);
         $.ajax({

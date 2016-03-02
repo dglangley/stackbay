@@ -61,6 +61,8 @@
 			// for each remote as keyed by $pos, find its most recent scan time
 			for ($i=0; $i<strlen($r['scan']); $i++) {
 				if (! isset($SEARCHES[$search][$i]) OR ! $SEARCHES[$search][$i]) { $SEARCHES[$search][$i] = ''; }
+				if (! isset($def[$pos[$i]])) { $def[$pos[$i]] = false; }
+
 				if (substr($r['scan'],$i,1)==1) {//scanned recently already
 					if (! $SEARCHES[$search][$i]) { $SEARCHES[$search][$i] = $r['datetime']; }
 					if ($expired_time===false) {
