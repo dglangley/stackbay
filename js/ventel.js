@@ -286,11 +286,15 @@
 */
 					};
 				},
+				allowClear: true,
 				cache: true
 	        },
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 2
 	    });
+		$(".accounts-body #companyid").change(function() {
+			$(this).closest("form").submit();
+		});
 	    $(".lists-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/lists.php",
