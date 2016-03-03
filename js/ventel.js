@@ -1,5 +1,5 @@
     $(document).ready(function() {
-		$("#s").select();
+		if ($("#s:focus") && $("#accounts-search").length==0) { $("#s").select(); }
 
 		// adjust height dynamically to size of the rows within section
 		$(".market-table").each(function() {
@@ -17,11 +17,17 @@
         $("body").on('click','a.modal-results',function() {
             $('#myModal').modal('toggle');
         });
-        $("body").on('focus','input.price-control',function() {
-			toggleNotes($(this));
-		});
-        $("body").on('click','input.price-control',function() {
-			$(this).select();
+		/* toggle notes on input focus and blur */
+        $("input.price-control").each(function() {
+			$(this).click(function() {
+				toggleNotes($(this));
+
+				$(this).focusout(function() {
+					setTimeout("closeNotes()",100);
+				});
+
+				$(this).select();
+			});
 		});
 		// close notes when switching to a diff input text field
         $('input[type="text"]').focus(function() {
@@ -157,10 +163,13 @@
 			if (e.keyCode == 13) {
 				e.preventDefault();
 				$(this).blur();
+				$(this).closest(".descr-edit").toggleClass('hidden');
+				$(this).closest(".product-descr").find(".descr-label").toggleClass('hidden');
 			}
 		});
 		$(".descr-edit input").change(function() {
             console.log(window.location.origin+"/json/save-parts.php?partid="+$(this).data('partid')+"&field="+$(this).data('field')+"&new_value="+encodeURIComponent($(this).val()));
+			$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).val());
             $.ajax({
                 url: 'json/save-parts.php',
                 type: 'get',
@@ -468,6 +477,11 @@
         groupStr += '</div>';
         return (groupStr);
     }
+	function closeNotes() {
+		if ($("#modalNotes").has(document.activeElement).length == 0) {
+			$("#modalNotes").fadeOut(100);
+		}
+	}
 	function toggleNotes(e) {
 		var notes = $("#modalNotes");
 //           notes.modal('toggle');

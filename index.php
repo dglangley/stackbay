@@ -16,7 +16,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(request_qty) qty, AVG(request_qty*quote_price) price FROM demand, search_meta ";
+				$query2 = "SELECT datetime, SUM(request_qty) qty, ((SUM(request_qty)*quote_price)/SUM(request_qty)) price FROM demand, search_meta ";
 				$query2 .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -28,7 +28,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM purchase_items, purchase_orders ";
+				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM purchase_items, purchase_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -41,7 +41,7 @@
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-				$query2 = "SELECT datetime, SUM(qty) qty, AVG(qty*price) price FROM sales_items, sales_orders ";
+				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM sales_items, sales_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
@@ -72,7 +72,7 @@
 		$num_summaries = mysqli_num_rows($result);
 		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 		while ($r = mysqli_fetch_assoc($result)) {
-			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'x</span> &nbsp; '.format_date($r['datetime'],"M 'y").' '.$r['price'].'</div>';
+			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'x</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
 		}
 
 		if ($market_str) {
@@ -90,11 +90,14 @@
 	function format_dateTitle($order_date,$dated_qty) {
 		global $today,$yesterday;
 
+/*
 		if ($order_date==$today) { $date = 'Today'; }
 		else if ($order_date==$yesterday) { $date = 'Yesterday'; }
 		else if ($order_date>$lastWeek) { $date = format_date($order_date,'D'); }
 		else if ($order_date>=$lastYear) { $date = format_date($order_date,'M j'); }
 		else { $date = format_date($order_date,'M j, y'); }
+*/
+		$date = summarize_date($order_date);
 
 		$dtitle = '<div class="date-group"><a href="#" class="modal-results">'.$date.': '.
 			$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
@@ -118,6 +121,7 @@
 	<?php include_once 'inc/dictionary.php'; ?>
 	<?php include_once 'inc/logSearch.php'; ?>
 	<?php include_once 'inc/format_price.php'; ?>
+	<?php include_once 'inc/getQty.php'; ?>
 	<?php require('vendor/autoload.php'); ?>
 
 <?php
@@ -263,6 +267,7 @@ die('died');
 		$lines = explode(chr(10),$s);
 	}
 
+	$ln = 0;
 	foreach ($lines as $n => $line) {
 		$line = trim($line);
 		if (! $line) { continue; }
@@ -322,11 +327,11 @@ die('died');
 					           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
 								</div>
 								<div class="qty">
-									<input type="text" name="search_qtys[<?php echo $n; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
-									<span class="info">search qty</span>
+									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
+									<span class="info">their qty</span>
 								</div>
 								<div class="product-descr">
-									<input type="text" name="searches[<?php echo $n; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
+									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
 								</div>
 							</td>
@@ -340,14 +345,9 @@ die('died');
 							</td>
                             <td class="text-right">
 								<div class="price">
-									<div class="form-group">
-										<div class="input-group buy">
-											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
-											</span>
-											<input name="buyprice[<?php echo $n; ?>]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
-										</div>
-										<span class="info">target price</span>
+									<div class="form-group target">
+										<input name="buyprice[<?php echo $ln; ?>]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control input-primary" />
+										<span class="info">their price</span>
 									</div>
 								</div>
 							</td>
@@ -355,7 +355,7 @@ die('died');
 
 <?php
 		foreach ($results as $partid => $P) {
-			$itemqty = 0;
+			$itemqty = getQty($partid);
 			$itemprice = "0.00";
 			$fav_flag = $favs[$partid];
 
@@ -366,12 +366,12 @@ die('died');
                         <tr class="product-results" id="row-<?php echo $partid; ?>">
                             <td class="descr-row">
 								<div class="product-action text-center">
-                                	<div><input type="checkbox" class="item-check" name="items[<?php echo $n; ?>][]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
+                                	<div><input type="checkbox" class="item-check" name="items[<?php echo $ln; ?>][]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
                                     <a href="javascript:void(0);" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
 								</div>
 								<div class="qty">
 									<div class="form-group">
-										<input name="sellqty[<?php echo $n; ?>][]" type="text" value="<?php echo $itemqty; ?>" size="2" placeholder="Qty" class="input-xs form-control" />
+										<input name="sellqty[<?php echo $ln; ?>][]" type="text" value="<?php echo $itemqty; ?>" size="2" placeholder="Qty" class="input-xs form-control" />
 									</div>
 								</div>
                                 <div class="product-img">
@@ -379,7 +379,7 @@ die('died');
                                 </div>
                                 <div class="product-descr" data-partid="<?php echo $partid; ?>">
 									<span class="descr-label"><span class="part-label"><?php echo $P['Part']; ?></span> &nbsp; <span class="heci-label"><?php echo $P['HECI']; ?></span></span>
-                                   	<div class="description descr-label"><span class="manf-label"><?php echo dictionary($P['manf']); ?></span> <?php echo dictionary($P['system']); ?></span> <span class="description-label"><?php echo dictionary($P['description']); ?></span></div>
+                                   	<div class="description descr-label"><span class="manfid-label"><?php echo dictionary($P['manf']); ?></span> <span class="systemid-label"><?php echo dictionary($P['system']); ?></span> <span class="description-label"><?php echo dictionary($P['description']); ?></span></div>
 
 									<div class="descr-edit hidden">
 										<p>
@@ -414,7 +414,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input type="text" name="sellprice[<?php echo $n; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="Sell" class="input-xs form-control price-control sell-price" />
+											<input type="text" name="sellprice[<?php echo $ln; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="Sell" class="input-xs form-control price-control sell-price" />
 										</div>
 									</div>
 								</div>
@@ -441,7 +441,7 @@ die('died');
 										</td>
 										<td class="col-sm-3 bg-availability">
 											<a href="javascript:void(0);" class="market-title">Availability</a>
-											<div class="market-results" id="<?php echo $n.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $n; ?>"></div>
+											<div class="market-results" id="<?php echo $ln.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $ln; ?>"></div>
 										</td>
 									</tr>
 								</table>
@@ -451,17 +451,15 @@ die('died');
 
 			$k++;
 ?>
-                            <td class="product-actions">
+                            <td class="product-actions text-right">
 								<div class="price">
 									<div class="form-group">
-<!--
 										<div class="input-group buy">
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input name="buyprice[<?php echo $n; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+											<input name="buyprice[<?php echo $ln; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
--->
 									</div>
 								</div>
                             </td>
@@ -476,6 +474,7 @@ die('died');
                         </tr>
                     </tbody>
 <?php
+		$ln++;
 	}
 ?>
                 </table>

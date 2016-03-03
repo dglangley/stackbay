@@ -42,10 +42,6 @@
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 
-	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
-	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
-	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
-
 	$matches = array();
 	$partid_array = explode(",",$partids);
 	$partid_str = "";
@@ -251,11 +247,7 @@ $query .= "AND companies.id <> '1118' ";
 			$newRows[] = $row;
 		}
 
-		if ($rDate==$today) { $rDate = 'Today'; }
-		else if ($rDate==$yesterday) { $rDate = 'Yesterday'; }
-		else if ($rDate>$lastWeek) { $rDate = format_date($rDate,'D'); }
-		else if ($rDate>=$lastYear) { $rDate = format_date($rDate,'M j'); }
-		else { $rDate = format_date($rDate,'M j, y'); }
+		$rDate = summarize_date($rDate);
 
 		$newResults['results'][$rDate] = $newRows;
 		$n++;
