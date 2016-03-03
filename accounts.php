@@ -8,7 +8,10 @@
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = $_REQUEST['companyid']; }
 	$report_type = 'summary';
-	if (isset($_REQUEST['report_type']) AND $_REQUEST['report_type']=='detail') { $report_type = 'detail'; }
+	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
+	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
+
+	setcookie('report_type',$report_type);
 ?>
 <!DOCTYPE html>
 <html>
@@ -47,7 +50,7 @@
     <div id="pad-wrapper">
 
             <!-- orders table -->
-            <div class="table-wrapper orders-table">
+            <div class="table-wrapper">
 <?php if ($companyid) { ?>
                 <div class="row head text-center">
                     <div class="col-md-12">
@@ -74,32 +77,50 @@
                     </div>
                 </div>
 
+<?php
+	// format col widths based on content (company column, items detail, etc)
+	if ($companyid) {
+		if ($report_type=='summary') {
+			$widths = array(3,3,2,2,2);
+		} else {
+			$widths = array(2,2,5,2,1);
+		}
+	} else {
+		if ($report_type=='summary') {
+			$widths = array(2,4,2,1,2,1);
+		} else {
+			$widths = array(2,3,1,4,1,1);
+		}
+	}
+	$c = 0;
+?>
+
                 <div class="row">
-                    <table class="table table-hover table-striped">
+                    <table class="table table-hover table-striped table-condensed">
                         <thead>
                             <tr>
-                                <th class="col-md-2">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     Date
                                 </th>
 <?php if (! $companyid) { ?>
-                                <th class="col-md-4">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Company
                                 </th>
 <?php } ?>
-                                <th class="col-md-2">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Order#
                                 </th>
-                                <th class="col-md-2">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Items
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Total amount
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Status
                                 </th>
@@ -128,12 +149,13 @@
 		$query2 = "SELECT qty, price, partid FROM sales_items WHERE sales_orderid = '".$r['id']."'; ";
 		$result2 = qdb($query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$amt += $r2['qty']*$r2['price'];
+			$this_amt = $r2['qty']*$r2['price'];
+			$amt += $this_amt;
 			$num_items += $r2['qty'];
 
 			if ($report_type=='detail') {
 				$descr = getPart($r2['partid'],'part').' &nbsp; '.getPart($r2['partid'],'heci');
-				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'amt'=>$amt,'status'=>'<span class="label label-success">Completed</span>');
+				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			}
 		}
 
