@@ -149,15 +149,28 @@
     </header>
     <!-- end navbar -->
 
+<?php
+	// verizon morning bid
+	if ($now>=$date." 07:33:00" AND $now<=$date." 08:30:00") {
+		$expDate = date("m-d-Y 10:00:00");
+	} else if ($now>=$date." 09:33:00" AND $now<=$date." 10:30:00") {//vz afternoon bid
+		$expDate = date("m-d-Y 12:00:00");
+	} else if ($now>=$date." 13:33:00" AND $now<=$date." 14:30:00") {//vz evening bid
+		$expDate = format_date(date("m-d-Y"),"m-d-Y 07:00:00",array("d"=>1));
+	} else {
+		$expDate = format_date(date("m-d-Y"),"m-d-Y 17:00:00",array('d'=>7));
+	}
+?>
+
 	<div id="advanced-search-options" class="animated fadeInDown hidden">
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center">
 	                Date Range:<br/>
-	                <a href="javascript:void(0);" class="btn btn-default btn-sm" id="dp1" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>"><span id="startDateLabel"><?php echo $startDate; ?></span></a>
+	                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
 	                <input type="hidden" name="startDate" id="startDate" value="<?php echo $startDate; ?>">
 	                to
-	                <a href="javascript:void(0);" class="btn btn-default btn-sm" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="endDateLabel"><?php echo $endDate; ?></span></a>
+	                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
 	                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
 				</div>
 				<div class="text-center lists-manager">
@@ -165,26 +178,31 @@
 						Lists Manager:
 					</p>
 					<div class="form-group">
+<!--
 						<input type="text" name="list_name" class="input-xs form-control" value="" size="14" placeholder="Name (optional)" />
 					</div>
 					<div class="form-group">
 						<label for="inventory-file" id="invfile-label"><a class="btn btn-default btn-xs">Upload .xls/.xlsx/.csv/.txt</a></label>
+-->
+						<select name="invlistid" id="invlistid" class="lists-selector">
+							<option value="">- Upload or Select a List -</option>
+						</select>
 						<input name="invfile" type="file" id="inventory-file" class="file-upload">
 					</div>
-					<p>
+					<p class="upload-options animated fadeIn hidden">
 						<select name="inv-companyid" id="inv-companyid" class="company-selector">
 							<option value="">- Select a Company -</option>
 						</select>
 					</p>
-					<p>
-						<button type="submit" class="btn btn-primary btn-sm">Save</button>
+					<p class="upload-options animated fadeIn hidden">
+						<button type="submit" class="btn btn-success btn-sm">Sales Request</button>
+	                	<a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp3" data-date-format="mm-dd-yyyy" data-date="<?php echo $expDate; ?>"><span id="dp3Label"><?php echo $expDate; ?></span></a>
+	                	<input type="hidden" name="expDate" id="expDate" value="<?php echo $expDate; ?>">
+						<button type="submit" class="btn btn-warning btn-sm">Vendor List</button>
 					</p>
 				</div>
 				<div class="text-center">
 					<p>
-						<select name="invlistid" id="invlistid" class="lists-selector">
-							<option value="">- Select a List -</option>
-						</select>
 					</p>
 				</div>
 			</div>

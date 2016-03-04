@@ -83,13 +83,13 @@
 		if ($report_type=='summary') {
 			$widths = array(3,3,2,2,2);
 		} else {
-			$widths = array(2,2,5,2,1);
+			$widths = array(2,2,4,1,1,1,1);
 		}
 	} else {
 		if ($report_type=='summary') {
 			$widths = array(2,4,2,1,2,1);
 		} else {
-			$widths = array(2,3,1,4,1,1);
+			$widths = array(1,3,1,3,1,1,1,1);
 		}
 	}
 	$c = 0;
@@ -116,9 +116,19 @@
                                     <span class="line"></span>
                                     Items
                                 </th>
+<?php if ($report_type=='detail') { ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Total amount
+                                    Qty
+                                </th>
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Price (ea)
+                                </th>
+<?php } ?>
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Total Amount
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
@@ -153,9 +163,20 @@
 			$amt += $this_amt;
 			$num_items += $r2['qty'];
 
+			$qty_col = '
+                                <td>
+                                    '.$r2['qty'].'
+                                </td>
+			';
+			$price_col = '
+                                <td class="text-right">
+                                    '.format_price($r2['price']).'
+                                </td>
+			';
+
 			if ($report_type=='detail') {
 				$descr = getPart($r2['partid'],'part').' &nbsp; '.getPart($r2['partid'],'heci');
-				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			}
 		}
 
@@ -181,6 +202,8 @@
                                 <td>
                                     '.$r['detail'].'
                                 </td>
+								'.$r['qty_col'].'
+								'.$r['price_col'].'
                                 <td class="text-right">
                                     '.format_price($r['amt'],true,' ').'
                                 </td>

@@ -167,9 +167,13 @@
 				$(this).closest(".product-descr").find(".descr-label").toggleClass('hidden');
 			}
 		});
-		$(".descr-edit input").change(function() {
+		$(".descr-edit input, .descr-edit select").change(function() {
             console.log(window.location.origin+"/json/save-parts.php?partid="+$(this).data('partid')+"&field="+$(this).data('field')+"&new_value="+encodeURIComponent($(this).val()));
-			$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).val());
+			if ($(this).is("select")) {
+				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).select2('data')[0].text);
+			} else {
+				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).val());
+			}
             $.ajax({
                 url: 'json/save-parts.php',
                 type: 'get',
@@ -321,6 +325,14 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+		$(".lists-selector").change(function() {
+			if ($(this).val()=='upload') {
+				$("#inventory-file").click();
+				$(".upload-options").toggleClass('hidden');
+			} else {
+				//$(".upload-options").removeClass('hidden').addClass('hidden');
+			}
+		});
 
 		$(".advanced-search").click(function() {
 			$("#advanced-search-options").toggleClass('hidden');
@@ -360,7 +372,7 @@
 				toggleFav($(this).data('partid'));
 			}
 		});
-	
+/*	
 	    $('#dp1').datepicker().on('changeDate', function(ev){
 	        if (ev.date.valueOf() > endDate.valueOf()){
 	            $('#alert').show().find('strong').text('The start date can not be greater than the end date');
@@ -383,6 +395,20 @@
 	        }
 	        $('#dp2').datepicker('hide');
 	    });
+*/
+	    $('.datepicker-date').each(function() {
+			$(this).datepicker().on('changeDate', function(ev){
+		        if (ev.date.valueOf() > endDate.valueOf()) {
+		            $('#alert').show().find('strong').text('The start date can not be greater than the end date');
+		        } else {
+		            $('#alert').hide();
+		            startDate = new Date(ev.date);
+		            $(this).find("span:first").text($(this).data('date'));
+		            $($(this).data('target')).val($(this).data('date'));
+		        }
+		        $(this).datepicker('hide');
+			});
+	    });
 	
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
@@ -404,7 +430,9 @@
 		});
 
 		$("input#inventory-file").change(function() {
-			$("#invfile-label a").html($(this).val().replace("C:\\fakepath\\",""));
+			var invfile = $(this).val().replace("C:\\fakepath\\","");
+			$("#invlistid").html("<option value='"+invfile+"' selected>"+invfile+"</option>");
+			$("#invlistid").val(invfile).trigger('change');
 		});
 	
     });/* close $(document).ready */

@@ -9,7 +9,7 @@
 	$firsts = array();//exact match
 	$seconds = array();//similar match (wildcard ending)
 	$thirds = array();//all others
-	$lists = array();
+	$lists = array(array('id'=>'upload','text'=>' &nbsp; <i class="fa fa-upload"></i>  &nbsp; UPLOAD .XLS/.XLSX/.CSV/.TXT'));
 
 	$query = "SELECT name, filename, uploads.id FROM uploads, companies ";
 	$query .= "WHERE companies.id = uploads.companyid ";
