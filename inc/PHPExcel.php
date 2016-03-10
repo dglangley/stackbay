@@ -36,7 +36,7 @@
 									$qty = $columns[$qty_col];
 								}
 								if ($cell->getCoordinate()=='L'.$row_num) {
-									$heci = $columns[$heci_col];
+									$heci = preg_replace('/[^[:alnum:]]*/','',$columns[$heci_col]);
 									$part = $columns[$part_col];
 								}
 								if ($keeper_row===false) { $keepers[] = $row_num; }

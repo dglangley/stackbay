@@ -182,7 +182,7 @@
 						<select name="upload_listid" id="upload-listid" class="lists-selector">
 							<option value="">- Upload or Select a List -</option>
 						</select>
-						<button type="button" class="btn btn-default btn-sm btn-upload">Go</button>
+						<button type="button" class="btn btn-primary btn-sm btn-upload">GO</button>
 					</p>
 					<div class="upload-options animated fadeIn hidden">
 						<p>
