@@ -205,7 +205,7 @@
             var rowHtml = '';
             var qtyTotal = 0;
             var container = $(this);
-			var thisId = container.attr('id');
+			var thisId = container.prop('id');
 			var doneFlag = '';
 
             console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
@@ -246,7 +246,7 @@
 
                     if (! json.done && attempt==0) {
                         //setTimeout("$('#market-results').loadResults()",1000);
-						setTimeout("$('#"+container.attr('id')+"').loadResults("+(attempt+1)+")",1000);
+						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
                     }
                 },
                 error: function(xhr, desc, err) {
@@ -300,6 +300,7 @@
 			$(this).closest("form").submit();
 		});
 	    $(".lists-selector").select2({
+			placeholder: 'Upload or Select...',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/lists.php",
 	            dataType: 'json',
@@ -325,13 +326,52 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+//		$(".lists-selector").bind('change keypress',function(e) {
+//			if (e.keyCode && e.keyCode != 13) { return; }
 		$(".lists-selector").change(function() {
-			if ($(this).val()=='upload') {
-				$("#inventory-file").click();
-				$(".upload-options").toggleClass('hidden');
-			} else {
-				//$(".upload-options").removeClass('hidden').addClass('hidden');
+			$(this).bind('change',function(e) {
+				uploadFile($(this));
+			});
+		});
+		$("#upload-companyid").change(function() {
+			if (! $(this).val()) { return; }
+
+			if ($.cookie("upload_type."+$(this).val())) {
+				var cookie_val = $.cookie("upload_type."+$(this).val());
+				// set slider class and then invoke 'click' event to update radio buttons
+				if (cookie_val=='Avail') {
+					$("#upload-slider").removeClass("on").trigger('click');
+				} else {
+					$("#upload-slider").removeClass("on").addClass("on").trigger('click');
+				}
 			}
+		});
+/*
+		$(".upload-type").change(function() {
+			var utype = $(this).data('target');
+			$(".datetime-picker").each(function() {
+				$(this).removeClass('hidden');
+				if ($(this).id!=utype) {
+					$(this).addClass('hidden');
+				}
+			});
+		});
+*/
+		$('.slider-button').click(function() {
+			var buttonText = '';
+			if ($(this).hasClass("on")) {
+				$(this).closest(".slider-frame").removeClass("warning").addClass("success");
+				$(this).removeClass('on').html($(this).data("off-text"));   
+				buttonText = $(this).data("off-text");
+			} else {
+				$(this).closest(".slider-frame").removeClass("success").addClass("warning");
+				$(this).addClass('on').html($(this).data("on-text"));
+				buttonText = $(this).data("on-text");
+			}
+			$("input[name='upload_type']").each(function() {
+				if (buttonText==$(this).val()) { $(this).prop('checked',true); }
+				else { $(this).prop('checked',false); }
+			});
 		});
 
 		$(".advanced-search").click(function() {
@@ -358,10 +398,10 @@
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {
 				$(this).removeClass('btn-default').addClass('btn-danger');
-				$("#favorites").attr('checked',true);
+				$("#favorites").prop('checked',true);
 			} else {
 				$(this).removeClass('btn-danger').addClass('btn-default');
-				$("#favorites").attr('checked',false);
+				$("#favorites").prop('checked',false);
 			}
 		});
 		$(".fav-icon").click(function() {
@@ -372,30 +412,7 @@
 				toggleFav($(this).data('partid'));
 			}
 		});
-/*	
-	    $('#dp1').datepicker().on('changeDate', function(ev){
-	        if (ev.date.valueOf() > endDate.valueOf()){
-	            $('#alert').show().find('strong').text('The start date can not be greater than the end date');
-	        } else {
-	            $('#alert').hide();
-	            startDate = new Date(ev.date);
-	            $('#startDateLabel').text($('#dp1').data('date'));
-	            $('#startDate').val($('#dp1').data('date'));
-	        }
-	        $('#dp1').datepicker('hide');
-	    });
-	    $('#dp2').datepicker().on('changeDate', function(ev){
-	        if (ev.date.valueOf() < startDate.valueOf()){
-	            $('#alert').show().find('strong').text('The end date can not be less than the start date');
-	        } else {
-	            $('#alert').hide();
-	            endDate = new Date(ev.date);
-	            $('#endDateLabel').text($('#dp2').data('date'));
-	            $('#endDate').val($('#dp2').data('date'));
-	        }
-	        $('#dp2').datepicker('hide');
-	    });
-*/
+/*
 	    $('.datepicker-date').each(function() {
 			$(this).datepicker().on('changeDate', function(ev){
 		        if (ev.date.valueOf() > endDate.valueOf()) {
@@ -409,6 +426,31 @@
 		        $(this).datepicker('hide');
 			});
 	    });
+*/
+		$('.datetime-picker').each(function() {
+			$(this).datetimepicker({
+				/* use font awesome icons instead of glyphicons. because i said so. */
+				icons: {
+					time: 'fa fa-clock-o',
+					date: 'fa fa-calendar',
+					up: 'fa fa-chevron-up',
+					down: 'fa fa-chevron-down',
+					previous: 'fa fa-chevron-left',
+					next: 'fa fa-chevron-right',
+					today: 'fa fa-screenshot',
+					clear: 'fa fa-trash',
+					close: 'fa fa-close'
+				},
+			});
+		});
+		$(".btn-expdate").click(function() {
+			$("#exp-date").val($(this).data('date'));
+		});
+		$(".btn-upload").click(function() {
+			var form = $(this).closest("form");
+			form.prop('action','/upload.php');
+			form.submit();
+		});
 	
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
@@ -429,15 +471,42 @@
 			$(this).select();
 		});
 
-		$("input#inventory-file").change(function() {
-			var invfile = $(this).val().replace("C:\\fakepath\\","");
-			$("#invlistid").html("<option value='"+invfile+"' selected>"+invfile+"</option>");
-			$("#invlistid").val(invfile).trigger('change');
+		$("input#upload-file").change(function() {
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+			//$("#upload-listid").html("<option value='"+upload_file+"' selected>"+upload_file+"</option>");
+			//$("#upload-listid").val(upload_file).trigger('change');
+			var option = $('<option></option>').
+				prop('selected', true).
+				text(upload_file).
+				val(upload_file);
+				/* insert the option (which is already 'selected'!) into the select */
+				option.appendTo($("#upload-listid"));
+				/* Let select2 do whatever it likes with this */
+				$("#upload-listid").trigger('change');
 		});
 	
     });/* close $(document).ready */
 
+	function uploadFile(e) {
+		if (! e.val()) { return; }
 
+//		var dataArray = [];
+		var upload = false;
+		e.find("option:selected").each(function() {
+console.log($(this).val());
+			if ($(this).val()=='upload') {
+				upload = true;
+			} else {
+//				dataArray.push($(this));
+			}
+		});
+
+		e.val("");
+		if (upload===true) {
+			$("#upload-file").click();//show().focus().click().hide();
+			$(".upload-options").removeClass('hidden');
+		}
+	}
 	function mergeParts(rows) {
 		var partids = [];
 		rows.each(function() {

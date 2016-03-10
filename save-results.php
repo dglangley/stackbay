@@ -3,6 +3,7 @@
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_price.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPart.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getCompany.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
 
 //	print "<pre>".print_r($_REQUEST,true)."</pre>";
 	$submit_type = 'demand';
@@ -21,27 +22,8 @@
 	$display_str = '';
 	$display_html = '';
 
-	// save data to db if companyid is passed in
-	if ($companyid) {
-		$metaid = 0;
-		// have we already posted this page? replace instead of create
-		$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
-		$query .= "AND datetime LIKE '".$today."%' AND searchid = '".$searchlistid."'; ";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)==1) {
-			$r = mysqli_fetch_assoc($result);
-			$metaid = $r['id'];
-		}
+	$metaid = logSearchMeta($companyid,$searchlistid);
 
-		// save meta data
-		$query = "REPLACE search_meta (companyid, datetime, source, searchid";
-		if ($metaid) { $query .= ", id"; }
-		$query .= ") VALUES ('".$companyid."','".$now."','".$userid."','".$searchlistid."'";
-		if ($metaid) { $query .= ",'".$metaid."'"; }
-		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
-		if (! $metaid) { $metaid = qid(); }
-	}
 	// process items for output to screen, and save to db if $companyid
 	foreach ($items as $ln => $row) {
 		if (! is_numeric($ln)) { $ln = 0; }//default in case of corrupt data
@@ -64,7 +46,7 @@
 		$list_qty = 1;
 		if (isset($_REQUEST['search_qtys'][$ln]) AND is_numeric($_REQUEST['search_qtys'][$ln]) AND $_REQUEST['search_qtys'][$ln]>0) { $list_qty = trim($_REQUEST['search_qtys'][$ln]); }
 		$list_price = false;
-		if (isset($_REQUEST['buyprice'][$ln])) { $list_price = trim($_REQUEST['buyprice'][$ln]); }
+		if (isset($_REQUEST['list_price'][$ln])) { $list_price = trim($_REQUEST['list_price'][$ln]); }
 
 		$sellqty[$ln] = array();
 		if (isset($_REQUEST['sellqty'][$ln]) AND is_array($_REQUEST['sellqty'][$ln])) { $sellqty[$ln] = $_REQUEST['sellqty'][$ln]; }
@@ -83,40 +65,9 @@
 
 			// get id if already saved
 			if ($companyid) {
-				$itemid = 0;
-				$query = "SELECT id FROM ".$submit_type." WHERE partid = '".$partid."' AND metaid = '".$metaid."' AND line_number = '".$line_number."'; ";
-				$result = qdb($query);
-				if (mysqli_num_rows($result)==1) {
-					$r = mysqli_fetch_assoc($result);
-					$itemid = $r['id'];
-				}
-
-				if ($submit_type=='demand') {
-					$q1 = 'request_qty';
-					$p1 = 'request_price';
-					$q2 = 'quote_qty';
-					$p2 = 'quote_price';
-				} else if ($submit_type=='availability') {
-					$q1 = 'avail_qty';
-					$p1 = 'avail_price';
-					$q2 = 'offer_qty';
-					$p2 = 'offer_price';
-				}
-
 				// if user is recording demand, or if it's the first item of an availability, or if the user actually has a qty entered
 				if ($submit_type=='demand' OR ($n==0 OR $response_qty>0)) {
-					$query = "REPLACE ".$submit_type." (partid, ".$q1.", ".$p1.", ".$q2.", ".$p2.", metaid, searchid, line_number";
-					if ($itemid) { $query .= ", id"; }
-					$query .= ") VALUES ('".$partid."','".$list_qty."',";
-					if ($list_price) { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
-					if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
-					if ($response_qty>0 AND $response_price) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
-					$query .= "'".$metaid."',";
-					if ($searchid) { $query .= "'".$searchid."',"; } else { $query .= "NULL,"; }
-					$query .= "'".($ln+1)."'";//always save it incremented by one since it's initialized in array starting at 0
-					if ($itemid) { $query .= ",'".$itemid."'"; }
-					$query .= "); ";
-					$result = qdb($query) OR die(qe().' '.$query);
+					insertMarket($partid,$qty,$metaid,$submit_type,$searchid,$ln);
 				}
 			}
 

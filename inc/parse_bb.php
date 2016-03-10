@@ -84,7 +84,7 @@
 
 				//must return a variable so this function doesn't happen asynchronously
 				if ($return_type=='db') {
-					$added = insertMarket($partid,$qty,$companyid,$GLOBALS['now'],'BB');
+					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'BB');
 				}
 			}
 

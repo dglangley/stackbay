@@ -15,8 +15,12 @@
     <link rel="stylesheet" type="text/css" href="css/compiled/icons.css" />
     <link rel="stylesheet" type="text/css" href="css/compiled/animate.min.css" />
     <link rel="stylesheet" type="text/css" href="css/lib/select2.min.css" />
+<!--
 	<link href="css/lib/bootstrap.datepicker.css" rel="stylesheet" media="screen" />
+-->
+	<link href="css/lib/bootstrap-datetimepicker.min.css" rel="stylesheet" media="screen" />
 	<link rel="stylesheet" href="css/compiled/tables.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="css/compiled/ui-elements.css" type="text/css" media="screen" />
 <!--
     <link href="css/lib/jquery.dataTables.css" type="text/css" rel="stylesheet" />
 -->

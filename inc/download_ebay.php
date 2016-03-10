@@ -298,7 +298,7 @@
 					$uniques[$partkey] = true;
 
 //					echo 'Identifying '.$word.' = '.$r['partid'].' to be added...<BR>'.chr(10);
-					insertMarket($r['partid'],1,$GLOBALS['companyid'],$GLOBALS['today'],$itemid,$item['price']);
+					insertMarket2($r['partid'],1,$GLOBALS['companyid'],$GLOBALS['today'],$itemid,$item['price']);
 
 					$descr = $r['description'];
 					if ($r['systemid']) { $descr = getSys($r['systemid']).' '.$descr; }

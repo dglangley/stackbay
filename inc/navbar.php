@@ -151,14 +151,14 @@
 
 <?php
 	// verizon morning bid
-	if ($now>=$date." 07:33:00" AND $now<=$date." 08:30:00") {
-		$expDate = date("m-d-Y 10:00:00");
-	} else if ($now>=$date." 09:33:00" AND $now<=$date." 10:30:00") {//vz afternoon bid
-		$expDate = date("m-d-Y 12:00:00");
-	} else if ($now>=$date." 13:33:00" AND $now<=$date." 14:30:00") {//vz evening bid
-		$expDate = format_date(date("m-d-Y"),"m-d-Y 07:00:00",array("d"=>1));
+	if ($now>=$today." 07:33:00" AND $now<=$today." 08:30:00") {
+		$expDate = date("n/j/Y 10:00 A");
+	} else if ($now>=$today." 09:33:00" AND $now<=$today." 10:30:00") {//vz afternoon bid
+		$expDate = date("n/j/Y 12:00 A");
+	} else if ($now>=$today." 13:33:00" AND $now<=$today." 14:30:00") {//vz evening bid
+		$expDate = format_date(date("m-d-Y 07:00"),"n/j/Y g:i A",array("d"=>1));
 	} else {
-		$expDate = format_date(date("m-d-Y"),"m-d-Y 17:00:00",array('d'=>7));
+		$expDate = format_date(date("m-d-Y 17:00"),"n/j/Y g:i A",array('d'=>7));
 	}
 ?>
 
@@ -166,40 +166,59 @@
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center">
-	                Date Range:<br/>
-	                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
-	                <input type="hidden" name="startDate" id="startDate" value="<?php echo $startDate; ?>">
-	                to
-	                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
-	                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
+	                <p>Date Range:</p>
+					<p>
+		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
+		                <input type="hidden" name="startDate" id="startDate" value="<?php echo $startDate; ?>">
+		                to
+		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
+		                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
+					</p>
 				</div>
 				<div class="text-center lists-manager">
+					<p>Lists Manager:</p>
 					<p>
-						Lists Manager:
-					</p>
-					<div class="form-group">
-<!--
-						<input type="text" name="list_name" class="input-xs form-control" value="" size="14" placeholder="Name (optional)" />
-					</div>
-					<div class="form-group">
-						<label for="inventory-file" id="invfile-label"><a class="btn btn-default btn-xs">Upload .xls/.xlsx/.csv/.txt</a></label>
--->
-						<select name="invlistid" id="invlistid" class="lists-selector">
+						<input name="upload_file" type="file" id="upload-file" class="file-upload" />
+						<select name="upload_listid" id="upload-listid" class="lists-selector">
 							<option value="">- Upload or Select a List -</option>
 						</select>
-						<input name="invfile" type="file" id="inventory-file" class="file-upload">
+						<button type="button" class="btn btn-default btn-sm btn-upload">Go</button>
+					</p>
+					<div class="upload-options animated fadeIn hidden">
+						<p>
+							<div class="form-group" style="padding-right:8px">
+								<select name="upload_companyid" id="upload-companyid" class="company-selector">
+									<option value="">- Select a Company -</option>
+								</select>
+							</div>
+							<div class="form-group" style="padding-left:8px">
+								<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
+								<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
+								<div class="slider-frame success">
+									<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
+								</div>
+							</div>
+						</p>
 					</div>
-					<p class="upload-options animated fadeIn hidden">
-						<select name="inv-companyid" id="inv-companyid" class="company-selector">
-							<option value="">- Select a Company -</option>
-						</select>
-					</p>
-					<p class="upload-options animated fadeIn hidden">
-						<button type="submit" class="btn btn-success btn-sm">Sales Request</button>
-	                	<a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp3" data-date-format="mm-dd-yyyy" data-date="<?php echo $expDate; ?>"><span id="dp3Label"><?php echo $expDate; ?></span></a>
-	                	<input type="hidden" name="expDate" id="expDate" value="<?php echo $expDate; ?>">
-						<button type="submit" class="btn btn-warning btn-sm">Vendor List</button>
-					</p>
+					<div class="upload-options animated fadeIn hidden">
+						<div class="row">
+							<div class="col-sm-5">
+								<div class="btn-group">
+									<button class="left btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 10:00"),"m/d/Y g:i A"); ?>"><i class="fa fa-hourglass-1"></i></button>
+									<button class="middle btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 12:00"),"m/d/Y g:i A"); ?>"><i class="fa fa-hourglass-2"></i></button>
+									<button class="right btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 7:00"),"m/d/Y g:i A",array('d'=>1)); ?>"><i class="fa fa-hourglass-3"></i></button>
+								</div>
+							</div>
+							<div class="col-sm-7">
+				                <div class="input-group date datetime-picker">
+	   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
+	           		       			 <span class="input-group-addon">
+			       		                 <span class="fa fa-calendar"></span>
+	       					         </span>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="text-center">
 					<p>
@@ -213,31 +232,37 @@
 			<div class="col-sm-3 options-group text-left">
 				<div class="row">
 					<div class="col-sm-4 text-center">
-						Search:<br/>
-						<div class="form-group">
-		                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
-						</div>
-						<div class="form-group">
-		                   <label for="searchFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="search_from_right" id="searchFromRight" value="1"></label>
-						</div>
+						<p>Search:</p>
+						<p>
+							<div class="form-group">
+			                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
+							</div>
+							<div class="form-group">
+			                   <label for="searchFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="search_from_right" id="searchFromRight" value="1"></label>
+							</div>
+						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						Qty:<br/>
-						<div class="form-group">
-		                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
-						</div>
-						<div class="form-group">
-		                  	<label for="qtyFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="qty_from_right" id="qtyFromRight" value="1"></label>
-						</div>
+						<p>Qty:</p>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
+							</div>
+							<div class="form-group">
+			                  	<label for="qtyFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="qty_from_right" id="qtyFromRight" value="1"></label>
+							</div>
+						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						Price:<br/>
-						<div class="form-group">
-		                  	<input type="text" name="price_field" value="<?php echo $price_field; ?>" class="form-control input-xs" size="2">
-						</div>
-						<div class="form-group">
-		                  	<label for="priceFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="price_from_right" id="priceFromRight" value="1"></label>
-						</div>
+						<p>Price:</p>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="price_field" value="<?php echo $price_field; ?>" class="form-control input-xs" size="2">
+							</div>
+							<div class="form-group">
+			                  	<label for="priceFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="price_from_right" id="priceFromRight" value="1"></label>
+							</div>
+						</p>
 					</div>
 				</div>
 				<div class="row">

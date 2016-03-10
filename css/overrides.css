@@ -82,7 +82,7 @@
 #advanced-search-options .btn-submit {
 	position:absolute;
 	bottom:-1px;
-	right:14px;
+	right:-1px;
 }
 
 .source {
@@ -95,7 +95,7 @@
 	vertical-align:top;
 	padding:0px;
 }
-.table-products .table .product-img, .table-products .table .product-descr, .first .qty, .table .product-action {
+.table-products .table .product-img, .table-products .table .product-descr, .first .qty, .first .price, .table .product-action {
 	font-size:11px;
 	display:inline-block;
 }
@@ -277,11 +277,18 @@
 	border:0px;
 	min-height:400px;
 }
-#advanced-search-options div {
-	color:#fff;
+#advanced-search-options div p, #advanced-search-options .options-group label {
+	color:#fff !important;
 }
 #advanced-search-options div p input {
 	margin-right:8px;
+}
+#advanced-search-options div {
+	margin:0px;
+	padding:0px;
+}
+#advanced-search-options .options-group.text-left > div {
+	padding-left:12px;
 }
 #advanced-search-options .options-group > div {
 	margin-top:8px;
@@ -454,20 +461,28 @@ a.fa {
 }
 
 
+/*
 .datepicker {
 	z-index:2003;
 	margin-top:-120px;
+}
+*/
+.datetime-picker {
+	/*width:220px;*/
 }
 
 .file-upload {
 	width: 0.1px;
 	height: 0.1px;
-	opacity: 0;
 	overflow: hidden;
-	position: absolute;
+	opacity: 0;
 	z-index: -1;
+	position: absolute;
 }
 
 #remote-warnings img {
 	height:20px;
+}
+.slider-frame.warning {
+  background-color: #f0ad4e;
 }

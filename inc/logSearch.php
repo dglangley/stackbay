@@ -10,7 +10,7 @@
 		$userid = 1;
 		$listid = 0;
 
-		$query = "SELECT * FROM search_lists WHERE list_text = '".res(trim($search))."' ";
+		$query = "SELECT * FROM search_lists WHERE search_text = '".res(trim($search))."' ";
 		$query .= "AND userid = '".res($userid)."'; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)>0) {
@@ -18,7 +18,7 @@
 			$listid = $r['id'];
 		}
 
-		$query = "REPLACE search_lists (list_text, fields, datetime, userid";
+		$query = "REPLACE search_lists (search_text, fields, datetime, userid";
 		if ($listid) { $query .= ", id"; }
 		$query .= ") VALUES ('".res(trim($search))."','".res($fields)."','".res($GLOBALS['now'])."','".res($userid)."'";
 		if ($listid) { $query .= ",'".$listid."'"; }

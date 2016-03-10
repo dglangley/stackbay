@@ -61,7 +61,7 @@
 //				echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);
 				//must return a variable so this function doesn't happen asynchronously
 				if ($return_type=='db') {
-					$added = insertMarket($partid,$qty,$companyid,$GLOBALS['now'],'TE');
+					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'TE');
 				}
 			}
 		}

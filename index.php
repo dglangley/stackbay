@@ -2,6 +2,9 @@
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
 
+	$listid = 0;
+	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
+
 	$summary_date = format_date($today,'Y-m-01',array('m'=>-2));
 	function format_market($partid_str,$market_table) {
 		$last_date = '';
@@ -122,74 +125,13 @@
 	<?php include_once 'inc/logSearch.php'; ?>
 	<?php include_once 'inc/format_price.php'; ?>
 	<?php include_once 'inc/getQty.php'; ?>
-	<?php require('vendor/autoload.php'); ?>
-
-<?php
-    // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
-	if (! $DEV_ENV) {
-		$s3 = Aws\S3\S3Client::factory();
-		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
-	}
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['invfile']) && $_FILES['invfile']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['invfile']['tmp_name'])) {
-        try {
-			$cid = 0;
-			if (isset($_REQUEST['inv-companyid']) AND is_numeric($_REQUEST['inv-companyid'])) { $cid = $_REQUEST['inv-companyid']; }
-
-            // key the filename on aws using today's date, companyid and the filename
-            $filename = 'inv'.date("Ymd").'_'.$cid.'_'.$_FILES['invfile']['name'];
-
-            // check for file existing already
-			$keyExists = false;
-			if (! $DEV_ENV) {
-	            $s3->registerStreamWrapper();
-				$keyExists = file_exists("s3://".$bucket."/".$filename);
-			}
-
-            if ($keyExists) {//file has already been uploaded
-                $ALERT = array('code'=>14,'message'=>$E[14]['message']);
-die('file already is uploaded');
-            } else {
-				if ($DEV_ENV) {
-					$temp_dir = sys_get_temp_dir();
-					$temp_file = $temp_dir.'/'.preg_replace('/[^[:alnum:].]+/','-',$_FILES['invfile']['name']);
-
-					// store uploaded file in temp dir so we can use it later
-					if (move_uploaded_file($_FILES['invfile']['tmp_name'], $temp_file)) {
-//						echo "File is valid, and was successfully uploaded.\n";
-					} else {
-						die('file did not save');
-					}
-
-                	$query = "INSERT INTO uploads (filename, userid, companyid, datetime, processed, link) ";
-                	$query .= "VALUES ('".res($_FILES['invfile']['name'])."','1','".res($cid)."',";
-                	$query .= "'".res($GLOBALS['now'])."',NULL,'".htmlspecialchars($temp_file)."'); ";
-				} else {
-	                $upload = $s3->upload($bucket, $filename, fopen($_FILES['invfile']['tmp_name'], 'rb'), 'public-read');
-
-	                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, processed, link) ";
-	                $query .= "VALUES ('".res($_FILES['invfile']['name'])."','".res($U['id'])."','".res($cid)."',";
-	                $query .= "'".res($GLOBALS['now'])."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
-				}
-                $result = qdb($query) OR die(qe().' '.$query);
-
-/*
-                $ALERT = array('code'=>0,'message'=>'Success! Processing can take up to 20 mins...');
-*/
-            }
-        } catch(Exception $e) {
-//            $ALERT = array('code'=>18,'message'=>$E[18]['message']);
-die('died');
-        }
-    }
-?>
 
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
 
 <?php
-	if (! $s AND ! $invlistid) {
+	if (! $s AND ! $listid) {
 ?>
     <div id="pad-wrapper">
 
@@ -236,7 +178,7 @@ die('died');
                             <th class="col-md-5">
 								<span class="qty-header">Qty</span>
                                 Product Description
-								<span class="price-header">Sell</span>
+								<span class="price-header">Price</span>
                             </th>
                             <th class="col-md-6 text-center">
                                 <span class="line"></span>Market
@@ -252,16 +194,23 @@ die('died');
 //	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
 
 	$lines = array();
-	if ($invlistid) {
-		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($invlistid)."' AND parts.id = market.partid; ";
+	if ($listid) {
+//		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($listid)."' AND parts.id = market.partid; ";
+		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
+		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$linestr = '';
-			if ($r['heci']) { $linestr = substr($r['heci'],0,7); }
-			else { $linestr = $r['part']; }
-			if (array_search($linestr,$lines)!==false) { continue; }
+			$query2 = "SELECT part, heci FROM parts, ".$r['type']." ";
+			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid; ";
+			$result2 = qdb($query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$linestr = '';
+				if ($r2['heci']) { $linestr = substr($r2['heci'],0,7); }
+				else { $linestr = $r2['part']; }
+				if (array_search($linestr,$lines)!==false) { continue; }
 
-			$lines[] = $linestr;
+				$lines[] = $linestr;
+			}
 		}
 	} else {
 		$lines = explode(chr(10),$s);
@@ -331,7 +280,7 @@ die('died');
 									<span class="info">their qty</span>
 								</div>
 								<div class="product-descr">
-									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
+									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo preg_replace('/[^[:alnum:]]*/','',$search_str); ?>" class="product-search text-primary" /><br/>
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
 								</div>
 							</td>
@@ -346,7 +295,7 @@ die('died');
                             <td class="text-right">
 								<div class="price">
 									<div class="form-group target">
-										<input name="buyprice[<?php echo $ln; ?>]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control input-primary" />
+										<input name="list_price[<?php echo $ln; ?>]" type="text" value="0.00" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
 										<span class="info">their price</span>
 									</div>
 								</div>
@@ -414,7 +363,7 @@ die('died');
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
-											<input type="text" name="sellprice[<?php echo $ln; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="Sell" class="input-xs form-control price-control sell-price" />
+											<input type="text" name="sellprice[<?php echo $ln; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
 										</div>
 									</div>
 								</div>

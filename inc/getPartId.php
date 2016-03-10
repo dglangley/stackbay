@@ -5,19 +5,19 @@
 		$partid = 0;
 
 		$part = trim($part);
-		if (strlen($part)<=1) { return; }
+		if (strlen($part)<=1 AND ! $heci) { return; }
 		$heci = trim($heci);
 
 		$num_results = 0;
 		if ($heci AND strlen($heci)>=7 AND strlen($heci)<=10) {
 			$query = "SELECT id FROM parts WHERE heci LIKE '".res($heci)."%' ORDER BY ";
 			if (strlen($heci)==10) { $query .= "IF(heci='".res($heci)."',0,1), "; }
-			$query .= "IF(part LIKE '".res($part)."%',0,1), ";
+			if ($part) { $query .= "IF(part LIKE '".res($part)."%',0,1), "; }
 			$query .= "part, rel, heci; ";
 			$result = qdb($query) OR die(qe().' '.$query);
 			$num_results = mysqli_num_rows($result);
 		}
-		if ($num_results==0) {
+		if ($num_results==0 AND $part) {
 			// strip off non-alphanumerics
 			$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 
