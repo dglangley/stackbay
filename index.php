@@ -195,21 +195,23 @@
 
 	$lines = array();
 	if ($listid) {
+		$search_index = 0;
+		$qty_index = 0;
 //		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($listid)."' AND parts.id = market.partid; ";
 		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$query2 = "SELECT part, heci FROM parts, ".$r['type']." ";
-			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid; ";
+			if ($r['type']=='demand') { $table_qty = 'request_qty'; }
+			else { $table_qty = 'avail_qty'; }
+
+			$query2 = "SELECT search, '.$table_qty.' qty FROM parts, ".$r['type'].", searches ";
+			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
 			$result2 = qdb($query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$linestr = '';
-				if ($r2['heci']) { $linestr = substr($r2['heci'],0,7); }
-				else { $linestr = $r2['part']; }
-				if (array_search($linestr,$lines)!==false) { continue; }
+				if (array_search($r2['search'],$lines)!==false) { continue; }
 
-				$lines[] = $linestr;
+				$lines[] = $r2['search'].' '.$r2['qty'];
 			}
 		}
 	} else {

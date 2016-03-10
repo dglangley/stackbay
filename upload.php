@@ -50,32 +50,42 @@ die('file already is uploaded');
 				$upload_type = 'availability';
 				if (isset($_REQUEST['upload_type']) AND $_REQUEST['upload_type']=='Req') { $upload_type = 'demand'; }
 
-				$metaid = logSearchMeta($cid);
-
-				if ($DEV_ENV) {
-					$temp_dir = sys_get_temp_dir();
-					if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
-					$temp_file = $temp_dir.preg_replace('/[^[:alnum:].]+/','-',$_FILES['upload_file']['name']);
-
-					// store uploaded file in temp dir so we can use it later
-					if (move_uploaded_file($_FILES['upload_file']['tmp_name'], $temp_file)) {
-//						echo "File is valid, and was successfully uploaded.\n";
-					} else {
-						die('file did not save');
-					}
-
-                	$query = "INSERT INTO uploads (filename, userid, metaid, exp_datetime, type, processed, link) ";
-                	$query .= "VALUES ('".res($_FILES['upload_file']['name'])."','1','".$metaid."',";
-                	$query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($temp_file)."'); ";
+				// check for re-submission duplicate
+				$query = "SELECT uploads.id FROM uploads, search_meta ";
+				$query .= "WHERE filename = '".res($_FILES['upload_file']['name'])."' AND companyid = '".$cid."' ";
+				$query .= "AND datetime LIKE '".$today."%' AND uploads.metaid = search_meta.id; ";
+				$result = qdb($query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$upload_listid = $r['id'];
 				} else {
-	                $upload = $s3->upload($bucket, $filename, fopen($_FILES['upload_file']['tmp_name'], 'rb'), 'public-read');
+					$metaid = logSearchMeta($cid);
 
-	                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, exp_datetime, type, processed, link) ";
-	                $query .= "VALUES ('".res($_FILES['upload_file']['name'])."','".res($U['id'])."','".$metaid."',";
-	                $query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
+					if ($DEV_ENV) {
+						$temp_dir = sys_get_temp_dir();
+						if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
+						$temp_file = $temp_dir.preg_replace('/[^[:alnum:].]+/','-',$_FILES['upload_file']['name']);
+
+						// store uploaded file in temp dir so we can use it later
+						if (move_uploaded_file($_FILES['upload_file']['tmp_name'], $temp_file)) {
+//							echo "File is valid, and was successfully uploaded.\n";
+						} else {
+							die('file did not save');
+						}
+
+   		             	$query = "INSERT INTO uploads (filename, userid, metaid, exp_datetime, type, processed, link) ";
+   		             	$query .= "VALUES ('".res($_FILES['upload_file']['name'])."','1','".$metaid."',";
+   		             	$query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($temp_file)."'); ";
+					} else {
+		                $upload = $s3->upload($bucket, $filename, fopen($_FILES['upload_file']['tmp_name'], 'rb'), 'public-read');
+
+		                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, exp_datetime, type, processed, link) ";
+		                $query .= "VALUES ('".res($_FILES['upload_file']['name'])."','".res($U['id'])."','".$metaid."',";
+		                $query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
+					}
+					$result = qdb($query) OR die(qe().' '.$query);
+					$upload_listid = qid();
 				}
-                $result = qdb($query) OR die(qe().' '.$query);
-				$upload_listid = qid();
 
 				// process file now, if less than 500kb; otherwise, leave it to be scheduled
 				if ($_FILES['upload_file']['size']<500000) {

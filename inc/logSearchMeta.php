@@ -5,12 +5,14 @@
 
 		$metaid = 0;
 		// have we already posted this page? replace instead of create
-		$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
-		$query .= "AND datetime LIKE '".$today."%' AND searchlistid = '".$searchlistid."'; ";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)==1) {
-			$r = mysqli_fetch_assoc($result);
-			$metaid = $r['id'];
+		if ($searchlistid) {
+			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
+			$query .= "AND datetime LIKE '".$today."%' AND searchlistid = '".$searchlistid."'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)==1) {
+				$r = mysqli_fetch_assoc($result);
+				$metaid = $r['id'];
+			}
 		}
 
 		// save meta data

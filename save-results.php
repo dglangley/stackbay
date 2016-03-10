@@ -67,7 +67,7 @@
 			if ($companyid) {
 				// if user is recording demand, or if it's the first item of an availability, or if the user actually has a qty entered
 				if ($submit_type=='demand' OR ($n==0 OR $response_qty>0)) {
-					insertMarket($partid,$qty,$metaid,$submit_type,$searchid,$ln);
+					insertMarket($partid,$qty,false,false,false,$metaid,$submit_type,$searchid,$ln);
 				}
 			}
 

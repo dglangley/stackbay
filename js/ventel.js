@@ -328,7 +328,7 @@
 		});
 //		$(".lists-selector").bind('change keypress',function(e) {
 //			if (e.keyCode && e.keyCode != 13) { return; }
-		$(".lists-selector").change(function() {
+		$(".lists-selector").each(function() {
 			$(this).bind('change',function(e) {
 				uploadFile($(this));
 			});
@@ -493,7 +493,7 @@
 //		var dataArray = [];
 		var upload = false;
 		e.find("option:selected").each(function() {
-console.log($(this).val());
+//			console.log($(this).val());
 			if ($(this).val()=='upload') {
 				upload = true;
 			} else {
@@ -501,8 +501,8 @@ console.log($(this).val());
 			}
 		});
 
-		e.val("");
 		if (upload===true) {
+			e.val("");//reset selection
 			$("#upload-file").click();//show().focus().click().hide();
 			$(".upload-options").removeClass('hidden');
 		}

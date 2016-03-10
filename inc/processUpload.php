@@ -15,6 +15,17 @@
 //	require($_SERVER["DOCUMENT_ROOT"].'/vendor/autoload.php');
 
 	$test = 0;
+	if (! isset($userid)) { $userid = 1; }
+
+	// used for logging searches below, check once to get number of 0's to log
+	$num_remotes = 0;
+	$query = "SELECT id FROM remotes; ";
+	$result = qdb($query);
+	$num_remotes = mysqli_num_rows($result);
+	$remotes_log = '';
+	for ($i=0; $i<$num_remotes; $i++) {
+		$remotes_log .= '0';
+	}
 
 	function array_find($needle, $haystack) {
 		$f = false;
@@ -189,6 +200,8 @@ $email = 'davidglangley@gmail.com';
 		return ($curated);
 	}
 	function consolidatePartids($curated) {
+		global $userid,$now,$today,$remotes_log;
+
 		// further consolidate results by tapping the db for partid's, and keying on that id to get summed qtys
 		$consolidated = array();
 		foreach ($curated as $partKey => $qty) {
@@ -201,8 +214,26 @@ $email = 'davidglangley@gmail.com';
 			$partid = getPartId($part,$heci);
 			if (! $partid) { continue; }
 
-			if (! isset($consolidated[$partid])) { $consolidated[$partid] = 0; }
-			$consolidated[$partid] += $qty;
+			$searchkey = '';
+			if ($heci) { $searchkey = $heci; } else { $searchkey = $part; }
+			$searchkey = preg_replace('/[^[:alnum:]]*/','',$searchkey);
+
+			// create search string log but without hitting the remotes
+			$query2 = "SELECT id FROM searches WHERE search = '".$searchkey."' AND userid = '".$userid."' ";
+			$query2 .= "AND datetime LIKE '".$today."%' AND scan = '".$remotes_log."'; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$searchid = $r2['id'];
+			} else {
+				$query2 = "INSERT INTO searches (search, userid, datetime, scan) ";
+				$query2 .= "VALUES ('".$searchkey."','".$userid."','".$now."','".$remotes_log."'); ";
+				$result2 = qdb($query2) OR die(qe().' '.$query2);
+				$searchid = qid();
+			}
+
+			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid); }
+			$consolidated[$partid]['qty'] += $qty;
 		}
 
 		return ($consolidated);
@@ -211,7 +242,7 @@ $email = 'davidglangley@gmail.com';
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 	function processUpload($uploadid) {
-		global $temp_dir,$now,$test;
+		global $temp_dir,$now,$test,$userid,$today,$remotes_log;
 		if (! $uploadid OR ! is_numeric($uploadid)) { return false; }
 
 		$query = "SELECT uploads.*, search_meta.companyid, uploads.id uploadid FROM uploads, search_meta ";
@@ -290,9 +321,12 @@ $tempfile = '/var/tmp/400004291.xls';
 		// now take the finished results and add to the db
 		$ln = 0;//line number, even tho it's not necessarily accurate to original list, it's still a good way to keep track
 		$report = '';
-		foreach ($consolidated as $partid => $qty) {
+		foreach ($consolidated as $partid => $row) {
 //			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
+			$qty = $row['qty'];
+			$searchid = $row['searchid'];
+
 			if (! $qty OR ! $partid) {
 				$status = '';
 				if (! $qty) { $status = 'Missing Qty'; }
@@ -304,7 +338,7 @@ $tempfile = '/var/tmp/400004291.xls';
 			$report .= '"'.$part.'","'.$heci.'","'.$qty.'","'.$status.'"'.chr(10);
 			if (! $partid OR ! $qty) { continue; }
 
-			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,false,$ln);
+			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,$searchid,$ln);
 			$ln++;
 		}
 

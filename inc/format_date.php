@@ -100,8 +100,8 @@
 		if ($date==$today) { $date = 'Today'; }
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
 		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }
-		else if ($date>=$summary_lastyear) { $date = format_date($date,'M j'); }
-		else { $date = format_date($date,'M j, y'); }
+		else if ($date>=$summary_lastyear) { $date = format_date($date,'M'); }
+		else { $date = format_date($date,'M, y'); }
 
 		return ($date);
 	}
