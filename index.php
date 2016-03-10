@@ -4,6 +4,8 @@
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
+	$pg = 1;
+	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
 	$summary_date = format_date($today,'Y-m-01',array('m'=>-2));
 	function format_market($partid_str,$market_table) {
@@ -148,6 +150,7 @@
 		if ($s) { $searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right); }
 ?>
 	<input type="hidden" name="searchlistid" value="<?php echo $searchlistid; ?>">
+
     <table class="table table-header">
 		<tr>
 			<td class="col-md-2">
@@ -196,7 +199,7 @@
 	$lines = array();
 	if ($listid) {
 		$search_index = 0;
-		$qty_index = 0;
+		$qty_index = 1;
 //		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($listid)."' AND parts.id = market.partid; ";
 		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
@@ -205,7 +208,7 @@
 			if ($r['type']=='demand') { $table_qty = 'request_qty'; }
 			else { $table_qty = 'avail_qty'; }
 
-			$query2 = "SELECT search, '.$table_qty.' qty FROM parts, ".$r['type'].", searches ";
+			$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
 			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
 			$result2 = qdb($query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -218,10 +221,22 @@
 		$lines = explode(chr(10),$s);
 	}
 
-	$ln = 0;
 	foreach ($lines as $n => $line) {
 		$line = trim($line);
 		if (! $line) { continue; }
+
+		$rows[] = $line;
+	}
+	unset($lines);
+
+	$per_pg = 50;
+	$min_ln = ($pg*$per_pg)-$per_pg;
+	$max_ln = ($min_ln+$per_pg)-1;
+	$num_rows = count($rows);
+
+	foreach ($rows as $ln => $line) {
+		if ($ln<$min_ln) { continue; }
+		else if ($ln>$max_ln) { break; }
 
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = trim($terms[$search_index]);
@@ -425,19 +440,34 @@
                         </tr>
                     </tbody>
 <?php
-		$ln++;
 	}
 ?>
                 </table>
             </div>
+<?php
+		if ($num_rows>$per_pg) {
+			$pages = ceil($num_rows/$per_pg);
+			$paginates = '';
+			$end_pg = '';
+			if ($pages>4) {
+				$paginates = '<li><a href="javascript:void(0);" data-pg="1" data-listid="'.$listid.'">&laquo;</a></li>'.chr(10);
+                $end_pg = '<li><a href="javascript:void(0);" data-pg="'.$pages.'" data-listid="'.$listid.'">&raquo;</a></li>'.chr(10);
+			}
+			$pstart = 1;
+			if ($pg>2) { $pstart = $pg-2; }
+			for ($p=$pstart; $p<=($pstart+3); $p++) {
+				$cls = '';
+				if ($p==$pg) { $cls = ' class="active"'; }
+                $paginates .= '<li'.$cls.'><a href="javascript:void(0);" data-pg="'.$p.'" data-listid="'.$listid.'">'.$p.'</a></li>'.chr(10);
+			}
+			$paginates .= $end_pg;
+?>
             <ul class="pagination">
-                <li><a href="#">&laquo;</a></li>
-                <li class="active"><a href="#">1</a></li>
-                <li><a href="#">2</a></li>
-                <li><a href="#">3</a></li>
-                <li><a href="#">4</a></li>
-                <li><a href="#">&raquo;</a></li>
+				<?php echo $paginates; ?>
             </ul>
+<?php
+		}
+?>
         </div>
 <?php
 	}//end if ($s)

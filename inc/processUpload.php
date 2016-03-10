@@ -30,6 +30,7 @@
 	function array_find($needle, $haystack) {
 		$f = false;
 		foreach ($haystack as $k => $item) {
+			//strpos() is haystack, needle
 			if (strpos($item, $needle) !== FALSE) {
 				// cannot have dups of same column
 				if ($f!==false) { return false; }
@@ -92,7 +93,7 @@
 
 		return ($condensed);
 	}
-	function curateResults($condensed) {
+	function curateResults($condensed,$filename) {
 		$num_lines = count($condensed);
 
 		// columns detected below for each field
@@ -172,7 +173,8 @@ $email = 'davidglangley@gmail.com';
 			}
 
 //			$part = strtoupper(preg_replace('/[^[:alnum:]]*/','',trim($L[$part_col])));
-			if ($part_col) {
+			$part = '';
+			if ($part_col!==false) {
 				$part = strtoupper(trim($L[$part_col]));
 			}
 
@@ -182,7 +184,10 @@ $email = 'davidglangley@gmail.com';
 
 			$qty = preg_replace('/^([0-9]+)(x)$/i','$1',trim($L[$qty_col]));
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
-			$heci = strtoupper(trim($L[$heci_col]));
+			$heci = '';
+			if ($heci_col!==false) {
+				$heci = strtoupper(trim($L[$heci_col]));
+			}
 			if (! $part AND ! $heci) { continue; }
 
 //			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
@@ -310,7 +315,7 @@ $tempfile = '/var/tmp/400004291.xls';
 		unset($lines);
 
 		// curate results by summing qtys of matching parts and eliminating bogus rows
-		$curated = curateResults($condensed);
+		$curated = curateResults($condensed,$filename);
 //		print "<pre>".print_r($curated,true)."</pre>";
 		unset($condensed);
 

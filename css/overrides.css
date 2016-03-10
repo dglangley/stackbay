@@ -359,6 +359,7 @@
 	border:1px solid #ccc;
 	overflow-y:scroll;
 	box-shadow: 2px 1px 2px #888888;
+	z-index:2001;
 }
 
 .market-table hr {

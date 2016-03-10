@@ -484,6 +484,10 @@
 				/* Let select2 do whatever it likes with this */
 				$("#upload-listid").trigger('change');
 		});
+
+		$(".pagination li a").click(function() {
+			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
+		});
 	
     });/* close $(document).ready */
 
