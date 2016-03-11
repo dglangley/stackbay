@@ -5,6 +5,7 @@
 	if (! isset($SUPER_ADMIN)) { $SUPER_ADMIN = false; }
 
 	function insertMarket($partid,$list_qty,$list_price=false,$response_qty=false,$response_price=false,$metaid,$type='availability',$searchid=false,$ln=0) {
+		if (! $list_qty) { $list_qty = 1; }
 		$itemid = 0;
 		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND metaid = '".$metaid."' AND searchid ";
 		if ($searchid) { $query .= "= '".$searchid."' "; } else { $query .= "IS NULL "; }
@@ -30,7 +31,7 @@
 		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ".$q2.", ".$p2.", metaid, searchid, line_number";
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
-		if ($list_price) { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
+		if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
 		if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
 		if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
 		$query .= "'".$metaid."',";

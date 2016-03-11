@@ -182,11 +182,14 @@ $email = 'davidglangley@gmail.com';
 //				$part = preg_replace('/(REV|REL|ISS|SER).+$/','',$part);
 //			}
 
-			$qty = preg_replace('/^([0-9]+)(x)$/i','$1',trim($L[$qty_col]));
+			// replacing chr(0) is removing null characters, specifically for verizon bid list
+			$qty = preg_replace('/^([0-9]+)(x)$/i','$1',str_replace(chr(0),'',trim($L[$qty_col])));
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = '';
 			if ($heci_col!==false) {
 				$heci = strtoupper(trim($L[$heci_col]));
+				// there's no such thing as a legitimate all-numeric heci, but verizon sometimes uses their internal codes here
+				if (is_numeric($heci)) { $heci = ''; }
 			}
 			if (! $part AND ! $heci) { continue; }
 

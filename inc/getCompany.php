@@ -1,6 +1,6 @@
 <?php
 	$COMPANIES = array();
-	function getCompany($search_field,$input_field='id',$output_field='name') {
+	function getCompany($search_field,$input_field='id',$output_field='name',$add_new=false) {
 		global $COMPANIES;
 
 		$search_field = trim($search_field);
@@ -10,6 +10,24 @@
 
 		if (isset($COMPANIES[$search_field]) AND isset($COMPANIES[$search_field][$input_field])) {
 			return ($COMPANIES[$search_field][$input_field][$output_field]);
+		}
+
+		$num_results = 0;
+
+		if ($add_new) {
+			$search_field = trim($search_field);
+
+			// check for existing
+			$query = "SELECT id FROM companies WHERE name = '".res($search_field)."'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				return ($r['id']);
+			}
+
+			$query = "INSERT INTO companies (name) VALUES ('".res($search_field)."'); ";
+			$result = qdb($query);
+			return (qid());
 		}
 
 		$query = "SELECT * FROM companies WHERE $input_field = '".res($search_field)."'; ";
@@ -38,7 +56,6 @@
 
 			if ($num_results==0) { return (0); }
 		}
-
 		$r = mysqli_fetch_assoc($result);
 
 		if (! $r['default_email']) {

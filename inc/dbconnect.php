@@ -144,5 +144,5 @@ $userid = 1;
 */
 
 	// version control for css and js includes
-	$V = '20160303';
+	$V = '20160305';
 ?>

@@ -4,13 +4,27 @@
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPart.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getCompany.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
 
 //	print "<pre>".print_r($_REQUEST,true)."</pre>";
 	$submit_type = 'demand';
 	if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
 
 	$companyid = 0;
-	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = trim($_REQUEST['companyid']); }
+	if (isset($_REQUEST['companyid']) AND trim($_REQUEST['companyid'])) {
+		$new_company = false;
+		// check that this is a legitimate company by passing in id and asking for it back; this way, even an
+		// all-numeric company NAME can be created here...
+		if (is_numeric($_REQUEST['companyid'])) {
+			$companyid = getCompany($_REQUEST['companyid'],'id','id');
+			if (! $companyid OR $companyid<>$_REQUEST['companyid']) { $new_company = true; }
+		} else {
+			$new_company = true;
+		}
+		if ($new_company) {
+			$companyid = getCompany(trim($_REQUEST['companyid']),'name','id',true);
+		}
+	}
 	$searchlistid = 0;
 	if (isset($_REQUEST['searchlistid']) AND is_numeric($_REQUEST['searchlistid'])) { $searchlistid = trim($_REQUEST['searchlistid']); }
 
@@ -34,9 +48,9 @@
 
 		if ($search_str AND $companyid) {
 			$query = "SELECT id FROM searches WHERE search = '".$search_str."' AND userid = '".$userid."' ";
-			$query .= "AND datetime LIKE '".$today."%'; ";
+			$query .= "AND datetime LIKE '".$today."%' ORDER BY id DESC; ";//get most recent
 			$result = qdb($query);
-			if (mysqli_num_rows($result)==1) {
+			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$searchid = $r['id'];
 			}
@@ -67,7 +81,7 @@
 			if ($companyid) {
 				// if user is recording demand, or if it's the first item of an availability, or if the user actually has a qty entered
 				if ($submit_type=='demand' OR ($n==0 OR $response_qty>0)) {
-					insertMarket($partid,$qty,false,false,false,$metaid,$submit_type,$searchid,$ln);
+					insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$submit_type,$searchid,$ln);
 				}
 			}
 
@@ -162,7 +176,7 @@
 <?php } ?>
 			</div>
 			<div class="col-md-4 text-center">
-				<?php if ($companyid) { echo '<h2>'.getCompany($companyid).'</h2>'; } ?>
+				<?php if ($companyid) { echo '<h3>'.getCompany($companyid).'</h3>'; } ?>
 
 				<textarea class="freeform-text"><?php echo $display_str; ?></textarea>
 			</div>
