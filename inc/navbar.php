@@ -151,9 +151,9 @@
 
 <?php
 	// verizon morning bid
-	if ($now>=$today." 07:33:00" AND $now<=$today." 08:30:00") {
+	if ($now>=$today." 07:33:00" AND $now<=$today." 08:45:00") {
 		$expDate = date("n/j/Y 10:00 A");
-	} else if ($now>=$today." 09:33:00" AND $now<=$today." 10:30:00") {//vz afternoon bid
+	} else if ($now>=$today." 09:33:00" AND $now<=$today." 10:45:00") {//vz afternoon bid
 		$expDate = date("n/j/Y 12:00 A");
 	} else if ($now>=$today." 13:33:00" AND $now<=$today." 14:30:00") {//vz evening bid
 		$expDate = format_date(date("m-d-Y 07:00"),"n/j/Y g:i A",array("d"=>1));

@@ -117,4 +117,24 @@
 		}
 		return false;//($company);
 	}
+
+	function setCompany() {
+		$companyid = 0;
+		if (isset($_REQUEST['companyid']) AND trim($_REQUEST['companyid'])) {
+			$new_company = false;
+			// check that this is a legitimate company by passing in id and asking for it back; this way, even an
+			// all-numeric company NAME can be created here...
+			if (is_numeric($_REQUEST['companyid'])) {
+				$companyid = getCompany($_REQUEST['companyid'],'id','id');
+				if (! $companyid OR $companyid<>$_REQUEST['companyid']) { $new_company = true; }
+			} else {
+				$new_company = true;
+			}
+			if ($new_company) {
+				$companyid = getCompany(trim($_REQUEST['companyid']),'name','id',true);
+			}
+		}
+
+		return ($companyid);
+	}
 ?>

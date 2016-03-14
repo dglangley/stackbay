@@ -10,21 +10,7 @@
 	$submit_type = 'demand';
 	if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
 
-	$companyid = 0;
-	if (isset($_REQUEST['companyid']) AND trim($_REQUEST['companyid'])) {
-		$new_company = false;
-		// check that this is a legitimate company by passing in id and asking for it back; this way, even an
-		// all-numeric company NAME can be created here...
-		if (is_numeric($_REQUEST['companyid'])) {
-			$companyid = getCompany($_REQUEST['companyid'],'id','id');
-			if (! $companyid OR $companyid<>$_REQUEST['companyid']) { $new_company = true; }
-		} else {
-			$new_company = true;
-		}
-		if ($new_company) {
-			$companyid = getCompany(trim($_REQUEST['companyid']),'name','id',true);
-		}
-	}
+	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	$searchlistid = 0;
 	if (isset($_REQUEST['searchlistid']) AND is_numeric($_REQUEST['searchlistid'])) { $searchlistid = trim($_REQUEST['searchlistid']); }
 

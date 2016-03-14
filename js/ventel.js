@@ -262,6 +262,8 @@
 		});
 
 	    // select2 plugin for select elements
+		var add_custom = 1;
+		if ($(".accounts-body").length>0) { add_custom = 0; }
 	    $(".company-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
@@ -269,7 +271,7 @@
 				/*delay: 250,*/
 	            data: function (params) {
 	                return {
-	                    add_custom: '1',
+	                    add_custom: add_custom,
 	                    q: params.term,//search term
 						page: params.page
 	                };
@@ -296,8 +298,10 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 2
 	    });
-		$(".accounts-body #companyid").change(function() {
-			$(this).closest("form").submit();
+		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
+			if ($.isNumeric($(this).val())) {
+				$(this).closest("form").submit();
+			}
 		});
 	    $(".lists-selector").select2({
 			placeholder: 'Upload or Select...',

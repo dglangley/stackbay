@@ -28,6 +28,7 @@
     <!-- this page specific styles -->
     <link rel="stylesheet" href="css/compiled/index.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="css/compiled/datatables.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="css/compiled/user-profile.css" type="text/css" media="screen" />
 
 	<!-- development overrides -->
     <link rel="stylesheet" type="text/css" href="css/overrides.css?id=<?php echo $V; ?>" />
