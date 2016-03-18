@@ -234,10 +234,8 @@
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
 
+	$x = 0;//line number index for tracking under normal circumstances, but also for favorites-only views
 	foreach ($rows as $ln => $line) {
-		if ($ln<$min_ln) { continue; }
-		else if ($ln>$max_ln) { break; }
-
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = trim($terms[$search_index]);
 		$search_qty = 1;//default
@@ -247,7 +245,6 @@
 
 		$results = hecidb(format_part($search_str));
 
-		$k = 0;
 		// gather all partid's first
 		$partid_str = "";
 		$partids = "";//comma-separated for data-partids tag
@@ -278,6 +275,10 @@
 
 		if ($favorites AND $num_favs==0) { continue; }
 
+		if ($x<$min_ln) { $x++; continue; }
+		else if ($x>$max_ln) { break; }
+		$x++;
+
 		$num_results = count($results);
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
@@ -297,7 +298,7 @@
 									<span class="info">their qty</span>
 								</div>
 								<div class="product-descr">
-									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo preg_replace('/[^[:alnum:]]*/','',$search_str); ?>" class="product-search text-primary" /><br/>
+									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
 								</div>
 							</td>
@@ -320,8 +321,12 @@
 						</tr>
 
 <?php
+		$k = 0;
 		foreach ($results as $partid => $P) {
 			$itemqty = getQty($partid);
+			$rowcls = '';
+			if ($itemqty>0) { $rowcls = ' info'; }
+
 			$itemprice = "0.00";
 			$fav_flag = $favs[$partid];
 
@@ -330,9 +335,9 @@
 ?>
                         <!-- row -->
                         <tr class="product-results" id="row-<?php echo $partid; ?>">
-                            <td class="descr-row">
+                            <td class="descr-row<?php echo $rowcls; ?>">
 								<div class="product-action text-center">
-                                	<div><input type="checkbox" class="item-check" name="items[<?php echo $ln; ?>][]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
+                                	<div><input type="checkbox" class="item-check" name="items[<?php echo $ln; ?>][<?php echo $k; ?>]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
                                     <a href="javascript:void(0);" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
 								</div>
 								<div class="qty">

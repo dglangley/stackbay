@@ -3,21 +3,22 @@
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
 	include_once 'inc/getCompany.php';
+	include_once 'inc/getContacts.php';
 	include_once 'inc/getPart.php';
 
-	function getContacts($companyid) {
-		$contacts = array();
-		$query = "SELECT * FROM contacts WHERE companyid = '".res($companyid)."' ORDER BY name ASC; ";
-		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$r['emails'] = array();
-			$r['phones'] = array();
-			$contacts[] = $r;
+	function getAddress($searchid,$search_type='addressid') {
+		$A = array('name'=>'','street'=>'','city'=>'','state'=>'','postal_code'=>'','country'=>'','id'=>0);
+		if ($search_type=='addressid') {
+			$query = "SELECT * FROM addresses WHERE id = '".res($searchid)."'; ";
+		} else if ($search_type=='companyid') {
+			$query = "SELECT * FROM companies, addresses ";
+			$query .= "WHERE companies.id = '".res($searchid)."' AND companies.corporateid = addresses.id; ";
 		}
-
-		// one more row as blank to add new
-		$contacts[] = array('name'=>'','emails'=>array(),'phones'=>array(),'im'=>'','notes'=>'');
-		return ($contacts);
+		$result = qdb($query);
+		if (mysqli_num_rows($result)==0) { return ($A); }
+		$A = mysqli_fetch_assoc($result);
+		$A['address'] = $A['street'].', '.$A['city'].', '.$A['state'].' '.$A['postal_code'];
+		return ($A);
 	}
 
 	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
@@ -34,12 +35,12 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
-	<form class="form-inline" method="get" action="/profile.php">
+	<form class="form-inline" method="get" action="/save-profile.php">
+	<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
 
     <table class="table table-header">
 		<tr>
 			<td class="col-md-2">
-                <input type="text" class="search order-search" id="accounts-search" placeholder="Order#, Part#, HECI..." autofocus />
 			</td>
 			<td class="text-center col-md-6">
 			</td>
@@ -58,121 +59,192 @@
 
     <div id="pad-wrapper" class="user-profile">
 
-            <!-- header -->
-            <div class="row header">
-                <div class="col-md-9">
-					<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
-                    <h2 class="name"><?php echo getCompany($companyid); ?></h2>
-                </div>
-                <div class="col-md-3 text-right">
-	                <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Delete" data-placement="top"><i class="fa fa-trash text-danger"></i></a>
-	                <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Edit" data-placement="top"><i class="fa fa-pencil"></i></a>
-				</div>
+        <!-- header -->
+        <div class="row header">
+            <div class="col-md-9">
+				<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
+                <h2 class="name"><?php echo getCompany($companyid); ?></h2>
             </div>
+            <div class="col-md-3 text-right">
+	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Delete" data-placement="top"><i class="fa fa-trash text-danger"></i></a>
+	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Edit" data-placement="top"><i class="fa fa-pencil"></i></a>
+			</div>
+        </div>
 
-            <div class="row">
-                <!-- bio, new note & orders column -->
-                <div class="col-md-9 bio">
-                    <div class="profile-box">
+        <div class="row">
+            <!-- bio, new note & orders column -->
+            <div class="col-md-8 bio">
+                <div class="profile-box">
 
-                        <!-- recent orders table -->
-                        <table class="table table-hover table-striped table-condensed">
-                            <thead>
-                                <tr>
-                                    <th class="col-md-3">
-                                        Name
-                                    </th>
-                                    <th class="col-md-3">
-                                        <span class="line"></span>
-                                        Email(s)
-                                    </th>
-                                    <th class="col-md-2">
-                                        <span class="line"></span>
-                                        Phone Number(s)
-                                    </th>
-                                    <th class="col-md-2">
-                                        <span class="line"></span>
-                                        IM
-                                    </th>
-                                    <th class="col-md-2">
-                                        <span class="line"></span>
-                                        Notes
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <!-- recent orders table -->
+                    <table class="table table-hover table-striped table-condensed">
+                        <thead>
+                            <tr>
+                                <th class="col-md-3">
+                                    Contact Name
+                                </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>
+                                    Email(s)
+                                </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>
+                                    Phone Number(s)
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
+                                    IM
+                                </th>
+                                <th class="col-md-2">
+                                    <span class="line"></span>
+                                    Notes
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
 <?php
 	$contacts = getContacts($companyid);
-	foreach ($contacts as $contact) {
+	foreach ($contacts as $contactid => $contact) {
+		$cls = ' static-form';
+		if ($contactid) { $cls = ' active-form'; }
+		$name_plh = 'Full Name (Last Name optional)';
+		if ($contactid==0) { $name_plh = 'Add New Contact Name...'; }
+
 		$emails = '';
-		foreach($contact['emails'] as $email) {
-			$emails .= '<input type="text" class="form-control input-sm inline" value="'.$email.'">'.chr(10);
+		foreach($contact['emails'] as $e) {
+			$email_plh = $e['email'];
+			if (! $email_plh) { $email_plh = 'this@that.com'; }
+			$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
 		}
-		$emails .= '<input type="text" class="form-control input-sm inline" value="">'.chr(10);
 		$phones = '';
-		foreach($contact['phones'] as $phone) {
-			$phones .= '<input type="text" class="form-control input-sm inline" value="'.$phone.'">'.chr(10);
+		foreach($contact['phones'] as $p) {
+			$phone_plh = $p['phone'];
+			if (! $phone_plh) { $phone_plh = '(000) 555-1212 or 000-555-1212'; }
+			$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
 		}
-		$phones .= '<input type="text" class="form-control input-sm inline" value="">'.chr(10);
 ?>
-                                <tr>
-                                    <td>
-                                        <input type="text" class="form-control input-sm inline" value="<?php echo $contact['name']; ?>">
-                                    </td>
-                                    <td>
-										<?php echo $emails; ?>
-                                    </td>
-                                    <td>
-										<?php echo $phones; ?>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control input-sm inline" value="<?php echo $contact['im']; ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control input-sm inline" value="<?php echo $contact['notes']; ?>">
-                                    </td>
-                                </tr>
+                            <tr data-contactid="<?php echo $contactid; ?>">
+                                <td>
+                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="name" value="<?php echo $contact['name']; ?>" placeholder="<?php echo $name_plh; ?>">
+                                </td>
+                                <td>
+									<?php echo $emails; ?>
+                                </td>
+                                <td>
+									<?php echo $phones; ?>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="im" value="<?php echo $contact['im']; ?>">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="notes" value="<?php echo $contact['notes']; ?>">
+                                </td>
+                            </tr>
 <?php
 	}
 ?>
-                            </tbody>
-                        </table>
-
-                        <!-- new comment form -->
-                        <div class="col-md-12 section comment">
-                            <h6>Add a quick note</h6>
-                            <p>Add a note about this user to keep a history of your interactions.</p>
-                            <textarea></textarea>
-                            <a href="#">Attach files</a>
-                            <div class="col-md-12 submit-box pull-right">
-                                <input type="submit" class="btn-glow primary" value="Add Note">
-                                <span>OR</span>
-                                <input type="reset" value="Cancel" class="reset">
-                            </div>
-                        </div>
-                    </div>
+							<tr>
+								<td colspan="5">
+									<button type="submit" class="btn btn-default btn-submit btn-sm" disabled>Save</button>
+								</td>
+							</tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- side address column -->
-                <div class="col-md-3 col-xs-12 address pull-right">
-                    <h6>Address</h6>
-                    <iframe width="300" height="133" scrolling="no" src="https://maps.google.com.mx/?ie=UTF8&amp;t=m&amp;ll=19.715081,-155.071421&amp;spn=0.010746,0.025749&amp;z=14&amp;output=embed"></iframe>
-                    <ul>
-                        <li>2301 East Lamar Blvd. Suite 140. </li>
-                        <li>City, Arlington. United States,</li>
-                        <li>Zip Code, TX 76006.</li>
-                        <li class="ico-li">
-                            <i class="ico-phone"></i>
-                            1817 274 2933
-                        </li>
-                         <li class="ico-li">
-                            <i class="ico-mail"></i>
-                            <a href="#">alejandra@detail.com</a>
-                        </li>
-                    </ul>
-                </div>
+<?php
+	$A = getAddress($companyid,'companyid');
+?>
 
-        </div>
+            <!-- side address column -->
+            <div class="col-md-4 col-xs-12 address pull-right">
+<?php if ($A['address']) { ?>
+                <iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?php echo urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
+<?php } ?>
+                <ul>
+                    <li><?php echo $A['street']; ?></li>
+                    <li><?php echo $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
+                    <li class="ico-li">
+                        <i class="ico-phone"></i>
+                        <?php echo getCompany($companyid,'id','phone'); ?>
+                    </li>
+<!--
+                    <li class="ico-li">
+                        <i class="ico-mail"></i>
+                        <a href="#">alejandra@detail.com</a>
+                    </li>
+-->
+                </ul>
+            </div>
+        </div><!-- row -->
+
+<?php
+	$selPP = ' selected';
+	$selC = ' selected';
+
+	$ar_list = '';
+	$ap_list = '';
+	$query = "SELECT * FROM terms LEFT JOIN company_terms ON company_terms.termsid = terms.id ";
+	$query .= "WHERE (companyid IS NULL OR companyid = '".$companyid."') ";
+	$query .= "ORDER BY days ASC, terms ASC; ";
+	$result = qdb($query) OR die(qe().' '.$query);
+	$num_terms = mysqli_num_rows($result);
+	// first iterate to find if any company-selections are made; if not, default to select all
+	$ar_selections = false;
+	$ap_selections = false;
+	while ($r = mysqli_fetch_assoc($result)) {
+		$terms[] = $r;
+		if ($r['companyid'] AND $r['category']=='AR') { $ar_selections = true; }
+		if ($r['companyid'] AND $r['category']=='AP') { $ap_selections = true; }
+	}
+	foreach ($terms as $r) {
+		$sel = '';
+		if (($r['category']=='AR' AND $r['companyid']) OR $ar_selections===false) { $sel = ' selected'; }
+		$ar_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
+
+		$sel = '';
+		if (($r['category']=='AP' AND $r['companyid']) OR $ap_selections===false) { $sel = ' selected'; }
+		$ap_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
+	}
+?>
+
+		<div class="row terms-section bg-sales">
+			<div class="col-sm-2">
+				<h4><i class="fa fa-arrow-circle-o-left"></i> Receivable Terms</h4>
+			</div>
+			<div class="col-sm-2">
+				Type:<br/>
+				<select class="form-control terms-select2 terms-type" multiple>
+					<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
+					<option value="Credit"<?php echo $selC; ?>>Credit</option>
+				</select>
+			</div>
+			<div class="col-sm-8">
+				Approved Terms:<br/>
+				<select name="ar_termsids" class="form-control terms-select2 terms-selections" data-category="AR" data-companyid="<?php echo $companyid; ?>" multiple>
+					<?php echo $ar_list; ?>
+				</select>
+			</div>
+		</div>
+		<div class="row terms-section bg-purchases">
+			<div class="col-sm-2">
+				<h4><i class="fa fa-arrow-circle-o-right"></i> Payable Terms</h4>
+			</div>
+			<div class="col-sm-2">
+				Type:<br/>
+				<select class="form-control terms-select2 terms-type" multiple>
+					<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
+					<option value="Credit"<?php echo $selC; ?>>Credit</option>
+				</select>
+			</div>
+			<div class="col-sm-8">
+				Approved Terms:<br/>
+				<select name="ap_termsids" class="form-control terms-select2 terms-selections" data-category="AP" data-companyid="<?php echo $companyid; ?>" multiple>
+					<?php echo $ap_list; ?>
+				</select>
+			</div>
+		</div>
 
 	</div>
     <!-- end main container -->
@@ -181,6 +253,72 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+			$(".active-form").change(function() {
+				var field = $(this);
+				var action = field.closest("form").prop("action").replace('save-','json/save-');
+				if (field.data('field')) { var k = field.data('field'); }
+				else { var k = field.prop("name"); }
+				var fieldid = 0;
+				if (field.data('id')) { fieldid = field.data('id'); }
+				var v = field.val();
+				var contactid = field.closest('tr').data('contactid');
+				console.log(action+'?contactid='+contactid+'&change_field='+k+'&change_value='+v.trim()+'&fieldid='+fieldid);
+
+				$.ajax({
+					url: action,
+					type: 'get',
+					data: {'contactid': contactid, 'change_field': k, 'change_value': encodeURIComponent(v), id: fieldid},
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message=='Success') {
+							toggleLoader('Save successful');
+							field.data('id',json.id);
+							if (json.data && json.data!='') { field.val(json.data); }
+						} else {
+							alert(json.message);
+						}
+					},
+					error: function(xhr, desc, err) {
+						console.log(xhr);
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+			});
+			$(".active-form").on("keypress",function(e) {
+				if (e.keyCode == 13) {
+					e.preventDefault();
+				}
+			});
+			$(".static-form").change(function() {
+				if ($(".btn-submit").prop('disabled',true)) {
+					$(".btn-submit").prop('disabled',false);
+					$(".btn-submit").toggleClass('btn-default btn-primary');
+				} else {
+					$(".btn-submit").toggleClass('btn-primary btn-default');
+				}
+			});
+			$(".terms-selections").change(function() {
+	            console.log(window.location.origin+"/json/save-terms.php?companyid="+$(this).data('companyid')+"&termsids="+$(this).val()+"&category="+$(this).data('category'));
+	            $.ajax({
+					url: 'json/save-terms.php',
+					type: 'get',
+					data: {'companyid': $(this).data('companyid'), 'termsids': $(this).val(), 'category': $(this).data('category')},
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message=='Success') {
+							toggleLoader('Save successful');
+						} else {
+							alert(json.message);
+						}
+					},
+					error: function(xhr, desc, err) {
+						console.log(xhr);
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+
+				return;
+			});
         });
     </script>
 

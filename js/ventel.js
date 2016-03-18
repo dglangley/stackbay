@@ -1,5 +1,6 @@
     $(document).ready(function() {
 		if ($("#s:focus") && $("#accounts-search").length==0) { $("#s").select(); }
+		toggleLoader();
 
 		// adjust height dynamically to size of the rows within section
 		$(".market-table").each(function() {
@@ -330,6 +331,26 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+	    $(".terms-select2").select2({
+		});
+	    $(".terms-select2.terms-type").change(function() {
+			var selections = [];
+			var type;
+			$(this).find("option:selected").each(function(k,v) {
+				type = $(this).prop("value");
+				selections.push(type);
+			});
+			$(this).closest(".terms-section").find(".terms-select2.terms-selections option").each(function(k,v) {
+				if ($.inArray($(this).data("type"),selections)==-1) {
+					$(this).prop('disabled',true);
+					$(this).prop('selected',false);
+				} else {
+					$(this).prop('disabled',false);
+					$(this).prop('selected',true);
+				}
+			});
+			$(this).closest(".terms-section").find(".terms-select2.terms-selections").trigger('change');
+		});
 //		$(".lists-selector").bind('change keypress',function(e) {
 //			if (e.keyCode && e.keyCode != 13) { return; }
 		$(".lists-selector").each(function() {
@@ -494,6 +515,18 @@
 		});
 	
     });/* close $(document).ready */
+
+	function toggleLoader(msg) {
+		if ($("#loading-bar").is(':visible')) {
+			$("#loading-bar").fadeOut('fast');
+		} else {
+			if (! msg) { var msg = 'Loading'; }
+			$("#loading-bar").html(msg);
+
+			$("#loading-bar").show();
+			setTimeout("toggleLoader()",1000);
+		}
+	}
 
 	function uploadFile(e) {
 		if (! e.val()) { return; }

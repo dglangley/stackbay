@@ -67,7 +67,7 @@
 }
 .modalNotes .modal-header {
 	position:relative;
-	inline-block;
+	display:inline-block;
 }
 .modalNotes .modal-header .notes-text {
 	width:100%;
@@ -244,6 +244,23 @@ input[type="text"].inline {
 	width:320px;
 }
 
+#loading-bar {
+	background:#f4efd4;
+	width:200px;
+	height:36px;
+	position:absolute;
+	left:45%;
+	top:-120px;
+	z-index:3001;
+	color:black;
+	text-align:center;
+	border-radius:0px 0px 3px 3px;
+	border:1px solid #e0e0e0;
+	box-shadow: 2px 3px 2px #888;
+	padding:4px;
+	font-size:14px;
+}
+
 .search-form .search-group {
 	width:320px;
 	margin:6px 36px;
@@ -377,10 +394,29 @@ input[type="text"].inline {
 	padding-top:8px !important;
 	margin-top:0px !important;
 }
+
+/*** PROFILE PAGE ***/
 .user-profile .header {
 	vertical-align:top;
 }
+.profile-box table tr td, .profile-body .row > div > .form-group {
+	vertical-align:top !important;
+}
+.terms-select2.terms-type {
+	width:160px;
+}
+.terms-select2.terms-selections {
+}
+.terms-section {
+	padding-top:20px;
+	padding-bottom:20px;
+	border-top:1px solid #ddd;
+	border-bottom:1px solid #ddd;
+	background-color:#eee;
+}
 
+
+/*** MARKET MANAGER ***/
 .market-table hr {
 	margin:8px 0px;
 }
@@ -479,6 +515,12 @@ a.fa {
 	font-weight:normal;
 	color:#999;
 }
+tr.info td, td.info {
+	background-color:#d9edf7 !important;
+}
+tr.info:hover td, td.info:hover {
+	background-color:#e9fbff !important;
+}
 
 
 /*
@@ -505,4 +547,9 @@ a.fa {
 }
 .slider-frame.warning {
   background-color: #f0ad4e;
+}
+
+h1 a, h2 a, h3 a {
+	text-decoration:none;
+	color:black;
 }

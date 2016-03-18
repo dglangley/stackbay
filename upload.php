@@ -3,18 +3,12 @@
 	include_once 'inc/format_date.php';
     include_once 'inc/logSearchMeta.php';
     include_once 'inc/processUpload.php';
+    include_once 'inc/getCompany.php';
 	require('vendor/autoload.php');
 
 	// set cookies for upload selections, if present
 //	setcookie('upload_type.870','Req');//VZ
 //	setcookie('upload_type.361','Avail');//Rogers
-	if (isset($_REQUEST['upload_companyid'])) {
-		if (! isset($_REQUEST['upload_type']) OR $_REQUEST['upload_type']=='Avail') {
-			setcookie('upload_type.'.$_REQUEST['upload_companyid'],'Avail');
-		} else {
-			setcookie('upload_type.'.$_REQUEST['upload_companyid'],'Req');
-		}
-	}
 
     // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 	if (! $DEV_ENV) {
@@ -25,8 +19,14 @@
 	$upload_listid = 0;
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['upload_file']['tmp_name'])) {
         try {
-			$cid = 0;
-			if (isset($_REQUEST['upload_companyid']) AND is_numeric($_REQUEST['upload_companyid'])) { $cid = $_REQUEST['upload_companyid']; }
+			$cid = setCompany('upload_companyid');//uses $_REQUEST data with this field name, passed in
+			if ($cid) {
+				if (! isset($_REQUEST['upload_type']) OR $_REQUEST['upload_type']=='Avail') {
+					setcookie('upload_type.'.$cid,'Avail');
+				} else {
+					setcookie('upload_type.'.$cid,'Req');
+				}
+			}
 
             // key the filename on aws using today's date, companyid and the filename
             $filename = 'inv'.date("Ymd").'_'.$cid.'_'.$_FILES['upload_file']['name'];
@@ -106,6 +106,10 @@ die('died');
 
 	$urlstr = '';
 	if ($upload_listid) { $urlstr = '?listid='.$upload_listid; }
+	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) {
+		if ($urlstr) { $urlstr .= '&'; } else { $urlstr .= '?'; }
+		$urlstr .= 'favorites=1';
+	}
 
 	header('Location: /'.$urlstr);
 	exit;

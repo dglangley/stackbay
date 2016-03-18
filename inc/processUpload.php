@@ -123,6 +123,7 @@
 				if ($heci_col===false) { $heci_col = array_find('clei',$line_lower); }
 				$qty_col = array_find('qty',$line_lower);
 				if ($qty_col===false) { $qty_col = array_find('quantity',$line_lower); }
+				if ($qty_col===false) { $qty_col = array_find('qnty',$line_lower); }
 
 				// at least one of these two fields must be present, otherwise it's prob not a header row.
 				if ($part_col!==false AND $qty_col!==false) {

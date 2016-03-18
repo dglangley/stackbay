@@ -49,6 +49,7 @@
 		}
 	}
 ?>
+	<div id="loading-bar">Loading...</div>
 
 	<form class="form-inline search-form" method="post" action="/" enctype="multipart/form-data" >
 

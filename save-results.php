@@ -13,6 +13,8 @@
 	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	$searchlistid = 0;
 	if (isset($_REQUEST['searchlistid']) AND is_numeric($_REQUEST['searchlistid'])) { $searchlistid = trim($_REQUEST['searchlistid']); }
+	$contactid = 0;
+	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = trim($_REQUEST['contactid']); }
 
 	$items = array();
 	if (isset($_REQUEST['items']) AND is_array($_REQUEST['items'])) { $items = $_REQUEST['items']; }
@@ -112,13 +114,25 @@
 
 		<div class="row">
 			<div class="col-md-4">
-<?php if ($companyid) { ?>
+<?php
+	if ($companyid) {
+		include_once 'inc/getContacts.php';
+		$contacts = getContacts($companyid);
+		ksort($contacts);
+		$contacts_list = '';
+		foreach ($contacts as $id => $c) {
+			$sel = '';
+			if (! $id) { $c['name'] = '- Select Contact -'; }
+			else if ($contactid==$id) { $sel = ' selected'; }
+			$contacts_list .= '<option value="'.$id.'"'.$sel.'>'.$c['name'].'</option>'.chr(10);
+		}
+?>
 				<form class="inline-form order-form">
 				<h5>Create Order</h5>
 				<div class="field-box">
 					<div class="ui-select">
 						<select>
-							<option value="">- Select Contact -</option>
+							<?php echo $contacts_list; ?>
 						</select>
 					</div>
 					<div class="ui-select">
@@ -162,7 +176,7 @@
 <?php } ?>
 			</div>
 			<div class="col-md-4 text-center">
-				<?php if ($companyid) { echo '<h3>'.getCompany($companyid).'</h3>'; } ?>
+				<?php if ($companyid) { echo '<h3><a href="/profile.php?companyid='.$companyid.'" title="">'.getCompany($companyid).'</a></h3>'; } ?>
 
 				<textarea class="freeform-text"><?php echo $display_str; ?></textarea>
 			</div>

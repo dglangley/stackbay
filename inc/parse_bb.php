@@ -56,6 +56,12 @@
 					}
 					$data[$k] = trim($text);
 				}
+				//skip thead and tfoot rows but check first to be sure this is not a contacts table
+				if ($j<=1) {
+					if ($data[2]=='St' AND $data[5]=='Phone') { break; }//we're in the wrong table
+					continue;//just a normal header row, skip it
+				}
+
 				$resArray[] = $data;
 //				print "<pre>".print_r($data,true)."</pre>";
 
