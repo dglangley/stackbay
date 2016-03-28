@@ -238,6 +238,8 @@
 	foreach ($rows as $ln => $line) {
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = trim($terms[$search_index]);
+		if (! $search_str) { continue; }
+
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index]) AND is_numeric($terms[$qty_index]) AND $terms[$qty_index]>0) {
 			$search_qty = trim($terms[$qty_index]);

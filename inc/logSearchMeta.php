@@ -1,13 +1,15 @@
 <?php
-	function logSearchMeta($companyid,$searchlistid=false) {
-		global $today,$now;
+	function logSearchMeta($companyid,$searchlistid=false,$metadatetime='') {
+		global $now;
 		if (! $companyid) { return false; }
+		if (! $metadatetime) { $metadatetime = $now; }
+		$metadate = substr($metadatetime,0,10);
 
 		$metaid = 0;
 		// have we already posted this page? replace instead of create
 		if ($searchlistid) {
 			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
-			$query .= "AND datetime LIKE '".$today."%' AND searchlistid = '".$searchlistid."'; ";
+			$query .= "AND datetime LIKE '".$metadate."%' AND searchlistid = '".$searchlistid."'; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
@@ -18,7 +20,7 @@
 		// save meta data
 		$query = "REPLACE search_meta (companyid, datetime, source, searchlistid";
 		if ($metaid) { $query .= ", id"; }
-		$query .= ") VALUES ('".$companyid."','".$now."',NULL,";
+		$query .= ") VALUES ('".$companyid."','".$metadatetime."',NULL,";
 		if ($searchlistid) { $query .= "'".$searchlistid."'"; } else { $query .= "NULL"; }
 		if ($metaid) { $query .= ",'".$metaid."'"; }
 		$query .= "); ";

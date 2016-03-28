@@ -50,16 +50,23 @@ die('file already is uploaded');
 				$upload_type = 'availability';
 				if (isset($_REQUEST['upload_type']) AND $_REQUEST['upload_type']=='Req') { $upload_type = 'demand'; }
 
+				$searchdate = $today;
+				$searchdatetime = $now;
+				if ($expDate<$now) {
+					$searchdate = substr($expDate,0,10);
+					$searchdatetime = $expDate;
+				}
+
 				// check for re-submission duplicate
 				$query = "SELECT uploads.id FROM uploads, search_meta ";
 				$query .= "WHERE filename = '".res($_FILES['upload_file']['name'])."' AND companyid = '".$cid."' ";
-				$query .= "AND datetime LIKE '".$today."%' AND uploads.metaid = search_meta.id; ";
+				$query .= "AND datetime LIKE '".$searchdate."%' AND uploads.metaid = search_meta.id; ";
 				$result = qdb($query);
 				if (mysqli_num_rows($result)>0) {
 					$r = mysqli_fetch_assoc($result);
 					$upload_listid = $r['id'];
 				} else {
-					$metaid = logSearchMeta($cid);
+					$metaid = logSearchMeta($cid,false,$searchdatetime);
 
 					if ($DEV_ENV) {
 						$temp_dir = sys_get_temp_dir();

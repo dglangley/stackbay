@@ -199,65 +199,6 @@
 				else { $(this).removeClass('fa-unlock').addClass('fa-lock'); }
 			});
 		});
-
-        // build jquery plugin for remote ajax call
-        jQuery.fn.loadResults = function(attempt) {
-            var newHtml = '';
-            var rowHtml = '';
-            var qtyTotal = 0;
-            var container = $(this);
-			var thisId = container.prop('id');
-			var doneFlag = '';
-
-            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
-            $.ajax({
-                url: 'json/availability.php',
-                type: 'get',
-                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': $(this).data('ln')},
-                success: function(json, status) {
-                    $.each(json.results, function(dateKey, item) {
-                        qtyTotal = 0;
-
-                        rowHtml = '';
-                        /* process each item's data */
-                        $.each(item, function(key, row) {
-                            qtyTotal += parseInt(row.qty,10);
-                            rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                                '<a href="#" class="market-company">'+row.company+'</a> &nbsp; ';
-                            $.each(row.sources, function(i, src) {
-                                rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
-                            });
-                            if (row.price) {
-                                rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
-                            }
-                            rowHtml += '</div>';
-                        });
-
-						doneFlag = json.done;
-
-                        /* add section header of date and qty total */
-                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag)+rowHtml;
-                    });
-                    container.html(newHtml);
-
-					// alert the user when there are errors with any/all remotes by unhiding alert buttons
-					$.each(json.err, function(i, remote) {
-						$("#remote-"+remote).removeClass('hidden');
-					});
-
-                    if (! json.done && attempt==0) {
-                        //setTimeout("$('#market-results').loadResults()",1000);
-						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
-                    }
-                },
-                error: function(xhr, desc, err) {
-                    console.log(xhr);
-                    console.log("Details: " + desc + "\nError:" + err);
-                }
-            }); // end ajax call
-
-            return;
-        };
         $(".market-results").each(function() {
 			$(this).loadResults(0);
 		});
@@ -515,6 +456,65 @@
 		});
 	
     });/* close $(document).ready */
+
+        // build jquery plugin for remote ajax call
+        jQuery.fn.loadResults = function(attempt) {
+            var newHtml = '';
+            var rowHtml = '';
+            var qtyTotal = 0;
+            var container = $(this);
+			var thisId = container.prop('id');
+			var doneFlag = '';
+
+            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
+            $.ajax({
+                url: 'json/availability.php',
+                type: 'get',
+                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': $(this).data('ln')},
+                success: function(json, status) {
+                    $.each(json.results, function(dateKey, item) {
+                        qtyTotal = 0;
+
+                        rowHtml = '';
+                        /* process each item's data */
+                        $.each(item, function(key, row) {
+                            qtyTotal += parseInt(row.qty,10);
+                            rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
+                                '<a href="#" class="market-company">'+row.company+'</a> &nbsp; ';
+                            $.each(row.sources, function(i, src) {
+                                rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
+                            });
+                            if (row.price) {
+                                rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
+                            }
+                            rowHtml += '</div>';
+                        });
+
+						doneFlag = json.done;
+
+                        /* add section header of date and qty total */
+                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag)+rowHtml;
+                    });
+                    container.html(newHtml);
+
+					// alert the user when there are errors with any/all remotes by unhiding alert buttons
+					$.each(json.err, function(i, remote) {
+						$("#remote-"+remote).removeClass('hidden');
+					});
+
+                    if (! json.done && attempt==0) {
+                        //setTimeout("$('#market-results').loadResults()",1000);
+						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
+                    }
+                },
+                error: function(xhr, desc, err) {
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+            }); // end ajax call
+
+            return;
+        };
 
 	function toggleLoader(msg) {
 		if ($("#loading-bar").is(':visible')) {
