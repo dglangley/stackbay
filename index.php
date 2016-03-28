@@ -241,8 +241,19 @@
 		if (! $search_str) { continue; }
 
 		$search_qty = 1;//default
-		if (isset($terms[$qty_index]) AND is_numeric($terms[$qty_index]) AND $terms[$qty_index]>0) {
-			$search_qty = trim($terms[$qty_index]);
+		if (isset($terms[$qty_index])) {
+			$qty_text = trim($terms[$qty_index]);
+			$qty_text = preg_replace('/^(qty|qnty|quantity)-?0?([0-9]+)-?x?/i','$2',$qty_text);
+
+			if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
+		}
+
+		$search_price = "0.00";//default
+		if (isset($terms[$price_index])) {
+			$price_text = trim($terms[$price_index]);
+			$price_text = preg_replace('/^([$])([0-9]+)([.][0-9]{0,2})?/i','$2$3',$price_text);
+
+			if ($price_text) { $search_price = number_format($price_text,2,'.',''); }
 		}
 
 		$results = hecidb(format_part($search_str));
@@ -315,7 +326,7 @@
                             <td class="text-right">
 								<div class="price">
 									<div class="form-group target">
-										<input name="list_price[<?php echo $ln; ?>]" type="text" value="0.00" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
+										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
 										<span class="info">their price</span>
 									</div>
 								</div>
