@@ -34,6 +34,7 @@
 	// requires login, see below
 	if (! isset($LOCKED)) { $LOCKED = false; }
 
+	set_include_path(get_include_path() . PATH_SEPARATOR . $_SERVER["DOCUMENT_ROOT"].'/inc/google-api-php-client/src');
 	date_default_timezone_set('America/Los_Angeles');
 
 	$DEV_ENV = false;
@@ -43,6 +44,14 @@ $userid = 1;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
+
+	$ACCESS_TOKEN = false;
+	$query = "SELECT access_token FROM google_tokens WHERE userid = '".$userid."' ORDER BY id DESC LIMIT 1; ";
+	$result = qdb($query);
+	if (mysqli_num_rows($result)>0) {
+		$row = mysqli_fetch_assoc($result);
+		$ACCESS_TOKEN = $row["access_token"];
+	}
 /*
 	$U = array('id'=>0);
 
@@ -144,5 +153,5 @@ $userid = 1;
 */
 
 	// version control for css and js includes
-	$V = '20160308';
+	$V = '20160320';
 ?>

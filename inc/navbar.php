@@ -14,7 +14,7 @@
 
     if (isset($_REQUEST['search_field'])) { $search_field = trim($_REQUEST['search_field']); }
     if (isset($_REQUEST['qty_field'])) { $qty_field = trim($_REQUEST['qty_field']); }
-    if (isset($_REQUEST['price_field'])) { $price_field = trim($_REQUEST['price_field']); }
+    if (isset($_REQUEST['price_field']) AND $_REQUEST['price_field']<>'') { $price_field = trim($_REQUEST['price_field']); }
 
 	$search_from_right = false;
 	$qty_from_right = false;
@@ -258,7 +258,7 @@
 						<p>Price:</p>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="price_field" value="<?php echo $price_field; ?>" class="form-control input-xs" size="2">
+			                  	<input type="text" name="price_field" value="" class="form-control input-xs" size="2">
 							</div>
 							<div class="form-group">
 			                  	<label for="priceFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="price_from_right" id="priceFromRight" value="1"></label>

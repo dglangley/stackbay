@@ -58,15 +58,15 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$order_date = substr($r['datetime'],0,10);
 			if ($last_date AND $order_date<>$last_date) {
-				$market_str = format_dateTitle($order_date,$dated_qty).$market_str;
+				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
 				$dated_qty = 0;//reset for next date
 			}
 			$last_date = $order_date;
 			$dated_qty += $r['qty'];
 
 			// itemized data
-			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span> &nbsp; '.
-				'<a href="#">'.$r['name'].'</a> <span class="pa">'.format_price($r['price'],false).'</span></div>';
+			$market_str = '<div class="market-data"><span class="pa">'.$r['qty'].'</span> &nbsp; '.
+				'<a href="#">'.$r['name'].'</a> <span class="pa">'.format_price($r['price'],false).'</span></div>'.$market_str;
 		}
 		// append last remaining data
 		if ($num_detailed>0) {
@@ -104,7 +104,7 @@
 */
 		$date = summarize_date($order_date);
 
-		$dtitle = '<div class="date-group"><a href="#" class="modal-results">'.$date.': '.
+		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'.$date.': '.
 			$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
@@ -249,14 +249,26 @@
 		}
 
 		$search_price = "0.00";//default
-		if (isset($terms[$price_index])) {
+		if ($price_index!==false AND isset($terms[$price_index])) {
 			$price_text = trim($terms[$price_index]);
 			$price_text = preg_replace('/^([$])([0-9]+)([.][0-9]{0,2})?/i','$2$3',$price_text);
 
 			if ($price_text) { $search_price = number_format($price_text,2,'.',''); }
 		}
 
-		$results = hecidb(format_part($search_str));
+		// if 10-digit string, detect if qualifying heci, determine if heci so we can search by 7-digit instead of full 10
+		$heci7_search = false;
+		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
+		}
+
+		if ($heci7_search) {
+			$results = hecidb(substr($search_str,0,7));
+		} else {
+			$results = hecidb(format_part($search_str));
+		}
 
 		// gather all partid's first
 		$partid_str = "";

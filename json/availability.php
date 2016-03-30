@@ -187,6 +187,7 @@ $query .= "AND companies.id <> '1118' ";
 		if (! isset($matches[$date][$r['companyid']])) {
 			$matches[$date][$r['companyid']] = array(
 				'company' => $r['name'],
+				'cid' => $r['companyid'],
 				'qty' => $r['qty'],
 				'price' => $price,
 				'changeFlag' => 'circle-o',

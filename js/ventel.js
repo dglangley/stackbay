@@ -15,8 +15,8 @@
 			}
 		});
 
-        $("body").on('click','a.modal-results',function() {
-            $('#myModal').modal('toggle');
+        $("body").on('click','a.modal-results',function(e) {
+			$("#"+$(this).data('target')).modal('toggle');
         });
 		/* toggle notes on input focus and blur */
         $("input.price-control").each(function() {
@@ -480,7 +480,7 @@
                         $.each(item, function(key, row) {
                             qtyTotal += parseInt(row.qty,10);
                             rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                                '<a href="#" class="market-company">'+row.company+'</a> &nbsp; ';
+                                '<a href="/accounts.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                             $.each(row.sources, function(i, src) {
                                 rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
                             });
@@ -611,7 +611,7 @@
 		return;
 	}
     function addDateGroup(dateKey,qtyTotal,doneFlag) {
-        var groupStr = '<div class="date-group"><a href="#" class="modal-results">'+
+        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'+
             dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
         if (! doneFlag && dateKey=='Today') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
