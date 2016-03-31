@@ -28,11 +28,13 @@ exit;
 		$client->authenticate($code);
 
 		$access_token = $client->getAccessToken();
+		$t = json_decode($access_token);
 
-		$query = "INSERT INTO google_tokens (access_token, userid) VALUES ('".$access_token."','".$userid."'); ";
+		$query = "INSERT INTO google_tokens (access_token, token_type, expires_in, created, userid) ";
+		$query .= "VALUES ('".$t->access_token."','".$t->token_type."','".$t->expires_in."','".$t->created."','".$userid."'); ";
 		$result = qdb($query);
 
-		$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/';
+		$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/gmail.php';
 		header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
 		exit;
 	}

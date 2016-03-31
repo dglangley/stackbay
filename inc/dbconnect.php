@@ -44,13 +44,17 @@ $userid = 1;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
+	$timestamp = mktime();
 
 	$ACCESS_TOKEN = false;
-	$query = "SELECT access_token FROM google_tokens WHERE userid = '".$userid."' ORDER BY id DESC LIMIT 1; ";
+	$query = "SELECT * FROM google_tokens WHERE userid = '".$userid."' ORDER BY id DESC; ";
 	$result = qdb($query);
-	if (mysqli_num_rows($result)>0) {
-		$row = mysqli_fetch_assoc($result);
-		$ACCESS_TOKEN = $row["access_token"];
+	while ($r = mysqli_fetch_assoc($result)) {
+		$exp_time = $r['created']+$r['expires_in'];
+		if ($timestamp<$exp) {
+			$ACCESS_TOKEN = $r["access_token"];
+			break;
+		}
 	}
 /*
 	$U = array('id'=>0);

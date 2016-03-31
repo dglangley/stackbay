@@ -1,6 +1,23 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	require_once 'inc/google-api-php-client/src/Google/autoload.php';
+//	include_once 'inc/mailer.php';
+
+function sendMessage($service, $userId, $message) {
+  try {
+    $message = $service->users_messages->send($userId, $message);
+    print 'Message with ID: ' . $message->getId() . ' sent.';
+    return $message;
+  } catch (Exception $e) {
+    print 'An error occurred: ' . $e->getMessage();
+  }
+}
+
+	$query = "SELECT client_secret FROM google; ";
+	$result = qdb($query);
+	if (mysqli_num_rows($result)<>1) { die("Could not establish client token"); }
+	$row = mysqli_fetch_assoc($result);
+	$auth = $row['client_secret'];
 
 	$client = new Google_Client();
 	$client->addScope("https://www.googleapis.com/auth/gmail.compose");
@@ -11,23 +28,23 @@
 
 	// without access token, ask user for permission
 	if ($ACCESS_TOKEN) {
+echo $ACCESS_TOKEN;
 		$client->setAccessToken($ACCESS_TOKEN);
 
-		// prep email here
-echo $ACCESS_TOKEN;
+		mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
+		$email_message = format_email('test','test body','teaser');
+		$base64 = base64_encode($email_message);
+
+		// Get the API client and construct the service object.
+		$service = new Google_Service_Gmail($client);
+
+		sendMessage($service, 'david@ven-tel.com', $email_message);
+
 exit;
 	} else {
-		$query = "SELECT client_secret FROM google; ";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)<>1) { die("Could not establish client token"); }
-		$row = mysqli_fetch_assoc($result);
-		$auth = $row['client_secret'];
-
-		$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php');
+		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php');
 
 		$auth_url = $client->createAuthUrl();
-echo $auth_url;
-exit;
 		header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
 	}
 
