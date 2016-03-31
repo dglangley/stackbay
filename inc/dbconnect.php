@@ -47,12 +47,12 @@ $userid = 1;
 	$timestamp = mktime();
 
 	$ACCESS_TOKEN = false;
-	$query = "SELECT * FROM google_tokens WHERE userid = '".$userid."' ORDER BY id DESC; ";
+	$query = "SELECT access_token, token_type, expires_in, created FROM google_tokens WHERE userid = '".$userid."' ORDER BY id DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$exp_time = $r['created']+$r['expires_in'];
-		if ($timestamp<$exp) {
-			$ACCESS_TOKEN = $r["access_token"];
+		if ($timestamp<$exp_time) {
+			$ACCESS_TOKEN = json_encode($r);
 			break;
 		}
 	}

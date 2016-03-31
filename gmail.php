@@ -1,7 +1,8 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	require_once 'inc/google-api-php-client/src/Google/autoload.php';
-//	include_once 'inc/mailer.php';
+	include_once 'inc/format_email.php';
+	include_once 'phpmailer/PHPMailerAutoload.php';
 
 function sendMessage($service, $userId, $message) {
   try {
@@ -31,14 +32,29 @@ function sendMessage($service, $userId, $message) {
 echo $ACCESS_TOKEN;
 		$client->setAccessToken($ACCESS_TOKEN);
 
-		mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
-		$email_message = format_email('test','test body','teaser');
-		$base64 = base64_encode($email_message);
+                $email_message = format_email('test','test body','teaser');
 
-		// Get the API client and construct the service object.
-		$service = new Google_Service_Gmail($client);
+//prepare the mail with PHPMailer
+$mail = new PHPMailer();
+$mail->CharSet = "UTF-8";
+$mail->Encoding = "base64";
 
-		sendMessage($service, 'david@ven-tel.com', $email_message);
+//supply with your header info, body etc...
+$mail->Subject = "You've got mail!";
+$mail->Body = "New test email";
+
+//create the MIME Message
+$mail->preSend();
+$mime = $mail->getSentMIMEMessage();
+$mime = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
+
+//create the Gmail Message
+
+$message = new Google_Service_Gmail_Message();
+$message->setRaw($mime);
+$message = $service->users_messages->send('me',$message);
+
+sendMessage($service, 'me', $message);
 
 exit;
 	} else {
