@@ -1,6 +1,7 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	require_once 'inc/google-api-php-client/src/Google/autoload.php';
+	include_once 'inc/updateAccessToken.php';
 
 	$err = '';
 	$code = '';
@@ -28,11 +29,7 @@ exit;
 		$client->authenticate($code);
 
 		$access_token = $client->getAccessToken();
-		$t = json_decode($access_token);
-
-		$query = "INSERT INTO google_tokens (access_token, token_type, expires_in, created, userid) ";
-		$query .= "VALUES ('".$t->access_token."','".$t->token_type."','".$t->expires_in."','".$t->created."','".$userid."'); ";
-		$result = qdb($query);
+		updateAccessToken($access_token,$userid);
 
 		$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/gmail.php';
 		header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));

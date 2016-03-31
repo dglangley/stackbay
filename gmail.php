@@ -2,6 +2,7 @@
 	include_once 'inc/dbconnect.php';
 	require_once 'inc/google-api-php-client/src/Google/autoload.php';
 	include_once 'phpmailer/PHPMailerAutoload.php';
+	include_once 'inc/updateAccessToken.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -21,13 +22,22 @@
 
 	$client = new Google_Client();
 	$client->addScope("https://www.googleapis.com/auth/gmail.compose");
-//	$client->setApplicationName("VenTel Market Manager");
-//	$client->setDeveloperKey("YOUR_APP_KEY");
-//	$client->setAuthConfigFile('client_secrets.json');
 	$client->setAuthConfig($auth);
+	$client->setAccessType("offline");
+	// forces prompt for user to authorize app so that we can be sure
+	// it will always return a refresh token for long-term access
+//	$client->setApprovalPrompt('force');
 
-	// without access token, ask user for permission
+	// without access token, try to refresh, if we have a refresh token
+	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
+		$client->refreshToken($REFRESH_TOKEN);
+		$ACCESS_TOKEN = $client->getAccessToken();
+		updateAccessToken($ACCESS_TOKEN,$userid);
+		$REFRESH_TOKEN = $ACCESS_TOKEN->refresh_token;
+	}
+
 	if ($ACCESS_TOKEN) {
+//	if (! $client->isAccessTokenExpired()) {
 //		echo $ACCESS_TOKEN;
 		$client->setAccessToken($ACCESS_TOKEN);
 
@@ -57,7 +67,7 @@
 
 		sendMessage($service, 'me', $message);
 	} else {
-		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php');
+		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php?prompt=consent');
 
 		$auth_url = $client->createAuthUrl();
 		header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
