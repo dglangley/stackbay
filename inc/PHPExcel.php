@@ -47,6 +47,7 @@
 						}
 					}
 					if (! $heci) { continue; }
+					if (strtoupper($heci)=='NONE' OR strtoupper($heci)=='NOCLEI') { $heci = ''; }
 
 					if (! isset($results[$bid_num])) { $results[$bid_num][] = array('heci','part','qty'); }
 					$results[$bid_num][] = array($heci,$part,$qty);

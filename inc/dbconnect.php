@@ -40,7 +40,7 @@
 	$DEV_ENV = false;
 	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
 $DEV_ENV = true;
-$userid = 1;
+$userid = 1;//need to get this from cookie
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
@@ -61,12 +61,11 @@ $userid = 1;
 			break;
 		}
 	}
-/*
-	$U = array('id'=>0);
+//	$U = array('name'=>'','email'=>'','id'=>0);
+	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','id'=>1);
 
-	$SUPER_ADMIN = false;
 	function is_loggedin($force_userid=0,$force_usertoken='') {
-		global $U,$SUPER_ADMIN,$super_id;
+		global $U;
 
 		$userid = 0;
 		$user_token = '';
@@ -87,9 +86,6 @@ $userid = 1;
 			return false;
 		}
 
-		// for David for now
-		if ($userid==1 OR $userid==36) { $SUPER_ADMIN = true; }
-
 		$query = "SELECT users.*, user_tokens.user_token, user_tokens.userid ";
 		if ($force_userid AND $force_usertoken) { $query .= "FROM users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
 		else { $query .= "FROM users, user_tokens WHERE users.id = user_tokens.userid AND "; }
@@ -102,6 +98,7 @@ $userid = 1;
 			setcookie('user_token','',$to_sec);
 			return false;
 		} else {
+/*
 			// after validating admin user, re-query with the super_id
 			if ($SUPER_ADMIN AND isset($_REQUEST['super_id']) AND $_REQUEST['super_id']>0) {
 				if (isset($_REQUEST['super_id'])) { $super_id = $_REQUEST['super_id']; }
@@ -111,15 +108,17 @@ $userid = 1;
 				$query .= "FROM users WHERE id = '".res($super_id)."' ";
 				$result = qdb($query);
 			}
+*/
 
 			$U = mysqli_fetch_assoc($result);
-			$U['name'] = $U['first_name'].' '.$U['last_name'];
-			$U['email'] = $U['login_email'];
+//			$U['name'] = $U['first_name'].' '.$U['last_name'];
+//			$U['email'] = $U['login_email'];
 
 			return true;
 		}
 	}
 
+/*
 	$E = array(
 		0 => array('type'=>'unknown','message'=>'SUCCESS'),
 		1 => array('type'=>'email','message'=>'Email is invalid or does not exist'),
@@ -162,5 +161,5 @@ $userid = 1;
 */
 
 	// version control for css and js includes
-	$V = '20160320';
+	$V = '20160321';
 ?>

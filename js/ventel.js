@@ -16,6 +16,47 @@
 		});
 
         $("body").on('click','a.modal-results',function(e) {
+			var productSearch = $(this).closest(".product-results").siblings(".first").find(".product-search").val().toUpperCase();
+			var partids = $(this).closest(".market-results").data('partids');
+			var ln = $(this).closest(".market-results").data('ln');
+            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"...");
+            $.ajax({
+                url: 'json/availability.php',
+                type: 'get',
+                data: {'attempt': '0', 'partids': partids},
+                success: function(json, status) {
+					rowHtml = '';
+                    $.each(json.results, function(dateKey, item) {
+	                    rowHtml += '<div class="check-group">'+
+							'<div class="row bg-success"><div class="col-sm-2"><input type="checkbox" class="checkTargetAll" data-target=".check-group"/></div>'+
+							'<div class="col-sm-10">'+dateKey+'</div></div>';
+                        /* process each item's data */
+                        $.each(item, function(key, row) {
+							rowHtml += '<div class="row"><div class="col-sm-2"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"/></div>'+
+								'<div class="col-sm-2"><strong>'+row.qty+'</strong></div>'+
+								'<div class="col-sm-6">'+row.company+'</div>'+
+								'<div class="col-sm-2">';
+                            $.each(row.sources, function(i, src) {
+								rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" /> ';
+							});
+							rowHtml += '</div></div>';
+                        });
+						rowHtml += '</div>';/*end check-group*/
+                    });
+					rowHtml += '<br/><textarea name="message_body" style="width:100%" rows="5">Please quote:\n\n'+productSearch+'</textarea>';
+                    $("#marketModal .modal-body").html(rowHtml);
+
+					// alert the user when there are errors with any/all remotes by unhiding alert buttons
+					$.each(json.err, function(i, remote) {
+						$("#remote-"+remote).removeClass('hidden');
+					});
+                },
+                error: function(xhr, desc, err) {
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+            }); // end ajax call
+
 			$("#"+$(this).data('target')).modal('toggle');
         });
 		/* toggle notes on input focus and blur */
@@ -53,6 +94,10 @@
 
         $(".checkAll").on('click',function(){
             jQuery(this).closest('tbody').find('.item-check:checkbox').not(this).prop('checked', this.checked);
+        });
+		/* must use this click method for ajax-generated content */
+        $("body").on('click','.checkTargetAll',function(){
+            jQuery(this).closest($(this).data('target')).find('.item-check:checkbox').not(this).prop('checked', this.checked);
         });
 
 /*
@@ -416,6 +461,33 @@
 			var form = $(this).closest("form");
 			form.prop('action','/upload.php');
 			form.submit();
+		});
+
+		$(".modal-form").submit(function(e) {
+			var modalForm = $(this);
+			$.ajax({
+				type: "POST",
+				url: $(this).prop("action"),
+				data: $(this).serialize(), // serializes the form's elements.
+				dataType: 'json',
+                success: function(json, status) {
+					if (json.message!='Success') {
+						if (json.confirm && json.confirm=='1') {
+							var user_conf = confirm(json.message);
+							if (user_conf===true) {
+								document.location.href = json.url;
+							}
+						} else {
+							alert(json.message); // show response from the php script.
+						}
+					}
+				},
+	            error: function(xhr, desc, err) {
+	                console.log(xhr);
+	                console.log("Details: " + desc + "\nError:" + err);
+	            }
+			});
+			e.preventDefault();
 		});
 	
 		$(".results-form").submit(function() {

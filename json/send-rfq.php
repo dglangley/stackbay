@@ -1,8 +1,8 @@
 <?php
-	include_once 'inc/dbconnect.php';
-	require_once 'inc/google-api-php-client/src/Google/autoload.php';
-	include_once 'phpmailer/PHPMailerAutoload.php';
-	include_once 'inc/updateAccessToken.php';
+	include_once '../inc/dbconnect.php';
+	require_once '../inc/google-api-php-client/src/Google/autoload.php';
+	include_once '../phpmailer/PHPMailerAutoload.php';
+	include_once '../inc/updateAccessToken.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -13,6 +13,13 @@
 			print 'An error occurred: ' . $e->getMessage();
 		}
 	}
+
+	$consent = false;
+	if (isset($_REQUEST['consent'])) { $consent = true; }
+	$message_body = '';
+	if (isset($_REQUEST['message_body'])) { $message_body = $_REQUEST['message_body']; }
+	$companyids = array();
+	if (isset($_REQUEST['companyids']) AND is_array($_REQUEST['companyids'])) { $companyids = $_REQUEST['companyids']; }
 
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
@@ -38,6 +45,11 @@
 	if ($ACCESS_TOKEN) {
 //	if (! $client->isAccessTokenExpired()) {
 //		echo $ACCESS_TOKEN;
+
+		if (count($companyids)==0) {
+			echo json_encode(array('message'=>'Oops! Did you forget to select at least one item?'));
+			exit;
+		}
 		$client->setAccessToken($ACCESS_TOKEN);
 
 		//prepare the mail with PHPMailer
@@ -47,7 +59,6 @@
 		$mail->Priority = 3;
 
 $sbj = "You've got mail";
-$message_body = "Please quote:<br/>".chr(10)."<br/>".chr(10);
 
 		//supply with your header info, body etc...
 		$mail->Subject = $sbj;
@@ -70,8 +81,19 @@ $message_body = "Please quote:<br/>".chr(10)."<br/>".chr(10);
 		sendMessage($service, 'me', $message);
 	} else {
 		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php?prompt=consent');
-
 		$auth_url = $client->createAuthUrl();
-		header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+
+		if (! $consent) {
+			$msg = "In order to Send RFQ's through VenTel Market Manager, ".
+				"you need to authorize access to send emails on your behalf. ".
+				"This is a one-time action, but you will lose any unsaved ".
+				"activity on your current page and you will need to reload it ".
+				"again in order to send the rfq. Press OK to proceed to authorization.";
+			echo json_encode(array('message'=>$msg,'confirm'=>"1",'url'=>filter_var($auth_url, FILTER_SANITIZE_URL)));
+		} else {
+			header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+		}
+
+		exit;
 	}
 ?>

@@ -194,7 +194,7 @@ $email = 'davidglangley@gmail.com';
 			}
 			if (! $part AND ! $heci) { continue; }
 
-//			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
+			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
 			$partKey = '';
 			if ($part) { $partKey = preg_replace('/[^[:alnum:]]+/','',$part); }
 			$partKey .= '.';
