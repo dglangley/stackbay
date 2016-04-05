@@ -471,7 +471,10 @@
 				data: $(this).serialize(), // serializes the form's elements.
 				dataType: 'json',
                 success: function(json, status) {
-					if (json.message!='Success') {
+					if (json.message=='Success') {
+						toggleLoader("RFQ sent successfully");
+						modalForm.closest(".modal").modal("toggle");
+					} else {
 						if (json.confirm && json.confirm=='1') {
 							var user_conf = confirm(json.message);
 							if (user_conf===true) {

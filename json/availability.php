@@ -228,6 +228,8 @@ $query .= "AND companies.id <> '1118' ";
 	array_append($market,$priced);
 	array_append($market,$standard);
 
+	krsort($market);
+
 	unset($priced);
 	unset($standard);
 

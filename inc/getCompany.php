@@ -59,12 +59,12 @@
 		$r = mysqli_fetch_assoc($result);
 
 		if (! $r['default_email']) {
-			$query2 = "SELECT * FROM users WHERE companyid = '".res($r['id'])."' ";
-			$query2 .= "AND login_email IS NOT NULL AND login_email <> '' AND rfq = 'T'; ";
+			$query2 = "SELECT email FROM contacts, emails WHERE companyid = '".res($r['id'])."' AND emails.contactid = contacts.id; ";
+//			$query2 .= "AND login_email IS NOT NULL AND login_email <> '' AND rfq = 'T'; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				$r['default_email'] = $r2['login_email'];
+				$r['default_email'] = $r2['email'];
 			}
 		}
 

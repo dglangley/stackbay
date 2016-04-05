@@ -248,9 +248,9 @@ input[type="text"].inline {
 	background:#f4efd4;
 	width:200px;
 	height:36px;
-	position:absolute;
+	position:fixed;
 	left:45%;
-	top:-120px;
+	top:0px;
 	z-index:3001;
 	color:black;
 	text-align:center;

@@ -3,11 +3,13 @@
 	require_once '../inc/google-api-php-client/src/Google/autoload.php';
 	include_once '../phpmailer/PHPMailerAutoload.php';
 	include_once '../inc/updateAccessToken.php';
+	include_once '../inc/format_email.php';
+	include_once '../inc/getCompany.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
 			$message = $service->users_messages->send($userId, $message);
-			print 'Message with ID: ' . $message->getId() . ' sent.';
+//			print 'Message with ID: ' . $message->getId() . ' sent.';
 			return $message;
 		} catch (Exception $e) {
 			print 'An error occurred: ' . $e->getMessage();
@@ -58,27 +60,74 @@
 		$mail->Encoding = "base64";
 		$mail->Priority = 3;
 
-$sbj = "You've got mail";
+		$sbj = "You've got mail";
 
 		//supply with your header info, body etc...
 		$mail->Subject = $sbj;
-		$mail->MsgHTML(format_email($sbj,$message_body,""));
 		$mail->SetFrom($U['email'],$U['name']);
-		$mail->addAddress("davidglangley@gmail.com");
-		$mail->addBCC($U['email']);
 
-		//create the MIME Message
-		$mail->preSend();
-		$mime = $mail->getSentMIMEMessage();
-		$mime = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
+//		$mail->addBCC($U['email']);
 
-		//create the Gmail Message
-		$message = new Google_Service_Gmail_Message();
-		$message->setRaw($mime);
+		$send_err = '';
+		foreach ($companyids as $cid) {
+			$email = '';
+			$intro = 'Hi';
+			$query = "SELECT default_email email, '' name FROM companies WHERE id = '".$cid."'; ";
+			$result = qdb($query);
+			$num_emails = mysqli_num_rows($result);
+			if ($num_emails==0) {
+				$query = "SELECT email, name FROM emails, contacts WHERE contacts.companyid = '".$cid."' AND emails.contactid = contacts.id; ";
+				$result = qdb($query);
+				$num_emails = mysqli_num_rows($result);
+			}
+			if ($num_emails) {
+				if ($send_err) { $send_err .= chr(10); }
+				$send_err .= getCompany($cid).' is missing an email recipient!';
+				continue;
+			}
+			$e = mysqli_fetch_assoc($result);
+			if ($e["name"]) {
+				$names = explode(" ",$e["name"]);
+				$name = $names[0];
+			}
+$mail->addAddress('davidglangley@gmail.com');
+//			$mail->addAddress($e["email"]);
 
-		$service = new Google_Service_Gmail($client);
+			if ($name) { $intro .= " ".$name; }
+			$intro .= ','.chr(10).chr(10);
+			$mail->MsgHTML(format_email($sbj,$intro.$message_body));
 
-		sendMessage($service, 'me', $message);
+			if (! $mail->send()) {
+				$send_err .= 'Mailer Error ('.str_replace("@", "&#64;", $e["email"]).') '.$mail->ErrorInfo.chr(10);
+			} else {
+//				echo "Message sent to :" . $row['full_name'] . ' (' . str_replace("@", "&#64;", $row['email']) . ')<br />';
+//Mark it as sent in the DB
+			}
+
+			// Clear all addresses and attachments for next loop
+			$mail->clearAddresses();
+			$mail->clearAttachments();
+
+			//create the MIME Message
+			$mail->preSend();
+			$mime = $mail->getSentMIMEMessage();
+			$mime = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
+
+			//create the Gmail Message
+			$message = new Google_Service_Gmail_Message();
+			$message->setRaw($mime);
+
+			$service = new Google_Service_Gmail($client);
+
+			sendMessage($service, 'me', $message);
+		}
+
+		if ($send_err) {
+			echo json_encode(array('message'=>$send_err));
+		} else {
+			echo json_encode(array('message'=>'Success'));
+		}
+		exit;
 	} else {
 		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php?prompt=consent');
 		$auth_url = $client->createAuthUrl();

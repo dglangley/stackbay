@@ -61,8 +61,8 @@ $userid = 1;//need to get this from cookie
 			break;
 		}
 	}
-//	$U = array('name'=>'','email'=>'','id'=>0);
-	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','id'=>1);
+//	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0);
+	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','phone'=>'(805) 824-0136','id'=>1);
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U;
@@ -86,9 +86,9 @@ $userid = 1;//need to get this from cookie
 			return false;
 		}
 
-		$query = "SELECT users.*, user_tokens.user_token, user_tokens.userid ";
-		if ($force_userid AND $force_usertoken) { $query .= "FROM users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
-		else { $query .= "FROM users, user_tokens WHERE users.id = user_tokens.userid AND "; }
+		$query = "SELECT users.id, users.contactid, contacts.name, user_tokens.user_token, user_tokens.userid ";
+		if ($force_userid AND $force_usertoken) { $query .= "FROM contacts, users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
+		else { $query .= "FROM contacts, users, user_tokens WHERE users.id = user_tokens.userid AND contacts.id = users.contactid AND "; }
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
 		$result = qdb($query);
@@ -111,6 +111,21 @@ $userid = 1;//need to get this from cookie
 */
 
 			$U = mysqli_fetch_assoc($result);
+
+			$U['email'] = '';
+			$U['phone'] = '';
+			$query2 = "SELECT email FROM emails WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Work',0,1) LIMIT 0,1; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$U['email'] = $r2['email'];
+			}
+			$query2 = "SELECT phone FROM phones WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Office',0,1) LIMIT 0,1; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$U['phone'] = $r2['phone'];
+			}
 //			$U['name'] = $U['first_name'].' '.$U['last_name'];
 //			$U['email'] = $U['login_email'];
 
@@ -161,5 +176,5 @@ $userid = 1;//need to get this from cookie
 */
 
 	// version control for css and js includes
-	$V = '20160321';
+	$V = '20160322';
 ?>

@@ -2,6 +2,17 @@
 	function format_email($subject='rfq',$main_body='',$teaser='') {
 		$U = $GLOBALS['U'];
 
+		$phone = '';
+		if ($U['phone']) { $phone = $U['phone'].' &#8226; '; }
+
+		if ($teaser) {
+			$teaser = '
+		<div class="row" id="teaser">
+			'.$teaser.'
+		</div>
+			';
+		}
+
 		$email_contents = '
 <!DOCTYPE html>
 <html lang="en">
@@ -44,29 +55,28 @@
 <body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
 
 	<div class="container">
-		<div class="row" id="teaser">
-			'.$teaser.'
-		</div>
-
+		'.$teaser.'
 		<div class="row" id="message-body">
 			'.$main_body.'
 		</div>
 	</div>
 
 	<div class="container">
-      <hr>
-
-      <footer>
-		<p style="font-size:14px">
-			Thanks,<br/><br/>
-			<strong>'.$U['name'].'</strong><br/>
-			(805) 212-4959<br/>
-			<a href="http://www.ven-tel.com">www.ven-tel.com</a><br/><br/>
-		</p>
-		<p>
-			<img src="http://ven-tel.com/site/templates/images/ventel-logo.png" style="width:160px"><br/>
-		</p>
-      </footer>
+	  <div class="row">
+		  <p style="line-height:16px; font-size:14px; padding:0px; margin:0px">
+			--<br/>
+			<strong>'.$U['name'].'</strong>
+		  </p>
+		  <p style="padding-bottom:12px; margin:0px; font-size:10px">'.$phone.' <a href="http://www.ven-tel.com">www.ven-tel.com</a></p>
+		  <p>
+			<strong>Ventura Telephone, LLC</strong><br/>
+			3037 Golf Course Dr Suite 4<br/>
+			Ventura, CA 93003
+		  </p>
+		  <p>
+			<strong>Service-Disabled Veteran-Owned Business<br/>ISO 9001:2008 Certified</strong>
+		  </p>
+		</div>
     </div> <!-- /container -->
 
   </body>
