@@ -50,6 +50,15 @@
 			overflow:hidden;
 			white-space:nowrap;
 		}
+		.container {
+			margin:6px;
+			padding:6px;
+			margin-left:12px;
+			padding-left:12px;
+		}
+		.container .row {
+			font-size:12px;
+		}
 	</style>
   </head>
 <body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
@@ -63,7 +72,7 @@
 
 	<div class="container">
 	  <div class="row">
-		  <p style="line-height:16px; font-size:14px; padding:0px; margin:0px">
+		  <p style="line-height:16px; font-size:12px; padding:0px; margin:0px">
 			--<br/>
 			<strong>'.$U['name'].'</strong>
 		  </p>

@@ -19,7 +19,7 @@
 	$consent = false;
 	if (isset($_REQUEST['consent'])) { $consent = true; }
 	$message_body = '';
-	if (isset($_REQUEST['message_body'])) { $message_body = $_REQUEST['message_body']; }
+	if (isset($_REQUEST['message_body'])) { $message_body = str_replace(chr(10),'<br/>',$_REQUEST['message_body']); }
 	$companyids = array();
 	if (isset($_REQUEST['companyids']) AND is_array($_REQUEST['companyids'])) { $companyids = $_REQUEST['companyids']; }
 
@@ -71,8 +71,7 @@
 		$send_err = '';
 		foreach ($companyids as $cid) {
 			$email = '';
-			$intro = 'Hi';
-			$query = "SELECT default_email email, '' name FROM companies WHERE id = '".$cid."'; ";
+			$query = "SELECT default_email email, '' name FROM companies WHERE id = '".$cid."' AND default_email <> '' AND default_email IS NOT NULL; ";
 			$result = qdb($query);
 			$num_emails = mysqli_num_rows($result);
 			if ($num_emails==0) {
@@ -80,7 +79,7 @@
 				$result = qdb($query);
 				$num_emails = mysqli_num_rows($result);
 			}
-			if ($num_emails) {
+			if ($num_emails==0) {
 				if ($send_err) { $send_err .= chr(10); }
 				$send_err .= getCompany($cid).' is missing an email recipient!';
 				continue;
@@ -93,8 +92,10 @@
 $mail->addAddress('davidglangley@gmail.com');
 //			$mail->addAddress($e["email"]);
 
-			if ($name) { $intro .= " ".$name; }
-			$intro .= ','.chr(10).chr(10);
+			$intro = '';
+			if ($name) {
+				$intro = "Hi ".$name.",<br/><br/>";
+			}
 			$mail->MsgHTML(format_email($sbj,$intro.$message_body));
 
 			if (! $mail->send()) {

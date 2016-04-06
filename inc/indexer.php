@@ -43,6 +43,11 @@
 		}
 
 		foreach ($results as $k => $r) {
+			if ($search) {
+				$query = "DELETE FROM parts_index WHERE partid = '".$k."'; ";
+				$result = qdb($query);
+			}
+
 			while (list($f,$v) = each($r)) {
 				// don't use certain fields that don't have keywords, and don't use any capitalized
 				// words that we generated above because they're duplicates or irrelevant

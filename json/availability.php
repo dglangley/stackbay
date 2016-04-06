@@ -228,6 +228,15 @@ $query .= "AND companies.id <> '1118' ";
 	array_append($market,$priced);
 	array_append($market,$standard);
 
+	$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
+	$query .= "WHERE (".$partid_str.") AND keywords.id = parts_index.keywordid AND keyword = search ";
+	$query .= "GROUP BY date; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$search_date = $r['datetime'];
+		if (! isset($market[$search_date])) { $market[$search_date] = array(); }
+	}
+
 	krsort($market);
 
 	unset($priced);
