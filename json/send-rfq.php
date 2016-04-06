@@ -19,9 +19,15 @@
 	$consent = false;
 	if (isset($_REQUEST['consent'])) { $consent = true; }
 	$message_body = '';
-	if (isset($_REQUEST['message_body'])) { $message_body = str_replace(chr(10),'<br/>',$_REQUEST['message_body']); }
+	if (isset($_REQUEST['message_body'])) { $message_body = $_REQUEST['message_body']; }
+	$sbj = trim(str_replace("Please quote:","",$message_body));
+	$message_body = str_replace(chr(10),'<br/>',$message_body);
 	$companyids = array();
 	if (isset($_REQUEST['companyids']) AND is_array($_REQUEST['companyids'])) { $companyids = $_REQUEST['companyids']; }
+
+sleep(2);
+echo json_encode(array('message'=>'Success'));
+exit;
 
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
@@ -60,8 +66,6 @@
 		$mail->Encoding = "base64";
 		$mail->Priority = 3;
 
-		$sbj = "You've got mail";
-
 		//supply with your header info, body etc...
 		$mail->Subject = $sbj;
 		$mail->SetFrom($U['email'],$U['name']);
@@ -84,15 +88,17 @@
 				$send_err .= getCompany($cid).' is missing an email recipient!';
 				continue;
 			}
+			$name = '';
+			$intro = '';
+
 			$e = mysqli_fetch_assoc($result);
 			if ($e["name"]) {
 				$names = explode(" ",$e["name"]);
 				$name = $names[0];
 			}
-$mail->addAddress('davidglangley@gmail.com');
-//			$mail->addAddress($e["email"]);
+//$mail->addAddress('davidglangley@gmail.com');
+			$mail->addAddress($e["email"]);
 
-			$intro = '';
 			if ($name) {
 				$intro = "Hi ".$name.",<br/><br/>";
 			}

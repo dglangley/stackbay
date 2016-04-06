@@ -40,29 +40,13 @@
 	$DEV_ENV = false;
 	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
 $DEV_ENV = true;
-$userid = 1;//need to get this from cookie
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
 	$timestamp = mktime();
 
-	$ACCESS_TOKEN = false;
-	$REFRESH_TOKEN = false;
-	$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
-	$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$exp_time = $r['created']+$r['expires_in'];
-		if ($timestamp<$exp_time) {
-			$ACCESS_TOKEN = json_encode($r);
-			break;
-		} else if ($r['refresh_token']) {
-			$REFRESH_TOKEN = $r['refresh_token'];
-			break;
-		}
-	}
-//	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0);
-	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','phone'=>'(805) 824-0136','id'=>1);
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0);
+//	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','phone'=>'(805) 824-0136','id'=>1);
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U;
@@ -70,6 +54,7 @@ $userid = 1;//need to get this from cookie
 		$userid = 0;
 		$user_token = '';
 		if (! $force_userid AND isset($_COOKIE["userid"])) { $userid = $_COOKIE["userid"]; }
+/*
 		if (! $force_usertoken AND isset($_COOKIE["user_token"])) { $user_token = $_COOKIE["user_token"]; }
 
 		// already logged in, already verified
@@ -85,12 +70,14 @@ $userid = 1;//need to get this from cookie
 			setcookie('user_token','',$to_sec);
 			return false;
 		}
+*/
 
 		$query = "SELECT users.id, users.contactid, contacts.name, user_tokens.user_token, user_tokens.userid ";
 		if ($force_userid AND $force_usertoken) { $query .= "FROM contacts, users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
 		else { $query .= "FROM contacts, users, user_tokens WHERE users.id = user_tokens.userid AND contacts.id = users.contactid AND "; }
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
+$query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qdb($query);
 		// if user is not registered in db, reset cookies
 		if (mysqli_num_rows($result)==0) {
@@ -174,6 +161,23 @@ $userid = 1;//need to get this from cookie
 		exit;
 	}
 */
+	$is_loggedin = is_loggedin();
+
+	$ACCESS_TOKEN = false;
+	$REFRESH_TOKEN = false;
+	$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
+	$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$exp_time = $r['created']+$r['expires_in'];
+		if ($timestamp<$exp_time) {
+			$ACCESS_TOKEN = json_encode($r);
+			break;
+		} else if ($r['refresh_token']) {
+			$REFRESH_TOKEN = $r['refresh_token'];
+			break;
+		}
+	}
 
 	// version control for css and js includes
 	$V = '20160401';

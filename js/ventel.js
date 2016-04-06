@@ -1,4 +1,5 @@
     $(document).ready(function() {
+		$('#loader').hide();
 		if ($("#s:focus") && $("#accounts-search").length==0) { $("#s").select(); }
 		toggleLoader();
 
@@ -464,6 +465,10 @@
 		});
 
 		$(".modal-form").submit(function(e) {
+			$('#loader-message').html('Please wait while your RFQ is being sent...');
+			$('#loader').show();
+			$('#modal-submit').prop('disabled',true);
+
 			var modalForm = $(this);
 			$.ajax({
 				type: "POST",
@@ -471,6 +476,10 @@
 				data: $(this).serialize(), // serializes the form's elements.
 				dataType: 'json',
                 success: function(json, status) {
+					$('#loader-message').html('Please wait while your RFQ is being sent...');
+					$('#loader').hide();
+					$('#modal-submit').prop('disabled',false);
+
 					if (json.message=='Success') {
 						toggleLoader("RFQ sent successfully");
 						modalForm.closest(".modal").modal("toggle");
@@ -486,6 +495,13 @@
 					}
 				},
 	            error: function(xhr, desc, err) {
+					$('#loader-message').html('Please wait while your RFQ is being sent...');
+					$('#loader').hide();
+					$('#modal-submit').prop('disabled',false);
+
+					toggleLoader("Error sending RFQ! Details: " + desc + "<br/>Error:" + err);
+					modalForm.closest(".modal").modal("toggle");
+
 	                console.log(xhr);
 	                console.log("Details: " + desc + "\nError:" + err);
 	            }

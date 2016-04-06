@@ -51,6 +51,13 @@
 ?>
 	<div id="loading-bar">Loading...</div>
 
+	<div id="loader" class="loader text-muted">
+		<div>
+			<i class="fa fa-refresh fa-5x fa-spin"></i><br/>
+			<h1 id="loader-message">Please wait while your RFQ is being sent...</h1>
+		</div>
+	</div>
+
 	<form class="form-inline search-form" method="post" action="/" enctype="multipart/form-data" >
 
     <!-- navbar -->
@@ -136,14 +143,17 @@
 			</li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
-                    David Langley
+                    <?php echo $U['name']; ?>
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
+                    <li><a href="/switch_user.php?userid=<?php if ($U['id']==1) { echo '2'; } else { echo '1'; } ?>"><?php if ($U['id']==1) { echo 'Sam Campa'; } else { echo 'David Langley'; } ?></a></li>
+<!--
                     <li><a href="#"><i class="fa fa-user"></i> Personal info</a></li>
                     <li><a href="#"><i class="fa fa-calendar-o"></i> Calendar</a></li>
                     <li><a href="#">Submit issue</a></li>
                     <li><a href="#">Logout</a></li>
+-->
                 </ul>
             </li>
         </ul>
