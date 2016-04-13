@@ -151,32 +151,69 @@
 		$done = 1;
 	}
 
-	$query = "SELECT companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid ";
+	$rfqs = array();
+	$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$rfqs[$r['partid']] = true;
+	}
+
+	$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
 	$query .= "FROM availability, search_meta, companies ";
 	$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 $query .= "AND companies.id <> '1118' ";
-	$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
+//	$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
+	$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$results[] = $r;
+		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
+
+		// if an rfq has been submitted against this partid, log it against the $key
+		if ($rfqs[$r['partid']]) { $r['rfq'] = 'Y'; }
+
+		if (isset($results[$key])) {
+			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
+			$results[$key]['qty'] += $r['qty'];
+			$results[$key]['rfq'] = 'Y';
+			continue;
+		}
+		unset($r['partid']);
+
+//		$result[] = $r;
+		$results[$key] = $r;
 	}
 
-	$query = "SELECT name, datetime, SUM(qty) qty, price, source, companyid FROM market, companies ";
+	$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq FROM market, companies ";
 	$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
 $query .= "AND companies.id <> '1118' ";
-	$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
+//	$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
+	$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$results[] = $r;
+		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
+
+		// if an rfq has been submitted against this partid, log it against the $key
+		if ($rfqs[$r['partid']]) { $r['rfq'] = 'Y'; }
+
+		if (isset($results[$key])) {
+			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
+			$results[$key]['qty'] += $r['qty'];
+			$results[$key]['rfq'] = 'Y';
+			continue;
+		}
+		unset($r['partid']);
+
+//		$result[] = $r;
+		$results[$key] = $r;
 	}
 
-	$keys = array();//prevent duplicate results on same day
+//	$keys = array();//prevent duplicate results on same day
 	foreach ($results as $r) {
 		$date = substr($r['datetime'],0,10);
 
 		// log based on keyed result to avoid duplicates
-		if (isset($keys[$date.'.'.$r['companyid'].'.'.$r['source']])) { continue; }
-		$keys[$date.'.'.$r['companyid'].'.'.$r['source']] = true;
+//		if (isset($keys[$date.'.'.$r['companyid'].'.'.$r['source']])) { continue; }
+//		$keys[$date.'.'.$r['companyid'].'.'.$r['source']] = true;
 
 		$price = false;
 		if ($r['price']>0) { $price = $r['price']; }
@@ -191,6 +228,7 @@ $query .= "AND companies.id <> '1118' ";
 				'qty' => $r['qty'],
 				'price' => $price,
 				'changeFlag' => 'circle-o',
+				'rfq' => $r['rfq'],
 				'sources' => array(),
 			);
 		} else if ($r['qty']>$matches[$date][$r['companyid']]['qty']) {
@@ -200,7 +238,7 @@ $query .= "AND companies.id <> '1118' ";
 		if ($source) { $matches[$date][$r['companyid']]['sources'][] = $source; }
 	}
 	unset($results);
-	unset($keys);
+//	unset($keys);
 
 	krsort($matches);
 

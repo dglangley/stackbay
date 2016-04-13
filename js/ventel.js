@@ -33,8 +33,11 @@
 							'<div class="col-sm-10">'+dateKey+'</div></div>';
                         /* process each item's data */
                         $.each(item, function(key, row) {
-							rowHtml += '<div class="row"><div class="col-sm-2"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"/></div>'+
-								'<div class="col-sm-2"><strong>'+row.qty+'</strong></div>'+
+							rowHtml += '<div class="row"><div class="col-sm-2"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"/>';
+							if (row.rfq && row.rfq=='Y') {
+								rowHtml += ' <i class="fa fa-paper-plane text-primary"></i>';
+							}
+							rowHtml += '</div><div class="col-sm-2"><strong>'+row.qty+'</strong></div>'+
 								'<div class="col-sm-6">'+row.company+'</div>'+
 								'<div class="col-sm-2">';
                             $.each(row.sources, function(i, src) {
@@ -44,8 +47,10 @@
                         });
 						rowHtml += '</div>';/*end check-group*/
                     });
-					rowHtml += '<br/><textarea name="message_body" style="width:100%" rows="5">Please quote:\n\n'+productSearch+'</textarea>';
-                    $("#marketModal .modal-body").html(rowHtml);
+					rowHtml += '<br/><textarea name="message_body" style="width:100%" rows="5">Please quote:\n\n'+productSearch+'</textarea>'+
+						'<input type="hidden" name="partids" value="'+partids+'">';
+                    var modalBody = $("#marketModal .modal-body");
+					modalBody.html(rowHtml);
 
 					// alert the user when there are errors with any/all remotes by unhiding alert buttons
 					$.each(json.err, function(i, remote) {
@@ -60,6 +65,51 @@
 
 			$("#"+$(this).data('target')).modal('toggle');
         });
+
+		$(".modal-form").submit(function(e) {
+			$('#loader-message').html('Please wait while your RFQ is being sent...');
+			$('#loader').show();
+			$('#modal-submit').prop('disabled',true);
+
+			var modalForm = $(this);
+			$.ajax({
+				type: "POST",
+				url: $(this).prop("action"),
+				data: $(this).serialize(), // serializes the form's elements.
+				dataType: 'json',
+                success: function(json, status) {
+					$('#loader').hide();
+					$('#modal-submit').prop('disabled',false);
+
+					if (json.message=='Success') {
+						toggleLoader("RFQ sent successfully");
+						modalForm.closest(".modal").modal("toggle");
+					} else {
+						if (json.confirm && json.confirm=='1') {
+							var user_conf = confirm(json.message);
+							if (user_conf===true && json.url && json.url!='') {
+								document.location.href = json.url;
+							}
+						} else {
+							alert(json.message); // show response from the php script.
+							modalForm.closest(".modal").modal("toggle");
+						}
+					}
+				},
+	            error: function(xhr, desc, err) {
+					$('#loader').hide();
+					$('#modal-submit').prop('disabled',false);
+
+					toggleLoader("Error sending RFQ! Details: " + desc + "<br/>Error:" + err);
+					modalForm.closest(".modal").modal("toggle");
+
+	                console.log(xhr);
+	                console.log("Details: " + desc + "\nError:" + err);
+	            }
+			});
+			e.preventDefault();
+		});
+
 		/* toggle notes on input focus and blur */
         $("input.price-control").each(function() {
 			$(this).click(function() {
@@ -462,51 +512,6 @@
 			var form = $(this).closest("form");
 			form.prop('action','/upload.php');
 			form.submit();
-		});
-
-		$(".modal-form").submit(function(e) {
-			$('#loader-message').html('Please wait while your RFQ is being sent...');
-			$('#loader').show();
-			$('#modal-submit').prop('disabled',true);
-
-			var modalForm = $(this);
-			$.ajax({
-				type: "POST",
-				url: $(this).prop("action"),
-				data: $(this).serialize(), // serializes the form's elements.
-				dataType: 'json',
-                success: function(json, status) {
-					$('#loader-message').html('Please wait while your RFQ is being sent...');
-					$('#loader').hide();
-					$('#modal-submit').prop('disabled',false);
-
-					if (json.message=='Success') {
-						toggleLoader("RFQ sent successfully");
-						modalForm.closest(".modal").modal("toggle");
-					} else {
-						if (json.confirm && json.confirm=='1') {
-							var user_conf = confirm(json.message);
-							if (user_conf===true) {
-								document.location.href = json.url;
-							}
-						} else {
-							alert(json.message); // show response from the php script.
-						}
-					}
-				},
-	            error: function(xhr, desc, err) {
-					$('#loader-message').html('Please wait while your RFQ is being sent...');
-					$('#loader').hide();
-					$('#modal-submit').prop('disabled',false);
-
-					toggleLoader("Error sending RFQ! Details: " + desc + "<br/>Error:" + err);
-					modalForm.closest(".modal").modal("toggle");
-
-	                console.log(xhr);
-	                console.log("Details: " + desc + "\nError:" + err);
-	            }
-			});
-			e.preventDefault();
 		});
 	
 		$(".results-form").submit(function() {

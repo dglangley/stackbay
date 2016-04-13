@@ -27,7 +27,7 @@
 		$client->authenticate($code);
 
 		$access_token = $client->getAccessToken();
-		updateAccessToken($access_token,$userid);
+		updateAccessToken($access_token,$U['id']);
 
 		$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/';
 //		$redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . '/gmail.php';

@@ -21,13 +21,14 @@
 	$message_body = '';
 	if (isset($_REQUEST['message_body'])) { $message_body = $_REQUEST['message_body']; }
 	$sbj = trim(str_replace("Please quote:","",$message_body));
+	if (! $sbj) { $sbj = "Quote request"; }
 	$message_body = str_replace(chr(10),'<br/>',$message_body);
 	$companyids = array();
 	if (isset($_REQUEST['companyids']) AND is_array($_REQUEST['companyids'])) { $companyids = $_REQUEST['companyids']; }
+	$partids = array();
+	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 
-sleep(2);
-echo json_encode(array('message'=>'Success'));
-exit;
+    $partid_array = explode(",",$partids);
 
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
@@ -71,6 +72,7 @@ exit;
 		$mail->SetFrom($U['email'],$U['name']);
 
 //		$mail->addBCC($U['email']);
+		$mail->addBCC('david@ven-tel.com');
 
 		$send_err = '';
 		foreach ($companyids as $cid) {
@@ -85,7 +87,7 @@ exit;
 			}
 			if ($num_emails==0) {
 				if ($send_err) { $send_err .= chr(10); }
-				$send_err .= getCompany($cid).' is missing an email recipient!';
+				$send_err .= getCompany($cid).' is missing an email recipient so no RFQ was sent to them!';
 				continue;
 			}
 			$name = '';
@@ -97,26 +99,26 @@ exit;
 				$name = $names[0];
 			}
 //$mail->addAddress('davidglangley@gmail.com');
-			$mail->addAddress($e["email"]);
+			$mail->addAddress(trim($e["email"]));
 
 			if ($name) {
 				$intro = "Hi ".$name.",<br/><br/>";
 			}
 			$mail->MsgHTML(format_email($sbj,$intro.$message_body));
-
-			if (! $mail->send()) {
+			//create the MIME Message
+			$preSend = $mail->preSend();
+			if (! $preSend) {
 				$send_err .= 'Mailer Error ('.str_replace("@", "&#64;", $e["email"]).') '.$mail->ErrorInfo.chr(10);
 			} else {
 //				echo "Message sent to :" . $row['full_name'] . ' (' . str_replace("@", "&#64;", $row['email']) . ')<br />';
-//Mark it as sent in the DB
+				foreach ($partid_array as $partid) {
+					$query2 = "INSERT INTO rfqs (partid, companyid, datetime, userid) ";
+					$query2 .= "VALUES ('".res($partid)."','".$cid."','".$now."','".$U['id']."'); ";
+					$result2 = qdb($query2);
+					$send_err .= $query2;
+				}
 			}
 
-			// Clear all addresses and attachments for next loop
-			$mail->clearAddresses();
-			$mail->clearAttachments();
-
-			//create the MIME Message
-			$mail->preSend();
 			$mime = $mail->getSentMIMEMessage();
 			$mime = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
 
@@ -127,6 +129,10 @@ exit;
 			$service = new Google_Service_Gmail($client);
 
 			sendMessage($service, 'me', $message);
+
+			// Clear all addresses and attachments for next loop
+			$mail->clearAddresses();
+			$mail->clearAttachments();
 		}
 
 		if ($send_err) {

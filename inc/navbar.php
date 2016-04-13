@@ -147,7 +147,13 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="/switch_user.php?userid=<?php if ($U['id']==1) { echo '2'; } else { echo '1'; } ?>"><?php if ($U['id']==1) { echo 'Sam Campa'; } else { echo 'David Langley'; } ?></a></li>
+<?php
+	$query = "SELECT name, users.id FROM users, contacts WHERE users.contactid = contacts.id AND users.id <> '".$U['id']."'; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		echo '<li><a href="/switch_user.php?userid='.$r['id'].'">'.$r['name'].'</a></li>';
+	}
+?>
 <!--
                     <li><a href="#"><i class="fa fa-user"></i> Personal info</a></li>
                     <li><a href="#"><i class="fa fa-calendar-o"></i> Calendar</a></li>

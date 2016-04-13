@@ -73,7 +73,7 @@
 	<div class="container">
 	  <div class="row">
 		  <p style="line-height:16px; font-size:12px; padding:0px; margin:0px">
-			--<br/>
+			<br/><br/>--<br/>
 			<strong>'.$U['name'].'</strong>
 		  </p>
 		  <p style="padding-bottom:12px; margin:0px; font-size:10px">'.$phone.' <a href="http://www.ven-tel.com">www.ven-tel.com</a></p>

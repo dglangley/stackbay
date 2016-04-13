@@ -293,7 +293,7 @@
 			$result = qdb($query);
 			$num_favs += mysqli_num_rows($result);
 			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['userid']==$userid) { $favs[$partid] = 'star text-danger'; }
+				if ($r['userid']==$U['id']) { $favs[$partid] = 'star text-danger'; }
 				else if ($favs[$partid]<>'star text-danger') { $favs[$partid] = 'star-half-o text-danger'; }
 			}
 		}

@@ -166,7 +166,7 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 	$ACCESS_TOKEN = false;
 	$REFRESH_TOKEN = false;
 	$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
-	$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
+	$query .= "WHERE userid = '".$U['id']."' ORDER BY id DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$exp_time = $r['created']+$r['expires_in'];
@@ -180,5 +180,5 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 	}
 
 	// version control for css and js includes
-	$V = '20160401';
+	$V = '20160403';
 ?>
