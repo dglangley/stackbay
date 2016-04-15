@@ -75,6 +75,9 @@
         </div>
         <ul class="nav navbar-nav pull-right hidden-xs">
             <li class="hidden-xs hidden-sm">
+				<a href="/profile.php"><i class="fa fa-book"></i> Address Book</a>
+			</li>
+            <li class="hidden-xs hidden-sm">
 				<div class="form-group search-group">
 					<div class="input-group">
 						<span class="input-group-btn">

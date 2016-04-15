@@ -59,15 +59,28 @@
 
     <div id="pad-wrapper" class="user-profile">
 
+<?php if (! $companyid) { ?>
+
+    <table class="table">
+		<tr>
+			<td class="col-md-12 text-center">
+				Use the Select Company menu above to search for a company...
+			</td>
+		</tr>
+	</table>
+
+<?php } else { ?>
+
         <!-- header -->
         <div class="row header">
             <div class="col-md-9">
-				<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
+				<div class="business-icon"><i class="fa fa-book fa-4x"></i></div>
                 <h2 class="name"><?php echo getCompany($companyid); ?></h2>
             </div>
             <div class="col-md-3 text-right">
 	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Delete" data-placement="top"><i class="fa fa-trash text-danger"></i></a>
 	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Edit" data-placement="top"><i class="fa fa-pencil"></i></a>
+	            <a href="/accounts.php?companyid=<?php echo $companyid; ?>" class="btn btn-default icon pull-right" data-toggle="tooltip" title="Accounts" data-placement="top"><i class="fa fa-building-o"></i></a>
 			</div>
         </div>
 
@@ -245,6 +258,8 @@
 				</select>
 			</div>
 		</div>
+
+<?php } /* end (!$companyid) */ ?>
 
 	</div>
     <!-- end main container -->

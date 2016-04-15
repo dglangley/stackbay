@@ -576,7 +576,7 @@
                         $.each(item, function(key, row) {
                             qtyTotal += parseInt(row.qty,10);
                             rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                                '<a href="/accounts.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
+                                '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                             $.each(row.sources, function(i, src) {
                                 rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
                             });

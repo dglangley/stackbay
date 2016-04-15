@@ -115,7 +115,7 @@
 					$query2 = "INSERT INTO rfqs (partid, companyid, datetime, userid) ";
 					$query2 .= "VALUES ('".res($partid)."','".$cid."','".$now."','".$U['id']."'); ";
 					$result2 = qdb($query2);
-					$send_err .= $query2;
+//					$send_err .= $query2;
 				}
 			}
 

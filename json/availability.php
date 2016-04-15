@@ -152,7 +152,8 @@
 	}
 
 	$rfqs = array();
-	$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
+//	$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
+	$query = "SELECT partid, companyid FROM rfqs WHERE datetime LIKE '".$today."%' AND (".$partid_str."); ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$rfqs[$r['partid']] = true;
@@ -169,12 +170,12 @@ $query .= "AND companies.id <> '1118' ";
 		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
 
 		// if an rfq has been submitted against this partid, log it against the $key
-		if ($rfqs[$r['partid']]) { $r['rfq'] = 'Y'; }
+		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
 
 		if (isset($results[$key])) {
 			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 			$results[$key]['qty'] += $r['qty'];
-			$results[$key]['rfq'] = 'Y';
+			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') { $results[$key]['rfq'] = 'Y'; }
 			continue;
 		}
 		unset($r['partid']);
@@ -193,12 +194,12 @@ $query .= "AND companies.id <> '1118' ";
 		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
 
 		// if an rfq has been submitted against this partid, log it against the $key
-		if ($rfqs[$r['partid']]) { $r['rfq'] = 'Y'; }
+		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
 
 		if (isset($results[$key])) {
 			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 			$results[$key]['qty'] += $r['qty'];
-			$results[$key]['rfq'] = 'Y';
+			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') { $results[$key]['rfq'] = 'Y'; }
 			continue;
 		}
 		unset($r['partid']);
