@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
 
-	function updateContact($fieldname,$fieldvalue,$id=0) {
+	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 $type = '';//for now
 		$query = "REPLACE ".$fieldname."s (".$fieldname.", type, contactid";
 		if ($id) { $query .= ", id"; }
@@ -10,7 +10,7 @@ $type = '';//for now
 		$query .= "'".$contactid."'";
 		if ($id) { $query .= ",'".$id."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR reportError(qe().' '.$query);
+		$result = qdb($query) OR die(qe().' '.$query);
 		if (! $id) { $id = qid(); }
 
 		return ($id);
@@ -36,7 +36,7 @@ $type = '';//for now
 		$msg = 'Missing valid input data';
 	} else {
 		// is this valid input?
-		$query = "SELECT id FROM companies WHERE companyid = '".$companyid."'; ";
+		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Contact does not exist';
@@ -51,10 +51,10 @@ $type = '';//for now
 		$contactid = qid();
 
 		foreach ($emails as $id => $email) {
-			$id = updateContact('email',$email,$id);
+			$id = updateContact('email',$email,$contactid,$id);
 		}
 		foreach ($phones as $id => $phone) {
-			$id = updateContact('phone',$phone,$id);
+			$id = updateContact('phone',$phone,$contactid,$id);
 		}
 	}
 

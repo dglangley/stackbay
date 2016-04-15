@@ -54,6 +54,8 @@ $DEV_ENV = true;
 		$userid = 0;
 		$user_token = '';
 		if (! $force_userid AND isset($_COOKIE["userid"])) { $userid = $_COOKIE["userid"]; }
+
+		$to_sec = time()-(60*60);
 /*
 		if (! $force_usertoken AND isset($_COOKIE["user_token"])) { $user_token = $_COOKIE["user_token"]; }
 
@@ -63,7 +65,6 @@ $DEV_ENV = true;
 		if ($force_userid) { $userid = $force_userid; }
 		if ($force_usertoken) { $user_token = $force_usertoken; }
 
-		$to_sec = time()-(60*60);
 		// if cookies are not set, set them to a guaranteed time an hour ago
 		if (! $userid OR ! $user_token) {
 			setcookie('userid','',$to_sec);
