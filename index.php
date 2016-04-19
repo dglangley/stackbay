@@ -436,7 +436,7 @@
 											<?php echo $purchases_col; ?>
 										</td>
 										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title">Availability</a>
+											<a href="javascript:void(0);" class="market-title">Availability</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
 											<div class="market-results" id="<?php echo $ln.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $ln; ?>"></div>
 										</td>
 									</tr>

@@ -16,6 +16,11 @@
 		}
 	}
 
+	if (! $U['id']) {
+		echo json_encode(array('message'=>'You must be logged in to send an RFQ'));
+		exit;
+	}
+
 	$consent = false;
 	if (isset($_REQUEST['consent'])) { $consent = true; }
 	$message_body = '';
@@ -32,7 +37,10 @@
 
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
-	if (mysqli_num_rows($result)<>1) { die("Could not establish client token"); }
+	if (mysqli_num_rows($result)<>1) {
+		echo json_encode(array('message'=>'Could not establish client token for email authorization'));
+		exit;
+	}
 	$row = mysqli_fetch_assoc($result);
 	$auth = $row['client_secret'];
 
@@ -48,7 +56,7 @@
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
 		$client->refreshToken($REFRESH_TOKEN);
 		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
+		updateAccessToken($ACCESS_TOKEN,$U['id'],$REFRESH_TOKEN);
 	}
 
 	if ($ACCESS_TOKEN) {

@@ -46,7 +46,7 @@
 			</td>
 			<td class="col-md-3">
 				<div class="pull-right form-group">
-					<select name="companyid" id="companyid" class="company-selector">
+					<select name="companyid-sel" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 <?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
 					</select>
@@ -168,6 +168,7 @@
 
 <?php
 	$A = getAddress($companyid,'companyid');
+	$company_phone = getCompany($companyid,'id','phone');
 ?>
 
             <!-- side address column -->
@@ -178,10 +179,12 @@
                 <ul>
                     <li><?php echo $A['street']; ?></li>
                     <li><?php echo $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
+<?php if ($company_phone) { ?>
                     <li class="ico-li">
                         <i class="ico-phone"></i>
-                        <?php echo getCompany($companyid,'id','phone'); ?>
+						<?php echo $company_phone; ?>
                     </li>
+<?php } ?>
 <!--
                     <li class="ico-li">
                         <i class="ico-mail"></i>

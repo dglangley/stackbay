@@ -126,6 +126,15 @@
 			else if ($contactid==$id) { $sel = ' selected'; }
 			$contacts_list .= '<option value="'.$id.'"'.$sel.'>'.$c['name'].'</option>'.chr(10);
 		}
+
+		include_once 'inc/getTerms.php';
+		$terms = getTerms($companyid,'AR');
+		$terms_list = '';
+		foreach ($terms as $id => $t) {
+			$sel = '';
+			if (! $id) { $t['terms'] = '- Select Terms -'; }
+			$terms_list .= '<option value="'.$id.'"'.$sel.'>'.$t['terms'].'</option>'.chr(10);
+		}
 ?>
 				<form class="inline-form order-form">
 				<h5>Create Order</h5>
@@ -137,10 +146,7 @@
 					</div>
 					<div class="ui-select">
 						<select>
-							<option value="">- Select Terms -</option>
-							<option value="">Net 15</option>
-							<option value="">Net 30</option>
-							<option value="">COD</option>
+							<?php echo $terms_list; ?>
 						</select>
 					</div>
 				</div>

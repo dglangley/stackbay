@@ -1,5 +1,6 @@
 <?php
 	include '../inc/dbconnect.php';
+	include '../inc/format_date.php';
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
@@ -53,6 +54,18 @@
 
 //			$companies[] = array('id'=>$r['companyid'],'text'=>$r['name']);
 		}
+	} else {
+		$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-30));
+
+		$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
+		$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
+		$query .= "GROUP BY companyid ORDER BY n DESC; ";
+		$result = qdb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$arr = array('id'=>$r['id'],'text'=>$r['name']);
+
+			$firsts[$r['name'].'.'.$r['id']] = $arr;
+		}
 	}
 
 	krsort($firsts);
@@ -63,7 +76,7 @@
 	foreach ($seconds as $r) { $companies[] = $r; }
 	foreach ($thirds as $r) { $companies[] = $r; }
 
-	if ($add_custom) {
+	if ($add_custom AND strlen($q)>1) {
 		$companies[] = array('id'=>ucwords($q),'text'=>'Add '.ucwords($q).'...');
 	}
 

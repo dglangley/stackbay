@@ -119,6 +119,8 @@
 				$line_lower = array_map('strtolower',$L);
 				$part_col = array_find('part',$line_lower);
 				if ($part_col===false) { $part_col = array_find('model',$line_lower); }
+				if ($part_col===false) { $part_col = array_find('mpn',$line_lower); }
+				if ($part_col===false) { $part_col = array_find('item',$line_lower); }
 				$heci_col = array_find('heci',$line_lower);
 				if ($heci_col===false) { $heci_col = array_find('clei',$line_lower); }
 				$qty_col = array_find('qty',$line_lower);

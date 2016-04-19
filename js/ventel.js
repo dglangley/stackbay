@@ -298,6 +298,10 @@
         $(".market-results").each(function() {
 			$(this).loadResults(0);
 		});
+		$(".market-download").click(function() {
+			var mr = $(this).closest(".bg-availability").find(".market-results:first");
+			mr.loadResults(0);
+		});
 
 	    // select2 plugin for select elements
 		var add_custom = 1;
@@ -334,7 +338,7 @@
 				cache: true
 	        },
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 2
+	        minimumInputLength: 0
 	    });
 		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
 			if ($.isNumeric($(this).val())) {
@@ -420,20 +424,7 @@
 		});
 */
 		$('.slider-button').click(function() {
-			var buttonText = '';
-			if ($(this).hasClass("on")) {
-				$(this).closest(".slider-frame").removeClass("warning").addClass("success");
-				$(this).removeClass('on').html($(this).data("off-text"));   
-				buttonText = $(this).data("off-text");
-			} else {
-				$(this).closest(".slider-frame").removeClass("success").addClass("warning");
-				$(this).addClass('on').html($(this).data("on-text"));
-				buttonText = $(this).data("on-text");
-			}
-			$("input[name='upload_type']").each(function() {
-				if (buttonText==$(this).val()) { $(this).prop('checked',true); }
-				else { $(this).prop('checked',false); }
-			});
+			setUploadSlider($(this));
 		});
 
 		$(".advanced-search").click(function() {
@@ -550,6 +541,8 @@
 		$(".pagination li a").click(function() {
 			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
 		});
+
+		setUploadSlider($(".slider-button:first"));
 	
     });/* close $(document).ready */
 
@@ -622,6 +615,22 @@
 			$("#loading-bar").show();
 			setTimeout("toggleLoader()",1000);
 		}
+	}
+	function setUploadSlider(e) {
+		var buttonText = '';
+		if (e.hasClass("on")) {
+			e.closest(".slider-frame").removeClass("warning").addClass("success");
+			e.removeClass('on').html(e.data("off-text"));   
+			buttonText = e.data("off-text");
+		} else {
+			e.closest(".slider-frame").removeClass("success").addClass("warning");
+			e.addClass('on').html(e.data("on-text"));
+			buttonText = e.data("on-text");
+		}
+		$("input[name='upload_type']").each(function() {
+			if (buttonText==$(this).val()) { $(this).prop('checked',true); }
+			else { $(this).prop('checked',false); }
+		});
 	}
 
 	function uploadFile(e) {

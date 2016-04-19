@@ -156,7 +156,7 @@
 	$query = "SELECT partid, companyid FROM rfqs WHERE datetime LIKE '".$today."%' AND (".$partid_str."); ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$rfqs[$r['partid']] = true;
+		$rfqs[$r['partid']][$r['companyid']] = true;
 	}
 
 	$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
