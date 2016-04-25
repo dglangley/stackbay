@@ -36,7 +36,9 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<form class="form-inline" method="get" action="/save-profile.php">
+<!--
 	<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
+-->
 
     <table class="table table-header">
 		<tr>
@@ -46,7 +48,7 @@
 			</td>
 			<td class="col-md-3">
 				<div class="pull-right form-group">
-					<select name="companyid-sel" id="companyid" class="company-selector">
+					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 <?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
 					</select>
@@ -280,12 +282,12 @@
 				if (field.data('id')) { fieldid = field.data('id'); }
 				var v = field.val();
 				var contactid = field.closest('tr').data('contactid');
-				console.log(action+'?contactid='+contactid+'&change_field='+k+'&change_value='+v.trim()+'&fieldid='+fieldid);
+				console.log(action+'?contactid='+contactid+'&change_field='+k+'&change_value='+encodeURIComponent(v.trim())+'&fieldid='+fieldid);
 
 				$.ajax({
 					url: action,
 					type: 'get',
-					data: {'contactid': contactid, 'change_field': k, 'change_value': encodeURIComponent(v), id: fieldid},
+					data: {'contactid': contactid, 'change_field': k, 'change_value': encodeURIComponent(v.trim()), id: fieldid},
 					dataType: 'json',
 					success: function(json, status) {
 						if (json.message=='Success') {

@@ -243,7 +243,7 @@
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index])) {
 			$qty_text = trim($terms[$qty_index]);
-			$qty_text = preg_replace('/^(qty|qnty|quantity)-?0?([0-9]+)-?x?/i','$2',$qty_text);
+			$qty_text = preg_replace('/^(qty|qnty|quantity)?-?0?([0-9]+)-?(x|ea)?/i','$2',$qty_text);
 
 			if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
 		}

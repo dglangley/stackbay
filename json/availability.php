@@ -41,6 +41,8 @@
 	if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
+	$force_download = false;
+	if ($attempt==2) { $force_download = true; }
 
 	$matches = array();
 	$partid_array = explode(",",$partids);
@@ -67,7 +69,7 @@
 	if (! $partid_str) {
 		// limit today's results (and broker searches below) to the first few lines
 		$results = array();
-		if ($ln<=$max_ln) { $results = array($today=>array()); }
+		if ($ln<=$max_ln OR $force_download) { $results = array($today=>array()); }
 		$newResults = array('results'=>$results,'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 		header("Content-Type: application/json", true);
 		echo json_encode($newResults);
@@ -104,7 +106,7 @@
 	foreach ($searches as $keyword => $bool) {
 		// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 		// statically-stored db results
-		if ($attempt>=1 AND $ln<=$max_ln) {
+		if ($attempt>=1 AND ($ln<=$max_ln OR $force_download)) {
 			// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
 			$RLOG = logRemotes($keyword);
 		} else {
@@ -153,10 +155,10 @@
 
 	$rfqs = array();
 //	$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
-	$query = "SELECT partid, companyid FROM rfqs WHERE datetime LIKE '".$today."%' AND (".$partid_str."); ";
+	$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime LIKE '".$today."%' AND (".$partid_str."); ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$rfqs[$r['partid']][$r['companyid']] = true;
+		$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
 	}
 
 	$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
@@ -167,15 +169,18 @@ $query .= "AND companies.id <> '1118' ";
 	$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
+		$date = substr($r['datetime'],0,10);
+		$key = $date.'.'.$r['companyid'].'.'.$r['source'];
 
 		// if an rfq has been submitted against this partid, log it against the $key
-		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
+		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
 
 		if (isset($results[$key])) {
 			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 			$results[$key]['qty'] += $r['qty'];
-			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') { $results[$key]['rfq'] = 'Y'; }
+			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
+				$results[$key]['rfq'] = 'Y';
+			}
 			continue;
 		}
 		unset($r['partid']);
@@ -191,15 +196,18 @@ $query .= "AND companies.id <> '1118' ";
 	$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$key = substr($r['datetime'],0,10).'.'.$r['companyid'].'.'.$r['source'];
+		$date = substr($r['datetime'],0,10);
+		$key = $date.'.'.$r['companyid'].'.'.$r['source'];
 
 		// if an rfq has been submitted against this partid, log it against the $key
-		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
+		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
 
 		if (isset($results[$key])) {
 			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 			$results[$key]['qty'] += $r['qty'];
-			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') { $results[$key]['rfq'] = 'Y'; }
+			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
+				$results[$key]['rfq'] = 'Y';
+			}
 			continue;
 		}
 		unset($r['partid']);
@@ -261,7 +269,7 @@ $query .= "AND companies.id <> '1118' ";
 	$market = array();
 	// include today's date preset in case there are no results, since we still need the header, so long as
 	// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
-	if ($ln<=$max_ln) {
+	if ($ln<=$max_ln OR $force_download) {
 		$market = array($today=>array());
 	}
 	array_append($market,$priced);

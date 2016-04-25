@@ -16,7 +16,7 @@
 		$contactid = $_REQUEST['contactid'];
 	}
 	if (isset($_REQUEST['change_field'])) { $change_field = trim($_REQUEST['change_field']); }
-	if (isset($_REQUEST['change_value'])) { $change_value = trim($_REQUEST['change_value']); }
+	if (isset($_REQUEST['change_value'])) { $change_value = urldecode(trim($_REQUEST['change_value'])); }
 	if (isset($_REQUEST['fieldid']) AND is_numeric($_REQUEST['fieldid']) AND $_REQUEST['fieldid']>0) { $fieldid = trim($_REQUEST['fieldid']); }
 
 	$msg = 'Success';
@@ -36,7 +36,7 @@
 		// validate email
 		if ($change_field=='email') {
 			$valid_email = filter_var($change_value, FILTER_VALIDATE_EMAIL);
-			if (! $valid_email) { reportError('Email is invalid!'); }
+			if (! $valid_email) { reportError('Email "'.$change_value.'" is invalid!'); }
 		} else if ($change_field=='phone') {
 			$change_value = format_phone($change_value);
 		}

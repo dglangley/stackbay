@@ -1,6 +1,6 @@
     $(document).ready(function() {
 		$('#loader').hide();
-		if ($("#s:focus") && $("#accounts-search").length==0) { $("#s").select(); }
+		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) { $("#s").select(); }
 		toggleLoader();
 
 		// adjust height dynamically to size of the rows within section
@@ -300,7 +300,7 @@
 		});
 		$(".market-download").click(function() {
 			var mr = $(this).closest(".bg-availability").find(".market-results:first");
-			mr.loadResults(0);
+			mr.loadResults(2);
 		});
 
 	    // select2 plugin for select elements
@@ -553,6 +553,9 @@
             var qtyTotal = 0;
             var container = $(this);
 			var thisId = container.prop('id');
+			if (attempt==2) {
+	            container.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+			}
 			var doneFlag = '';
 
             console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
