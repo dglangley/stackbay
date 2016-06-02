@@ -101,9 +101,33 @@
 }
 .table .product-action div input[type="checkbox"] {
 	position:relative;
-	top:-6px;
-	left:33%;
+	top:-8px;
+	left:37%;
 }
+.table .first {
+	vertical-align:top;
+	height:64px;
+}
+.table .product-action {
+	vertical-align:top;
+	width:48px;
+	height:22px;
+	padding:0px;
+	margin:0px;
+}
+.table tr .product-action .action-meta {
+	display:none;
+}
+.table tr:hover .product-action .action-meta {
+	display:block;
+}
+.table tr .product-action .action-items {
+	display:none;
+}
+.table tr:hover .product-action .action-items {
+	display:block;
+}
+
 .first .product-descr {
 	margin-left:12px;
 }
@@ -135,7 +159,7 @@
 }
 .table-products .table .product-descr .description, .table-products .table .product-descr .description .descr-edit input {
 	font-size:10px;
-	color:#888;
+	color:#aaa;
 }
 .table-products .table .product-search {
 	border:0px;
@@ -172,6 +196,9 @@
 	width:40px;
 	margin-left:4px;
 	font-weight:bold;
+}
+.product-results .price .btn i {
+	color:#aaa;
 }
 .price-header, .product-results .price {
 	padding-right:12px;
@@ -578,4 +605,8 @@ h1 a, h2 a, h3 a {
 }
 .loader div, .loader div h1, .loader div h2, .loader div h3, .loader div h4 {
     color: #fff;
+}
+
+.highlight-selected {
+	font-weight:bold;
 }

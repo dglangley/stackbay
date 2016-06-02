@@ -27,6 +27,12 @@
 			$m = $D[0];
 			$d = $D[1];
 			$y = $D[2];
+		} else if (preg_match('/[0-9]{2}-[A-Z]{3}-[0-9]{2,4}/i',$date)) {//07-May-2016 06:00:00
+			$months = array('Jan'=>'01','Feb'=>'02','Mar'=>'03','Apr'=>'04','May'=>'05','Jun'=>'06','Jul'=>'07','Aug'=>'08','Sep'=>'09','Oct'=>'10','Nov'=>'11','Dec'=>'12');
+			$D = preg_split('/[-\/]/',$date);
+			$m = $months[ucfirst(strtolower($D[1]))];
+			$d = $D[0];
+			$y = $D[2];
 		} else {
 			return false;
 		}

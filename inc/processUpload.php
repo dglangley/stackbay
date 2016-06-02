@@ -12,6 +12,8 @@
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
 //	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/mailer.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/PHPExcel.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/array_find.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/find_fields.php';
 //	require($_SERVER["DOCUMENT_ROOT"].'/vendor/autoload.php');
 
 	$test = 0;
@@ -27,75 +29,25 @@
 		$remotes_log .= '0';
 	}
 
-	function array_find($needle, $haystack) {
-		$f = false;
-		foreach ($haystack as $k => $item) {
-			//strpos() is haystack, needle
-			if (strpos($item, $needle) !== FALSE) {
-				// cannot have dups of same column
-				if ($f!==false) { return false; }
-				$f = $k;//identify the key but keep searching for dups
-			}
-		}
-		return ($f);
-	}
-	function find_fields($arr) {
-		if ($GLOBALS['test']) { print "<pre>".print_r($arr,true)."</pre>"; }
-
-		$qty = false;
-		$heci = false;
-		$part = false;
-		foreach ($arr as $k => $col) {
-			$col = trim($col);
-			if (! $col) { continue; }
-			// easiest field to identify is qty
-			if (is_numeric($col) AND $col<10000) {
-				if ($qty!==false) { $qty = true; }//if qty has already been found, discredit it for finding a 2nd match
-				else { $qty = $k; }
-				continue;
-			}
-			if ($heci===false AND preg_match('/^[[:alnum:]]{7,10}$/',$col)) {
-				$query = "SELECT * FROM parts WHERE heci LIKE '".res($col)."%'; ";
-				$result = qdb($query);
-				if (mysqli_num_rows($result)>0) {
-					$heci = $k;
-					continue;
-				}
-			}
-			if ($part===false AND strlen($col)>1) {
-				$fields = explode(' ',$col);
-				if (strlen($fields[0])>1) { $part = $k; }
-			}
-		}
-
-		if ($qty===true) {
-			// should I try to search the entire list array to get a better grasp of qty column?
-			$qty = false;
-		}
-
-		return (array($part,$heci,$qty));
-	}
 	function condenseLines($lines) {
 		$condensed = array();
 		// use this loop to eliminate empty rows
-		foreach ($lines as $n => $L) {
+		foreach ($lines as $n => $row_arr) {
 			// verify that there's data within the array
 			$verified = false;
-			if (! is_array($L)) {
+			if (! is_array($row_arr)) {
 				$verified = true;
 			} else {
-				foreach ($L as $d) {
+				foreach ($row_arr as $d) {
 					if (trim($d)) { $verified = true; }
 				}
 			}
-			if ($verified) { $condensed[] = $L; }
+			if ($verified) { $condensed[] = $row_arr; }
 		}
 
 		return ($condensed);
 	}
 	function curateResults($condensed,$filename) {
-		$num_lines = count($condensed);
-
 		// columns detected below for each field
 		$part_col = false;
 		$heci_col = false;
@@ -103,59 +55,20 @@
 
 		// identify the columns and curate the results by removing punctuations
 		$curated = array();
-		foreach ($condensed as $n => $L) {
+		foreach ($condensed as $n => $row_arr) {
 			// make array out of fields if not already
-			if (! is_array($L)) {
-				$data = explode(' ',$L);// ?????
+			if (! is_array($row_arr)) {
+				$data = explode(' ',$row_arr);// ?????
 				$num_fields = count($data);
-				//reassign $L as the array now
-				$L = $data;
+				//reassign $row_arr as the array now
+				$row_arr = $data;
 			}
 
-//			print "<pre>".print_r($L,true)."</pre>";
+//			print "<pre>".print_r($row_arr,true)."</pre>";
 
 			// is this a header row? try to find out
 			if ($n==0) {
-				$line_lower = array_map('strtolower',$L);
-				$part_col = array_find('part',$line_lower);
-				if ($part_col===false) { $part_col = array_find('model',$line_lower); }
-				if ($part_col===false) { $part_col = array_find('mpn',$line_lower); }
-				if ($part_col===false) { $part_col = array_find('item',$line_lower); }
-				$heci_col = array_find('heci',$line_lower);
-				if ($heci_col===false) { $heci_col = array_find('clei',$line_lower); }
-				$qty_col = array_find('qty',$line_lower);
-				if ($qty_col===false) { $qty_col = array_find('quantity',$line_lower); }
-				if ($qty_col===false) { $qty_col = array_find('qnty',$line_lower); }
-
-				// at least one of these two fields must be present, otherwise it's prob not a header row.
-				if ($part_col!==false AND $qty_col!==false) {
-					continue;
-				}
-
-				// we have to auto-determine the rows, so use samplings to find types of columns
-				$r1 = round($num_lines/3);
-				$r2 = $r1*2;
-				$s1 = $lines[rand(1,$r1)];//sample array one
-				$s2 = $lines[rand(($r1+1),$r2)];//sample array two
-				$s3 = $lines[rand(($r2+1),($num_lines-1))];//sample array three
-
-				$ff1 = find_fields($s1);
-				$ff2 = find_fields($s2);
-				$ff3 = find_fields($s3);
-				if ($ff1[0]!==false AND $ff1[2]!==false) {
-					if (($ff1[0]==$ff2[0] AND $ff1[2]==$ff2[2]) OR ($ff1[0]==$ff3[0] AND $ff1[2]==$ff3[2])) {
-						$part_col = $ff1[0];
-						$qty_col = $ff1[2];
-						if ($ff1[1]!==false) { $heci_col = $ff1[1]; }
-						else if ($ff2[1]!==false) { $heci_col = $ff2[1]; }
-						else if ($ff3[0]==$ff1[0] AND $ff3[2]==$ff1[2] AND $ff3[1]!==false) { $heci_col = $ff3[1]; }
-					}
-				} else if ($ff2[0]!==false AND $ff2[2]!==false AND $ff2[0]==$ff3[0] AND $ff2[2]==$ff3[2]) {
-					$part_col = $ff2[0];
-					$qty_col = $ff2[2];
-					if ($ff2[1]!==false) { $heci_col = $ff2[1]; }
-					else if ($ff3[1]!==false) { $heci_col = $ff3[1]; }
-				}
+				list($part_col,$qty_col,$heci_col) = set_columns($row_arr,$condensed);
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
@@ -175,10 +88,10 @@ $email = 'davidglangley@gmail.com';
 				break;
 			}
 
-//			$part = strtoupper(preg_replace('/[^[:alnum:]]*/','',trim($L[$part_col])));
+//			$part = strtoupper(preg_replace('/[^[:alnum:]]*/','',trim($row_arr[$part_col])));
 			$part = '';
 			if ($part_col!==false) {
-				$part = strtoupper(trim($L[$part_col]));
+				$part = strtoupper(trim($row_arr[$part_col]));
 			}
 
 //			if (preg_match('/(REV|REL|ISS|SER)/',$part)) {
@@ -186,11 +99,11 @@ $email = 'davidglangley@gmail.com';
 //			}
 
 			// replacing chr(0) is removing null characters, specifically for verizon bid list
-			$qty = preg_replace('/^([0-9]+)(x|ea)$/i','$1',str_replace(chr(0),'',trim($L[$qty_col])));
+			$qty = preg_replace('/^([0-9]+)(x|ea)$/i','$1',str_replace(chr(0),'',trim($row_arr[$qty_col])));
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = '';
 			if ($heci_col!==false) {
-				$heci = strtoupper(trim($L[$heci_col]));
+				$heci = strtoupper(trim($row_arr[$heci_col]));
 				// there's no such thing as a legitimate all-numeric heci, but verizon sometimes uses their internal codes here
 				if (is_numeric($heci)) { $heci = ''; }
 			}

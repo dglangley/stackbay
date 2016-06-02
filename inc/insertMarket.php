@@ -42,9 +42,10 @@
 		$result = qdb($query) OR die(qe().' '.$query);
 	}
 
-	function insertMarket2($partid,$qty,$companyid,$date,$source,$price=false) {
+	function insertMarket2($partid,$qty,$companyid,$date,$source,$price=false,$partstr) {
 		if (! $partid OR ! $companyid) { return; }
 		if (! $date) { $date = $GLOBALS['now']; }
+		if ($qty>=9999 OR strstr($partstr,$qty)) { $qty = 1; }//fixes results such as in tel-explorer that gets Telmar's qty wrong
 
 		// get today's marketid already stored, if any; also try to get previous price for this company
 		$marketid = 0;
@@ -73,6 +74,7 @@
 		$query2 .= "'".res($source)."'";
 		if ($marketid) { $query2 .= ",'".res($marketid)."'"; }
 		$query2 .= "); ";
+//echo $query2.'<BR>'; return true;
 		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { echo $query2.'<BR>'.chr(10); }
 		else { $result2 = qdb($query2) OR die(qe().' '.$query2); }
 

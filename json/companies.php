@@ -13,6 +13,7 @@
 	$seconds = array();//similar match (wildcard ending)
 	$thirds = array();//all others
 	$companies = array();
+	$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-30));
 
 	// require string length to be at least 2 chars
 	if (strlen($q)>1) {
@@ -54,9 +55,28 @@
 
 //			$companies[] = array('id'=>$r['companyid'],'text'=>$r['name']);
 		}
-	} else {
-		$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-30));
 
+		// sort the companies in $seconds (secondary priority) by recent activity
+		$new_seconds = array();
+		foreach ($seconds as $k => $arr) {
+			$n = 0;
+			$query = "SELECT COUNT(search_meta.id) n FROM search_meta ";
+			$query .= "WHERE datetime >= '".$past_date."' AND companyid = '".$arr['id']."'; ";
+			$result = qdb($query) OR die(qe());
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$n = $r['n'];
+			}
+			$new_seconds[$n][$k] = $arr;
+		}
+		krsort($new_seconds);
+
+		$seconds = array();//reset for new order of results below
+		foreach($new_seconds as $n => $results) {
+			$seconds = array_merge($seconds,$results);
+		}
+//		print "<pre>".print_r($seconds,true)."</pre>";
+	} else {
 		$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
 		$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
 		$query .= "GROUP BY companyid ORDER BY n DESC; ";
@@ -69,7 +89,8 @@
 	}
 
 	krsort($firsts);
-	krsort($seconds);
+//this array is now sorted above, in priority rather than straight key-order
+//	krsort($seconds);
 	krsort($thirds);
 
 	foreach ($firsts as $r) { $companies[] = $r; }

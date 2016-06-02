@@ -30,7 +30,21 @@
 			return (qid());
 		}
 
-		$query = "SELECT * FROM companies WHERE $input_field = '".res($search_field)."'; ";
+		$query_field = $input_field;
+		$key_field = $search_field;
+
+		if ($input_field=='contactid') {
+			$query = "SELECT companyid FROM contacts WHERE id = '".res($search_field)."'; ";
+			$result = qdb($query);
+			$num_results = mysqli_num_rows($result);
+			if ($num_results>0) {
+				$r = mysqli_fetch_assoc($result);
+				$query_field = 'id';
+				$search_field = $r['companyid'];
+			}
+		}
+
+		$query = "SELECT * FROM companies WHERE $query_field = '".res($search_field)."'; ";
 		$result = qdb($query);
 		$num_results = mysqli_num_rows($result);
 		if ($num_results==0) {
@@ -76,7 +90,7 @@
 			$r['aliases'][$r2['id']] = $r2['name'];
 		}
 
-		$COMPANIES[$search_field] = array($input_field=>$r);
+		$COMPANIES[$key_field] = array($input_field=>$r);
 
 		return ($r[$output_field]);
 	}

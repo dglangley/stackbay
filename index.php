@@ -83,7 +83,7 @@
 		if ($market_str) {
 			$market_str = '<a href="#" class="market-title">'.ucfirst($market_table).'</a>'.$market_str;
 		} else {
-			$market_str = '- No '.ucfirst($market_table).' -';
+			$market_str = '<span class="info">- No '.ucfirst($market_table).' -</span>';
 		}
 
 		return ($market_str);
@@ -178,7 +178,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th class="col-md-5">
+                            <th class="col-md-6">
 								<span class="qty-header">Qty</span>
                                 Product Description
 								<span class="price-header">Price</span>
@@ -186,11 +186,12 @@
                             <th class="col-md-6 text-center">
                                 <span class="line"></span>Market
                             </th>
+<!--
                             <th class="col-md-1">
                                 <span class="line"></span>
-								<!-- Buy -->
 								<span class="pull-right">Response</span>
                             </th>
+-->
                         </tr>
                     </thead>
 <?php
@@ -243,7 +244,7 @@
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index])) {
 			$qty_text = trim($terms[$qty_index]);
-			$qty_text = preg_replace('/^(qty|qnty|quantity)?-?0?([0-9]+)-?(x|ea)?/i','$2',$qty_text);
+			$qty_text = preg_replace('/^(qty|qnty|quantity)?([.]|-)?0?([0-9]+)([.]|-)?(x|ea)?/i','$3',$qty_text);
 
 			if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
 		}
@@ -315,8 +316,10 @@
                             <td>
 								<div class="product-action text-center">
 	                                <div><input type="checkbox" class="checkAll" checked></div>
+<div class="action-meta">
 					           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
 					           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
+</div>
 								</div>
 								<div class="qty">
 									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
@@ -325,6 +328,12 @@
 								<div class="product-descr">
 									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
+								</div>
+								<div class="price pull-right">
+									<div class="form-group target text-right">
+										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
+										<span class="info">their price</span>
+									</div>
 								</div>
 							</td>
                             <td>
@@ -335,6 +344,7 @@
 									<div class="col-sm-3 text-center"><?php echo '$'.rand(200,400).'-$'.rand(550,1300); ?><br/><span class="info">market pricing</span></div>
 								</div>
 							</td>
+<!--
                             <td class="text-right">
 								<div class="price">
 									<div class="form-group target">
@@ -343,6 +353,7 @@
 									</div>
 								</div>
 							</td>
+-->
 						</tr>
 
 <?php
@@ -363,7 +374,13 @@
                             <td class="descr-row<?php echo $rowcls; ?>">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items[<?php echo $ln; ?>][<?php echo $k; ?>]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
+<!--
+<div class="action-items">
+-->
                                     <a href="javascript:void(0);" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
+<!--
+</div>
+-->
 								</div>
 								<div class="qty">
 									<div class="form-group">
@@ -450,12 +467,14 @@
                             <td class="product-actions text-right">
 								<div class="price">
 									<div class="form-group">
+<!--
 										<div class="input-group buy">
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
 											<input name="buyprice[<?php echo $ln; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
+-->
 									</div>
 								</div>
                             </td>
