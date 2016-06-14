@@ -7,12 +7,26 @@
 
 		if (isset($CONTACTS[$search_field][$input_field])) { return ($CONTACTS[$search_field][$input_field][$output_field]); }
 
-		$CONTACTS[$search_field][$input_field] = array($output_field=>'');
+		$CONTACTS[$search_field][$input_field] = array($output_field=>false);
 
-		$query = "SELECT * FROM contacts WHERE $input_field = '".res($search_field)."'; ";
+		$query = "SELECT contacts.* FROM contacts ";
+		if ($input_field=='email') { $query .= ", emails "; }
+		$query .= "WHERE $input_field = '".res($search_field)."' ";
+		if ($input_field=='email') { $query .= "AND emails.contactid = contacts.id "; }
+		$query .= "; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)>0) {
-			$CONTACTS[$search_field][$input_field] = mysqli_fetch_assoc($result);
+			$r = mysqli_fetch_assoc($result);
+			$r["email"] = "";//default
+			$r["emails"] = array();
+
+			$query2 = "SELECT * FROM emails WHERE contactid = '".$r['id']."'; ";
+			$result2 = qdb($query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				if (! $r["email"]) { $r["email"] = $r2["email"]; }
+				$r["emails"][] = $r2["email"];
+			}
+			$CONTACTS[$search_field][$input_field] = $r;
 		}
 
 		return ($CONTACTS[$search_field][$input_field][$output_field]);

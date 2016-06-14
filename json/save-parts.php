@@ -37,7 +37,9 @@
 		reportError("Could not find part in db");
 	}
 
-	$query = "UPDATE parts SET ".$field." = '".strtoupper($new_value)."' WHERE id = '".$partid."' LIMIT 1; ";
+	$query = "UPDATE parts SET ".$field." = ";
+	if (! $new_value) { $query .= "NULL "; } else { $query .= "'".strtoupper($new_value)."' "; }
+	$query .= "WHERE id = '".$partid."' LIMIT 1; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	// update keywords index for this part

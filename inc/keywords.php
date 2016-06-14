@@ -103,7 +103,9 @@
 		// formatted without non-alphanumerics
 		$fsearch = preg_replace('/[^[:alnum:]]*/','',$search);
 
-		if (strtolower($fsearch)=='cisco' OR strtolower($fsearch)=='rev' OR strlen($fsearch)<=1) { return array(); }
+		$fsearch_lower = strtolower($fsearch);
+		if ($fsearch_lower=='cisco' OR preg_match('/^(rev|iss)-?[0-9]*$/',$fsearch_lower) OR strlen($fsearch)<=1) { return array(); }
+//		if (strtolower($fsearch)=='cisco' OR strtolower($fsearch)=='rev' OR strlen($fsearch)<=1) { return array(); }
 
 		$half_life = strlen($fsearch)*.51;
 
@@ -118,8 +120,8 @@
 			$query .= "WHERE id = '".res($search)."' ";
 		} else {
 			$query .= ", parts_index, keywords ";
-			$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
-			//$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND parts_index.keywordid = keywords.id ";
+			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
+			$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
 			$query .= "AND parts.id = parts_index.partid ";
 			if ($manfid) { $query .= "AND parts.manfid = '".res($manfid)."' "; }
 			if ($sysid) { $query .= "AND parts.systemid = '".res($sysid)."' "; }

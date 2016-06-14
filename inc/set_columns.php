@@ -2,6 +2,7 @@
 	include_once 'array_find.php';
 	include_once 'find_fields.php';
 	include_once 'format_heci.php';
+	include_once 'keywords.php';
 
 	function set_columns($row_arr,$lines) {
 		$num_lines = count($lines);

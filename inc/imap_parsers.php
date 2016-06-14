@@ -14,8 +14,7 @@
 		foreach ($tables as $table) {
 			$table_text = $table->nodeValue;
 			if (! stristr($table_text,'heci')) {
-				if (preg_match('/'.$intro.'/i',$table_text)) { continue; }
-				else if (preg_match('/'.$signature.'.*/m',$table_text)) { continue; }
+				if ($num_tables>1 AND (preg_match('/'.$intro.'/i',$table_text) OR preg_match('/'.$signature.'.*/m',$table_text))) { continue; }
 			}
 
 			$rows = $table->getElementsByTagName('tr');
@@ -78,7 +77,10 @@
 
 		$signature_matches = array();
 		if (preg_match('/'.$signature.'?/m',$fmessage,$signature_matches)) {
-			$body = preg_replace('/'.$signature.'[\s\S]*$/m','',$fmessage);
+//			$body = preg_replace('/'.$signature.'[\s\S]*$/m','',$fmessage);
+			// break off first occurrence of a line to avoid confusion between signature and introduction
+			$body_parts = explode(chr(10),trim($fmessage),2);
+			$body = $body_parts[0].chr(10).preg_replace('/'.$signature.'[\s\S]*$/m','',$body_parts[1]);
 			$signature_found = true;
 		} else {
 			$body = preg_replace($email_pattern, '', $fmessage);

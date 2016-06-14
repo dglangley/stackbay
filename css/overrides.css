@@ -610,3 +610,6 @@ h1 a, h2 a, h3 a {
 .highlight-selected {
 	font-weight:bold;
 }
+.margin-10 {
+	margin-top:10px;
+}

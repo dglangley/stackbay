@@ -157,27 +157,56 @@
 		});
 */
 		$(".highlight-word").on('click',function() {
-			var field = $(this);
-			var color = '';
+			$("#"+$(this).data("for")).click();
 
+			// get color of selected highlighter
+			var color = '';
 			$(".highlighter-pen").each(function() {
-				if ($(this).hasClass('btn-default') || field.hasClass('text-'+$(this).data('color'))) { return; }
+				if ($(this).hasClass('btn-default')) { return; }// || $(this).hasClass('text-'+$(this).data('color'))) { return; }
 				color = $(this).data('color');
+				field_type = $(this).data('type');
+			});
+			$("#"+field_type+"-col").val($(this).data("col"));
+
+			// iterate through all objects of this class (radio's) and change text formatting as per radio selections
+			$("input[type='radio'][name='fields']").each(function() {
+				var labelobj = $("#"+$(this).data("label"));
+				if ($(this).prop('checked')) {
+					labelobj.attr('class','highlight-word highlight-selected text-'+color);
+				} else if (! labelobj.hasClass('highlight-selected') || labelobj.hasClass('text-'+color)) {
+					labelobj.attr('class','highlight-word');
+				}
 			});
 
-			var sel = ' highlight-selected';
-			if (field.hasClass('highlight-selected') && color=='') {
-				sel = '';
-			}
-			field.attr('class','');//reset
-			if (color!='') {
-				field.attr('class','highlight-word text-'+color+sel);
-			}
+			$(this).blur();
 		});
 		$(".highlighter-pen").on('click',function() {
 			$(this).removeClass('btn-default').addClass('btn-'+$(this).data('color'));
 			$(".highlighter-pen").not(this).each(function() {
 				$(this).removeClass('btn-'+$(this).data('color')).addClass('btn-default');
+			});
+		});
+		$(".btn-end").click(function() {
+			var aligned = '';
+			var btn = $(this);
+
+			// the 'data-for' element tracks whether the alignment is right or left
+			$("#"+$(this).data("for")).click();
+			if ($("#"+$(this).data("for")).prop('checked')===true) {
+				$("#"+$(this).data("input")).css('text-align','right');
+				$(this).find("i").removeClass('fa-align-left').addClass('fa-align-right');
+				aligned = 'right';
+			} else {
+				$("#"+$(this).data("input")).css('text-align','left');
+				$(this).find("i").removeClass('fa-align-right').addClass('fa-align-left');
+				aligned = 'left';
+			}
+			$("input[type='radio'][name='fields']:checked").each(function() {
+				if (aligned=='left') {
+					$("#"+btn.data("input")).val($(this).data("col"));
+				} else if (aligned=='right') {
+					$("#"+btn.data("input")).val($(this).data("end"));
+				}
 			});
 		});
 

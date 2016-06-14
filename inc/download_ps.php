@@ -25,8 +25,13 @@
 		// reset every use
 		$PS_ERROR = "";
 
-		// cannot copy and paste cookies contents into db for use below! for some reason it loses proper encoding;
-		// copy a legitimate cookies file as the filename below, then let the script update the database
+		/**************** INSTRUCTIONS ******************/
+		// Do NOT copy and paste cookies contents into db for use below! For some reason it loses proper encoding.
+		// 1) Logout all PS sessions for user
+		// 2) Initialize a session using test.php or other similar method, with remote_login and remote_password being passed in
+		// 3) Save tmp cookies file (created below) to local computer
+		// 4) Open file directly into contents field (double click field entry) in remote_sessions table using Sequel Pro
+		// 5) uncomment this in call_remote.php:              curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
 		// get cookies from database
 		$contents = '';

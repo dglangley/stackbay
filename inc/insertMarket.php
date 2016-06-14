@@ -42,7 +42,7 @@
 		$result = qdb($query) OR die(qe().' '.$query);
 	}
 
-	function insertMarket2($partid,$qty,$companyid,$date,$source,$price=false,$partstr) {
+	function insertMarket2($partid,$qty,$companyid,$date,$source,$price=false,$partstr='') {
 		if (! $partid OR ! $companyid) { return; }
 		if (! $date) { $date = $GLOBALS['now']; }
 		if ($qty>=9999 OR strstr($partstr,$qty)) { $qty = 1; }//fixes results such as in tel-explorer that gets Telmar's qty wrong

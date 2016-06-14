@@ -1,5 +1,5 @@
 <?php
-	include_once 'format_qty.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_qty.php';
 
 	function find_fields($arr,$qty=false) {
 		if ($GLOBALS['test']) { print "<pre>".print_r($arr,true)."</pre>"; }

@@ -18,19 +18,12 @@
 			<h2><i class="fa fa-female"></i> <strong>A</strong>uto<strong>m</strong>ated <strong>E</strong>mail <strong>A</strong>ttendant</h2>
 		</div>
 
-
-<!--
-				<td>
-					<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					</select>
-				</td>
--->
 <?php
 	include_once 'inc/format_date.php';
 	include_once 'inc/imap_decode.php';
 	include_once 'inc/imap_parsers.php';
 	include_once 'inc/getContact.php';
+	include_once 'inc/getCompany.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -41,6 +34,7 @@
 
 	// default
 	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
+$since_datetime = '07-May-2016 06:00:00';
 	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
 	$email_number = 0;
 	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
@@ -59,7 +53,10 @@
 	// put the newest emails on top
 	rsort($inbox_results);
 
-	$email = '';//final result for output below
+	$email_body = '';//final result for output below
+	$from_email = '';
+	$from_name = '';
+	$from = '';
 
 	// for every email...
 	foreach ($inbox_results as $n) {
@@ -94,6 +91,8 @@
 		}
 		$subject = $overview[0]->subject;
 		$from = $overview[0]->from;
+		$f = explode(' <',$from);
+		$from_name = $f[0];
 
 		$contactid = getContact($from_email,'email','id');
 
@@ -119,22 +118,44 @@
 		foreach ($results as $i => $row) {
 			$line = '';
 			$linestr = '';
-			foreach ($row as $x => $field) {
-				if ($linestr) { $linestr .= ' '; }
-				$linestr .= $field;
-
+			$z = 0;
+			// get total count of fields in this row first
+			foreach ($row as $col => $field) {
 				$words = explode(' ',$field);
-				foreach ($words as $word) {
-					if ($line) { $line .= ' '; }
-					$line .= '<a href="javascript:void(0);" class="highlight-word" data-row="'.$i.'" data-col="'.$x.'" data-word="'.$word.'">'.$word.'</a>';
+				foreach ($words as $k => $word) {
+					$z++;
 				}
 			}
-			$result_str .= '<div class="selector-line" data-string="'.$linestr.'">'.$line.'</div>';
+
+			$a = 1;
+			foreach ($row as $col => $field) {
+				$linestr .= '
+					<input type="hidden" name="lines['.$i.']['.$a.']" value="'.$field.'">
+				';
+
+				$words = explode(' ',$field);
+//				print "<pre>".print_r($words,true)."</pre>";
+				foreach ($words as $k => $word) {
+					$line .= '
+					<a href="javascript:void(0);" class="highlight-word" data-for="fields_'.$i.'-'.$a.'" data-col="'.$a.'" id="label_'.$i.'-'.$a.'">'.$word.'</a>
+					<input type="radio" name="fields" value="'.$word.'" id="fields_'.$i.'-'.$a.'" data-label="label_'.$i.'-'.$a.'" data-col="'.$a.'" data-end="'.$z.'" class="hidden">
+					';
+					$a++;
+					$z--;
+				}
+			}
+			$result_str .= $linestr.'
+				<div>'.$line.'</div>
+			';
 		}
 
-		$email = '
-			<hr><div class="pull-right">'.$date.'</div>
-			<div><strong>'.$from.'</strong> &lt;'.$from_email.'&gt;</div><hr>'.$result_str;
+		$email_body = '
+			<div><strong>'.$from_name.'</strong> &lt;'.$from_email.'&gt;</div><hr>'.$result_str;
+	}
+
+	if ($from_email) {
+		// get companyid for select dropdown below
+		$companyid = getContact($from_email,'email','companyid');
 	}
 ?>
 
@@ -142,9 +163,9 @@
 			<div class="row">
 				<div class="col-md-2"> </div>
 				<div class="col-md-8">
-					Teach me, I'm eager to learn! Please help me by using the highlighters on the left, and then click on the
+					<span class="info">Teach me, I'm eager to learn! Please help me by using the highlighters on the left, and then click on the
 					words or terms in the email below that are Part Numbers, HECI Codes or Quantities. I can be easily confused
-					so please be careful what you highlight.
+					so please be careful what you highlight.</span>
 <!--
 					If there are <em>duplicate</em> occurrences of a Part#/HECI in the same item (not just multiple lines of the
 					same part#), only show me the most consistent, predictable instance.<BR><BR>
@@ -152,22 +173,83 @@
 				</div>
 				<div class="col-md-2"> </div>
 			</div>
+
+			<form method="POST" action="save-amea.php" class="form-inline">
+			<input type="hidden" name="from_email" value="<?php echo $from_email; ?>">
+			<input type="hidden" name="from_name" value="<?php echo $from_name; ?>">
+			<input type="hidden" name="email_number" value="<?php echo $email_number; ?>">
 			<div class="row">
-				<div class="col-md-2">
-					<p><a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="danger"><i class="fa fa-pencil"></i></a> PART</p>
-					<p><a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="success"><i class="fa fa-pencil"></i></a> HECI</p>
-					<p><a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="warning"><i class="fa fa-pencil"></i></a> QTY</p>
-				</div>
+				<div class="col-md-2"> </div>
 				<div class="col-md-8">
-					<?php echo $email; ?>
+					<hr>
+					<div class="pull-right">
+						<select name="companyid" id="companyid" class="company-selector">
+							<option value="">- Select a Company -</option>
+<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
+						</select>
+					</div>
 				</div>
 				<div class="col-md-2"> </div>
 			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<div class="form-group margin-10">
+						<div class="input-group">
+							<span class="input-group-btn">
+								<a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="danger" data-type="part"><i class="fa fa-pencil"></i></a>
+							</span>
+							<input type="text" name="part_col" id="part-col" value="" placeholder="PART" size="3" class="form-control input-sm">
+							<span class="input-group-btn">
+								<input type="checkbox" class="hidden" id="part-end" name="part_from_end" value="1">
+								<a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" data-for="part-end" data-input="part-col" title="Toggle alignment" class="btn btn-sm btn-default btn-end"><i class="fa fa-align-left"></i></a>
+							</span>
+						</div>
+					</div>
+					<div class="form-group margin-10">
+						<div class="input-group">
+							<span class="input-group-btn">
+								<a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="success" data-type="heci"><i class="fa fa-pencil"></i></a>
+							</span>
+							<input type="text" name="heci_col" id="heci-col" value="" placeholder="HECI" size="3" class="form-control input-sm">
+							<span class="input-group-btn">
+								<input type="checkbox" class="hidden" id="heci-end" name="heci_from_end" value="1">
+								<a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" data-for="heci-end" data-input="heci-col" title="Toggle alignment" class="btn btn-sm btn-default btn-end"><i class="fa fa-align-left"></i></a>
+							</span>
+						</div>
+					</div>
+					<div class="form-group margin-10">
+						<div class="input-group">
+							<span class="input-group-btn">
+								<a href="javascript:void(0);" class="btn btn-sm btn-default highlighter-pen" data-color="warning" data-type="qty"><i class="fa fa-pencil"></i></a>
+							</span>
+							<input type="text" name="qty_col" id="qty-col" value="" placeholder="QTY" size="3" class="form-control input-sm">
+							<span class="input-group-btn">
+								<input type="checkbox" class="hidden" id="qty-end" name="qty_from_end" value="1">
+								<a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" data-for="qty-end" data-input="qty-col" title="Toggle alignment" class="btn btn-sm btn-default btn-end"><i class="fa fa-align-left"></i></a>
+							</span>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-8">
+					<p>
+						<div class="pull-right">
+							<?php echo $date; ?>
+						</div>
+						<?php echo $email_body; ?>
+					</p>
+					<br/><hr><br/>
+					<p>
+						<button type="submit" class="btn btn-primary btn-md">Complete My Training!</button>
+					</p>
+				</div>
+				<div class="col-md-2"> </div>
+			</div>
+			</form>
 		</div>
 
 	</div><!-- pad-wrapper -->
 
-<?php include_once 'modal/amea.php'; ?>
+<?php //include_once 'modal/amea.php'; ?>
 <?php include_once 'inc/footer.php'; ?>
 
 </body>

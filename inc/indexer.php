@@ -98,6 +98,9 @@
 		$field_name = $table_name.'id';
 		$table_name .= 's_index';
 
+		$keyword_lower = strtolower($keyword);
+		if ($keyword_lower=='cisco' OR preg_match('/^(rev|iss)-?[0-9]*$/i',$keyword)) { $rank = 'secondary'; }
+
 		$keywordid = 0;
 		if (! isset($KEYWORDS[$keyword])) {
 			$query = "SELECT * FROM keywords WHERE keyword = '".res($keyword)."'; ";

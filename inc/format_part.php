@@ -65,8 +65,9 @@
 			/* Tollgrade TLGD-DMUPLUS */
 			'(TLGD-?[[:alnum:]]{3,7}([^[:alnum:]]?([A-Z]{3,6}|I[0-9][A-Z]?))?(-[ML])?)([^[:alnum:]]?(I|L|ISS)-?[0-9]{1,2})?',
 
-			/* Teltrend DST2496 */
-			'(DST[[:alnum:]]{4})([^[:alnum:]]?(I[0-9]))?',
+			/* Teltrend DST2496, SDS5486 */
+			'([DST]{3}[[:alnum:]]{4}(-?[[:alpha:]]{1,2})?)([^[:alnum:]]?(I[0-9]))?',
+
 
 			/* Calix C7 100-00007 */
 			'(100-[0-9]{5})([^[:alnum:]]?REV[^[:alnum:]][0-9]{2})?',
@@ -127,6 +128,8 @@
 	$revs = '([^[:alnum:]]+'.$rev_kit.')*';
 	function format_part($part,$manfid=0) {
 		global $formats;
+
+		$part = preg_replace('/-RF$/','',$part);
 
 		$revs = $GLOBALS['revs'];
 		$rev_kit = $GLOBALS['rev_kit'];

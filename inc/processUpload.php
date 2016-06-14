@@ -14,6 +14,7 @@
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/PHPExcel.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/array_find.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/find_fields.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/set_columns.php';
 //	require($_SERVER["DOCUMENT_ROOT"].'/vendor/autoload.php');
 
 	$test = 0;

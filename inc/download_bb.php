@@ -50,6 +50,7 @@
 
 		if (! $BB_CH) { $BB_CH = curl_init($bb_base); }
 
+		$res = '';
 		// login attempt
 		if (! $contents OR (! $logout AND ! $search)) {
 			if (! $BB_CREDS) {//user hasn't been prompted to login yet

@@ -12,21 +12,7 @@
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContact.php';
 	include_once 'inc/imap_parsers.php';
-
-	function get_db($part_str,$line_str,$part_col) {
-		$fpart = trim(filter_var(format_part($part_str), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH));
-		$part_matches = array();
-//		echo 'part str: ['.$fpart.']('.$line_str.')<BR>';
-		// if the first column is a type of header/placeholder such as "MPN: xxxx" then process the entire line accordingly
-		if ($part_col==0 AND preg_match('/^(product|upn|mpn|part|model|item)[[:alpha:][:space:]\\/#-]*[:]?[[:space:]]*/i',$fpart,$part_matches)) {
-//			$part_str = preg_replace('/^(product|upn|mpn|part|model|item)([[:alpha:][:space:]\\/#-]*[:]?[[:space:]]*)([[:alnum:]-]+).*/i','$3',$line_str);//.'<BR>';
-			$part_str = preg_replace('/^(product|upn|mpn|part|model|item)([[:space:]\\/#-]*[:]?[[:space:]]*)([[:alnum:]-]+).*/i','$3',$line_str);//.'<BR>';
-			$fpart = $part_str;
-		}
-		$fpart = preg_replace('/-RF$/','',$fpart);
-		$hecidb = hecidb($fpart);
-		return ($hecidb);
-	}
+	include_once 'inc/get_db.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -125,7 +111,7 @@ $since_datetime = '07-May-2016 06:00:00';
 
 			$contactid = getContact($from_email,'email','id');
 
-			if (! $contactid) {
+//			if (! $contactid) {
 				echo '
 			<tr>
 				<td><strong>'.$email_number.'</strong> '.$from.'</td>
@@ -137,7 +123,7 @@ $since_datetime = '07-May-2016 06:00:00';
 				</td>
 			</tr>
 				';
-			}
+//			}
 			$companyid = getCompany($contactid,'contactid','id');
 
 			$emails[$email_number] = array('message'=>$message,'date'=>$date,'from'=>$from,'subject'=>$subject);
