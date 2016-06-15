@@ -4,7 +4,8 @@
 	function qe() { return (mysqli_error($GLOBALS['WLI'])); }
 	function res($str) { return (mysqli_real_escape_string($GLOBALS['WLI'],$str)); }
 	$WLI_GLOBALS = array();
-	if (! isset($root_dir) OR ! $root_dir) { $root_dir = '/var/www/html'; }
+	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
+	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
 	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('could not connect to host'.chr(10)); }
@@ -17,7 +18,7 @@
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
-	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
+//	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db'], $WLI_GLOBALS['RDS_PORT']);
 	if (mysqli_connect_errno($WLI)) {
@@ -166,17 +167,19 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 
 	$ACCESS_TOKEN = false;
 	$REFRESH_TOKEN = false;
-	$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
-	$query .= "WHERE userid = '".$U['id']."' ORDER BY id DESC; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$exp_time = $r['created']+$r['expires_in'];
-		if ($timestamp<$exp_time) {
-			$ACCESS_TOKEN = json_encode($r);
-			break;
-		} else if ($r['refresh_token']) {
-			$REFRESH_TOKEN = $r['refresh_token'];
-			break;
+	if ($U['id']>0) {
+		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
+		$query .= "WHERE userid = '".$U['id']."' ORDER BY id DESC; ";
+		$result = qdb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$exp_time = $r['created']+$r['expires_in'];
+			if ($timestamp<$exp_time) {
+				$ACCESS_TOKEN = json_encode($r);
+				break;
+			} else if ($r['refresh_token']) {
+				$REFRESH_TOKEN = $r['refresh_token'];
+				break;
+			}
 		}
 	}
 
