@@ -5,6 +5,7 @@
 	include_once '../inc/ps.php';
 	include_once '../inc/bb.php';
 	include_once '../inc/te.php';
+	include_once '../inc/ebay.php';
 	include_once '../inc/excel.php';
 	include_once '../inc/logRemotes.php';
 
@@ -21,15 +22,15 @@
 			}
 		}
 	}
-	function array_stristr(&$haystack,$needle) {
-		foreach ($haystack as $straw => $bool) {
-//			echo $straw.':'.$needle.':'.stripos($straw,$needle).'<BR>';
-			if (stripos($straw,$needle)!==false) {
-				unset($haystack[$straw]);
-//				break;
-			}
-		}
-	}
+    function array_keysearch(&$haystack,$needle) {
+        foreach ($haystack as $straw => $bool) {
+//          echo $straw.':'.$needle.':'.stripos($straw,$needle).'<BR>';
+            if (stripos($straw,$needle)!==false) {
+                unset($haystack[$straw]);
+//              break;
+            }
+        }
+    }
 
 	$done = '';
 	$attempt = 0;
@@ -89,7 +90,7 @@
 		// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
 		if (isset($searches[$r['keyword']])) { continue; }
 
-		array_stristr($searches,$r['keyword']);
+		array_keysearch($searches,$r['keyword']);
 		$searches[$r['keyword']] = true;
 
 //		echo $r['keyword'].'<BR>';
@@ -98,10 +99,12 @@
 	// string unique searches now into single line-separated string
 	$psstr = '';
 	$bbstr = '';
+	$ebaystr = '';
 	$excelstr = '';
 	$ps_err = '';
 	$bb_err = '';
 	$te_err = '';
+	$ebay_err = '';
 	$excel_err = '';
 	foreach ($searches as $keyword => $bool) {
 		// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
@@ -115,6 +118,10 @@
 
 		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
 		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
+		if ($RLOG['ebay']) {
+			if ($ebaystr) { $ebaystr .= ','; }
+			$ebaystr .= $keyword;
+		}
 		if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //		$bbstr .= $keyword.chr(10);
 
@@ -141,6 +148,13 @@
 			if ($bb_err) {
 				$err[] = 'bb';
 				$errmsgs[] = $bb_err;
+			}
+		}
+		if ($ebaystr) {
+			$ebay_err = ebay($ebaystr);
+			if ($ebay_err) {
+				$err[] = 'ebay';
+				$errmsgs[] = $ebay_err;
 			}
 		}
 		if ($excelstr) {
@@ -227,11 +241,17 @@ $query .= "AND companies.id <> '1118' ";
 		$price = false;
 		if ($r['price']>0) { $price = $r['price']; }
 		$source = false;
-		if (! is_numeric($r['source']) AND $r['source']<>'List') { $source = $r['source']; }
+		$companyid_key = $r['companyid'];
+		if (! is_numeric($r['source']) AND $r['source']<>'List') {
+			$source = $r['source'];
+		} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
+			$companyid_key .= '.'.$r['source'];
+			$source = 'ebay';
+		}
 
 		if (! isset($matches[$date])) { $matches[$date] = array(); }
-		if (! isset($matches[$date][$r['companyid']])) {
-			$matches[$date][$r['companyid']] = array(
+		if (! isset($matches[$date][$companyid_key])) {
+			$matches[$date][$companyid_key] = array(
 				'company' => $r['name'],
 				'cid' => $r['companyid'],
 				'qty' => $r['qty'],
@@ -240,11 +260,11 @@ $query .= "AND companies.id <> '1118' ";
 				'rfq' => $r['rfq'],
 				'sources' => array(),
 			);
-		} else if ($r['qty']>$matches[$date][$r['companyid']]['qty']) {
-			$matches[$date][$r['companyid']]['qty'] = $r['qty'];
+		} else if ($r['qty']>$matches[$date][$companyid_key]['qty']) {
+			$matches[$date][$companyid_key]['qty'] = $r['qty'];
 		}
 
-		if ($source) { $matches[$date][$r['companyid']]['sources'][] = $source; }
+		if ($source) { $matches[$date][$companyid_key]['sources'][] = $source; }
 	}
 	unset($results);
 //	unset($keys);
@@ -254,7 +274,7 @@ $query .= "AND companies.id <> '1118' ";
 	$priced = array();
 	$standard = array();
 	foreach ($matches as $date => $companies) {
-		foreach ($companies as $companyid => $r) {
+		foreach ($companies as $companyid_key => $r) {
 			if ($r['price']) {
 				$priced[$date][$r['price']][] = $r;
 			} else {

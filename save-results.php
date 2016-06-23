@@ -20,6 +20,7 @@
 	if (isset($_REQUEST['items']) AND is_array($_REQUEST['items'])) { $items = $_REQUEST['items']; }
 
 	$userid = 1;
+	if ($U['id']) { $userid = $U['id']; }
 
 	$display_str = '';
 	$display_html = '';

@@ -2,6 +2,7 @@
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getContact.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getCompany.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setContact.php';
 
 	$from_email = '';
 	$from_name = '';
@@ -30,9 +31,7 @@ exit;
 	$contact_companyid = getContact($from_email,'email','companyid');
 
 	if ($contact_companyid===false) {//contact doesn't exist
-		$query = "INSERT INTO contacts (name, status, companyid) VALUES ('".res(htmlentities($from_name))."','Active','".$companyid."'); ";
-		$result = qdb($query);
-		$contactid = qid();
+		$contactid = setContact(htmlentities($from_name),$companyid);
 
 		$query = "INSERT INTO emails (email, type, contactid) VALUES ('".res($from_email)."','Work','".$contactid."'); ";
 		$result = qdb($query);

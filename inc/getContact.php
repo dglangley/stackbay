@@ -23,6 +23,7 @@
 			$query2 = "SELECT * FROM emails WHERE contactid = '".$r['id']."'; ";
 			$result2 = qdb($query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
+				// set default email for this contact, besides the array of all associated emails for this contact (if multiple)
 				if (! $r["email"]) { $r["email"] = $r2["email"]; }
 				$r["emails"][] = $r2["email"];
 			}

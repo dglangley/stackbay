@@ -1,7 +1,7 @@
 <?php
 	include_once 'format_part.php';
 
-	function getPartId($part,$heci,$manfid=0) {
+	function getPartId($part,$heci='',$manfid=0) {
 		$partid = 0;
 
 		$part = trim($part);

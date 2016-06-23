@@ -1,5 +1,7 @@
 <?php
 	function logSearch($search,$search_field=1,$sfb=false,$qty_field=false,$qfb=false,$price_field=false,$pfb=false) {
+		global $U;
+
 		if ($sfb) { $search_field = 10-$sfb; }//from back
 		if (! $qty_field) { $qty_field = 0; }
 		if ($qfb) { $qty_field = 10-$qfb; }//from back
@@ -8,6 +10,7 @@
 		$fields = $search_field.$qty_field.$price_field;
 
 		$userid = 1;
+		if ($U['id']) { $userid = $U['id']; }
 		$listid = 0;
 
 		$query = "SELECT * FROM search_lists WHERE search_text = '".res(trim($search))."' ";

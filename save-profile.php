@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setContact.php';
 
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 $type = '';//for now
@@ -20,6 +21,7 @@ $type = '';//for now
 	$name = '';
 	$title = '';
 	$notes = '';
+	$ebayid = '';
 	$emails = array();
 	$phones = array();
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) {
@@ -42,13 +44,7 @@ $type = '';//for now
 			$msg = 'Contact does not exist';
 		}
 
-		$query = "INSERT INTO contacts (name, title, notes, status, companyid) ";
-		$query .= "VALUES ('".res($name)."',";
-		if ($title) { $query .= "'".res($title)."',"; } else { $query .= "NULL,"; }
-		if ($notes) { $query .= "'".res($notes)."',"; } else { $query .= "NULL,"; }
-		$query .= "'Active','".res($companyid)."'); ";
-		$result = qdb($query) OR die(qe().' '.$query);
-		$contactid = qid();
+		$contactid = setContact($name,$companyid,$title,$notes,$ebayid);
 
 		foreach ($emails as $id => $email) {
 			$id = updateContact('email',$email,$contactid,$id);

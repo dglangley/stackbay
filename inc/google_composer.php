@@ -4,6 +4,7 @@
 	include_once '../phpmailer/PHPMailerAutoload.php';
 	include_once '../inc/updateAccessToken.php';
 	include_once '../inc/format_email.php';
+	include_once '../inc/getContact.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -13,6 +14,17 @@
 		} catch (Exception $e) {
 			print 'An error occurred: ' . $e->getMessage();
 		}
+	}
+
+	$userid = 0;
+	if (! $U['id']) {
+		$userid = 0;
+		$useremail = getContact($userid,'id','email');
+		$username = getContact($userid,'id','name');
+	} else {
+		$userid = $U['id'];
+		$username = $U['name'];
+		$useremail = $U['email'];
 	}
 
 	$sbj = "This is a test";
@@ -39,10 +51,9 @@
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
 		$client->refreshToken($REFRESH_TOKEN);
 		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$U['id'],$REFRESH_TOKEN);
+		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
 	}
 
-die('token:'.$ACCESS_TOKEN);
 	if ($ACCESS_TOKEN) {
 		$client->setAccessToken($ACCESS_TOKEN);
 
@@ -54,9 +65,9 @@ die('token:'.$ACCESS_TOKEN);
 
 		//supply with your header info, body etc...
 		$mail->Subject = $sbj;
-		$mail->SetFrom($U['email'],$U['name']);
+		$mail->SetFrom($useremail,$username);
 
-		$mail->addBCC($U['email']);
+		$mail->addBCC($useremail);
 
 		$send_err = '';
 		$mail->addAddress('davidglangley@gmail.com');

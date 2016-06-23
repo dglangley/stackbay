@@ -3,6 +3,7 @@
 	$past_time = format_date($now,'Y-m-d H:i:s',array('i'=>-360));//6 hours
 	$REMPOS = array();
 	$SEARCHES = array();
+	$SEARCH_IDS = array();
 
 	$query = "SELECT * FROM remotes; ";
 	$result = qdb($query);
@@ -19,7 +20,7 @@
 	}
 
 	function logRemotes($search,$user_remotes='') {
-		global $SEARCHES;
+		global $SEARCHES,$SEARCH_IDS;
 
 		$pos = $GLOBALS['REMPOS'];
 		$def = array();
@@ -41,6 +42,7 @@
 		if (! $search) { return ($def); }
 
 		$userid = 1;//$GLOBALS['U']['id'];
+		if ($GLOBALS['U']['id']) { $userid = $GLOBALS['U']['id']; }
 
 		// check for duplicate search within the recent time that scanned inventories,
 		// and also check for user's same search within time frame for logging purposes
@@ -98,6 +100,8 @@
 		if ($logid) { $query .= ",'$logid'"; }
 		$query .= "); ";
 		$result = qdb($query);
+		$searchid = qid();
+		$SEARCH_IDS[$search] = $searchid;
 
 		return ($def);
 	}
