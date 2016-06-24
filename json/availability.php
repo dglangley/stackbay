@@ -82,6 +82,7 @@
 
 	// stash all searches in strings for each remote
 	$searches = array();
+	$limited = array();
 
 	$query = "SELECT keyword FROM keywords, parts_index WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
 	$query .= "ORDER BY LENGTH(keyword) DESC; ";
@@ -90,8 +91,9 @@
 		// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
 		if (isset($searches[$r['keyword']])) { continue; }
 
-		array_keysearch($searches,$r['keyword']);
+		array_keysearch($limited,$r['keyword']);
 		$searches[$r['keyword']] = true;
+		$limited[$r['keyword']] = true;
 
 //		echo $r['keyword'].'<BR>';
 	}
@@ -111,17 +113,31 @@
 		// statically-stored db results
 		if ($attempt>=1 AND ($ln<=$max_ln OR $force_download)) {
 			// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
-			$RLOG = logRemotes($keyword);
+
+			// if this is not in $limited[] it's because it would produce redundant results for broker sites,
+			// but for ebay it's more precise because their search method is pickier
+			if (! isset($limited[$keyword])) {
+				$RLOG = logRemotes($keyword,'000100');
+			} else {
+				$RLOG = logRemotes($keyword);
+			}
 		} else {
 			$RLOG = logRemotes($keyword,'000000');
 		}
 
-		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
-		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
+		// place this first because results below may be limited due to $limited/$searches differences
 		if ($RLOG['ebay']) {
 			if ($ebaystr) { $ebaystr .= ','; }
 			$ebaystr .= $keyword;
 		}
+
+		// only continue beyond this point if the keyword is in $limited[], which is our less-redundant
+		// array (ie, NTK555DA only, as opposed to NTK555DA + NTK555DAE5) on account of ebay's pickier
+		// search method but the broker sites are more open / relaxed
+		if (! isset($limited[$keyword])) { continue; }
+
+		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
+		if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
 		if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //		$bbstr .= $keyword.chr(10);
 
