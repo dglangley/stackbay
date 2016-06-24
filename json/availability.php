@@ -113,7 +113,7 @@
 			// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
 			$RLOG = logRemotes($keyword);
 		} else {
-			$RLOG = logRemotes($keyword,'00000');
+			$RLOG = logRemotes($keyword,'000000');
 		}
 
 		if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
@@ -245,7 +245,7 @@ $query .= "AND companies.id <> '1118' ";
 		if (! is_numeric($r['source']) AND $r['source']<>'List') {
 			$source = $r['source'];
 		} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
-			$companyid_key .= '.'.$r['source'];
+//			$companyid_key .= '.'.$r['source'];
 			$source = 'ebay';
 		}
 
@@ -259,12 +259,28 @@ $query .= "AND companies.id <> '1118' ";
 				'changeFlag' => 'circle-o',
 				'rfq' => $r['rfq'],
 				'sources' => array(),
+				'min_price' => $price,
+				'max_price' => $price,
 			);
-		} else if ($r['qty']>$matches[$date][$companyid_key]['qty']) {
-			$matches[$date][$companyid_key]['qty'] = $r['qty'];
+		} else {
+			// on ebay results, sum the qtys and show price range rather than every individual result
+			if ($source=='ebay' AND $price>0 AND $price<>$matches[$date][$companyid_key]['price'] AND $matches[$date][$companyid_key]['price']>0) {
+				$matches[$date][$companyid_key]['qty'] += $r['qty'];
+				if ($price>0 AND $price<$matches[$date][$companyid_key]['min_price']) {
+					$matches[$date][$companyid_key]['min_price'] = $price;
+				}
+				if ($price>$matches[$date][$companyid_key]['max_price']) {
+					$matches[$date][$companyid_key]['max_price'] = $price;
+				}
+				if ($matches[$date][$companyid_key]['min_price']<>$matches[$date][$companyid_key]['max_price']) {
+					$matches[$date][$companyid_key]['price'] = $matches[$date][$companyid_key]['min_price'].'-'.$matches[$date][$companyid_key]['max_price'];
+				}
+			} else if ($r['qty']>$matches[$date][$companyid_key]['qty']) {
+				$matches[$date][$companyid_key]['qty'] = $r['qty'];
+			}
 		}
 
-		if ($source) { $matches[$date][$companyid_key]['sources'][] = $source; }
+		if ($source AND array_search($source,$matches[$date][$companyid_key]['sources'])===false) { $matches[$date][$companyid_key]['sources'][] = $source; }
 	}
 	unset($results);
 //	unset($keys);

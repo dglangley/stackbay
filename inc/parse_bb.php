@@ -81,8 +81,8 @@
 				if (! $companyid) { $companyid = addCompany($company); }
 
 				$partid = getPartId($part,$heci,goManf($manf));
-				echo 'bb:'.$part.':'.$heci.':'.$partid.' '.$company.'<BR>';
-				continue;
+//				echo 'bb:'.$part.':'.$heci.':'.$partid.' '.$company.'<BR>';
+//				continue;
 				if (! $partid) {
 					$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
 				}

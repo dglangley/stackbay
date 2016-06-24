@@ -1,0 +1,29 @@
+#This file is: /home/ec2-user/lunacera.cron
+#Use "crontab lunacera.cron" to reinstall this file
+#Use "crontab -l" to list the contents of the current crontab
+#Use man 5 crontab for info
+#Format is: minute hour dayofmonth month dayofweek
+# * * * * * *
+# | | | | | |
+# | | | | | +-- Year              (range: 1900-3000)
+# | | | | +---- Day of the Week   (range: 0-6, 0 for Sunday, 1 for Monday, 6 for Saturday)
+# | | | +------ Month of the Year (range: 1-12)
+# | | +-------- Day of the Month  (range: 1-31)
+# | +---------- Hour              (range: 0-23)
+# +------------ Minute            (range: 0-59)
+# , and - can be used as in 0,15,30,45 or 1-5
+
+# run inventory processor frequently all day to catch any uploads on S3
+#0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
+0,10,20,30,40,50 * * * * curl https://www.lunacera.com/db/auto/processor.php > ~/processor_log
+# run ngt dated inventory search daily at various times
+0 5-17 * * * curl https://www.lunacera.com/db/auto/ngt_api.php > ~/ngt_log
+# run inventory scanner (ngt, te, fp, em, etc) throughout the day
+#5 5,7,9,11,15 * * * php -f /var/www/html/scanner.php > ~/scanner_log
+# run ebay scanner throughout the day
+10 5,7,9,11,14,19 * * * curl https://www.lunacera.com/db/auto/ebay_api.php > ~/ebay_log
+# run hotlist scanner daily through the work week
+35 7 * * 1-5 curl https://www.lunacera.com/db/auto/hotlist.php > ~/hotlist_log
+
+# there must be a newline at the end of this file or CRON won't run!!
+

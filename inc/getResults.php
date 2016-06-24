@@ -25,6 +25,7 @@
 		'te'=>array('setting'=>'N'),
 		'ebay'=>array('setting'=>'Y'),
 		'et'=>array('setting'=>'N'),
+		'alu'=>array('setting'=>'N'),
 	);
 
 	if (! isset($company_filter)) { $company_filter = array(); }

@@ -479,6 +479,7 @@ input[type="text"].inline {
 	line-height:10px;
 }
 .market-data, .date-group {
+	vertical-align:top !important;
 	text-align:left;
 	font-size:10px;
 	line-height:10px;
@@ -495,6 +496,7 @@ input[type="text"].inline {
 	color:#000;
 }
 .market-data > .pa {
+	vertical-align:top !important;
 	display:inline-block;
 	width:14px;
 	color:#555;

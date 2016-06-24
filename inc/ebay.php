@@ -160,6 +160,7 @@
     //Output: Object containing: Item Name, Quantity, parts it matches, and prices
     function searchDescriptions($keys,$items){
         global $SEARCH_IDS;
+
         //Loop through the description of each item and match the description on
         //key word.
         foreach($items as $k => $item){
@@ -170,27 +171,28 @@
                     $items[$k]['match'][] = $key;
                     
                     //If the value is matched, return the following
-                    $contactID = getContact($item['seller'],'ebayid','id');
-                    $companyID = getContact($item['seller'],'ebayid','companyid');
-                    
-                    if (!$contactID){
-                        $companyID = getCompany('eBay seller','name','id');
-                        $contactID = setContact($item['seller'], $companyID,'', '',$item['seller']);
+                    $contactid = getContact($item['seller'],'ebayid','id');
+					if ($contactid) {
+	                    $companyid = getContact($item['seller'],'ebayid','companyid');
+					} else {
+						// get default ebay companyid
+                        $companyid = getCompany('eBay seller','name','id');
+						// get contactid associated with this ebay seller id
+                        $contactid = setContact($item['seller'], $companyid,'', '',$item['seller']);
                     }
-                    $partid = getPartId($key,'');
+                    $partid = getPartId($key);
                     if (!$partid) { continue; }
-                    //$res_err = insertMarket();
-                    
-                    $metaid = logSearchMeta($companyID,false,'',$item['id']);
-                    insertMarket($partid, $item['qty'], $item['price'], false, false, $metaid, 'availability',$SEARCH_IDS[$key]);
 
-                    //echo $partid."<br>";
-                    //echo 'ContactID is:'.$contactID.'<br>';
-                    //echo 'CompanyID is:'.$companyID.'<br>';
-                    
+                    $metaid = logSearchMeta($companyid,false,'',$item['id']);
+					// $META_EXISTS is a global var within logSearchMeta() to help us know if this same record
+					// was already logged today; in this case, we do NOT want to duplicate results for this same
+					// ebay item, so only insert market data if this item hasn't already been logged
+					if (! $META_EXISTS) {
+	                    insertMarket($partid, $item['qty'], $item['price'], false, false, $metaid, 'availability',$SEARCH_IDS[$key]);
+					}
                 }
-                
-            unset($items[$k]['description']);
+
+				unset($items[$k]['description']);
             }
         }
         return $items;
@@ -230,9 +232,9 @@ function ebay($search){
     $kw_array = explode(',',$search);
     
     //Log the fucntion as a cache against RLOG
-    foreach($kw_array as $k_log){
-        $RLOG = logRemotes($k_log,'00010');
-    }
+//    foreach($kw_array as $k_log){
+//        $RLOG = logRemotes($k_log,'00010');
+//    }
     ////print_r($kw_array);
     ////echo("<br>");
     
@@ -245,7 +247,7 @@ function ebay($search){
 }
 
 //For Debugging Purposes
-//ebay('psx010,NT7E05JC,nt3x73a,PWPQ20EAXX,NT7E02PB');
+//ebay('NTK552DAE5');
 
 //============================================================================//
 //============================Legacy Code=====================================//
