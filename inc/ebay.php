@@ -163,8 +163,11 @@
 
         //Loop through the description of each item and match the description on
         //key word.
-        foreach($items as $k => $item){
+		foreach ($items as $item) {
             foreach($keys as $key){
+				// strip non-alphanumeric chars just in case, because for ebay sometimes we use punctuated strings
+				$key = preg_replace('/[^[:alnum:]]+/','',$key);
+
                 if (stristr($item['description'],$key)) {
 
                     //Store to the 'match' array the value of the keyword it matched
@@ -231,12 +234,8 @@ function ebay($search){
 //    $keywords = 'psx010,NT7E05JC,nt3x73a,PWPQ20EAXX,NT7E02PB';
     $kw_array = explode(',',$search);
     
-    //Log the fucntion as a cache against RLOG
-//    foreach($kw_array as $k_log){
-//        $RLOG = logRemotes($k_log,'00010');
-//    }
-    ////print_r($kw_array);
-    ////echo("<br>");
+    //print_r($kw_array);
+    //echo("<br>");
     
     $KW_results = ebayKeyWordSearch($search);
     $id_list = ebayGetItemIDList($KW_results);
@@ -247,7 +246,7 @@ function ebay($search){
 }
 
 //For Debugging Purposes
-//ebay('NTK552DAE5');
+//ebay('090-58022-01');
 
 //============================================================================//
 //============================Legacy Code=====================================//

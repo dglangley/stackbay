@@ -84,7 +84,9 @@
 	$searches = array();
 	$limited = array();
 
-	$query = "SELECT keyword FROM keywords, parts_index WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
+	$checked_ids = array();
+	$query = "SELECT keyword, partid FROM keywords, parts_index ";
+	$query .= "WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
 	$query .= "ORDER BY LENGTH(keyword) DESC; ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -94,6 +96,23 @@
 		array_keysearch($limited,$r['keyword']);
 		$searches[$r['keyword']] = true;
 		$limited[$r['keyword']] = true;
+
+		if (isset($checked_ids[$r['partid']])) { continue; }
+
+		// for ebay, get original-formatted keyword with punctuations because we don't get the same results
+		// with punctuation-less keywords as we do with original formats (ie, "090-58022-01")
+		$query2 = "SELECT part FROM parts WHERE id = '".$r['partid']."'; ";
+		$result2 = qdb($query2);
+		if (mysqli_num_rows($result2)==0) { continue; }
+		$checked_ids[$r['partid']] = true;
+
+		$r2 = mysqli_fetch_assoc($result2);
+		$part_strs = explode(' ',$r2['part']);
+		foreach ($part_strs as $part_str) {
+			$part_str = format_part($part_str);
+			$fpart = preg_replace('/[^[:alnum:]]+/','',$part_str);
+			if ($r['keyword']==$fpart) { $searches[$part_str] = true; }
+		}
 
 //		echo $r['keyword'].'<BR>';
 	}

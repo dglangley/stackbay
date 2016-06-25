@@ -4,7 +4,7 @@
 	function qe() { return (mysqli_error($GLOBALS['WLI'])); }
 	function res($str) { return (mysqli_real_escape_string($GLOBALS['WLI'],$str)); }
 	$WLI_GLOBALS = array();
-	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
+	if (isset($_SERVER["ROOT_DIR"]) AND (! isset($root_dir) OR ! $root_dir)) { $root_dir = $_SERVER["ROOT_DIR"]; }
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
