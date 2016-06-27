@@ -6,8 +6,8 @@
 	//price, and quantity.
 
 	//Include all requisite files
-	include_once $_SERVER["DOCUMENT_ROOT"]."/inc/call_remote.php";
     include_once $_SERVER["DOCUMENT_ROOT"]."/inc/dbconnect.php";
+	include_once $_SERVER["DOCUMENT_ROOT"]."/inc/call_remote.php";
     include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getPartId.php";
     include_once $_SERVER["DOCUMENT_ROOT"]."/inc/setContact.php";
     include_once $_SERVER["DOCUMENT_ROOT"]."/inc/setPart.php";
@@ -166,12 +166,14 @@ while ($friday){
 			}
 
 			//Debugging Value Verification
+/*
 			echo ('CLEI: '.$heci."<br>");
 			echo ('Part #: '.$part."<br>");
 			echo ('Price: '.$price."<br>");
 			echo ('Quantity: '.$quantity."<br>");
 			echo ('Description: '.$desc."<br>");
 			echo("<br>");
+*/
 			
 			//==================================================================
 			//---------------------Iteratively Submit To DB---------------------
