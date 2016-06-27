@@ -3,6 +3,7 @@
 	function getContact($search_field,$input_field='id',$output_field='name') {
 		global $CONTACTS;
 
+		$search_field = (string)$search_field;
 		if (! isset($CONTACTS[$search_field])) { $CONTACTS[$search_field] = array(); }
 
 		if (isset($CONTACTS[$search_field][$input_field])) { return ($CONTACTS[$search_field][$input_field][$output_field]); }

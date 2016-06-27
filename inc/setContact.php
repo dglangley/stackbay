@@ -1,5 +1,11 @@
 <?php
 	function setContact($name,$companyid=0,$title='',$notes='',$ebayid='') {
+		$name = (string)$name;
+		$title = (string)$title;
+		$notes = (string)$notes;
+		$ebayid = (string)$ebayid;
+		$companyid = (int)$companyid;
+
 		$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid) ";
 		$query .= "VALUES ('".res($name)."',";
 		if ($title) { $query .= "'".res($title)."',"; } else { $query .= "NULL,"; }

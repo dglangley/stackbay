@@ -163,7 +163,7 @@
 
         //Loop through the description of each item and match the description on
         //key word.
-		foreach ($items as $item) {
+		foreach ($items as $k => $item) {
             foreach($keys as $key){
 				// strip non-alphanumeric chars just in case, because for ebay sometimes we use punctuated strings
 				$key = preg_replace('/[^[:alnum:]]+/','',$key);
@@ -172,6 +172,7 @@
 
                     //Store to the 'match' array the value of the keyword it matched
                     $items[$k]['match'][] = $key;
+					$item['seller'] = (string)$item['seller'];
                     
                     //If the value is matched, return the following
                     $contactid = getContact($item['seller'],'ebayid','id');
@@ -246,7 +247,7 @@ function ebay($search){
 }
 
 //For Debugging Purposes
-//ebay('090-58022-01');
+ebay('090-58022-01');
 
 //============================================================================//
 //============================Legacy Code=====================================//
