@@ -4,5 +4,5 @@
     include_once '../inc/indexer.php';
 
     $test = 0;
-    indexer('990102');
+    indexer('D8301');
 ?>

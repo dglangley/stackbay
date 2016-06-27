@@ -1,6 +1,7 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
+	include_once 'inc/pipe.php';
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
@@ -8,11 +9,12 @@
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
 	$summary_date = format_date($today,'Y-m-01',array('m'=>-2));
-	function format_market($partid_str,$market_table) {
+	function format_market($partid_str,$market_table,$search_str) {
 		$last_date = '';
 		$market_str = '';
 		$dated_qty = 0;
 		$monthly_totals = array();
+		$results = array();
 
 		switch ($market_table) {
 			case 'demand':
@@ -25,6 +27,8 @@
 				$query2 .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+
+				$results = pipe($search_str,$GLOBALS['summary_date']);
 				break;
 
 			case 'purchases':
@@ -54,8 +58,12 @@
 		}
 
 		$result = qdb($query);
-		$num_detailed = mysqli_num_rows($result);
 		while ($r = mysqli_fetch_assoc($result)) {
+			$results[] = $r;
+		}
+		$num_detailed = count($results);//mysqli_num_rows($result);
+
+		foreach ($results as $r) {
 			$order_date = substr($r['datetime'],0,10);
 			if ($last_date AND $order_date<>$last_date) {
 				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
@@ -435,9 +443,9 @@
 <?php
 			// if on the first result, build out the market column that runs down all rows of results
 			if ($k==0) {
-				$sales_col = format_market($partid_str,'sales');
-				$demand_col = format_market($partid_str,'demand');
-				$purchases_col = format_market($partid_str,'purchases');
+				$sales_col = format_market($partid_str,'sales',$search_str);
+				$demand_col = format_market($partid_str,'demand',$search_str);
+				$purchases_col = format_market($partid_str,'purchases',$search_str);
 ?>
 							<!-- market-row for all items within search result section -->
                             <td rowspan="<?php echo ($num_results+1); ?>" class="market-row">

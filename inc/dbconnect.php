@@ -1,8 +1,8 @@
 <?php
-	function qdb($query) { return (mysqli_query($GLOBALS['WLI'],$query)); }
-	function qid() { return (mysqli_insert_id($GLOBALS['WLI'])); }
-	function qe() { return (mysqli_error($GLOBALS['WLI'])); }
-	function res($str) { return (mysqli_real_escape_string($GLOBALS['WLI'],$str)); }
+	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
+	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
+	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
+	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	$WLI_GLOBALS = array();
 	if (isset($_SERVER["ROOT_DIR"]) AND (! isset($root_dir) OR ! $root_dir)) { $root_dir = $_SERVER["ROOT_DIR"]; }
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }

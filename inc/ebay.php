@@ -159,7 +159,7 @@
     //      makes a call to the database to submit the value to the database
     //Output: Object containing: Item Name, Quantity, parts it matches, and prices
     function searchDescriptions($keys,$items){
-        global $SEARCH_IDS;
+        global $SEARCH_IDS,$META_EXISTS;
 
         //Loop through the description of each item and match the description on
         //key word.
@@ -192,7 +192,9 @@
 					// was already logged today; in this case, we do NOT want to duplicate results for this same
 					// ebay item, so only insert market data if this item hasn't already been logged
 					if (! $META_EXISTS) {
-	                    insertMarket($partid, $item['qty'], $item['price'], false, false, $metaid, 'availability',$SEARCH_IDS[$key]);
+						$searchid = false;
+						if (isset($SEARCH_IDS[$key])) { $searchid = $SEARCH_IDS[$key]; }
+	                    insertMarket($partid, $item['qty'], $item['price'], false, false, $metaid, 'availability',$searchid);
 					}
                 }
 
