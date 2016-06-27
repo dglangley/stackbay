@@ -16,6 +16,7 @@
     include_once $_SERVER["DOCUMENT_ROOT"]."/inc/logRemotes.php";
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
+    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_price.php';
     
 //=============================================================================
 //---------------------------Connect to ALU's server---------------------------
@@ -70,7 +71,7 @@
 	//Grab the meta manufacture non-iteratively
 	$manf = 'Alcatel-Lucent';
     $companyID = getCompany($manf,'name','id');
-    $metaid = logSearchMeta($companyID);
+    $metaid = logSearchMeta($companyID,false,'','alu');
 
 
 while ($friday){
@@ -114,6 +115,7 @@ while ($friday){
 
 	//Initialize the count for the new page for the sake of 'last_first' storage
 	$count = 0;
+	$check = '';
 	
 	//Loop through each row to parse out the values we want
 	foreach ($rows as $row) {
@@ -130,10 +132,20 @@ while ($friday){
 
 			//Break out the row text into an array
 			$datArr = preg_split('/[[:space:]]+/',$data);
-			
+
+			// find heci field, which is always preceded by "RE-USE" directly in front
+			$heci_col = false;
+			foreach ($datArr as $f => $field) {
+				if ($field=='RE-USE') { $heci_col = $f+1; }
+			}
+			// heci not found in foreach() above
+			if ($heci_col===false) { continue; }
+			$part_col = $heci_col+3; 
+                 
 			//Grab the CLEI, PART NUMBER
-			$heci = $datArr[4];
-			$part = $datArr[7];
+			$heci = $datArr[$heci_col];
+			$part = $datArr[$part_col];
+
 			$desc = '';
 			for($i = 6;$i<count($datArr)-2;$i++){
 				$desc .= $datArr[$i].' ';
@@ -158,7 +170,7 @@ while ($friday){
 			$qty = $td->item(2);
 			$q_path = $qty->getElementsByTagName('input')->item(0);
 			$quantity = $q_path->getAttribute("value");
-			$price = $datArr[count($datArr)-2];
+			$price = format_price($datArr[count($datArr)-2],true,'',true);
 
 			//Check to see if the CLEI is a valid CLEI, if not, replace with ''
 			if (preg_match('/^AL[0-9]{5}/',$heci)) {
