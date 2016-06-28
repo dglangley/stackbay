@@ -615,3 +615,7 @@ h1 a, h2 a, h3 a {
 .margin-10 {
 	margin-top:10px;
 }
+
+#image-modal img {
+	width:100%;
+}

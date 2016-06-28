@@ -11,10 +11,12 @@
 	$summary_date = format_date($today,'Y-m-01',array('m'=>-2));
 	function format_market($partid_str,$market_table,$search_str) {
 		$last_date = '';
+		$last_sum = '';
 		$market_str = '';
 		$dated_qty = 0;
 		$monthly_totals = array();
 		$results = array();
+		$results2 = array();
 
 		switch ($market_table) {
 			case 'demand':
@@ -28,7 +30,7 @@
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
 
-				$results = pipe($search_str,$GLOBALS['summary_date']);
+				list($results,$results2) = pipe($search_str,'demand',$GLOBALS['summary_date']);
 				break;
 
 			case 'purchases':
@@ -41,6 +43,8 @@
 				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+
+				//$results = pipe($search_str,'sales',$GLOBALS['summary_date']);
 				break;
 
 			case 'sales':
@@ -65,11 +69,13 @@
 
 		foreach ($results as $r) {
 			$order_date = substr($r['datetime'],0,10);
-			if ($last_date AND $order_date<>$last_date) {
+			$sum_date = summarize_date($r['datetime']);
+			if ($last_sum AND $sum_date<>$last_sum) {
 				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
 				$dated_qty = 0;//reset for next date
 			}
 			$last_date = $order_date;
+			$last_sum = $sum_date;
 			$dated_qty += $r['qty'];
 
 			// itemized data
@@ -85,7 +91,11 @@
 		$num_summaries = mysqli_num_rows($result);
 		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 		while ($r = mysqli_fetch_assoc($result)) {
-			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'x</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
+			$results2[] = $r;
+		}
+
+		foreach ($results2 as $r) {
+			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
 		}
 
 		if ($market_str) {
@@ -113,7 +123,7 @@
 		$date = summarize_date($order_date);
 
 		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'.$date.': '.
-			$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
+			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
 
@@ -374,6 +384,9 @@
 			$itemprice = "0.00";
 			$fav_flag = $favs[$partid];
 
+			$partstrs = explode(' ',$P['part']);
+			$primary_part = $partstrs[0];
+
 			$chkd = '';
 			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
 ?>
@@ -396,7 +409,7 @@
 									</div>
 								</div>
                                 <div class="product-img">
-                                    <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
+                                    <img src="http://www.ven-tel.com/img/parts/<?php echo format_part($primary_part); ?>.jpg" alt="pic" class="img" data-part="<?php echo $primary_part; ?>" />
                                 </div>
                                 <div class="product-descr" data-partid="<?php echo $partid; ?>">
 									<span class="descr-label"><span class="part-label"><?php echo $P['Part']; ?></span> &nbsp; <span class="heci-label"><?php echo $P['HECI']; ?></span></span>
@@ -533,6 +546,20 @@
     </div>
 
 	</form>
+
+<div class="modal fade" id="image-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="prod-image-title"></h4>
+      </div>
+      <div class="modal-body">
+		<img id="modal-prod-img">
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 <?php include_once 'inc/footer.php'; ?>
 

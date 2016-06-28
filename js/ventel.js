@@ -595,6 +595,12 @@
 			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
 		});
 
+		$(".product-img img").click(function() {
+			$("#modal-prod-img").attr('src',$(this).attr('src'));
+			$("#prod-image-title").text($(this).data('part'));
+			$("#image-modal").modal('toggle');
+		});
+
 		setUploadSlider($(".slider-button:first"));
 	
     });/* close $(document).ready */
