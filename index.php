@@ -156,15 +156,24 @@
 		return ($market_str);
 	}
 
-//	$WIN_DETAILS = array();
-	function get_details($invid,$table_name,$date_limit,$results) {
-//		global $WIN_DETAILS;
-
+	function set_fields(&$table_name) {
+		$field_sel = '';
 		$and_where = '';
-		if ($table_name=='sales') { $table_name = 'outgoing_quote'; $and_where = "AND win = '1' "; }
-		else if ($table_name=='incoming_quote') { $and_where = "AND purchase = '1' "; }
+		if ($table_name=='sales') {
+			$table_name = 'outgoing_quote';
+			$field_sel = ", quote_id ";
+			$and_where = "AND win = '1' ";
+		} else if ($table_name=='incoming_quote') {
+			$field_sel = ", quote_id ";
+			$and_where = "AND purchase = '1' ";
+		}
+		return (array($field_sel,$and_where));
+	}
 
-		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ";
+	function get_details($invid,$table_name,$date_limit,$results) {
+		list($field_sel,$and_where) = set_fields($table_name);
+
+		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$field_sel;
 		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
 		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 		$query2 .= $and_where;
@@ -172,31 +181,15 @@
 		if ($date_limit) { $query2 .= "AND date >= '".$date_limit."' "; }
 		$query2 .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
 //		echo $query2.'<BR>';
-		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			if ($r2['price']=='0.00') { $r2['price'] = ''; }
-			else { $r2['price'] = format_price($r2['price'],2); }
 
-//			if ($r2['win']) { $WIN_DETAILS[$invid][$r2['datetime']][] = $r2; }
-//			unset($r2['win']);
-
-			$results[$r2['datetime']][] = $r2;
-		}
-
-		return ($results);
+		return (query_results($query2,$table_name,$results));
 	}
 
-//	$WIN_SUMMARY = array();
 	function get_summary($invid,$table_name,$date_limit,$results) {
-//		global $WIN_SUMMARY;
-
-		$and_where = '';
-		if ($table_name=='sales') { $table_name = 'outgoing_quote'; $and_where = "AND win = '1' "; }
-		else if ($table_name=='incoming_quote') { $and_where = "AND purchase = '1' "; }
+		list($field_sel,$and_where) = set_fields($table_name);
 
 		//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
-		$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' partid ";
-//		if ($table_name=='outgoing_quote') { $query2 .= ", win "; } else { $query2 .= ", '0' win "; }
+		$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' partid ".$field_sel;
 		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
 		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 		$query2 .= $and_where;
@@ -205,13 +198,28 @@
 		//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
 		$query2 .= "ORDER BY date DESC, price DESC; ";
 //		echo $query2.'<BR>';
-		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			if (! $r2['price'] OR $r2['price']=='0.00') { $r2['price'] = ''; }
-			else { $r2['price'] = number_format($r2['price'],2,'.',''); }
 
-//			if ($r2['win']) { $WIN_SUMMARY[$invid][$r2['datetime']][] = $r2; }
-//			unset($r2['win']);
+		return (query_results($query2,$table_name,$results));
+	}
+
+	function query_results($query,$table_name,$results) {
+		$result2 = qdb($query,'PIPE') OR die(qe('PIPE'));
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if ($r2['price']=='0.00') { $r2['price'] = ''; }
+			else { $r2['price'] = format_price($r2['price'],2); }
+
+			if (isset($r2['quote_id'])) {
+				if ($table_name=='outgoing_quote') {
+					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r2['quote_id']."'; ";
+				} else if ($table_name=='incoming_quote') {
+					$query3 = "SELECT date FROM inventory_purchasequote WHERE id = '".$r2['quote_id']."'; ";
+				}
+				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE'));
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					$r2['datetime'] = $r3['date'];
+				}
+			}
 
 			$results[$r2['datetime']][] = $r2;
 		}
