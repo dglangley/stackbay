@@ -9,31 +9,45 @@
 	$pg = 1;
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
+	$PIPE_IDS = array();
 	function get_coldata($search,$coldata='demand') {
+		global $PIPE_IDS;
+
+		$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
 		$date_limit = $GLOBALS['summary_date'];
 		$unsorted = array();
 		$unsorted2 = array();
 
-		$search = preg_replace('/[^[:alnum:]]+/','',$search);
+		if (! isset($PIPE_IDS[$search])) {
+			//$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
+			//$query .= "clei heci, quantity_stock qty, notes ";
+			$query = "SELECT id FROM inventory_inventory WHERE (clean_part_number LIKE '".res($search,'PIPE')."%' ";
+			if (strlen($search)==7 OR strlen($search)==10 AND ! is_numeric($search)) { $query .= "OR clei LIKE '".res(substr($search,0,7),'PIPE')."%' "; }
+			$query .= "); ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+			while ($r = mysqli_fetch_assoc($result)) {
+				$PIPE_IDS[$search][] = $r;
+			}
+		}
 
-		$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
-		$query .= "clei heci, quantity_stock qty, notes ";
-		$query .= "FROM inventory_inventory WHERE (clean_part_number LIKE '".res($search,'PIPE')."%' ";
-		if (strlen($search)==7 OR strlen($search)==10 AND ! is_numeric($search)) { $query .= "OR clei LIKE '".res(substr($search,0,7),'PIPE')."%' "; }
-		$query .= "); ";
-		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-		while ($r = mysqli_fetch_assoc($result)) {
+		foreach ($PIPE_IDS[$search] as $r) {
 			$invid = $r['id'];
-			$key = $r['part'];
-			if ($r['heci']) { $key .= '.'.$r['heci']; }
 
-			$unsorted = get_details($invid,'outgoing_quote',$date_limit,$unsorted);
-			$unsorted = get_details($invid,'outgoing_request',$date_limit,$unsorted);
-			$unsorted = get_details($invid,'userrequest',$date_limit,$unsorted);
+			if ($coldata=='demand') {
+				$unsorted = get_details($invid,'outgoing_quote',$date_limit,$unsorted);
+				$unsorted = get_details($invid,'outgoing_request',$date_limit,$unsorted);
+				$unsorted = get_details($invid,'userrequest',$date_limit,$unsorted);
 
-			$unsorted2 = get_summary($invid,'outgoing_quote',$date_limit,$unsorted2);
-			$unsorted2 = get_summary($invid,'outgoing_request',$date_limit,$unsorted2);
-			$unsorted2 = get_summary($invid,'userrequest',$date_limit,$unsorted2);
+				$unsorted2 = get_summary($invid,'outgoing_quote',$date_limit,$unsorted2);
+				$unsorted2 = get_summary($invid,'outgoing_request',$date_limit,$unsorted2);
+				$unsorted2 = get_summary($invid,'userrequest',$date_limit,$unsorted2);
+			} else if ($coldata=='sales') {
+				$unsorted = get_details($invid,'sales',$date_limit,$unsorted);
+				$unsorted2 = get_summary($invid,'sales',$date_limit,$unsorted2);
+			} else if ($coldata=='purchases') {
+				$unsorted = get_details($invid,'incoming_quote',$date_limit,$unsorted);
+				$unsorted2 = get_summary($invid,'incoming_quote',$date_limit,$unsorted2);
+			}
 		}
 
 		return (array($unsorted,$unsorted2));
@@ -46,12 +60,12 @@
 		$market_str = '';
 		$dated_qty = 0;
 		$monthly_totals = array();
-		$results = array();
-		$results2 = array();
+		$unsorted = array();
+		$unsorted2 = array();
 
 		switch ($market_table) {
 			case 'demand':
-				$query = "SELECT datetime, request_qty qty, quote_price price, name FROM demand, search_meta, companies ";
+				$query = "SELECT datetime, request_qty qty, quote_price price, name, partid FROM demand, search_meta, companies ";
 				$query .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
@@ -61,7 +75,7 @@
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
 
-				list($results,$results2) = get_coldata($search_str,'demand');
+				list($unsorted,$unsorted2) = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
@@ -75,7 +89,7 @@
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
 
-				//$results = pipe($search_str,'sales',$GLOBALS['summary_date']);
+				list($unsorted,$unsorted2) = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
@@ -89,14 +103,16 @@
 				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+
+				list($unsorted,$unsorted2) = get_coldata($search_str,'sales');
 				break;
 		}
 
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$results[] = $r;
+			$unsorted[$r['datetime']][] = $r;
 		}
-		$results = sort_results($results,'asc');
+		$results = sort_results($unsorted,'asc');
 		$num_detailed = count($results);//mysqli_num_rows($result);
 
 		foreach ($results as $r) {
@@ -123,9 +139,9 @@
 		$num_summaries = mysqli_num_rows($result);
 		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 		while ($r = mysqli_fetch_assoc($result)) {
-			$results2[] = $r;
+			$unsorted2[$r['datetime']][] = $r;
 		}
-		$results2 = sort_results($results2,'desc');
+		$results2 = sort_results($unsorted2,'desc');
 
 		foreach ($results2 as $r) {
 			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
@@ -140,42 +156,67 @@
 		return ($market_str);
 	}
 
+//	$WIN_DETAILS = array();
 	function get_details($invid,$table_name,$date_limit,$results) {
-			$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id ";
-			$query2 .= "FROM inventory_".$table_name.", inventory_company ";
-			$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-			if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
-			if ($date_limit) { $query2 .= "AND date >= '".$date_limit."' "; }
-			$query2 .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
-//			echo $query2.'<BR>';
-			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				if ($r2['price']=='0.00') { $r2['price'] = ''; }
-				else { $r2['price'] = format_price($r2['price'],2); }
-				$results[$r2['datetime']][] = $r2;
-			}
-			return ($results);
+//		global $WIN_DETAILS;
+
+		$and_where = '';
+		if ($table_name=='sales') { $table_name = 'outgoing_quote'; $and_where = "AND win = '1' "; }
+		else if ($table_name=='incoming_quote') { $and_where = "AND purchase = '1' "; }
+
+		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ";
+		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
+		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+		$query2 .= $and_where;
+		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
+		if ($date_limit) { $query2 .= "AND date >= '".$date_limit."' "; }
+		$query2 .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
+//		echo $query2.'<BR>';
+		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if ($r2['price']=='0.00') { $r2['price'] = ''; }
+			else { $r2['price'] = format_price($r2['price'],2); }
+
+//			if ($r2['win']) { $WIN_DETAILS[$invid][$r2['datetime']][] = $r2; }
+//			unset($r2['win']);
+
+			$results[$r2['datetime']][] = $r2;
+		}
+
+		return ($results);
 	}
 
+//	$WIN_SUMMARY = array();
 	function get_summary($invid,$table_name,$date_limit,$results) {
-			$data = array();
-			//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
-			$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' inventory_id ";
-			$query2 .= "FROM inventory_".$table_name.", inventory_company ";
-			$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-			if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
-			if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
-			//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
-			$query2 .= "ORDER BY date DESC, price DESC; ";
-//			echo $query2.'<BR>';
-			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				if (! $r2['price'] OR $r2['price']=='0.00') { $r2['price'] = ''; }
-				else { $r2['price'] = number_format($r2['price'],2,'.',''); }
-				$results[$r2['datetime']][] = $r2;
-			}
+//		global $WIN_SUMMARY;
 
-			return ($results);
+		$and_where = '';
+		if ($table_name=='sales') { $table_name = 'outgoing_quote'; $and_where = "AND win = '1' "; }
+		else if ($table_name=='incoming_quote') { $and_where = "AND purchase = '1' "; }
+
+		//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
+		$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' partid ";
+//		if ($table_name=='outgoing_quote') { $query2 .= ", win "; } else { $query2 .= ", '0' win "; }
+		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
+		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+		$query2 .= $and_where;
+		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
+		if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
+		//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
+		$query2 .= "ORDER BY date DESC, price DESC; ";
+//		echo $query2.'<BR>';
+		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE'));
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if (! $r2['price'] OR $r2['price']=='0.00') { $r2['price'] = ''; }
+			else { $r2['price'] = number_format($r2['price'],2,'.',''); }
+
+//			if ($r2['win']) { $WIN_SUMMARY[$invid][$r2['datetime']][] = $r2; }
+//			unset($r2['win']);
+
+			$results[$r2['datetime']][] = $r2;
+		}
+
+		return ($results);
 	}
 
 	function sort_results($unsorted,$sort_order='asc') {
@@ -188,8 +229,8 @@
 		$k = 0;
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
-				if (! $r['inventory_id']) {
-					$key = $r['cid'].'.'.$r['datetime'];
+				$key = $r['name'].'.'.$date;
+				if (! $r['partid']) {
 					if (isset($uniques[$key])) { continue; }
 					$uniques[$key] = $r;
 
@@ -211,16 +252,14 @@
 					unset($r['qty']);
 					unset($r['price']);
 					unset($r['cid']);
-					unset($r['inventory_id']);
+					unset($r['partid']);
 					$grouped[$month] = $r;
 					continue;
 				}
 
-				$key = $r['cid'].'.'.$r['datetime'].'.'.$r['inventory_id'];
+//				$key = $r['cid'].'.'.$r['datetime'].'.'.$r['partid'];
 				if (isset($uniques[$key])) {
-					if ($r['cid'] AND $r['inventory_id']) {
-						$results[$uniques[$key]]['qty'] = $r['qty'];
-					}
+					$results[$uniques[$key]]['qty'] = $r['qty'];
 
 					continue;
 				}

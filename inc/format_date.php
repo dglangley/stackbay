@@ -110,7 +110,7 @@
 		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }
 		else if ($date>=$summary_past) { $date = format_date($date,'M j'); }
 		else if ($date>=$summary_lastyear) { $date = format_date($date,'M'); }
-		else { $date = format_date($date,'M, y'); }
+		else { $date = format_date($date,"M 'y"); }
 
 		return ($date);
 	}
