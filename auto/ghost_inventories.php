@@ -12,7 +12,7 @@ include_once $_SERVER["DOCUMENT_ROOT"]."/inc/dbconnect.php";
 
 //For testing purposes, I am running this on local mySQL connection, this will 
 //Need to be fixed before pushing to live.
-# $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
+// $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
 
 
@@ -25,13 +25,13 @@ $getPairedData .= "availability.`avail_qty` as `Quantity`,";
 $getPairedData .= "search_meta.`id` as `Meta_ID`, ";
 $getPairedData .= "search_meta.`companyid` as `Company` ";
 $getPairedData .= "FROM search_meta,availability,companies ";
-$getPairedData .= "WHERE  `datetime` > DATE_SUB(CURDATE( ) , INTERVAL 3 WEEK)";
+$getPairedData .= "WHERE  `datetime` > DATE_SUB(CURDATE( ) , INTERVAL 1 WEEK)";
 $getPairedData .= "AND search_meta.`id`= availability.`metaid` ";
 $getPairedData .= "AND companies.`id` = search_meta.companyid; ";
 
 
 
-$results = qdb($getPairedData);
+$results = qdb($getPairedData) OR die(qe());
 
 //Declare the value of the Organized array, which will contain the values of the
 //returned rows in the following loop
@@ -103,16 +103,13 @@ foreach ($organized as $company => $item) {
     
 }
 
-
 //Loop through the items we randomly selected and insert the rows
 
 foreach ($parsed[$company] as $item => $qty){
         $insert = "INSERT INTO staged_qtys ";
-        $insert .= "'partID' , 'companyid' , 'qty' VALUES (";
-        $insert .= $item.", ";
-        $insert .= $company.", ";
-        $insert .= $qty.");";
-        qdb($insert);
+        $insert .= "(partid , companyid , qty) VALUES ('";
+        $insert .= $item."', '".$company."', '".$qty."');";
+        qdb($insert) OR die(qe());
     
 }
     //print_r("Ghost Sunday Completed: ".date("m-d-y|g:i a"));
