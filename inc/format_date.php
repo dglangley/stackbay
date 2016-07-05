@@ -100,16 +100,17 @@
 	$summary_lastweek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$summary_lastyear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 	$this_month = substr($today,0,7).'-01';
+	$summary_past = format_date($today,'Y-m-01',array('d'=>-59));
 	function summarize_date($date) {
-		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month;
+		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month,$summary_past;
 		$date = substr($date,0,10);
 
 		if ($date==$today) { $date = 'Today'; }
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
 		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }
-		else if ($date>=$this_month) { $date = format_date($date,'M j'); }
+		else if ($date>=$summary_past) { $date = format_date($date,'M j'); }
 		else if ($date>=$summary_lastyear) { $date = format_date($date,'M'); }
-		else { $date = format_date($date,'M, y'); }
+		else { $date = format_date($date,"M 'y"); }
 
 		return ($date);
 	}

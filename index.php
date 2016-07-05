@@ -1,24 +1,71 @@
 <?php
 	include_once 'inc/dbconnect.php';
-	include_once 'inc/format_date.php';
 	include_once 'inc/pipe.php';
+	include_once 'inc/format_date.php';
+	include_once 'inc/format_price.php';
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
 	$pg = 1;
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
-	$summary_date = format_date($today,'Y-m-01',array('m'=>-2));
+	$PIPE_IDS = array();
+	function get_coldata($search,$coldata='demand') {
+		global $PIPE_IDS;
+
+		$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
+		$date_limit = $GLOBALS['summary_date'];
+		$unsorted = array();
+		$unsorted2 = array();
+
+		if (! isset($PIPE_IDS[$search])) {
+			//$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
+			//$query .= "clei heci, quantity_stock qty, notes ";
+			$query = "SELECT id FROM inventory_inventory WHERE (clean_part_number LIKE '".res($search,'PIPE')."%' ";
+			if (strlen($search)==7 OR strlen($search)==10 AND ! is_numeric($search)) { $query .= "OR clei LIKE '".res(substr($search,0,7),'PIPE')."%' "; }
+			$query .= "); ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+			while ($r = mysqli_fetch_assoc($result)) {
+				$PIPE_IDS[$search][] = $r;
+			}
+		}
+
+		foreach ($PIPE_IDS[$search] as $r) {
+			$invid = $r['id'];
+
+			if ($coldata=='demand') {
+				$unsorted = get_details($invid,'outgoing_quote',$date_limit,$unsorted);
+				$unsorted = get_details($invid,'outgoing_request',$date_limit,$unsorted);
+				$unsorted = get_details($invid,'userrequest',$date_limit,$unsorted);
+
+				$unsorted2 = get_summary($invid,'outgoing_quote',$date_limit,$unsorted2);
+				$unsorted2 = get_summary($invid,'outgoing_request',$date_limit,$unsorted2);
+				$unsorted2 = get_summary($invid,'userrequest',$date_limit,$unsorted2);
+			} else if ($coldata=='sales') {
+				$unsorted = get_details($invid,'sales',$date_limit,$unsorted);
+				$unsorted2 = get_summary($invid,'sales',$date_limit,$unsorted2);
+			} else if ($coldata=='purchases') {
+				$unsorted = get_details($invid,'incoming_quote',$date_limit,$unsorted);
+				$unsorted2 = get_summary($invid,'incoming_quote',$date_limit,$unsorted2);
+			}
+		}
+
+		return (array($unsorted,$unsorted2));
+	}
+
+	$summary_date = format_date($today,'Y-m-01',array('d'=>-59));
 	function format_market($partid_str,$market_table,$search_str) {
 		$last_date = '';
+		$last_sum = '';
 		$market_str = '';
 		$dated_qty = 0;
 		$monthly_totals = array();
-		$results = array();
+		$unsorted = array();
+		$unsorted2 = array();
 
 		switch ($market_table) {
 			case 'demand':
-				$query = "SELECT datetime, request_qty qty, quote_price price, name FROM demand, search_meta, companies ";
+				$query = "SELECT datetime, request_qty qty, quote_price price, name, partid FROM demand, search_meta, companies ";
 				$query .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
@@ -28,7 +75,7 @@
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
 
-				$results = pipe($search_str,$GLOBALS['summary_date']);
+				list($unsorted,$unsorted2) = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
@@ -41,6 +88,8 @@
 				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+
+				list($unsorted,$unsorted2) = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
@@ -54,22 +103,27 @@
 				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+
+				list($unsorted,$unsorted2) = get_coldata($search_str,'sales');
 				break;
 		}
 
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$results[] = $r;
+			$unsorted[$r['datetime']][] = $r;
 		}
+		$results = sort_results($unsorted,'asc');
 		$num_detailed = count($results);//mysqli_num_rows($result);
 
 		foreach ($results as $r) {
 			$order_date = substr($r['datetime'],0,10);
-			if ($last_date AND $order_date<>$last_date) {
+			$sum_date = summarize_date($r['datetime']);
+			if ($last_sum AND $sum_date<>$last_sum) {
 				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
 				$dated_qty = 0;//reset for next date
 			}
 			$last_date = $order_date;
+			$last_sum = $sum_date;
 			$dated_qty += $r['qty'];
 
 			// itemized data
@@ -85,7 +139,12 @@
 		$num_summaries = mysqli_num_rows($result);
 		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 		while ($r = mysqli_fetch_assoc($result)) {
-			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'x</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
+			$unsorted2[$r['datetime']][] = $r;
+		}
+		$results2 = sort_results($unsorted2,'desc');
+
+		foreach ($results2 as $r) {
+			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
 		}
 
 		if ($market_str) {
@@ -95,6 +154,145 @@
 		}
 
 		return ($market_str);
+	}
+
+	function set_fields(&$table_name) {
+		$field_sel = '';
+		$and_where = '';
+		if ($table_name=='sales') {
+			$table_name = 'outgoing_quote';
+			$field_sel = ", quote_id ";
+			$and_where = "AND win = '1' ";
+		} else if ($table_name=='incoming_quote') {
+			$field_sel = ", quote_id ";
+			$and_where = "AND purchase = '1' ";
+		}
+		return (array($field_sel,$and_where));
+	}
+
+	function get_details($invid,$table_name,$date_limit,$results) {
+		list($field_sel,$and_where) = set_fields($table_name);
+
+		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$field_sel;
+		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
+		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+		$query2 .= $and_where;
+		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
+		if ($date_limit) { $query2 .= "AND date >= '".$date_limit."' "; }
+		$query2 .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
+//		echo $query2.'<BR>';
+
+		return (query_results($query2,$table_name,$results));
+	}
+
+	function get_summary($invid,$table_name,$date_limit,$results) {
+		list($field_sel,$and_where) = set_fields($table_name);
+
+		//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
+		$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' partid ".$field_sel;
+		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
+		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+		$query2 .= $and_where;
+		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
+		if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
+		//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
+		$query2 .= "ORDER BY date DESC, price DESC; ";
+//		echo $query2.'<BR>';
+
+		return (query_results($query2,$table_name,$results));
+	}
+
+	function query_results($query,$table_name,$results) {
+		$result2 = qdb($query,'PIPE') OR die(qe('PIPE'));
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if ($r2['price']=='0.00') { $r2['price'] = ''; }
+			else { $r2['price'] = format_price($r2['price'],2); }
+
+			if (isset($r2['quote_id'])) {
+				if ($table_name=='outgoing_quote') {
+					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r2['quote_id']."'; ";
+				} else if ($table_name=='incoming_quote') {
+					$query3 = "SELECT date FROM inventory_purchasequote WHERE id = '".$r2['quote_id']."'; ";
+				}
+				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE'));
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					$r2['datetime'] = $r3['date'];
+				}
+			}
+
+			$results[$r2['datetime']][] = $r2;
+		}
+
+		return ($results);
+	}
+
+	function sort_results($unsorted,$sort_order='asc') {
+		if ($sort_order=='asc') { ksort($unsorted); }
+		else if ($sort_order=='desc') { krsort($unsorted); }
+
+		$results = array();
+		$uniques = array();
+		$grouped = array();
+		$k = 0;
+		foreach ($unsorted as $date => $arr) {
+			foreach ($arr as $r) {
+				$key = $r['name'].'.'.$date;
+				if (! $r['partid']) {
+					if (isset($uniques[$key])) { continue; }
+					$uniques[$key] = $r;
+
+					$month = substr($r['datetime'],0,7);
+
+					if (isset($grouped[$month])) {
+						if ($r['price']>0) {
+							$grouped[$month]['sum_qty'] += $r['qty'];
+							$grouped[$month]['sum_price'] += $r['price']*$r['qty'];
+						}
+						$grouped[$month]['total_qty'] += $r['qty'];
+						continue;
+					}
+					if ($r['price']>0) {
+						$r['sum_qty'] = $r['qty'];
+						$r['sum_price'] = $r['price']*$r['qty'];
+					}
+					$r['total_qty'] = $r['qty'];
+					unset($r['qty']);
+					unset($r['price']);
+					unset($r['cid']);
+					unset($r['partid']);
+					$grouped[$month] = $r;
+					continue;
+				}
+
+//				$key = $r['cid'].'.'.$r['datetime'].'.'.$r['partid'];
+				if (isset($uniques[$key])) {
+					$results[$uniques[$key]]['qty'] = $r['qty'];
+
+					continue;
+				}
+				$uniques[$key] = $k;
+
+				$results[$k++] = $r;
+			}
+		}
+
+		// if $grouped has elements, it's a summary array of uniquely-identified elements above so convert here
+		foreach ($grouped as $month => $r) {
+			$r['price'] = '';
+			if ($r['sum_price']>0) {
+				$r['price'] = format_price($r['sum_price']/$r['sum_qty'],2);
+				$r['qty'] = $r['total_qty'];
+			} else {
+				$r['qty'] = $r['total_qty'];
+			}
+			unset($r['sum_price']);
+			unset($r['sum_qty']);
+			unset($r['total_qty']);
+			$results[] = $r;
+		}
+
+		return ($results);
 	}
 
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
@@ -113,7 +311,7 @@
 		$date = summarize_date($order_date);
 
 		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'.$date.': '.
-			$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
+			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
 
@@ -374,6 +572,9 @@
 			$itemprice = "0.00";
 			$fav_flag = $favs[$partid];
 
+			$partstrs = explode(' ',$P['part']);
+			$primary_part = $partstrs[0];
+
 			$chkd = '';
 			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
 ?>
@@ -396,7 +597,7 @@
 									</div>
 								</div>
                                 <div class="product-img">
-                                    <img src="/products/images/090-42140-13.jpg" alt="pic" class="img" />
+                                    <img src="http://www.ven-tel.com/img/parts/<?php echo format_part($primary_part); ?>.jpg" alt="pic" class="img" data-part="<?php echo $primary_part; ?>" />
                                 </div>
                                 <div class="product-descr" data-partid="<?php echo $partid; ?>">
 									<span class="descr-label"><span class="part-label"><?php echo $P['Part']; ?></span> &nbsp; <span class="heci-label"><?php echo $P['HECI']; ?></span></span>
@@ -533,6 +734,20 @@
     </div>
 
 	</form>
+
+<div class="modal fade" id="image-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="prod-image-title"></h4>
+      </div>
+      <div class="modal-body">
+		<img id="modal-prod-img">
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 <?php include_once 'inc/footer.php'; ?>
 
