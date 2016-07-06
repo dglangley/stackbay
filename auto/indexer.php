@@ -1,8 +1,13 @@
 <?php
-    ini_set('memory_limit', '2000M');
-    include_once '../inc/mconnect.php';
-    include_once '../inc/indexer.php';
+	$search = '';
+	if (isset($_REQUEST['search']) AND strlen(trim($_REQUEST['search']))>2) { $search = trim($_REQUEST['search']); }
+	$search = preg_replace('/[^[:alnum:]-]+/','',$search);
+	if (strlen($search)<=2) { die("Invalid search string"); }
 
-    $test = 0;
-    indexer('D8301');
+	ini_set('memory_limit', '2000M');
+	include_once '../inc/mconnect.php';
+	include_once '../inc/indexer.php';
+
+	$test = 0;
+	indexer($search);
 ?>

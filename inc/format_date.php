@@ -105,6 +105,8 @@
 		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month,$summary_past;
 		$date = substr($date,0,10);
 
+		if (strlen($date)==7) { $date .= '-01'; }
+
 		if ($date==$today) { $date = 'Today'; }
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
 		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }

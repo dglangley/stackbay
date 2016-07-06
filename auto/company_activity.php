@@ -8,10 +8,9 @@
 	$result = qdb($query) OR die(qe());
 
 	$activity = array();
-	$limit = 10;
 	$query = "SELECT companyid, COUNT(search_meta.id) n FROM demand, search_meta ";
 	$query .= "WHERE datetime >= '".$past_date."' AND demand.metaid = search_meta.id ";
-	$query .= "GROUP BY companyid HAVING n > 1 ORDER BY n DESC LIMIT 0,$limit; ";
+	$query .= "GROUP BY companyid ORDER BY n DESC; ";
 	$result = qdb($query) OR die(qe());
 	while ($r = mysqli_fetch_assoc($result)) {
 		$activity[$r['companyid']] = array('demand'=>$r['n'],'supply'=>0);
@@ -19,7 +18,7 @@
 
 	$query = "SELECT companyid, COUNT(search_meta.id) n FROM availability, search_meta ";
 	$query .= "WHERE datetime >= '".$past_date."' AND availability.metaid = search_meta.id ";
-	$query .= "GROUP BY companyid HAVING n > 1 ORDER BY n DESC LIMIT 0,$limit; ";
+	$query .= "GROUP BY companyid ORDER BY n DESC; ";
 	$result = qdb($query) OR die(qe());
 	while ($r = mysqli_fetch_assoc($result)) {
 		$demand = 0;
