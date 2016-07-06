@@ -290,6 +290,7 @@ $query .= "AND companies.id <> '1118' ";
 				'company' => $r['name'],
 				'cid' => $r['companyid'],
 				'qty' => $r['qty'],
+				'old' => '0',
 				'price' => $price,
 				'changeFlag' => 'circle-o',
 				'rfq' => $r['rfq'],
