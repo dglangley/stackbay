@@ -9,7 +9,7 @@
 	$pg = 1;
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
-	$FREQS = array();
+	$FREQS = array('demand'=>array(),'supply'=>array());
 	$freq_min = 2;
 	$query = "SELECT * FROM company_activity WHERE demand_volume > $freq_min OR supply_volume > $freq_min; ";
 	$result = qdb($query);
@@ -27,7 +27,6 @@
 		global $PIPE_IDS;
 
 		$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
-		$date_limit = $GLOBALS['summary_date'];
 		$unsorted = array();
 		$unsorted2 = array();
 
@@ -47,26 +46,26 @@
 			$invid = $r['id'];
 
 			if ($coldata=='demand') {
-				$unsorted = get_details($invid,'outgoing_quote',$date_limit,$unsorted);
-				$unsorted = get_details($invid,'outgoing_request',$date_limit,$unsorted);
-				$unsorted = get_details($invid,'userrequest',$date_limit,$unsorted);
+				$unsorted = get_details($invid,'outgoing_quote',$unsorted);
+				$unsorted = get_details($invid,'outgoing_request',$unsorted);
+				$unsorted = get_details($invid,'userrequest',$unsorted);
 
-//				$unsorted2 = get_summary($invid,'outgoing_quote',$date_limit,$unsorted2);
-//				$unsorted2 = get_summary($invid,'outgoing_request',$date_limit,$unsorted2);
-//				$unsorted2 = get_summary($invid,'userrequest',$date_limit,$unsorted2);
+//				$unsorted2 = get_summary($invid,'outgoing_quote',$unsorted2);
+//				$unsorted2 = get_summary($invid,'outgoing_request',$unsorted2);
+//				$unsorted2 = get_summary($invid,'userrequest',$unsorted2);
 			} else if ($coldata=='sales') {
-				$unsorted = get_details($invid,'sales',$date_limit,$unsorted);
-//				$unsorted2 = get_summary($invid,'sales',$date_limit,$unsorted2);
+				$unsorted = get_details($invid,'sales',$unsorted);
+//				$unsorted2 = get_summary($invid,'sales',$unsorted2);
 			} else if ($coldata=='purchases') {
-				$unsorted = get_details($invid,'incoming_quote',$date_limit,$unsorted);
-//				$unsorted2 = get_summary($invid,'incoming_quote',$date_limit,$unsorted2);
+				$unsorted = get_details($invid,'incoming_quote',$unsorted);
+//				$unsorted2 = get_summary($invid,'incoming_quote',$unsorted2);
 			}
 		}
 
 		return (array($unsorted,$unsorted2));
 	}
 
-	$summary_date = format_date($today,'Y-m-01',array('d'=>-59));
+//	$summary_date = format_date($today,'Y-m-01',array('m'=>-1));
 	function format_market($partid_str,$market_table,$search_str) {
 		$last_date = '';
 		$last_sum = '';
@@ -96,13 +95,15 @@
 			case 'purchases':
 				$query = "SELECT datetime, name, purchase_orders.id, qty, price FROM purchase_items, purchase_orders, companies ";
 				$query .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id AND companies.id = purchase_orders.companyid ";
-				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
+//				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
+/*
 				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM purchase_items, purchase_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+*/
 
 				list($unsorted,$unsorted2) = get_coldata($search_str,'purchases');
 				break;
@@ -111,13 +112,15 @@
 			default:
 				$query = "SELECT datetime, name, sales_orders.id, qty, price FROM sales_items, sales_orders, companies ";
 				$query .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id AND companies.id = sales_orders.companyid ";
-				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
+//				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
+/*
 				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM sales_items, sales_orders ";
 				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
 				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
 				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
+*/
 
 				list($unsorted,$unsorted2) = get_coldata($search_str,'sales');
 				break;
@@ -133,20 +136,20 @@
 
 		$details = array();
 		$grouped = array();
-		$i = 0;
 		$last_date = '';
 		foreach ($results as $r) {
-			if ($i<6) {
+			$datetime = substr($r['datetime'],0,10);
+			$summary_form = true;
+			if ($datetime>=$GLOBALS['summary_past']) {
 				$group_date = substr($r['datetime'],0,10);
 				$last_date = $group_date;
 				$num_detailed = true;
+				$summary_form = false;
 			} else {
 				// update date baseline for summarize_date() below to show just month rather than full date
-				if ($i==6) { $GLOBALS['summary_past'] = $last_date; }
 
 				$group_date = substr($r['datetime'],0,7);
 			}
-			$i++;
 			if (! isset($grouped[$group_date])) { $grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array()); }
 
 			$fprice = format_price($r['price'],true,'',true);
@@ -157,16 +160,41 @@
 			}
 			$grouped[$group_date]['datetime'] = $r['datetime'];
 			$grouped[$group_date]['total_qty'] += $r['qty'];
-			$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
+
+			if ($market_table=='demand' OR $market_table=='sales') {
+				if (! $summary_form OR isset($FREQ['demand'][$r['cid']])) {
+					$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
+				}
+			} else if ($market_table=='purchases') {
+				if (! $summary_form OR isset($FREQ['supply'][$r['cid']])) {
+					$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
+				}
+			}
 		}
 		ksort($grouped);
 
+		$cls1 = '';
+		$cls2 = '';
 		foreach ($grouped as $order_date => $r) {
+			// summarized date for heading line
 			$sum_date = summarize_date($r['datetime']);
+
+			// add group heading (date with summarized qty)
 			if ($last_sum AND $sum_date<>$last_sum) {
-				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
+				$market_str = $cls1.format_dateTitle($last_date,$dated_qty).$cls2.$market_str;
 				$dated_qty = 0;//reset for next date
 			}
+
+			$cls1 = '';
+			$cls2 = '';
+			if ($r['datetime']<$GLOBALS['summary_lastyear']) {
+				$cls1 = '<span class="archives">';
+				$cls2 = '</span>';
+			} else if ($r['datetime']<$GLOBALS['summary_past']) {
+				$cls1 = '<span class="summary">';
+				$cls2 = '</span>';
+			}
+
 			if (strlen($order_date)==10 AND strlen($last_date)==7) {
 				$market_str = '<HR>'.$market_str;
 			}
@@ -176,6 +204,7 @@
 			$dated_qty += $r['total_qty'];
 
 			$companies = '';
+			$cid = 0;
 			foreach ($r['companies'] as $cid => $name) {
 				if ($companies) { $companies .= '<br>'; }
 				$companies .= $name;
@@ -188,38 +217,21 @@
 				$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
 			}
 			$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
-				'<a href="#" class="market-company">'.$companies.'</a> <span class="pa">'.format_price($price,false).'</span></div>';
+				'<a href="profile.php?companyid='.$cid.'" class="market-company">'.$companies.'</a> <span class="pa">'.format_price($price,false).'</span></div>';
 
 			// append to column string
-			$market_str = $line_str.$market_str;
+			$market_str = $cls1.$line_str.$cls2.$market_str;
 		}
 
-/*
-		foreach ($results as $r) {
-			$order_date = substr($r['datetime'],0,10);
-			$sum_date = summarize_date($r['datetime']);
-			if ($last_sum AND $sum_date<>$last_sum) {
-				$market_str = format_dateTitle($last_date,$dated_qty).$market_str;
-				$dated_qty = 0;//reset for next date
-			}
-			$last_date = $order_date;
-			$last_sum = $sum_date;
-			$dated_qty += $r['qty'];
-
-			// itemized data
-				$market_str = '<div class="market-data"><span class="pa">'.$r['qty'].'</span> &nbsp; '.
-					'<a href="#">'.$r['name'].'</a> <span class="pa">'.format_price($r['price'],false).'</span></div>'.$market_str;
-		}
-*/
-//DAVID
 		// append last remaining data
 		if ($num_detailed) {
-			$market_str = format_dateTitle($order_date,$dated_qty).$market_str;
+			$market_str = $cls1.format_dateTitle($order_date,$dated_qty).$cls2.$market_str;
 		}
 
 //		$result = qdb($query2) OR die(qe().' '.$query2);
 //		$num_summaries = mysqli_num_rows($result);
 //		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
+/*
 		while ($r = mysqli_fetch_assoc($result)) {
 			$unsorted2[$r['datetime']][] = $r;
 		}
@@ -228,6 +240,7 @@
 		foreach ($results2 as $r) {
 			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
 		}
+*/
 
 		if ($market_str) {
 			$market_str = '<a href="#" class="market-title">'.ucfirst($market_table).'</a><div class="market-body">'.$market_str.'</div>';
@@ -252,7 +265,7 @@
 		return (array($field_sel,$and_where));
 	}
 
-	function get_details($invid,$table_name,$date_limit,$results) {
+	function get_details($invid,$table_name,$results) {
 		list($field_sel,$and_where) = set_fields($table_name);
 
 		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$field_sel;
@@ -267,7 +280,7 @@
 		return (query_results($query2,$table_name,$results));
 	}
 
-	function get_summary($invid,$table_name,$date_limit,$results) {
+	function get_summary($invid,$table_name,$results) {
 		list($field_sel,$and_where) = set_fields($table_name);
 
 		//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
@@ -276,7 +289,7 @@
 		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 		$query2 .= $and_where;
 		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
-		if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
+//		if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
 		//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
 		$query2 .= "ORDER BY date DESC, price DESC; ";
 //		echo $query2.'<BR>';
@@ -734,18 +747,18 @@
                             <td rowspan="<?php echo ($num_results+1); ?>" class="market-row">
 								<table class="table market-table">
 									<tr>
+										<td class="col-sm-3 bg-availability">
+											<a href="javascript:void(0);" class="market-title">Supply</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
+											<div class="market-results" id="<?php echo $ln.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $ln; ?>"></div>
+										</td>
+										<td class="col-sm-3 bg-purchases">
+											<?php echo $purchases_col; ?>
+										</td>
 										<td class="col-sm-3 bg-sales">
 											<?php echo $sales_col; ?>
 										</td>
 										<td class="col-sm-3 bg-demand">
 											<?php echo $demand_col; ?>
-										</td>
-										<td class="col-sm-3 bg-purchases">
-											<?php echo $purchases_col; ?>
-										</td>
-										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title">Availability</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
-											<div class="market-results" id="<?php echo $ln.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $ln; ?>"></div>
 										</td>
 									</tr>
 								</table>

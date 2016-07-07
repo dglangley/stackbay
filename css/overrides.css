@@ -400,7 +400,7 @@ input[type="text"].inline {
 }
 
 .market-table .bg-sales .market-body, .market-table .bg-demand .market-body, .market-table .bg-purchases .market-body {
-	height:114px !important;
+	height:88% !important;
 	width:100%;
 	overflow:hidden;
 	display:block;
@@ -408,11 +408,22 @@ input[type="text"].inline {
 }
 .market-table .bg-sales:hover .market-body, .market-table .bg-demand:hover .market-body, .market-table .bg-purchases:hover .market-body {
 	padding:4px;
-	height:100% !important;
+	height:150% !important;
+	width:120%;
+	background:inherit;
 	overflow-y:scroll;
 	border:1px solid #ccc;
 	box-shadow: 2px 1px 2px #888888;
 	z-index:2001;
+}
+.market-table .summary * {
+	color:#555 !important;
+	font-weight:normal;
+}
+.market-table .archives * {
+	color:#999 !important;
+	font-weight:normal;
+	font-style:italic;
 }
 
 .market-table .market-results {

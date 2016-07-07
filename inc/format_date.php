@@ -100,7 +100,7 @@
 	$summary_lastweek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$summary_lastyear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 	$this_month = substr($today,0,7).'-01';
-	$summary_past = format_date($today,'Y-m-01',array('d'=>-59));
+	$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
 	function summarize_date($date) {
 		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month,$summary_past;
 		$date = substr($date,0,10);
