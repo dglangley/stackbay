@@ -33,6 +33,7 @@
     }
 
 	$done = '';
+	// 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's
 	$attempt = 0;
 	$max_ln = 2;
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
@@ -45,6 +46,7 @@
 	$force_download = false;
 	if ($attempt==2) { $force_download = true; }
 
+	// partids are passed in with comma-separated format
 	$matches = array();
 	$partid_array = explode(",",$partids);
 	$partid_str = "";
@@ -84,19 +86,26 @@
 	$searches = array();
 	$limited = array();
 
+
+	/***** KEYWORD SEARCH *****/
+
 	$checked_ids = array();
+	// get primary keywords (part, heci, etc) and corresponding partid's
 	$query = "SELECT keyword, partid FROM keywords, parts_index ";
 	$query .= "WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
-	$query .= "ORDER BY LENGTH(keyword) DESC; ";
+	$query .= "ORDER BY LENGTH(keyword) DESC; ";//sort in desc length so we can work backwards to eliminate matching substrings later
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
 		if (isset($searches[$r['keyword']])) { continue; }
 
+		// eliminate matching super-strings
 		array_keysearch($limited,$r['keyword']);
+
 		$searches[$r['keyword']] = true;
 		$limited[$r['keyword']] = true;
 
+		// somehow saving processing time ???
 		if (isset($checked_ids[$r['partid']])) { continue; }
 
 		// for ebay, get original-formatted keyword with punctuations because we don't get the same results
@@ -116,6 +125,9 @@
 
 //		echo $r['keyword'].'<BR>';
 	}
+
+
+	/***** BROKER STRING BUILDING *****/
 
 	// string unique searches now into single line-separated string
 	$psstr = '';
@@ -199,8 +211,13 @@
 				$errmsgs[] = $excel_err;
 			}
 		}
+
+		// when we're done with all remote calls
 		$done = 1;
 	}
+
+
+	// get stored rfqs from various users on the partids passed in
 
 	$rfqs = array();
 //	$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
@@ -209,6 +226,7 @@
 	while ($r = mysqli_fetch_assoc($result)) {
 		$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
 	}
+
 
 	$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
 	$query .= "FROM availability, search_meta, companies ";
@@ -224,20 +242,26 @@ $query .= "AND companies.id <> '1118' ";
 		// if an rfq has been submitted against this partid, log it against the $key
 		if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
 
+		// add missing gaps of info from previous iterations (ie, same date but earlier in the day had a price, whereas the first found record had no price)
 		if (isset($results[$key])) {
+			// if price is in this iteration whereas not found in previous ($results), set it to this price
 			if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 			$results[$key]['qty'] += $r['qty'];
+
+			// add rfq flag if it has been rfq'd by user (see query above)
 			if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
 				$results[$key]['rfq'] = 'Y';
 			}
 			continue;
 		}
+		// save memory in array
 		unset($r['partid']);
 
 //		$result[] = $r;
 		$results[$key] = $r;
 	}
 
+	// legacy code/query
 	$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq FROM market, companies ";
 	$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
 $query .= "AND companies.id <> '1118' ";
@@ -290,7 +314,6 @@ $query .= "AND companies.id <> '1118' ";
 				'company' => $r['name'],
 				'cid' => $r['companyid'],
 				'qty' => $r['qty'],
-				'old' => '0',
 				'price' => $price,
 				'changeFlag' => 'circle-o',
 				'rfq' => $r['rfq'],
@@ -321,6 +344,10 @@ $query .= "AND companies.id <> '1118' ";
 	unset($results);
 //	unset($keys);
 
+
+	/***** SORTING FOR VISUAL DISPLAY *****/
+	// sort results with priced items first, then descending by qty
+
 	krsort($matches);
 
 	$priced = array();
@@ -347,6 +374,8 @@ $query .= "AND companies.id <> '1118' ";
 	array_append($market,$priced);
 	array_append($market,$standard);
 
+
+	// create date-separated headers for each group of results
 	$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
 	$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
 	$query .= "GROUP BY date; ";
@@ -356,7 +385,9 @@ $query .= "AND companies.id <> '1118' ";
 		if (! isset($market[$search_date])) { $market[$search_date] = array(); }
 	}
 
+	// sort here instead of order in query above because $market already contains date-keyed results and we want to sort altogether
 	krsort($market);
+//	print "<pre>".print_r($market,true)."</pre>";exit;
 
 	unset($priced);
 	unset($standard);

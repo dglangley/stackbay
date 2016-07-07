@@ -398,6 +398,23 @@ input[type="text"].inline {
 	height:140px;
 	min-height:140px;
 }
+
+.market-table .bg-sales .market-body, .market-table .bg-demand .market-body, .market-table .bg-purchases .market-body {
+	height:114px !important;
+	width:100%;
+	overflow:hidden;
+	display:block;
+	position:absolute;
+}
+.market-table .bg-sales:hover .market-body, .market-table .bg-demand:hover .market-body, .market-table .bg-purchases:hover .market-body {
+	padding:4px;
+	height:100% !important;
+	overflow-y:scroll;
+	border:1px solid #ccc;
+	box-shadow: 2px 1px 2px #888888;
+	z-index:2001;
+}
+
 .market-table .market-results {
 	height:114px;
 	overflow:hidden;
