@@ -37,7 +37,7 @@
 	$errmsgs = array();
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs;
+		global $err,$errmsgs,$today;
 
 		if (! $partid_array) { $partid_array = array(); }
 

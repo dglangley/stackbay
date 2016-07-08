@@ -400,7 +400,7 @@ input[type="text"].inline {
 }
 
 .market-table .bg-sales .market-body, .market-table .bg-demand .market-body, .market-table .bg-purchases .market-body {
-	height:88% !important;
+	height:80% !important;
 	width:100%;
 	overflow:hidden;
 	display:block;

@@ -24,50 +24,81 @@
 
 	$PIPE_IDS = array();
 	$avg_cost = '';
-	function get_coldata($search,$coldata='demand') {
+	function getPipeIds($search_str,$search_by='') {
 		global $PIPE_IDS,$avg_cost;
 
-		$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
-		$unsorted = array();
-		$unsorted2 = array();
+		$searches = explode(' ',$search_str);
 
-		if (! isset($PIPE_IDS[$search])) {
-			//$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
-			//$query .= "clei heci, quantity_stock qty, notes ";
-			$query = "SELECT id, avg_cost FROM inventory_inventory WHERE (clean_part_number LIKE '".res($search,'PIPE')."%' ";
-			if (strlen($search)==7 OR strlen($search)==10 AND ! is_numeric($search)) { $query .= "OR clei LIKE '".res(substr($search,0,7),'PIPE')."%' "; }
-			$query .= "); ";
-			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['avg_cost']>0) { $avg_cost = $r['avg_cost']; }
-				$PIPE_IDS[$search][] = $r;
+		$pipe_ids = array();//all ids for the search string passed in
+
+		foreach ($searches as $search) {
+			$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
+			$search_by = strtolower($search_by);
+			$keysearch = $search;
+			if ($search_by) { $keysearch .= '.'.$search_by; }
+
+			$ids = array();
+			if (isset($PIPE_IDS[$keysearch])) {
+				foreach ($PIPE_IDS[$keysearch] as $id => $r) {
+					$pipe_ids[$id] = $r;
+				}
+			} else {
+				//$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
+				//$query .= "clei heci, quantity_stock qty, notes ";
+				$query = "SELECT id, avg_cost FROM inventory_inventory WHERE (";
+				$subquery = "";
+				if ($search_by<>'heci') {
+					$subquery .= "clean_part_number LIKE '".res($search,'PIPE')."%' ";
+				}
+				if ((strlen($search)==7 OR strlen($search)==10 OR $search_by<>'part') AND ! is_numeric($search)) {
+					if ($subquery) { $subquery .= "OR "; }
+					if ($search_by=='heci' AND strlen($search)==10) {
+						$subquery .= "clei = '".res($search,'PIPE')."' ";
+					} else {
+						$subquery .= "clei LIKE '".res(substr($search,0,7),'PIPE')."%' ";
+					}
+				}
+				if (! $subquery) { $subquery .= "1 = 1 "; }
+				$query .= $subquery."); ";
+				$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+				while ($r = mysqli_fetch_assoc($result)) {
+					if ($r['avg_cost']>0) { $avg_cost = $r['avg_cost']; }
+					$ids[$r['id']] = $r;//ids for just this sub-divided search str
+					$pipe_ids[$r['id']] = $r;//ids for all results of exploded search string
+				}
+				$PIPE_IDS[$keysearch] = $ids;
+			}
+
+			// check aliases
+			if ($search_by<>'heci') {
 			}
 		}
 
-		foreach ($PIPE_IDS[$search] as $r) {
-			$invid = $r['id'];
-
-			if ($coldata=='demand') {
-				$unsorted = get_details($invid,'outgoing_quote',$unsorted);
-				$unsorted = get_details($invid,'outgoing_request',$unsorted);
-				$unsorted = get_details($invid,'userrequest',$unsorted);
-
-//				$unsorted2 = get_summary($invid,'outgoing_quote',$unsorted2);
-//				$unsorted2 = get_summary($invid,'outgoing_request',$unsorted2);
-//				$unsorted2 = get_summary($invid,'userrequest',$unsorted2);
-			} else if ($coldata=='sales') {
-				$unsorted = get_details($invid,'sales',$unsorted);
-//				$unsorted2 = get_summary($invid,'sales',$unsorted2);
-			} else if ($coldata=='purchases') {
-				$unsorted = get_details($invid,'incoming_quote',$unsorted);
-//				$unsorted2 = get_summary($invid,'incoming_quote',$unsorted2);
-			}
-		}
-
-		return (array($unsorted,$unsorted2));
+		return ($pipe_ids);
 	}
 
-//	$summary_date = format_date($today,'Y-m-01',array('m'=>-1));
+	function getPipeQty($heci='',$part='') {
+		if (strlen($heci)==7 OR strlen($heci)==10) {
+			$pipe_ids = getPipeIds($heci,'heci');
+		} else {
+			$pipe_ids = getPipeIds($part);
+		}
+
+		$qty = 0;
+		foreach ($pipe_ids as $r) {
+			$query = "SELECT COUNT(inventory_itemlocation.id) AS qty ";
+			$query .= "FROM inventory_itemlocation, inventory_location ";
+			$query .= "WHERE inventory_id = '".$r['id']."' AND no_sales = '0' ";
+			$query .= "AND inventory_itemlocation.location_id = inventory_location.id; ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+			while ($r = mysqli_fetch_assoc($result)) {
+				$qty += $r['qty'];
+			}
+		}
+
+		return ($qty);
+	}
+
 	function format_market($partid_str,$market_table,$search_str) {
 		global $FREQS;
 
@@ -77,56 +108,31 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 		$unsorted = array();
-		$unsorted2 = array();
 
 		switch ($market_table) {
 			case 'demand':
 				$query = "SELECT datetime, request_qty qty, quote_price price, name, partid FROM demand, search_meta, companies ";
 				$query .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-//				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-/*
-				$query2 = "SELECT datetime, SUM(request_qty) qty, ((SUM(request_qty)*quote_price)/SUM(request_qty)) price FROM demand, search_meta ";
-				$query2 .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id ";
-				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
-				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
-*/
-
-				list($unsorted,$unsorted2) = get_coldata($search_str,'demand');
+				$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
 				$query = "SELECT datetime, name, purchase_orders.id, qty, price FROM purchase_items, purchase_orders, companies ";
 				$query .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id AND companies.id = purchase_orders.companyid ";
-//				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-/*
-				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM purchase_items, purchase_orders ";
-				$query2 .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id ";
-				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
-				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
-*/
-
-				list($unsorted,$unsorted2) = get_coldata($search_str,'purchases');
+				$unsorted = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
 			default:
 				$query = "SELECT datetime, name, sales_orders.id, qty, price FROM sales_items, sales_orders, companies ";
 				$query .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id AND companies.id = sales_orders.companyid ";
-//				$query .= "AND datetime >= '".$GLOBALS['summary_date']."' ";
 				$query .= "ORDER BY datetime ASC; ";
 
-/*
-				$query2 = "SELECT datetime, SUM(qty) qty, ((SUM(qty)*price)/SUM(qty)) price FROM sales_items, sales_orders ";
-				$query2 .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id ";
-				$query2 .= "AND datetime < '".$GLOBALS['summary_date']."' ";
-				$query2 .= "GROUP BY LEFT(datetime,7) ORDER BY datetime DESC; ";
-*/
-
-				list($unsorted,$unsorted2) = get_coldata($search_str,'sales');
+				$unsorted = get_coldata($search_str,'sales');
 				break;
 		}
 
@@ -145,7 +151,7 @@
 		foreach ($results as $r) {
 			$datetime = substr($r['datetime'],0,10);
 			$summary_form = true;
-			if ($datetime>=$GLOBALS['summary_past']) {
+			if ($market_table<>'demand' OR $datetime>=$GLOBALS['summary_past']) {
 				$group_date = substr($r['datetime'],0,10);
 				$last_date = $group_date;
 				$summary_form = false;
@@ -230,19 +236,6 @@
 			$market_str = $cls1.format_dateTitle($order_date,$dated_qty).$cls2.$market_str;
 		}
 
-//		$result = qdb($query2) OR die(qe().' '.$query2);
-//		$num_summaries = mysqli_num_rows($result);
-/*
-		while ($r = mysqli_fetch_assoc($result)) {
-			$unsorted2[$r['datetime']][] = $r;
-		}
-		$results2 = sort_results($unsorted2,'desc');
-
-		foreach ($results2 as $r) {
-			$market_str .= '<div class="market-data"><span class="pa">'.$r['qty'].'</span>&nbsp; '.summarize_date($r['datetime']).'&nbsp; '.format_price($r['price'],false).'</div>';
-		}
-*/
-
 		if ($market_str) {
 			$market_str = '<a href="#" class="market-title">'.ucfirst($market_table).'</a><div class="market-body">'.$market_str.'</div>';
 		} else {
@@ -252,72 +245,86 @@
 		return ($market_str);
 	}
 
-	function set_fields(&$table_name) {
-		$field_sel = '';
+	function get_coldata($search,$coldata='demand') {
+		$unsorted = array();
+
+		$pipe_ids = getPipeIds($search);
+
+		foreach ($pipe_ids as $r) {
+			$invid = $r['id'];
+
+			if ($coldata=='demand') {
+				$unsorted = get_details($invid,'outgoing_quote',$unsorted);
+				$unsorted = get_details($invid,'outgoing_request',$unsorted);
+				$unsorted = get_details($invid,'userrequest',$unsorted);
+			} else if ($coldata=='sales') {
+				$unsorted = get_details($invid,'sales',$unsorted);
+			} else if ($coldata=='purchases') {
+				$unsorted = get_details($invid,'incoming_quote',$unsorted);
+			}
+		}
+
+		return ($unsorted);
+	}
+
+	$SALES = array();
+	function get_details($invid,$table_name,$results) {
+		global $SALES;
+
+		$orig_table = $table_name;
+
 		$and_where = '';
+		$add_field = '';
 		if ($table_name=='sales') {
 			$table_name = 'outgoing_quote';
-			$field_sel = ", quote_id ";
 			$and_where = "AND win = '1' ";
+			$add_field = ', quote_id ';
 		} else if ($table_name=='incoming_quote') {
-			$field_sel = ", quote_id ";
-			$and_where = "AND purchase = '1' ";
+			$and_where = "AND inventory_purchaseorder.purchasequote_ptr_id = inventory_incoming_quote.quote_id ";
+			$add_field = ', quote_id ';
 		}
-		return (array($field_sel,$and_where));
+
+		$db_results = array();
+		if ($orig_table=='outgoing_quote' AND isset($SALES[$invid])) {
+			$db_results = $SALES[$invid];
+		} else {
+			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$add_field;
+			$query .= "FROM inventory_".$table_name.", inventory_company ";
+			if ($table_name=='incoming_quote') { $query .= ", inventory_purchaseorder "; }
+			$query .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+			$query .= $and_where;
+			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
+			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
+//			echo $query.'<BR>';
+			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+			while ($r = mysqli_fetch_assoc($result)) {
+				$db_results[] = $r;
+			}
+			if ($orig_table=='sales') { $SALES[$invid] = $db_results; }
+		}
+
+		return (handle_results($db_results,$orig_table,$results));
 	}
 
-	function get_details($invid,$table_name,$results) {
-		list($field_sel,$and_where) = set_fields($table_name);
+	function handle_results($db_results,$table_name,$results) {
+		foreach ($db_results as $r) {
+			if ($r['price']=='0.00') { $r['price'] = ''; }
+			else { $r['price'] = format_price($r['price'],2); }
 
-		$query2 = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$field_sel;
-		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
-		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-		$query2 .= $and_where;
-		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
-//		if ($date_limit) { $query2 .= "AND date >= '".$date_limit."' "; }
-		$query2 .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
-//		echo $query2.'<BR>';
-
-		return (query_results($query2,$table_name,$results));
-	}
-
-	function get_summary($invid,$table_name,$results) {
-		list($field_sel,$and_where) = set_fields($table_name);
-
-		//$query2 = "SELECT date datetime, SUM(quantity) qty, ((SUM(quantity)*price)/SUM(quantity)) price, '' cid, '' inventory_id ";
-		$query2 = "SELECT date datetime, quantity qty, price, company_id cid, '' partid ".$field_sel;
-		$query2 .= "FROM inventory_".$table_name.", inventory_company ";
-		$query2 .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-		$query2 .= $and_where;
-		if ($table_name=='userrequest') { $query2 .= "AND incoming = '0' "; }
-//		if ($date_limit) { $query2 .= "AND date < '".$date_limit."' "; }
-		//$query2 .= "GROUP BY LEFT(date,7) ORDER BY date DESC; ";
-		$query2 .= "ORDER BY date DESC, price DESC; ";
-//		echo $query2.'<BR>';
-
-		return (query_results($query2,$table_name,$results));
-	}
-
-	function query_results($query,$table_name,$results) {
-		$result2 = qdb($query,'PIPE') OR die(qe('PIPE'));
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			if ($r2['price']=='0.00') { $r2['price'] = ''; }
-			else { $r2['price'] = format_price($r2['price'],2); }
-
-			if (isset($r2['quote_id'])) {
-				if ($table_name=='outgoing_quote') {
-					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r2['quote_id']."'; ";
+			if ($table_name=='sales' OR $table_name=='incoming_quote') {
+				if ($table_name=='sales') {
+					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r['quote_id']."'; ";
 				} else if ($table_name=='incoming_quote') {
-					$query3 = "SELECT date FROM inventory_purchasequote WHERE id = '".$r2['quote_id']."'; ";
+					$query3 = "SELECT po_date date FROM inventory_purchaseorder WHERE purchasequote_ptr_id = '".$r['quote_id']."'; ";
 				}
 				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE'));
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
-					$r2['datetime'] = $r3['date'];
+					$r['datetime'] = $r3['date'];
 				}
 			}
 
-			$results[$r2['datetime']][] = $r2;
+			$results[$r['datetime']][] = $r;
 		}
 
 		return ($results);
@@ -615,7 +622,8 @@
 		$results_rows = '';
 		$k = 0;
 		foreach ($results as $partid => $P) {
-			$itemqty = getQty($partid);
+			//$itemqty = getQty($partid);
+			$itemqty = getPipeQty($P['heci'],$P['part']);
 			$rowcls = '';
 			if ($itemqty>0) { $rowcls = ' info'; }
 
@@ -773,10 +781,10 @@
 							</td>
                             <td>
 								<div class="row">
+									<div class="col-sm-3 text-center"><br/><span class="info">market pricing</span></div>
+									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
 									<div class="col-sm-3 text-center"><br/><span class="info">shelflife</span></div>
 									<div class="col-sm-3 text-center"><br/><span class="info">quotes-to-sale</span></div>
-									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
-									<div class="col-sm-3 text-center"><br/><span class="info">market pricing</span></div>
 								</div>
 							</td>
 <!--
