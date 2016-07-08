@@ -495,11 +495,11 @@ input[type="text"].inline {
     background: linear-gradient(#f7fff0, #fff); /* Standard syntax */
 }
 .market-table tr:hover td.bg-purchases, .bg-purchases, .bg-purchases:hover {
-	background-color:#e0c5a0;
-    background: -webkit-linear-gradient(#e0c5a0, #fff); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(#e0c5a0, #fff); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(#e0c5a0, #fff); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(#e0c5a0, #fff); /* Standard syntax */
+	background-color:#f5dfba;
+    background: -webkit-linear-gradient(#f5dfba, #fff); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#f5dfba, #fff); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#f5dfba, #fff); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#f5dfba, #fff); /* Standard syntax */
 }
 
 
