@@ -130,14 +130,13 @@
 				break;
 		}
 
-		// get local data
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$unsorted[$r['datetime']][] = $r;
 		}
-		// sort local and piped data together in one results array
 		$results = sort_results($unsorted,'desc');
-		$num_results = count($results);
+//		$num_detailed = count($results);//mysqli_num_rows($result);
+		$num_detailed = false;
 
 		$details = array();
 		$grouped = array();
@@ -148,6 +147,7 @@
 			if ($datetime>=$GLOBALS['summary_past']) {
 				$group_date = substr($r['datetime'],0,10);
 				$last_date = $group_date;
+				$num_detailed = true;
 				$summary_form = false;
 			} else {
 				// update date baseline for summarize_date() below to show just month rather than full date
@@ -165,9 +165,7 @@
 			$grouped[$group_date]['datetime'] = $r['datetime'];
 			$grouped[$group_date]['total_qty'] += $r['qty'];
 
-			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']])) {
-				$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
-			}
+			$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
 		}
 		ksort($grouped);
 
@@ -226,12 +224,13 @@
 		}
 
 		// append last remaining data
-		if ($num_results>0) {
+		if ($num_detailed) {
 			$market_str = $cls1.format_dateTitle($order_date,$dated_qty).$cls2.$market_str;
 		}
 
 //		$result = qdb($query2) OR die(qe().' '.$query2);
 //		$num_summaries = mysqli_num_rows($result);
+//		if ($num_detailed>0 AND $num_summaries>0) { $market_str .= '<hr>'; }
 /*
 		while ($r = mysqli_fetch_assoc($result)) {
 			$unsorted2[$r['datetime']][] = $r;
@@ -583,6 +582,7 @@
 		// pre-process results so that we can build a partid string for this group as well as to group results
 		// if the user is showing just favorites
 		foreach ($results as $partid => $P) {
+echo $avg_cost.'<BR>';
 //			print "<pre>".print_r($P,true)."</pre>";
 //                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
 			if ($partid_str) { $partid_str .= "OR "; }
@@ -610,139 +610,6 @@
 		$num_results = count($results);
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
-
-		$avg_cost = '';
-		$results_rows = '';
-		$k = 0;
-		foreach ($results as $partid => $P) {
-			$itemqty = getQty($partid);
-			$rowcls = '';
-			if ($itemqty>0) { $rowcls = ' info'; }
-
-			$itemprice = "0.00";
-			$fav_flag = $favs[$partid];
-
-			$partstrs = explode(' ',$P['part']);
-			$primary_part = $partstrs[0];
-
-			$chkd = '';
-			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
-
-			$results_rows .= '
-                        <!-- row -->
-                        <tr class="product-results" id="row-'.$partid.'">
-                            <td class="descr-row'.$rowcls.'">
-								<div class="product-action text-center">
-                                	<div><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
-<!--
-<div class="action-items">
--->
-                                    <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon"></a>
-<!--
-</div>
--->
-								</div>
-								<div class="qty">
-									<div class="form-group">
-										<input name="sellqty['.$ln.'][]" type="text" value="'.$itemqty.'" size="2" placeholder="Qty" class="input-xs form-control" />
-									</div>
-								</div>
-                                <div class="product-img">
-                                    <img src="http://www.ven-tel.com/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
-                                </div>
-                                <div class="product-descr" data-partid="'.$partid.'">
-									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span></span>
-                                   	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
-
-									<div class="descr-edit hidden">
-										<p>
-		        							<button type="button" class="close parts-edit"><span>&times;</span></button>
-											<div class="form-group">
-												<input type="text" value="'.$P['Part'].'" class="form-control" data-partid="'.$partid.'" data-field="part">
-											</div>
-											<div class="form-group">
-												<input type="text" value="'.$P['HECI'].'" class="form-control" data-partid="'.$partid.'" data-field="heci">
-											</div>
-										</p>
-										<p>
-											<input type="text" name="descr[]" value="'.$P['description'].'" class="form-control" data-partid="'.$partid.'" data-field="description">
-										</p>
-										<p>
-											<div class="form-group">
-												<select name="manfid[]" class="manf-selector" data-partid="'.$partid.'" data-field="manfid">
-													<option value="'.$P['manfid'].'">'.$P['manf'].'</option>
-												</select>
-											</div>
-											<div class="form-group">
-												<select name="systemid[]" class="system-selector" data-partid="'.$partid.'" data-field="systemid">
-													<option value="'.$P['systemid'].'">'.$P['system'].'</option>
-												</select>
-											</div>
-										</p>
-									</div>
-								</div>
-								<div class="price">
-									<div class="form-group">
-										<div class="input-group sell">
-											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
-											</span>
-											<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
-										</div>
-									</div>
-								</div>
-                            </td>
-			';
-
-			// if on the first result, build out the market column that runs down all rows of results
-			if ($k==0) {
-				$sales_col = format_market($partid_str,'sales',$search_str);
-				$demand_col = format_market($partid_str,'demand',$search_str);
-				$purchases_col = format_market($partid_str,'purchases',$search_str);
-
-				$results_rows .= '
-							<!-- market-row for all items within search result section -->
-                            <td rowspan="'.($num_results+1).'" class="market-row">
-								<table class="table market-table">
-									<tr>
-										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title">Supply</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
-											<div class="market-results" id="'.$ln.'-'.$partid.'" data-partids="'.$partids.'" data-ln="'.$ln.'"></div>
-										</td>
-										<td class="col-sm-3 bg-purchases">
-											'.$purchases_col.'
-										</td>
-										<td class="col-sm-3 bg-sales">
-											'.$sales_col.'
-										</td>
-										<td class="col-sm-3 bg-demand">
-											'.$demand_col.'
-										</td>
-									</tr>
-								</table>
-                            </td>
-				';
-			}
-			$k++;
-
-			$results_rows .= '
-                            <td class="product-actions text-right">
-								<div class="price">
-									<div class="form-group">
-<!--
-										<div class="input-group buy">
-											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
-											</span>
-											<input name="buyprice['.$ln.'][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
-										</div>
--->
-									</div>
-								</div>
-                            </td>
-                        </tr>
-			';
-		}
 ?>
 
                     <tbody>
@@ -773,10 +640,10 @@
 							</td>
                             <td>
 								<div class="row">
-									<div class="col-sm-3 text-center"><br/><span class="info">shelflife</span></div>
-									<div class="col-sm-3 text-center"><br/><span class="info">quotes-to-sale</span></div>
+									<div class="col-sm-3 text-center"><?php echo rand(0,200); ?> day(s)<br/><span class="info">shelflife</span></div>
+									<div class="col-sm-3 text-center"><?php echo rand(1,9); ?>:1<br/><span class="info">quotes-to-sale</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
-									<div class="col-sm-3 text-center"><br/><span class="info">market pricing</span></div>
+									<div class="col-sm-3 text-center"><?php echo '$'.rand(200,400).'-$'.rand(550,1300); ?><br/><span class="info">market pricing</span></div>
 								</div>
 							</td>
 <!--
@@ -791,8 +658,135 @@
 -->
 						</tr>
 
-						<?php echo $results_rows; ?>
+<?php
+		$k = 0;
+		foreach ($results as $partid => $P) {
+			$itemqty = getQty($partid);
+			$rowcls = '';
+			if ($itemqty>0) { $rowcls = ' info'; }
 
+			$itemprice = "0.00";
+			$fav_flag = $favs[$partid];
+
+			$partstrs = explode(' ',$P['part']);
+			$primary_part = $partstrs[0];
+
+			$chkd = '';
+			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
+?>
+                        <!-- row -->
+                        <tr class="product-results" id="row-<?php echo $partid; ?>">
+                            <td class="descr-row<?php echo $rowcls; ?>">
+								<div class="product-action text-center">
+                                	<div><input type="checkbox" class="item-check" name="items[<?php echo $ln; ?>][<?php echo $k; ?>]" value="<?php echo $partid; ?>"<?php echo $chkd; ?>></div>
+<!--
+<div class="action-items">
+-->
+                                    <a href="javascript:void(0);" data-partid="<?php echo $partid; ?>" class="fa fa-<?php echo $fav_flag; ?> fa-lg fav-icon"></a>
+<!--
+</div>
+-->
+								</div>
+								<div class="qty">
+									<div class="form-group">
+										<input name="sellqty[<?php echo $ln; ?>][]" type="text" value="<?php echo $itemqty; ?>" size="2" placeholder="Qty" class="input-xs form-control" />
+									</div>
+								</div>
+                                <div class="product-img">
+                                    <img src="http://www.ven-tel.com/img/parts/<?php echo format_part($primary_part); ?>.jpg" alt="pic" class="img" data-part="<?php echo $primary_part; ?>" />
+                                </div>
+                                <div class="product-descr" data-partid="<?php echo $partid; ?>">
+									<span class="descr-label"><span class="part-label"><?php echo $P['Part']; ?></span> &nbsp; <span class="heci-label"><?php echo $P['HECI']; ?></span></span>
+                                   	<div class="description descr-label"><span class="manfid-label"><?php echo dictionary($P['manf']); ?></span> <span class="systemid-label"><?php echo dictionary($P['system']); ?></span> <span class="description-label"><?php echo dictionary($P['description']); ?></span></div>
+
+									<div class="descr-edit hidden">
+										<p>
+		        							<button type="button" class="close parts-edit"><span>&times;</span></button>
+											<div class="form-group">
+												<input type="text" value="<?php echo $P['Part']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="part">
+											</div>
+											<div class="form-group">
+												<input type="text" value="<?php echo $P['HECI']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="heci">
+											</div>
+										</p>
+										<p>
+											<input type="text" name="descr[]" value="<?php echo $P['description']; ?>" class="form-control" data-partid="<?php echo $partid; ?>" data-field="description">
+										</p>
+										<p>
+											<div class="form-group">
+												<select name="manfid[]" class="manf-selector" data-partid="<?php echo $partid; ?>" data-field="manfid">
+													<option value="<?php echo $P['manfid']; ?>"><?php echo $P['manf']; ?></option>
+												</select>
+											</div>
+											<div class="form-group">
+												<select name="systemid[]" class="system-selector" data-partid="<?php echo $partid; ?>" data-field="systemid">
+													<option value="<?php echo $P['systemid']; ?>"><?php echo $P['system']; ?></option>
+												</select>
+											</div>
+										</p>
+									</div>
+								</div>
+								<div class="price">
+									<div class="form-group">
+										<div class="input-group sell">
+											<span class="input-group-btn">
+												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+											</span>
+											<input type="text" name="sellprice[<?php echo $ln; ?>][]" value="<?php echo $itemprice; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
+										</div>
+									</div>
+								</div>
+                            </td>
+<?php
+			// if on the first result, build out the market column that runs down all rows of results
+			if ($k==0) {
+				$sales_col = format_market($partid_str,'sales',$search_str);
+				$demand_col = format_market($partid_str,'demand',$search_str);
+				$purchases_col = format_market($partid_str,'purchases',$search_str);
+?>
+							<!-- market-row for all items within search result section -->
+                            <td rowspan="<?php echo ($num_results+1); ?>" class="market-row">
+								<table class="table market-table">
+									<tr>
+										<td class="col-sm-3 bg-availability">
+											<a href="javascript:void(0);" class="market-title">Supply</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
+											<div class="market-results" id="<?php echo $ln.'-'.$partid; ?>" data-partids="<?php echo $partids; ?>" data-ln="<?php echo $ln; ?>"></div>
+										</td>
+										<td class="col-sm-3 bg-purchases">
+											<?php echo $purchases_col; ?>
+										</td>
+										<td class="col-sm-3 bg-sales">
+											<?php echo $sales_col; ?>
+										</td>
+										<td class="col-sm-3 bg-demand">
+											<?php echo $demand_col; ?>
+										</td>
+									</tr>
+								</table>
+                            </td>
+<?php
+			}
+
+			$k++;
+?>
+                            <td class="product-actions text-right">
+								<div class="price">
+									<div class="form-group">
+<!--
+										<div class="input-group buy">
+											<span class="input-group-btn">
+												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+											</span>
+											<input name="buyprice[<?php echo $ln; ?>][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+										</div>
+-->
+									</div>
+								</div>
+                            </td>
+                        </tr>
+<?php
+		}
+?>
                         <!-- row -->
                         <tr>
                             <td> </td>
