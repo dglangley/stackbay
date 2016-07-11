@@ -7,8 +7,10 @@
 	include_once '../inc/getCompany.php';
 	include_once '../inc/insertMarket.php';
 	include_once '../inc/keywords.php';
+	include_once '../inc/getPartId.php';
 	require_once '../inc/google-api-php-client/src/Google/autoload.php';
 	include_once '../phpmailer/PHPMailerAutoload.php';
+	include_once '../inc/google_composer.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -19,7 +21,7 @@
 
 	$client = new Google_Client();
 	$client->addScope("https://www.googleapis.com/auth/gmail.compose");
-	$client->setAuthConfig($auth);
+	$client->setAuthConfig($GAUTH);
 	$client->setAccessType("offline");
 
 	// without access token, try to refresh, if we have a refresh token
@@ -90,6 +92,9 @@ $since_datetime = '07-May-2016 06:00:00';
 		$from_name = $f[0];
 
 		$contactid = getContact($from_email,'email','id');
+		$companyid = getContact($contactid,'id','companyid');
+		if (! $contactid OR ! $companyid) { continue; }
+
 //		if ($contactid<>14) { continue; }
 		echo $from_email.':'.$contactid.'<BR>';
 
@@ -147,6 +152,9 @@ $since_datetime = '07-May-2016 06:00:00';
 
 				if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
 
+				$partid = getPartId($part,$heci);
+echo 'getPartId:'.$partid.'<BR>';
+
 				$numdb = 0;
 				if ($heci) {
 					$hecidb = hecidb(substr($heci,0,7));
@@ -172,50 +180,6 @@ echo '<BR>';
 
 			if ($matches_found>0) {
 				break;
-			}
-continue;
-			// iterate twice: first, to build the line string out of the array
-			for ($i=$r['first_row']; $i<=$r['last_row']; $i++) {
-				$line = '';
-				foreach ($results[$i] as $col_text) {
-					$words = explode(' ',$col_text);
-					foreach ($words as $word) {
-						if ($line) { $line .= ' '; }
-						$line .= $word;
-					}
-				}
-
-echo $line.'<BR>';
-				if (! preg_match('/^'.$r['pattern'].'$/',$line)) { continue; }
-
-				$part = '';
-				if ($r['part']) {
-					//$part = str_replace(' ','',preg_replace('/'.$r['pattern'].'/',$r['part'],$line));
-					$part = trim(preg_replace('/'.$r['pattern'].'/',$r['part'],$line));
-				}
-				$qty = 1;
-				if ($r['qty']) {
-					$qty = trim(preg_replace('/'.$r['pattern'].'/',$r['qty'],$line));
-				}
-				$heci = '';
-				if ($r['heci']) {
-					$heci = trim(preg_replace('/[[:punct:]]+/','',preg_replace('/'.$r['pattern'].'/',$r['heci'],$line)));
-				}
-echo format_part($part).':'.$qty.':'.$heci.'<BR>';
-
-				if ($heci) {
-					$hecidb = hecidb(substr($heci,0,7));
-				} else {
-					$hecidb = hecidb(format_part($part));
-				}
-if (count($hecidb)>0) {
-print "<pre>".print_r($hecidb,true)."</pre>";
-}
-
-				foreach ($hecidb as $partid => $P) {
-echo $partid.'<BR>';
-//					insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$submit_type,$searchid,$ln);
-				}
 			}
 		}
 echo '<BR><BR>';
