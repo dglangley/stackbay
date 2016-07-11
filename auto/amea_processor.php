@@ -11,6 +11,7 @@
 	require_once '../inc/google-api-php-client/src/Google/autoload.php';
 	include_once '../phpmailer/PHPMailerAutoload.php';
 	include_once '../inc/google_composer.php';
+	include_once '../inc/logSearchMeta.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -96,7 +97,7 @@ $since_datetime = '07-May-2016 06:00:00';
 		if (! $contactid OR ! $companyid) { continue; }
 
 //		if ($contactid<>14) { continue; }
-		echo $from_email.':'.$contactid.'<BR>';
+//		echo $from_email.':'.$contactid.'<BR>';
 
 		// use this to identify if there are any html tables, which require different handling
 		$DOM = new DOMDocument();
@@ -116,11 +117,13 @@ $since_datetime = '07-May-2016 06:00:00';
 		}
 //		print "<pre>".print_r($results,true)."</pre>";
 
-		$matches_found = 0;
 		$query = "SELECT * FROM amea WHERE contactid = '".$contactid."'; ";
 //		echo $query.'<BR>';
 		$result = qdb($query);
 		if (mysqli_num_rows($result)==0) { continue; }
+
+		$metaid = logSearchMeta($companyid,false,'','email');
+		$matches_body = '';
 
 		while ($r = mysqli_fetch_assoc($result)) {
 			$part_col = $r['part'];
@@ -129,7 +132,7 @@ $since_datetime = '07-May-2016 06:00:00';
 			$qty_from_end = $r['qty_from_end'];
 			$heci_col = $r['heci'];
 			$heci_from_end = $r['heci_from_end'];
-			foreach ($results as $rows) {
+			foreach ($results as $ln => $rows) {
 				$fields = array();
 				foreach ($rows as $cols) {
 					$words = explode(' ',$cols);
@@ -153,35 +156,21 @@ $since_datetime = '07-May-2016 06:00:00';
 				if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
 
 				$partid = getPartId($part,$heci);
-echo 'getPartId:'.$partid.'<BR>';
+				if (! $partid) { continue; }
 
-				$numdb = 0;
-				if ($heci) {
-					$hecidb = hecidb(substr($heci,0,7));
-					$numdb = count($hecidb);
-echo $heci.' ';
-				}
+				$matches_body .= $qty.'- ';
+				if ($part) { $matches_body .= $part.' '; }
+				if ($heci) { $matches_body .= $heci.' '; }
+				$matches_body .= ' (id '.$partid.')<BR>';
 
-				if ($numdb==0 AND $part) {
-					$hecidb = hecidb(format_part($part));
-					$numdb = count($hecidb);
-echo $part.' ';
-				}
-echo '('.$qty.' qty)<BR>';
-				if ($numdb==0) { echo 'No Match!<BR>'; continue; }
-				$matches_found += $numdb;
-
-				foreach ($hecidb as $partid => $P) {
-echo $partid.'<BR>';
-//					insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$submit_type,$searchid,$ln);
-				}
-echo '<BR>';
+//				insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
 			}
 
-			if ($matches_found>0) {
-				break;
-			}
+			// pattern match successfully found for this email so don't try next pattern
+			if ($matches_body) { break; }
 		}
-echo '<BR><BR>';
+if ($matches_body) {
+	echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$matches_body.$message.'<BR><BR>'; 
+}
 	}
 ?>
