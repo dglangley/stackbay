@@ -32,7 +32,9 @@
 		$pipe_ids = array();//all ids for the search string passed in
 
 		foreach ($searches as $search) {
-			$search = strtoupper(preg_replace('/[^[:alnum:]]+/','',$search));
+			$search = trim(strtoupper(preg_replace('/[^[:alnum:]]+/','',$search)));
+			if (strlen($search)<=2) { continue; }
+
 			$search_by = strtolower($search_by);
 			$keysearch = $search;
 			if ($search_by) { $keysearch .= '.'.$search_by; }
@@ -43,9 +45,8 @@
 					$pipe_ids[$id] = $r;
 				}
 			} else {
-				//$query = "SELECT id, manufacturer_id_id manfid, part_number part, short_description description, ";
-				//$query .= "clei heci, quantity_stock qty, notes ";
-				$query = "SELECT id, avg_cost FROM inventory_inventory WHERE (";
+				$results = array();
+				$query = "SELECT id, avg_cost, clei heci FROM inventory_inventory WHERE (";
 				$subquery = "";
 				if ($search_by<>'heci') {
 					$subquery .= "clean_part_number LIKE '".res($search,'PIPE')."%' ";
@@ -62,6 +63,21 @@
 				$query .= $subquery."); ";
 				$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 				while ($r = mysqli_fetch_assoc($result)) {
+					$results[] = $r;
+				}
+
+				// get ids from aliases
+				if ($search_by<>'heci') {
+					$query = "SELECT inventory_inventory.id, avg_cost, clei heci FROM inventory_inventory, inventory_inventoryalias ";
+					$query .= "WHERE inventory_inventoryalias.clean_part_number LIKE '".res($search,'PIPE')."%' ";
+					$query .= "AND inventory_inventory.id = inventory_inventoryalias.inventory_id; ";
+					$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+					while ($r = mysqli_fetch_assoc($result)) {
+						$results[] = $r;
+					}
+				}
+
+				foreach ($results as $r) {
 					if ($r['avg_cost']>0) { $avg_cost = $r['avg_cost']; }
 					$ids[$r['id']] = $r;//ids for just this sub-divided search str
 					$pipe_ids[$r['id']] = $r;//ids for all results of exploded search string
@@ -77,24 +93,15 @@
 		return ($pipe_ids);
 	}
 
-	function getPipeQty($heci='',$part='') {
-		if (strlen($heci)==7 OR strlen($heci)==10) {
-			$pipe_ids = getPipeIds($heci,'heci');
-			if (count($pipe_ids)==0 AND strlen($heci)==10) { $pipe_ids = getPipeIds(substr($heci,0,7),'heci'); }
-		} else {
-			$pipe_ids = getPipeIds($part);
-		}
-
+	function getPipeQty($pipe_id) {
 		$qty = 0;
-		foreach ($pipe_ids as $r) {
-			$query = "SELECT COUNT(inventory_itemlocation.id) AS qty ";
-			$query .= "FROM inventory_itemlocation, inventory_location ";
-			$query .= "WHERE inventory_id = '".$r['id']."' AND no_sales = '0' ";
-			$query .= "AND inventory_itemlocation.location_id = inventory_location.id; ";
-			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-			while ($r = mysqli_fetch_assoc($result)) {
-				$qty += $r['qty'];
-			}
+		$query = "SELECT COUNT(inventory_itemlocation.id) AS qty ";
+		$query .= "FROM inventory_itemlocation, inventory_location ";
+		$query .= "WHERE inventory_id = '".$pipe_id."' AND no_sales = '0' ";
+		$query .= "AND inventory_itemlocation.location_id = inventory_location.id; ";
+		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+		while ($r = mysqli_fetch_assoc($result)) {
+			$qty += $r['qty'];
 		}
 
 		return ($qty);
@@ -387,6 +394,9 @@
 					if ($r['qty']>$results[$uniques[$key]]['qty']) {
 						$results[$uniques[$key]]['qty'] = $r['qty'];
 					}
+					if (format_price($r['price'],true,'',true)>0 AND (! $results[$uniques[$key]]['price'] OR $results[$uniques[$key]]['price']=='0.00')) {
+						$results[$uniques[$key]]['price'] = $r['price'];
+					}
 
 					continue;
 				}
@@ -605,6 +615,8 @@
 		$favs = array();
 		$num_favs = 0;
 
+		$pipe_ids = array();
+		$pipe_id_assoc = array();
 		// pre-process results so that we can build a partid string for this group as well as to group results
 		// if the user is showing just favorites
 		foreach ($results as $partid => $P) {
@@ -614,6 +626,19 @@
 			$partid_str .= "partid = '".$partid."' ";
 			if ($partids) { $partids .= ","; }
 			$partids .= $partid;
+
+			$results[$partid]['pipe_id'] = 0;
+			if ($P['heci']) {
+				$ids = getPipeIds(substr($P['heci'],0,7),'heci');
+				foreach ($ids as $id => $arr) {
+					if ($arr['heci']===$P['heci']) { $pipe_id_assoc[$id] = $partid; unset($pipe_ids[$id]); $results[$partid]['pipe_id'] = $id; }
+					else if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
+				}
+			}
+			$ids = getPipeIds($P['part'],'part');
+			foreach ($ids as $id => $arr) {
+				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
+			}
 
 			// check favorites
 			$favs[$partid] = 'star-o';
@@ -640,8 +665,17 @@
 		$results_rows = '';
 		$k = 0;
 		foreach ($results as $partid => $P) {
+			$itemqty = 0;
+			if ($P['pipe_id']) {
+				$itemqty = getPipeQty($P['pipe_id']);
+			} else {
+				foreach ($pipe_ids as $pipe_id => $arr) {
+					$itemqty += getPipeQty($pipe_id);
+				}
+				$pipe_ids = array();
+			}
+
 			//$itemqty = getQty($partid);
-			$itemqty = getPipeQty($P['heci'],$P['part']);
 			$rowcls = '';
 			if ($itemqty>0) { $rowcls = ' info'; }
 
@@ -725,6 +759,9 @@
 				$sales_col = format_market($partid_str,'sales',$search_str);
 				$demand_col = format_market($partid_str,'demand',$search_str);
 				$purchases_col = format_market($partid_str,'purchases',$search_str);
+
+				// reset after getting col data in format_market() above, which  may alter this date for item-specific results
+				$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
 
 				$results_rows .= '
 							<!-- market-row for all items within search result section -->

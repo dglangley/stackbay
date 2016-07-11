@@ -4,7 +4,8 @@
 	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
 	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	$WLI_GLOBALS = array();
-	if (isset($_SERVER["ROOT_DIR"]) AND (! isset($root_dir) OR ! $root_dir)) { $root_dir = $_SERVER["ROOT_DIR"]; }
+	if (! isset($root_dir)) { $root_dir = ''; }
+	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
@@ -184,5 +185,5 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 	}
 
 	// version control for css and js includes
-	$V = '20160616';
+	$V = '20160617';
 ?>

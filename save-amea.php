@@ -31,16 +31,16 @@ exit;
 	$contact_companyid = getContact($from_email,'email','companyid');
 
 	if ($contact_companyid===false) {//contact doesn't exist
-		$contactid = setContact(htmlentities($from_name),$companyid);
+		$contactid = setContact($from_name,$companyid);
 
 		$query = "INSERT INTO emails (email, type, contactid) VALUES ('".res($from_email)."','Work','".$contactid."'); ";
-		$result = qdb($query);
+		$result = qdb($query) OR die(qe().' '.$query);
 	} else {
 		$contactid = getContact($from_email,'email','id');
 		// set the companyid to this contact, if none is already set
 		if ($contactid AND ! $contact_companyid AND $companyid) {
 			$query = "UPDATE contacts SET companyid = '".$companyid."' WHERE id = '".$contactid."'; ";
-			$result = qdb($query);
+			$result = qdb($query) OR die(qe().' '.$query);
 		}
 	}
 
@@ -144,7 +144,7 @@ continue;
 		$query .= "NULL,NULL,";
 	}
 	$query .= "'".$first_row."','".$last_row."','".res($contactid)."'); ";
-	$result = qdb($query) OR die(qe());
+	$result = qdb($query) OR die(qe().' '.$query);
 
 	header('Location: /amea.php');
 	exit;

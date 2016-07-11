@@ -42,7 +42,7 @@
 		if (! $partid_array) { $partid_array = array(); }
 
 		$done = '';
-		// $attempt: 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's
+		// $attempt: 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's; 2=force download
 		$matches = array();
 
 		// partids are passed in with comma-separated format
@@ -56,7 +56,7 @@
 
 		if (! $partid_str) {
 			if ($ln<=$max_ln OR $attempt==2) { $results = array($today=>array()); }
-			$newResults = array('results'=>$results,'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
+			$newResults = array('results'=>$results,'price_range'=>'','done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 			return ($newResults);
 		}
 
@@ -123,7 +123,7 @@
 		foreach ($searches as $keyword => $bool) {
 			// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 			// statically-stored db results
-			if ($attempt>=1 AND ($ln<=$max_ln OR $force_download)) {
+			if ($attempt>=1 AND ($ln<=$max_ln OR $attempt==2)) {
 				// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
 
 				// if this is not in $limited[] it's because it would produce redundant results for broker sites,
@@ -270,6 +270,8 @@
 			$results[$key] = $r;
 		}
 
+		$min_price = false;
+		$max_price = false;
 //		$keys = array();//prevent duplicate results on same day
 		foreach ($results as $r) {
 			$date = substr($r['datetime'],0,10);
@@ -279,7 +281,12 @@
 //			$keys[$date.'.'.$r['companyid'].'.'.$r['source']] = true;
 
 			$price = false;
-			if ($r['price']>0) { $price = $r['price']; }
+			if ($r['price']>0) {
+				$price = $r['price'];
+				if ($min_price===false OR $r['price']<$min_price) { $min_price = $r['price']; }
+				if ($max_price===false OR $r['price']>$max_price) { $max_price = $r['price']; }
+			}
+
 			$source = false;
 			$companyid_key = $r['companyid'];
 			if (! is_numeric($r['source']) AND $r['source']<>'List') {
@@ -349,7 +356,7 @@
 		$market = array();
 		// include today's date preset in case there are no results, since we still need the header, so long as
 		// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
-		if ($ln<=$max_ln OR $force_download) {
+		if ($ln<=$max_ln OR $attempt==2) {
 			$market = array($today=>array());
 		}
 		array_append($market,$priced);
@@ -373,7 +380,7 @@
 		unset($priced);
 		unset($standard);
 
-		$newResults = array('results'=>array(),'done'=>$done,'err'=>$err,'errmsgs'=>$errmsgs);
+		$newResults = array('results'=>array(),'price_range'=>array('min'=>$min_price,'max'=>$max_price),'done'=>$done,'err'=>$err,'errmsgs'=>$errmsgs);
 
 		$n = 0;
 		foreach ($market as $rDate => $r) {

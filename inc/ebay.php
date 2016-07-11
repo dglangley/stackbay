@@ -173,7 +173,7 @@
                     //Store to the 'match' array the value of the keyword it matched
                     $items[$k]['match'][] = $key;
 					$item['seller'] = (string)$item['seller'];
-                    
+
                     //If the value is matched, return the following
                     $contactid = getContact($item['seller'],'ebayid','id');
 					if ($contactid) {
@@ -249,7 +249,7 @@ function ebay($search){
 }
 
 //For Debugging Purposes
-ebay('090-58022-01');
+//ebay('090-58022-01');
 
 //============================================================================//
 //============================Legacy Code=====================================//

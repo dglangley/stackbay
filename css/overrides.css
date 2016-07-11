@@ -408,7 +408,7 @@ input[type="text"].inline {
 }
 .market-table .bg-sales:hover .market-body, .market-table .bg-demand:hover .market-body, .market-table .bg-purchases:hover .market-body {
 	padding:4px;
-	height:150% !important;
+	height:100% !important;
 	width:120%;
 	background:inherit;
 	overflow-y:scroll;
