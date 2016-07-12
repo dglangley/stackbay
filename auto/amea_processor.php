@@ -74,8 +74,8 @@ $since_datetime = '07-May-2016 06:00:00';
 		$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
 
 		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
-			$part = $structure->parts[1];
-			$message = imap_decode(imap_fetchbody($inbox,$n,2),$part->encoding);
+			$message_part = $structure->parts[1];
+			$message = imap_decode(imap_fetchbody($inbox,$n,2),$message_part->encoding);
 //			$message = imap_qprint(imap_body($inbox,$n));
 		}
 //echo $message.'<BR><BR>';
@@ -130,7 +130,8 @@ $since_datetime = '07-May-2016 06:00:00';
 
 $metaid = 0;
 //		$metaid = logSearchMeta($companyid,false,'','email');
-		$matches_body = '';
+		$results_body = '';
+		$matches_found = 0;
 
 		while ($r = mysqli_fetch_assoc($result)) {
 			$part_col = $r['part'];
@@ -163,26 +164,34 @@ $metaid = 0;
 				if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
 
 				$partid = getPartId($part,$heci);
-				if (! $partid) { continue; }
+//				if (! $partid) { continue; }
 
-				$matches_body .= 'FOUND: ';
-				if ($part) { $matches_body .= $part.' '; }
-				if ($heci) { $matches_body .= $heci.' '; }
-				$matches_body .= ' (qty '.$qty.')<BR>MATCHED: '.getPart($partid,'part').' '.getPart($partid,'heci').' (id '.$partid.')<BR>';
+				$results_body .= 'FOUND: <strong>';
+				if ($part) { $results_body .= $part.' '; }
+				if ($heci) { $results_body .= $heci.' '; }
+				$results_body .= '</strong> (qty '.$qty.')<BR>'.
 
-//				insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
+				if ($partid) {
+					$results_body .= 'MATCHED: <div style="color:#468847; font-weight:bold">'.
+						getPart($partid,'part').' '.getPart($partid,'heci').' (id '.$partid.')</div>';
+
+//					insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
+					$matches_found++;
+				} else {
+					$results_body .= '<div style="color:#b94a48; font-weight:bold">NO MATCHES FOUND</div>';
+				}
 			}
 
 			// pattern match successfully found for this email so don't try next pattern
-			if ($matches_body) { break; }
+			if ($matches_found>0) { break; }
 		}
 
 		// build message body and send
-		if ($matches_body) {
-			$email_body = $matches_body.'<BR>'.$message;
-//			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$matches_body.$message.'<BR><BR>';
+		if ($results_body) {
+			$email_body = $results_body.'<BR>'.$message;
+//			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$results_body.$message.'<BR><BR>';
 
-			$send_success = send_gmail($email_body,$subject,5);
+			$send_success = send_gmail($email_body,$subject,5,$from_email);//set reply to as $from_email
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {

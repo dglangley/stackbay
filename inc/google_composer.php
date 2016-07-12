@@ -25,7 +25,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$userid) {
+	function send_gmail($email_body,$email_subject,$userid,$replyto='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR;
 
 		$SEND_ERR = '';
@@ -33,8 +33,8 @@
 			$SEND_ERR .= 'Invalid or missing user id';
 			return false;
 		}
-	        $useremail = getContact($userid,'id','email');
-	        $username = getContact($userid,'id','name');
+		$useremail = getContact($userid,'id','email');
+		$username = getContact($userid,'id','name');
 
 		$client = new Google_Client();
 		$client->addScope("https://www.googleapis.com/auth/gmail.compose");
@@ -74,6 +74,9 @@
 //		$mail->addBCC('chris@ven-tel.com');
 
 		$mail->addAddress('david@ven-tel.com');
+		if ($replyto AND filter_var($replyto, FILTER_VALIDATE_EMAIL)) {
+			$mail->addReplyTo($replyto);
+		}
 
 		$mail->MsgHTML(format_email($email_subject,$email_body));
 		//create the MIME Message
