@@ -8,7 +8,7 @@
 	}
 */
 //2/24/16
-//	include_once $root_dir.'/inc/indexer.php';
+	include_once $root_dir.'/inc/indexer.php';
 
 	function setPart($P) {
 		$part = '';
@@ -79,7 +79,7 @@
 				if (! $manfid) { $manfid = $r2['manfid']; }
 			} else {
 //2/24/16
-//				indexer($r2['id'],'id');
+				indexer($r2['id'],'id');
 				return ($r2['id']);
 			}
 		}
@@ -103,7 +103,7 @@
 		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { return ($partid); }
 
 //2/24/16
-//		indexer($partid,'id');
+		indexer($partid,'id');
 
 		return ($partid);
 	}

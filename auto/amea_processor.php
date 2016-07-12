@@ -7,6 +7,7 @@
 	include_once '../inc/getCompany.php';
 	include_once '../inc/insertMarket.php';
 	include_once '../inc/keywords.php';
+	include_once '../inc/getPart.php';
 	include_once '../inc/getPartId.php';
 	require_once '../inc/google-api-php-client/src/Google/autoload.php';
 	include_once '../phpmailer/PHPMailerAutoload.php';
@@ -49,6 +50,11 @@ $since_datetime = '07-May-2016 06:00:00';
 
 	// if emails are returned, cycle through each...
 	if (! $inbox_results) { die("Could not find any emails in inbox"); }
+
+	// for now (7/11/16) set globals for send_gmail()
+	$U['name'] = 'Amea Cabula';
+	$U['email'] = 'amea@ven-tel.com';
+	$U['phone'] = '(805) 212-4959';
 
 	// put the newest emails on top
 	rsort($inbox_results);
@@ -122,7 +128,8 @@ $since_datetime = '07-May-2016 06:00:00';
 		$result = qdb($query);
 		if (mysqli_num_rows($result)==0) { continue; }
 
-		$metaid = logSearchMeta($companyid,false,'','email');
+$metaid = 0;
+//		$metaid = logSearchMeta($companyid,false,'','email');
 		$matches_body = '';
 
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -158,10 +165,10 @@ $since_datetime = '07-May-2016 06:00:00';
 				$partid = getPartId($part,$heci);
 				if (! $partid) { continue; }
 
-				$matches_body .= $qty.'- ';
+				$matches_body .= 'FOUND: ';
 				if ($part) { $matches_body .= $part.' '; }
 				if ($heci) { $matches_body .= $heci.' '; }
-				$matches_body .= ' (id '.$partid.')<BR>';
+				$matches_body .= ' (qty '.$qty.')<BR>MATCHED: '.getPart($partid,'part').' '.getPart($partid,'heci').' (id '.$partid.')<BR>';
 
 //				insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
 			}
@@ -169,8 +176,18 @@ $since_datetime = '07-May-2016 06:00:00';
 			// pattern match successfully found for this email so don't try next pattern
 			if ($matches_body) { break; }
 		}
-if ($matches_body) {
-	echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$matches_body.$message.'<BR><BR>'; 
-}
+
+		// build message body and send
+		if ($matches_body) {
+			$email_body = $matches_body.'<BR>'.$message;
+//			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$matches_body.$message.'<BR><BR>';
+
+			$send_success = send_gmail($email_body,$subject,5);
+			if ($send_success) {
+				echo json_encode(array('message'=>'Success'));
+			} else {
+				echo json_encode(array('message'=>$SEND_ERR));
+			}
+		}
 	}
 ?>

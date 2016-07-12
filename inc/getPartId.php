@@ -29,6 +29,15 @@
 			$result = qdb($keyword_query);
 			$num_results = mysqli_num_rows($result);
 			if ($num_results==0) {
+				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
+				$keyword_query .= "WHERE keyword LIKE '".res($fpart)."%' AND keywords.id = parts_index.keywordid ";
+				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+				$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
+				$result = qdb($keyword_query);
+				$num_results = mysqli_num_rows($result);
+			}
+
+			if ($num_results==0) {
 				// get base part#, maybe rev ending is messing up query; strip off non-alphanumerics
 				$fbase_part = preg_replace('/[^[:alnum:]]+/','',format_part($part));
 				if ($fpart<>$fbase_part) {
@@ -39,24 +48,24 @@
 					$result = qdb($keyword_query);
 					$num_results = mysqli_num_rows($result);
 				}
+			}
 
-				if ($num_results==0) {
-					$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
-					$keyword_query .= "WHERE keyword LIKE '".res($part)."%' AND keywords.id = parts_index.keywordid ";
-					$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
-					$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
-					$result = qdb($keyword_query);
-					$num_results = mysqli_num_rows($result);
+			if ($num_results==0) {
+				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
+				$keyword_query .= "WHERE keyword LIKE '".res($part)."%' AND keywords.id = parts_index.keywordid ";
+				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+				$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
+				$result = qdb($keyword_query);
+				$num_results = mysqli_num_rows($result);
+			}
 
-					// maybe it's a heci? retry above query without heci exclusion
-					if ($num_results==0 AND strlen($part)>=7 AND strlen($part)<=10) {
-						$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
-						$keyword_query .= "WHERE keyword LIKE '".res($part)."%' AND keywords.id = parts_index.keywordid ";
-						$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ".$ord;
-						$result = qdb($keyword_query);
-						$num_results = mysqli_num_rows($result);
-					}
-				}
+			// maybe it's a heci? retry above query without heci exclusion
+			if ($num_results==0 AND strlen($part)>=7 AND strlen($part)<=10) {
+				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
+				$keyword_query .= "WHERE keyword LIKE '".res($part)."%' AND keywords.id = parts_index.keywordid ";
+				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ".$ord;
+				$result = qdb($keyword_query);
+				$num_results = mysqli_num_rows($result);
 			}
 		}
 		if ($num_results>0) {

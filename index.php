@@ -186,7 +186,7 @@
 			$grouped[$group_date]['datetime'] = $r['datetime'];
 			$grouped[$group_date]['total_qty'] += $r['qty'];
 
-			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']])) {
+			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']]) AND array_search($r['name'],$grouped[$group_date]['companies'])===false) {
 				$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
 			}
 		}

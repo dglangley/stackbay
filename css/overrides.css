@@ -414,7 +414,7 @@ input[type="text"].inline {
 	overflow-y:scroll;
 	border:1px solid #ccc;
 	box-shadow: 2px 1px 2px #888888;
-	z-index:2001;
+	z-index:999;
 }
 .market-table .summary * {
 	color:#555 !important;

@@ -110,6 +110,7 @@
 		return true;
 	}
 
+/*
 	$U['name'] = 'Amea Cabula';
 	$U['email'] = 'amea@ven-tel.com';
 	$U['phone'] = '(805) 212-4959';
@@ -121,4 +122,5 @@
 	} else {
 		echo json_encode(array('message'=>$SEND_ERR));
 	}
+*/
 ?>
