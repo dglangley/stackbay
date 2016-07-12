@@ -1,11 +1,13 @@
 <?php
 	include_once 'format_part.php';
 
-	function getPartId($part,$heci='',$manfid=0) {
+	function getPartId($part,$heci='',$manfid=0,$return_all_results=false) {
 		$partid = 0;
 
 		$part = trim($part);
-		if (strlen($part)<=1 AND ! $heci) { return; }
+		if (strlen($part)<=1 AND ! $heci) {
+			if ($return_all_results) { return (array()); } else { return (''); }
+		}
 		$heci = trim($heci);
 
 		$num_results = 0;
@@ -68,11 +70,18 @@
 				$num_results = mysqli_num_rows($result);
 			}
 		}
+
+		if (! $return_all_results) { $dbresult = array(); } else { $dbresult = ''; }
 		if ($num_results>0) {
-			$r = mysqli_fetch_assoc($result);
-			$partid = $r['id'];
+			while ($r = mysqli_fetch_assoc($result)) {
+				if (! $return_all_results) {
+					$dbresult = $r['id'];
+					break;
+				}
+				$dbresult[] = $r['id'];
+			}
 		}
 
-		return ($partid);
+		return ($dbresult);
 	}
 ?>

@@ -1,6 +1,7 @@
 <?php
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_date.php';
+	include_once '../inc/format_part.php';
 	include_once '../inc/imap_decode.php';
 	include_once '../inc/imap_parsers.php';
 	include_once '../inc/getContact.php';
@@ -13,6 +14,9 @@
 	include_once '../phpmailer/PHPMailerAutoload.php';
 	include_once '../inc/google_composer.php';
 	include_once '../inc/logSearchMeta.php';
+	include_once '../inc/pipe.php';
+	include_once '../inc/getPipeIds.php';
+	include_once '../inc/getPipeQty.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -98,92 +102,115 @@ $since_datetime = '07-May-2016 06:00:00';
 		$f = explode(' <',$from);
 		$from_name = $f[0];
 
+		$results_body = '';
 		$contactid = getContact($from_email,'email','id');
 		$companyid = getContact($contactid,'id','companyid');
-		if (! $contactid OR ! $companyid) { continue; }
+		if (! $contactid OR ! $companyid) {
+			$results_body = 'Please see email below from '.$from_name.'<BR>';
+		} else {
+			// use this to identify if there are any html tables, which require different handling
+			$DOM = new DOMDocument();
+			$DOM->loadHTML($message);
+			$tables = $DOM->getElementsByTagName('table');
 
-//		if ($contactid<>14) { continue; }
-//		echo $from_email.':'.$contactid.'<BR>';
+			$results = array();
+			if (($tables->length)>0) {
+				$results = parseHtmlTable($tables);
+			} else {/* if no html table in the email */
+				$results = parsePlainText($message);
+				if ($results===false) { continue; }
+			}
+//			print "<pre>".print_r($results,true)."</pre>";
 
-		// use this to identify if there are any html tables, which require different handling
-		$DOM = new DOMDocument();
-		$DOM->loadHTML($message);
-		$tables = $DOM->getElementsByTagName('table');
+			//reset
+			$metaid = 0;
+			$matches_found = 0;
 
-		$signature_found = false;
-		$results = array();
-		$result_strings = array();
-		$html_table = false;
-		if (($tables->length)>0) {
-			$html_table = true;
-			$results = parseHtmlTable($tables);
-		} else {/* if no html table in the email */
-			$results = parsePlainText($message);
-			if ($results===false) { continue; }
-		}
-//		print "<pre>".print_r($results,true)."</pre>";
-
-		$query = "SELECT * FROM amea WHERE contactid = '".$contactid."'; ";
-//		echo $query.'<BR>';
-		$result = qdb($query);
-		if (mysqli_num_rows($result)==0) { continue; }
-
-$metaid = 0;
-//		$metaid = logSearchMeta($companyid,false,'','email');
-		$results_body = '';
-		$matches_found = 0;
-
-		while ($r = mysqli_fetch_assoc($result)) {
-			$part_col = $r['part'];
-			$part_from_end = $r['part_from_end'];
-			$qty_col = $r['qty'];
-			$qty_from_end = $r['qty_from_end'];
-			$heci_col = $r['heci'];
-			$heci_from_end = $r['heci_from_end'];
-			foreach ($results as $ln => $rows) {
-				$fields = array();
-				foreach ($rows as $cols) {
-					$words = explode(' ',$cols);
-					foreach ($words as $word) {
-						$fields[] = trim(str_replace(array(chr(160),chr(194)),'',$word));
-					}
-				}
-				$num_fields = count($fields);
-
-				$part = '';
-				if ($part_from_end) { $part = $fields[(($num_fields-1)-$part_col)]; } else { $part = $fields[$part_col]; }
-				$qty = '';
-				if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
-				$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
-				if (! is_numeric($qty)) { $qty = ''; }
-				$qty = (int)$qty;//convert 02's into 2's
-				$heci = '';
-				if ($heci_from_end) { $heci = $fields[(($num_fields-1)-$heci_col)]; } else { $heci = $fields[$heci_col]; }
-				$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
-
-				if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
-
-				$partid = getPartId($part,$heci);
-//				if (! $partid) { continue; }
-
-				$results_body .= 'FOUND: <strong>';
-				if ($part) { $results_body .= $part.' '; }
-				if ($heci) { $results_body .= $heci.' '; }
-				$results_body .= '</strong> (qty '.$qty.')<BR>'.
-
-				if ($partid) {
-					$results_body .= 'MATCHED: <div style="color:#468847; font-weight:bold">'.
-						getPart($partid,'part').' '.getPart($partid,'heci').' (id '.$partid.')</div>';
-
-//					insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
-					$matches_found++;
-				} else {
-					$results_body .= '<div style="color:#b94a48; font-weight:bold">NO MATCHES FOUND</div>';
-				}
+			// find patterns already stored for this contact
+			$query = "SELECT * FROM amea WHERE contactid = '".$contactid."'; ";
+//			echo $query.'<BR>';
+			$result = qdb($query);
+			if (mysqli_num_rows($result)==0) {
+				// no patterns detected so send the email to a user as if it was hand-written
+				$results_body = 'Please see email below from '.$from_name.' at '.getCompany($companyid).'<BR>';
+			} else {
+//				$metaid = logSearchMeta($companyid,false,'','email');
 			}
 
-			// pattern match successfully found for this email so don't try next pattern
-			if ($matches_found>0) { break; }
+			// use each pattern found in the db for this contact, and attempt to match against each of the $results rows from above
+			while ($r = mysqli_fetch_assoc($result)) {
+				$part_col = $r['part'];
+				$part_from_end = $r['part_from_end'];
+				$qty_col = $r['qty'];
+				$qty_from_end = $r['qty_from_end'];
+				$heci_col = $r['heci'];
+				$heci_from_end = $r['heci_from_end'];
+				foreach ($results as $ln => $rows) {
+					$fields = array();
+					foreach ($rows as $cols) {
+						$words = explode(' ',$cols);
+						foreach ($words as $word) {
+							$fields[] = trim(str_replace(array(chr(160),chr(194)),'',$word));
+						}
+					}
+					$num_fields = count($fields);
+
+					$part = '';
+					if ($part_from_end) { $part = $fields[(($num_fields-1)-$part_col)]; } else { $part = $fields[$part_col]; }
+					$qty = '';
+					if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
+					$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
+					if (! is_numeric($qty)) { $qty = ''; }
+					$qty = (int)$qty;//convert 02's into 2's
+					$heci = '';
+					if ($heci_from_end) { $heci = $fields[(($num_fields-1)-$heci_col)]; } else { $heci = $fields[$heci_col]; }
+					$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
+
+					if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
+
+					$matches = getPartId($part,$heci,0,true);//return ALL results, not just first found
+//					if (count($matches)==0) { continue; }
+
+					$num_matches = count($matches);
+					$matches_found += $num_matches;
+					if ($num_matches>0) {
+						$results_body .= '<div style="color:#468847; font-weight:bold">I ran '.$part.' '.$heci.' (qty '.$qty.'), please confirm:</div>';
+					} else {
+						$results_body .= '<div style="color:#b94a48; font-weight:bold">Please check '.$part.' '.$heci.' (qty '.$qty.') in your system...</div>';
+					}
+					foreach ($matches as $partid) {
+						$pipe_ids = array();
+						$part_str = getPart($partid,'part');
+						$heci_str = getPart($partid,'heci');
+
+						// get pipe ids for qty check
+						$ids = getPipeIds(format_part($part_str),'part');
+						foreach ($ids as $pipe_id => $arr) {
+							$pipe_ids[$pipe_id] = $pipe_id;
+						}
+						if ($heci_str) {
+							$ids = getPipeIds(substr($heci_str,0,7),'heci');
+							foreach ($ids as $pipe_id => $arr) {
+								$pipe_ids[$pipe_id] = $pipe_id;
+							}
+						}
+						$qty = 0;
+						foreach ($pipe_ids as $pipe_id) {
+							$qty += getPipeQty($pipe_id);
+						}
+						$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')';
+						if ($qty>0) {
+							$results_body .= ' IN STOCK';
+						}
+						$results_body .= '<BR>';
+
+//						insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
+					}
+				}
+
+				// pattern match successfully found for this email so don't try next pattern
+				if ($matches_found>0) { break; }
+			}
 		}
 
 		// build message body and send
