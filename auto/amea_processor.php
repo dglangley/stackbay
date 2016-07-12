@@ -39,7 +39,7 @@
 
 	// default
 	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
-$since_datetime = '07-May-2016 06:00:00';
+$since_datetime = '01-Jul-2016 06:00:00';
 	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
 	$email_number = 0;
 	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
@@ -157,6 +157,8 @@ $since_datetime = '07-May-2016 06:00:00';
 
 					$part = '';
 					if ($part_from_end) { $part = $fields[(($num_fields-1)-$part_col)]; } else { $part = $fields[$part_col]; }
+					// trailing -RF (refurb) is common in frontier emails, but also occurs elsewhere at times
+					$part = preg_replace('/-RF$/','',$part);
 					$qty = '';
 					if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
 					$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
@@ -174,9 +176,9 @@ $since_datetime = '07-May-2016 06:00:00';
 					$num_matches = count($matches);
 					$matches_found += $num_matches;
 					if ($num_matches>0) {
-						$results_body .= '<div style="color:#468847; font-weight:bold">I ran '.$part.' '.$heci.' (qty '.$qty.'), please confirm:</div>';
+						$results_body .= '<div style="color:#468847; font-weight:bold">I ran '.$part.' '.$heci.' (qty '.$qty.')...</div>';
 					} else {
-						$results_body .= '<div style="color:#b94a48; font-weight:bold">Please check '.$part.' '.$heci.' (qty '.$qty.') in your system...</div>';
+						$results_body .= '<div style="color:#b94a48; font-weight:bold">I could not find results for '.$part.' '.$heci.' (qty '.$qty.'), please check in your system...</div>';
 					}
 					foreach ($matches as $partid) {
 						$pipe_ids = array();
@@ -194,13 +196,13 @@ $since_datetime = '07-May-2016 06:00:00';
 								$pipe_ids[$pipe_id] = $pipe_id;
 							}
 						}
-						$qty = 0;
+						$stk_qty = 0;
 						foreach ($pipe_ids as $pipe_id) {
-							$qty += getPipeQty($pipe_id);
+							$stk_qty += getPipeQty($pipe_id);
 						}
 						$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')';
-						if ($qty>0) {
-							$results_body .= ' IN STOCK';
+						if ($stk_qty>0) {
+							$results_body .= ' <strong>CHECK STOCK</strong>';
 						}
 						$results_body .= '<BR>';
 

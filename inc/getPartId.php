@@ -20,8 +20,8 @@
 			$num_results = mysqli_num_rows($result);
 		}
 		if ($num_results==0 AND $part) {
-			// strip off non-alphanumerics, and any ending "-RF" (common in frontier emails and broker sites results)
-			$fpart = preg_replace('/[^[:alnum:]]+/','',preg_replace('/-RF$/','',$part));
+			// strip off non-alphanumerics
+			$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 
 			$ord = "ORDER BY part, rel, heci; ";
 			$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
