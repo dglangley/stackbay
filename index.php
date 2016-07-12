@@ -4,6 +4,7 @@
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
 	include_once 'inc/getPipeIds.php';
+	include_once 'inc/getPipeQty.php';
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
@@ -21,20 +22,6 @@
 		if ($r['supply_volume']>$freq_min) {
 			$FREQS['supply'][$r['companyid']] = $r['supply_volume'];
 		}
-	}
-
-	function getPipeQty($pipe_id) {
-		$qty = 0;
-		$query = "SELECT COUNT(inventory_itemlocation.id) AS qty ";
-		$query .= "FROM inventory_itemlocation, inventory_location ";
-		$query .= "WHERE inventory_id = '".$pipe_id."' AND no_sales = '0' ";
-		$query .= "AND inventory_itemlocation.location_id = inventory_location.id; ";
-		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-		while ($r = mysqli_fetch_assoc($result)) {
-			$qty += $r['qty'];
-		}
-
-		return ($qty);
 	}
 
 	function format_market($partid_str,$market_table,$search_str) {

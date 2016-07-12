@@ -122,6 +122,22 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 			return true;
 		}
 	}
+	function setGoogleAccessToken($userid) {
+		global $ACCESS_TOKEN,$REFRESH_TOKEN;
+		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
+		$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
+		$result = qdb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$exp_time = $r['created']+$r['expires_in'];
+			if ($timestamp<$exp_time) {
+				$ACCESS_TOKEN = json_encode($r);
+				break;
+			} else if ($r['refresh_token']) {
+				$REFRESH_TOKEN = $r['refresh_token'];
+				break;
+			}
+		}
+	}
 
 /*
 	$E = array(
@@ -169,19 +185,7 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 	$ACCESS_TOKEN = false;
 	$REFRESH_TOKEN = false;
 	if ($U['id']>0) {
-		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
-		$query .= "WHERE userid = '".$U['id']."' ORDER BY id DESC; ";
-		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$exp_time = $r['created']+$r['expires_in'];
-			if ($timestamp<$exp_time) {
-				$ACCESS_TOKEN = json_encode($r);
-				break;
-			} else if ($r['refresh_token']) {
-				$REFRESH_TOKEN = $r['refresh_token'];
-				break;
-			}
-		}
+		setGoogleAccessToken($U['id']);
 	}
 
 	// version control for css and js includes

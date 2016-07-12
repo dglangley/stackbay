@@ -73,6 +73,8 @@
 
 //		$mail->addBCC('chris@ven-tel.com');
 
+		// for multiple recipients, just add another line of this; to add name, pass in second parameter, ie addAddress("david@ven-tel.com","David Langley")
+		$mail->addAddress('sam@ven-tel.com');
 		$mail->addAddress('david@ven-tel.com');
 		if ($replyto AND filter_var($replyto, FILTER_VALIDATE_EMAIL)) {
 			$mail->addReplyTo($replyto);

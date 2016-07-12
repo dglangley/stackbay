@@ -18,6 +18,9 @@
 	include_once '../inc/getPipeIds.php';
 	include_once '../inc/getPipeQty.php';
 
+	$userid = 5;
+	setGoogleAccessToken($userid);
+
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
 	$username = 'amea@ven-tel.com';
@@ -34,7 +37,7 @@
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
 		$client->refreshToken($REFRESH_TOKEN);
 		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$U['id'],$REFRESH_TOKEN);
+		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
 	}
 
 	// default
@@ -54,11 +57,6 @@ $since_datetime = '01-Jul-2016 06:00:00';
 
 	// if emails are returned, cycle through each...
 	if (! $inbox_results) { die("Could not find any emails in inbox"); }
-
-	// for now (7/11/16) set globals for send_gmail()
-	$U['name'] = 'Amea Cabula';
-	$U['email'] = 'amea@ven-tel.com';
-	$U['phone'] = '(805) 212-4959';
 
 	// put the newest emails on top
 	rsort($inbox_results);
@@ -175,11 +173,9 @@ $since_datetime = '01-Jul-2016 06:00:00';
 
 					$num_matches = count($matches);
 					$matches_found += $num_matches;
-					if ($num_matches>0) {
-						$results_body .= '<div style="color:#468847; font-weight:bold">I ran '.$part.' '.$heci.' (qty '.$qty.')...</div>';
-					} else {
-						$results_body .= '<div style="color:#b94a48; font-weight:bold">I could not find results for '.$part.' '.$heci.' (qty '.$qty.'), please check in your system...</div>';
-					}
+
+					$match_results = '';
+					$stk_qty = 0;
 					foreach ($matches as $partid) {
 						$pipe_ids = array();
 						$part_str = getPart($partid,'part');
@@ -196,18 +192,24 @@ $since_datetime = '01-Jul-2016 06:00:00';
 								$pipe_ids[$pipe_id] = $pipe_id;
 							}
 						}
-						$stk_qty = 0;
-						foreach ($pipe_ids as $pipe_id) {
-							$stk_qty += getPipeQty($pipe_id);
-						}
-						$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')';
-						if ($stk_qty>0) {
-							$results_body .= ' <strong>CHECK STOCK</strong>';
-						}
-						$results_body .= '<BR>';
+						//$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')<BR>';
+						$match_results .= $part_str.' '.$heci_str.'<BR>';
 
 //						insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
 					}
+					if ($num_matches>0) {
+						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.')';
+					} else {
+						$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.'), please check your system';
+					}
+
+					foreach ($pipe_ids as $pipe_id) {
+						$stk_qty += getPipeQty($pipe_id);
+					}
+					if ($stk_qty>0) {
+						$results_body .= ' <strong>CHECK STOCK</strong>';
+					}
+					$results_body .= '...<BR>'.$match_results;
 				}
 
 				// pattern match successfully found for this email so don't try next pattern
@@ -220,7 +222,7 @@ $since_datetime = '01-Jul-2016 06:00:00';
 			$email_body = $results_body.'<BR>'.$message;
 //			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$results_body.$message.'<BR><BR>';
 
-			$send_success = send_gmail($email_body,$subject,5,$from_email);//set reply to as $from_email
+			$send_success = send_gmail($email_body,$subject,$userid,$from_email);//set reply to as $from_email
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {
