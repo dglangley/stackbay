@@ -121,7 +121,7 @@ $since_datetime = '07-May-2016 06:00:00';
 			$z = 0;
 			// get total count of fields in this row first
 			foreach ($row as $col => $field) {
-				$words = explode(' ',$field);
+				$words = preg_split('/[[:space:]]+/',$field);
 				foreach ($words as $k => $word) {
 					$z++;
 				}
@@ -133,7 +133,7 @@ $since_datetime = '07-May-2016 06:00:00';
 					<input type="hidden" name="lines['.$i.']['.$a.']" value="'.$field.'">
 				';
 
-				$words = explode(' ',$field);
+				$words = preg_split('/[[:space:]]+/',$field);
 //				print "<pre>".print_r($words,true)."</pre>";
 				foreach ($words as $k => $word) {
 					$line .= '

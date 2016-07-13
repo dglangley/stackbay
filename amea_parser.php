@@ -400,7 +400,7 @@ exit;
 					$noqty = preg_replace('/'.$QTY_FILTER.'/i','',trim(str_replace($fields[$part_col],'',$result_strings[$k])));
 					// clean up by removing one-character chunks
 					$cleaned_str = trim(preg_replace('/((^[[:punct:]]*[[:alnum:]][[:punct:]]*[[:space:]]+)|([[:space:]]+[[:punct:]]*[[:alnum:]][[:punct:]]*[[:space:]]+))/','',$noqty));
-					$breakups = explode(' ',$cleaned_str);
+					$breakups = preg_split('/[[:space:]]+/',$cleaned_str);
 					foreach ($breakups as $word) {
 						$hecidb = get_db($word,$cleaned_str,$part_col);
 						if (count($hecidb)>0) {

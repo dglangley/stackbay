@@ -81,7 +81,13 @@ $since_datetime = '01-Jul-2016 06:00:00';
 
 		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
 			$message_part = $structure->parts[1];
-			$message = imap_decode(imap_fetchbody($inbox,$n,2),$message_part->encoding);
+//changed 7-13-16 when I stopped redirect-forwarding emails to Amea
+//			$message = imap_decode(imap_fetchbody($inbox,$n,2),$message_part->encoding);
+			if ($message_part->encoding==4) {//4 appears with some emails that appear to be generated as a redirect-forward
+				$message = imap_qprint(imap_body($inbox,$n));
+			} else {//most normal emails
+				$message = imap_qprint(imap_fetchbody($inbox,$n,1.2));
+			}
 //			$message = imap_qprint(imap_body($inbox,$n));
 		}
 //echo $message.'<BR><BR>';
@@ -103,7 +109,7 @@ $since_datetime = '01-Jul-2016 06:00:00';
 		$results_body = '';
 		$contactid = getContact($from_email,'email','id');
 		$companyid = getContact($contactid,'id','companyid');
-		if (! $contactid OR ! $companyid) {
+		if (! $contactid OR ! $companyid OR substr($subject,0,3)=='RE:') {
 			$results_body = 'Please see email below from '.$from_name.'<BR>';
 		} else {
 			// use this to identify if there are any html tables, which require different handling
@@ -147,7 +153,7 @@ $since_datetime = '01-Jul-2016 06:00:00';
 				foreach ($results as $ln => $rows) {
 					$fields = array();
 					foreach ($rows as $cols) {
-						$words = explode(' ',$cols);
+						$words = preg_split('/[[:space:]]+/',$cols);
 						foreach ($words as $word) {
 							$fields[] = trim(str_replace(array(chr(160),chr(194)),'',$word));
 						}
