@@ -72,6 +72,10 @@ $since_datetime = '01-Jul-2016 06:00:00';
 		$message = '';
 		$header = imap_headerinfo($inbox,$n);
 		$overview = imap_fetch_overview($inbox,$n,0);
+		// output the email overview information
+		$status = ($overview[0]->seen ? 'read' : 'unread');
+		if ($status=='read') { continue; }
+
 		$structure = imap_fetchstructure($inbox, $n);
 		$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
 
@@ -81,10 +85,6 @@ $since_datetime = '01-Jul-2016 06:00:00';
 //			$message = imap_qprint(imap_body($inbox,$n));
 		}
 //echo $message.'<BR><BR>';
-
-		// output the email overview information
-		$status = ($overview[0]->seen ? 'read' : 'unread');
-//		if ($status=='read') { continue; }
 
 		$date_utc = $overview[0]->date;
 		$date = date("Y-m-d",strtotime($date_utc));
@@ -108,6 +108,7 @@ $since_datetime = '01-Jul-2016 06:00:00';
 		} else {
 			// use this to identify if there are any html tables, which require different handling
 			$DOM = new DOMDocument();
+			$DOM->strictErrorChecking = false;
 			$DOM->loadHTML($message);
 			$tables = $DOM->getElementsByTagName('table');
 
@@ -163,7 +164,8 @@ $since_datetime = '01-Jul-2016 06:00:00';
 					if (! is_numeric($qty)) { $qty = ''; }
 					$qty = (int)$qty;//convert 02's into 2's
 					$heci = '';
-					if ($heci_from_end) { $heci = $fields[(($num_fields-1)-$heci_col)]; } else { $heci = $fields[$heci_col]; }
+					if ($heci_from_end AND isset($fields[(($num_fields-1)-$heci_col)])) { $heci = $fields[(($num_fields-1)-$heci_col)]; }
+					else if (isset($fields[$heci_col])) { $heci = $fields[$heci_col]; }
 					$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
 
 					if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }

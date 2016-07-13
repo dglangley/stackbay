@@ -40,7 +40,7 @@
 	date_default_timezone_set('America/Los_Angeles');
 
 	$DEV_ENV = false;
-	if ($_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
+	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
 $DEV_ENV = true;
 
 	$today = date("Y-m-d");
@@ -123,7 +123,8 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 		}
 	}
 	function setGoogleAccessToken($userid) {
-		global $ACCESS_TOKEN,$REFRESH_TOKEN;
+		global $ACCESS_TOKEN,$REFRESH_TOKEN,$timestamp;
+
 		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
 		$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
 		$result = qdb($query);

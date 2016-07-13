@@ -1,10 +1,11 @@
 <?php
-	include_once '../inc/dbconnect.php';
-	require_once '../inc/google-api-php-client/src/Google/autoload.php';
-	include_once '../phpmailer/PHPMailerAutoload.php';
-	include_once '../inc/updateAccessToken.php';
-	include_once '../inc/format_email.php';
-	include_once '../inc/getContact.php';
+	include_once 'inc/dbconnect.php';
+	require_once 'inc/google-api-php-client/src/Google/autoload.php';
+	include_once 'phpmailer/PHPMailerAutoload.php';
+	include_once 'inc/updateAccessToken.php';
+	include_once 'inc/format_email.php';
+	include_once 'inc/getContact.php';
+exit;
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -16,16 +17,11 @@
 		}
 	}
 
-	$userid = 0;
-	if (! $U['id']) {
-		$userid = 0;
-		$useremail = getContact($userid,'id','email');
-		$username = getContact($userid,'id','name');
-	} else {
-		$userid = $U['id'];
-		$username = $U['name'];
-		$useremail = $U['email'];
-	}
+	$userid = 5;
+	$useremail = getContact($userid,'id','email');
+	$username = getContact($userid,'id','name');
+	//force token for this userid
+	setGoogleAccessToken($userid);
 
 	$sbj = "This is a test";
 	$email_body = "Test body";
@@ -45,7 +41,10 @@
 	$client->setAccessType("offline");
 	// forces prompt for user to authorize app so that we can be sure
 	// it will always return a refresh token for long-term access
-//	$client->setApprovalPrompt('force');
+	$client->setApprovalPrompt('force');
+
+	/**************** TO FORCE A NEW TOKEN, UNCOMMENT THIS LINE ***************/
+	//$ACCESS_TOKEN = '';
 
 	// without access token, try to refresh, if we have a refresh token
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {

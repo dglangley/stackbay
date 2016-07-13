@@ -110,14 +110,24 @@
 		if ($date==$today) { $date = 'Today'; }
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
 		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }
-		else if ($date>=$summary_past) { $date = format_date($date,'M j'); }
-		else if ($date>=$summary_lastyear) {
+		else if ($date>=$summary_past) {
+//			$date = format_date($date,'M j');
+			// because $summary_past can change and is a floating point in time based on its particular usage,
+			// we still want to format according to what point in time it's currently set at; if older than
+			// $summary_lastyear, add the year for clarification
+			if ($date<$summary_lastyear) {
+				$date = format_date($date,"M j 'y");
+			} else {
+				$date = format_date($date,'M j');
+			}
+		} else if ($date>=$summary_lastyear) {
 //			$date = format_date($date,'M');
+
 			// because $summary_past can change and is a floating point in time based on its particular usage,
 			// we still want to format according to what point in time it's currently set at; if older than
 			// $summary_lastyear, add the year for clarification
 			if ($summary_past<$summary_lastyear) {
-				$date = format_date($date,"M 'j");
+				$date = format_date($date,"M 'y");
 			} else {
 				$date = format_date($date,'M');
 			}

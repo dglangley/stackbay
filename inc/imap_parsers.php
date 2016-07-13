@@ -59,6 +59,8 @@
 	function parsePlainText($message) {
 		global $signature,$signature_found,$email_pattern,$intro;
 
+		$results = array();
+
 		// remove unnecessary and poorly-syntaxed comment lines ("/* /* */")
 		$message = preg_replace('/&nbsp;[\s\S]?[\n]/','&nbsp;',preg_replace('/[\\/][*][\s\S]*[*][\\/]/m','',$message));
 		// replace non-standard character?
