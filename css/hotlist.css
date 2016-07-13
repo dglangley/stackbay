@@ -1,0 +1,56 @@
+body{
+    color:#526273;
+    background-color:#dddddb;
+    font-family: 'Open Sans', sans-serif;
+    font-size:12px;
+}
+table, td {
+    margin:auto;
+    border-bottom: 1px solid #EDF2F7;
+    padding:5px;
+}
+table{
+    width: 50%;
+    border-collapse:collapse;
+    border-bottom:2px solid #EDF2F7;
+}
+tr{
+    vertical-align:top;
+    min-height:28px;
+}
+tr:nth-child(odd){
+    background-color:#F7F7F7;
+}
+tr:nth-child(even){
+    background-color:#FFFFFF;
+}
+tr:not(.tableHead):hover{
+    background-color:#EEE;
+}
+
+.tableHead{
+    color:#333333;
+    font-weight:bold;
+    padding:5px;
+    padding-bottom:20px;
+}
+.part{
+    padding-left:6px;
+    padding-right:6px;
+    min-width:180px;
+    width:40%;
+
+}
+.heci{
+    width:28%;
+}
+.available{
+    
+}
+.price{
+    width: 5%;
+}
+.user{
+    width:5%;
+    padding:5px;
+}
