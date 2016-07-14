@@ -8,14 +8,14 @@
     
     //Includes:
     
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/dbconnect.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getPartId.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/setContact.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getContact.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getCompany.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/logRemotes.php";
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
+    include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getPartId.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/setContact.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getContact.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getCompany.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/logRemotes.php";
+    include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
 //    header("Content-type: text/xml");
 

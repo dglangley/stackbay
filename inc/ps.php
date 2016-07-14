@@ -1,6 +1,6 @@
 <?php
-	include_once 'download_ps.php';
-	include_once 'parse_ps.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_ps.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/parse_ps.php';
 
 	$PS_ERROR = '';
 	function ps($search) {

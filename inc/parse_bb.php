@@ -1,8 +1,8 @@
 <?php
-	include_once 'getCompany.php';
-	include_once 'getPartId.php';
-	include_once 'setPart.php';
-	include_once 'insertMarket.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
 	// indeces of columns found in results
 	$F = array(

@@ -1,5 +1,5 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	$past_time = format_date($now,'Y-m-d H:i:s',array('i'=>-360));//6 hours
 	$REMPOS = array();
 	$SEARCHES = array();

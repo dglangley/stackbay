@@ -1,6 +1,6 @@
 <?php
-	include_once 'getManf.php';
-	include_once 'getSys.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getManf.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSys.php';
 
 	$PARTS = array();
 	function getPart($partid,$return_field='') {

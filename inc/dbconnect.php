@@ -36,7 +36,7 @@
 	// requires login, see below
 	if (! isset($LOCKED)) { $LOCKED = false; }
 
-	set_include_path(get_include_path() . PATH_SEPARATOR . $_SERVER["DOCUMENT_ROOT"].'/inc/google-api-php-client/src');
+	set_include_path(get_include_path() . PATH_SEPARATOR . $_SERVER["ROOT_DIR"].'/inc/google-api-php-client/src');
 	date_default_timezone_set('America/Los_Angeles');
 
 	$DEV_ENV = false;

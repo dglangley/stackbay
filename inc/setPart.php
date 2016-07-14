@@ -1,14 +1,6 @@
 <?php
-/*
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunacera.com'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]); }
-		else { $root_dir = '/var/www/html'; }
-	}
-*/
 //2/24/16
-	include_once $root_dir.'/inc/indexer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
 	function setPart($P) {
 		$part = '';

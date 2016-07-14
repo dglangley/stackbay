@@ -99,7 +99,7 @@
 		$table_name .= 's_index';
 
 		$keyword_lower = strtolower($keyword);
-		if ($keyword_lower=='cisco' OR preg_match('/^(rev|iss)-?[0-9]*$/i',$keyword)) { $rank = 'secondary'; }
+		if ($keyword_lower=='cisco' OR $keyword_lower=='power' OR preg_match('/^(rev|iss)-?[0-9]*$/i',$keyword)) { $rank = 'secondary'; }
 
 		$keywordid = 0;
 		if (! isset($KEYWORDS[$keyword])) {

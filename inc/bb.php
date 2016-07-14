@@ -1,6 +1,6 @@
 <?php
-	include_once 'download_bb.php';
-	include_once 'parse_bb.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_bb.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/parse_bb.php';
 
 	$BB_ERROR = '';
 	function bb($search) {

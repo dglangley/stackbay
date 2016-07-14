@@ -13,6 +13,8 @@
 # +------------ Minute            (range: 0-59)
 # , and - can be used as in 0,15,30,45 or 1-5
 
+ROOT_DIR=/var/www/html
+
 # run inventory processor frequently all day to catch any uploads on S3
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
 0,10,20,30,40,50 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/processor.php > ~/processor_log

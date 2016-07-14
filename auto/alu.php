@@ -6,17 +6,17 @@
 	//price, and quantity.
 
 	//Include all requisite files
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/dbconnect.php";
-	include_once $_SERVER["DOCUMENT_ROOT"]."/inc/call_remote.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getPartId.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/setContact.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/setPart.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getContact.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/getCompany.php";
-    include_once $_SERVER["DOCUMENT_ROOT"]."/inc/logRemotes.php";
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_price.php';
+    include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
+	include_once $_SERVER["ROOT_DIR"]."/inc/call_remote.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getPartId.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/setContact.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/setPart.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getContact.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/getCompany.php";
+    include_once $_SERVER["ROOT_DIR"]."/inc/logRemotes.php";
+    include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
     
 //=============================================================================
 //---------------------------Connect to ALU's server---------------------------

@@ -1,22 +1,22 @@
 <?php
-	include_once '../inc/dbconnect.php';
-	include_once '../inc/format_date.php';
-	include_once '../inc/format_part.php';
-	include_once '../inc/imap_decode.php';
-	include_once '../inc/imap_parsers.php';
-	include_once '../inc/getContact.php';
-	include_once '../inc/getCompany.php';
-	include_once '../inc/insertMarket.php';
-	include_once '../inc/keywords.php';
-	include_once '../inc/getPart.php';
-	include_once '../inc/getPartId.php';
-	require_once '../inc/google-api-php-client/src/Google/autoload.php';
-	include_once '../phpmailer/PHPMailerAutoload.php';
-	include_once '../inc/google_composer.php';
-	include_once '../inc/logSearchMeta.php';
-	include_once '../inc/pipe.php';
-	include_once '../inc/getPipeIds.php';
-	include_once '../inc/getPipeQty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/imap_decode.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/imap_parsers.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	require_once $_SERVER["ROOT_DIR"].'/inc/google-api-php-client/src/Google/autoload.php';
+	include_once $_SERVER["ROOT_DIR"].'/phpmailer/PHPMailerAutoload.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/google_composer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeIds.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeQty.php';
 
 	$userid = 5;
 	setGoogleAccessToken($userid);
@@ -65,6 +65,8 @@
 	$from_email = '';
 	$from_name = '';
 	$from = '';
+
+	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1);
 
 	// for every email...
 	foreach ($inbox_results as $n) {
@@ -147,6 +149,7 @@
 				$heci_col = $r['heci'];
 				$heci_from_end = $r['heci_from_end'];
 
+				$last_fields = array();//used for looking back at previous row's fields, in case qty is on a subsequent row
 				$search_results = array();//consolidates results to avoid duplicates and to catch qtys on subsequent rows
 				foreach ($results as $ln => $rows) {
 					$fields = array();
@@ -159,7 +162,13 @@
 					$num_fields = count($fields);
 
 					$part = '';
-					if ($part_from_end) { $part = $fields[(($num_fields-1)-$part_col)]; } else { $part = $fields[$part_col]; }
+					// set part field based on counting from start or end
+					$part_field = $part_col;
+					if ($part_from_end) { $part_field = ($num_fields-1)-$part_col; }
+					// set part string from identified field, uppercase it for $commons lookup purposes
+					$part = strtoupper($fields[$part_field]);
+					// if this is a 'common' word and if we already have a matched field, resort to that previously-matched field
+					if (isset($commons[$part]) AND isset($last_fields[$part_field])) { $part = $last_fields[$part_field]; }
 
 					$qty = '';
 					if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
@@ -179,6 +188,8 @@
 					$qty = (int)$qty;//convert 02's into 2's
 
 					$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
+
+					$last_fields = $fields;//set for next iteration, if any
 
 //for now, default to 1 if qty not found on this row
 if ($qty_col!==NULL AND ! $qty) { $qty = 1; }

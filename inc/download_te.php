@@ -1,6 +1,6 @@
 <?php
-	include_once 'dbconnect.php';
-	include_once 'call_remote.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/call_remote.php';
 
 	$TE_CH = false;
 	$TE_ERROR = "";

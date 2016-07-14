@@ -1,6 +1,6 @@
 <?php
-	include_once '../inc/dbconnect.php';
-	include_once '../inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	$past_date = format_date($today,'Y-m-d 00:00:00',array('m'=>-6));
 

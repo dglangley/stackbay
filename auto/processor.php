@@ -1,6 +1,6 @@
 <?php
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/processUpload.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/processUpload.php';
 
 	$query = "SELECT uploads.*, uploads.id uploadid FROM uploads, search_meta ";
 //	if ($test) { $query .= "WHERE filename = 'nave_131114.csv' "; }

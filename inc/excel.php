@@ -1,6 +1,6 @@
 <?php
-	include_once 'download_excel.php';
-	include_once 'parse_excel.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_excel.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/parse_excel.php';
 
 	$EXCEL_ERROR = '';
 	function excel($search) {

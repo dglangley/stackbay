@@ -1,5 +1,5 @@
 <?php
-	include_once '../inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	$query = "SELECT ebayid, COUNT(id) n FROM contacts WHERE ebayid IS NOT NULL ";
 	$query .= "GROUP BY name, ebayid HAVING n > 1 ORDER BY name ASC, id ASC; ";
