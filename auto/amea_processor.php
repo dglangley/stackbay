@@ -146,6 +146,8 @@
 				$qty_from_end = $r['qty_from_end'];
 				$heci_col = $r['heci'];
 				$heci_from_end = $r['heci_from_end'];
+
+				$search_results = array();//consolidates results to avoid duplicates and to catch qtys on subsequent rows
 				foreach ($results as $ln => $rows) {
 					$fields = array();
 					foreach ($rows as $cols) {
@@ -158,19 +160,43 @@
 
 					$part = '';
 					if ($part_from_end) { $part = $fields[(($num_fields-1)-$part_col)]; } else { $part = $fields[$part_col]; }
-					// trailing -RF (refurb) is common in frontier emails, but also occurs elsewhere at times
-					$part = preg_replace('/-RF$/','',$part);
+
 					$qty = '';
 					if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
-					$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
-					if (! is_numeric($qty)) { $qty = ''; }
-					$qty = (int)$qty;//convert 02's into 2's
+
 					$heci = '';
 					if ($heci_from_end AND isset($fields[(($num_fields-1)-$heci_col)])) { $heci = $fields[(($num_fields-1)-$heci_col)]; }
 					else if (isset($fields[$heci_col])) { $heci = $fields[$heci_col]; }
+
+					// cols can't be the same
+					if ($part==$qty) { $qty = 1; }
+
+					// trailing -RF (refurb) is common in frontier emails, but also occurs elsewhere at times
+					$part = preg_replace('/-RF$/','',$part);
+
+					$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
+					if (! is_numeric($qty)) { $qty = ''; }
+					$qty = (int)$qty;//convert 02's into 2's
+
 					$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
 
+//for now, default to 1 if qty not found on this row
+if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
+					//if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
 					if (($part_col!==NULL AND ! $part) OR ($qty_col!==NULL AND ! $qty) OR (! $part AND ! $heci)) { continue; }
+
+					$base = $part.'|'.$heci;
+					if (! isset($search_results[$base])) {
+						$search_results[$base] = $qty;
+					} else {
+						if ($qty>$search_results[$base]) { $search_results[$base] = $qty; }
+					}
+				}
+
+				foreach ($search_results as $base => $qty) {
+					$roots = explode('|',$base);
+					$part = $roots[0];
+					$heci = $roots[1];
 
 					$matches = getPartId($part,$heci,0,true);//return ALL results, not just first found
 //					if (count($matches)==0) { continue; }
@@ -201,7 +227,7 @@
 
 //						insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
 					}
-					if ($num_matches>0) {
+					if ($matches_found>0) {
 						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.')';
 					} else {
 						$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.'), please check your system';

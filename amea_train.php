@@ -91,7 +91,7 @@ $since_datetime = '07-May-2016 06:00:00';
 		$subject = $overview[0]->subject;
 		$from = $overview[0]->from;
 		$f = explode(' <',$from);
-		$from_name = $f[0];
+		$from_name = str_replace('"','',$f[0]);
 
 		$contactid = getContact($from_email,'email','id');
 

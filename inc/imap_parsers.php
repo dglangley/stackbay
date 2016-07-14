@@ -10,6 +10,7 @@
 
 		$results = array();
 
+		$k = 0;
 		$num_tables = $tables->length;
 		foreach ($tables as $table) {
 			$table_text = $table->nodeValue;
@@ -19,7 +20,6 @@
 
 			$rows = $table->getElementsByTagName('tr');
 
-			$k = 0;
 			foreach ($rows as $row) {
 				$header = $row->getElementsByTagName('th');
 				$cols = $row->getElementsByTagName('td');
