@@ -38,12 +38,13 @@ $results = qdb($query);
 
 
 //Establish the initial declaration of the html
-$email_str .= "<!DOCTYPE html>";
-$email_str .= "<html>";
-$email_str .= "<head>";
-$email_str .= "<link href='/css/hotlist.css' rel='stylesheet' type='text/css'>";
-$email_str .= "</head>";
+$email_str = "";
+//$email_str .= "<!DOCTYPE html>";
+//$email_str .= "<html>";
+//$email_str .= "<head>";
+//$email_str .= "</head>";
 $email_str .= "<body>";
+$email_str .= '<style type="text/css">'.file_get_contents('../css/hotlist.css').'</style>';
 $email_str .= "<table>";
 $email_str .= "    <tr class = 'tableHead'>";
 $email_str .= "        <td class = 'part'>Description</td>";
@@ -217,7 +218,7 @@ foreach ($results as $k => $row) {
         }
     }
 
-if ($k>0) { break; }
+if ($k>5) { break; }
     
     if (!$any_delta){
         continue;
@@ -278,8 +279,8 @@ if ($k>0) { break; }
 }
 
 $email_str .= "</table>";
-$email_str .= "</body>";
-$email_str .= "</html>";
+//$email_str .= "</body>";
+//$email_str .= "</html>";
 
 	$send_success = send_gmail($email_str,'favorites test',array('david@ven-tel.com','aaron@ven-tel.com'));
 	if ($send_success) {
