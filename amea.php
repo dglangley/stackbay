@@ -89,8 +89,8 @@ $since_datetime = '07-May-2016 06:00:00';
 			$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
 
 			if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
-				$part = $structure->parts[1];
-				$message = imap_decode(imap_fetchbody($inbox,$email_number,2),$part->encoding);
+				$mpart = $structure->parts[1];
+				$message = imap_decode($inbox,$n,$mpart->encoding);
 			}
 
 			// output the email overview information

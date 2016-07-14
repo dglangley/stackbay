@@ -177,17 +177,17 @@ $since_datetime = '07-May-2016 06:00:00';
 		rsort($inbox_results);
 	
 		// for every email...
-		foreach ($inbox_results as $email_number) {
-			if ($email_number<>74) { continue; }
-//if ($email_number==69) { continue; }
+		foreach ($inbox_results as $n) {
+			if ($n<>74) { continue; }
+//if ($n==69) { continue; }
 
 			// get information specific to this email
 			$message = '';
-			$header = imap_fetch_overview($inbox,$email_number,0);
-			$structure = imap_fetchstructure($inbox, $email_number);
+			$header = imap_fetch_overview($inbox,$n,0);
+			$structure = imap_fetchstructure($inbox, $n);
 			if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
-				$part = $structure->parts[1];
-				$message = imap_decode(imap_fetchbody($inbox,$email_number,2),$part->encoding);
+				$mpart = $structure->parts[1];
+				$message = imap_decode($inbox,$n,$mpart->encoding);
 			}
 
 			// output the email header information
@@ -199,7 +199,7 @@ $since_datetime = '07-May-2016 06:00:00';
 			$subject = $header[0]->subject;
 			$from = $header[0]->from;
 
-			$emails[$email_number] = array('message'=>$message,'date'=>$date,'from'=>$from,'subject'=>$subject);
+			$emails[$n] = array('message'=>$message,'date'=>$date,'from'=>$from,'subject'=>$subject);
 		}
 	}
 

@@ -1,6 +1,7 @@
 <?php
-	function imap_decode($text,$encoding=1) {
+	function imap_decode($inbox,$email_number,$encoding=1) {
 		global $debug_num;
+
 		if ($debug_num) {
 			// create temp file name in temp directory
 			$tempfile = sys_get_temp_dir().'/email'.$debug_num.'.txt';
@@ -10,15 +11,21 @@
 			fclose($handle);
 			exit;
 		}
-/*
-preg_match_all('/thank[\s\S]{0,10}/mi',$text,$matches);
-foreach ($matches[0] as $match) {
-	for ($i=0; $i<strlen($match); $i++) {
-		echo $match[$i].':'.ord($match[$i]).'<BR>';
-	}
-	echo '<BR><BR>';
-}
-*/
+
+		// 4 appears with some emails that appear to be generated as a redirect-forward, I found
+		// this in the case of some Bob Fehlinger emails
+		if ($encoding==4) {
+			$message = imap_qprint(imap_body($inbox,$email_number));
+		} else {//most normal emails
+			$message = imap_qprint(imap_fetchbody($inbox,$email_number,1.2));
+		}
+
+		return ($message);
+
+
+
+
+//changed 7/13/16 when I stopped redirect-forwarding emails and received them directly
 //		$text = preg_replace('/([[:alnum:]])['.chr(13).chr(10).']([[:alnum:]])/','$1$2',$text);
 
 // strip out equal signs that mark the end of a truncated line due to email line length limits

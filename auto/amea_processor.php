@@ -41,8 +41,8 @@
 	}
 
 	// default
-	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
-$since_datetime = '01-Jul-2016 06:00:00';
+//	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
+	$since_datetime = format_date($now,'d-M-Y 00:00:00');
 	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
 	$email_number = 0;
 	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
@@ -80,15 +80,11 @@ $since_datetime = '01-Jul-2016 06:00:00';
 		$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
 
 		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
-			$message_part = $structure->parts[1];
+			$mpart = $structure->parts[1];
 //changed 7-13-16 when I stopped redirect-forwarding emails to Amea
-//			$message = imap_decode(imap_fetchbody($inbox,$n,2),$message_part->encoding);
-			if ($message_part->encoding==4) {//4 appears with some emails that appear to be generated as a redirect-forward
-				$message = imap_qprint(imap_body($inbox,$n));
-			} else {//most normal emails
-				$message = imap_qprint(imap_fetchbody($inbox,$n,1.2));
-			}
-//			$message = imap_qprint(imap_body($inbox,$n));
+//			$message = imap_decode(imap_fetchbody($inbox,$n,2),$mpart->encoding);
+
+			$message = imap_decode($inbox,$n,$mpart->encoding);
 		}
 //echo $message.'<BR><BR>';
 

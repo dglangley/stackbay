@@ -24,6 +24,8 @@
 0 6 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
 # sunday ghosting script
 0 20 * * 0 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/ghost_inventories.php > ~/ghost_log
+# run amea all day
+0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/amea_processor.php > ~/amea_log
 
 # there must be a newline at the end of this file or CRON won't run!!
 
