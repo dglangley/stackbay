@@ -14,6 +14,10 @@ include_once($_SERVER["ROOT_DIR"]."/inc/dbconnect.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/getPartId.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+
+$U['id'] = 5;
+setGoogleAccessToken(5);
 
 #$credentials = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
@@ -31,25 +35,25 @@ $results = qdb($query);
 
 
 //Establish the initial declaration of the html
-echo("<!DOCTYPE html>");
-echo("<html>");
-echo("<head>");
-echo("<link href='/css/hotlist.css' rel='stylesheet' type='text/css'>");
-echo("</head>");
-echo("<body>");
-echo("<table>");
-echo("    <tr class = 'tableHead'>");
-echo("        <td class = 'part'>Description</td>");
-//echo("        <td class = 'heci'>HECI</td>");
-//echo("        <td class = 'price'>Price</td>");
-echo("        <td class = 'user'>Users</td>");
-echo("        <td class = 'end'>Available</td>");
+$email_str .= "<!DOCTYPE html>";
+$email_str .= "<html>";
+$email_str .= "<head>";
+$email_str .= "<link href='/css/hotlist.css' rel='stylesheet' type='text/css'>";
+$email_str .= "</head>";
+$email_str .= "<body>";
+$email_str .= "<table>";
+$email_str .= "    <tr class = 'tableHead'>";
+$email_str .= "        <td class = 'part'>Description</td>";
+//$email_str .= "        <td class = 'heci'>HECI</td>";
+//$email_str .= "        <td class = 'price'>Price</td>";
+$email_str .= "        <td class = 'user'>Users</td>";
+$email_str .= "        <td class = 'end'>Available</td>";
 
 
-echo("    </tr>");
+$email_str .= "    </tr>";
 
 //Take in iteritavely the values of the part ids
-foreach ($results as $row) {
+foreach ($results as $k => $row) {
     $partids = array();
     
     //Prepare the output array to seperate out the output from the processing
@@ -209,6 +213,8 @@ foreach ($results as $row) {
             $any_delta = true;
         }
     }
+
+if ($k>0) { break; }
     
     if (!$any_delta){
         continue;
@@ -218,57 +224,64 @@ foreach ($results as $row) {
     if(empty($output['availability'])){continue;}
     
     //Start the new line
-    echo("<tr>");
+    $email_str .= "<tr>";
     
     //Print the description for each of the items.
-    echo("  <td class = 'part'>".$output['pname']." &nbsp; ".$output['heci']."</td>");
+    $email_str .= "  <td class = 'part'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
     
     //Echo the curated list of the user output information
-    echo("  <td class = 'user'>".$output['users']."</td>");
+    $email_str .= "  <td class = 'user'>".$output['users']."</td>";
     
     //Print the end-piece of the line
-    echo("  <td class = 'end'>");
+    $email_str .= "  <td class = 'end'>";
     
     //For each item of availible stock by quantity, print the value
     foreach($output['availability']  as $company => $ava){
-        echo('<div class="item">');
+        $email_str .= '<div class="item">';
         
         //Stack for showing an empty value in the available table if there is none
-        if($ava['new']){echo('<div class="new">'.$ava['new'].'</div>');}
-        else{echo('      <div class="new">&nbsp;</div>');}
+        if($ava['new']){$email_str .= '<div class="new">'.$ava['new'].'</div>';}
+        else{$email_str .= '      <div class="new">&nbsp;</div>';}
         
         //Show the appropriate Arrow for the changed value
-        if ($ava['chg']>0){echo('<div class="posdelta">&#9650;</div>');}
-        else if($ava['chg']<0){echo('<div class="negdelta">&#9660;</div>');}
-        else {echo('<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>');}
+        if ($ava['chg']>0){$email_str .= '<div class="posdelta">&#9650;</div>';}
+        else if($ava['chg']<0){$email_str .= '<div class="negdelta">&#9660;</div>';}
+        else {$email_str .= '<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>';}
         
         //Print out the 
-        echo('      <div class="old">'.$ava['old'].'</div>');
+        $email_str .= '      <div class="old">'.$ava['old'].'</div>';
         
         //Print the name of the supplier
-        echo('      <div class="supplier">'.$company.'</div>');
+        $email_str .= '      <div class="supplier">'.$company.'</div>';
 
         //Output each of the sources iteratively. There is currently no case for
         //a missing image. If I would want to make the exceptional case, David
         //might have already solved one for his system.
-        echo('      <div class="source">');
+        $email_str .= '      <div class="source">';
         foreach ($ava['source'] as $sc) {
-            echo('<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png"></img>');
+            $email_str .= '<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png"></img>';
         }
-        echo('      </div>');
+        $email_str .= '      </div>';
         
         //Echo the price of the item.
-        echo('      <div class="price">'.$ava['price'].'</div>');
-        echo('    </div>');
+        $email_str .= '      <div class="price">'.$ava['price'].'</div>';
+        $email_str .= '    </div>';
         
         
 }
 
-    echo("</td>");
-    echo("</tr>");
+    $email_str .= "</td>";
+    $email_str .= "</tr>";
 }
 
-echo("</table>");
-echo("</body>");
-echo("</html>");
+$email_str .= "</table>";
+$email_str .= "</body>";
+$email_str .= "</html>";
+
+	$send_success = send_gmail($email_str,'favorites test',array('david@ven-tel.com','aaron@ven-tel.com'));
+	if ($send_success) {
+		echo json_encode(array('message'=>'Success'));
+	} else {
+		echo json_encode(array('message'=>$SEND_ERR));
+	}
 ?>
