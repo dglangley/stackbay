@@ -12,14 +12,14 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 	require_once $_SERVER["ROOT_DIR"].'/inc/google-api-php-client/src/Google/autoload.php';
 	include_once $_SERVER["ROOT_DIR"].'/phpmailer/PHPMailerAutoload.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/google_composer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeIds.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeQty.php';
 
-	$userid = 5;
-	setGoogleAccessToken($userid);
+	$U['id'] = 5;
+	setGoogleAccessToken($U['id']);
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -37,7 +37,7 @@
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
 		$client->refreshToken($REFRESH_TOKEN);
 		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
+		updateAccessToken($ACCESS_TOKEN,$U['id'],$REFRESH_TOKEN);
 	}
 
 	// default
@@ -263,7 +263,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			$email_body = $results_body.'<BR>'.$message;
 //			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$results_body.$message.'<BR><BR>';
 
-			$send_success = send_gmail($email_body,$subject,$userid,$from_email);//set reply to as $from_email
+			$send_success = send_gmail($email_body,$subject,array('david@ven-tel.com','sam@ven-tel.com'),'',$from_email);//set reply to as $from_email
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {

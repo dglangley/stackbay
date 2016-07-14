@@ -1,10 +1,10 @@
 <?php
-	include_once 'dbconnect.php';
-	require_once 'google-api-php-client/src/Google/autoload.php';
-	include_once '../phpmailer/PHPMailerAutoload.php';
-	include_once 'updateAccessToken.php';
-	include_once 'format_email.php';
-	include_once 'getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	require_once $_SERVER["ROOT_DIR"].'/inc/google-api-php-client/src/Google/autoload.php';
+	include_once $_SERVER["ROOT_DIR"].'/phpmailer/PHPMailerAutoload.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/updateAccessToken.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_email.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -25,13 +25,22 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$userid,$replyto='') {
-		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR;
+	function send_gmail($email_body,$email_subject,$to,$bcc,$replyto='') {
+		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U;
+
+		$userid = $U['id'];
 
 		$SEND_ERR = '';
 		if (! $userid OR ! is_numeric($userid)) {
 			$SEND_ERR .= 'Invalid or missing user id';
 			return false;
+		}
+		if (! $to OR (! is_array($to) AND ! filter_var($to, FILTER_VALIDATE_EMAIL))) {
+			$SEND_ERR .= 'Invalid or missing recipient';
+			return false;
+		}
+		if (! is_array($to)) {
+			$to = array($to);
 		}
 		$useremail = getContact($userid,'id','email');
 		$username = getContact($userid,'id','name');
@@ -71,11 +80,20 @@
 		$mail->Subject = $email_subject;
 		$mail->SetFrom($useremail,$username);
 
-//		$mail->addBCC('chris@ven-tel.com');
+		if ($bcc AND filter_var($bcc, FILTER_VALIDATE_EMAIL)) {
+			$mail->addBCC($bcc);
+		}
 
 		// for multiple recipients, just add another line of this; to add name, pass in second parameter, ie addAddress("david@ven-tel.com","David Langley")
-		$mail->addAddress('sam@ven-tel.com');
-		$mail->addAddress('david@ven-tel.com');
+		foreach ($to as $rec_email) {
+			if (is_array($rec_email)) {
+				if (! filter_var($rec_email[0], FILTER_VALIDATE_EMAIL)) { continue; }
+				$mail->addAddress($rec_email[0],$rec_email[1]);
+			} else {
+				if (! filter_var($rec_email, FILTER_VALIDATE_EMAIL)) { continue; }
+				$mail->addAddress($rec_email);
+			}
+		}
 		if ($replyto AND filter_var($replyto, FILTER_VALIDATE_EMAIL)) {
 			$mail->addReplyTo($replyto);
 		}

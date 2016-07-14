@@ -1,13 +1,13 @@
 <?php
-	include_once 'dbconnect.php';
-	include_once 'format_date.php';
-	include_once 'format_price.php';
-	include_once 'ps.php';
-	include_once 'bb.php';
-	include_once 'te.php';
-	include_once 'ebay.php';
-	include_once 'excel.php';
-	include_once 'logRemotes.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
 
 	function array_append(&$arr1,$arr2) {
 		foreach ($arr2 as $date => $arr) {
