@@ -8,22 +8,24 @@
 //------------------------------------Main------------------------------------
 
 //Include the requisite files
-include_once($_SERVER["DOCUMENT_ROOT"]."/inc/getSupply.php");
-include_once($_SERVER["DOCUMENT_ROOT"]."/inc/dbconnect.php");
-include_once($_SERVER["DOCUMENT_ROOT"]."/inc/getPartId.php");
-include_once($_SERVER["DOCUMENT_ROOT"]."/inc/getPart.php");
-include_once($_SERVER["DOCUMENT_ROOT"]."/inc/keywords.php");
+include_once($_SERVER["ROOT_DIR"].'/inc/.php');
+include_once($_SERVER["ROOT_DIR"]."/inc/getSupply.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/dbconnect.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/getPartId.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
 
 #$credentials = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
 
 //Pull the values of the parts we want to search for in the last day
-$query = "SELECT `partid`, p.`id`, `heci` "; 
+$query = "SELECT favorites.`userid`,`partid`, p.`id`, `heci` "; 
 $query .= "FROM  `favorites`, `parts` p ";
 $query .= "Where `partid` = p.`id` ";
 $query .= "Order By ID DESC ";
-$query .= "LIMIT 10;";
-echo ("Initial Query: ".$query."<br>");
+$query .= "LIMIT 12;";
+//echo ("Initial Query: ".$query."<br>");
+
 //Grab the search results from the database
 $results = qdb($query);
 
@@ -37,11 +39,11 @@ echo("</head>");
 echo("<body>");
 echo("<table>");
 echo("    <tr class = 'tableHead'>");
-echo("        <td class = 'part'>Part &nbsp;<i> HECI </i></td>");
+echo("        <td class = 'part'>Description</td>");
 //echo("        <td class = 'heci'>HECI</td>");
 //echo("        <td class = 'price'>Price</td>");
 echo("        <td class = 'user'>Users</td>");
-echo("        <td class = 'end'>Availible</td>");
+echo("        <td class = 'end'>Available</td>");
 
 
 echo("    </tr>");
@@ -57,10 +59,22 @@ foreach ($results as $row) {
         'users' => '',
         'availability' => array()
         );
-
+    
+    switch ($row['userid']) {
+        case 1:
+            $output['users'] = 'David';
+            break;
+        case 2:
+            $output['users'] = 'Sam';
+            break;
+        default:
+            $output['users'] = 'Aaron';
+            break;
+    }
     //Pull the heci and/or the Part ID
     $partid = $row['partid'];
     $heci = $row['heci'];
+    
     
     //If the part has a HECI, do the following
     if ($heci) {
@@ -80,7 +94,7 @@ foreach ($results as $row) {
             if(!$output['pname']){
                 $output['pname'] = getPart($part['id'], 'part');
             }
-            echo ('It is related to: '.$part['id']."<br>");
+//            echo ('It is related to: '.$part['id']."<br>");
             array_push($partids, $part['id']);
         }
     }
@@ -89,75 +103,64 @@ foreach ($results as $row) {
         //Find the part names of all the related parts without part information 
         $partName = getPart($partid);
         $output['pname'] = $partName;
-        echo("Aliases Output: ");
-        echo($partName);
-        echo "<br>";
+
         
         //Find if there the parts related as a list of partids
         $related = hecidb($partName);
-        //print $related;
-        echo ("Found these related part ids: ");
-        echo("<br>");
         foreach($related as $partID => $days_results){
-            print_r($days_results['id']);
-            echo ("<br>");
-            //echo ($partID."<br>");
             array_push($partids, $partID);
         }
     }
     
-    echo($output['pname']."<br>");
-    
+
     //Take in the list of partids from the initial search
-    $resultSet = getSupply($partids);    
-    
-    print_r ($partids);
-    //var_dump($results);
-    echo ("<pre>");
-    print_r($resultSet);
-    echo ("</pre>");
+    $resultSet = getSupply($partids,1);    
     
     //Reset the day counter
     $i = 0;
     
     //If there are no results in the array, then set that day's values to zero
-    $no_new_result = false;
-    $no_old_result = false;
-    
+
     //Now take the results of the get supply and take in the 
     foreach($resultSet['results'] as $date => $days_results){
         
         //We don't care about any results more than two days ago
-        if ($i == 2){break;}
-        
-        echo "TODAY'S DATE: ".$date."<br>";
-        echo ("<pre>");
-        print_r($days_results);
-        echo ("</pre>");
+        if ($i == 2){
+            $no_new_result = false;
+            $no_old_result = false;
+            continue;
+        }
+        $i += 1;
 
+//        echo "TODAY'S DATE: ".$date."<br>";
+//        echo ("<pre>");//
+//        print_r($days_results);
+//        echo ("</pre>");
+//        echo ("^this is a day's results.");
+
+        if (empty($days_results)){
+            if ($i == 1){
+                $no_new_result = true;
+//                echo("There is no new result");
+                }
+            else{
+                $no_old_result = true;
+//                echo("There is no old result");
+                }
+        }
+
+        //If both are null, exit out of the loop
+        if($no_new_result and $no_old_result){continue;}  
+        
         //Each day, go through the individual returned values
-        foreach($days_results as $item){
+        foreach($days_results as &$item){
             
             //If the results don't return anything, mark the comparative value 
             //for each company to zero for either the old or the new and 
             //continue to the next iteration of the loop
-            if (empty($days_results)){
 
-                if ($i == 0){
-                    $no_new_result = true;
-                    continue;
-                }
-                else{
-                    $no_old_result = true;
-                    continue;
-                }
-            }
-            
-            //If both are null, exit out of the loop
-            if($no_new_result and $no_old_result){break;}
-            
             //Otherwise, make a note of this particular result's company
-            $company = $item['cid'];
+            $company = $item['company'];
             
             //If the company doesn't already have an entry for this item, make a
             //new line item for the company
@@ -166,11 +169,12 @@ foreach ($results as $row) {
                     'new' => '',
                     'old' => '',
                     'chg' => '',
-                    'price' => ''
+                    'price' => '',
+                    'source' => ''
                     );
             }
-            print_r($item);
-            
+
+
             //If there is only no new result, then set the value of new to zero
             if($no_new_result){
                 $output['availability'][$company]['new'] = 0;
@@ -182,52 +186,86 @@ foreach ($results as $row) {
             }
             
             //If there is a value, then save the company values by increasing the quantity
-            if($i == 0){
+            if($i == 1){
                 $output['availability'][$company]['new'] += $item['qty'];
                 $price = $item['price'];    
             }
             else{
                 $output['availability'][$company]['old'] += $item['qty'];
-                $price = $item['price'];    
             }
+            $output['availability'][$company]['price'] = $item['price'];
+            $output['availability'][$company]['source'] = $item['sources'];
         }
-        $i++;
     }
-    //f
-    var_dump($output);
-    $access = $output['availability'];
-//    print_r($company);
+
     
     //Calculate the change. If there is no change, mark the flag
     //This covers the case where if the value of both old AND new is matched, the
     //loop will not output (earlier just covered the case that both were null)
-    $no_change = false;
-    foreach($access as $co){
-
+    $any_delta = false;
+    foreach($output['availability'] as $options => &$co){
         $co['chg'] = $co['new'] - $co['old'];
-        if ($co['chg'] == 0) {
-            $no_change = true;
-            break;
+        if ($co['chg'] != 0) {
+            $any_delta = true;
         }
     }
     
-    //Print the line into the table for this item.
+    if (!$any_delta){
+        continue;
+    }
+    
+    //If there is still no entry into the availability script, skip.
+    if(empty($output['availability'])){continue;}
+    
+    //Start the new line
     echo("<tr>");
-    echo("<td class = 'part'>".$output['pname']." &nbsp; <i>".$output['heci']."</i></td>");
-//    echo("<td class = 'heci'>65432196876487968</td>");
-//    echo("<td class = 'price'>\$100.00</td>");
-    echo("<td class = 'user'>Sam</td>");
-    echo("<td class = 'end'>");
-            foreach($access as $company => $ava){
-                echo("<pre>");
-                print_r($ava);
-                echo("</pre>");
-                echo("<br>");
-            }
+    
+    //Print the description for each of the items.
+    echo("  <td class = 'part'>".$output['pname']." &nbsp; ".$output['heci']."</td>");
+    
+    //Echo the curated list of the user output information
+    echo("  <td class = 'user'>".$output['users']."</td>");
+    
+    //Print the end-piece of the line
+    echo("  <td class = 'end'>");
+    
+    //For each item of availible stock by quantity, print the value
+    foreach($output['availability']  as $company => $ava){
+        echo('<div class="item">');
+        
+        //Stack for showing an empty value in the available table if there is none
+        if($ava['new']){echo('<div class="new">'.$ava['new'].'</div>');}
+        else{echo('      <div class="new">&nbsp;</div>');}
+        
+        //Show the appropriate Arrow for the changed value
+        if ($ava['chg']>0){echo('<div class="posdelta">&#9650;</div>');}
+        else if($ava['chg']<0){echo('<div class="negdelta">&#9660;</div>');}
+        else {echo('<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>');}
+        
+        //Print out the 
+        echo('      <div class="old">'.$ava['old'].'</div>');
+        
+        //Print the name of the supplier
+        echo('      <div class="supplier">'.$company.'</div>');
+
+        //Output each of the sources iteratively. There is currently no case for
+        //a missing image. If I would want to make the exceptional case, David
+        //might have already solved one for his system.
+        echo('      <div class="source">');
+        foreach ($ava['source'] as $sc) {
+            echo('<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png"></img>');
+        }
+        echo('      </div>');
+        
+        //Echo the price of the item.
+        echo('      <div class="price">'.$ava['price'].'</div>');
+        echo('    </div>');
+        
+        
+}
+
     echo("</td>");
     echo("</tr>");
-
-    echo("<br><br>");
 }
 
 echo("</table>");

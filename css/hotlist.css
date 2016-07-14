@@ -2,7 +2,7 @@ body{
     color:#526273;
     background-color:#dddddb;
     font-family: 'Open Sans', sans-serif;
-    font-size:12px;
+    font-size:15px;
 }
 table, td {
     margin:auto;
@@ -10,7 +10,7 @@ table, td {
     padding:5px;
 }
 table{
-    width: 50%;
+    width: 40%;
     border-collapse:collapse;
     border-bottom:2px solid #EDF2F7;
 }
@@ -34,13 +34,7 @@ tr:not(.tableHead):hover{
     padding:5px;
     padding-bottom:20px;
 }
-.part{
-    padding-left:6px;
-    padding-right:6px;
-    min-width:180px;
-    width:40%;
 
-}
 .heci{
     width:28%;
 }
@@ -52,5 +46,45 @@ tr:not(.tableHead):hover{
 }
 .user{
     width:5%;
-    padding:5px;
+    padding-right:15;
+}
+.item div{
+   display:inline-block;
+   position:relative;
+   padding-bottom:1px;
+}
+.new{
+   width:20px;
+   font-weight:bold;
+}
+.old{
+   text-align:left;
+   width:30px;
+}
+.part{
+    padding-left:6px;
+    padding-right:6px;
+    min-width:400px;
+    width:20%;
+}
+.supplier{
+   min-width:247px;
+}
+.negdelta{
+   color:red;
+}
+.posdelta{
+   color:green;
+}
+
+.source{
+   width:40;
+}
+.source img{
+   width:12px;
+}
+.price{
+    width:10%;
+    position:absolute;
+    right:0;
 }
