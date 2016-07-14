@@ -17,6 +17,9 @@ include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
 
 $U['id'] = 5;
+$U['name'] = 'Amea Cabula';
+$U['email'] = 'amea@ven-tel.com';
+$U['phone'] = '(805) 212-4959';
 setGoogleAccessToken(5);
 
 #$credentials = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');

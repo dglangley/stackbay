@@ -19,6 +19,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeQty.php';
 
 	$U['id'] = 5;
+	$U['name'] = 'Amea Cabula';
+	$U['email'] = 'amea@ven-tel.com';
+	$U['phone'] = '(805) 212-4959';
 	setGoogleAccessToken($U['id']);
 
 	/* connect to gmail */
