@@ -36,6 +36,8 @@ $query .= "LIMIT 12;";
 //Grab the search results from the database
 $results = qdb($query);
 
+//gets added globally to email header within format_email() (inside send_gmail)
+$EMAIL_CSS = file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css');
 
 //Establish the initial declaration of the html
 $email_str = "";
@@ -46,7 +48,6 @@ $email_str = "";
 $email_str .= "<body>";
 $email_str .= "Hey there! I found the following changes to the availibility of";
 $email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
-$email_str .= '<style type="text/css">'.file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css').'</style>';
 $email_str .= "<table>";
 $email_str .= "    <tr class = 'tableHead'>";
 $email_str .= "        <td class = 'part'>Description</td>";
@@ -136,8 +137,8 @@ foreach ($results as $k => $row) {
     //Now take the results of the get supply and take in the 
     foreach($resultSet['results'] as $date => $days_results){
         
-        //We don't care about any results more than two days ago
-        if ($i >= 2){
+        //We don't care about any results more than 3 days ago (monday backwards to friday)
+        if ($i > 3){
             $no_new_result = false;
             $no_old_result = false;
             break;
