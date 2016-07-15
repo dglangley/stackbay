@@ -1,6 +1,6 @@
 <?php
 //============================================================================
-//The hotlist script will take the information from the availability tables
+//The favorites script will take the information from the availability tables
 //and display the part information, its Heci, the user information of any
 //user who marked it, and the data about the change
 //=============================================================================
@@ -45,8 +45,8 @@ $email_str = "";
 //$email_str .= "</head>";
 $email_str .= "<body>";
 $email_str .= "Hey there! I found the following changes to the availibility of";
-$email_str .= " your favorited items since last time they were searched! -Amea";
-$email_str .= '<style type="text/css">'.file_get_contents('../css/hotlist.css').'</style>';
+$email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
+$email_str .= '<style type="text/css">'.file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css').'</style>';
 $email_str .= "<table>";
 $email_str .= "    <tr class = 'tableHead'>";
 $email_str .= "        <td class = 'part'>Description</td>";
@@ -122,6 +122,8 @@ foreach ($results as $k => $row) {
         }
     }
     
+	$no_new_result = false;
+	$no_old_result = false;
 
     //Take in the list of partids from the initial search
     $resultSet = getSupply($partids,1);    
@@ -135,10 +137,10 @@ foreach ($results as $k => $row) {
     foreach($resultSet['results'] as $date => $days_results){
         
         //We don't care about any results more than two days ago
-        if ($i == 2){
+        if ($i >= 2){
             $no_new_result = false;
             $no_old_result = false;
-            continue;
+            break;
         }
         $i += 1;
 
@@ -220,7 +222,7 @@ foreach ($results as $k => $row) {
         }
     }
 
-if ($k>5) { break; }
+//	if ($k>5) { break; }
     
     if (!$any_delta){
         continue;
@@ -284,7 +286,7 @@ $email_str .= "</table>";
 //$email_str .= "</body>";
 //$email_str .= "</html>";
 
-	$send_success = send_gmail($email_str,'favorites test',array('david@ven-tel.com','aaron@ven-tel.com'));
+	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, y"),array('david@ven-tel.com','sam@ven-tel.com'),'aaron@ven-tel.com');
 	if ($send_success) {
 		echo json_encode(array('message'=>'Success'));
 	} else {
