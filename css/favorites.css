@@ -10,7 +10,8 @@ table, td {
     padding:5px;
 }
 table{
-    width: 40%;
+    width: 98%;
+    min-width:500px;
     border-collapse:collapse;
     border-bottom:2px solid #EDF2F7;
 }

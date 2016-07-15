@@ -44,6 +44,8 @@ $email_str = "";
 //$email_str .= "<head>";
 //$email_str .= "</head>";
 $email_str .= "<body>";
+$email_str .= "Hey there! I found the following changes to the availibility of";
+$email_str .= " your favorited items since last time they were searched! -Amea";
 $email_str .= '<style type="text/css">'.file_get_contents('../css/hotlist.css').'</style>';
 $email_str .= "<table>";
 $email_str .= "    <tr class = 'tableHead'>";
