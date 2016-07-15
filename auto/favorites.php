@@ -50,9 +50,9 @@ $email_str .= "Hey there! I found the following changes to the availibility of";
 $email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
 $email_str .= "<table style='margin:auto; padding:5px; width: 98%; min-width:500px; border-collapse:collapse; border-bottom:2px solid #EDF2F7;'>";
 $email_str .= "    <tr style='vertical-align:top; min-height:28px;'>";
-$email_str .= "        <td style='border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
-$email_str .= "        <td style='width:5%; padding-right:15;'>Users</td>";
-$email_str .= "        <td class = 'end'>Available</td>";
+$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
+$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7; width:5%; padding-right:15;'>Users</td>";
+$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7;'>Available</td>";
 $email_str .= "    </tr>";
 
 $bgc = array('#ffffff','#f7f7f7');
@@ -237,13 +237,13 @@ foreach ($results as $k => $row) {
 	$rownum = !$rownum;
     
     //Print the description for each of the items.
-    $email_str .= "  <td style='padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
+    $email_str .= "  <td style='font-size:13px; padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
     
     //Echo the curated list of the user output information
-    $email_str .= "  <td style='width:5%; padding-right:15;'>".$output['users']."</td>";
+    $email_str .= "  <td style='font-size:13px; width:5%; padding-right:15;'>".$output['users']."</td>";
     
     //Print the end-piece of the line
-    $email_str .= "  <td class = 'end'>";
+    $email_str .= "  <td style='font-size:13px'>";
     
     //For each item of availible stock by quantity, print the value
     foreach($output['availability']  as $company => $ava){
