@@ -29,8 +29,8 @@ setGoogleAccessToken(5);
 $query = "SELECT favorites.`userid`,`partid`, p.`id`, `heci` "; 
 $query .= "FROM  `favorites`, `parts` p ";
 $query .= "Where `partid` = p.`id` ";
-$query .= "Order By ID DESC ";
-$query .= "LIMIT 12;";
+$query .= "Order By ID DESC; ";
+//$query .= "LIMIT 12;";
 //echo ("Initial Query: ".$query."<br>");
 
 //Grab the search results from the database
@@ -50,9 +50,9 @@ $email_str .= "Hey there! I found the following changes to the availibility of";
 $email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
 $email_str .= "<table style='margin:auto; padding:5px; width: 98%; min-width:500px; border-collapse:collapse; border-bottom:2px solid #EDF2F7;'>";
 $email_str .= "    <tr style='vertical-align:top; min-height:28px;'>";
-$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
-$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7; width:5%; padding-right:15;'>Users</td>";
-$email_str .= "        <td style='font-size:13px; border-bottom: 1px solid #EDF2F7;'>Available</td>";
+$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
+$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7; width:5%; padding-right:15;'>Users</td>";
+$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7;'>Available</td>";
 $email_str .= "    </tr>";
 
 $bgc = array('#ffffff','#f7f7f7');
@@ -237,21 +237,23 @@ foreach ($results as $k => $row) {
 	$rownum = !$rownum;
     
     //Print the description for each of the items.
-    $email_str .= "  <td style='font-size:13px; padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
+    $email_str .= "  <td style='font-size:12px; padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
     
     //Echo the curated list of the user output information
-    $email_str .= "  <td style='font-size:13px; width:5%; padding-right:15;'>".$output['users']."</td>";
+    $email_str .= "  <td style='font-size:12px; width:5%; padding-right:15;'>".$output['users']."</td>";
     
     //Print the end-piece of the line
-    $email_str .= "  <td style='font-size:13px'>";
+    $email_str .= "  <td style='font-size:12px'>";
     
     //For each item of availible stock by quantity, print the value
     foreach($output['availability']  as $company => $ava){
         $email_str .= '<div class="item">';
         
         //Stack for showing an empty value in the available table if there is none
-        if($ava['new']){$email_str .= '<div style="width:20px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">'.$ava['new'].'</div>';}
-        else{$email_str .= '      <div style="width:20px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">&nbsp;</div>';}
+		$email_str .= '<div style="width:30px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">';
+        if($ava['new']){$email_str .= $ava['new'];}
+        else{$email_str .= '&nbsp;';}
+		$email_str .= '</div>';
         
         //Show the appropriate Arrow for the changed value
         if ($ava['chg']>0){$email_str .= '<div class="posdelta" style="color:green; display:inline-block; position:relative; padding-bottom:1px;">&#9650;</div>';}
@@ -262,19 +264,19 @@ foreach ($results as $k => $row) {
         $email_str .= '      <div style="text-align:left; width:30px; display:inline-block; position:relative; padding-bottom:1px;">'.$ava['old'].'</div>';
         
         //Print the name of the supplier
-        $email_str .= '      <div class="supplier" style="display:inline-block; position:relative; padding-bottom:1px; min-width:247px;">'.$company.'</div>';
+        $email_str .= '      <div class="supplier" style="display:inline-block; position:relative; padding-bottom:1px; min-width:200px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ">'.$company.'</div>';
 
         //Output each of the sources iteratively. There is currently no case for
         //a missing image. If I would want to make the exceptional case, David
         //might have already solved one for his system.
-        $email_str .= '      <div class="source" style="width:40; display:inline-block; position:relative; padding-bottom:1px;">';
+        $email_str .= '      <div class="source" style="width:40px; display:inline-block; position:relative; padding-bottom:1px;">';
         foreach ($ava['source'] as $sc) {
             $email_str .= '<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png" style="width:12px;"></img>';
         }
         $email_str .= '      </div>';
         
         //Echo the price of the item.
-        $email_str .= '      <div style="width:28%; display:inline-block; position:relative; padding-bottom:1px; width:10%; position:absolute; right:0;">'.$ava['price'].'</div>';
+        $email_str .= '      <div style="display:inline-block; position:relative; padding-bottom:1px; width:10%; position:absolute; right:0;">'.$ava['price'].'</div>';
         $email_str .= '    </div>';
         
         
