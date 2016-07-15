@@ -8,9 +8,9 @@
 //------------------------------------Main------------------------------------
 
 //Include the requisite files
-include_once($_SERVER["ROOT_DIR"].'/inc/.php');
-include_once($_SERVER["ROOT_DIR"]."/inc/getSupply.php");
+//include_once($_SERVER["ROOT_DIR"].'/inc/.php');
 include_once($_SERVER["ROOT_DIR"]."/inc/dbconnect.php");
+include_once($_SERVER["ROOT_DIR"]."/inc/getSupply.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/getPartId.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
@@ -45,19 +45,19 @@ $email_str = "";
 //$email_str .= "<html>";
 //$email_str .= "<head>";
 //$email_str .= "</head>";
-$email_str .= "<body>";
+//$email_str .= "<body>";
 $email_str .= "Hey there! I found the following changes to the availibility of";
 $email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
-$email_str .= "<table>";
-$email_str .= "    <tr class = 'tableHead'>";
-$email_str .= "        <td class = 'part'>Description</td>";
-//$email_str .= "        <td class = 'heci'>HECI</td>";
-//$email_str .= "        <td class = 'price'>Price</td>";
-$email_str .= "        <td class = 'user'>Users</td>";
+$email_str .= "<table style='margin:auto; padding:5px; width: 98%; min-width:500px; border-collapse:collapse; border-bottom:2px solid #EDF2F7;'>";
+$email_str .= "    <tr style='vertical-align:top; min-height:28px;'>";
+$email_str .= "        <td style='border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
+$email_str .= "        <td style='width:5%; padding-right:15;'>Users</td>";
 $email_str .= "        <td class = 'end'>Available</td>";
-
-
 $email_str .= "    </tr>";
+
+$bgc = array('#ffffff','#f7f7f7');
+
+$rownum = 0;
 
 //Take in iteritavely the values of the part ids
 foreach ($results as $k => $row) {
@@ -231,15 +231,16 @@ foreach ($results as $k => $row) {
     
     //If there is still no entry into the availability script, skip.
     if(empty($output['availability'])){continue;}
-    
+
     //Start the new line
-    $email_str .= "<tr>";
+    $email_str .= "<tr style='background-color:".$bgc[$rownum].";'>";
+	$rownum = !$rownum;
     
     //Print the description for each of the items.
-    $email_str .= "  <td class = 'part'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
+    $email_str .= "  <td style='padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
     
     //Echo the curated list of the user output information
-    $email_str .= "  <td class = 'user'>".$output['users']."</td>";
+    $email_str .= "  <td style='width:5%; padding-right:15;'>".$output['users']."</td>";
     
     //Print the end-piece of the line
     $email_str .= "  <td class = 'end'>";
@@ -249,31 +250,31 @@ foreach ($results as $k => $row) {
         $email_str .= '<div class="item">';
         
         //Stack for showing an empty value in the available table if there is none
-        if($ava['new']){$email_str .= '<div class="new">'.$ava['new'].'</div>';}
-        else{$email_str .= '      <div class="new">&nbsp;</div>';}
+        if($ava['new']){$email_str .= '<div style="width:20px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">'.$ava['new'].'</div>';}
+        else{$email_str .= '      <div style="width:20px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">&nbsp;</div>';}
         
         //Show the appropriate Arrow for the changed value
-        if ($ava['chg']>0){$email_str .= '<div class="posdelta">&#9650;</div>';}
-        else if($ava['chg']<0){$email_str .= '<div class="negdelta">&#9660;</div>';}
-        else {$email_str .= '<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>';}
+        if ($ava['chg']>0){$email_str .= '<div class="posdelta" style="color:green; display:inline-block; position:relative; padding-bottom:1px;">&#9650;</div>';}
+        else if($ava['chg']<0){$email_str .= '<div class="negdelta" style="color:red; display:inline-block; position:relative; padding-bottom:1px;">&#9660;</div>';}
+        else {$email_str .= '<div style=" display:inline-block; position:relative; padding-bottom:1px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>';}
         
         //Print out the 
-        $email_str .= '      <div class="old">'.$ava['old'].'</div>';
+        $email_str .= '      <div style="text-align:left; width:30px; display:inline-block; position:relative; padding-bottom:1px;">'.$ava['old'].'</div>';
         
         //Print the name of the supplier
-        $email_str .= '      <div class="supplier">'.$company.'</div>';
+        $email_str .= '      <div class="supplier" style="display:inline-block; position:relative; padding-bottom:1px; min-width:247px;">'.$company.'</div>';
 
         //Output each of the sources iteratively. There is currently no case for
         //a missing image. If I would want to make the exceptional case, David
         //might have already solved one for his system.
-        $email_str .= '      <div class="source">';
+        $email_str .= '      <div class="source" style="width:40; display:inline-block; position:relative; padding-bottom:1px;">';
         foreach ($ava['source'] as $sc) {
-            $email_str .= '<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png"></img>';
+            $email_str .= '<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png" style="width:12px;"></img>';
         }
         $email_str .= '      </div>';
         
         //Echo the price of the item.
-        $email_str .= '      <div class="price">'.$ava['price'].'</div>';
+        $email_str .= '      <div style="width:28%; display:inline-block; position:relative; padding-bottom:1px; width:10%; position:absolute; right:0;">'.$ava['price'].'</div>';
         $email_str .= '    </div>';
         
         
