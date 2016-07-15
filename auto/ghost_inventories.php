@@ -59,7 +59,10 @@ foreach($results as $row){
 $weights = array(
     "Default" => .30,
     "34" => .80,
-    "36" => .25
+    "36" => .25,
+    "3" => .25,
+    "1414" => .25,
+    "4" =>.26
     );
 
 //Declare the array catch for the randomized ID's
