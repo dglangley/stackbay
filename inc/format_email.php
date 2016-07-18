@@ -1,6 +1,8 @@
 <?php
+	$EMAIL_CSS = '';
 	function format_email($subject='rfq',$main_body='',$teaser='') {
 		$U = $GLOBALS['U'];
+		$css = $GLOBALS['EMAIL_CSS'];
 
 		$phone = '';
 		if ($U['phone']) { $phone = $U['phone'].' &#8226; '; }
@@ -59,9 +61,10 @@
 		.container .row {
 			font-size:12px;
 		}
+		'.$css.'
 	</style>
   </head>
-<body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
+<body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space; color:#526273; background-color:#fff; font-family:\'Open Sans\', sans-serif; font-size:13px">
 
 	<div class="container">
 		'.$teaser.'
