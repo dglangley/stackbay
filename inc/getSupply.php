@@ -219,6 +219,8 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
 			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
+			// create array of partids so we can sum qtys on a given date or avoid duplicating qtys
+			$r['partids'] = array($r['partid']);
 
 			// if an rfq has been submitted against this partid, log it against the $key
 			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
@@ -227,7 +229,12 @@
 			if (isset($results[$key])) {
 				// if price is in this iteration whereas not found in previous ($results), set it to this price
 				if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
-				$results[$key]['qty'] += $r['qty'];
+
+				// check array of partids and if partid hasn't been logged, sum qty; otherwise we don't count it to avoid duplicating qty
+				if (array_search($r['partid'],$results[$key]['partids'])===false) {
+					$results[$key]['partids'][] = $r['partid'];
+					$results[$key]['qty'] += $r['qty'];
+				}
 
 				// add rfq flag if it has been rfq'd by user (see query above)
 				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
@@ -252,13 +259,21 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
 			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
+			// create array of partids so we can sum qtys on a given date or avoid duplicating qtys
+			$r['partids'] = array($r['partid']);
 
 			// if an rfq has been submitted against this partid, log it against the $key
 			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
 
 			if (isset($results[$key])) {
 				if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
-				$results[$key]['qty'] += $r['qty'];
+
+				// check array of partids and if partid hasn't been logged, sum qty; otherwise we don't count it to avoid duplicating qty
+				if (array_search($r['partid'],$results[$key]['partids'])===false) {
+					$results[$key]['partids'][] = $r['partid'];
+					$results[$key]['qty'] += $r['qty'];
+				}
+
 				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
 					$results[$key]['rfq'] = 'Y';
 				}
