@@ -212,7 +212,7 @@
 		$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
 		$query .= "FROM availability, search_meta, companies ";
 		$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
-		$query .= "AND companies.id <> '1118' ";
+		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
 //		$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
 		$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 		$result = qdb($query);
@@ -245,7 +245,7 @@
 		// legacy code/query
 		$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq FROM market, companies ";
 		$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
-		$query .= "AND companies.id <> '1118' ";
+		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
 //		$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
 		$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 		$result = qdb($query);
