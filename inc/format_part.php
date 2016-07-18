@@ -1,7 +1,7 @@
 <?php
 	if (! isset($test)) { $test = 0; }
 
-	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{1,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?)?';
+	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{0,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?)?';
 //comparative standard rev format by concatenating universal rev vars below, combined here for reference only
 //	$revs =    '([^[:alnum:]]([0-9]{1,2}[:])?[[:alnum:]]{0,3}(S[-]?|RE[VL][-.]?|I[S]{2}?[-]?))';
 	$formats = array(
@@ -13,10 +13,15 @@
 
 			/* Alcatel-Lucent ES660C,TN329C,TN1286B*/
 			/*'([A-Z]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
-			'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
+			/*'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
+			/* read more about look-ahead negatives: http://stackoverflow.com/questions/406230/regular-expression-to-match-line-that-doesnt-contain-a-word */
+			'(((?!(FB|FD))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent VLNC5,WSRG19B,WSRH1B*/
 			'([VW][A-Z]{3}[0-9]{1,2}[A-Z]?)'.$aluRevs,
+
+			/* Alcatel-Lucent AKM85,LNW555*/
+			'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent 11075L-128*/
 			'([0-9]{5}[A-Z][[:space:]-]?[0-9]{3})(([^[:alnum:]]?R(EV)?)?[^[:alnum:]]?[0-9]{1,2})?',
@@ -32,7 +37,7 @@
 
 			/* Microcodes, MC97780A1, MC97144A1D */
 			/* Alcatel-Lucent MC#@###@# - MC1D088A1; MC#@###@#@ - MC1D088A1B; MC#####@# - MC45019A2 */
-			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]I?[^[:alnum:]][0-9])?',
+			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]?I?[^[:alnum:]]?[0-9])?',
 
 			/* AG Comm / Alcatel-Lucent / GTD5: FB-27013-A / FB-27013-1A / FB-16271 (changed this to more loose PN-matching 4/20/15 */
 			/*'(F[A-Z][-]?0?[0-9]{5}[[:space:]-]?1?[A-C]?[O0-9]?[A-C])([-]?(([0-9]{3})|(I(SS)?[0-9]{1,2})))?',*/
@@ -65,8 +70,8 @@
 			/* Tollgrade TLGD-DMUPLUS */
 			'(TLGD-?[[:alnum:]]{3,7}([^[:alnum:]]?([A-Z]{3,6}|I[0-9][A-Z]?))?(-[ML])?)([^[:alnum:]]?(I|L|ISS)-?[0-9]{1,2})?',
 
-			/* Teltrend DST2496, SDS5486 */
-			'([DST]{3}[[:alnum:]]{4}(-?[[:alpha:]]{1,2})?)([^[:alnum:]]?(I[0-9]))?',
+			/* Teltrend DST2496, SDS5486, DNI5760LN */
+			'((DST|DNI|SDS)[[:alnum:]]{4}(-?[[:alpha:]]{1,2})?)([^[:alnum:]]?(I(SS)[0-9]))?',
 
 
 			/* Calix C7 100-00007 */
@@ -158,7 +163,8 @@
 		if (! $form_found) {
 			foreach ($formats[0] as $form) {
 				if (preg_match('/^'.$form.'/',$part)) {
-					$base_part = preg_replace('/^'.$form.$rev_kit.'?$/','$1',$part);
+					$base_part = preg_replace('/^'.$form.'$/','$1',$part);
+//					echo $part.' = '.$base_part.' = '.$form.'<BR>';
 					// if impacting a change, do not try to alter below
 					if ($base_part!==$part) {
 //						echo $part.' = '.$base_part.' = '.$form.'<BR>';

@@ -492,7 +492,7 @@
 	$x = 0;//line number index for tracking under normal circumstances, but also for favorites-only views
 	foreach ($rows as $ln => $line) {
 		$terms = preg_split('/[[:space:]]+/',$line);
-		$search_str = trim($terms[$search_index]);
+		$search_str = strtoupper(trim($terms[$search_index]));
 		if (! $search_str) { continue; }
 
 		$search_qty = 1;//default
@@ -634,15 +634,13 @@
 									<div class="descr-edit hidden">
 										<p>
 		        							<button type="button" class="close parts-edit"><span>&times;</span></button>
-											<div class="form-group">
-												<input type="text" value="'.$P['Part'].'" class="form-control" data-partid="'.$partid.'" data-field="part">
-											</div>
-											<div class="form-group">
-												<input type="text" value="'.$P['HECI'].'" class="form-control" data-partid="'.$partid.'" data-field="heci">
-											</div>
+											<input type="text" value="'.$P['Part'].'" class="form-control" data-partid="'.$partid.'" data-field="part" placeholder="Part Number">
 										</p>
 										<p>
-											<input type="text" name="descr[]" value="'.$P['description'].'" class="form-control" data-partid="'.$partid.'" data-field="description">
+											<input type="text" value="'.$P['HECI'].'" class="form-control" data-partid="'.$partid.'" data-field="heci" placeholder="HECI/CLEI">
+										</p>
+										<p>
+											<input type="text" name="descr[]" value="'.$P['description'].'" class="form-control" data-partid="'.$partid.'" data-field="description" placeholder="Description">
 										</p>
 										<p>
 											<div class="form-group">

@@ -69,7 +69,7 @@
 	$from_name = '';
 	$from = '';
 
-	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1);
+	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1);
 
 	// for every email...
 	foreach ($inbox_results as $n) {
@@ -216,7 +216,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 //					if (count($matches)==0) { continue; }
 
 					$num_matches = count($matches);
-					$matches_found += $num_matches;
+//					$matches_found += $num_matches;
 
 					$match_results = '';
 					$stk_qty = 0;
@@ -239,6 +239,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 						//$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')<BR>';
 						$match_results .= $part_str.' '.$heci_str.'<BR>';
 
+						$matches_found++;
 //						insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
 					}
 					if ($matches_found>0) {
