@@ -1,7 +1,7 @@
 <?php
 	if (! isset($test)) { $test = 0; }
 
-	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{0,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?)?';
+	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{0,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?[^[:alnum:]]?)?';
 //comparative standard rev format by concatenating universal rev vars below, combined here for reference only
 //	$revs =    '([^[:alnum:]]([0-9]{1,2}[:])?[[:alnum:]]{0,3}(S[-]?|RE[VL][-.]?|I[S]{2}?[-]?))';
 	$formats = array(
@@ -19,9 +19,6 @@
 
 			/* Alcatel-Lucent VLNC5,WSRG19B,WSRH1B*/
 			'([VW][A-Z]{3}[0-9]{1,2}[A-Z]?)'.$aluRevs,
-
-			/* Alcatel-Lucent AKM85,LNW555*/
-			'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent 11075L-128*/
 			'([0-9]{5}[A-Z][[:space:]-]?[0-9]{3})(([^[:alnum:]]?R(EV)?)?[^[:alnum:]]?[0-9]{1,2})?',
@@ -44,7 +41,12 @@
 			'(F[A-Z][-]?0?[0-9]{5})([[:space:]-]?1?[A-C]?[O0-9]?[A-C])([-]?(([0-9]{3})|(I(SS)?[0-9]{1,2})))?',
 
 			/* Alcatel-Lucent 410AA,494LA, NOT 303RU39A*/
-			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{3}[A-RT-Z]?)'.$aluRevs,
+			'(4([0-9]{2})[A-Z]{1,2})'.$aluRevs,
+
+			/* Alcatel-Lucent AKM85,LNW555*/
+			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
+			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,LAA---,LEY---,LNW---,etc*/
+			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{2,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Ericsson ROF-131-708 */
 			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
@@ -78,7 +80,7 @@
 			'(100-[0-9]{5})([^[:alnum:]]?REV[^[:alnum:]][0-9]{2})?',
 
 			/* Nortel NTLX72AA,NT0H40BC,NTRX51GT,NTR651GT01,NTCA04PQ 04,NT2X90AD-REV. 08,NT0H05ABE5 023,NTHW77AA01, NT4T05AE SERIES:S-01*/
-			'(NT[[:alnum:]]{2}[0-9]{2}[A-Z]{2}(E[0-9])?)(([[:space:]]*[^[:alnum:]]?(S(ERIES[:]?(S)?)?|(R((EL)|(EV))[^[:alnum:]]?)|(I[S]{0,2}[0-9]{1,2}))?)?[^[:alnum:]]?[0-9]{1,3})?',
+			'(NT[[:alnum:]]{2}[0-9]{2}[A-Z]{2}(E[0-9])?)(([[:space:]]*[^[:alnum:]]?(S(ERIES[:]?(S)?)?|(R((EL)|(EV))[^[:alnum:]]?)|(I[S]{0,2}[0-9]{1,2}))?)?[^[:alnum:]]?[[:alnum:]]{1,3})?',
 
 			/* Alcatel-Lucent 108003005.006*/
 			'([1-46-7]0[0-9]{7})([.\/-][0-9]{3})?',

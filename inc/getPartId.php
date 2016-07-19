@@ -1,5 +1,5 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_part.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 
 	function getPartId($part,$heci='',$manfid=0,$return_all_results=false) {
 		$partid = 0;

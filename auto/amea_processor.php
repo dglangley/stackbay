@@ -209,7 +209,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 
 				foreach ($search_results as $base => $qty) {
 					$roots = explode('|',$base);
-					$part = $roots[0];
+					$part = format_part($roots[0]);
 					$heci = $roots[1];
 
 					$matches = getPartId($part,$heci,0,true);//return ALL results, not just first found
@@ -244,8 +244,6 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					}
 					if ($matches_found>0) {
 						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.')';
-					} else {
-						$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.'), please check your system';
 					}
 
 					foreach ($pipe_ids as $pipe_id) {
@@ -259,6 +257,10 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 
 				// pattern match successfully found for this email so don't try next pattern
 				if ($matches_found>0) { break; }
+			}
+			// after trying all patterns, still couldn't find a match so send message
+			if ($matches_found==0) {
+				$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.'), please check your system';
 			}
 		}
 
