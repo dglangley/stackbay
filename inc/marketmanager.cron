@@ -14,6 +14,10 @@
 # , and - can be used as in 0,15,30,45 or 1-5
 
 ROOT_DIR=/var/www/html
+RDS_PORT=3306
+RDS_HOSTNAME=aa1qkk16kza9ick.cbjttt30gz5p.us-west-2.rds.amazonaws.com
+RDS_USERNAME=ventel
+RDS_PASSWORD=joder1234
 
 # run inventory processor frequently all day to catch any uploads on S3
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
@@ -24,6 +28,8 @@ ROOT_DIR=/var/www/html
 #35 7 * * 1-5 curl https://www.lunacera.com/db/auto/hotlist.php > ~/hotlist_log
 # alu-scanner once a day
 0 6 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
+# favorites once a day, immediately after alu api
+5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # sunday ghosting script
 0 20 * * 0 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/ghost_inventories.php > ~/ghost_log
 # run amea all day

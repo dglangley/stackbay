@@ -9,7 +9,7 @@
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
-	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('could not connect to host'.chr(10)); }
+	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('Host is not set in env globals, could not connect'.chr(10)); }
 
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],

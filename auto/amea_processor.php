@@ -130,7 +130,10 @@
 
 			//reset
 			$metaid = 0;
-			$matches_found = 0;
+			// array for holding all market data to be inserted
+			$inserts = array();
+			$num_inserts = 0;//running count of array above
+			$failed_strings = "";//concatenated list of strings failing to produce matches, for sending to users as recap of results
 
 			// find patterns already stored for this contact
 			$query = "SELECT * FROM amea WHERE contactid = '".$contactid."'; ";
@@ -139,8 +142,6 @@
 			if (mysqli_num_rows($result)==0) {
 				// no patterns detected so send the email to a user as if it was hand-written
 				$results_body = 'Please see email below from '.$from_name.' at '.getCompany($companyid).'<BR>';
-			} else {
-//				$metaid = logSearchMeta($companyid,false,'','email');
 			}
 
 			// use each pattern found in the db for this contact, and attempt to match against each of the $results rows from above
@@ -211,12 +212,13 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					$roots = explode('|',$base);
 					$part = format_part($roots[0]);
 					$heci = $roots[1];
+					$partkey = $part;
+					if ($heci) { $partkey .= ' '.substr($heci,0,7); }
 
 					$matches = getPartId($part,$heci,0,true);//return ALL results, not just first found
 //					if (count($matches)==0) { continue; }
 
 					$num_matches = count($matches);
-//					$matches_found += $num_matches;
 
 					$match_results = '';
 					$stk_qty = 0;
@@ -236,14 +238,19 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 								$pipe_ids[$pipe_id] = $pipe_id;
 							}
 						}
-						//$results_body .= $part_str.' '.$heci_str.' (id '.$partid.')<BR>';
 						$match_results .= $part_str.' '.$heci_str.'<BR>';
 
-						$matches_found++;
-//						insertMarket($partid, $qty, false, false, false, $metaid, 'demand', 0, $ln);
+						// add first occurrence of this $partkey (part and 7-digit heci, if present) to $inserts for adding to db
+						if (! isset($inserts[$partkey])) {
+							$inserts[$partkey] = array('partid'=>$partid,'qty'=>$qty,'ln'=>$ln);
+						}
 					}
-					if ($matches_found>0) {
-						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.')';
+					$num_inserts += count($inserts);
+					if ($num_inserts>0) {
+						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$partkey.'</span> (qty '.$qty.')';
+					} else if (! strstr($failed_strings,$partkey)) {
+						if ($failed_strings) { $failed_strings .= ', '; }
+						$failed_strings .= $partkey;
 					}
 
 					foreach ($pipe_ids as $pipe_id) {
@@ -256,11 +263,20 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 				}
 
 				// pattern match successfully found for this email so don't try next pattern
-				if ($matches_found>0) { break; }
+				if ($num_inserts>0) { break; }
+
+				// no data inserted above so use our failed strings to add to email message to user
+				if ($failed_strings) {
+					$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$failed_strings.
+						'</span> (qty '.$qty.'), please check your system';
+				}
 			}
-			// after trying all patterns, still couldn't find a match so send message
-			if ($matches_found==0) {
-				$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$part.' '.$heci.'</span> (qty '.$qty.'), please check your system';
+
+			if ($num_inserts>0) {
+				$metaid = logSearchMeta($companyid,false,'','email');
+				foreach ($inserts as $r) {
+					insertMarket($r['partid'], $r['qty'], false, false, false, $metaid, 'demand', 0, $r['ln']);
+				}
 			}
 		}
 
