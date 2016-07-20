@@ -253,23 +253,24 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 						$failed_strings .= $partkey;
 					}
 
+					// check stock against old db
 					foreach ($pipe_ids as $pipe_id) {
 						$stk_qty += getPipeQty($pipe_id);
 					}
-					if ($stk_qty>0) {
-						$results_body .= ' <strong>CHECK STOCK</strong>';
-					}
-					$results_body .= '...<BR>'.$match_results;
+					// if we have stock (or at least looks that way), add a note to user to check stock
+					if ($stk_qty>0) { $results_body .= ' <strong>CHECK STOCK</strong>'; }
+					// end the line with a line break and then add the matched results
+					if ($match_results) { $results_body .= '...<BR>'.$match_results; }
 				}
 
 				// pattern match successfully found for this email so don't try next pattern
 				if ($num_inserts>0) { break; }
+			}
 
-				// no data inserted above so use our failed strings to add to email message to user
-				if ($failed_strings) {
-					$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$failed_strings.
-						'</span> (qty '.$qty.'), please check your system';
-				}
+			// no data inserted above so use our failed strings to add to email message to user
+			if ($failed_strings) {
+				$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$failed_strings.
+					'</span> (qty '.$qty.'), please check your system';
 			}
 
 			if ($num_inserts>0) {
