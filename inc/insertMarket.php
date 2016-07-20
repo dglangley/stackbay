@@ -1,5 +1,6 @@
 <?php
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+
 	if (! isset($now)) { $now = date("Y-m-d H:i:s"); }
 	if (! isset($test)) { $test = 0; }
 	if (! isset($SUPER_ADMIN)) { $SUPER_ADMIN = false; }

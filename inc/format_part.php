@@ -1,19 +1,21 @@
 <?php
 	if (! isset($test)) { $test = 0; }
 
-	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{1,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?)?';
+	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{0,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?[^[:alnum:]]?)?';
 //comparative standard rev format by concatenating universal rev vars below, combined here for reference only
 //	$revs =    '([^[:alnum:]]([0-9]{1,2}[:])?[[:alnum:]]{0,3}(S[-]?|RE[VL][-.]?|I[S]{2}?[-]?))';
 	$formats = array(
 		/* use this for universal formats that can supercede a specific manfid */
 		0 => array(
 			/* Alcatel-Lucent 300-0609-943 REV. C,600976-713-001,644-0184-003 REV B I, 134-0106-900-ISS-1, 134-0106-900-REV-F*/
-			/*'((([0-9]{3}-?[0-9]{4})|([0-9]{6}-?[0-9]{3}))-?[0-9]{3})([^[:alnum:]]?((R(EV)?)|(ISS))?[^[:alnum:]]{0,2}[[:space:]A-Z]{1,3})?',*/
-			'(((((2(44|59|77|89))|(300)|(50[09])|(6(22|40|94|95)))-?[0-9]{4})|([0-9]{6}-?[0-9]{3}))-?[0-9]{3})([^[:alnum:]]?((R(EV)?)|(ISS))?[^[:alnum:]]{0,2}[[:space:]A-Z]{1,3})?',
+			/*'((([0-9]{3}-?[0-9]{4})|([0-9]{6}-?[0-9]{3}))-?[0-9]{3})([^[:alnum:]]?((R(EV)?)|(ISS))?[^[:alnum:]]{0,2}[[:space:]A-Z]{1,3}[0-9]?)?',*/
+			'(((((2(44|59|77|89))|(300)|(50[09])|(6(22|40|94|95)))-?[0-9]{4})|([0-9]{6}-?[0-9]{3}))-?[0-9]{3})([^[:alnum:]]?((R(EV)?)|(ISS))?[^[:alnum:]]{0,2}[[:space:]A-Z]{1,3}[0-9]?)?',
 
 			/* Alcatel-Lucent ES660C,TN329C,TN1286B*/
 			/*'([A-Z]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
-			'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
+			/*'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
+			/* read more about look-ahead negatives: http://stackoverflow.com/questions/406230/regular-expression-to-match-line-that-doesnt-contain-a-word */
+			'(((?!(FB|FD))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent VLNC5,WSRG19B,WSRH1B*/
 			'([VW][A-Z]{3}[0-9]{1,2}[A-Z]?)'.$aluRevs,
@@ -32,14 +34,19 @@
 
 			/* Microcodes, MC97780A1, MC97144A1D */
 			/* Alcatel-Lucent MC#@###@# - MC1D088A1; MC#@###@#@ - MC1D088A1B; MC#####@# - MC45019A2 */
-			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]I?[^[:alnum:]][0-9])?',
+			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]?I?[^[:alnum:]]?[0-9])?',
 
 			/* AG Comm / Alcatel-Lucent / GTD5: FB-27013-A / FB-27013-1A / FB-16271 (changed this to more loose PN-matching 4/20/15 */
 			/*'(F[A-Z][-]?0?[0-9]{5}[[:space:]-]?1?[A-C]?[O0-9]?[A-C])([-]?(([0-9]{3})|(I(SS)?[0-9]{1,2})))?',*/
 			'(F[A-Z][-]?0?[0-9]{5})([[:space:]-]?1?[A-C]?[O0-9]?[A-C])([-]?(([0-9]{3})|(I(SS)?[0-9]{1,2})))?',
 
 			/* Alcatel-Lucent 410AA,494LA, NOT 303RU39A*/
-			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{3}[A-RT-Z]?)'.$aluRevs,
+			'(4([0-9]{2})[A-Z]{1,2})'.$aluRevs,
+
+			/* Alcatel-Lucent AKM85,LNW555*/
+			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
+			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,LAA---,LEY---,LNW---,etc*/
+			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{2,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Ericsson ROF-131-708 */
 			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
@@ -65,15 +72,15 @@
 			/* Tollgrade TLGD-DMUPLUS */
 			'(TLGD-?[[:alnum:]]{3,7}([^[:alnum:]]?([A-Z]{3,6}|I[0-9][A-Z]?))?(-[ML])?)([^[:alnum:]]?(I|L|ISS)-?[0-9]{1,2})?',
 
-			/* Teltrend DST2496, SDS5486 */
-			'([DST]{3}[[:alnum:]]{4}(-?[[:alpha:]]{1,2})?)([^[:alnum:]]?(I[0-9]))?',
+			/* Teltrend DST2496, SDS5486, DNI5760LN */
+			'((DST|DNI|SDS)[[:alnum:]]{4}(-?[[:alpha:]]{1,2})?)([^[:alnum:]]?(I(SS)[0-9]))?',
 
 
 			/* Calix C7 100-00007 */
 			'(100-[0-9]{5})([^[:alnum:]]?REV[^[:alnum:]][0-9]{2})?',
 
 			/* Nortel NTLX72AA,NT0H40BC,NTRX51GT,NTR651GT01,NTCA04PQ 04,NT2X90AD-REV. 08,NT0H05ABE5 023,NTHW77AA01, NT4T05AE SERIES:S-01*/
-			'(NT[[:alnum:]]{2}[0-9]{2}[A-Z]{2}(E[0-9])?)(([[:space:]]*[^[:alnum:]]?(S(ERIES[:]?(S)?)?|(R((EL)|(EV))[^[:alnum:]]?)|(I[S]{0,2}[0-9]{1,2}))?)?[^[:alnum:]]?[0-9]{1,3})?',
+			'(NT[[:alnum:]]{2}[0-9]{2}[A-Z]{2}(E[0-9])?)(([[:space:]]*[^[:alnum:]]?(S(ERIES[:]?(S)?)?|(R((EL)|(EV))[^[:alnum:]]?)|(I[S]{0,2}[0-9]{1,2}))?)?[^[:alnum:]]?[[:alnum:]]{1,3})?',
 
 			/* Alcatel-Lucent 108003005.006*/
 			'([1-46-7]0[0-9]{7})([.\/-][0-9]{3})?',
@@ -158,7 +165,8 @@
 		if (! $form_found) {
 			foreach ($formats[0] as $form) {
 				if (preg_match('/^'.$form.'/',$part)) {
-					$base_part = preg_replace('/^'.$form.$rev_kit.'?$/','$1',$part);
+					$base_part = preg_replace('/^'.$form.'$/','$1',$part);
+//					echo $part.' = '.$base_part.' = '.$form.'<BR>';
 					// if impacting a change, do not try to alter below
 					if ($base_part!==$part) {
 //						echo $part.' = '.$base_part.' = '.$form.'<BR>';

@@ -26,7 +26,7 @@ setGoogleAccessToken(5);
 
 
 //Pull the values of the parts we want to search for in the last day
-$query = "SELECT favorites.`userid`,`partid`, p.`id`, `heci` "; 
+$query = "SELECT favorites.`userid`,`partid`, p.`id`, p.`part`, `heci` "; 
 $query .= "FROM  `favorites`, `parts` p ";
 $query .= "Where `partid` = p.`id` ";
 $query .= "Order By ID DESC; ";
@@ -84,6 +84,7 @@ foreach ($results as $k => $row) {
     }
     //Pull the heci and/or the Part ID
     $partid = $row['partid'];
+    $part = $row['part'];
     $heci = $row['heci'];
     
     
@@ -112,18 +113,20 @@ foreach ($results as $k => $row) {
     //If it does not have a Heci, find the results which it is similar to
     else {
         //Find the part names of all the related parts without part information 
-        $partName = getPart($partid);
-        $output['pname'] = $partName;
+//        $part = getPart($partid);
+        $output['pname'] = $part;
 
         
         //Find if there the parts related as a list of partids
-        $related = hecidb($partName);
+        $related = hecidb($part);
         foreach($related as $partID => $days_results){
             array_push($partids, $partID);
         }
     }
     
+	// no new result is a flag for today's results
 	$no_new_result = false;
+	// no old result is a flag for previous day's results
 	$no_old_result = false;
 
     //Take in the list of partids from the initial search
@@ -138,32 +141,18 @@ foreach ($results as $k => $row) {
     foreach($resultSet['results'] as $date => $days_results){
         
         //We don't care about any results more than 3 days ago (monday backwards to friday)
-        if ($i > 3){
-            $no_new_result = false;
-            $no_old_result = false;
-            break;
-        }
-        $i += 1;
-
-//        echo "TODAY'S DATE: ".$date."<br>";
-//        echo ("<pre>");//
-//        print_r($days_results);
-//        echo ("</pre>");
-//        echo ("^this is a day's results.");
+        if ($i > 1){ break; }
 
         if (empty($days_results)){
-            if ($i == 1){
+            if ($i == 0){//today
                 $no_new_result = true;
-//                echo("There is no new result");
-                }
-            else{
+            } else {
                 $no_old_result = true;
-//                echo("There is no old result");
-                }
+            }
         }
 
-        //If both are null, exit out of the loop
-        if($no_new_result and $no_old_result){continue;}  
+        //If both flags are already tripped, exit out of the loop
+        if($no_new_result and $no_old_result){ break; }  
         
         //Each day, go through the individual returned values
         foreach($days_results as &$item){
@@ -184,7 +173,7 @@ foreach ($results as $k => $row) {
                     'chg' => '',
                     'price' => '',
                     'source' => ''
-                    );
+                );
             }
 
 
@@ -199,16 +188,15 @@ foreach ($results as $k => $row) {
             }
             
             //If there is a value, then save the company values by increasing the quantity
-            if($i == 1){
+            if($i == 0){
                 $output['availability'][$company]['new'] += $item['qty'];
-                $price = $item['price'];    
-            }
-            else{
+            } else {
                 $output['availability'][$company]['old'] += $item['qty'];
             }
             $output['availability'][$company]['price'] = $item['price'];
             $output['availability'][$company]['source'] = $item['sources'];
         }
+        $i++;
     }
 
     
@@ -276,7 +264,7 @@ foreach ($results as $k => $row) {
         $email_str .= '      </div>';
         
         //Echo the price of the item.
-        $email_str .= '      <div style="display:inline-block; position:relative; padding-bottom:1px; width:10%; position:absolute; right:0;">'.$ava['price'].'</div>';
+        $email_str .= '      <div style="display:inline-block; position:relative; padding-bottom:1px; width:100px; position:absolute; right:0;">'.$ava['price'].'</div>';
         $email_str .= '    </div>';
         
         
@@ -290,7 +278,7 @@ $email_str .= "</table>";
 //$email_str .= "</body>";
 //$email_str .= "</html>";
 
-	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, y"),array('david@ven-tel.com','sam@ven-tel.com'),'aaron@ven-tel.com');
+	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('david@ven-tel.com','sam@ven-tel.com','chris@ven-tel.com'),'aaron@ven-tel.com');
 	if ($send_success) {
 		echo json_encode(array('message'=>'Success'));
 	} else {

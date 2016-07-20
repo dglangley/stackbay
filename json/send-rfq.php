@@ -81,6 +81,7 @@
 
 //		$mail->addBCC($U['email']);
 		$mail->addBCC('david@ven-tel.com');
+		$mail->addBCC('sam@ven-tel.com');
 
 		$send_err = '';
 		foreach ($companyids as $cid) {
