@@ -71,7 +71,7 @@
 			}
 		}
 
-		if (! $return_all_results) { $dbresult = array(); } else { $dbresult = ''; }
+		if ($return_all_results) { $dbresult = array(); } else { $dbresult = ''; }
 		if ($num_results>0) {
 			while ($r = mysqli_fetch_assoc($result)) {
 				if (! $return_all_results) {

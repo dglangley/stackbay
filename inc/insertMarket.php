@@ -17,6 +17,7 @@
 			$itemid = $r['id'];
 		}
 
+		// deliver results to table associated with the type of record this: supply (availability) or demand (request)
 		if ($type=='demand') {
 			$q1 = 'request_qty';
 			$p1 = 'request_price';

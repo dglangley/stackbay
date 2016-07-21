@@ -1,26 +1,13 @@
 <?php
-
-
-/*
-	$list_name = '*';
-	if (isset($argv[1])) { $list_name = $argv[1]; }
-*/
-
+	$root_dir = '';
+	if (isset($_SERVER["ROOT_DIR"])) { $root_dir = $_SERVER["ROOT_DIR"]; }
 	include_once $root_dir.'/inc/dbconnect.php';
 	include_once $root_dir.'/inc/format_date.php';
-	include_once $root_dir.'/inc/format_date.php';
-	include_once $root_dir."/inc/call_remote.php";
+	include_once $root_dir.'/inc/call_remote.php';
 	include_once $root_dir.'/inc/getPartId.php';
 	include_once $root_dir.'/inc/insertMarket.php';
 	include_once $root_dir.'/inc/getCompany.php';
 	include_once $root_dir.'/inc/logSearchMeta.php';
-
-//Log the search into the search meta table	
-	$companyid = getCompany('North Georgia Telecom','name','id');
-	$metaid = logSearchMeta($companyID,false,'','ngt');
-	
-	
-
 
 	// use today's date as the initial search date for most recent inventory additions
 	$search_date = date("m-d-Y");
@@ -29,28 +16,29 @@
 	
 	//If there no results, look back through the older dates
 	for ($i=0; $i<7; $i++) {
-		echo 'Capturing NGT '.$search_date.'...<BR>'.chr(10);
-
 		// set search date back, if after the initial date
 		if ($i>0) {
 			$search_date = format_date($today,'m-d-Y',array('d'=>-$i));
 		}
-		echo "$url<br>$date<br>";
-		//Set the html to the result of the htmlDOM document.
+		echo 'Capturing NGT '.$search_date.' at '.$url.'...<BR>'.chr(10);
 		
+		//Set the html to the result of the htmlDOM document.
 		//If we want to pull the full day's database, we can pass in junk data
 		$ngt_html = call_remote($url,"?startDate=$search_date",$cookiejar,$cookiejarfile,'GET');
 
-		
-	// if there's content on the page and it's content that doesn't say "No results found", we have all we need
-	if ($ngt_html and ! strstr($ngt_html,'No results found.')) { break; }
-		
+		// if there's content on the page and it's content that doesn't say "No results found", we have all we need
+		if ($ngt_html and ! strstr($ngt_html,'No results found.')) { break; }
 	}
 	if ($i>0) { $search_time = '08:00:00'; }//default to 8am the date of search if prior to today
 
 	if ($i>=7) { die("No results found."); }
 
 	echo 'Initializing at '.$now.', searching date '.$search_date.'<BR>'.chr(10);
+
+	//Log the search into the search meta table, and do so only from here to be sure we didn't die above
+	$companyid = getCompany('North Georgia Telecom','name','id');
+	echo 'Found companyid '.$companyid.' in db for NGT<BR>';
+	$metaid = logSearchMeta($companyid,false,'','ngt');
 
 //	echo $ngt_html;
 	libxml_use_internal_errors(true); //prevent errors from displaying
@@ -73,11 +61,13 @@
 		$qty = trim($cols->item(6)->nodeValue);
 		$descr = trim($cols->item(1)->nodeValue.' '.$cols->item(4)->nodeValue);
 		$descr = str_replace("'","",str_replace('"','',$descr));
-		
 
 
 		$partid = getPartId($part,$heci);
-		insertMarket($partid,$qty,'',false,false,$metaid,'availability');
+		// for now, we don't need to be adding parts into our db that's in NGT's system, just skip 'em
+		if (! $partid) { continue; }
+
+		insertMarket($partid,$qty,false,false,false,$metaid,'availability');
 	}
 	echo ('success!')
 ?>
