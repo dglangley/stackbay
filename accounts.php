@@ -36,7 +36,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
-	<form class="form-inline" method="get" action="/accounts_table.php">
+	<form class="form-inline" method="get" action="/accounts.php">
 
     <table class="table table-header">
 		<tr>
