@@ -1,31 +1,42 @@
 <?php
-	include_once 'inc/dbconnect.php';
-	include_once 'inc/format_date.php';
-	include_once 'inc/format_price.php';
-	include_once 'inc/getCompany.php';
-	include_once 'inc/getPart.php';
-
+	$root_dir = getenv('Home');
+	include_once $rootdir.'inc/dbconnect.php';
+	include_once $rootdir.'inc/format_date.php';
+	include_once $rootdir.'inc/format_price.php';
+	include_once $rootdir.'inc/getCompany.php';
+	include_once $rootdir.'inc/getPart.php';
+	include_once $rootdir.'inc/pipe.php';
+	
+	//Company Id is grabbed from the search field at the top, but only if one has been passed in
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = $_REQUEST['companyid']; }
+
+	//Report type is set to summary as a default. This is where the button functionality comes in to play
 	$report_type = 'summary';
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
-
+	
+	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
 ?>
+
 <!DOCTYPE html>
 <html>
+<!-- Declaration of the standard head with Accounts home set as title -->
 <head>
 	<title>VMM Accounts Home</title>
 	<?php
-		include_once 'inc/scripts.php';
+		//Standard headers included in the function
+		include_once $rootdir.'inc/scripts.php';
 	?>
 </head>
+
 <body class="sub-nav accounts-body">
 
 	<?php include 'inc/navbar.php'; ?>
 
-	<form class="form-inline" method="get" action="/accounts.php">
+	<!-- Wraps the entire page into a form for the sake of php trickery -->
+	<form class="form-inline" method="get" action="/accounts_table.php">
 
     <table class="table table-header">
 		<tr>
@@ -38,19 +49,22 @@
 				<div class="pull-right form-group">
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
-<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
+<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.
+($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
 					</select>
 					<input class="btn btn-primary btn-sm" type="submit" value="Go">
 				</div>
 			</td>
 		</tr>
 	</table>
-
-
+	
+	
     <div id="pad-wrapper">
 
             <!-- orders table -->
             <div class="table-wrapper">
+
+<!-- If there is a company id, output the text of that company id to the top of the screen -->
 <?php if ($companyid) { ?>
                 <div class="row head text-center">
                     <div class="col-md-12">
@@ -59,6 +73,7 @@
                 </div>
 <?php } ?>
 
+			<!-- If the summary button is pressed, inform the page and depress the button -->
                 <div class="row filter-block">
                     <div class="col-md-6">
                         <div class="btn-group">
@@ -79,6 +94,7 @@
 
 <?php
 	// format col widths based on content (company column, items detail, etc)
+	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($companyid) {
 		if ($report_type=='summary') {
 			$widths = array(3,3,2,2,2);
@@ -94,7 +110,7 @@
 	}
 	$c = 0;
 ?>
-
+	<!-- Declare the class/rows dynamically by the type of information requested (could be transitioned to jQuery) -->
                 <div class="row">
                     <table class="table table-hover table-striped table-condensed">
                         <thead>
@@ -137,16 +153,37 @@
                             </tr>
                         </thead>
                         <tbody>
+<!--================================================================================-->
+<!--========================   Start outputting the table   ========================-->
+<!--================================================================================-->
 <?php
+	//Establish a blank array for receiving the results from the table
 	$results = array();
-	$query = "SELECT * FROM sales_orders ";
-	if ($companyid) { $query .= "WHERE companyid = '".$companyid."' "; }
-	$query .= "ORDER BY datetime DESC, id DESC; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
+	
+	//Write the query for the gathering of Pipe data
+	$query = "SELECT ";
+    $query .= "s.so_date 'datetime', i.id 'partid', c.`id` 'companyid', c.name 'company_name', q.company_id, ";
+    $query .= "q.quantity 'qty', i.clei, q.inventory_id, i.part_number, q.quote_id 'id', q.price price ";
+    $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
+    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id ";
+   	if ($companyid) { $query .= "AND q.company_id = '".$companyid."' "; }
+    $query .= "Order By s.so_date DESC;";
+	
+##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
+	//$query = "SELECT * FROM sales_orders ";
+	//if ($companyid) { $query .= "WHERE companyid = '".$companyid."' "; }
+	//$query .= "ORDER BY datetime DESC, id DESC; ";
+#####
+
+//Search for the results. Leave the second parameter null if the pipe is not being used
+
+	$result = qdb($query,'PIPE');
+	foreach ($result as $r){
+		//Set the amount to zero for the number of items and the total price
 		$amt = 0;
 		$num_items = 0;
-
+		
+		//Set the value of the company to the individual row if there is no company ID preset
 		$company_col = '';
 		if (! $companyid) {
 			$company_col = '
@@ -154,28 +191,23 @@
                                     <a href="#">'.getCompany($r['companyid']).'</a>
                                 </td>
 			';
-		}
-
-		$query2 = "SELECT qty, price, partid FROM sales_items WHERE sales_orderid = '".$r['id']."'; ";
-		$result2 = qdb($query2);
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$this_amt = $r2['qty']*$r2['price'];
+			$this_amt = $r['qty']*$r['price'];
 			$amt += $this_amt;
-			$num_items += $r2['qty'];
+			$num_items += $r['qty'];
 
 			$qty_col = '
                                 <td>
-                                    '.$r2['qty'].'
+                                    '.$r['qty'].'
                                 </td>
 			';
 			$price_col = '
                                 <td class="text-right">
-                                    '.format_price($r2['price']).'
+                                    '.format_price($r['price']).'
                                 </td>
 			';
 
 			if ($report_type=='detail') {
-				$descr = getPart($r2['partid'],'part').' &nbsp; '.getPart($r2['partid'],'heci');
+				$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
 				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			}
 		}
