@@ -69,7 +69,7 @@
 	$from_name = '';
 	$from = '';
 
-	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1);
+	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1,'DLC'=>1,'REPEATER'=>1);
 
 	// for every email...
 	foreach ($inbox_results as $n) {
@@ -222,8 +222,8 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 
 					$match_results = '';
 					$stk_qty = 0;
+					$pipe_ids = array();
 					foreach ($matches as $partid) {
-						$pipe_ids = array();
 						$part_str = getPart($partid,'part');
 						$heci_str = getPart($partid,'heci');
 
@@ -270,7 +270,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			// no data inserted above so use our failed strings to add to email message to user
 			if ($failed_strings) {
 				$results_body .= 'I could not find <span style="color:#b94a48; font-weight:bold">'.$failed_strings.
-					'</span> (qty '.$qty.'), please check your system';
+					'</span> (qty '.$qty.'), please check your system...<BR>';
 			}
 
 			if ($num_inserts>0) {
