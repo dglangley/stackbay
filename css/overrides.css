@@ -439,7 +439,7 @@ input[type="text"].inline {
 	border:1px solid #ccc;
 	overflow-y:scroll;
 	box-shadow: 2px 1px 2px #888888;
-	z-index:2001;
+	z-index:999;
 }
 .business-icon {
 	float:left;

@@ -69,7 +69,7 @@
 	$from_name = '';
 	$from = '';
 
-	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1,'DLC'=>1,'REPEATER'=>1);
+	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1,'DLC'=>1,'REPEATER'=>1,'LABEL'=>1);
 
 	// for every email...
 	foreach ($inbox_results as $n) {

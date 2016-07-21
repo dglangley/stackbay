@@ -84,7 +84,14 @@
 //				echo 'bb:'.$part.':'.$heci.':'.$partid.' '.$company.'<BR>';
 //				continue;
 				if (! $partid) {
-					$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+					// try once more for part if there are multiple words (ie, "1425105L2 TOTAL REAC" by CO Systems)
+					$words = explode(' ',$part);
+					if (count($words)>1) {
+						$partid = getPartId($words[0],$heci,goManf($manf));
+					}
+					if (! $partid) {
+						$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+					}
 				}
 //				echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);
 
