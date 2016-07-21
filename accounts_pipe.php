@@ -49,7 +49,8 @@
 				<div class="pull-right form-group">
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
-<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
+<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.
+($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
 					</select>
 					<input class="btn btn-primary btn-sm" type="submit" value="Go">
 				</div>
