@@ -21,6 +21,7 @@
 		$F = $GLOBALS['et_cols'];
 		$cid = $GLOBALS['et_cid'];
 
+		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
 
 		$newDom = new domDocument;
@@ -62,7 +63,15 @@
 
 			//must return a variable so this function doesn't happen asynchronously
 			if ($return_type=='db') {
-				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
+//				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
+				$inserts[] = array('partid'=>$partid,'qty'=>$qty);
+			}
+		}
+
+		if ($return_type=='db' AND count($inserts)>0) {
+			$metaid = logSearchMeta($cid,false,'','et');
+			foreach ($inserts as $r) {
+				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
 			}
 		}
 

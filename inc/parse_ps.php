@@ -8,6 +8,7 @@
 	function parse_ps($res,$return_type='db') {
 		if (! $res) { return false; }
 
+		$inserts = array();//gather all records to be inserted into db
 		$resArray = array();
 
 		$newDom = new domDocument;
@@ -72,7 +73,15 @@
 
 			//must return a variable so this function doesn't happen asynchronously
 			if ($return_type=='db') {
-				$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'PS');
+//				$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'PS');
+				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid);
+			}
+		}
+
+		if ($return_type=='db') {
+			foreach ($inserts as $r) {
+				$metaid = logSearchMeta($r['companyid'],false,'','ps');
+				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
 			}
 		}
 

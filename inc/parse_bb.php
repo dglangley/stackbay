@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
 	// indeces of columns found in results
@@ -21,6 +22,7 @@
 		$F = $GLOBALS['F'];
 
 		$resArray = array();
+		$inserts = array();//all the records to be added
 
 		$newDom = new domDocument;
 		$newDom->loadHTML($res);
@@ -97,12 +99,20 @@
 
 				//must return a variable so this function doesn't happen asynchronously
 				if ($return_type=='db') {
-					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'BB');
+//					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'BB');
+					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid);
 				}
 			}
 
 //commented this 2-25-16 because in multiple-search submissions, we DO want more than just the first table
 //			break;//there are multiple tables of same class, just break after the first one, which is the real one
+		}
+
+		if ($return_type=='db') {
+			foreach ($inserts as $r) {
+				$metaid = logSearchMeta($r['companyid'],false,'','bb');
+				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
+			}
 		}
 
 		if ($return_type=='db') { return true; }

@@ -18,6 +18,7 @@
 	function parse_te($res,$return_type='db') {
 		$F = $GLOBALS['te_cols'];
 
+		$inserts = array();//gather all records to be inserted into db
 		$resArray = array();
 
 		$sorter = 'company';
@@ -46,6 +47,7 @@
 				$manf = trim($cols->item(array_search('Manf',$F))->nodeValue);
 				$part = trim(strtoupper($cols->item(array_search('Part',$F))->nodeValue));
 				$part = trim(substr($part,0,strpos($part,'(')-1));
+				if ($qty>=9999 OR strstr($part,$qty)) { $qty = 1; }//fixes results such as in tel-explorer that gets Telmar's qty wrong
 				$company = trim($cols->item(array_search('Company',$F))->nodeValue);
 				$company = ucfirst(trim(substr($company,0,strpos($company,'(')-1)));
 				$companyid = getCompany($company,'name','id');
@@ -61,8 +63,16 @@
 //				echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);
 				//must return a variable so this function doesn't happen asynchronously
 				if ($return_type=='db') {
-					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'TE',false,$part);
+//					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'TE',false,$part);
+					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid);
 				}
+			}
+		}
+
+		if ($return_type=='db') {
+			foreach ($inserts as $r) {
+				$metaid = logSearchMeta($r['companyid'],false,'','te');
+				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
 			}
 		}
 
