@@ -6,6 +6,8 @@
 	if (! isset($SUPER_ADMIN)) { $SUPER_ADMIN = false; }
 
 	function insertMarket($partid,$list_qty,$list_price=false,$response_qty=false,$response_price=false,$metaid,$type='availability',$searchid=false,$ln=0) {
+		if (! $partid) { return false; }
+
 		if (! $list_qty) { $list_qty = 1; }
 		$itemid = 0;
 		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND metaid = '".$metaid."' AND searchid ";

@@ -131,6 +131,9 @@ foreach ($results as $k => $row) {
 
     //Take in the list of partids from the initial search
     $resultSet = getSupply($partids,1);    
+
+	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
+	sleep(1);
     
     //Reset the day counter
     $i = 0;

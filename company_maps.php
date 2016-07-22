@@ -2,9 +2,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 
-	$debug = false;
+	$debug = true;
 
-	$query = "SELECT inventory_company.id, TRIM(name) name FROM inventory_company, inventory_incoming_quote ";
+	$query = "SELECT inventory_company.id, TRIM(name) name FROM inventory_company, inventory_outgoing_quote ";
 	$query .= "WHERE company_id = inventory_company.id AND name NOT LIKE 'AAATEST%' ";
 	$query .= "GROUP BY inventory_company.id ORDER BY name ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe().' '.$query);
@@ -25,8 +25,16 @@
 		foreach ($arr as $name) {
 			if ($debug) { echo $name; }
 			$query = "SELECT * FROM companies WHERE name = '".res($name)."'; ";
-			$result = qdb($query);
-			if (mysqli_num_rows($result)==0) { if ($debug) { echo '<BR>'; } continue; }
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)==0) {
+
+				$query = "SELECT companyid id FROM company_aliases WHERE name = '".res($name)."'; ";
+				$result = qdb($query) OR die(qe().' '.$query);
+				if (mysqli_num_rows($result)==0) {
+					if ($debug) { echo '<BR>'; }
+					continue;
+				}
+			}
 
 			$r = mysqli_fetch_assoc($result);
 			$companyid = $r['id'];
@@ -40,7 +48,7 @@
 			// if no companyid from above, add company to db; all ensuing iterations will be aliases
 			if (! $companyid) {
 				$query = "INSERT INTO companies (name, notes) ";
-				$query .= "VALUES ('".res($name)."','Added from db 1.0, 7/21/16'); ";
+				$query .= "VALUES ('".res($name)."','Added from db 1.0, 7/22/16'); ";
 if ($debug) { echo $query.'<BR>'; }
 				$result = qdb($query) OR die(qe().' '.$query);
 				$companyid = qid();
@@ -57,10 +65,14 @@ if ($debug) { echo $query.'<BR>'; }
 			if (mysqli_num_rows($result)>0) { continue; }// alias already exists, even if not an import from old db
 
 			$query = "INSERT INTO company_aliases (name, companyid, notes) ";
-			$query .= "VALUES ('".$name."','".$companyid."','Added from db 1.0, 7/21/16'); ";
+			$query .= "VALUES ('".$name."','".$companyid."','Added from db 1.0, 7/22/16'); ";
 if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().' '.$query);
 		}
+
+		$query = "SELECT * FROM company_maps WHERE inventory_companyid = '".$id."' AND companyid = '".$companyid."'; ";
+		$result = qdb($query) OR die(qe().' '.$query);
+		if (mysqli_num_rows($result)>0) { continue; }
 
 		$query = "INSERT INTO company_maps (companyid, inventory_companyid) ";
 		$query .= "VALUES ('".$companyid."','".$id."'); ";
