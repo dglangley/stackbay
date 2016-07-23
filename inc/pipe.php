@@ -1,7 +1,7 @@
 <?php
- $root_dir = getenv("Home");
-	include_once 'inc/dbconnect.php';
-	include_once 'inc/format_price.php';
+// $root_dir = getenv("Home");
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 
 	$PIPE = mysqli_init();
 	//$PIPE = mysqli_connect('db.ven-tel.com', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');

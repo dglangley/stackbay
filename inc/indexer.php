@@ -7,6 +7,7 @@
 	include_once 'getSys.php';
 	include_once 'format_part.php';
 
+	$PRIMARIES = array();
 	function indexer($search='',$stype='') {
 		$results = array();
 
@@ -48,6 +49,8 @@
 				$result = qdb($query);
 			}
 
+			$PRIMARIES = array();//reset every part; makes sure secondary rank doesn't override primary if part# is in description, for example
+
 			while (list($f,$v) = each($r)) {
 				// don't use certain fields that don't have keywords, and don't use any capitalized
 				// words that we generated above because they're duplicates or irrelevant
@@ -83,7 +86,7 @@
 
 	$KEYWORDS = array();
 	function keyword($keyword,$fieldid,$table_name) {
-		global $KEYWORDS;
+		global $KEYWORDS,$PRIMARIES;
 
 		$keyword = trim(preg_replace('/[^[:alnum:]]*/','',$keyword));
 		if (! $keyword OR ! $fieldid OR ! $table_name) { return; }
@@ -104,10 +107,10 @@
 		$keywordid = 0;
 		if (! isset($KEYWORDS[$keyword])) {
 			$query = "SELECT * FROM keywords WHERE keyword = '".res($keyword)."'; ";
-			$result = qdb($query);// OR die(qe());
+			$result = qdb($query);// OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)==0) {
 				$query = "REPLACE keywords (keyword) VALUES ('".res($keyword)."'); ";
-				$result = qdb($query);// OR die(qe());
+				$result = qdb($query);// OR die(qe().' '.$query);
 				$keywordid = qid();
 			} else {
 				$r = mysqli_fetch_assoc($result);
@@ -118,13 +121,19 @@
 			$keywordid = $KEYWORDS[$keyword];
 		}
 
+		if ($rank=='primary') {
+			$PRIMARIES[$keywordid] = true;
+		} else if (isset($PRIMARIES[$keywordid])) {
+			return false;
+		}
+
 		$query = "REPLACE $table_name (keywordid, ";
 		if ($rank) { $query .= "rank, "; }
 		$query .= "$field_name) VALUES ('".res($keywordid)."',";
 		if ($rank) { $query .= "'".res($rank)."',"; }
 		$query .= "'".res($fieldid)."'); ";
 //		echo $keyword.' '.$query.' <BR> '.chr(10);
-		$result = qdb($query);// OR die(qe());
+		$result = qdb($query);// OR die(qe().' '.$query);
 		return (qid());
 	}
 

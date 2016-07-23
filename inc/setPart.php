@@ -48,8 +48,8 @@
 			if ($descr) { $query .= "IF(description = '".res($descr)."',0,1) "; }
 		}
 		$query .= "; ";
-		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { echo $query.'<BR>'; }
-		$result = qdb($query);
+		if ($GLOBALS['test']) { echo $query.'<BR>'; }
+		$result = qdb($query) OR die(qe().' '.$query);
 		if (mysqli_num_rows($result)>0) {
 			$r2 = mysqli_fetch_assoc($result);
 			// if the db result has no heci but this search does ($heci), use the data
@@ -88,11 +88,11 @@
 		if ($descr) { $query .= "'".res($descr)."'"; } else { $query .= "NULL"; }
 		if ($partid) { $query .= ",'".res($partid)."'"; }
 		$query .= "); ";
-		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { echo $query.'<BR>'; }
-		else { $result = qdb($query); }
+		if ($GLOBALS['test']) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR (qe().' '.$query); }
 		if (! $partid) { $partid = qid(); }
 
-		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { return ($partid); }
+		if ($GLOBALS['test']) { return ($partid); }
 
 //2/24/16
 		indexer($partid,'id');

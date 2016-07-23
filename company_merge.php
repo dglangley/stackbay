@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+exit;
 
 	$masterid = 211;
 	$slaveid = 1126;
@@ -28,7 +29,7 @@ echo $query.'<BR>';
 	$result = qdb($query) OR die(qe().' '.$query);
 	// no alias exists, so merge
 	if (mysqli_num_rows($result)==0) {
-		$query = "INSERT INTO company_aliases (name, companyid, notes) VALUES ('".res($slavename)."','".$masterid."','Added from db 1.0, 7/21/16');
+		$query = "INSERT INTO company_aliases (name, companyid, notes) VALUES ('".res($slavename)."','".$masterid."','Added from db 1.0, 7/21/16'); ";
 		$result = qdb($query) OR die(qe().' '.$query);
 echo $query.'<BR>';
 	}
