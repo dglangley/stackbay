@@ -35,9 +35,10 @@
 	// global
 	$err = array();
 	$errmsgs = array();
+	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-14));//look up rfq's within the past 2 weeks
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today;
+		global $err,$errmsgs,$today,$rfq_base_date;
 
 		if (! $partid_array) { $partid_array = array(); }
 
@@ -202,12 +203,14 @@
 
 		$rfqs = array();
 //		$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
-		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime LIKE '".$today."%' AND (".$partid_str."); ";
+		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
 		}
 
+		$prices = array();//track prices in query results below so we can post-humously price later-dated results
+		$rows = array();
 
 		$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
 		$query .= "FROM availability, search_meta, companies ";
@@ -218,7 +221,22 @@
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
+			if ($r['price']>0) {
+				$prices[$r['companyid']][$date] = $r['price'];
+			}
+			$rows[] = $r;
+		}
+
+		foreach ($rows as $r) {
+			$date = substr($r['datetime'],0,10);
 			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
+
+			if ((! $r['price'] OR $r['price']=='0.00') AND isset($prices[$r['companyid']])) {
+				krsort($prices[$r['companyid']]);//sort in reverse order to get most recent result first
+				foreach ($prices[$r['companyid']] as $p) {
+					$r['price'] = $p;
+				}
+			}
 			// create array of partids so we can sum qtys on a given date or avoid duplicating qtys
 			$r['partids'] = array($r['partid']);
 

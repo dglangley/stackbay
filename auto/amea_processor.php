@@ -69,7 +69,35 @@
 	$from_name = '';
 	$from = '';
 
-	$commons = array('CARD'=>1,'POWER'=>1,'FAN'=>1,'PIC'=>1,'SHELF'=>1,'UNIT'=>1,'HOUSING'=>1,'TEST'=>1,'PACK'=>1,'MODULE'=>1,'NID'=>1,'TIMING'=>1,'TAG'=>1,'CABLE'=>1,'DFMS'=>1,'DLC'=>1,'REPEATER'=>1,'LABEL'=>1);
+	$commons = array(
+		'CARD'=>1,
+		'POWER'=>1,
+		'FAN'=>1,
+		'PIC'=>1,
+		'SHELF'=>1,
+		'UNIT'=>1,
+		'HOUSING'=>1,
+		'TEST'=>1,
+		'PACK'=>1,
+		'MODULE'=>1,
+		'NID'=>1,
+		'TIMING'=>1,
+		'TAG'=>1,
+		'CABLE'=>1,
+		'DFMS'=>1,
+		'DLC'=>1,
+		'REPEATER'=>1,
+		'LABEL'=>1,
+		'DL'=>1,
+		'GTD-5'=>1,
+		'ASSY'=>1,
+		'RACK'=>1,
+		'SWITCH'=>1,
+		'TRANSCEIVER'=>1,
+		'CENTRAL'=>1,
+		'FUSE'=>1,
+		'DACS'=>1,
+	);
 
 	// for every email...
 	foreach ($inbox_results as $n) {
@@ -214,6 +242,14 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					$heci = $roots[1];
 					$partkey = $part;
 					if ($heci) { $partkey .= ' '.substr($heci,0,7); }
+
+					if (strlen($part)<2 AND ! $heci) {
+						if (! strstr($failed_strings,$partkey)) {
+							if ($failed_strings) { $failed_strings .= ', '; }
+							$failed_strings .= $partkey;
+						}
+						continue;
+					}
 
 					$matches = getPartId($part,$heci,0,true);//return ALL results, not just first found
 //					if (count($matches)==0) { continue; }
