@@ -47,12 +47,12 @@
     	echo(' | '.$part_string); 	
     }
 	
-	$record_end = '';
+	$record_end = $today;
 	if (isset($_REQUEST['END_DATE'])){
 		$record_end = format_date($_REQUEST['END_DATE'],'Y-m-d');
 	}
 	
-	$record_start = '';
+	$record_start = '2016-07-01';
 	if (isset($_REQUEST['START_DATE'])){
 		$record_start = format_date($_REQUEST['START_DATE'], 'Y-m-d');
 	}
@@ -138,8 +138,7 @@
 		<div class = "col-md-1 ">
 			and
 					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($record_end){echo $record_end;}else{echo $today;}?>" />
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $record_end;?>" />
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>

@@ -1,5 +1,6 @@
 <?php
 	include_once 'getPipeIds.php';
+	include_once 'getPartId.php';
 	
 	$record_start = '';
 	$record_end = '';
@@ -63,12 +64,14 @@
 			$unsorted[$r['datetime']][] = $r;
 		}
 		// sort local and piped data together in one results array, combining where necessary (to elim dups)
-		$results = sort_results($unsorted,'desc');
+		$consolidate = true;
+		if (! $search_str AND ! $partid_array) { $consolidate = false; }
+		$results = sort_results($unsorted,'desc',$consolidate);
 
 		return ($results);
 	}
 
-	function sort_results($unsorted,$sort_order='asc') {
+	function sort_results($unsorted,$sort_order='asc',$consolidate=true) {
 		if ($sort_order=='asc') { ksort($unsorted); }
 		else if ($sort_order=='desc') { krsort($unsorted); }
 
@@ -78,6 +81,7 @@
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
 				$key = $r['name'].'.'.$date;
+				if (! $consolidate) { $key .= '.'.$r['partid']; }
 
 				if (isset($uniques[$key])) {
 					if ($r['qty']>$results[$uniques[$key]]['qty']) {
@@ -103,26 +107,36 @@
 
 		$pipe_ids = getPipeIds($search);
 
+		$id_csv = '';
 		foreach ($pipe_ids as $r) {
-			$invid = $r['id'];
+			if ($id_csv) { $id_csv .= ','; }
+			$id_csv .= $r['id'];
+		}
 
-			if ($coldata=='demand') {
-				$unsorted = get_details($invid,'outgoing_quote',$unsorted);
-				$unsorted = get_details($invid,'outgoing_request',$unsorted);
-				$unsorted = get_details($invid,'userrequest',$unsorted);
-			} else if ($coldata=='sales') {
-				$unsorted = get_details($invid,'sales',$unsorted);
-			} else if ($coldata=='purchases') {
-				$unsorted = get_details($invid,'incoming_quote',$unsorted);
-			}
+		if ($coldata=='demand') {
+			$unsorted = get_details($id_csv,'outgoing_quote',$unsorted);
+			$unsorted = get_details($id_csv,'outgoing_request',$unsorted);
+			$unsorted = get_details($id_csv,'userrequest',$unsorted);
+		} else if ($coldata=='sales') {
+			$unsorted = get_details($id_csv,'sales',$unsorted);
+		} else if ($coldata=='purchases') {
+			$unsorted = get_details($id_csv,'incoming_quote',$unsorted);
 		}
 
 		return ($unsorted);
 	}
 
-	$SALE_QUOTES = array();
-	function get_details($invid,$table_name,$results) {
-		global $SALE_QUOTES, $record_start, $record_end;
+//	$SALE_QUOTES = array();
+	function get_details($id_csv,$table_name,$results) {
+//		global $SALE_QUOTES, $record_start, $record_end;
+		global $record_start, $record_end;
+
+		$db_results = array();
+
+		if (!$id_csv && !$record_start && !$record_end){
+			echo 'Valid search result or date range not entered';
+			return $db_results;
+		}
 
 		$orig_table = $table_name;
 
@@ -137,16 +151,18 @@
 			$add_field = ', quote_id ';
 		}
 		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
-			if ($record_start && $record_end){$and_where .= "AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+			if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
 		}
-		$db_results = array();
+/*
 		if ($orig_table=='outgoing_quote' AND isset($SALE_QUOTES[$invid])) {
 			$db_results = $SALE_QUOTES[$invid];
 		} else {
+*/
 			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$add_field;
 			$query .= "FROM inventory_".$table_name.", inventory_company ";
 			if ($table_name=='incoming_quote') { $query .= ", inventory_purchaseorder "; }
-			$query .= "WHERE inventory_id = '".$invid."' AND inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+			$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+			if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
 			$query .= $and_where;
 			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
 			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
@@ -155,10 +171,17 @@
 
 			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 			while ($r = mysqli_fetch_assoc($result)) {
+				$query2 = "SELECT part_number, clei FROM inventory_inventory WHERE id = '".$r['partid']."'; ";
+				$result2 = qdb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					$r['partid'] = getPartId($r2['part_number'],$r2['clei']);
+				}
+
 				$db_results[] = $r;
 			}
 			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
-		}
+//		}
 		
 		return (handle_results($db_results,$orig_table,$results));
 	}
