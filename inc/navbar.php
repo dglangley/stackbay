@@ -106,9 +106,10 @@
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
                     <i class="fa fa-signal"></i>
                     <span>Reports</span>
+                    <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="#"> Inventory Export</a></li>
+                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
                     <li><a href="#"> Profits &amp; Loss</a></li>
                     <li><a href="#"> Requests Report</a></li>
                     <li><a href="#"> Revenue Report</a></li>
