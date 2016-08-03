@@ -78,6 +78,8 @@
 		$query .= "ORDER BY LENGTH(keyword) DESC; ";//sort in desc length so we can work backwards to eliminate matching substrings later
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			if (strlen($r['keyword'])<2) { continue; }
+
 			// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
 			if (isset($searches[$r['keyword']])) { continue; }
 

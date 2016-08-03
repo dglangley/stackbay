@@ -4,12 +4,15 @@
 	function getPipeIds($search_str,$search_by='') {
 		global $PIPE_IDS,$avg_cost;
 
+		// search strings are passed in as space-separated due to our current db using aliases this way (8/2/16)
 		$searches = explode(' ',$search_str);
 
 		$pipe_ids = array();//all ids for the search string passed in
 
 		foreach ($searches as $search) {
+			// strip out non-alphanumeric chars, convert to uppercase and then trim it to be sure no spaces are wrapping it
 			$search = trim(strtoupper(preg_replace('/[^[:alnum:]]+/','',$search)));
+			// only strings over 2-chars in length
 			if (strlen($search)<=2) { continue; }
 
 			$search_by = strtolower($search_by);

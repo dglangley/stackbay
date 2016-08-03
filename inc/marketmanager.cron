@@ -19,19 +19,17 @@ RDS_HOSTNAME=aa1qkk16kza9ick.cbjttt30gz5p.us-west-2.rds.amazonaws.com
 RDS_USERNAME=ventel
 RDS_PASSWORD=joder1234
 
-#FAVORITES: 6:05am to about 6:30am/6:40am
-#ALU: 6am (runs in about 20 seconds)
-#NGT: 6:01am (runs in less than a minute)
+#ALU: 5:30am (runs in about 20 seconds)
+#NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
+#FAVORITES: 6:05am to about 7:00am
 
 # run inventory processor frequently all day to catch any uploads on S3
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
 0,10,20,30,40,50 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/processor.php > ~/processor_log
 # run ngt dated inventory search daily at various times
-1 6,8,10,12,17 * * * php -f /var/www/html/auto/ngt.php > ~/ngt_log
-# run hotlist scanner daily through the work week
-#35 7 * * 1-5 curl https://www.lunacera.com/db/auto/hotlist.php > ~/hotlist_log
+31 5,7,9,12,17 * * * php -f /var/www/html/auto/ngt.php > ~/ngt_log
 # alu-scanner once a day
-0 6 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
+30 5 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # sunday ghosting script

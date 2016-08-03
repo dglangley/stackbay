@@ -97,6 +97,8 @@
 		'CENTRAL'=>1,
 		'FUSE'=>1,
 		'DACS'=>1,
+		'CTF'=>1,
+		'REMOTE'=>1,
 	);
 
 	// for every email...

@@ -1,8 +1,8 @@
 <?php
- $root_dir = getenv('Home');
+// $root_dir = getenv('Home');
 
-	include_once $root_dir.'inc/getManf.php';
-	include_once $root_dir.'inc/getSys.php';
+	include_once $_SERVER["ROOT_DIR"].'inc/getManf.php';
+	include_once $_SERVER["ROOT_DIR"].'inc/getSys.php';
 
 	$PARTS = array();
 	function getPart($partid,$return_field='') {
