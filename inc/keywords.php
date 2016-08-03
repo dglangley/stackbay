@@ -120,6 +120,7 @@
 			$query .= "WHERE id = '".res($search)."' ";
 		} else {
 			$query .= ", parts_index, keywords ";
+			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
 			$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
 			$query .= "AND parts.id = parts_index.partid ";

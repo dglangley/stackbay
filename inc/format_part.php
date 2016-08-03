@@ -26,6 +26,9 @@
 			/* AFC / Tellabs 0470-0009-1B, 0120-0037-RU*/
 			'((0101|((0[1-8]|8[16])[0-9]0))-?[01][0-9]{3})(([^[:alnum:]]?R(EV)?)?[^[:alnum:]]{0,2}[0-9][A-Z]?[+]?)?',
 
+			/* Tellabs 825520, 82.5520 */
+			'(8[0-4][.]?[245][35][0-9]{2})(([^[:alnum:]]?R(EV)?)?[^[:alnum:]]?[A-Z])?',
+
 			/* Alcatel-Lucent  ^ED-#[#@]##-### */
 			'(ED-?[0-9][[:alnum:]][0-9]{2,3}-?[0-9]{2})([[:alnum:]]*)?',
 
@@ -46,7 +49,7 @@
 			/* Alcatel-Lucent AKM85,LNW555*/
 			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
 			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,LAA---,LEY---,LNW---,etc*/
-			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{2,3}[A-RT-Z]?)'.$aluRevs,
+			'((((B[BDN]|DA|IT|KF|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Ericsson ROF-131-708 */
 			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
@@ -81,6 +84,9 @@
 
 			/* Nortel NTLX72AA,NT0H40BC,NTRX51GT,NTR651GT01,NTCA04PQ 04,NT2X90AD-REV. 08,NT0H05ABE5 023,NTHW77AA01, NT4T05AE SERIES:S-01*/
 			'(NT[[:alnum:]]{2}[0-9]{2}[A-Z]{2}(E[0-9])?)(([[:space:]]*[^[:alnum:]]?(S(ERIES[:]?(S)?)?|(R((EL)|(EV))[^[:alnum:]]?)|(I[S]{0,2}[0-9]{1,2}))?)?[^[:alnum:]]?[[:alnum:]]{1,3})?',
+
+			/* Bay Networks P109372-32 *
+			'(P?-?[0-9]{6}-?(16|32|64))(R?(EV|V)?([0-9]|[A-Za-z]){1,2})?',
 
 			/* Alcatel-Lucent 108003005.006*/
 			'([1-46-7]0[0-9]{7})([.\/-][0-9]{3})?',
@@ -130,7 +136,7 @@
 	$formats[21] = $formats[19];//BAY-NETWORKS -> NORTEL
 
 	$rev_ext = '([0-9]{1,2}[:])?[[:alnum:]]{0,3}';
-	$rev_base = '(S[-]?|RE[VL][[:space:]-.]?|I[S]{2}?[[:space:]-]?)';
+	$rev_base = '(S[-]?|R(E[VL])?[[:space:]-.]?|I[S]{2}?[[:space:]-]?)';
 	$rev_kit = '('.$rev_base.$rev_ext.')';
 	$revs = '([^[:alnum:]]+'.$rev_kit.')*';
 	function format_part($part,$manfid=0) {

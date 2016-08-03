@@ -41,13 +41,17 @@
 			$arr = array('id'=>$r['companyid'],'text'=>$r['name']);
 
 			if (isset($list[$r['companyid']])) { continue; }//no duplicates
+			// to avoid further duplicates in alias looping
+			$list[$r['companyid']] = $r['name'];
 
-			// confirm main company data
+			// confirm main company data, withholding duplicating similar names ("Universal Wireless Solutions" and "Universal Wireless Solutions, Inc")
 			$query2 = "SELECT name FROM companies WHERE id = '".$r['companyid']."'; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)==0) { continue; }
 			$r2 = mysqli_fetch_assoc($result2);
-			$arr['text'] .= ' ('.$r2['name'].')';
+			if (! stristr($r2['name'],$r['name']) AND ! stristr($r['name'],$r2['name'])) {
+				$arr['text'] .= ' ('.$r2['name'].')';
+			}
 
 			if ($namelower===$qlower) { $firsts[$r['name'].'.'.$r['companyid']] = $arr; }
 			else if (substr($namelower,0,strlen($qlower))===$qlower) { $seconds[$r['name'].'.'.$r['companyid']] = $arr; }
@@ -76,9 +80,12 @@
 			$seconds = array_merge($seconds,$results);
 		}
 //		print "<pre>".print_r($seconds,true)."</pre>";
+
+		krsort($firsts);
 	} else {
 		$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
 		$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
+		$query .= "AND (source IS NULL OR LENGTH(source)<=5) ";//this is to filter out ebay results that are amea-pulled
 		$query .= "GROUP BY companyid ORDER BY n DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -88,7 +95,8 @@
 		}
 	}
 
-	krsort($firsts);
+//now sorted only within scope of a user search ($q)
+//	krsort($firsts);
 //this array is now sorted above, in priority rather than straight key-order
 //	krsort($seconds);
 	krsort($thirds);
