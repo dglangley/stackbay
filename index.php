@@ -34,7 +34,7 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 
-		$results = getRecords($search_str,$partid_array,'statement',$market_table);
+		$results = getRecords($search_str,$partid_str,'statement',$market_table);
 
 		$num_results = count($results);
 		// number of detailed results instead of month-groups, which is normally only results within the past month

@@ -15,7 +15,7 @@
 			/*'([A-Z]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
 			/*'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
 			/* read more about look-ahead negatives: http://stackoverflow.com/questions/406230/regular-expression-to-match-line-that-doesnt-contain-a-word */
-			'(((?!(FB|FD))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
+			'(((?!(FB|FD|FC))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent VLNC5,WSRG19B,WSRH1B*/
 			'([VW][A-Z]{3}[0-9]{1,2}[A-Z]?)'.$aluRevs,
@@ -37,7 +37,7 @@
 
 			/* Microcodes, MC97780A1, MC97144A1D */
 			/* Alcatel-Lucent MC#@###@# - MC1D088A1; MC#@###@#@ - MC1D088A1B; MC#####@# - MC45019A2 */
-			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]?I?[^[:alnum:]]?[0-9])?',
+			'(MC[[:alnum:]]{6}[0-9][A-HJ-Z]?)([^[:alnum:]]?I?[^[:alnum:]]?[0-9][A-Z]?)?',
 
 			/* AG Comm / Alcatel-Lucent / GTD5: FB-27013-A / FB-27013-1A / FB-16271 (changed this to more loose PN-matching 4/20/15 */
 			/*'(F[A-Z][-]?0?[0-9]{5}[[:space:]-]?1?[A-C]?[O0-9]?[A-C])([-]?(([0-9]{3})|(I(SS)?[0-9]{1,2})))?',*/
