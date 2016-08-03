@@ -1,27 +1,44 @@
 <?php
 	include_once 'getPipeIds.php';
-
-	function getRecords($search_str,$partid_array,$array_format='csv',$market_table='demand') {
+	
+	$record_start = '';
+	$record_end = '';
+	
+	function getRecords($search_str = '',$partid_array = '',$array_format='csv',$market_table='demand') {
+		global $record_start,$record_end;
 		$unsorted = array();
 
-		$partid_str = '';
-		if ($array_format=='statement') {
-			$partid_str = $partid_array;
-		} else if ($array_format=='csv') {
+		if ((!$search_str && !$partid_array)&&(!$record_start && !$record_end)){
+			echo 'Valid search result or date range not entered';
+			return $unsorted;
 		}
 
+		
+
+		$partid_str = '';
+		
+		if ($partid_array){
+			if ($array_format=='statement') {
+				$partid_str = $partid_array;
+			} else if ($array_format=='csv') {
+				$partid_str = 'partid IN ('.$partid_array.')';
+			}
+		}
 		switch ($market_table) {
 			case 'demand':
 				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid FROM demand, search_meta, companies ";
-				$query .= "WHERE (".$partid_str.") AND demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				$query .= "WHERE  demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				$query .= "ORDER BY datetime ASC; ";
-
 				$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
 				$query = "SELECT datetime, companyid cid, name, purchase_orders.id, qty, price, partid FROM purchase_items, purchase_orders, companies ";
-				$query .= "WHERE (".$partid_str.") AND purchase_items.purchase_orderid = purchase_orders.id AND companies.id = purchase_orders.companyid ";
+				$query .= "WHERE purchase_items.purchase_orderid = purchase_orders.id AND companies.id = purchase_orders.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				$query .= "ORDER BY datetime ASC; ";
 
 				$unsorted = get_coldata($search_str,'purchases');
@@ -30,7 +47,9 @@
 			case 'sales':
 			default:
 				$query = "SELECT datetime, companyid cid, name, sales_orders.id, qty, price, partid FROM sales_items, sales_orders, companies ";
-				$query .= "WHERE (".$partid_str.") AND sales_items.sales_orderid = sales_orders.id AND companies.id = sales_orders.companyid ";
+				$query .= "WHERE sales_items.sales_orderid = sales_orders.id AND companies.id = sales_orders.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				$query .= "ORDER BY datetime ASC; ";
 
 				$unsorted = get_coldata($search_str,'sales');
@@ -38,6 +57,7 @@
 		}
 
 		// get local data
+
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$unsorted[$r['datetime']][] = $r;
@@ -102,7 +122,7 @@
 
 	$SALE_QUOTES = array();
 	function get_details($invid,$table_name,$results) {
-		global $SALE_QUOTES;
+		global $SALE_QUOTES, $record_start, $record_end;
 
 		$orig_table = $table_name;
 
@@ -116,7 +136,9 @@
 			$and_where = "AND inventory_purchaseorder.purchasequote_ptr_id = inventory_incoming_quote.quote_id ";
 			$add_field = ', quote_id ';
 		}
-
+		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
+			if ($record_start && $record_end){$and_where .= "AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+		}
 		$db_results = array();
 		if ($orig_table=='outgoing_quote' AND isset($SALE_QUOTES[$invid])) {
 			$db_results = $SALE_QUOTES[$invid];
@@ -128,14 +150,16 @@
 			$query .= $and_where;
 			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
 			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
+
 //			echo $orig_table.':<BR>'.$query.'<BR>';
+
 			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 			while ($r = mysqli_fetch_assoc($result)) {
 				$db_results[] = $r;
 			}
 			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
 		}
-
+		
 		return (handle_results($db_results,$orig_table,$results));
 	}
 
@@ -163,4 +187,5 @@
 
 		return ($results);
 	}
+
 ?>

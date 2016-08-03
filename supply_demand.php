@@ -8,6 +8,8 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/getRecords.php';
+	
 	
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -45,26 +47,27 @@
     	echo(' | '.$part_string); 	
     }
 	
-	$endDate = '';
+	$record_end = '';
 	if (isset($_REQUEST['END_DATE'])){
-		$endDate = $_REQUEST['END_DATE'];
+		$record_end = format_date($_REQUEST['END_DATE'],'Y-m-d');
 	}
 	
-	$startDate = '';
+	$record_start = '';
 	if (isset($_REQUEST['START_DATE'])){
-		$startDate = $_REQUEST['START_DATE'];
+		$record_start = format_date($_REQUEST['START_DATE'], 'Y-m-d');
 	}
-	
+    
 ?>
+
 
 <!------------------------------------------------------------------------------------------->
 <!-------------------------------------- HEADER OUTPUT -------------------------------------->
 <!------------------------------------------------------------------------------------------->
 <!DOCTYPE html>
 <html>
-<!-- Declaration of the standard head with Accounts home set as title -->
+<!-- Declaration of the standard head with S&D home set as title -->
 <head>
-	<title>VMM Accounts Home</title>
+	<title>VMM Supply and Demand</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -76,7 +79,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
-	<form class="form-inline" method="get" action="/accounts.php">
+	<form class="form-inline" method="get" action="/supply_demand.php">
 
     <table class="table table-header">
 		<tr>
@@ -120,12 +123,13 @@
 			$quarter = array('01/01/','03/01/','06/01/','09/01/');
 			$today = date('m/d/Y');
 			$quarter_start = $quarter[floor(date('m')/3)];
+			
 		?>
 		<div class = "col-md-1">
 			Dates between
 				<div class="input-group date datetime-picker-filter">
 		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" />
+		                <?php if($record_start){echo $record_start;}else{echo $quarter_start.$year;}?>" />
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -135,7 +139,7 @@
 			and
 					<div class="input-group date datetime-picker-filter">
 		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" />
+		            <?php if($record_end){echo $record_end;}else{echo $today;}?>" />
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -167,7 +171,7 @@
                 <div class="row head text-center">
                     <div class="col-md-12">
                         <h2>
-                        <?php echo ('Accounts');
+                        <?php echo ('Supply and Demand');
                         if($company_filter){ 
                         	echo ': ';
                         	echo getCompany($company_filter);
@@ -211,33 +215,8 @@
 //	echo '<br>The value of this company in the old database is: '.$oldid;
 	
 	//Write the query for the gathering of Pipe data
-	$query = "SELECT ";
-    $query .= "s.so_date 'datetime', c.`id` 'companyid', c.name 'company_name', q.company_id 'company', ";
-    $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id 'id', q.price price ";
-    $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-   	//if ($endDate) { $query .= "AND s.so_date <'".$endDate."'  ";}
-    $query .= "Order By s.so_date DESC;";
-	
-##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
-	//$query = "SELECT * FROM sales_orders ";
-	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
-	//$query .= "ORDER BY datetime DESC, id DESC; ";
-#####
-
-//Search for the results. Leave the second parameter null if the pipe is not being used
-
-	$result = qdb($query,'PIPE');
-	
+    $result = getRecords();
+    
 	foreach ($result as $r){
 
 		//Set the amount to zero for the number of items and the total price
@@ -248,7 +227,7 @@
 		if (! $company_filter) {
 			$company_col = '
                                 <td>
-	                                    <a href="#">'.$r['company_name'].'</a>
+	                                    <a href="#">'.$r['name'].'</a>
                                 </td>
 			';
 		}
@@ -268,7 +247,7 @@
 		';
 
 			if ($report_type=='detail') {
-				$descr = $r['part'].' &nbsp; '.$r['heci'];
+				$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
 				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			}
 
@@ -317,8 +296,8 @@
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     Date 
                             		<?php
-                            			if($startDate and $endDate){
-                            				echo ('('.$startDate.' - '.$endDate.')');
+                            			if($record_start and $record_end){
+                            				echo ('('.$record_start.' - '.$record_end.')');
                             				echo '<i class="fa fa-times" style="color:red" aria-hidden="true" id = "date_filter"></i>';
                             			}
                             		?>
@@ -334,7 +313,7 @@
 <?php } ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Order#
+                                    Quote #
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
@@ -373,21 +352,6 @@
 	</div>
 	</form>
 <?php include_once 'inc/footer.php'; ?>
-
-    <script type="text/javascript">
-
-        $(document).ready(function() {
-            $('#accounts').dataTable({
-                "sPaginationType": "full_numbers"
-            });
-			$('.btn-report').click(function() {
-				var btnValue = $(this).data('value');
-				$(this).closest("div").find("input[type=radio]").each(function() {
-					if ($(this).val()==btnValue) { $(this).attr('checked',true); }
-				});
-			});
-        });
-    </script>
 
 </body>
 </html>
