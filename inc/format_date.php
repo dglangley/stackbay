@@ -1,4 +1,24 @@
 <?php
+/***** format_date - Format a given date or date/time to a different date or date/time, with optional date/time modification using $modify
+
+	string format_date(string $datestring [, string $format = "n/j/y", array $modify])
+
+	Returns a string formatted according to the given (or default) format string ($format) using the given string $date. Optionally,
+	$modify can be used to modify the given string $date to a past/future date/time.
+
+	$datestring can be a date or date/time in any format ("mm/dd/yy" or "mm/dd/yyyy" or "yy-mm-dd" or "yyyy-mm-dd" or even "dd-mmm-yyyy").
+
+	$modify can be an array of date/time parameters to modify the given string $date to a past/future date/time. Parameters follow
+	PHP's date() recognized format parameter strings, with only hours, minutes, months, days and years allowed:
+		'h' hours
+		'i' minutes
+		'm' months
+		'd' days
+		'y' years
+	If modifying to a past/earlier date, use the negative operand in front of the appropriate value (ie, array('d'=>-3) for 3 days ago).
+*****/
+
+
 	$DATE_TIMES = array();
 	function format_date($datetime,$date_format='n/j/y',$A='') {
 		global $DATE_TIMES;

@@ -34,6 +34,7 @@
 
 		$res = curl_exec($ch);
 
+		// if we don't have a global connection we want left open, close the connection upon completion of this script
 		if (! $global_ch) { curl_close($ch); }
 
 		return ($res);

@@ -61,6 +61,11 @@ $rownum = 0;
 
 //Take in iteritavely the values of the part ids
 foreach ($results as $k => $row) {
+
+	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
+	if ($k>0) {
+		sleep(4);
+	}
     $partids = array();
     
     //Prepare the output array to seperate out the output from the processing
@@ -131,9 +136,6 @@ foreach ($results as $k => $row) {
 
     //Take in the list of partids from the initial search
     $resultSet = getSupply($partids,1);    
-
-	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
-	sleep(1);
     
     //Reset the day counter
     $i = 0;
