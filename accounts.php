@@ -227,8 +227,7 @@
    	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
    	//if ($endDate) { $query .= "AND s.so_date <'".$endDate."'  ";}
     $query .= "Order By s.so_date DESC;";
-	echo $query; exit;
-
+	
 ##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
 	//$query = "SELECT * FROM sales_orders ";
 	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
