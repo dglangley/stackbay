@@ -549,6 +549,25 @@
 				},
 			});
 		});
+		
+		$('.datetime-picker-filter').each(function() {
+			$(this).datetimepicker({
+				/* use font awesome icons instead of glyphicons. because i said so. */
+				format: 'MM/DD/YYYY',
+				icons: {
+					time: 'fa fa-clock-o',
+					date: 'fa fa-calendar',
+					up: 'fa fa-chevron-up',
+					down: 'fa fa-chevron-down',
+					previous: 'fa fa-chevron-left',
+					next: 'fa fa-chevron-right',
+					today: 'fa fa-screenshot',
+					clear: 'fa fa-trash',
+					close: 'fa fa-close'
+				},
+				maxDate: Date(),
+			});
+		});
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});
