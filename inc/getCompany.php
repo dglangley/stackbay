@@ -1,11 +1,49 @@
 <?php
+	//Declare the company array which will be used to globally communicate the found companies
 	$COMPANIES = array();
+	
+	//Function designed by Aaron to act as a direct conversion from the value in the old database
+	//to the new one via the curated table called company_aliases.
+
+	function dbTranslate($companyid, $oldToNew = true){
+		include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
+		
+			if ($oldToNew){
+				$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid'";
+			}
+			else{
+				$query = "Select inventory_companyid `c` From company_maps where companyid = '$companyid';";
+			}
+
+		$result = qdb($query);
+		if(mysqli_num_rows($result)){
+			foreach($result as $row){
+				echo "Found the translation: ".$row['c'];
+				return $row['c'];
+			}
+		}
+		else{
+			return $companyid;
+		}
+	}
+
+	
+	//The main function of this file. It takes inputs of the search parameter 
+	//and its type, as well as the output one wishes to grab from the field. If there is no existing company
+	//then we pass in the boolean which indicates this. However, there is already an "addCompany" function,
+	//So I would have to assume there is redundancy in the system somewhere.
+
 	function getCompany($search_field,$input_field='id',$output_field='name',$add_new=false) {
+		//Make the company array global
 		global $COMPANIES;
 
+		//Strip any white space from the search field
 		$search_field = trim($search_field);
+		
+		//If there is no search field, exit the code and return null
 		if (! $search_field) { return (''); }
-
+		
+		//Translate any old code referring to companyid into regular id.
 		if ($output_field=='companyid') { $output_field = 'id'; }
 
 		if (isset($COMPANIES[$search_field]) AND isset($COMPANIES[$search_field][$input_field])) {
@@ -43,9 +81,11 @@
 				$search_field = $r['companyid'];
 			}
 		}
-
+		if ($output_field == 'oldid'){}
 		$query = "SELECT * FROM companies WHERE $query_field = '".res($search_field)."'; ";
+		//echo $query; exit;
 		$result = qdb($query);
+		
 		$num_results = mysqli_num_rows($result);
 		if ($num_results==0) {
 			if ($input_field=='name') {
