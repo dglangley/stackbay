@@ -10,7 +10,7 @@
 		$unsorted = array();
 
 		if ((!$search_str && !$partid_array)&&(!$record_start && !$record_end)){
-			echo 'Valid search result or date range not entered';
+//			echo 'Valid search result or date range not entered';
 			return $unsorted;
 		}
 
@@ -134,7 +134,7 @@
 		$db_results = array();
 
 		if (!$id_csv && !$record_start && !$record_end){
-			echo 'Valid search result or date range not entered';
+//			echo 'Valid search result or date range not entered';
 			return $db_results;
 		}
 
@@ -172,14 +172,17 @@
 			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 			while ($r = mysqli_fetch_assoc($result)) {
 				$query2 = "SELECT part_number, clei FROM inventory_inventory WHERE id = '".$r['partid']."'; ";
-				$result2 = qdb($query2);
+
+				$result2 = qdb($query2,'PIPE');
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
 					$r['partid'] = getPartId($r2['part_number'],$r2['clei']);
 				}
+				
 
 				$db_results[] = $r;
 			}
+
 			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
 //		}
 		
