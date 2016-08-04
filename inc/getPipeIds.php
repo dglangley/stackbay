@@ -31,7 +31,7 @@
 				if ($search_by<>'heci') {
 					$subquery .= "clean_part_number LIKE '".res($search,'PIPE')."%' ";
 				}
-				if ((strlen($search)==7 OR strlen($search)==10 OR $search_by<>'part') AND ! is_numeric($search)) {
+				if ((strlen($search)==7 OR strlen($search)==10) AND $search_by<>'part' AND ! is_numeric($search)) {
 					if ($subquery) { $subquery .= "OR "; }
 					if ($search_by=='heci' AND strlen($search)==10) {
 						$subquery .= "clei = '".res($search,'PIPE')."' ";
