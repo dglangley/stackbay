@@ -23,17 +23,19 @@
 	$k = 0;
 	$query = "SELECT category_id_id, part_number part, clean_part_number, heci, clei, short_description description, ";
 	$query .= "inventory_manufacturer.name manf, system_name system, inventory_id, ";
-	$query .= "COUNT(inventory_itemlocation.id) AS qty, previous_export_qty ";
+	$query .= "COUNT(inventory_itemlocation.id) AS qty, previous_export_qty visible_qty ";
 	$query .= "FROM inventory_itemlocation, inventory_location, inventory_inventory, inventory_manufacturer ";
 	$query .= "WHERE no_sales = '0' AND inventory_inventory.id = inventory_itemlocation.inventory_id ";
 	$query .= "AND inventory_itemlocation.location_id = inventory_location.id AND category_id_id = '2' ";
 	$query .= "AND inventory_inventory.manufacturer_id_id = inventory_manufacturer.id ";
-//	$query .= "AND part_number = '506447' ";
+//	$query .= "AND part_number LIKE 'AKM68%' ";
 	$query .= "GROUP BY inventory_id ORDER BY part_number ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$part_numbers = explode(' ',$r['part']);
-		$part = str_replace('"','',trim($part_numbers[0]));
+		$part = strtoupper(str_replace('"','',trim(str_replace('MERGEME','',$part_numbers[0]))));
+		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+
 		$heci = $r['clei'];
 		$heci7 = $r['heci'];
 		if (is_numeric($heci) OR preg_match('/[^[:alnum:]]+/',$heci)) {
@@ -43,11 +45,6 @@
 		}
 		if (strlen($heci)==7) { $heci = $heci7.'VTL'; }
 		$heci = str_replace('"','',$heci);
-
-		$partid = getPartId($part,$heci);
-//		echo $partid.':'.$part.'<BR>';
-
-//		if ($partid) { continue; }
 
 		$manf = strtoupper(trim($r['manf']));
 		$manfid = getManf($manf);
@@ -59,6 +56,8 @@
 				$manfid = $r2['id'];
 			}
 		}
+
+		$partid = getPartId($part,$heci,$manfid);
 
 		$descr = strtoupper(trim($r['description']));
 		$sysid = 0;
@@ -75,7 +74,7 @@
 				$descr = trim($system.' '.$descr);
 			}
 		}
-		$descr = str_replace('*',' ',$descr);
+		$descr = trim(str_replace('BOT GENERATED','',str_replace('*',' ',$descr)));
 		if (! $partid) {
 			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
 		}
@@ -83,7 +82,10 @@
 		$manf = str_replace(",","",str_replace("\t","",str_replace('"','',$manf)));
 		$descr = str_replace(",","",str_replace("\t","",str_replace('"','',$descr)));
 
-		$qty = $r['qty'];
+		$qty = $r['visible_qty'];
+		// while our qty may be above 0 to get us within this loop in the first place, $qty (visible qty) may be 0 or even
+		// errantly negative, so don't include these lines...
+		if ($qty<=0) { continue; }
 
 		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
@@ -93,17 +95,32 @@
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {
 			// index it by part number to consolidate, and save on lookups later
-			$fpart = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
+			$part_numbers[$i] = trim(str_replace('MERGEME','',$part_numbers[$i]));
+			$fstr = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
+			if (strlen($fstr)<2 OR $fstr==$part OR preg_match('/^S-[0-9]{1,2}$/',$part_numbers[$i])) { continue; }
+
 			$aliases[$part_numbers[$i]] = $part_numbers[$i];
 		}
 
-		$query2 = "SELECT clean_part_number, part_number FROM inventory_inventoryalias ";
+		// get aliases from old inventory aliases db table
+		$query2 = "SELECT part_number FROM inventory_inventoryalias ";
 		$query2 .= "WHERE inventory_id = '".$r['inventory_id']."' AND hide_from_export = '0' ";
 		$query2 .= "AND clean_part_number <> '".$r['clean_part_number']."'; ";
 //		echo $query2.'<BR>';
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$aliases[$r2['clean_part_number']] = $r2['part_number'];
+			$splits = explode(' ',$r2['part_number']);
+			foreach ($splits as $s) {
+				// lots of part/alias strings have "MERGEME" (annoying!) which we don't want
+				$s = trim(str_replace('MERGEME','',$s));
+
+				$falias = trim(preg_replace('/[^[:alnum:]]+/','',$s));
+				$alias = trim($s);
+
+				if (strlen($falias)<2 OR $falias==$fpart OR preg_match('/^S-[0-9]{1,2}$/',$alias)) { continue; }
+
+				$aliases[$falias] = strtoupper($alias);
+			}
 		}
 
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
@@ -114,7 +131,8 @@
 //		echo $query3.'<BR>';
 		$result3 = qdb($query3) OR die(qe().' '.$query3);
 		while ($r3 = mysqli_fetch_assoc($result3)) {
-			if (array_stristr($aliases,$r3['keyword'])!==false) { continue; }
+			$fkeyword = preg_replace('/[^[:alnum:]]+/','',$r3['keyword']);
+			if (strlen($fkeyword)<2 OR $fkeyword==$fpart OR array_stristr($aliases,$r3['keyword'])!==false) { continue; }
 
 			$aliases[$r3['keyword']] = $r3['keyword'];
 		}
@@ -126,13 +144,13 @@
 		}
 	}
 
+//	echo str_replace(chr(10),'<BR>',$csvTE);
+
 	$U['id'] = 5;
 	$U['name'] = 'Amea Cabula';
 	$U['email'] = 'amea@ven-tel.com';
 	$U['phone'] = '(805) 212-4959';
 	setGoogleAccessToken($U['id']);
-
-//	echo str_replace('\n','<BR>',$csvTE);
 
 	// create temp file name in temp directory for each file
 	$attachment = sys_get_temp_dir()."/inventory_export_bb-".date("ymdHis").".csv";
@@ -142,7 +160,7 @@
 	fclose($handle);
 
 //sendMailMIME("upload@brokerbin.com", "BrokerBin Export", "Report Attached", '/tmp/csvBB.csv')
-	$send_success = send_gmail('Report Attached','BrokerBin Export','upload@ven-tel.com','','',$attachment);
+	$send_success = send_gmail('Report Attached','BrokerBin Export','upload@brokerbin.com','david@ven-tel.com','',$attachment);
 	if ($send_success) {
 		echo json_encode(array('message'=>'BrokerBin Email Export Successful'));
 	} else {
@@ -157,7 +175,7 @@
 	fclose($handle);
 
 //sendMailMIME("inv@powersourceonline.com", "PowerSource Online Export", "Report Attached", '/tmp/psexport.csv')
-	$send_success = send_gmail('Report Attached','PowerSource Online Export','david@ven-tel.com','','',$attachment);
+	$send_success = send_gmail('Report Attached','PowerSource Online Export','inv@powersourceonline.com','david@ven-tel.com','',$attachment);
 	if ($send_success) {
 		echo json_encode(array('message'=>'PowerSource Online Email Export Successful'));
 	} else {
@@ -176,10 +194,10 @@
 	//switch to passive mode
 	ftp_pasv($ftpid, true) OR die("Cannot switch to passive");
 	if (ftp_put($ftpid,'ventura.csv',$attachment,FTP_ASCII)) {
-		echo "successfully uploaded $attachment<BR>";
+		echo "successfully uploaded $attachment<BR>".chr(10);
 //		ftp.storlines('STOR ventura.csv', exportFile) # Disable this for debugging
 	} else {
-		echo "problem uploading $attachment<BR>";
+		echo "problem uploading $attachment<BR>".chr(10);
 	}
 	ftp_close($ftpid);
 ?>

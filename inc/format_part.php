@@ -115,6 +115,9 @@
 			/* General Datacomm 058P150-002 */
 			'(0[0-9]{2}[AMP]1[0-9]{2}-0[0-9]{2})([^[:alnum:]]*[A-Z][^[:alnum:]]*[A-Z])?',
 
+			/* Larus 1119-L5 */
+			'(1119-?L5)([^[:alnum:]]?ISS[^[:alnum:]]?[0-9]{1,2})?([^[:alnum:]]?(OFFIC[E]?)*[^[:alnum:]]?REP.*)?',
+
 		),
 		1 => array(//alcatel-lucent
 		),
