@@ -20,7 +20,8 @@
 	// Tel-Explorer
 	$csvTE = '"part number","clei","manufacturer","condition","quantity","price","description"'.chr(10);
 
-	$k = 0;
+	$results = array();//contains all parts data that will be consolidated between db's for export
+
 	$query = "SELECT category_id_id, part_number part, clean_part_number, heci, clei, short_description description, ";
 	$query .= "inventory_manufacturer.name manf, system_name system, inventory_id, ";
 	$query .= "COUNT(inventory_itemlocation.id) AS qty, previous_export_qty visible_qty ";
@@ -28,7 +29,7 @@
 	$query .= "WHERE no_sales = '0' AND inventory_inventory.id = inventory_itemlocation.inventory_id ";
 	$query .= "AND inventory_itemlocation.location_id = inventory_location.id AND category_id_id = '2' ";
 	$query .= "AND inventory_inventory.manufacturer_id_id = inventory_manufacturer.id ";
-//	$query .= "AND part_number LIKE 'AKM68%' ";
+//	$query .= "AND part_number LIKE '437420600%' ";
 	$query .= "GROUP BY inventory_id ORDER BY part_number ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -59,6 +60,10 @@
 
 		$partid = getPartId($part,$heci,$manfid);
 
+		// don't add parts that are already exported earlier in loop
+		if (isset($results[$partid])) { continue; }
+
+		// build manf, sys and descr in order to insert part into db from old db, if applicable
 		$descr = strtoupper(trim($r['description']));
 		$sysid = 0;
 		$system = strtoupper(trim($r['system']));
@@ -78,18 +83,6 @@
 		if (! $partid) {
 			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
 		}
-
-		$manf = str_replace(",","",str_replace("\t","",str_replace('"','',$manf)));
-		$descr = str_replace(",","",str_replace("\t","",str_replace('"','',$descr)));
-
-		$qty = $r['visible_qty'];
-		// while our qty may be above 0 to get us within this loop in the first place, $qty (visible qty) may be 0 or even
-		// errantly negative, so don't include these lines...
-		if ($qty<=0) { continue; }
-
-		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
-		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 
 		// add aliases without heci code
 		$aliases = array();
@@ -123,10 +116,58 @@
 			}
 		}
 
+		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+	}
+
+	// get ghost inventory items
+	$query = "SELECT partid, SUM(vqty) visible_qty, parts.* FROM staged_qtys, parts ";
+	$query .= "WHERE staged_qtys.partid = parts.id ";
+//	$query .= "AND part LIKE '437420600%' ";
+	$query .= "GROUP BY partid ORDER BY part ASC; ";
+	$result = qdb($query) OR die(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		// don't add parts that are already being exported from previous db above
+		if (isset($results[$r['partid']])) { continue; }
+
+		$part_numbers = explode(' ',$r['part']);
+		$part = $part_numbers[0];
+		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+		$heci = $r['heci'];
+		$manf = getManf($r['manfid']);
+		$descr = trim(getSys($r['systemid'].' '.$r['description']));
+		$aliases = array();
+		for ($i=1; $i<count($part_numbers); $i++) {
+			$falias = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
+			if (strlen($falias)<2 OR $falias==$fpart OR array_stristr($aliases,$part_numbers[$i])!==false) { continue; }
+			$aliases[] = $part_numbers[$i];
+		}
+
+		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+	}
+
+	$k = 0;
+	foreach ($results as $partid => $r) {
+		$qty = $r['visible_qty'];
+		$part = $r['part'];
+		$heci = $r['heci'];
+		$manf = $r['manf'];
+		$descr = $r['descr'];
+		$aliases = $r['aliases'];
+
+		$manf = str_replace(",","",str_replace("\t","",str_replace('"','',$manf)));
+		$descr = str_replace(",","",str_replace("\t","",str_replace('"','',$descr)));
+
+		// while our qty may be above 0 to get us within this loop in the first place, $qty (visible qty) may be 0 or even
+		// errantly negative, so don't include these lines...
+		if ($qty<=0) { continue; }
+
+		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
+		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
+		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
 		$query3 .= "WHERE partid = '".$partid."' AND parts_index.keywordid = keywords.id AND rank = 'primary' ";
-		$query3 .= "AND keyword <> '".$r['clean_part_number']."' ";
 		$query3 .= "ORDER BY length(keyword) DESC; ";
 //		echo $query3.'<BR>';
 		$result3 = qdb($query3) OR die(qe().' '.$query3);
@@ -144,6 +185,7 @@
 		}
 	}
 
+	echo 'Exporting '.count($results).' part(s) totaling '.$k.' item(s)<BR>'.chr(10);
 //	echo str_replace(chr(10),'<BR>',$csvTE);
 
 	$U['id'] = 5;

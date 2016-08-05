@@ -19,9 +19,13 @@ RDS_HOSTNAME=aa1qkk16kza9ick.cbjttt30gz5p.us-west-2.rds.amazonaws.com
 RDS_USERNAME=ventel
 RDS_PASSWORD=joder1234
 
+#Monday-Friday
 #ALU: 5:30am (runs in about 20 seconds)
 #NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
 #FAVORITES: 6:05am to about 7:00am
+
+#Sunday
+#GHOST: 8pm
 
 # run inventory processor frequently all day to catch any uploads on S3
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
@@ -33,7 +37,7 @@ RDS_PASSWORD=joder1234
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # sunday ghosting script
-0 20 * * 0 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/ghost_inventories.php > ~/ghost_log
+0 20 * * 0 php -f /var/www/html/auto/ghost_inventories.php > ~/ghost_log
 # run amea all day
 0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/amea_processor.php > ~/amea_log
 
