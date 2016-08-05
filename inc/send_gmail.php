@@ -99,16 +99,17 @@
 		}
 
 		$mail->MsgHTML(format_email($email_subject,$email_body));
+
+		if ($attachment) {
+			$mail->addAttachment($attachment);
+		}
+
 		//create the MIME Message
 		$preSend = $mail->preSend();
 		if (! $preSend) {
 			$SEND_ERR .= 'Mailer Error ('.str_replace("@", "&#64;", $e["email"]).') '.$mail->ErrorInfo.chr(10);
 		} else {
 //			echo "Message sent to :" . $row['full_name'] . ' (' . str_replace("@", "&#64;", $row['email']) . ')<br />';
-		}
-
-		if ($attachment) {
-			$mail->addAttachment($attachment);
 		}
 
 		$mime = $mail->getSentMIMEMessage();

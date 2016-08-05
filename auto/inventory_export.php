@@ -6,18 +6,19 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSys.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/array_stristr.php';
 
 	// build BB, PS, TE and other inventories; see /var/www/venteldb/inventory/util.py and search for "BrokerBin", etc
 
 	// BrokerBin
-	$csvBB = '"part number","heci","manufacturer","condition","price","quantity","description"\r\n';
+	$csvBB = '"part number","heci","manufacturer","condition","price","quantity","description"'.chr(10);
 
 	// PowerSource doesn't like headers
-	//$csvPS = '"Posting Id *","Part No","Manufacturer","HECI/CLEI","Condition","Quantity *","Price","Description","Category *","Category Id *"\r\n"';
+	//$csvPS = '"Posting Id *","Part No","Manufacturer","HECI/CLEI","Condition","Quantity *","Price","Description","Category *","Category Id *"'.chr(10);
 	$csvPS = '';
 
 	// Tel-Explorer
-	$csvTE = '"part number","clei","manufacturer","condition","quantity","price","description"\n';
+	$csvTE = '"part number","clei","manufacturer","condition","quantity","price","description"'.chr(10);
 
 	$k = 0;
 	$query = "SELECT category_id_id, part_number part, clean_part_number, heci, clei, short_description description, ";
@@ -47,9 +48,6 @@
 //		echo $partid.':'.$part.'<BR>';
 
 //		if ($partid) { continue; }
-		if (! $partid) {
-			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
-		}
 
 		$manf = strtoupper(trim($r['manf']));
 		$manfid = getManf($manf);
@@ -68,7 +66,7 @@
 		if ($system) {
 			$sysid = getSys($system);
 
-			$query2 = "SELECT id FROM systems WHERE system LIKE '".res($sys)."%'; ";
+			$query2 = "SELECT id FROM systems WHERE system LIKE '".res($system)."%'; ";
 			$result2 = qdb($query2) OR die(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
@@ -78,15 +76,18 @@
 			}
 		}
 		$descr = str_replace('*',' ',$descr);
+		if (! $partid) {
+			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
+		}
 
 		$manf = str_replace(",","",str_replace("\t","",str_replace('"','',$manf)));
 		$descr = str_replace(",","",str_replace("\t","",str_replace('"','',$descr)));
 
 		$qty = $r['qty'];
 
-		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"\r\n';
-		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"\r\n';
-		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"\n';
+		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
+		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
+		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 
 		// add aliases without heci code
 		$aliases = array();
@@ -108,19 +109,21 @@
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
 		$query3 .= "WHERE partid = '".$partid."' AND parts_index.keywordid = keywords.id AND rank = 'primary' ";
-		$query3 .= "AND keyword <> '".$r['clean_part_number']."'; ";
+		$query3 .= "AND keyword <> '".$r['clean_part_number']."' ";
+		$query3 .= "ORDER BY length(keyword) DESC; ";
 //		echo $query3.'<BR>';
 		$result3 = qdb($query3) OR die(qe().' '.$query3);
 		while ($r3 = mysqli_fetch_assoc($result3)) {
+			if (array_stristr($aliases,$r3['keyword'])!==false) { continue; }
+
 			$aliases[$r3['keyword']] = $r3['keyword'];
 		}
 
 		foreach ($aliases as $alias) {
-			$csvBB .= '"'.$alias.'","","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"\r\n';
-			$csvPS .= '"'.($k++).'","'.substr($alias,0,25).'","'.$manf.'","","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"\r\n';
-			$csvTE .= '"'.$alias.'","","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"\n';
+			$csvBB .= '"'.$alias.'","","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
+			$csvPS .= '"'.($k++).'","'.substr($alias,0,25).'","'.$manf.'","","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
+			$csvTE .= '"'.$alias.'","","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 		}
-
 	}
 
 	$U['id'] = 5;
@@ -130,8 +133,6 @@
 	setGoogleAccessToken($U['id']);
 
 //	echo str_replace('\n','<BR>',$csvTE);
-//sendMailMIME("upload@brokerbin.com", "BrokerBin Export", "Report Attached", '/tmp/csvBB.csv')
-//sendMailMIME("inv@powersourceonline.com", "PowerSource Online Export", "Report Attached", '/tmp/psexport.csv')
 
 	// create temp file name in temp directory for each file
 	$attachment = sys_get_temp_dir()."/inventory_export_bb-".date("ymdHis").".csv";
@@ -140,7 +141,8 @@
 	fwrite($handle, $csvBB);
 	fclose($handle);
 
-	$send_success = send_gmail('Report Attached','BrokerBin Export','david@ven-tel.com','','',$attachment);
+//sendMailMIME("upload@brokerbin.com", "BrokerBin Export", "Report Attached", '/tmp/csvBB.csv')
+	$send_success = send_gmail('Report Attached','BrokerBin Export','upload@ven-tel.com','','',$attachment);
 	if ($send_success) {
 		echo json_encode(array('message'=>'BrokerBin Email Export Successful'));
 	} else {
@@ -154,6 +156,14 @@
 	fwrite($handle, $csvPS);
 	fclose($handle);
 
+//sendMailMIME("inv@powersourceonline.com", "PowerSource Online Export", "Report Attached", '/tmp/psexport.csv')
+	$send_success = send_gmail('Report Attached','PowerSource Online Export','david@ven-tel.com','','',$attachment);
+	if ($send_success) {
+		echo json_encode(array('message'=>'PowerSource Online Email Export Successful'));
+	} else {
+		echo json_encode(array('message'=>$SEND_ERR));
+	}
+
 	// create temp file name in temp directory for each file
 	$attachment = sys_get_temp_dir()."/inventory_export_te-".date("ymdHis").".csv";
 	$handle = fopen($attachment, "w");
@@ -162,7 +172,9 @@
 	fclose($handle);
 
 	$ftpid = ftp_connect('tel-explorer.com');
-	$ftp_login = ftp_login($ftpid,'Inventory', 'u5678d');
+	$ftp_login = ftp_login($ftpid,'Inventory', 'u5678d') OR die("Cannot login");
+	//switch to passive mode
+	ftp_pasv($ftpid, true) OR die("Cannot switch to passive");
 	if (ftp_put($ftpid,'ventura.csv',$attachment,FTP_ASCII)) {
 		echo "successfully uploaded $attachment<BR>";
 //		ftp.storlines('STOR ventura.csv', exportFile) # Disable this for debugging
