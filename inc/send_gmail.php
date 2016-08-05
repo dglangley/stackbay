@@ -25,7 +25,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='') {
+	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachment='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U;
 
 		$userid = $U['id'];
@@ -105,6 +105,10 @@
 			$SEND_ERR .= 'Mailer Error ('.str_replace("@", "&#64;", $e["email"]).') '.$mail->ErrorInfo.chr(10);
 		} else {
 //			echo "Message sent to :" . $row['full_name'] . ' (' . str_replace("@", "&#64;", $row['email']) . ')<br />';
+		}
+
+		if ($attachment) {
+			$mail->addAttachment($attachment);
 		}
 
 		$mime = $mail->getSentMIMEMessage();
