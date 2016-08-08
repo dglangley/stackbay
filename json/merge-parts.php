@@ -81,7 +81,7 @@
 	if (strtolower($descrs[$masterid])!==strtolower($descrs[$slaveid])) {
 		$descrTerms2 = preg_split('/[[:space:]]+/',$descrs[$slaveid]);
 		foreach ($descrTerms2 as $term) {
-			if (stristr($fdescription,preg_replace('/[^[:alnum:]]*/','',$term))!==false) { continue; }
+			if (stristr($fdescr,preg_replace('/[^[:alnum:]]*/','',$term))!==false) { continue; }
 
 			if ($description) { $description .= ' '; }
 			$description .= $term;
@@ -111,8 +111,23 @@
 
 	$query = "UPDATE market SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE availability SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	// check for existing record in availability table, and delete duplicate if present
+	$query = "SELECT metaid, id FROM availability WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		// is there a duplicate already under the $masterid?
+		$query2 = "SELECT id FROM availability WHERE partid = '".res($masterid)."' AND metaid = '".$r['metaid']."'; ";
+		$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		if (mysqli_num_rows($result2)==0) {
+			// no pre-existing record, so update accordingly
+			$query2 = "UPDATE availability SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
+			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		} else {
+			// duplicate
+			$query2 = "DELETE FROM availability WHERE id = '".$r['id']."'; ";
+			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		}
+	}
 	$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
@@ -122,6 +137,8 @@
 	$query = "UPDATE purchase_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+	$query = "UPDATE rfqs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "DELETE FROM parts WHERE id = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
