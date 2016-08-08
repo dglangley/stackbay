@@ -18,7 +18,7 @@
 		$result = qdb($query);
 		if(mysqli_num_rows($result)){
 			foreach($result as $row){
-				echo "Found the translation: ".$row['c'];
+//				echo "Found the translation: ".$row['c'];
 				return $row['c'];
 			}
 		}

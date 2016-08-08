@@ -27,14 +27,15 @@
 	setcookie('report_type',$report_type);
 	
 	$order = '';
-	if (isset($_REQUEST['order'])){
+	if ($_REQUEST['order']){
 		$report_type = 'detail';
 		$order = $_REQUEST['order'];
+		echo "Order = ".$order."..";
 	}
 	
 	$part = '';
 	$part_string = '';
-	if (isset($_REQUEST['part'])){
+	if ($_REQUEST['part']){
     	$part = $_REQUEST['part'];
     	echo($part);
     	$part_list = getPipeIds($part);
@@ -42,16 +43,15 @@
     	    $part_string .= $id.',';
     	}
     	$part_string = rtrim($part_string, ",");
-    	echo(' | '.$part_string); 	
     }
 	
 	$endDate = '';
-	if (isset($_REQUEST['END_DATE'])){
+	if ($_REQUEST['END_DATE']){
 		$endDate = $_REQUEST['END_DATE'];
 	}
 	
 	$startDate = '';
-	if (isset($_REQUEST['START_DATE'])){
+	if ($_REQUEST['START_DATE']){
 		$startDate = $_REQUEST['START_DATE'];
 	}
 	
