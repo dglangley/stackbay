@@ -119,6 +119,8 @@
                         return ($r["id"]);
                 }
 
+				return false;//abstain from creating manfs for now (8/8/16)
+
                 $query = "REPLACE manfs (name) VALUES ('".res($manf)."'); ";
                 $result = qdb($query);// OR die(qe());
                 $MANFS[$manf] = qid();

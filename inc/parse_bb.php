@@ -70,7 +70,7 @@
 				$eci = 0;
 				$company = $data[array_search('Company',$F)];
 				$part = $data[array_search('Part/Model',$F)];
-				$heci = $data[array_search('HECI/CLEI',$F)];
+				$heci = preg_replace('/^[^[:alnum:]]*([[:alnum:]]+)[^[:alnum:]]*/$','$1',$data[array_search('HECI/CLEI',$F)]);
 				if (strlen($heci)<>7 AND strlen($heci)<>10) { $heci = ''; }
 				$manf = $data[array_search('Mfg',$F)];
 				if ($manf=='N/A') { $manf = ''; }
@@ -82,7 +82,7 @@
 				$companyid = getCompany($company,'name','id');
 				if (! $companyid) { $companyid = addCompany($company); }
 
-				$partid = getPartId($part,$heci,goManf($manf));
+				$partid = getPartId($part,$heci);//,goManf($manf));
 //				echo 'bb:'.$part.':'.$heci.':'.$partid.' '.$company.'<BR>';
 //				continue;
 				if (! $partid) {
