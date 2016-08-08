@@ -71,6 +71,7 @@
 			//echo 'ps:'.$part.'<BR>';
 			//continue;
 			if (! $partid) {
+continue;//8-8-16
 				$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
 			}
 //			echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);

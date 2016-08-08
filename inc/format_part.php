@@ -145,7 +145,7 @@
 	$rev_base = '(S[-]?|R(E[VL])?[[:space:]-.]?|I[S]{2}?[[:space:]-]?)';
 	$rev_kit = '('.$rev_base.$rev_ext.')';
 	$revs = '([^[:alnum:]]+'.$rev_kit.')*';
-	$abs_revs = '([^[:alnum:]]*(REV|ISS|SER)[^[:alnum:]]?'.$rev_ext.')*';
+	$abs_revs = '([^[:alnum:]]*(REV|ISS|SER|ICS|REL)[^[:alnum:]]?'.$rev_ext.')*';
 	function format_part($part,$manfid=0) {
 		global $formats;
 
