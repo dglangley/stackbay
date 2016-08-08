@@ -41,6 +41,7 @@
 				}
 				if (! $subquery) { $subquery .= "1 = 1 "; }
 				$query .= $subquery."); ";
+
 				$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 				while ($r = mysqli_fetch_assoc($result)) {
 					$results[] = $r;
@@ -65,7 +66,7 @@
 				$PIPE_IDS[$keysearch] = $ids;
 			}
 		}
-
+		
 		return ($pipe_ids);
 	}
 ?>
