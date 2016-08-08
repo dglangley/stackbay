@@ -92,6 +92,7 @@
 						$partid = getPartId($words[0],$heci,goManf($manf));
 					}
 					if (! $partid) {
+continue;
 						$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
 					}
 				}

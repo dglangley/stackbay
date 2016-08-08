@@ -90,9 +90,11 @@
 			// index it by part number to consolidate, and save on lookups later
 			$part_numbers[$i] = trim(str_replace('MERGEME','',$part_numbers[$i]));
 			$fstr = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
-			if (strlen($fstr)<2 OR $fstr==$part OR preg_match('/^S-[0-9]{1,2}$/',$part_numbers[$i])) { continue; }
 
-			$aliases[$part_numbers[$i]] = $part_numbers[$i];
+			// must be at least 2 chars, must not be the same as the part#, and must not be a series ("S-08")
+			if (strlen($fstr)<2 OR $fstr==$part OR preg_match('/^S-[0-9]{1,2}$/',$part_numbers[$i]) OR isset($aliases[$fstr])) { continue; }
+
+			$aliases[$fstr] = $part_numbers[$i];
 		}
 
 		// get aliases from old inventory aliases db table
@@ -110,7 +112,8 @@
 				$falias = trim(preg_replace('/[^[:alnum:]]+/','',$s));
 				$alias = trim($s);
 
-				if (strlen($falias)<2 OR $falias==$fpart OR preg_match('/^S-[0-9]{1,2}$/',$alias)) { continue; }
+				// must be at least 2 chars, must not be the same as the part#, and must not be a series ("S-08")
+				if (strlen($falias)<2 OR $falias==$fpart OR preg_match('/^S-[0-9]{1,2}$/',$alias) OR isset($aliases[$falias])) { continue; }
 
 				$aliases[$falias] = strtoupper($alias);
 			}
@@ -122,7 +125,7 @@
 	// get ghost inventory items
 	$query = "SELECT partid, SUM(vqty) visible_qty, parts.* FROM staged_qtys, parts ";
 	$query .= "WHERE staged_qtys.partid = parts.id ";
-//	$query .= "AND part LIKE '437420600%' ";
+	$query .= "AND partid <> '292429' AND partid <> '29784' ";
 	$query .= "GROUP BY partid ORDER BY part ASC; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -138,8 +141,8 @@
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {
 			$falias = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
-			if (strlen($falias)<2 OR $falias==$fpart OR array_stristr($aliases,$part_numbers[$i])!==false) { continue; }
-			$aliases[] = $part_numbers[$i];
+			if (strlen($falias)<2 OR $falias==$fpart OR isset($aliases[$falias])) { continue; }
+			$aliases[$falias] = $part_numbers[$i];
 		}
 
 		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
@@ -149,6 +152,7 @@
 	foreach ($results as $partid => $r) {
 		$qty = $r['visible_qty'];
 		$part = $r['part'];
+		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 		$heci = $r['heci'];
 		$manf = $r['manf'];
 		$descr = $r['descr'];
@@ -167,15 +171,16 @@
 
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
-		$query3 .= "WHERE partid = '".$partid."' AND parts_index.keywordid = keywords.id AND rank = 'primary' ";
+		$query3 .= "WHERE partid = '".$partid."' AND parts_index.keywordid = keywords.id ";
+		$query3 .= "AND rank = 'primary' ";
 		$query3 .= "ORDER BY length(keyword) DESC; ";
 //		echo $query3.'<BR>';
 		$result3 = qdb($query3) OR die(qe().' '.$query3);
 		while ($r3 = mysqli_fetch_assoc($result3)) {
-			$fkeyword = preg_replace('/[^[:alnum:]]+/','',$r3['keyword']);
-			if (strlen($fkeyword)<2 OR $fkeyword==$fpart OR array_stristr($aliases,$r3['keyword'])!==false) { continue; }
+			$fkeyword = $r3['keyword'];
+			if (strlen($fkeyword)<2 OR $fkeyword==$fpart OR isset($aliases[$fkeyword]) OR (strlen($fkeyword)==7 AND array_stristr($aliases,$fkeyword)!==false)) { continue; }
 
-			$aliases[$r3['keyword']] = $r3['keyword'];
+			$aliases[$fkeyword] = $r3['keyword'];
 		}
 
 		foreach ($aliases as $alias) {

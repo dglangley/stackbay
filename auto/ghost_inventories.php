@@ -23,12 +23,13 @@ $result = qdb($query) OR die(qe().' '.$query);
 
 $getPairedData = "SELECT ";
 $getPairedData .= "availability.`partid`, ";
-$getPairedData .= "availability.`avail_qty`,";
+$getPairedData .= "MAX(availability.`avail_qty`) avail_qty,";
 $getPairedData .= "search_meta.`companyid` ";
 $getPairedData .= "FROM search_meta,availability,companies ";
-$getPairedData .= "WHERE  `datetime` > DATE_SUB(CURDATE( ) , INTERVAL 1 WEEK)";
+$getPairedData .= "WHERE  `datetime` > DATE_SUB(CURDATE( ) , INTERVAL 1 WEEK) ";
 $getPairedData .= "AND search_meta.`id`= availability.`metaid` ";
-$getPairedData .= "AND companies.`id` = search_meta.companyid; ";
+$getPairedData .= "AND companies.`id` = search_meta.companyid ";
+$getPairedData .= "GROUP BY partid, companyid; ";
 
 
 
@@ -41,7 +42,7 @@ $organized = array();
 //Declare the percentage value of each of the API's (curated for now)
 $weights = array(
 	"Default" => .30,
-	"34" => .80,
+	/*"34" => .80,*/
 	"36" => .25,
 	"3" => .25,
 	"1414" => .25,
@@ -114,11 +115,13 @@ foreach ($organized as $companyid => $item) {
 
 //Loop through the items we randomly selected and insert the rows
 
-foreach ($parsed[$companyid] as $item => $qty){
+foreach ($parsed as $companyid => $r) {
+	foreach ($r as $partid => $qty){
         $insert = "INSERT INTO staged_qtys ";
         $insert .= "(partid , companyid , qty) VALUES ('";
-        $insert .= $item."', '".$companyid."', '".$qty."');";
+        $insert .= $partid."', '".$companyid."', '".$qty."');";
         qdb($insert) OR die(qe());
+	}
     
 }
     //print_r("Ghost Sunday Completed: ".date("m-d-y|g:i a"));
