@@ -102,6 +102,9 @@
 		'KIT'=>1,
 		'ESS#5'=>1,
 		'AMPLIFIER'=>1,
+		'CONTROLLER'=>1,
+		'EWSD'=>1,
+		'BREAKER'=>1,
 	);
 
 	// for every email...
