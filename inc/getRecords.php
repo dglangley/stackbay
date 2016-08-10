@@ -138,7 +138,7 @@
 
 		$db_results = array();
 
-		if (!$id_csv && (!$record_start && !$record_end)||!($table_name == 'sales' || $table_name == 'incoming_quote')){
+		if (!$id_csv && (!$record_start && !$record_end)||(!$id_csv && ($table_name == 'sales' || $table_name == 'incoming_quote'))){
 //			echo 'Valid search result or date range not entered';
 			return $db_results;
 		}

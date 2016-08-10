@@ -11,8 +11,8 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	
 	
-  	
-	//Company Id is grabbed from the search field at the top, but only if one has been passed in
+
+	//Get the company filter from the   	
 	$company_filter = '';
 	if ($_REQUEST['companyid'] && is_numeric($_REQUEST['companyid']) && $_REQUEST['companyid']>0) { 
 		$company_filter = $_REQUEST['companyid']; 
@@ -52,7 +52,7 @@
 	$quarter_start = $quarter[floor(date('m')/3)];
 	$quarter_start .=  date('Y');
 
-	$record_start = format_date($quarter_start, 'Y-m-d');
+	$record_start = format_date($last_week, 'Y-m-d');
 	if ($_REQUEST['START_DATE']){
 		$record_start = format_date($_REQUEST['START_DATE'], 'Y-m-d');
 	}
@@ -83,20 +83,65 @@
 
     <table class="table table-header">
 		<tr>
-			<td class="col-md-2">
-                <input type="text" class="search order-search" id="accounts-search" placeholder="Order#, Part#, HECI..." autofocus />
-			</td>
-			<td class="text-center col-md-6">
-			</td>
-			<td class="col-md-3">
-				<div class="pull-right form-group">
-					<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					<?php if ($company_filter) { echo '<option value="'.$company_filter.'" selected>'.
-					($company_filter).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
-					</select>
-					<input class="btn btn-primary btn-sm" type="submit" value="Go">
-				</div>
+		<td class = "col-md-1">
+
+		    <div class="btn-group">
+		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+		        <i class="fa fa-sort-numeric-desc"></i>	
+		        </button>
+				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
+		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
+		        	<i class="fa fa-history"></i>	
+		        </button>
+		        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+		    </div>
+		</td>
+
+		<?php 
+			//Calculate the standard year range, output quarters as an array, and make 
+			$year = date('Y');
+			$quarter = array('01/01/','03/01/','06/01/','09/01/');
+			$today = date('m/d/Y');
+			$quarter_start = $quarter[floor(date('m')/3)];
+		?>
+		<td class = "col-md-1">
+				<div class="input-group date datetime-picker-filter">
+		            <input type="text" name="START_DATE" class="form-control input-sm" value="
+		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" style = "min-width:50px;"/>
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+		        </div>
+		</td>
+		<td class = "col-md-1 ">
+					<div class="input-group date datetime-picker-filter">
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="
+		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" style = "min-width:50px;"/>
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+		    </div>
+		</td>
+
+		<td class="col-md-1 text-center">
+
+			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+		</td>
+		
+		<td class="col-md-2 text-center">
+			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+		</td>
+		<td class="col-md-3">
+			<div class="pull-right form-group">
+			<select name="companyid" id="companyid" class="company-selector">
+					<option value="">- Select a Company -</option>
+				<?php 
+				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+				?>
+				</select>
+				<input class="btn btn-primary btn-sm" type="submit" value="Apply">
+			</div>
 			</td>
 		</tr>
 	</table>
@@ -108,51 +153,7 @@
 <!------------------------------------------------------------------------------------>
     <div id="pad-wrapper">
 		<div class="row filter-block">
-		<div class="col-md-2">
-			Detail Level <br>
-		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">Summary</button>
-				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">Detail</button>
-				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-		    </div>
-		</div>
 
-		<div class = "col-md-1">
-			Dates between
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php echo format_date($record_start, 'm/d/Y');?>" />
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-		<div class = "col-md-1 ">
-			and
-					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php echo format_date($record_end, 'm/d/Y');?>
-		            " />
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		    </div>
-		</div>
-
-	
-		<div class="col-md-2 text-center">
-			Part/Heci
-			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>'/>
-		</div>
-		<div class="col-md-5 text-right">
-		    <div class="btn-group pull-right">
-		        <button class="glow left large active">All</button>
-		        <button class="glow middle large">Pending</button>
-		        <button class="glow right large">Completed</button>
-		    </div>
-		</div>
-	    </div>
 		<br>
             <!-- orders table -->
             <div class="table-wrapper">
@@ -177,7 +178,7 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($report_type == 'summary'){
-		$widths = array(1,3,5,1,1,1);		
+		$widths = array(1,9,1,1);		
 	}
 	else{
 		if ($company_filter) {
@@ -201,16 +202,15 @@
 //	echo('Value Passed in: '.$company_filter);
 	//If there is a company id, translate it to the old identifier
 	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
-//	echo '<br>The value of this company in the old database is: '.$oldid;
+
 	//Write the query for the gathering of Pipe data
-	
     $result = getRecords($part,$part_string);
     $rows = '';
-	if (empty($result)){echo "Please enter valid search parameters";}
     $summary_rows = array();
     if($report_type == 'summary'){
         foreach ($result as $row){
             $part = $row['partid'];
+            if(!$part){continue;}
             if(!array_key_exists($part, $summary_rows)){
                 $summary_rows[$part] = array(
                     'last_date' => '',
@@ -218,26 +218,38 @@
                     'total' => ''
                     );
             }
-            $summary_rows[$part]['last_date'] = $row['datetime'];
+            
+        	if(!($summary_rows[$part]['last_date'])){
+        		$summary_rows[$part]['last_date'] = $row['datetime'];
+        	}
             $summary_rows[$part]['qty'] += $row['qty'];
             $summary_rows[$part]['total']++;
+		}
+        foreach($summary_rows as $part => $info){
+				$descr = (getPart($part,'part').' &nbsp; '.getPart($part,'heci'));
+	            $last_date = $info['last_date'];
+	            $summed_qtys = $info['qty'];
+	            $times_requested = $info['total'];
+			
+			$unsorted[] = array(
+				'part' => $descr,
+				'date' => $last_date,
+				'qty'  => $summed_qtys,
+				'rqs' => $times_requested
+				);
         }
 
-        foreach($summary_rows as $part => $info){
-            $descr = (getPart($part,'part').' &nbsp; '.getPart($part,'heci'));
-            $last_date = $info['last_date'];
-            $qty = $info['qty'];
-            $total_requested = $info['total'];
-            $rows .= '
-                <tr>
-                    <td>'.$last_date.'</td>
-                    <td>'.$descr.'</td>
-                    <td>'.$total_requested.'</td>
-                    <td>'.$qty.'</td>
-                </tr>
-            ';
-        }    
-    }
+        foreach($unsorted as $row){
+	            $rows .= '
+	                <tr>
+	                    <td>'.format_date($row['date'], 'M d, Y').'</td>
+	                    <td>'.$row['part'].'</td>
+	                    <td>'.$row['rqs'].'</td>
+	                    <td>'.$row['qty'].'</td>
+	                </tr>
+	            ';
+	        }    
+	}
 	else{ 
 	    foreach ($result as $r){
 
@@ -273,9 +285,6 @@
 
 		$results[] = $row;
 	}
-    
-
-
     	foreach ($results as $r) {
     		$rows .= '
                                 <!-- row -->
@@ -292,9 +301,6 @@
                                     <td class="text-right">
                                         '.format_price($r['amt'],true,' ').'
                                     </td>
-                                    <td class="text-right">
-    									'.$r['status'].'
-                                    </td>
                                 </tr>
     		';
     	    }
@@ -309,19 +315,9 @@
                         <thead>
                             <tr>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    Date 
-
-                            		<?php
-                            			if($report_type == 'summary'){echo("Last Ordered ");}
-                            			if($record_start and $record_end){
-                            				echo ('<br>('.$record_start.' - '.$record_end.')');
-                            				echo '<i class="fa fa-times" style="color:red" aria-hidden="true" id = "date_filter"></i>';
-                            			}
-                            		?>
-
-                                    <br>
-
-                                </th>
+                                    <?php if($report_type == 'summary'){echo("Last Req ");} ?>
+                                    Date
+	                            </th>
 		
 
 
@@ -336,26 +332,30 @@
                                     <span class="line"></span>
                                     Items
                                 </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+<?php if ($report_type == 'summary') { ?>
+								<th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Qty
-                                    <?php if($report_type == 'summary'){echo ('Ordered');}?>
-                                </th>
-<?php if ($report_type == 'detail') { ?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Price (ea)
-                                </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Total Amount
-									<br>
+                                    # Requests
                                 </th>
 <?php } ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Status
+                                    <?php if($report_type == 'summary'){echo ('Sum ');}?>
+                                    Qty
                                 </th>
+<?php if ($report_type == 'detail') { ?>
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Quote Price
+                                </th>
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Total Quote
+									<br>
+                                </th>
+<?php } ?>
+
+
                             </tr>
                         </thead>
                         <tbody>
