@@ -1,4 +1,6 @@
 <?php
+
+	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
@@ -10,10 +12,10 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	
-	
-
-	//Get the company filter from the   	
-	$company_filter = '';
+//========================================================================================
+//------------------------------- Filter Gathering Section -------------------------------
+//========================================================================================
+$company_filter = '';
 	if ($_REQUEST['companyid'] && is_numeric($_REQUEST['companyid']) && $_REQUEST['companyid']>0) { 
 		$company_filter = $_REQUEST['companyid']; 
 	}
@@ -25,12 +27,7 @@
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
 	
-/*	$order = '';
-	if ($_REQUEST['order']){
-//		$report_type = 'detail';
-		$order = $_REQUEST['order'];
-	}
-*/	
+	//Part is requested, converted with hecidb to a new system
 	$part = '';
 	$part_string = '';
 	if ($_REQUEST['part']){
@@ -207,9 +204,11 @@
     $result = getRecords($part,$part_string);
     $rows = '';
     $summary_rows = array();
+    $unsorted = array();
     if($report_type == 'summary'){
         foreach ($result as $row){
             $part = $row['partid'];
+            
             if(!$part){continue;}
             if(!array_key_exists($part, $summary_rows)){
                 $summary_rows[$part] = array(
@@ -225,6 +224,7 @@
             $summary_rows[$part]['qty'] += $row['qty'];
             $summary_rows[$part]['total']++;
 		}
+
         foreach($summary_rows as $part => $info){
 				$descr = (getPart($part,'part').' &nbsp; '.getPart($part,'heci'));
 	            $last_date = $info['last_date'];
@@ -238,7 +238,15 @@
 				'rqs' => $times_requested
 				);
         }
-
+		
+		function cmp($a, $b) {
+		    if ($a['rqs'] == $b['rqs']) {
+		        return 0;
+		    }
+		    return ($a['rqs'] < $b['rqs']) ? 1 : -1;
+		}
+		uasort($unsorted,'cmp');
+		
         foreach($unsorted as $row){
 	            $rows .= '
 	                <tr>

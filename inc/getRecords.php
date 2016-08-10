@@ -164,28 +164,20 @@
 			$db_results = $SALE_QUOTES[$invid];
 		} else {
 */
-			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, inventory_id partid ".$add_field;
-			$query .= "FROM inventory_".$table_name.", inventory_company ";
+			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, part_number , clei ".$add_field;
+			$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
 			if ($table_name=='incoming_quote') { $query .= ", inventory_purchaseorder "; }
 			$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 			if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
 			$query .= $and_where;
 			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
+			$query .= "AND inventory_inventory.id = inventory_id ";
 			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
-
 //			echo $orig_table.':<BR>'.$query.'<BR>';
 			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-			
 
 			while ($r = mysqli_fetch_assoc($result)) {
-				$query2 = "SELECT part_number, clei FROM inventory_inventory WHERE id = '".$r['partid']."'; ";
-
-				$result2 = qdb($query2,'PIPE');
-				if (mysqli_num_rows($result2)>0) {
-					$r2 = mysqli_fetch_assoc($result2);
-					$r['partid'] = getPartId($r2['part_number'],$r2['clei']);
-				}
-				
+				$r['partid'] = getPartId($r['part_number'],$r['clei']);
 				$db_results[] = $r;
 			}
 
