@@ -66,7 +66,7 @@
 				$PIPE_IDS[$keysearch] = $ids;
 			}
 		}
-		
+
 		return ($pipe_ids);
 	}
 ?>

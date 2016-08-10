@@ -30,14 +30,13 @@
 	if ($_REQUEST['order']){
 		$report_type = 'detail';
 		$order = $_REQUEST['order'];
-		echo "Order = ".$order."..";
 	}
 	
 	$part = '';
 	$part_string = '';
 	if ($_REQUEST['part']){
     	$part = $_REQUEST['part'];
-    	echo($part);
+
     	$part_list = getPipeIds($part);
     	foreach ($part_list as $id => $array) {
     	    $part_string .= $id.',';
@@ -80,20 +79,65 @@
 
     <table class="table table-header">
 		<tr>
-			<td class="col-md-2">
-                <input type="text" class="search order-search" id="accounts-search" placeholder="Order#, Part#, HECI..." autofocus />
-			</td>
-			<td class="text-center col-md-6">
-			</td>
-			<td class="col-md-3">
-				<div class="pull-right form-group">
-					<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					<?php if ($company_filter) { echo '<option value="'.$company_filter.'" selected>'.
-					($company_filter).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
-					</select>
-					<input class="btn btn-primary btn-sm" type="submit" value="Go">
-				</div>
+		<td class = "col-md-1">
+
+		    <div class="btn-group">
+		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+		        <i class="fa fa-ticket"></i>	
+		        </button>
+				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
+		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
+		        	<i class="fa fa-list"></i>	
+	        	</button>
+				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+		    </div>
+		</td>
+
+		<?php 
+			//Calculate the standard year range, output quarters as an array, and make 
+			$year = date('Y');
+			$quarter = array('01/01/','03/01/','06/01/','09/01/');
+			$today = date('m/d/Y');
+			$quarter_start = $quarter[floor(date('m')/3)];
+		?>
+		<td class = "col-md-1">
+				<div class="input-group date datetime-picker-filter">
+		            <input type="text" name="START_DATE" class="form-control input-sm" value="
+		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" style = "min-width:50px;"/>
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+		        </div>
+		</td>
+		<td class = "col-md-1 ">
+					<div class="input-group date datetime-picker-filter">
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="
+		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" style = "min-width:50px;"/>
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+		    </div>
+		</td>
+
+		<td class="col-md-1 text-center">
+
+			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+		</td>
+		
+		<td class="col-md-2 text-center">
+			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+		</td>
+		<td class="col-md-3">
+			<div class="pull-right form-group">
+			<select name="companyid" id="companyid" class="company-selector">
+					<option value="">- Select a Company -</option>
+				<?php 
+				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+				?>
+				</select>
+				<input class="btn btn-primary btn-sm" type="submit" value="Apply">
+			</div>
 			</td>
 		</tr>
 	</table>
@@ -105,60 +149,7 @@
 <!------------------------------------------------------------------------------------>
     <div id="pad-wrapper">
 		<div class="row filter-block">
-		<div class="col-md-2">
-			Detail Level <br>
-		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">Summary</button>
-				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">Detail</button>
-				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-		    </div>
-		</div>
-		<?php 
-			//Calculate the standard year range, output quarters as an array, and make 
-			$year = date('Y');
-			$quarter = array('01/01/','03/01/','06/01/','09/01/');
-			$today = date('m/d/Y');
-			$quarter_start = $quarter[floor(date('m')/3)];
-		?>
-		<div class = "col-md-1">
-			Dates between
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" />
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-		<div class = "col-md-1 ">
-			and
-					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" />
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		    </div>
-		</div>
 
-		<div class="col-md-1 text-center">
-			Order #
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>'/>
-		</div>
-		
-		<div class="col-md-2 text-center">
-			Part/Heci
-			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>'/>
-		</div>
-		<div class="col-md-5 text-right">
-		    <div class="btn-group pull-right">
-		        <button class="glow left large active">All</button>
-		        <button class="glow middle large">Pending</button>
-		        <button class="glow right large">Completed</button>
-		    </div>
-		</div>
-	    </div>
 		<br>
             <!-- orders table -->
             <div class="table-wrapper">
@@ -184,15 +175,15 @@
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($company_filter) {
 		if ($report_type=='summary') {
-			$widths = array(3,3,2,2,2);
+			$widths = array(3,3,2,2);
 		} else {
-			$widths = array(2,2,4,1,1,1,1);
+			$widths = array(2,2,4,1,1,1);
 		}
 	} else {
 		if ($report_type=='summary') {
-			$widths = array(2,4,2,1,2,1);
+			$widths = array(1,4,4,2,1);
 		} else {
-			$widths = array(1,3,1,3,1,1,1,1);
+			$widths = array(1,4,1,3,1,1,1);
 		}
 	}
 	$c = 0;
@@ -238,6 +229,42 @@
 
 	$result = qdb($query,'PIPE');
 	
+	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
+	//will prepare the results rows to make sorting and grouping easier without having to change the results
+	$summary_rows = array();
+	if($report_type == 'summary'){
+
+	    foreach ($result as $row){
+            $id = $row['id'];
+            if(!array_key_exists($id, $summary_rows)){
+                $summary_rows[$id] = array(
+                    'date' => '',
+                    'company' => '',
+                    'items' => '',
+                    'summed' => ''
+                    );
+            }
+			$summary_rows[$id]['date'] = $row['datetime'];
+            $summary_rows[$id]['items'] += $row['qty'];
+            $summary_rows[$id]['summed'] += $row['price'];
+            $summary_rows[$id]['company'] = $row['company_name'];
+        }
+        foreach ($summary_rows as $id => $info) {
+
+        	$rows .= '
+                <tr>
+                    <td>'.format_date($info['date'], 'M d, Y').'</td>';
+                    if(!$company_filter){$rows .= '<td>'.$info['company'].'</td>';}
+            $rows .='
+            		<td>'.$id.'</td>
+                    <td>'.$info['items'].'</td>
+                    <td>'.$info['summed'].'</td>
+                </tr>
+            ';
+        }
+	}
+
+if ($report_type=='detail') {
 	foreach ($result as $r){
 
 		//Set the amount to zero for the number of items and the total price
@@ -267,20 +294,12 @@
                             </td>
 		';
 
-			if ($report_type=='detail') {
-				$descr = $r['part'].' &nbsp; '.$r['heci'];
-				$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
-			}
-
-
-		if ($report_type=='summary') {
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$num_items,'amt'=>$amt,'status'=>'<span class="label label-success">Completed</span>');
+			$descr = $r['part'].' &nbsp; '.$r['heci'];
+			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 		}
 
 		$results[] = $row;
-	}
 
-	$rows = '';
 	foreach ($results as $r) {
 		$rows .= '
                             <!-- row -->
@@ -300,12 +319,11 @@
                                 <td class="text-right">
                                     '.format_price($r['amt'],true,' ').'
                                 </td>
-                                <td class="text-right">
-									'.$r['status'].'
-                                </td>
+
                             </tr>
 		';
 	}
+}
 ?>
 
 
@@ -316,13 +334,6 @@
                             <tr>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     Date 
-                            		<?php
-                            			if($startDate and $endDate){
-                            				echo ('('.$startDate.' - '.$endDate.')');
-                            				echo '<i class="fa fa-times" style="color:red" aria-hidden="true" id = "date_filter"></i>';
-                            			}
-                            		?>
-                            			
                                     <br>
 
                                 </th>
@@ -347,17 +358,13 @@
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Price (ea)
+                                    Price ( ea)
                                 </th>
 <?php } ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Total Amount
 									<br>
-                                </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Status
                                 </th>
                             </tr>
                         </thead>
@@ -377,9 +384,6 @@
     <script type="text/javascript">
 
         $(document).ready(function() {
-            $('#accounts').dataTable({
-                "sPaginationType": "full_numbers"
-            });
 			$('.btn-report').click(function() {
 				var btnValue = $(this).data('value');
 				$(this).closest("div").find("input[type=radio]").each(function() {
