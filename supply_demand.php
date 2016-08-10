@@ -120,11 +120,6 @@ $company_filter = '';
 		    </div>
 		</td>
 
-		<td class="col-md-1 text-center">
-
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
-		</td>
-		
 		<td class="col-md-2 text-center">
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 		</td>
@@ -304,7 +299,7 @@ $company_filter = '';
                                     <td>
                                         '.$r['detail'].'
                                     </td>
-    								'.$r['qty_col'].'
+    						 		'.$r['qty_col'].'
     								'.$r['price_col'].'
                                     <td class="text-right">';
                                     if($r['amt']){
