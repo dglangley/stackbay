@@ -115,6 +115,9 @@
 			/* General Datacomm 058P150-002 */
 			'(0[0-9]{2}[AMP]1[0-9]{2}-0[0-9]{2})([^[:alnum:]]*[A-Z][^[:alnum:]]*[A-Z])?',
 
+			/* Larus 1119-L5 */
+			'(1119-?L5)([^[:alnum:]]?ISS[^[:alnum:]]?[0-9]{1,2})?([^[:alnum:]]?(OFFIC[E]?)*[^[:alnum:]]?REP.*)?',
+
 		),
 		1 => array(//alcatel-lucent
 		),
@@ -142,6 +145,7 @@
 	$rev_base = '(S[-]?|R(E[VL])?[[:space:]-.]?|I[S]{2}?[[:space:]-]?)';
 	$rev_kit = '('.$rev_base.$rev_ext.')';
 	$revs = '([^[:alnum:]]+'.$rev_kit.')*';
+	$abs_revs = '([^[:alnum:]]*(REV|ISS|SER|ICS|REL)[^[:alnum:]]?'.$rev_ext.')*';
 	function format_part($part,$manfid=0) {
 		global $formats;
 
@@ -189,6 +193,10 @@
 		// default rev matching for all other cases
 		if (! $form_found) {
 			$base_part = preg_replace('/'.$revs.'$/','',$part);
+			// one last try! using no punct separator between base and rev, but using the more hardlined $abs_revs
+			if ($base_part===$part) {
+				$base_part = preg_replace('/'.$GLOBALS['abs_revs'].'$/','',$part);
+			}
 //			echo $part.' = '.$base_part.' === '.$revs.'<BR>';
 		}
 //		$base_part = preg_replace('/(S[-]?([0-9]{1,2}[:])?[[:alnum:]]{1,2})*$/','',$part);

@@ -27,6 +27,7 @@
 			$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 			$keyword_query .= "WHERE keyword = '".res($fpart)."' AND keywords.id = parts_index.keywordid ";
 			$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+			if ($manfid) { $keyword_query .= "AND manfid = '".$manfid."' "; }
 			$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
 			$result = qdb($keyword_query);
 			$num_results = mysqli_num_rows($result);
@@ -34,6 +35,7 @@
 				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 				$keyword_query .= "WHERE keyword LIKE '".res($fpart)."%' AND keywords.id = parts_index.keywordid ";
 				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+				if ($manfid) { $keyword_query .= "AND manfid = '".$manfid."' "; }
 				$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
 				$result = qdb($keyword_query);
 				$num_results = mysqli_num_rows($result);
@@ -46,6 +48,7 @@
 					$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 					$keyword_query .= "WHERE keyword = '".res($fbase_part)."' AND keywords.id = parts_index.keywordid ";
 					$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+					if ($manfid) { $keyword_query .= "AND manfid = '".$manfid."' "; }
 					$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
 					$result = qdb($keyword_query);
 					$num_results = mysqli_num_rows($result);
@@ -56,6 +59,7 @@
 				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 				$keyword_query .= "WHERE keyword LIKE '".res($part)."%' AND keywords.id = parts_index.keywordid ";
 				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
+				if ($manfid) { $keyword_query .= "AND manfid = '".$manfid."' "; }
 				$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
 				$result = qdb($keyword_query);
 				$num_results = mysqli_num_rows($result);

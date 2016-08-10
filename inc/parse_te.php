@@ -38,7 +38,7 @@
 				$manf = trim($cols->item(array_search('Manf',$F))->nodeValue);
 				$descr = trim(strtoupper($cols->item(array_search('Description',$F))->nodeValue));
 				$descr = str_ireplace('call','',$descr);
-				if ($manf AND $descr) { $descr = $manf.' '.$descr; }
+//				if ($manf AND $descr) { $descr = $manf.' '.$descr; }
 				$qty = trim($cols->item(array_search('Qty',$F))->nodeValue);
 				$heci = trim(str_replace('CALL','',strtoupper($cols->item(array_search('HECI/CLEI',$F))->nodeValue)));
 				// eliminate invalid heci data from suppliers
@@ -58,6 +58,7 @@
 				//echo 'te:'.$part.'<BR>';
 				//continue;
 				if (! $partid) {
+continue;//8-8-16
 					$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
 				}
 //				echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);

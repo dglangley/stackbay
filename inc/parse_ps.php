@@ -34,17 +34,21 @@
 			$cols = $rows->item($a)->getElementsByTagName('td');
 //			print "<pre>".print_r($cols,true)."</pre>";
 			$part_col = trim(str_replace('&nbsp;',' ',htmlentities($cols->item(1)->getElementsByTagName('span')->item(0)->nodeValue)));
-			$clei_pos = strpos($part_col,'CLEI:');
+			$clei_pos = false;
 			$pos_flag = 5;//number of digits of the 'CLEI:' flag string
-			if (! $clei_pos AND strstr($part_col,'Model:')) {
+			if (strstr($part_col,'CLEI:')) {
+				$clei_pos = strpos($part_col,'CLEI:');
+			} else if (strstr($part_col,'Model:')) {
 				$clei_pos = strpos($part_col,'Model:');
 				$pos_flag = 6;//number of digits of the 'Model:' flag string
 			}
 			$part = '';
 			$heci = '';
 			// if clei is found in part field, which can happen from various vendors (CSG, I'm lookin at you!)
-			if ($clei_pos>0) {
-				$part = trim(substr($part_col,0,$clei_pos));
+			if ($clei_pos!==false) {
+				if ($clei_pos>0) {
+					$part = trim(substr($part_col,0,$clei_pos));
+				}
 				// clei is at the position of the flag ('clei:' or 'model:') plus the number of digits of the flag
 				$heci = trim(substr($part_col,$clei_pos+$pos_flag,strlen($part_col)));
 				if (is_numeric($heci) OR (strlen($heci)<>7 AND strlen($heci)<>10)) { $heci = ''; }
@@ -67,6 +71,7 @@
 			//echo 'ps:'.$part.'<BR>';
 			//continue;
 			if (! $partid) {
+continue;//8-8-16
 				$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
 			}
 //			echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);

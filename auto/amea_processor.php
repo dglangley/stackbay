@@ -99,6 +99,9 @@
 		'DACS'=>1,
 		'CTF'=>1,
 		'REMOTE'=>1,
+		'KIT'=>1,
+		'ESS#5'=>1,
+		'AMPLIFIER'=>1,
 	);
 
 	// for every email...

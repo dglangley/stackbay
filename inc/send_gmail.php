@@ -25,7 +25,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='') {
+	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachment='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U;
 
 		$userid = $U['id'];
@@ -99,6 +99,11 @@
 		}
 
 		$mail->MsgHTML(format_email($email_subject,$email_body));
+
+		if ($attachment) {
+			$mail->addAttachment($attachment);
+		}
+
 		//create the MIME Message
 		$preSend = $mail->preSend();
 		if (! $preSend) {
