@@ -260,7 +260,6 @@ $company_filter = '';
 	}
 	else{ 
 	    foreach ($result as $r){
-
 		//Set the amount to zero for the number of items and the total price
 		$amt = 0;
 		$num_items = 0;
@@ -273,7 +272,8 @@ $company_filter = '';
                                 </td>
 			';
 		}
-		$this_amt = $r['qty']*$r['price'];
+		$price = trim($r['price'],"$");
+		$this_amt = $price * $r['qty'];
 		$amt += $this_amt;
 		$num_items += $r['qty'];
 
@@ -306,8 +306,11 @@ $company_filter = '';
                                     </td>
     								'.$r['qty_col'].'
     								'.$r['price_col'].'
-                                    <td class="text-right">
-                                        '.format_price($r['amt'],true,' ').'
+                                    <td class="text-right">';
+                                    if($r['amt']){
+                                    	$rows .= format_price($r['amt']);
+                                    }
+			$rows .='
                                     </td>
                                 </tr>
     		';
