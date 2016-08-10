@@ -38,6 +38,7 @@
 			for ($i=strlen($frel); $i>0; $i--) {
 				$n = $i-1;
 				$l = $frel[$n];
+				if (! isset($rev_values[$l])) { $rev_values[$l] = 0; }
 				$v += ((9*$p)+($rev_values[$l]*$p))/(10/$p);
 				$p *= 10;
 			}

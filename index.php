@@ -6,6 +6,7 @@
 	include_once 'inc/getPipeIds.php';
 	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
+	include_once 'inc/array_stristr.php';
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
@@ -272,7 +273,9 @@
 			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
 			$result2 = qdb($query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				if (array_search($r2['search'],$lines)!==false) { continue; }
+				// does this search string (followed by an appended space, as in the following 'search qty' format) already
+				// exist in the array? if so, don't add to list for duplication of calculations below
+				if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
 
 				$lines[] = $r2['search'].' '.$r2['qty'];
 			}
