@@ -96,7 +96,7 @@
 		<?php 
 			//Calculate the standard year range, output quarters as an array, and make 
 			$year = date('Y');
-			$quarter = array('01/01/','03/01/','06/01/','09/01/');
+			$quarter = array('01/01/','04/01/','07/01/','10/01/');
 			$today = date('m/d/Y');
 			$quarter_start = $quarter[floor(date('m')/3)];
 		?>
@@ -246,19 +246,19 @@
             }
 			$summary_rows[$id]['date'] = $row['datetime'];
             $summary_rows[$id]['items'] += $row['qty'];
-            $summary_rows[$id]['summed'] += $row['price'];
+            $summary_rows[$id]['summed'] += $row['price']*$row['qty'];
             $summary_rows[$id]['company'] = $row['company_name'];
         }
         foreach ($summary_rows as $id => $info) {
 
         	$rows .= '
                 <tr>
-                    <td>'.format_date($info['date'], 'M d, Y').'</td>';
+                    <td>'.format_date($info['date'], 'M j, Y').'</td>';
                     if(!$company_filter){$rows .= '<td>'.$info['company'].'</td>';}
             $rows .='
             		<td>'.$id.'</td>
                     <td>'.$info['items'].'</td>
-                    <td>'.$info['summed'].'</td>
+                    <td>'.format_price($info['summed']).'</td>
                 </tr>
             ';
         }
@@ -296,9 +296,9 @@ if ($report_type=='detail') {
 
 			$descr = $r['part'].' &nbsp; '.$r['heci'];
 			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+			$results[] = $row;
 		}
 
-		$results[] = $row;
 
 	foreach ($results as $r) {
 		$rows .= '
@@ -349,7 +349,13 @@ if ($report_type=='detail') {
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Items
+                                    <?php if($report_type == 'summary'){
+                                    	echo ('Pieces');
+                                    }
+                                    else{
+                                    	echo ('Items');
+                                    }
+                                    ?>
                                 </th>
 <?php if ($report_type=='detail') { ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">

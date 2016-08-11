@@ -83,7 +83,7 @@ $company_filter = '';
 		<td class = "col-md-1">
 
 		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+		        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
 		        <i class="fa fa-sort-numeric-desc"></i>	
 		        </button>
 				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
@@ -97,7 +97,7 @@ $company_filter = '';
 		<?php 
 			//Calculate the standard year range, output quarters as an array, and make 
 			$year = date('Y');
-			$quarter = array('01/01/','03/01/','06/01/','09/01/');
+			$quarter = array('01/01/','04/01/','07/01/','10/01/');
 			$today = date('m/d/Y');
 			$quarter_start = $quarter[floor(date('m')/3)];
 		?>
@@ -120,11 +120,6 @@ $company_filter = '';
 		    </div>
 		</td>
 
-		<td class="col-md-1 text-center">
-
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
-		</td>
-		
 		<td class="col-md-2 text-center">
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 		</td>
@@ -260,7 +255,6 @@ $company_filter = '';
 	}
 	else{ 
 	    foreach ($result as $r){
-
 		//Set the amount to zero for the number of items and the total price
 		$amt = 0;
 		$num_items = 0;
@@ -273,7 +267,8 @@ $company_filter = '';
                                 </td>
 			';
 		}
-		$this_amt = $r['qty']*$r['price'];
+		$price = trim($r['price'],"$");
+		$this_amt = $price * $r['qty'];
 		$amt += $this_amt;
 		$num_items += $r['qty'];
 
@@ -304,10 +299,13 @@ $company_filter = '';
                                     <td>
                                         '.$r['detail'].'
                                     </td>
-    								'.$r['qty_col'].'
+    						 		'.$r['qty_col'].'
     								'.$r['price_col'].'
-                                    <td class="text-right">
-                                        '.format_price($r['amt'],true,' ').'
+                                    <td class="text-right">';
+                                    if($r['amt']){
+                                    	$rows .= format_price($r['amt']);
+                                    }
+			$rows .='
                                     </td>
                                 </tr>
     		';
