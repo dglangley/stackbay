@@ -106,6 +106,7 @@
 		'EWSD'=>1,
 		'BREAKER'=>1,
 		'PWBA'=>1,
+		'CLOCK'=>1,
 	);
 
 	// for every email...

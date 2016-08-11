@@ -208,7 +208,8 @@
 		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
+			//$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
+			$rfqs[$r['partid']][$r['companyid']] = true;
 		}
 
 		$prices = array();//track prices in query results below so we can post-humously price later-dated results
@@ -243,7 +244,7 @@
 			$r['partids'] = array($r['partid']);
 
 			// if an rfq has been submitted against this partid, log it against the $key
-			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
+			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
 
 			// add missing gaps of info from previous iterations (ie, same date but earlier in the day had a price, whereas the first found record had no price)
 			if (isset($results[$key])) {
@@ -257,7 +258,7 @@
 				}
 
 				// add rfq flag if it has been rfq'd by user (see query above)
-				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
+				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') {
 					$results[$key]['rfq'] = 'Y';
 				}
 				continue;
@@ -283,7 +284,7 @@
 			$r['partids'] = array($r['partid']);
 
 			// if an rfq has been submitted against this partid, log it against the $key
-			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) { $r['rfq'] = 'Y'; }
+			if (isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) { $r['rfq'] = 'Y'; }
 
 			if (isset($results[$key])) {
 				if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
@@ -294,7 +295,7 @@
 					$results[$key]['qty'] += $r['qty'];
 				}
 
-				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']]) AND isset($rfqs[$r['partid']][$r['companyid']][$date])) OR $results[$key]['rfq']=='Y') {
+				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']=='Y') {
 					$results[$key]['rfq'] = 'Y';
 				}
 				continue;
