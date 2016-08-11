@@ -83,7 +83,7 @@ $company_filter = '';
 		<td class = "col-md-1">
 
 		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+		        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
 		        <i class="fa fa-sort-numeric-desc"></i>	
 		        </button>
 				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
@@ -97,7 +97,7 @@ $company_filter = '';
 		<?php 
 			//Calculate the standard year range, output quarters as an array, and make 
 			$year = date('Y');
-			$quarter = array('01/01/','03/01/','06/01/','09/01/');
+			$quarter = array('01/01/','04/01/','07/01/','10/01/');
 			$today = date('m/d/Y');
 			$quarter_start = $quarter[floor(date('m')/3)];
 		?>
