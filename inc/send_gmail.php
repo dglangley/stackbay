@@ -26,9 +26,10 @@
 
 	$SEND_ERR = '';
 	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachment='') {
-		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U;
+		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID;
 
-		$userid = $U['id'];
+		if ($GMAIL_USERID>0) { $userid = $GMAIL_USERID; }
+		else { $userid = $U['id']; }
 
 		$SEND_ERR = '';
 		if (! $userid OR ! is_numeric($userid)) {

@@ -193,11 +193,7 @@
 	echo 'Exporting '.count($results).' part(s) totaling '.$k.' item(s)<BR>'.chr(10);
 //	echo str_replace(chr(10),'<BR>',$csvTE);
 
-	$U['id'] = 5;
-	$U['name'] = 'Amea Cabula';
-	$U['email'] = 'amea@ven-tel.com';
-	$U['phone'] = '(805) 212-4959';
-	setGoogleAccessToken($U['id']);
+	setGoogleAccessToken(5);
 
 	// create temp file name in temp directory for each file
 	$attachment = sys_get_temp_dir()."/inventory_export_bb-".date("ymdHis").".csv";

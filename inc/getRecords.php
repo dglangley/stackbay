@@ -89,6 +89,13 @@
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 
 				if (isset($uniques[$key])) {
+					if ($market_table=='sales' OR $market_table=='purchases') {
+						$results[$uniques[$key]]['qty'] += $r['qty'];
+					} else {
+						if ($r['qty']>$results[$uniques[$key]]['qty']) {
+							$results[$uniques[$key]]['qty'] = $r['qty'];
+						}
+					}
 					if ($r['qty']>$results[$uniques[$key]]['qty']) {
 						$results[$uniques[$key]]['qty'] = $r['qty'];
 					}
@@ -181,7 +188,7 @@
 				$db_results[] = $r;
 			}
 
-			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
+//			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
 //		}
 		return (handle_results($db_results,$orig_table,$results));
 	}

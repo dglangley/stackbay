@@ -21,9 +21,7 @@
 
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 
-	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
-//hack for now
-$since_datetime = '07-May-2016 06:00:00';
+	$since_datetime = format_date($now,'d-M-Y H:i:s',array('d'=>-2));
 ?>
 <!DOCTYPE html>
 <html>

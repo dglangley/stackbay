@@ -122,8 +122,13 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 			return true;
 		}
 	}
+
+	$GMAIL_USERID = 0;
 	function setGoogleAccessToken($userid) {
-		global $ACCESS_TOKEN,$REFRESH_TOKEN,$timestamp;
+		global $ACCESS_TOKEN,$REFRESH_TOKEN,$GMAIL_USERID,$timestamp;
+
+		// we use this globally in format_email(), for example, to set signature variables like name, phone, etc
+		$GMAIL_USERID = $userid;
 
 		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
 		$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";

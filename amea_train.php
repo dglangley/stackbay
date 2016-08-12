@@ -33,8 +33,7 @@
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 
 	// default
-	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
-$since_datetime = '07-May-2016 06:00:00';
+	$since_datetime = format_date($now,'d-M-Y H:i:s',array('d'=>-2));
 	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
 	$email_number = 0;
 	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
@@ -72,6 +71,8 @@ $since_datetime = '07-May-2016 06:00:00';
 		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
 			$mpart = $structure->parts[1];
 			$message = imap_decode($inbox,$n,$mpart->encoding);
+		} else {
+			$message = imap_body($inbox,$n);
 		}
 //echo $message.'<BR><BR>';
 

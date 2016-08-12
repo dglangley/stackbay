@@ -18,11 +18,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeIds.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeQty.php';
 
-	$U['id'] = 5;
-	$U['name'] = 'Amea Cabula';
-	$U['email'] = 'amea@ven-tel.com';
-	$U['phone'] = '(805) 212-4959';
-	setGoogleAccessToken($U['id']);
+	$userid = 5;
+	setGoogleAccessToken($userid);
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -40,7 +37,7 @@
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
 		$client->refreshToken($REFRESH_TOKEN);
 		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$U['id'],$REFRESH_TOKEN);
+		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
 	}
 
 	// default
@@ -128,6 +125,8 @@
 //			$message = imap_decode(imap_fetchbody($inbox,$n,2),$mpart->encoding);
 
 			$message = imap_decode($inbox,$n,$mpart->encoding);
+		} else {
+			$message = imap_body($inbox,$n);
 		}
 //echo $message.'<BR><BR>';
 

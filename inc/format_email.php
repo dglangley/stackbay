@@ -1,11 +1,24 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+
 	$EMAIL_CSS = '';
 	function format_email($subject='rfq',$main_body='',$teaser='') {
 		$U = $GLOBALS['U'];
+		$GMAIL_USERID = $GLOBALS['GMAIL_USERID'];
 		$css = $GLOBALS['EMAIL_CSS'];
 
+		if ($GMAIL_USERID>0) {
+			$signature_name = getContact($GMAIL_USERID,'userid','name');
+			$signature_phone = getContact($GMAIL_USERID,'userid','phone');
+			$signature_email = getContact($GMAIL_USERID,'userid','email');
+		} else {
+			$signature_name = getContact($U['id'],'userid','name');
+			$signature_phone = getContact($U['id'],'userid','phone');
+			$signature_email = getContact($U['id'],'userid','email');
+		}
+
 		$phone = '';
-		if ($U['phone']) { $phone = $U['phone'].' &#8226; '; }
+		if ($signature_phone) { $phone = $signature_phone.' &#8226; '; }
 
 		if ($teaser) {
 			$teaser = '
@@ -77,7 +90,7 @@
 	  <div class="row">
 		  <p style="line-height:16px; font-size:12px; padding:0px; margin:0px">
 			<br/><br/>--<br/>
-			<strong>'.$U['name'].'</strong>
+			<strong>'.$signature_name.'</strong>
 		  </p>
 		  <p style="padding-bottom:12px; margin:0px; font-size:10px">'.$phone.' <a href="http://www.ven-tel.com">www.ven-tel.com</a></p>
 		  <p>
