@@ -39,7 +39,7 @@
 						$subquery .= "clei LIKE '".res(substr($search,0,7),'PIPE')."%' OR heci LIKE '".res(substr($search,0,7),'PIPE')."%' ";
 					}
 				}
-				if (! $subquery) { $subquery .= "1 = 1 "; }
+				if (! $subquery) { $subquery .= "1 = 2 "; }
 				$query .= $subquery."); ";
 
 				$result = qdb($query,'PIPE') OR die(qe('PIPE'));

@@ -6,12 +6,15 @@
 
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPartId.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getFavorites.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getContact.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
 //	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/mailer.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/PHPExcel.php';
+	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/send_gmail.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/array_find.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/find_fields.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/set_columns.php';
@@ -19,6 +22,8 @@
 
 	$test = 0;
 	if (! isset($userid)) { $userid = 1; }
+
+	setGoogleAccessToken(5);
 
 	// used for logging searches below, check once to get number of 0's to log
 	$num_remotes = 0;
@@ -48,7 +53,9 @@
 
 		return ($condensed);
 	}
-	function curateResults($condensed,$filename) {
+	function curateResults($condensed,$filename,$uploadid=0) {
+		global $now,$test;
+
 		// columns detected below for each field
 		$part_col = false;
 		$heci_col = false;
@@ -69,22 +76,32 @@
 
 			// is this a header row? try to find out
 			if ($n==0) {
-				list($part_col,$qty_col,$heci_col) = set_columns($row_arr,$condensed);
+				list($part_col,$qty_col,$heci_col,$header_row) = set_columns($row_arr,$condensed);
+				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
+				if ($header_row===true) { continue; }
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
+//test error email
+if ($test) {
+$part_col = false;
+$heci_col = false;
+$qty_col = false;
+}
 			if (($part_col===false AND $heci_col===false) OR $qty_col===false) {
-//				$email = getUser($r['userid'],'id','email');
-$email = 'davidglangley@gmail.com';
-				$mail_msg = 'Your inventory file named "'.$filename.'" was rejected because it was '.chr(10).
-					'unable to determine the Part# and/or Qty field(s).'.chr(10).chr(10).
-					'Oftentimes, this can be due to a missing header row, or if your file has only one column of data.'.chr(10);
-				$headers = 'From: "LunaCera support" <no-reply@lunacera.com>' . "\r\n" .
-					'Bcc: "LunaCera" <info@lunacera.com>'. "\r\n" .
-					'X-Mailer: PHP/' . phpversion();
-					//'Reply-To: "'.$U['first_name'].' '.$U['last_name'].'" <'.$U['email'].'>'. "\r\n" .
+				$mail_msg = 'I was unable to process your file upload named "'.$filename.'" because '.
+					'I was unable to determine the Part#/HECI and/or Qty field(s).<BR><BR>'.
+					'Please edit the file to add these column names, and then re-upload the file. Thanks!';
 				if (! $test) {
-					mail($email,'Inventory file rejected! '.date('D n/j/y'),$mail_msg,$headers);
+					$send_success = send_gmail($mail_msg,'Inventory upload rejected! '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com');
+					if ($send_success) {
+						echo json_encode(array('message'=>'Success'));
+					} else {
+						echo json_encode(array('message'=>$SEND_ERR));
+					}
+
+					$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
+					if (! $test) { $result2 = qdb($query2) OR die(qe().' '.$query2); }
 				}
 				break;
 			}
@@ -136,8 +153,10 @@ $email = 'davidglangley@gmail.com';
 			if (isset($keys[0])) { $part = $keys[0]; }
 			if (isset($keys[1])) { $heci = $keys[1]; }
 
-			$partid = getPartId($part,$heci);
-			if (! $partid) { continue; }
+			// get all related partids for favorites but use only the first result for capturing consolidated results
+			$partids = getPartId($part,$heci,0,true);
+			$partid = $partids[0];
+//			if (! $partid) { continue; }
 
 			$searchkey = '';
 			if ($heci) { $searchkey = $heci; } else { $searchkey = $part; }
@@ -157,7 +176,7 @@ $email = 'davidglangley@gmail.com';
 				$searchid = qid();
 			}
 
-			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid); }
+			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid,'partids'=>$partids); }
 			$consolidated[$partid]['qty'] += $qty;
 		}
 
@@ -235,7 +254,7 @@ $tempfile = '/var/tmp/400004291.xls';
 		unset($lines);
 
 		// curate results by summing qtys of matching parts and eliminating bogus rows
-		$curated = curateResults($condensed,$filename);
+		$curated = curateResults($condensed,$filename,$uploadid);
 //		print "<pre>".print_r($curated,true)."</pre>";
 		unset($condensed);
 
@@ -246,6 +265,8 @@ $tempfile = '/var/tmp/400004291.xls';
 		// now take the finished results and add to the db
 		$ln = 0;//line number, even tho it's not necessarily accurate to original list, it's still a good way to keep track
 		$report = '';
+		$num_favs = 0;
+		$favs_report = '';
 		foreach ($consolidated as $partid => $row) {
 //			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
@@ -260,7 +281,16 @@ $tempfile = '/var/tmp/400004291.xls';
 					$status .= 'Unidentified Item';
 				}
 			}
+
+			// assess favorites position by gathering all related partids
+			$favs = getFavorites($row['partids']);
+
 			$report .= '"'.$part.'","'.$heci.'","'.$qty.'","'.$status.'"'.chr(10);
+
+			if (count($favs)>0) {
+				$favs_report .= 'qty '.$qty.'- '.$part.' '.$heci.' ("'.$status.'")<BR>';
+				$num_favs += count($favs);
+			}
 			if (! $partid OR ! $qty) { continue; }
 
 			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,$searchid,$ln);
@@ -277,9 +307,28 @@ $tempfile = '/var/tmp/400004291.xls';
 			fwrite($handle, $report);
 			fclose($handle);
 
+			$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
+
+			$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com','',$attachment);
+			if ($send_success) {
+				echo json_encode(array('message'=>'Success'));
+			} else {
+				echo json_encode(array('message'=>$SEND_ERR));
+			}
+
+			if ($favs_report) {
+				$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
+
+				$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com');
+				if ($send_success) {
+					echo json_encode(array('message'=>'Success'));
+				} else {
+					echo json_encode(array('message'=>$SEND_ERR));
+				}
+			}
+
 /*
 			$email = getUser($r['userid'],'id','email');
-			$mail_msg = 'Please see attached'.chr(10).chr(10).chr(10).chr(10);
 			if (! $test) {
 $email = 'davidglangley@gmail.com';
 //				mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);

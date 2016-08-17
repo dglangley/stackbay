@@ -34,6 +34,7 @@
 				if ($heci_exists==$part_col) { $part_col = false; }
 				return (array($part_col,$qty_col,$heci_exists,false));
 			} else {
+				// actual heci doesn't exist, return columns and indicate that we have a header row ('true')
 				return (array($part_col,$qty_col,$heci_col,true));
 			}
 		}

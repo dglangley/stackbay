@@ -320,9 +320,9 @@
 		$(".descr-edit input, .descr-edit select").change(function() {
             console.log(window.location.origin+"/json/save-parts.php?partid="+$(this).data('partid')+"&field="+$(this).data('field')+"&new_value="+encodeURIComponent($(this).val()));
 			if ($(this).is("select")) {
-				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).select2('data')[0].text);
+				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).select2('data')[0].text.toUpperCase());
 			} else {
-				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).val());
+				$(this).closest(".product-descr").find("."+$(this).data('field')+"-label").html($(this).val().toUpperCase());
 			}
             $.ajax({
                 url: 'json/save-parts.php',

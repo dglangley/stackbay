@@ -96,7 +96,6 @@
 		'DACS'=>1,
 		'CTF'=>1,
 		'REMOTE'=>1,
-		'KIT'=>1,
 		'ESS#5'=>1,
 		'AMPLIFIER'=>1,
 		'CONTROLLER'=>1,
@@ -104,6 +103,15 @@
 		'BREAKER'=>1,
 		'PWBA'=>1,
 		'CLOCK'=>1,
+		'KIT'=>1,
+		'GENERATOR'=>1,
+		'ITEM'=>1,
+		'PARTNO'=>1,
+		'PART'=>1,
+		'SYS'=>1,
+		'PWR'=>1,
+		'OVERNIGHT'=>1,
+		'PART'=>1,
 	);
 
 	// for every email...
