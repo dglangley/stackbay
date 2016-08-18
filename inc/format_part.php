@@ -141,10 +141,16 @@
 	$formats[26] = $formats[25];//afc -> tellabs
 	$formats[21] = $formats[19];//BAY-NETWORKS -> NORTEL
 
-	$rev_ext = '([0-9]{1,2}[:])?[[:alnum:]]{0,3}';
-	$rev_base = '(S[-]?|R(E[VL])?[[:space:]-.]?|I[S]{2}?[[:space:]-]?)';
+	// commented rev lines below changed 8-18-16
+	//$rev_ext = '([0-9]{1,2}[:])?[[:alnum:]]{0,3}';
+	//$rev_ext = '([0-9]{1,2}[:])?[[:alnum:]]{1,3}';
+	$rev_ext = '(([0-9]{1,2}[:])?([0-9]{1,2}|[0-9]?[A-Z]|-[A-Z]{1,2}))';
+	//$rev_base = '(S(ER)?[-]?|R(E[VL])?[[:space:].-]?|I[S]{2}[[:space:]-]?)';
+	$rev_base = '((S(ER)?|R(E[VL])?|I(SS)?)[[:space:].-]?)';
 	$rev_kit = '('.$rev_base.$rev_ext.')';
-	$revs = '([^[:alnum:]]+'.$rev_kit.')*';
+	//$revs = '([^[:alnum:]]+'.$rev_kit.')*';
+	$revs = '([[:space:].-]+'.$rev_kit.')*';
+	//$abs_revs = '([^[:alnum:]]*(REV|ISS|SER|ICS|REL)[^[:alnum:]]?'.$rev_ext.')*';
 	$abs_revs = '([^[:alnum:]]*(REV|ISS|SER|ICS|REL)[^[:alnum:]]?'.$rev_ext.')*';
 	function format_part($part,$manfid=0) {
 		global $formats;

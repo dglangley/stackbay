@@ -4,15 +4,12 @@
 
 		$favs = array();
 
-		foreach ($partids as $partid => $P) {
-			$search = '';
-			if (isset($P['search'])) { $search = $P['search']; }
-
+		foreach ($partids as $partid) {
 			// check favorites
 			$query = "SELECT * FROM favorites WHERE partid = '".$partid."'; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)>0) {
-				$favs[$partid] = $search;
+				$favs[$partid] = $partid;
 			}
 		}
 

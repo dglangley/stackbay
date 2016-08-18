@@ -54,7 +54,7 @@
 		return ($condensed);
 	}
 	function curateResults($condensed,$filename,$uploadid=0) {
-		global $now,$test;
+		global $now,$test,$userid;
 
 		// columns detected below for each field
 		$part_col = false;
@@ -82,18 +82,16 @@
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
-//test error email
-if ($test) {
-$part_col = false;
-$heci_col = false;
-$qty_col = false;
-}
 			if (($part_col===false AND $heci_col===false) OR $qty_col===false) {
-				$mail_msg = 'I was unable to process your file upload named "'.$filename.'" because '.
+				$mail_msg = 'I could not process your file upload named "'.$filename.'" because '.
 					'I was unable to determine the Part#/HECI and/or Qty field(s).<BR><BR>'.
 					'Please edit the file to add these column names, and then re-upload the file. Thanks!';
 				if (! $test) {
-					$send_success = send_gmail($mail_msg,'Inventory upload rejected! '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com');
+					// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
+					$bcc = '';
+					if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
+
+					$send_success = send_gmail($mail_msg,'Inventory upload rejected! '.date("D n/j/y"),getContact($userid,'userid','email'),'david@ven-tel.com');
 					if ($send_success) {
 						echo json_encode(array('message'=>'Success'));
 					} else {
@@ -158,6 +156,7 @@ $qty_col = false;
 			$partid = $partids[0];
 //			if (! $partid) { continue; }
 
+			// concatenate the part string and heci string as our combined search string that produced this result
 			$searchkey = '';
 			if ($heci) { $searchkey = $heci; } else { $searchkey = $part; }
 			$searchkey = preg_replace('/[^[:alnum:]]*/','',$searchkey);
@@ -176,7 +175,7 @@ $qty_col = false;
 				$searchid = qid();
 			}
 
-			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid,'partids'=>$partids); }
+			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids); }
 			$consolidated[$partid]['qty'] += $qty;
 		}
 
@@ -200,6 +199,7 @@ $qty_col = false;
 		$companyid = $r['companyid'];
 		$upload_type = $r['type'];
 		$metaid = $r['metaid'];
+		$userid = $r['userid'];
 
 		$lines = array();
 		if (strstr($filename,'.xls')) {
@@ -285,11 +285,11 @@ $tempfile = '/var/tmp/400004291.xls';
 			// assess favorites position by gathering all related partids
 			$favs = getFavorites($row['partids']);
 
-			$report .= '"'.$part.'","'.$heci.'","'.$qty.'","'.$status.'"'.chr(10);
+			$report .= '"'.$row['part'].'","'.$row['heci'].'","'.$row['qty'].'","'.$status.'"'.chr(10);
 
 			if (count($favs)>0) {
-				$favs_report .= 'qty '.$qty.'- '.$part.' '.$heci.' ("'.$status.'")<BR>';
-				$num_favs += count($favs);
+				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].' ("'.$status.'")<BR>';
+				$num_favs++;// += count($favs);
 			}
 			if (! $partid OR ! $qty) { continue; }
 
@@ -309,7 +309,11 @@ $tempfile = '/var/tmp/400004291.xls';
 
 			$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
 
-			$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com','',$attachment);
+			// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
+			$bcc = '';
+			if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
+
+			$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc,'',$attachment);
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {
@@ -319,21 +323,13 @@ $tempfile = '/var/tmp/400004291.xls';
 			if ($favs_report) {
 				$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
 
-				$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($r['userid'],'userid','email'),'david@ven-tel.com');
+				$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc);
 				if ($send_success) {
 					echo json_encode(array('message'=>'Success'));
 				} else {
 					echo json_encode(array('message'=>$SEND_ERR));
 				}
 			}
-
-/*
-			$email = getUser($r['userid'],'id','email');
-			if (! $test) {
-$email = 'davidglangley@gmail.com';
-//				mailer($email,'Inventory Upload Report '.date("D n/j/y"),$mail_msg,'info@lunacera.com',$replyTo='no-reply@lunacera.com','',array('info@lunacera.com','LunaCera'),$attachment);
-			}
-*/
 
 			$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
 			if (! $test) { $result2 = qdb($query2) OR die(qe().' '.$query2); }

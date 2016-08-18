@@ -35,7 +35,7 @@
 	// global
 	$err = array();
 	$errmsgs = array();
-	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-14));//look up rfq's within the past 2 weeks
+	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-21));//look up rfq's within the past 3 weeks
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
 		global $err,$errmsgs,$today,$rfq_base_date;

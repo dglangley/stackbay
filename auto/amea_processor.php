@@ -112,6 +112,7 @@
 		'PWR'=>1,
 		'OVERNIGHT'=>1,
 		'PART'=>1,
+		'LCM'=>1,
 	);
 
 	// for every email...

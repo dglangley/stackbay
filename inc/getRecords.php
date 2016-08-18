@@ -40,30 +40,30 @@
 				break;
 
 			case 'purchases':
-				$query = "SELECT datetime, companyid cid, name, purchase_orders.id, qty, price, partid FROM purchase_items, purchase_orders, companies ";
-				$query .= "WHERE purchase_items.purchase_orderid = purchase_orders.id AND companies.id = purchase_orders.companyid ";
+				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number, qty, price, partid FROM purchase_items, purchase_orders, companies ";
+				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
-				$query .= "ORDER BY datetime ASC; ";
+				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				$query .= "ORDER BY created ASC; ";
 
 				$unsorted = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
 			default:
-				$query = "SELECT datetime, companyid cid, name, sales_orders.id, qty, price, partid FROM sales_items, sales_orders, companies ";
-				$query .= "WHERE sales_items.sales_orderid = sales_orders.id AND companies.id = sales_orders.companyid ";
+				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number, qty, price, partid FROM sales_items, sales_orders, companies ";
+				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
-				$query .= "ORDER BY datetime ASC; ";
+				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				$query .= "ORDER BY created ASC; ";
 
 				$unsorted = get_coldata($search_str,'sales');
 				break;
 		}
 
 		// get local data
-		if($partid_str || !$search_str){
-				$result = qdb($query);
+		if ($partid_str || !$search_str){
+			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$unsorted[$r['datetime']][] = $r;
 			}
@@ -71,12 +71,12 @@
 		// sort local and piped data together in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
 		if (! $search_str AND ! $partid_array) { $consolidate = false; }
-		$results = sort_results($unsorted,'desc',$consolidate);
+		$results = sort_results($unsorted,'desc',$consolidate,$market_table);
 
 		return ($results);
 	}
 
-	function sort_results($unsorted,$sort_order='asc',$consolidate=true) {
+	function sort_results($unsorted,$sort_order='asc',$consolidate=true,$market_table) {
 		if ($sort_order=='asc') { ksort($unsorted); }
 		else if ($sort_order=='desc') { krsort($unsorted); }
 
