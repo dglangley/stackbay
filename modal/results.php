@@ -9,8 +9,18 @@
       </div>
       <div class="modal-body"></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="modal-submit">Send Now</button>
+		<p class="text-left">
+			Subject
+			<input type="text" name="message_subject" value="" class="form-control message-subject">
+		</p>
+		<p class="text-left">
+			Message
+			<textarea name="message_body" class="message-body" rows="5"></textarea><br/>
+		</p>
+		<p>
+        	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	        <button type="submit" class="btn btn-primary" id="modal-submit">Send RFQ</button>
+		</p>
       </div>
     </div>
     </form>

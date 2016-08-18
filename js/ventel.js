@@ -47,8 +47,17 @@
                         });
 						rowHtml += '</div>';/*end check-group*/
                     });
+/*
 					rowHtml += '<br/><textarea name="message_body" style="width:100%" rows="5">Please quote:\n\n'+productSearch+'</textarea>'+
 						'<input type="hidden" name="partids" value="'+partids+'">';
+*/
+					$('#marketModal .message-body').each(function() {
+						$(this).val('Please quote:\n\n'+productSearch);
+					});
+					$('#marketModal .message-subject').each(function() {
+						$(this).val(productSearch);
+					});
+					rowHtml += '<input type="hidden" name="partids" value="'+partids+'">';
                     var modalBody = $("#marketModal .modal-body");
 					modalBody.html(rowHtml);
 

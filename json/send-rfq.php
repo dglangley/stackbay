@@ -25,9 +25,11 @@
 	if (isset($_REQUEST['consent'])) { $consent = true; }
 	$message_body = '';
 	if (isset($_REQUEST['message_body'])) { $message_body = $_REQUEST['message_body']; }
-	$sbj = trim(str_replace("Please quote:","",$message_body));
-	if (! $sbj) { $sbj = "Quote request"; }
 	$message_body = str_replace(chr(10),'<br/>',$message_body);
+	//$sbj = trim(str_replace("Please quote:","",$message_body));
+	$sbj = "Quote request";
+	if (isset($_REQUEST['message_subject'])) { $sbj = $_REQUEST['message_subject']; }
+	if (! $sbj) { $sbj = "Quote request"; }
 	$companyids = array();
 	if (isset($_REQUEST['companyids']) AND is_array($_REQUEST['companyids'])) { $companyids = $_REQUEST['companyids']; }
 	$partids = array();

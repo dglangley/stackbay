@@ -73,6 +73,16 @@
 	width:100%;
 }
 
+
+#marketModal .modal-body {
+	height:400px;
+	overflow:scroll;
+}
+
+#marketModal .message-body {
+	width:100%;
+}
+
 /* BUTTONS POSITIONED WITHIN TEXTAREA */
 .modalNotes .modal-header .btn-notes {
 	position:absolute;
