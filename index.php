@@ -26,7 +26,7 @@
 		}
 	}
 
-	function format_market($partid_str,$market_table,$search_str) {
+	function format_market($partid_str,$market_table,$search_strs) {
 		global $FREQS;
 
 		$last_date = '';
@@ -35,7 +35,7 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 
-		$results = getRecords($search_str,$partid_str,'statement',$market_table);
+		$results = getRecords($search_strs,$partid_str,'statement',$market_table);
 
 		$num_results = count($results);
 		// number of detailed results instead of month-groups, which is normally only results within the past month
@@ -336,6 +336,7 @@
 		// gather all partid's first
 		$partid_str = "";
 		$partids = "";//comma-separated for data-partids tag
+		$search_strs = array();
 
 		$favs = array();
 		$num_favs = 0;
@@ -363,6 +364,11 @@
 			$ids = getPipeIds($P['part'],'part');
 			foreach ($ids as $id => $arr) {
 				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
+			}
+
+			$search_strs = explode(' ',$P['part']);
+			if ($P['heci']) {
+				$search_strs[] = substr($P['heci'],0,7);
 			}
 
 			// check favorites
@@ -479,9 +485,9 @@
 
 			// if on the first result, build out the market column that runs down all rows of results
 			if ($k==0) {
-				$sales_col = format_market($partid_str,'sales',$search_str);
-				$demand_col = format_market($partid_str,'demand',$search_str);
-				$purchases_col = format_market($partid_str,'purchases',$search_str);
+				$sales_col = format_market($partid_str,'sales',$search_strs);
+				$demand_col = format_market($partid_str,'demand',$search_strs);
+				$purchases_col = format_market($partid_str,'purchases',$search_strs);
 
 				// reset after getting col data in format_market() above, which  may alter this date for item-specific results
 				$summary_past = format_date($today,'Y-m-01',array('m'=>-1));

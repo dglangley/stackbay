@@ -113,6 +113,10 @@
 		'OVERNIGHT'=>1,
 		'PART'=>1,
 		'LCM'=>1,
+		'CO'=>1,
+		'XFP'=>1,
+		'SFP'=>1,
+		'MODEM'=>1,
 	);
 
 	// for every email...

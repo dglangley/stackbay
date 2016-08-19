@@ -157,12 +157,21 @@
 
 			keyword($heci7,$k,'part');
 
+			// permute O's to 0's
+			$pheci = str_replace('O','0',$v);
+			$pheci7 = substr($pheci,0,7);
+			if ($pheci7<>substr($v,0,7)) {
+				keyword($pheci,$k,'part');
+				keyword($pheci7,$k,'part');
+			}
+
+			// permute 0's to O's
 			$pheci = str_replace('0','O',$v);
 			$pheci7 = substr($pheci,0,7);
-			if ($pheci7==substr($v,0,7)) { return; }
-
-			keyword($pheci,$k,'part');
-			keyword($pheci7,$k,'part');
+			if ($pheci7<>substr($v,0,7)) {
+				keyword($pheci,$k,'part');
+				keyword($pheci7,$k,'part');
+			}
 		} else {
 			$keywords = array($v);
 			$words = preg_split('/[^[:alnum:]]+/',$v);

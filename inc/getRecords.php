@@ -5,15 +5,27 @@
 	$record_start = '';
 	$record_end = '';
 	
-	function getRecords($search_str = '',$partid_array = '',$array_format='csv',$market_table='demand') {
+	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand') {
 		global $record_start,$record_end,$oldid,$company_filter;
 		$unsorted = array();
 
-		if ((!$search_str && !$partid_array)&&(!$record_start && !$record_end)){
+		if ($search_arr AND ! is_array($search_arr)) {
+			$search_arr = array($search_arr);
+		}
+
+		if ((count($search_arr)==0 && !$partid_array)&&(!$record_start && !$record_end)){
 //			echo 'Valid search result or date range not entered';
 			echo 'Please enter filters to get values.';
 			return $unsorted;
 			
+		}
+
+		// funky but true: getPipeIds() (within get_coldata() below) accepts space-separated strings and
+		// will split them apart automatically, so we need to convert array to string
+		$search_str = '';
+		foreach ($search_arr as $each_search) {
+			if ($search_str) { $search_str .= ' '; }
+			$search_str .= $each_search;
 		}
 
 
@@ -62,7 +74,7 @@
 		}
 
 		// get local data
-		if ($partid_str || !$search_str){
+		if ($partid_str || count($search_arr)==0){
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$unsorted[$r['datetime']][] = $r;
@@ -70,7 +82,7 @@
 		}
 		// sort local and piped data together in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
-		if (! $search_str AND ! $partid_array) { $consolidate = false; }
+		if (count($search_arr)==0 AND ! $partid_array) { $consolidate = false; }
 		$results = sort_results($unsorted,'desc',$consolidate,$market_table);
 
 		return ($results);
@@ -117,6 +129,7 @@
 	function get_coldata($search,$coldata='demand') {
 		$unsorted = array();
 		$pipe_ids = array();
+
 		if ($search){
 			$pipe_ids = getPipeIds($search);
 		}
