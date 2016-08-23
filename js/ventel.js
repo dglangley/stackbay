@@ -365,6 +365,19 @@
 			mr.loadResults(2);
 		});
 
+		$(".marketpricing-toggle").click(function() {
+			var mr = $(this).closest("tbody").find(".market-results:first");
+			$(this).find(".fa").each(function() {
+				if ($(this).hasClass('fa-toggle-off')) {
+					$(this).removeClass('fa-toggle-off').addClass('fa-toggle-on');
+					mr.loadResults(1,1);
+				} else {
+					$(this).removeClass('fa-toggle-on').addClass('fa-toggle-off');
+					mr.loadResults(0);
+				}
+			});
+		});
+
 	    // select2 plugin for select elements
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
@@ -634,22 +647,24 @@
     });/* close $(document).ready */
 
         // build jquery plugin for remote ajax call
-        jQuery.fn.loadResults = function(attempt) {
+        jQuery.fn.loadResults = function(attempt, pricing_only) {
+			if (! pricing_only) { var pricing_only = ''; }
             var newHtml = '';
             var rowHtml = '';
             var qtyTotal = 0;
             var container = $(this);
+            var ln = $(this).data('ln');
 			var thisId = container.prop('id');
 			if (attempt==2) {
 	            container.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 			}
 			var doneFlag = '';
 
-            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+$(this).data('ln')+"...");
+            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only+"...");
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': $(this).data('ln')},
+                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'pricing_only': pricing_only},
                 success: function(json, status) {
                     $.each(json.results, function(dateKey, item) {
                         qtyTotal = 0;
@@ -684,6 +699,16 @@
                     if (! json.done && attempt==0) {
                         //setTimeout("$('#market-results').loadResults()",1000);
 						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
+
+						var price_range = '';
+						var pr = json.price_range;
+						if (pr.min && pr.max) {
+							price_range = '$'+pr.min+' - $'+pr.max;
+							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
+						} else {
+							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
+						}
+						$("#marketpricing-"+ln).html(price_range);
                     }
                 },
                 error: function(xhr, desc, err) {

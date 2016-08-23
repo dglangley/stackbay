@@ -9,8 +9,14 @@
 		global $record_start,$record_end,$oldid,$company_filter;
 		$unsorted = array();
 
-		if ($search_arr AND ! is_array($search_arr)) {
-			$search_arr = array($search_arr);
+		if (strlen($record_start)) { $record_start .= ' 00:00:00'; }
+		if (strlen($record_end)) { $record_end .= ' 23:59:59'; }
+
+		// convert a string to an array of string element
+		if (! is_array($search_arr)) {
+			$new_array = array();
+			if ($search_arr) { $new_array[] = $search_arr; }
+			$search_arr = $new_array;
 		}
 
 		if ((count($search_arr)==0 && !$partid_array)&&(!$record_start && !$record_end)){

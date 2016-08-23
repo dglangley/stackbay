@@ -36,9 +36,10 @@
 	$err = array();
 	$errmsgs = array();
 	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-21));//look up rfq's within the past 3 weeks
+	if (! isset($pricing_only)) { $pricing_only = 0; }
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date;
+		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only;
 
 		if (! $partid_array) { $partid_array = array(); }
 
@@ -226,6 +227,8 @@
 			$date = substr($r['datetime'],0,10);
 			if ($r['price']>0) {
 				$prices[$r['companyid']][$date] = $r['price'];
+			} else if ($pricing_only) {//in modes where the user wants to see only records that have prices
+				continue;
 			}
 			$rows[] = $r;
 		}
@@ -278,6 +281,10 @@
 		$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			if (($r['price']=='0.00' OR ! $r['price']) AND $pricing_only) {//in modes where the user wants to see only records that have prices
+				continue;
+			}
+
 			$date = substr($r['datetime'],0,10);
 			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
 			// create array of partids so we can sum qtys on a given date or avoid duplicating qtys
@@ -421,7 +428,7 @@
 		$n = 0;
 		foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates
-			if ($n>=5) { break; }
+			if ($n>=5 AND ! $pricing_only) { break; }
 
 			$newRows = array();
 			foreach ($r as $k => $row) {

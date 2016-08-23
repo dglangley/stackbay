@@ -12,6 +12,8 @@
 //	if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
+	$pricing_only = 0;
+	if (isset($_REQUEST['pricing_only']) AND $_REQUEST['pricing_only']<>'') { $pricing_only = 1; }
 
 	// partids are passed in with comma-separated format
 	$partid_array = explode(",",$partids);

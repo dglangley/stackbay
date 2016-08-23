@@ -117,6 +117,12 @@
 		'XFP'=>1,
 		'SFP'=>1,
 		'MODEM'=>1,
+		'STATUS'=>1,
+		'PANEL'=>1,
+		'TRANSPORT'=>1,
+		'ITEMCODE'=>1,
+		'PICS'=>1,
+		'DRIVE'=>1,
 	);
 
 	// for every email...

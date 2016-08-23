@@ -565,7 +565,7 @@
 							</td>
                             <td>
 								<div class="row">
-									<div class="col-sm-3 text-center"><br/><span class="info">market pricing</span></div>
+									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
 									<div class="col-sm-3 text-center"><br/><span class="info">shelflife</span></div>
 									<div class="col-sm-3 text-center"><br/><span class="info">quotes-to-sale</span></div>

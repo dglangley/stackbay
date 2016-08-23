@@ -212,7 +212,7 @@ $company_filter = '';
                     'total' => ''
                     );
             }
-            
+
         	if(!($summary_rows[$part]['last_date'])){
         		$summary_rows[$part]['last_date'] = $row['datetime'];
         	}
@@ -225,7 +225,7 @@ $company_filter = '';
 	            $last_date = $info['last_date'];
 	            $summed_qtys = $info['qty'];
 	            $times_requested = $info['total'];
-			
+
 			$unsorted[] = array(
 				'part' => $descr,
 				'date' => $last_date,
