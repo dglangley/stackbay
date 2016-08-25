@@ -1,6 +1,6 @@
 <?php
-	include 'inc/bb.php';
+	include 'inc/ps.php';
 
-	$bb_err = bb('990102-A');
-echo $bb_err;
+	$ps_err = ps('990102-A');
+echo $ps_err;
 ?>

@@ -49,7 +49,7 @@
 			/* Alcatel-Lucent AKM85,LNW555*/
 			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
 			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,KTU--,LAA---,LEY---,LNW---,etc*/
-			'((((B[BDN]|DA|IT|KF|KT|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
+			'((((B[BDNS]|DA|IT|KF|KT|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Ericsson ROF-131-708 */
 			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',

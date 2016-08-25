@@ -37,9 +37,16 @@
 	$errmsgs = array();
 	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-21));//look up rfq's within the past 3 weeks
 	if (! isset($pricing_only)) { $pricing_only = 0; }
+	if (! isset($detail)) { $detail = 0; }
+	$urls = array(
+		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
+		'ps'=>'www.powersourceonline.com/iris-clei-search.authenticated-en.jsa?Q=',
+		'bb'=>'members.brokerbin.com/main.php?loc=partkey&clm=partclei&parts=',
+		'et'=>'',
+	);
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only;
+		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only,$detail,$urls;
 
 		if (! $partid_array) { $partid_array = array(); }
 
@@ -140,6 +147,8 @@
 			} else {
 				$RLOG = logRemotes($keyword,'000000');
 			}
+//$attempt = 1;
+//$RLOG['ps'] = 1;
 
 			// place this first because results below may be limited due to $limited/$searches differences
 			if ($RLOG['ebay']) {
@@ -216,7 +225,7 @@
 		$prices = array();//track prices in query results below so we can post-humously price later-dated results
 		$rows = array();
 
-		$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq ";
+		$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq, searchid ";
 		$query .= "FROM availability, search_meta, companies ";
 		$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
@@ -226,7 +235,9 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
 			if ($r['price']>0) {
-				$prices[$r['companyid']][$date] = $r['price'];
+				if (! $pricing_only) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+					$prices[$r['companyid']][$date] = $r['price'];
+				}
 			} else if ($pricing_only) {//in modes where the user wants to see only records that have prices
 				continue;
 			}
@@ -251,8 +262,10 @@
 
 			// add missing gaps of info from previous iterations (ie, same date but earlier in the day had a price, whereas the first found record had no price)
 			if (isset($results[$key])) {
-				// if price is in this iteration whereas not found in previous ($results), set it to this price
-				if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
+				if (! $pricing_only) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+					// if price is in this iteration whereas not found in previous ($results), set it to this price
+					if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
+				}
 
 				// check array of partids and if partid hasn't been logged, sum qty; otherwise we don't count it to avoid duplicating qty
 				if (array_search($r['partid'],$results[$key]['partids'])===false) {
@@ -274,7 +287,7 @@
 		}
 
 		// legacy code/query
-		$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq FROM market, companies ";
+		$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq, '' searchid FROM market, companies ";
 		$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
 		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
 //		$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
@@ -331,12 +344,16 @@
 			}
 
 			$source = false;
+			$ref_ln = '';
 			$companyid_key = $r['companyid'];
 			if (! is_numeric($r['source']) AND $r['source']<>'List') {
-				$source = $r['source'];
+				$source = strtolower($r['source']);
+				if (isset($urls[$r['source']])) { $ref_ln = $urls[$r['source']]; }
+
 			} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
 //				$companyid_key .= '.'.$r['source'];
 				$source = 'ebay';
+				$ref_ln = 'ebay.com/itm/'.$r['source'];
 			}
 
 			if (! isset($matches[$date])) { $matches[$date] = array(); }
@@ -351,6 +368,7 @@
 					'sources' => array(),
 					'min_price' => $price,
 					'max_price' => $price,
+					'lns' => array(),
 				);
 			} else {
 				// on ebay results, sum the qtys and show price range rather than every individual result
@@ -369,6 +387,7 @@
 					$matches[$date][$companyid_key]['qty'] = $r['qty'];
 				}
 			}
+			$matches[$date][$companyid_key]['lns'][] = $ref_ln;
 
 			if ($source AND array_search($source,$matches[$date][$companyid_key]['sources'])===false) { $matches[$date][$companyid_key]['sources'][] = $source; }
 		}
@@ -399,7 +418,7 @@
 		$market = array();
 		// include today's date preset in case there are no results, since we still need the header, so long as
 		// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
-		if ($ln<=$max_ln OR $attempt==2) {
+		if (! $pricing_only AND ($ln<=$max_ln OR $attempt==2)) {
 			$market = array($today=>array());
 		}
 		array_append($market,$priced);
@@ -407,13 +426,15 @@
 
 
 		// create date-separated headers for each group of results
-		$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
-		$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
-		$query .= "GROUP BY date; ";
-		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$search_date = $r['date'];
-			if (! isset($market[$search_date])) { $market[$search_date] = array(); }
+		if (! $pricing_only) {
+			$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
+			$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
+			$query .= "GROUP BY date; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$search_date = $r['date'];
+				if (! isset($market[$search_date])) { $market[$search_date] = array(); }
+			}
 		}
 
 		// sort here instead of order in query above because $market already contains date-keyed results and we want to sort altogether
@@ -430,20 +451,26 @@
 //for now, just show past 5 dates
 			if ($n>=5 AND ! $pricing_only) { break; }
 
-			$newRows = array();
-			foreach ($r as $k => $row) {
-/*
-				if ($k>=$attempt AND $rDate==$today) {
-					$newResults['done'] = false;
-					continue;
-				}
-*/
-				$newRows[] = $row;
-			}
-
 			$rDate = summarize_date($rDate);
 
-			$newResults['results'][$rDate] = $newRows;
+			if (count($r)==0) {
+				$newResults['results'][$rDate] = array();
+				continue;
+			}
+
+//see commented block below, and explanation, 8-24-16
+//			$newRows = array();
+			foreach ($r as $k => $row) {
+				// changed 8-24-16 mostly to allow for past grouped results to be enumerated rather
+				// than overwritten by a conflict of such a gruoped date between new results and legacy results
+				//$newRows[] = $row;
+				if (isset($newResults['results'][$rDate][$rDate.'.'.$row['cid']])) { continue; }
+
+				$newResults['results'][$rDate][$rDate.'.'.$row['cid']] = $row;
+			}
+
+//see commented section above, 8-24-16
+//			$newResults['results'][$rDate] = $newRows;
 			$n++;
 		}
 //		print "<pre>".print_r($newResults,true)."</pre>";

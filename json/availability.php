@@ -14,16 +14,20 @@
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 	$pricing_only = 0;
 	if (isset($_REQUEST['pricing_only']) AND $_REQUEST['pricing_only']<>'') { $pricing_only = 1; }
+	$detail = 0;
+	if (isset($_REQUEST['detail']) AND $_REQUEST['detail']=='1') { $detail = 1; }
 
 	// partids are passed in with comma-separated format
 	$partid_array = explode(",",$partids);
 
-	$results = array();
+//	$results = array();
 
 	$results = getSupply($partid_array,$attempt,$ln,$max_ln);
+/*
 	if ($err) {
 		$results = array('results'=>$results,'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 	}
+*/
 
 //	print "<pre>".print_r($results,true)."</pre>";
 

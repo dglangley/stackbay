@@ -180,8 +180,6 @@
 </head>
 <body class="sub-nav">
 
-	<?php include_once 'modal/results.php'; ?>
-	<?php include_once 'modal/notes.php'; ?>
 	<?php include_once 'inc/keywords.php'; ?>
 	<?php include_once 'inc/dictionary.php'; ?>
 	<?php include_once 'inc/logSearch.php'; ?>
@@ -214,7 +212,15 @@
     <table class="table table-header">
 		<tr>
 			<td class="col-md-2">
-				<div id="remote-warnings"><a class="btn btn-danger btn-sm hidden" id="remote-bb"><img src="/img/bb.png" /></a></div>
+				<div id="remote-warnings">
+<?php
+	$query = "SELECT * FROM remotes ORDER BY id ASC; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+	}
+?>
+				</div>
 			</td>
 			<td class="text-center col-md-5">
 			</td>
@@ -643,6 +649,9 @@
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<?php include_once 'modal/results.php'; ?>
+<?php include_once 'modal/notes.php'; ?>
+<?php include_once 'modal/remotes.php'; ?>
 <?php include_once 'inc/footer.php'; ?>
 
 </body>

@@ -123,6 +123,7 @@
 		'ITEMCODE'=>1,
 		'PICS'=>1,
 		'DRIVE'=>1,
+		'SUPPLY'=>1,
 	);
 
 	// for every email...

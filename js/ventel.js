@@ -20,11 +20,12 @@
 			var productSearch = $(this).closest(".product-results").siblings(".first").find(".product-search").val().toUpperCase();
 			var partids = $(this).closest(".market-results").data('partids');
 			var ln = $(this).closest(".market-results").data('ln');
-            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"...");
+			var pricing_only = $(this).data('pricing');
+            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&pricing_only="+pricing_only+"...");
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': '0', 'partids': partids},
+                data: {'attempt': '0', 'partids': partids, 'pricing_only': pricing_only, 'detail': 1},
                 success: function(json, status) {
 					rowHtml = '';
                     $.each(json.results, function(dateKey, item) {
@@ -376,6 +377,7 @@
 					mr.loadResults(0);
 				}
 			});
+			$(this).blur();
 		});
 
 	    // select2 plugin for select elements
@@ -643,6 +645,43 @@
 		});
 
 		setUploadSlider($(".slider-button:first"));
+
+		$('.btn-remote').click(function() {
+			var remote = $(this).prop('id').replace('remote-','');
+			$('.remote-name').html('<img src="/img/'+remote+'.png"> '+$(this).data('name')+' login');
+			$('#remote-activate').data('remote',remote);
+			$('#remote-modal').modal('show');
+		});
+
+		$('#remote-activate').click(function() {
+			var remote = $('#remote-activate').data('remote');
+			var remote_login = $("#remote-login").val();
+			var remote_password = $("#remote-password").val();
+            console.log(window.location.origin+"/json/remotes.php?remote="+remote+"&remote_login="+remote_login+"&remote_password="+remote_password);
+            $.ajax({
+                url: 'json/remotes.php',
+                type: 'get',
+                data: {'remote': remote, 'remote_login': remote_login, 'remote_password': remote_password},
+                success: function(json, status) {
+					if (json.err) {
+						alert(json.err);
+					} else {
+						toggleLoader(json.response);
+						$('#remote-modal').modal('hide');
+						$("#remote-"+remote).addClass('hidden');
+
+						// request all market results to reload now with the activated remote
+				        $(".market-results").each(function() {
+							$(this).loadResults(0);
+						});
+					}
+				},
+                error: function(xhr, desc, err) {
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+			});
+		});
 	
     });/* close $(document).ready */
 
@@ -687,7 +726,7 @@
 						doneFlag = json.done;
 
                         /* add section header of date and qty total */
-                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag)+rowHtml;
+                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only)+rowHtml;
                     });
                     container.html(newHtml);
 
@@ -703,7 +742,11 @@
 						var price_range = '';
 						var pr = json.price_range;
 						if (pr.min && pr.max) {
-							price_range = '$'+pr.min+' - $'+pr.max;
+							if (pr.min==pr.max) {
+								price_range = '$'+pr.min;
+							} else {
+								price_range = '$'+pr.min+' - $'+pr.max;
+							}
 							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
 						} else {
 							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
@@ -830,8 +873,8 @@
 
 		return;
 	}
-    function addDateGroup(dateKey,qtyTotal,doneFlag) {
-        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'+
+    function addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only) {
+        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal" data-pricing="'+pricing_only+'">'+
             dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
         if (! doneFlag && dateKey=='Today') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
