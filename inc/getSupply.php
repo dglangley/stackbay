@@ -8,6 +8,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 
 	function array_append(&$arr1,$arr2) {
 		foreach ($arr2 as $date => $arr) {
@@ -363,8 +364,10 @@
 			$companyid_key = $r['companyid'];
 			if (! is_numeric($r['source']) AND $r['source']<>'List') {
 				$source = strtolower($r['source']);
-				if (isset($urls[$r['source']])) { $ref_ln = $urls[$r['source']]; }
-
+				$ref_ln = $urls[$r['source']];
+				if (isset($urls[$r['source']]) AND $r['searchid']) {
+					$ref_ln .= getSearch($r['searchid']);
+				}
 			} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
 //				$companyid_key .= '.'.$r['source'];
 				$source = 'ebay';
@@ -402,7 +405,9 @@
 					$matches[$date][$companyid_key]['qty'] = $r['qty'];
 				}
 			}
-			$matches[$date][$companyid_key]['lns'][] = $ref_ln;
+			if ($detail AND $ref_ln) {
+				$matches[$date][$companyid_key]['lns'][$source][] = $ref_ln;
+			}
 
 			if ($source AND array_search($source,$matches[$date][$companyid_key]['sources'])===false) { $matches[$date][$companyid_key]['sources'][] = $source; }
 		}

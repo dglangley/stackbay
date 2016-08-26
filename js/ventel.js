@@ -25,7 +25,7 @@
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': '0', 'partids': partids, 'pricing_only': pricing_only, 'detail': 1},
+                data: {'attempt': '0', 'partids': partids, 'pricing_only': pricing_only, 'detail': '1'},
                 success: function(json, status) {
 					rowHtml = '';
                     $.each(json.results, function(dateKey, item) {
@@ -42,7 +42,13 @@
 								'<div class="col-sm-6">'+row.company+'</div>'+
 								'<div class="col-sm-2">';
                             $.each(row.sources, function(i, src) {
-								rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" /> ';
+								var source_lower = src.toLowerCase();
+								var source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
+								if (row.lns[source_lower]) {
+									rowHtml += '<a href="http://'+row.lns[source_lower]+'" target="_new">'+source_img+'</a> ';
+								} else {
+									rowHtml += source_img+' ';
+								}
 							});
 							rowHtml += '</div></div>';
                         });

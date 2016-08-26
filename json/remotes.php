@@ -12,8 +12,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/'.$remote.'.php';
 
 	header("Content-Type: application/json", true);
-	echo json_encode(array('response'=>$rem['name'].' activated!'));
-	exit;
 
 	$err = call_user_func($remote);
 	if ($err) {

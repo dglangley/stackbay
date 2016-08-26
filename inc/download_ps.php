@@ -96,7 +96,7 @@
 		}
 
 		/***** FAILED LOGIN, DELETE CREDENTIALS FILE AND RETRY *****/
-		if (! $res OR strstr($res,'Login Failed') OR strstr($res,'Access Denied')) {
+		if (! $res OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress')) OR strstr($res,'Access Denied')) {
 			if (! $logout AND ! $search) {// user was already prompted and this is a login attempt, and results were invalid
 				$PS_ERROR = "Your credentials appear to be invalid, please try logging in again";
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
@@ -108,7 +108,7 @@
 			if ($search) {
 				$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
 
-				if (! $res OR $logout OR strstr($res,'Login Failed') OR strstr($res,'Access Denied')) {
+				if (! $res OR $logout OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress')) OR strstr($res,'Access Denied')) {
 					$PS_ERROR = "There was a problem validating your PowerSource session, please check your credentials or contact Technical Support";
 					$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
 					$dbres = qdb($query);
