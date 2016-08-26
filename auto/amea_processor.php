@@ -124,6 +124,7 @@
 		'PICS'=>1,
 		'DRIVE'=>1,
 		'SUPPLY'=>1,
+		'MODULES'=>1,
 	);
 
 	// for every email...

@@ -1,4 +1,5 @@
 <?php
+	include_once 'pipe.php';
 	include_once 'getPipeIds.php';
 	include_once 'getPartId.php';
 	
@@ -68,7 +69,6 @@
 				break;
 
 			case 'sales':
-			default:
 				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number, qty, price, partid FROM sales_items, sales_orders, companies ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -77,10 +77,19 @@
 
 				$unsorted = get_coldata($search_str,'sales');
 				break;
+
+			case 'supply':
+				$query = "";
+				$unsorted = get_coldata($search_str,'supply');
+				break;
+
+			default:
+				$query = "";
+				break;
 		}
 
 		// get local data
-		if ($partid_str || count($search_arr)==0){
+		if ($query AND ($partid_str OR count($search_arr)==0)) {
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$unsorted[$r['datetime']][] = $r;
@@ -107,7 +116,7 @@
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 
 				if (isset($uniques[$key])) {
-					if ($market_table=='sales' OR $market_table=='purchases') {
+					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {
 						$results[$uniques[$key]]['qty'] += $r['qty'];
 					} else {
 						if ($r['qty']>$results[$uniques[$key]]['qty']) {
@@ -152,6 +161,8 @@
 		} else if ($coldata=='sales') {
 			$unsorted = get_details($id_csv,'sales',$unsorted);
 		} else if ($coldata=='purchases') {
+			$unsorted = get_details($id_csv,'purchases',$unsorted);
+		} else if ($coldata=='supply') {
 			$unsorted = get_details($id_csv,'incoming_quote',$unsorted);
 		}
 		return ($unsorted);
@@ -164,11 +175,12 @@
 
 		$db_results = array();
 
-		if (!$id_csv && (!$record_start && !$record_end)||(!$id_csv && ($table_name == 'sales' || $table_name == 'incoming_quote'))){
+		if (!$id_csv && (!$record_start && !$record_end)||(!$id_csv && ($table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote'))){
 //			echo 'Valid search result or date range not entered';
 			return $db_results;
 		}
 
+		// save the original table name passed in above because below we change it to accommodate various other db lookups
 		$orig_table = $table_name;
 
 		$and_where = '';
@@ -177,8 +189,11 @@
 			$table_name = 'outgoing_quote';
 //			$and_where = "AND win = '1' ";
 			$add_field = ', quote_id, win ';
-		} else if ($table_name=='incoming_quote') {
-			$and_where = "AND inventory_purchaseorder.purchasequote_ptr_id = inventory_incoming_quote.quote_id ";
+		} else if ($table_name=='purchases' OR $table_name=='incoming_quote') {
+			if ($table_name=='purchases') {
+				$table_name = 'incoming_quote';
+				$and_where = "AND inventory_purchaseorder.purchasequote_ptr_id = inventory_incoming_quote.quote_id ";
+			}
 			$add_field = ', quote_id ';
 		}
 		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
@@ -192,7 +207,7 @@
 */
 			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, part_number , clei ".$add_field;
 			$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
-			if ($table_name=='incoming_quote') { $query .= ", inventory_purchaseorder "; }
+			if ($orig_table=='purchases') { $query .= ", inventory_purchaseorder "; }
 			$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 			if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
 			$query .= $and_where;
@@ -217,14 +232,14 @@
 			if ($r['price']=='0.00') { $r['price'] = ''; }
 			else { $r['price'] = format_price($r['price'],2); }
 
-			if ($table_name=='sales' OR $table_name=='incoming_quote') {
+			if ($table_name=='sales' OR $table_name=='purchases') {
 				if ($table_name=='sales') {
 					if (! $r['win']) { continue; }
 					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r['quote_id']."'; ";
-				} else if ($table_name=='incoming_quote') {
+				} else if ($table_name=='purchases') {
 					$query3 = "SELECT po_date date FROM inventory_purchaseorder WHERE purchasequote_ptr_id = '".$r['quote_id']."'; ";
 				}
-				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE'));
+				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').' '.$query3);
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
 					$r['datetime'] = $r3['date'];

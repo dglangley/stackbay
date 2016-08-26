@@ -9,6 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRecords.php';
 
 	function array_append(&$arr1,$arr2) {
 		foreach ($arr2 as $date => $arr) {
@@ -95,7 +96,7 @@
 			// eliminate matching super-strings
 			array_keysearch($limited,$r['keyword']);
 
-			$searches[$r['keyword']] = true;
+			$searches[$r['keyword']] = $r['keyword'];
 			$limited[$r['keyword']] = true;
 
 			// somehow saving processing time ???
@@ -113,7 +114,7 @@
 			foreach ($part_strs as $part_str) {
 				$part_str = format_part($part_str);
 				$fpart = preg_replace('/[^[:alnum:]]+/','',$part_str);
-				if ($r['keyword']==$fpart) { $searches[$part_str] = true; }
+				if ($r['keyword']==$fpart) { $searches[$part_str] = $part_str; }
 			}
 
 //			echo $r['keyword'].'<BR>';
@@ -132,7 +133,7 @@
 		$te_err = '';
 		$ebay_err = '';
 		$excel_err = '';
-		foreach ($searches as $keyword => $bool) {
+		foreach ($searches as $keyword => $k2) {
 			// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 			// statically-stored db results
 			if ($attempt>=1 AND ($ln<=$max_ln OR $attempt==2)) {
@@ -342,6 +343,28 @@
 			$results[$key] = $r;
 		}
 
+		// get piped data
+		$pipe_results = getRecords($searches,'','','supply');
+		// re-group data into $results array as with other results above
+		foreach ($pipe_results as $r) {
+			$key = $r['datetime'].'.B'.$r['cid'].'.'.$r['quote_id'];
+			$r['datetime'] .= ' 00:00:00';
+
+			// rename fields to match naming conventions above
+			$r['source'] = $r['quote_id'];
+			$r['companyid'] = $r['cid'];
+			$r['partids'] = array($r['partid']);
+			$r['price'] = format_price($r['price'],false,'',true);
+
+			unset($r['quote_id']);
+			unset($r['cid']);
+			unset($r['partid']);
+			unset($r['clei']);
+			unset($r['part_number']);
+
+			$results[$key] = $r;
+		}
+
 		$min_price = false;
 		$max_price = false;
 //		$keys = array();//prevent duplicate results on same day
@@ -364,9 +387,8 @@
 			$companyid_key = $r['companyid'];
 			if (! is_numeric($r['source']) AND $r['source']<>'List') {
 				$source = strtolower($r['source']);
-				$ref_ln = $urls[$r['source']];
 				if (isset($urls[$r['source']]) AND $r['searchid']) {
-					$ref_ln .= getSearch($r['searchid']);
+					$ref_ln = $urls[$r['source']].getSearch($r['searchid']);
 				}
 			} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
 //				$companyid_key .= '.'.$r['source'];

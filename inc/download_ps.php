@@ -84,6 +84,11 @@
 
             $loginUrl = str_replace('http:','https:',$ps_base).'/cgi/en/session.access.login';
 			$res = call_remote($loginUrl,$params,$cookiefile,$cookiejarfile,'POST',$PS_CH);
+
+			// we have to close the curl session in order for curl to write the cookies file, prior to getting
+			// the contents at the end of this script and writing to the db, otherwise it's an empty file
+			curl_close($PS_CH);
+			$PS_CH = false;//reset so if the login retries below, it will re-initialize a curl session automatically
 		} else if ($logout) {/***** LOGOUT *****/
 			$res = call_remote($ps_base.'/cgi/en/session.access.logout','',$cookiefile,$cookiejarfile,'GET',$PS_CH);
 
