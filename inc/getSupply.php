@@ -46,7 +46,7 @@
 	);
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only,$detail,$urls;
+		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only,$detail,$urls,$REMOTES;
 
 		if (! $partid_array) { $partid_array = array(); }
 
@@ -173,6 +173,9 @@
 					$err[] = 'te';
 					$errmsgs[] = $te_err;
 				}
+			} else if ($REMOTES['te']['setting']=='N') {
+				$err[] = 'te';
+				$errmsgs[] = $REMOTES['te']['name'].' is not activated';
 			}
 		}
 
@@ -183,6 +186,9 @@
 					$err[] = 'ps';
 					$errmsgs[] = $ps_err;
 				}
+			} else if ($REMOTES['ps']['setting']=='N') {
+				$err[] = 'ps';
+				$errmsgs[] = $REMOTES['ps']['name'].' is not activated';
 			}
 			if ($bbstr) {
 				$bb_err = bb($bbstr);
@@ -190,6 +196,9 @@
 					$err[] = 'bb';
 					$errmsgs[] = $bb_err;
 				}
+			} else if ($REMOTES['bb']['setting']=='N') {
+				$err[] = 'bb';
+				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
 			}
 			if ($ebaystr) {
 				$ebay_err = ebay($ebaystr);
@@ -197,6 +206,9 @@
 					$err[] = 'ebay';
 					$errmsgs[] = $ebay_err;
 				}
+			} else if ($REMOTES['ebay']['setting']=='N') {
+				$err[] = 'ebay';
+				$errmsgs[] = $REMOTES['ebay']['name'].' is not activated';
 			}
 			if ($excelstr) {
 				$excel_err = excel($excelstr);
@@ -204,6 +216,9 @@
 					$err[] = 'excel';
 					$errmsgs[] = $excel_err;
 				}
+			} else if ($REMOTES['excel']['setting']=='N') {
+				$err[] = 'excel';
+				$errmsgs[] = $REMOTES['excel']['name'].' is not activated';
 			}
 
 			// when we're done with all remote calls

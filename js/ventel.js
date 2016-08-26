@@ -21,7 +21,7 @@
 			var partids = $(this).closest(".market-results").data('partids');
 			var ln = $(this).closest(".market-results").data('ln');
 			var pricing_only = $(this).data('pricing');
-            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&pricing_only="+pricing_only+"...");
+            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&pricing_only="+pricing_only);
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
@@ -699,7 +699,7 @@
 			}
 			var doneFlag = '';
 
-            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only+"...");
+            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only);
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',

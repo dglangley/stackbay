@@ -9,13 +9,13 @@
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$REMPOS[$r['id']] = $r['remote'];
-		$REMOTES[$r['remote']] = array('setting'=>'N');
+		$REMOTES[$r['remote']] = array('setting'=>'N','name'=>$r['name']);
 
 		// session exists, assume it's valid by turning setting on / activating
 		$query2 = "SELECT * FROM remote_sessions WHERE remoteid = '".$r['id']."'; ";
 		$result2 = qdb($query2);
 		if (mysqli_num_rows($result2)>0) {
-			$REMOTES[$r['remote']] = array('setting'=>'Y');
+			$REMOTES[$r['remote']]['setting'] = 'Y';
 		}
 	}
 
