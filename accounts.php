@@ -54,6 +54,12 @@
 		$startDate = $_REQUEST['START_DATE'];
 	}
 	
+	//Calculate the standard year range, output quarters as an array, and make 
+	$year = date('Y');
+	$quarter = array('01/01/','04/01/','07/01/','10/01/');
+	$current_date = date('m/d/Y');
+	$quarter_start = $quarter[floor(date('m')/3)].$year;
+	if (! $startDate) { $startDate = $quarter_start; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -93,17 +99,10 @@
 		    </div>
 		</td>
 
-		<?php 
-			//Calculate the standard year range, output quarters as an array, and make 
-			$year = date('Y');
-			$quarter = array('01/01/','04/01/','07/01/','10/01/');
-			$today = date('m/d/Y');
-			$quarter_start = $quarter[floor(date('m')/3)];
-		?>
 		<td class = "col-md-1">
 				<div class="input-group date datetime-picker-filter">
 		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" style = "min-width:50px;"/>
+		                <?php if($startDate){echo $startDate;}else{echo $quarter_start;}?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -112,7 +111,7 @@
 		<td class = "col-md-1 ">
 					<div class="input-group date datetime-picker-filter">
 		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" style = "min-width:50px;"/>
+		            <?php if($endDate){echo $endDate;}else{echo $current_date;}?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>

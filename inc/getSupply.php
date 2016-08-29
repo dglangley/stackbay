@@ -491,7 +491,7 @@
 		$n = 0;
 		foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates
-			if ($n>=5 AND ! $pricing_only) { break; }
+			if ($n>=5 AND ! $pricing_only AND ! $detail) { break; }
 
 			$rDate = summarize_date($rDate);
 
