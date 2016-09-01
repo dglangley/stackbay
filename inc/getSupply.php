@@ -497,6 +497,7 @@
 
 			if (count($r)==0) {
 				$newResults['results'][$rDate] = array();
+				$n++;
 				continue;
 			}
 
@@ -510,10 +511,11 @@
 
 				$newResults['results'][$rDate][$rDate.'.'.$row['cid']] = $row;
 			}
+			if (count($r)>0) { $n++; }
 
 //see commented section above, 8-24-16
 //			$newResults['results'][$rDate] = $newRows;
-			$n++;
+//			$n++;
 		}
 //		print "<pre>".print_r($newResults,true)."</pre>";
 
