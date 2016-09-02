@@ -12,13 +12,12 @@
 //	header('Content-Type:image/jpeg');
 //	readfile('img/data-center.jpg');
 
-	$img = 'img/spacer.jpg';
-	$dir = '/var/prodimg/';
-//	$dir = 'sqlite:/Users/Shared/WebServer/Sites/';
+	$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
+	$img = $dir.'spacer.jpg';
 
 	$query = "SELECT image FROM picture_maps, parts_index, keywords ";
 	$query .= "WHERE keyword = '".$basePart."' AND keywords.id = parts_index.keywordid AND picture_maps.partid = parts_index.partid ";
-	$query .= "ORDER BY picture_maps.id ASC; ";
+	$query .= "GROUP BY image ORDER BY picture_maps.id ASC; ";
 	$result = qdb($query);
 	$i = 0;//iteration counter
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -30,6 +29,7 @@
 		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
 		break;
 	}
+//echo $img;exit;
 //if ($uri=='1180212l2') { echo $query.'<BR>'; exit; }
 
 //	if ($i==0) { $img = 'img/noimage.png'; }

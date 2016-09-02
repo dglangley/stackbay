@@ -6,6 +6,7 @@
 	include_once 'inc/getPipeIds.php';
 	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
+	include_once 'inc/getShelflife.php';
 	include_once 'inc/array_stristr.php';
 
 	$listid = 0;
@@ -390,6 +391,13 @@
 
 		if ($favorites AND $num_favs==0) { continue; }
 
+		$id_array = "";//pass in comma-separated values for getShelflife()
+		foreach ($pipe_id_assoc as $pipe_id => $partid) {
+			if ($id_array) { $id_array .= ','; }
+			$id_array .= $pipe_id;
+		}
+		$shelflife = getShelflife($id_array);
+
 		if ($x<$min_ln) { $x++; continue; }
 		else if ($x>$max_ln) { break; }
 		$x++;
@@ -403,6 +411,7 @@
 		$k = 0;
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
+			// when a single value, handle accordingly; otherwise by array
 			if ($P['pipe_id']) {
 				$itemqty = getPipeQty($P['pipe_id']);
 			} else {
@@ -445,7 +454,7 @@
 									</div>
 								</div>
                                 <div class="product-img">
-                                    <img src="http://www.ven-tel.com/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
+                                    <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
                                 </div>
                                 <div class="product-descr" data-partid="'.$partid.'">
 									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span></span>
@@ -573,7 +582,7 @@
 								<div class="row">
 									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
-									<div class="col-sm-3 text-center"><br/><span class="info">shelflife</span></div>
+									<div class="col-sm-3 text-center"><?php echo $shelflife; ?><br/><span class="info">shelflife</span></div>
 									<div class="col-sm-3 text-center"><br/><span class="info">quotes-to-sale</span></div>
 								</div>
 							</td>

@@ -144,6 +144,8 @@
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "DELETE FROM parts_index WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
+	$query = "DELETE FROM picture_maps WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	echo json_encode(array('message'=>'Success'));
 	exit;

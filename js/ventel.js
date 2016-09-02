@@ -741,9 +741,10 @@
 						$("#remote-"+remote).removeClass('hidden');
 					});
 
-					// reset market pricing amounts and toggle
+					// reset market pricing amounts and toggle, and shelflife
 					$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
 					$("#marketpricing-"+ln).html('');
+//					$("#shelflife-"+ln).html('');
 
                     if (! json.done && attempt==0) {
                         //setTimeout("$('#market-results').loadResults()",1000);
@@ -763,6 +764,7 @@
 							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
 						}
 						$("#marketpricing-"+ln).html(price_range);
+//						$("#shelflife-"+ln).html(json.shelflife);
 					}
                 },
                 error: function(xhr, desc, err) {
