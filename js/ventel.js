@@ -244,6 +244,11 @@
 				});
 			});
 		});
+		$(".parts-index").click(function() {
+			var pdescr = $(this).closest(".product-descr");
+			var psearch = pdescr.find(".product-search:first").val();
+			modalAlertShow("Updating DB Keywords Index!","Re-indexing the database for this search term will reload the entire page. Are you ready to proceed?",true,'reindexParts',psearch);
+		});
 		$(".parts-merge").click(function() {
 			var tbody = $(this).closest("tbody");
 			var checked_rows = tbody.find(".item-check:checked").length;
@@ -823,6 +828,27 @@
 			$("#upload-file").click();//show().focus().click().hide();
 			$(".upload-options").removeClass('hidden');
 		}
+	}
+	function reindexParts(search) {
+        console.log(window.location.origin+"/json/indexer.php?search="+search);
+        $.ajax({
+            url: 'json/indexer.php',
+            type: 'get',
+            data: {'search': search},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.message=='Success') {
+					//alert(json.message);
+					location.reload();
+				} else {
+					alert(json.message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
 	}
 	function mergeParts(rows) {
 		var partids = [];

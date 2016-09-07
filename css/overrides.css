@@ -125,18 +125,20 @@
 	padding:0px;
 	margin:0px;
 }
-.table tr .product-action .action-meta {
+.table tr .action-hover .action-items {
 	display:none;
 }
-.table tr:hover .product-action .action-meta {
-	display:block;
+.table tr:hover .action-hover .action-items {
+	display:inline;
 }
-.table tr .product-action .action-items {
+/*
+.table tr .action-hover .action-items {
 	display:none;
 }
-.table tr:hover .product-action .action-items {
+.table tr:hover .action-hover .action-items {
 	display:block;
 }
+*/
 
 .first .product-descr {
 	margin-left:12px;

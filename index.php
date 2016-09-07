@@ -440,13 +440,7 @@
                             <td class="descr-row'.$rowcls.'">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
-<!--
-<div class="action-items">
--->
                                     <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon"></a>
-<!--
-</div>
--->
 								</div>
 								<div class="qty">
 									<div class="form-group">
@@ -556,20 +550,24 @@
                         <!-- row -->
                         <tr class="first">
                             <td>
-								<div class="product-action text-center">
+								<div class="product-action action-hover text-center">
 	                                <div><input type="checkbox" class="checkAll" checked></div>
-<div class="action-meta">
-					           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
-					           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
-</div>
+									<div class="action-items">
+						           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
+						           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
+									</div>
 								</div>
 								<div class="qty">
 									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
 									<span class="info">their qty</span>
 								</div>
-								<div class="product-descr">
-									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" /><br/>
+								<div class="product-descr action-hover">
+									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" />
+									<br/>
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
+									<div class="action-items">
+										<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
+									</div>
 								</div>
 								<div class="price pull-right">
 									<div class="form-group target text-right">
