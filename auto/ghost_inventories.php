@@ -41,13 +41,13 @@ $organized = array();
 
 //Declare the percentage value of each of the API's (curated for now)
 $weights = array(
-	"Default" => .30,
+	"Default" => .40,
 	/*"34" => .80,*/
-	"36" => .25,
-	"3" => .25,
-	"1414" => .25,
-	"1264" => .33,
-	"4" =>.26
+	"36" => .35,
+	"3" => .35,
+	"1414" => .35,
+	"1264" => .40,
+	"4" =>.33
 );
 
 

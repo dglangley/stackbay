@@ -10,8 +10,10 @@
 		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
-			$shelflife = round($r['days']).' day';
-			if ($r['days']<>1) { $shelflife .= 's'; }
+			if ($r['days']==='0' OR $r['days']>0) {
+				$shelflife = round($r['days']).' day';
+				if ($r['days']<>1) { $shelflife .= 's'; }
+			}
 		}
 
 		return ($shelflife);

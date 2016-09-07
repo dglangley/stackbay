@@ -355,6 +355,7 @@
 			$r['companyid'] = $r['cid'];
 			$r['partids'] = array($r['partid']);
 			$r['price'] = format_price($r['price'],false,'',true);
+			$r['rfq'] = '';
 
 			unset($r['quote_id']);
 			unset($r['cid']);

@@ -56,9 +56,13 @@
 	
 	//Calculate the standard year range, output quarters as an array, and make 
 	$year = date('Y');
-	$quarter = array('01/01/','04/01/','07/01/','10/01/');
+	$m = date('m');
+	$q = (ceil($m/3)*3)-2;
+	//prepend a 0 if a single-digit month
+	if (strlen($q)==1) { $q = '0'.$q; }
 	$current_date = date('m/d/Y');
-	$quarter_start = $quarter[floor(date('m')/3)].$year;
+
+	$quarter_start = $q.'/01/'.$year;
 	if (! $startDate) { $startDate = $quarter_start; }
 ?>
 
