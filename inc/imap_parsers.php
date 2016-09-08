@@ -15,7 +15,7 @@
 		foreach ($tables as $table) {
 			$table_text = $table->nodeValue;
 			if (! stristr($table_text,'heci')) {
-				if ($num_tables>1 AND (preg_match('/'.$intro.'/i',$table_text) OR preg_match('/'.$signature.'.*/m',$table_text))) { continue; }
+				if ($num_tables>1 AND (preg_match('/'.$intro.'/i',$table_text) OR preg_match('/'.$signature.'.*/m',$table_text) OR preg_match('/thank you[\n]/im',$table_text)) { continue; }
 			}
 
 			$rows = $table->getElementsByTagName('tr');
@@ -78,7 +78,7 @@
 		}
 
 		$signature_matches = array();
-		if (preg_match('/'.$signature.'?/m',$fmessage,$signature_matches)) {
+		if (preg_match('/'.$signature.'?/m',$fmessage,$signature_matches) OR preg_match('/thank you[\n]/im',$fmessage,$signature_matches)) {
 //			$body = preg_replace('/'.$signature.'[\s\S]*$/m','',$fmessage);
 			// break off first occurrence of a line to avoid confusion between signature and introduction
 			$body_parts = explode(chr(10),trim($fmessage),2);
