@@ -11,6 +11,7 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
+	include_once $rootdir.'/inc/getRep.php';
 	
 //========================================================================================
 //------------------------------- Filter Gathering Section -------------------------------
@@ -39,20 +40,34 @@ $company_filter = '';
     	$part_string = rtrim($part_string, ",");
     }
 	
-	$record_end = $today;
+	$endDate = $today;
 	if ($_REQUEST['END_DATE']){
-		$record_end = format_date($_REQUEST['END_DATE'],'Y-m-d');
+		$endDate = format_date($_REQUEST['END_DATE'],'Y-m-d');
 	}
-	//Calculate the standard year range, output quarters as an array, and make 
-	$quarter = array('01/01/','04/01/','07/01/','10/01/');
-	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
-	$quarter_start = $quarter[floor(date('m')/3)];
-	$quarter_start .=  date('Y');
+	// for getRecords()
+	$record_end = $endDate;
 
-	$record_start = format_date($last_week, 'Y-m-d');
+	//Calculate the standard year range, output quarters as an array, and make 
+	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
+
+	$startDate = format_date($last_week, 'Y-m-d');
 	if ($_REQUEST['START_DATE']){
-		$record_start = format_date($_REQUEST['START_DATE'], 'Y-m-d');
+		$startDate = format_date($_REQUEST['START_DATE'], 'Y-m-d');
 	}
+	// for getRecords()
+	$record_start = $startDate;
+/*
+	$year = date('Y');
+	$m = date('m');
+	$q = (ceil($m/3)*3)-2;
+	if (strlen($q)==1) { $q = '0'.$q; }
+	$quarter_start = $q.'/01/'.$year;
+	if (! $startDate) { $startDate = $quarter_start; }
+
+	//Calculate the standard year range, output quarters as an array, and make 
+	//prepend a 0 if a single-digit month
+	$current_date = date('m/d/Y');
+*/
 
 ?>
 
@@ -94,17 +109,9 @@ $company_filter = '';
 		    </div>
 		</td>
 
-		<?php 
-			//Calculate the standard year range, output quarters as an array, and make 
-			$year = date('Y');
-			$quarter = array('01/01/','04/01/','07/01/','10/01/');
-			$today = date('m/d/Y');
-			$quarter_start = $quarter[floor(date('m')/3)];
-		?>
 		<td class = "col-md-1">
 				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php if($startDate){echo $startDate;}else{echo $quarter_start.$year;}?>" style = "min-width:50px;"/>
+		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -112,8 +119,7 @@ $company_filter = '';
 		</td>
 		<td class = "col-md-1 ">
 					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($endDate){echo $endDate;}else{echo $today;}?>" style = "min-width:50px;"/>
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -174,9 +180,9 @@ $company_filter = '';
 	}
 	else{
 		if ($company_filter) {
-			$widths = array(2,6,1,2,1);
+			$widths = array(2,5,1,2,1,1);
 		} else {
-			$widths = array(1,4,3,1,1,1,1);
+			$widths = array(1,3,3,1,1,1,1,1);
 		}
 	}
 	
@@ -245,7 +251,7 @@ $company_filter = '';
         foreach($unsorted as $row){
 	            $rows .= '
 	                <tr>
-	                    <td>'.format_date($row['date'], 'M d, Y').'</td>
+	                    <td>'.format_date($row['date'], 'M j, Y').'</td>
 	                    <td>'.$row['part'].'</td>
 	                    <td>'.$row['rqs'].'</td>
 	                    <td>'.$row['qty'].'</td>
@@ -268,7 +274,7 @@ $company_filter = '';
 			';
 		}
 		$price = trim($r['price'],"$");
-		$this_amt = $price * $r['qty'];
+		$this_amt = format_price($price,false,'',true) * $r['qty'];
 		$amt += $this_amt;
 		$num_items += $r['qty'];
 
@@ -284,7 +290,7 @@ $company_filter = '';
 		';
 
 		$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
-		$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+		$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'repid'=>$r['repid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 
 		$results[] = $row;
 	}
@@ -306,6 +312,9 @@ $company_filter = '';
                                     	$rows .= format_price($r['amt']);
                                     }
 			$rows .='
+                                    </td>
+                                    <td class="text-center">
+                                        '.getRep($r['repid'],'olddb').'
                                     </td>
                                 </tr>
     		';
@@ -357,6 +366,11 @@ $company_filter = '';
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Total Quote
+									<br>
+                                </th>
+                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Sales Rep
 									<br>
                                 </th>
 <?php } ?>

@@ -92,6 +92,10 @@
 		if ($query AND ($partid_str OR count($search_arr)==0)) {
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
+				if (! isset($r['repid'])) {
+					if (substr($r['name'],0,7)=='Verizon') { $r['repid'] = 1; }
+					else { $r['repid'] = 2; }
+				}
 				$unsorted[$r['datetime']][] = $r;
 			}
 		}
@@ -171,7 +175,7 @@
 //	$SALE_QUOTES = array();
 	function get_details($id_csv,$table_name,$results) {
 //		global $SALE_QUOTES, $record_start, $record_end;
-		global $record_start, $record_end;
+		global $record_start, $record_end, $oldid;
 
 		$db_results = array();
 
@@ -196,6 +200,9 @@
 			}
 			$add_field = ', quote_id ';
 		}
+		// add sales/purchaser rep id
+		if ($table_name=='outgoing_quote' OR $table_name=='incoming_quote') { $add_field .= ", creator_id repid "; } else { $add_field .= ", '' repid "; }
+
 		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
 			if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
 		}
@@ -205,11 +212,13 @@
 			$db_results = $SALE_QUOTES[$invid];
 		} else {
 */
-			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, company_id cid, part_number , clei ".$add_field;
+			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, ";
+			$query .= "company_id cid, part_number , clei ".$add_field;
 			$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
 			if ($orig_table=='purchases') { $query .= ", inventory_purchaseorder "; }
 			$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
 			if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
+			if ($oldid) { $query .= "AND company_id = '".$oldid."' "; }
 			$query .= $and_where;
 			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
 			$query .= "AND inventory_inventory.id = inventory_id ";
