@@ -314,7 +314,7 @@ $company_filter = '';
 			$rows .='
                                     </td>
                                     <td class="text-center">
-                                        '.getRep($r['repid'],'olddb').'
+                                        '.getRep($r['repid'],'old').'
                                     </td>
                                 </tr>
     		';
