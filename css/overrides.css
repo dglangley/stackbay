@@ -22,13 +22,15 @@
 	top:46px;
 	box-shadow: 2px 1px 2px #888888;
 }
+
+/*
 .table-header tr td:first-child {
 	padding-left:40px;
 }
 .table-header tr td:last-child {
 	padding-right:40px;
 }
-
+*/
 .input-xs {
   height: 24px;
   padding: 3px 4px 3px 6px !important;
@@ -606,9 +608,9 @@ tr.info:hover td, td.info:hover {
 	margin-top:-120px;
 }
 */
-.datetime-picker {
-	/*width:220px;*/
-}
+
+
+
 
 .file-upload {
 	width: 0.1px;
