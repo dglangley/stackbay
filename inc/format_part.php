@@ -52,17 +52,20 @@
 			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,KTU--,LAA---,LEY---,LNW---,etc*/
 			'((((B[BDNS]|DA|IT|KF|KT|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
-			/* Ericsson ROF-131-708 */
-			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
-
 			/* Alcatel-Lucent 3AL45028AA,3HE00867CAEAC,3HE03615AA AC01,3TMA2500AA01*/
 			'([138](([A-MT]{2}[0-9]{5})|([A-Z]{3}[0-9]{4}))[A-Z]{2})(([^[:alnum:]]?((REV)|(ICS))?[^[:alnum:]]?([A-Z]{0,2}[0-9]{2}|[A-Z]{1,2}[[:space:]]*[0-9]{0,2}))|([A-Z]?[^[:alnum:]]?[[:alnum:]]{2,4}))?',
+
+			/* Alcatel-Lucent / Ascend CBX 11030 */
+			'(11[0-9]{3}[A-Z]?(-128)?)'.$aluRevs,
 
 			/* Austron-Datum 23413016-000-0 23413017-000-0*/
 			'(((2[235][0-9]{2})|(1417))[0-9]{4}[-]?[0-9]{3}[-]?[[:alnum:]])((-REV)?[^[:alnum:]]?[A-Z][.]?[0-9]{0,2})?',
 
 			/* Conklin 502-I3-L1 */
 			'(5[0-9]{2}-?I[0-9])(-?L[0-9])?',
+
+			/* Ericsson ROF-131-708 */
+			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
 
 			/* Siemens Surpass Hit S42024-L5437-A300-17 */
 			'(S[0-9]{5}-?[A-Z][0-9]{4}-?[A-Z][0-9]{3})(-?[[:alnum:]][0-9])?',

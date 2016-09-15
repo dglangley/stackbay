@@ -125,6 +125,12 @@
 		'DRIVE'=>1,
 		'SUPPLY'=>1,
 		'MODULES'=>1,
+		'RECTIFIER'=>1,
+		'-48V'=>1,
+		'48VDC'=>1,
+		'CONVERTOR'=>1,
+		'RING'=>1,
+		'48V'=>1,
 	);
 
 	// for every email...
@@ -228,12 +234,22 @@
 					$part_field = $part_col;
 					if ($part_from_end) { $part_field = ($num_fields-1)-$part_col; }
 					// set part string from identified field, uppercase it for $commons lookup purposes
-					$part = strtoupper($fields[$part_field]);
+					if (isset($fields[$part_field])) {
+						$part = strtoupper($fields[$part_field]);
+					}
 					// if this is a 'common' word and if we already have a matched field, resort to that previously-matched field
 					if (isset($commons[$part]) AND isset($last_fields[$part_field])) { $part = $last_fields[$part_field]; }
 
 					$qty = '';
-					if ($qty_from_end) { $qty = $fields[(($num_fields-1)-$qty_col)]; } else { $qty = $fields[$qty_col]; }
+					if ($qty_from_end) {
+						if (isset($fields[(($num_fields-1)-$qty_col)])) {
+							$qty = $fields[(($num_fields-1)-$qty_col)];
+						}
+					} else {
+						if (isset($fields[$qty_col])) {
+							$qty = $fields[$qty_col];
+						}
+					}
 
 					$heci = '';
 					if ($heci_from_end AND isset($fields[(($num_fields-1)-$heci_col)])) { $heci = $fields[(($num_fields-1)-$heci_col)]; }

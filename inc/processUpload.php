@@ -288,7 +288,7 @@ $tempfile = '/var/tmp/400004291.xls';
 			$report .= '"'.$row['part'].'","'.$row['heci'].'","'.$row['qty'].'","'.$status.'"'.chr(10);
 
 			if (count($favs)>0) {
-				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].' ("'.$status.'")<BR>';
+				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].'<BR>';// ("'.$status.'")<BR>';
 				$num_favs++;// += count($favs);
 			}
 			if (! $partid OR ! $qty) { continue; }
