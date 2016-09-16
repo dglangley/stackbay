@@ -61,6 +61,7 @@
 			$qty = trim(str_replace('&nbsp;',' ',htmlentities($cols->item(4)->nodeValue)));
 			if (! $qty) { $qty = 0; }
 			$price = trim(str_replace('&nbsp;',' ',htmlentities($cols->item(6)->nodeValue)));
+			if (strtoupper($price)=='CALL') { $price = ''; }
 			$company = trim(str_replace('&amp;','&',str_replace('&nbsp;',' ',htmlentities($cols->item(7)->getElementsByTagName('a')->item(0)->nodeValue))));
 			$companyid = getCompany($company,'name','id');
 			if (! $companyid) { $companyid = addCompany($company); }
@@ -79,14 +80,14 @@ continue;//8-8-16
 			//must return a variable so this function doesn't happen asynchronously
 			if ($return_type=='db') {
 //				$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'PS');
-				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid);
+				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid,'price'=>$price);
 			}
 		}
 
 		if ($return_type=='db') {
 			foreach ($inserts as $r) {
 				$metaid = logSearchMeta($r['companyid'],false,'','ps');
-				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
+				$added = insertMarket($r['partid'],$r['qty'],$r['price'],false,false,$metaid,'availability');
 			}
 		}
 

@@ -101,7 +101,7 @@ continue;
 				//must return a variable so this function doesn't happen asynchronously
 				if ($return_type=='db') {
 //					$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'BB');
-					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid);
+					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid,'price'=>$price);
 				}
 			}
 
@@ -112,7 +112,7 @@ continue;
 		if ($return_type=='db') {
 			foreach ($inserts as $r) {
 				$metaid = logSearchMeta($r['companyid'],false,'','bb');
-				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability');
+				$added = insertMarket($r['partid'],$r['qty'],$r['price'],false,false,$metaid,'availability');
 			}
 		}
 
