@@ -47,6 +47,9 @@
 			/*'(4([0-9]{2})[A-Z]{1,2})'.$aluRevs,*/
 			'([34]([0-9]{2})((?!(SC|RP|UA|UB|UR))[A-Z]){1,2}[0-9]?)'.$aluRevs,
 
+			/* Alcatel-Lucent 839B5, 739B5*/
+			'([1-9][0-9]{2}[A-Z][1-9])'.$aluRevs,
+
 			/* Alcatel-Lucent AKM85,LNW555*/
 			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
 			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,KTU--,LAA---,LEY---,LNW---,etc*/
