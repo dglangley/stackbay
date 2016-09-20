@@ -15,7 +15,7 @@
 			/*'([A-Z]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
 			/*'([A-Z[^((FD)|(FB))]]{2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,*/
 			/* read more about look-ahead negatives: http://stackoverflow.com/questions/406230/regular-expression-to-match-line-that-doesnt-contain-a-word */
-			'(((?!(FB|FD|FC))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
+			'(((?!(FB|FD|FC|CS))[A-Z]){2}[0-9]{3,4}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent VLNC5,WSRG19B,WSRH1B*/
 			'([VW][A-Z]{3}[0-9]{1,2}[A-Z]?)'.$aluRevs,

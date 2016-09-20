@@ -76,7 +76,15 @@
 				}
 				while (list($dkey,$dword) = each($words)) {
 //					echo $dword.' '.$f.' '.$k.' <BR> '.chr(10);
-					addWords($dword,$f,$k,$r['manfid']);
+
+					// change the primary key value to systemid for systems_index and manfid for manfs_index
+					if ($f=='system') {
+						addWords($dword,$f,$r['systemid'],$r['manfid']);
+					} else if ($f=='manf') {
+						addWords($dword,$f,$r['manfid'],$r['manfid']);
+					} else {
+						addWords($dword,$f,$k,$r['manfid']);
+					}
 				}
 				reset($words);
 			}
@@ -88,7 +96,7 @@
 	function keyword($keyword,$fieldid,$table_name) {
 		global $KEYWORDS,$PRIMARIES;
 
-		$keyword = trim(preg_replace('/[^[:alnum:]]*/','',$keyword));
+		$keyword = strtoupper(trim(preg_replace('/[^[:alnum:]]*/','',$keyword)));
 		if (! $keyword OR ! $fieldid OR ! $table_name) { return; }
 
 		$rank = '';
@@ -101,8 +109,7 @@
 		$field_name = $table_name.'id';
 		$table_name .= 's_index';
 
-		$keyword_lower = strtolower($keyword);
-		if ($keyword_lower=='cisco' OR $keyword_lower=='power' OR preg_match('/^(rev|iss)-?[0-9]*$/i',$keyword)) { $rank = 'secondary'; }
+		if ($keyword=='CISCO' OR $keyword=='POWER' OR preg_match('/^(rev|iss)-?[0-9]*$/i',$keyword)) { $rank = 'secondary'; }
 
 		$keywordid = 0;
 		if (! isset($KEYWORDS[$keyword])) {
