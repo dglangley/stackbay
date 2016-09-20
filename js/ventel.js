@@ -35,8 +35,8 @@
                         /* process each item's data */
                         $.each(item, function(key, row) {
 							rowHtml += '<div class="row"><div class="col-sm-2"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"/>';
-							if (row.rfq && row.rfq=='Y') {
-								rowHtml += ' <i class="fa fa-paper-plane text-primary"></i>';
+							if (row.rfq && row.rfq!='') {
+								rowHtml += ' <i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i>';
 							}
 							rowHtml += '</div><div class="col-sm-2"><strong>'+row.qty+'</strong></div>'+
 								'<div class="col-sm-6">'+row.company+'</div>'+

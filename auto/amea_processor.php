@@ -132,6 +132,7 @@
 		'RING'=>1,
 		'48V'=>1,
 		'T1'=>1,
+		'CONVERTER'=>1,
 	);
 
 	// for every email...
