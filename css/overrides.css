@@ -602,12 +602,27 @@ tr.info:hover td, td.info:hover {
 }
 
 
-/*
-.datepicker {
-	z-index:2003;
-	margin-top:-120px;
+.datepicker div table thead tr th {
+
+	border: 0px;
+	padding-bottom: 5px !important;
+	text-transform: none !important;
+	border-collapse: collapse !important;
+	font-size: 14px;
 }
-*/
+
+
+.datepicker tbody > tr > td{
+	border: none !important;
+}
+.datepicker div table thead tr th {
+	border: 0px;
+	padding-bottom: 5px !important;
+	text-transform: none !important;
+	border-collapse: collapse !important;
+	font-size: 14px;
+}
+
 
 
 
