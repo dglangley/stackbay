@@ -63,7 +63,7 @@
     <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
         <div class="navbar-header">
-            <button class="navbar-toggle" type="button" data-toggle="collapse" id="menu-toggler">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse"><!-- id="menu-toggler">-->
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
@@ -72,35 +72,35 @@
             <a class="logo" href="/" title="home">
                 <img src="img/logo-white.png" alt="logo" />
             </a>
+			<div class="search-center">
+			  <div class="form-group search-group">
+				<div class="input-group">
+					<span class="input-group-btn">
+						<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
+					</span>
+	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
+                	<span class="input-group-btn">
+	                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+	                </span>
+                </div><!-- /input-group -->
+              </div><!-- /form-group -->
+			</div>
         </div>
-        <ul class="nav navbar-nav pull-right hidden-xs">
+		<div class="collapse navbar-collapse text-center">
+          <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
             <li class="hidden-xs hidden-sm">
-				<a href="/amea.php"><i class="fa fa-female"></i> Améa</a>
+				<a href="/profile.php"><i class="fa fa-book"></i><span> Companies</span></a>
 			</li>
             <li class="hidden-xs hidden-sm">
-				<a href="/profile.php"><i class="fa fa-book"></i> Address Book</a>
+				<a href="#"><i class="fa fa-wrench"></i><span> Repair Home</span></a>
 			</li>
             <li class="hidden-xs hidden-sm">
-				<div class="form-group search-group">
-					<div class="input-group">
-						<span class="input-group-btn">
-							<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
-						</span>
-		                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
-	                	<span class="input-group-btn">
-		                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
-		                </span>
-	                </div><!-- /input-group -->
-                </div><!-- /form-group -->
-            </li>
-            <li class="hidden-xs hidden-sm">
-				<a href="/accounts.php"><i class="fa fa-building-o"></i> Accounts Home</a>
+				<a href="#"><i class="fa fa-truck"></i><span> Shipping Home</span></a>
 			</li>
+          </ul>
+          <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
             <li class="hidden-xs hidden-sm">
-				<a href="#"><i class="fa fa-wrench"></i> Repair Home</a>
-			</li>
-            <li class="hidden-xs hidden-sm">
-				<a href="#"><i class="fa fa-truck"></i> Shipping Home</a>
+				<a href="/accounts.php"><i class="fa fa-building-o"></i><span> Accounts Home</span></a>
 			</li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
@@ -112,6 +112,9 @@
                     <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
                     <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>
 				</ul>
+			</li>
+            <li class="hidden-xs hidden-sm">
+				<a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a>
 			</li>
             <li class="notification-dropdown hidden-xs hidden-sm">
                 <a href="#" class="trigger">
@@ -143,8 +146,6 @@
                     </div>
                 </div>
             </li>
-            <li class="hidden-xs hidden-sm">
-			</li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
                     <?php echo $U['name']; ?>
@@ -166,7 +167,8 @@
 -->
                 </ul>
             </li>
-        </ul>
+          </ul><!-- end navbar-collapse -->
+		</div>
     </header>
     <!-- end navbar -->
 
@@ -313,6 +315,7 @@
 	</div>
 
 	</form>
+
 <?php
 	if ($s2) { $s = $s2; }
 ?>
