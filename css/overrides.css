@@ -305,6 +305,16 @@ input[type="text"].inline {
 .search-form .search-group {
 	width:320px;
 	margin:6px 36px;
+	margin:6px auto;
+	z-index:1003;
+}
+.search-center {
+	height:0;
+	overflow:visible;
+	width:100%;
+	margin:auto;
+	position:absolute;
+	text-align:center;
 }
 #s, .product-search, .descr-edit input {
 	text-transform:uppercase;
@@ -679,4 +689,37 @@ h1 a, h2 a, h3 a {
 
 #image-modal img {
 	width:100%;
+}
+
+.navbar-nav {
+	z-index:1003;
+}
+
+@media (max-width: 1320px) {
+  .navbar-nav .hidden-xs.hidden-sm span {
+	display:none;
+/*
+	width:50px;
+	overflow:hidden;
+	white-space: nowrap;
+*/
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .navbar-header {
+	width:100%;
+  }
+  .navbar-toggle {
+    display: block !important;
+  }
+}
+@media (min-width: 992px) {
+  .navbar-toggle {
+    display: none;
+  }
+}
+@media screen and (max-width: 520px) {
+  .search-form .search-group {
+	width:140px;
+  }
 }
