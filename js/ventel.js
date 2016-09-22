@@ -693,7 +693,63 @@
                 }
 			});
 		});
-	
+		
+	/*Function Suite for filter buttons*/
+	$('#dateRanges').children().click(function() {
+		$(this).siblings('button[class*=active]').toggleClass("active");
+	});
+	$('#YTD').click(function() {
+		var year = new Date().getFullYear();
+		var month = new Date().getMonth();
+		month++;
+		var day = new Date().getDate(2);
+		day = ("0" + day).slice(-2);
+		month = ("0" + month).slice(-2);
+		var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
+		//alert('Day '.concat(today));
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val('01/01/'.concat(year));
+		$("input[name='END_DATE']").val(today);
+	});
+	$('#MTD').click(function() {
+		var year = new Date().getFullYear();
+		var month = new Date().getMonth();
+		month++;
+		var day = new Date().getDate();
+		day = ("0" + day).slice(-2);
+		month = ("0" + month).slice(-2);
+		var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
+		var begin = ''.concat(month).concat('/01/').concat(year);
+		//alert('Day '.concat(today));
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val(begin);
+		$("input[name='END_DATE']").val(today);
+	});
+	$('#Q1').click(function() {
+		var year = new Date().getFullYear();
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val('01/01/'.concat(year));
+   	    $("input[name='END_DATE']").val('03/31/'.concat(year));
+	});
+	$('#Q2').click(function() {
+		var year = new Date().getFullYear();
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val('04/01/'.concat(year));
+   	    $("input[name='END_DATE']").val('06/30/'.concat(year));
+	});
+	$('#Q3').click(function() {
+		var year = new Date().getFullYear();
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val('07/01/'.concat(year));
+   	    $("input[name='END_DATE']").val('09/30/'.concat(year));
+	});
+	$('#Q4').click(function() {
+		var year = new Date().getFullYear();
+	    $(this).button('toggle');
+	    $("input[name='START_DATE']").val('10/01/'.concat(year));
+   	    $("input[name='END_DATE']").val('12/31/'.concat(year));
+	});
+		
     });/* close $(document).ready */
 
         // build jquery plugin for remote ajax call

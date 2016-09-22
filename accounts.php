@@ -121,16 +121,35 @@
 		            </span>
 		    </div>
 		</td>
-
+		<td class="col-md-2 btn-group" data-toggle="buttons" id="dateRanges">
+	        <button class="glow left large btn-report" id = "MTD" type="submit" data-value="summary" style="font-size:10px;">
+	        	MTD	
+	        </button>
+			<button class="glow center small btn-report" id = "Q1" type="radio" data-value="summary" style="font-size:10px;">
+				Q1
+			</button>
+			<button class="glow center small btn-report" id = "Q2" type="radio" data-value="summary" style="font-size:10px;">
+				Q2
+			</button>
+			<button class="glow center small btn-report" id = "Q3" type="radio" data-value="summary" style="font-size:10px;">
+				Q3
+			</button>		
+			<button class="glow center small btn-report" id = "Q4" type="radio" data-value="summary" style="font-size:10px;">
+				Q4
+			</button>		
+			<button class="glow right small btn-report" id = "YTD" type="radio" data-value="summary" style="font-size:10px;">
+				YTD
+			</button>		
+		</td>
 		<td class="col-md-1 text-center">
 
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
 		</td>
 		
-		<td class="col-md-2 text-center">
+		<td class="col-md-1 text-center">
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 		</td>
-		<td class="col-md-3">
+		<td class="col-md-2">
 			<div class="pull-right form-group">
 			<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>

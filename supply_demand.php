@@ -16,7 +16,7 @@
 //========================================================================================
 //------------------------------- Filter Gathering Section -------------------------------
 //========================================================================================
-$company_filter = '';
+	$company_filter = '';
 	if ($_REQUEST['companyid'] && is_numeric($_REQUEST['companyid']) && $_REQUEST['companyid']>0) { 
 		$company_filter = $_REQUEST['companyid']; 
 	}
@@ -24,7 +24,7 @@ $company_filter = '';
 	$report_type = 'summary';
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
-
+	
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
 	
@@ -39,6 +39,15 @@ $company_filter = '';
     	}
     	$part_string = rtrim($part_string, ",");
     }
+	
+	$min_price = '';
+	$max_price = '';
+	if ($_REQUEST['min']){
+		$min_price = $_REQUEST['min'];
+	}
+	if ($_REQUEST['max']){
+		$max_price = $_REQUEST['max'];
+	}
 	
 	$endDate = $today;
 	if ($_REQUEST['END_DATE']){
@@ -72,9 +81,9 @@ $company_filter = '';
 ?>
 
 
-<!------------------------------------------------------------------------------------------->
-<!-------------------------------------- HEADER OUTPUT -------------------------------------->
-<!------------------------------------------------------------------------------------------->
+<!----------------------------------------------------------------------------->
+<!------------------------------- HEADER OUTPUT ------------------------------->
+<!----------------------------------------------------------------------------->
 <!DOCTYPE html>
 <html>
 <!-- Declaration of the standard head with S&D home set as title -->
@@ -99,7 +108,7 @@ $company_filter = '';
 
 		    <div class="btn-group">
 		        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
-		        <i class="fa fa-sort-numeric-desc"></i>	
+		        	<i class="fa fa-sort-numeric-desc"></i>	
 		        </button>
 				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
 		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
@@ -126,10 +135,40 @@ $company_filter = '';
 		    </div>
 		</td>
 
-		<td class="col-md-2 text-center">
+		<td class="col-md-2 btn-group" data-toggle="buttons" id="dateRanges">
+	        <button class="glow left large btn-report" id = "MTD" type="submit" data-value="summary" style="font-size:10px;">
+	        	MTD	
+	        </button>
+			<button class="glow center small btn-report" id = "Q1" type="radio" data-value="summary" style="font-size:10px;">
+				Q1
+			</button>
+			<button class="glow center small btn-report" id = "Q2" type="radio" data-value="summary" style="font-size:10px;">
+				Q2
+			</button>
+			<button class="glow center small btn-report" id = "Q3" type="radio" data-value="summary" style="font-size:10px;">
+				Q3
+			</button>		
+			<button class="glow center small btn-report" id = "Q4" type="radio" data-value="summary" style="font-size:10px;">
+				Q4
+			</button>		
+			<button class="glow right small btn-report" id = "YTD" type="radio" data-value="summary" style="font-size:10px;">
+				YTD
+			</button>		
+		</td>
+		
+		<td class="col-md-1 text-center">
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 		</td>
-		<td class="col-md-3">
+		
+		<td class="col-md-1">
+			<div class="input-group">
+				<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
+				<span class="input-group-addon">-</span>
+				<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
+			</div>
+		</td>
+		
+		<td class="col-md-2">
 			<div class="pull-right form-group">
 			<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>
@@ -146,9 +185,9 @@ $company_filter = '';
 	<!-- If the summary button is pressed, inform the page and depress the button -->
 	
 	
-<!------------------------------------------------------------------------------------>
-<!---------------------------------- FILTERS OUTPUT ---------------------------------->
-<!------------------------------------------------------------------------------------>
+<!---------------------------------------------------------------------------->
+<!------------------------------ FILTERS OUTPUT ------------------------------>
+<!---------------------------------------------------------------------------->
     <div id="pad-wrapper">
 		<div class="row filter-block">
 
@@ -196,8 +235,8 @@ $company_filter = '';
 	$results = array();
 	$oldid = 0;
 	$rows = '';
-//	echo getCompany($company_filter,'id','oldid');
-//	echo('Value Passed in: '.$company_filter);
+
+
 	//If there is a company id, translate it to the old identifier
 	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
 
@@ -206,6 +245,8 @@ $company_filter = '';
     $rows = '';
     $summary_rows = array();
     $unsorted = array();
+    
+    //Summary row contains four rows: Last Req Date, Items, # REQUESTS, SUM QTY
     if($report_type == 'summary'){
         foreach ($result as $row){
             $part = $row['partid'];
@@ -261,41 +302,41 @@ $company_filter = '';
 	}
 	else{ 
 	    foreach ($result as $r){
-		//Set the amount to zero for the number of items and the total price
-		$amt = 0;
-		$num_items = 0;
-		
-		//Set the value of the company to the individual row if there is no company ID preset
-		if (! $company_filter) {
-			$company_col = '
-                                <td>
-	                                    <a href="#">'.$r['name'].'</a>
-                                </td>
+			//Set the amount to zero for the number of items and the total price
+			$amt = 0;
+			$num_items = 0;
+			
+			//Set the value of the company to the individual row if there is no company ID preset
+			if (! $company_filter) {
+				$company_col = '
+	                                <td>
+		                                    <a href="#">'.$r['name'].'</a>
+	                                </td>
+				';
+			}
+			$price = trim($r['price'],"$");
+			$this_amt = format_price($price,false,'',true) * $r['qty'];
+			$amt += $this_amt;
+			$num_items += $r['qty'];
+	
+			$qty_col = '
+	                            <td>
+	                                '.$r['qty'].'
+	                            </td>
 			';
+			$price_col = '
+	                            <td class="text-right">
+	                                '.format_price($r['price']).'
+	                            </td>
+			';
+	
+			$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
+			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'repid'=>$r['repid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+	
+			$results[] = $row;
 		}
-		$price = trim($r['price'],"$");
-		$this_amt = format_price($price,false,'',true) * $r['qty'];
-		$amt += $this_amt;
-		$num_items += $r['qty'];
-
-		$qty_col = '
-                            <td>
-                                '.$r['qty'].'
-                            </td>
-		';
-		$price_col = '
-                            <td class="text-right">
-                                '.format_price($r['price']).'
-                            </td>
-		';
-
-		$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
-		$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'repid'=>$r['repid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
-
-		$results[] = $row;
-	}
     	foreach ($results as $r) {
-    		$rows .= '
+			  		$rows .= '
                                 <!-- row -->
                                 <tr>
                                     <td>
