@@ -694,6 +694,23 @@ h1 a, h2 a, h3 a {
 .navbar-nav {
 	z-index:1003;
 }
+.btn-expdate {
+	border:0;
+	padding:0;
+}
+.btn-expdate .calendar-text {
+	font-size:10px;
+}
+.btn-expdate.fa-lg {
+	font-size:1.5em;
+}
+.btn-expdate.fa-stack {
+	height:1.66666666em;
+	line-height:1.66666666em;
+}
+.btn-expdate .fa-stack-2x {
+	font-size:1.6666666em;
+}
 
 @media (max-width: 1320px) {
   .navbar-nav .hidden-xs.hidden-sm span {

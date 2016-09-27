@@ -133,6 +133,8 @@
 		'48V'=>1,
 		'T1'=>1,
 		'CONVERTER'=>1,
+		'TRACER'=>1,
+		'UMC1000'=>1,
 	);
 
 	// for every email...

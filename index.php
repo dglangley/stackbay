@@ -642,24 +642,12 @@
 
 	</form>
 
-<div class="modal fade" id="image-modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="prod-image-title"></h4>
-      </div>
-      <div class="modal-body">
-		<img id="modal-prod-img">
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
+<?php include_once 'inc/footer.php'; ?>
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
-<?php include_once 'inc/footer.php'; ?>
+<?php include_once 'modal/image.php'; ?>
+<?php include_once 'inc/jquery-fileupload.php'; ?>
 
 </body>
 </html>

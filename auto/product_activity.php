@@ -10,7 +10,7 @@
                 AND search_meta.id = demand.metaid
                 AND sysimg = 1
             GROUP BY systems.system
-            ORDER BY n DESC LIMIT 6; ";
+            ORDER BY n DESC LIMIT 30; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	// so long as we have a successful query above, delete previous instances
 	if (mysqli_num_rows($result)>0) {
