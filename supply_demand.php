@@ -60,11 +60,17 @@
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
 
 	$startDate = format_date($last_week, 'Y-m-d');
-	if ($_REQUEST['START_DATE']){
+ 	if ($_REQUEST['START_DATE']){
 		$startDate = format_date($_REQUEST['START_DATE'], 'Y-m-d');
 	}
 	// for getRecords()
 	$record_start = $startDate;
+	
+	//Market Manager Button
+	$market_table = 'supply';
+	if ($_REQUEST['market_table']){
+		$market_table = $_REQUEST['market_table'];
+	}
 /*
 	$year = date('Y');
 	$m = date('m');
@@ -103,82 +109,82 @@
 	<form class="form-inline" method="get" action="/supply_demand.php">
 
     <table class="table table-header">
-		<tr>
-		<td class = "col-md-1">
-
-		    <div class="btn-group">
-		        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
-		        	<i class="fa fa-sort-numeric-desc"></i>	
-		        </button>
-				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
-		        	<i class="fa fa-history"></i>	
-		        </button>
-		        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-		    </div>
-		</td>
-
-		<td class = "col-md-1">
+		<tr id = "filterTableOutput">
+			<td class = "col-md-2">
+	
+			    <div class="btn-group">
+			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+			        	<i class="fa fa-sort-numeric-desc"></i>	
+			        </button>
+					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
+			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
+			        	<i class="fa fa-history"></i>	
+			        </button>
+			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			    </div>
+				<div class="btn-group">
+			        <button class="glow left large btn-report <?php if ($market_table=='supply') { echo ' active'; } ?>" type="submit" data-value="supply">
+			        	Supply	
+			        </button>
+					<input type="radio" name="market_table" value="supply" class="hidden"<?php if ($market_table=='supply') { echo ' checked'; } ?>>
+			        <button class="glow right large btn-report<?php if ($market_table=='demand') { echo ' active'; } ?>" type="submit" data-value="demand">
+			        	Demand
+			        </button>
+			        <input type="radio" name="market_table" value="demand" class="hidden"<?php if ($market_table=='demand') { echo ' checked'; } ?>>
+			    </div>
+			</td>
+			<td class = "col-md-1">
 				<div class="input-group date datetime-picker-filter">
 		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
 		        </div>
-		</td>
-		<td class = "col-md-1 ">
-					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		    </div>
-		</td>
-
-		<td class="col-md-2 btn-group" data-toggle="buttons" id="dateRanges">
-	        <button class="glow left large btn-report" id = "MTD" type="submit" data-value="summary" style="font-size:10px;">
-	        	MTD	
-	        </button>
-			<button class="glow center small btn-report" id = "Q1" type="radio" data-value="summary" style="font-size:10px;">
-				Q1
-			</button>
-			<button class="glow center small btn-report" id = "Q2" type="radio" data-value="summary" style="font-size:10px;">
-				Q2
-			</button>
-			<button class="glow center small btn-report" id = "Q3" type="radio" data-value="summary" style="font-size:10px;">
-				Q3
-			</button>		
-			<button class="glow center small btn-report" id = "Q4" type="radio" data-value="summary" style="font-size:10px;">
-				Q4
-			</button>		
-			<button class="glow right small btn-report" id = "YTD" type="radio" data-value="summary" style="font-size:10px;">
-				YTD
-			</button>		
-		</td>
-		
-		<td class="col-md-1 text-center">
-			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
-		</td>
-		
-		<td class="col-md-1">
-			<div class="input-group">
-				<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
-				<span class="input-group-addon">-</span>
-				<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
-			</div>
-		</td>
-		
-		<td class="col-md-2">
-			<div class="pull-right form-group">
-			<select name="companyid" id="companyid" class="company-selector">
-					<option value="">- Select a Company -</option>
-				<?php 
-				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-				?>
-				</select>
-				<input class="btn btn-primary btn-sm" type="submit" value="Apply">
-			</div>
+			</td>
+			<td class = "col-md-1">
+				<div class="input-group date datetime-picker-filter">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
+			            <span class="input-group-addon">
+			                <span class="fa fa-calendar"></span>
+			            </span>
+			    </div>
+			</td>
+			<td class = "col-md-1 btn-group" data-toggle="buttons" id="shortDateRanges">
+				<div class="date-options">
+					<div class="btn btn-default btn-sm">&gt;</div>
+			        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
+	    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
+					<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
+					<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
+					<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
+					<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
+				</div>
+			</td>
+			<td class = "col-md-2">
+				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+			</td>
+			<td class = "col-md-2">
+				<div class="input-group">
+					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
+					<span class="input-group-addon">-</span>
+					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
+				</div>
+			</td>
+			<td class = "col-md-3">
+				<div class="pull-right form-inline">
+					<div class="input-group">
+						<select name="companyid" id="companyid" class="company-selector">
+						<option value="">- Select a Company -</option>
+					<?php 
+					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+					?>
+					</select>
+					<button class="btn btn-primary btn-sm" type="submit" >
+						<i class="fa fa-filter" aria-hidden="true"></i>
+					</button>
+					</div>
+				</div>
 			</td>
 		</tr>
 	</table>
@@ -241,7 +247,7 @@
 	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
 
 	//Write the query for the gathering of Pipe data
-    $result = getRecords($part,$part_string);
+    $result = getRecords($part,$part_string,'csv',$market_table);
     $rows = '';
     $summary_rows = array();
     $unsorted = array();
@@ -429,11 +435,21 @@
 
 
 	</div>
+	</div>
 	</form>
 <?php include_once 'inc/footer.php'; ?>
 <script type="text/javascript">
-			 $(document).ready(function() {
-				$('.btn-report').click(function() {
+			
+	$(document).ready(function() {
+		//Change the value of the     	
+    	var dateBoxWidth = $(".date-options").width();
+		$(".date-options").hover(function() {
+			$(this).animate({ width:"360" });
+		}, function() {
+            $(this).animate({ width:dateBoxWidth });
+		});
+
+		$('.btn-report').click(function() {
 				var btnValue = $(this).data('value');
 				$(this).closest("div").find("input[type=radio]").each(function() {
 					if ($(this).val()==btnValue) { $(this).attr('checked',true); }

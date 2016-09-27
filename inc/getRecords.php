@@ -84,7 +84,14 @@
 				break;
 
 			case 'supply':
-				$query = "";
+				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid FROM availability, search_meta, companies ";
+				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND avail_price >= ".$min." ";}
+				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
+				$query .= "ORDER BY datetime ASC; ";;
 				$unsorted = get_coldata($search_str,'supply');
 				break;
 

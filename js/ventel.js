@@ -694,10 +694,32 @@
 			});
 		});
 		
-	/*Function Suite for filter buttons*/
-	$('#dateRanges').children().click(function() {
+	/*Aaron: Function Suite for filter buttons*/
+	$('td[id*=Ranges]').children().click(function() {
 		$(this).siblings('button[class*=active]').toggleClass("active");
 	});
+/*
+	$('#shortDateRanges').hover(function(){
+		//$(this).parent('td').removeClass("col-md-1");
+    	$(this).removeClass("col-md-1 btn-group");
+		$(this).addClass("col-md-2 btn-group");
+		$(this).next().removeClass("col-md-2 text-center");
+		$(this).next().addClass("col-md-1 text-center");
+		$(this).children('button[class*=center]').show();
+	},function() {
+		$(this).children('button[class*=center]').hide();
+		$(this).removeClass("col-md-2 btn-group");
+		$(this).addClass("col-md-1 btn-group");
+		$(this).next().removeClass("col-md-1 text-center");
+		$(this).next().addClass("col-md-2 text-center");
+	});
+	
+	$('#dateRanges').hover(function(){
+		$(this).parent().children('button[class*=center]').toggle();
+		$(this).parent().removeClass("col-md-2 btn-group");
+		$(this).parent().addClass("col-md-1 btn-group");
+	});
+*/
 	$('#YTD').click(function() {
 		var year = new Date().getFullYear();
 		var month = new Date().getMonth();
@@ -752,90 +774,90 @@
 		
     });/* close $(document).ready */
 
-        // build jquery plugin for remote ajax call
-        jQuery.fn.loadResults = function(attempt, pricing_only) {
-			if (! pricing_only) { var pricing_only = ''; }
-            var newHtml = '';
-            var rowHtml = '';
-            var qtyTotal = 0;
-            var container = $(this);
-            var ln = $(this).data('ln');
-			var thisId = container.prop('id');
-			if (attempt==2) {
-	            container.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
-			}
-			var doneFlag = '';
+    // build jquery plugin for remote ajax call
+    jQuery.fn.loadResults = function(attempt, pricing_only) {
+		if (! pricing_only) { var pricing_only = ''; }
+        var newHtml = '';
+        var rowHtml = '';
+        var qtyTotal = 0;
+        var container = $(this);
+        var ln = $(this).data('ln');
+		var thisId = container.prop('id');
+		if (attempt==2) {
+            container.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+		}
+		var doneFlag = '';
 
-            console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only);
-            $.ajax({
-                url: 'json/availability.php',
-                type: 'get',
-                data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'pricing_only': pricing_only},
-                success: function(json, status) {
-                    $.each(json.results, function(dateKey, item) {
-                        qtyTotal = 0;
+        console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only);
+        $.ajax({
+            url: 'json/availability.php',
+            type: 'get',
+            data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'pricing_only': pricing_only},
+            success: function(json, status) {
+                $.each(json.results, function(dateKey, item) {
+                    qtyTotal = 0;
 
-                        rowHtml = '';
-                        /* process each item's data */
-                        $.each(item, function(key, row) {
-                            qtyTotal += parseInt(row.qty,10);
-                            rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                                '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
-                            $.each(row.sources, function(i, src) {
-                                rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
-                            });
-                            if (row.price) {
-                                rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
-                            }
-                            rowHtml += '</div>';
+                    rowHtml = '';
+                    /* process each item's data */
+                    $.each(item, function(key, row) {
+                        qtyTotal += parseInt(row.qty,10);
+                        rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
+                            '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
+                        $.each(row.sources, function(i, src) {
+                            rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
                         });
-
-						doneFlag = json.done;
-
-                        /* add section header of date and qty total */
-                        newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only)+rowHtml;
+                        if (row.price) {
+                            rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
+                        }
+                        rowHtml += '</div>';
                     });
-                    container.html(newHtml);
 
-					// alert the user when there are errors with any/all remotes by unhiding alert buttons
-					$.each(json.err, function(i, remote) {
-						$("#remote-"+remote).removeClass('hidden');
-					});
+					doneFlag = json.done;
 
-					// reset market pricing amounts and toggle, and shelflife
-					$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
-					$("#marketpricing-"+ln).html('');
+                    /* add section header of date and qty total */
+                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only)+rowHtml;
+                });
+                container.html(newHtml);
+
+				// alert the user when there are errors with any/all remotes by unhiding alert buttons
+				$.each(json.err, function(i, remote) {
+					$("#remote-"+remote).removeClass('hidden');
+				});
+
+				// reset market pricing amounts and toggle, and shelflife
+				$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
+				$("#marketpricing-"+ln).html('');
 //					$("#shelflife-"+ln).html('');
 
-                    if (! json.done && attempt==0) {
-                        //setTimeout("$('#market-results').loadResults()",1000);
-						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
-                    } else if (json.done==1) {
-						// after done loading the market results, show the market pricing summary and toggle
-						var price_range = '';
-						var pr = json.price_range;
-						if (pr.min && pr.max) {
-							if (pr.min==pr.max) {
-								price_range = '$'+pr.min;
-							} else {
-								price_range = '$'+pr.min+' - $'+pr.max;
-							}
-							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
+                if (! json.done && attempt==0) {
+                    //setTimeout("$('#market-results').loadResults()",1000);
+					setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
+                } else if (json.done==1) {
+					// after done loading the market results, show the market pricing summary and toggle
+					var price_range = '';
+					var pr = json.price_range;
+					if (pr.min && pr.max) {
+						if (pr.min==pr.max) {
+							price_range = '$'+pr.min;
 						} else {
-							$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
+							price_range = '$'+pr.min+' - $'+pr.max;
 						}
-						$("#marketpricing-"+ln).html(price_range);
-//						$("#shelflife-"+ln).html(json.shelflife);
+						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
+					} else {
+						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
 					}
-                },
-                error: function(xhr, desc, err) {
-                    console.log(xhr);
-                    console.log("Details: " + desc + "\nError:" + err);
-                }
-            }); // end ajax call
+					$("#marketpricing-"+ln).html(price_range);
+//						$("#shelflife-"+ln).html(json.shelflife);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
 
-            return;
-        };
+        return;
+    };
 
 	function toggleLoader(msg) {
 		if ($("#loading-bar").is(':visible')) {
