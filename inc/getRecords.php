@@ -2,14 +2,17 @@
 	include_once 'pipe.php';
 	include_once 'getPipeIds.php';
 	include_once 'getPartId.php';
+	include_once 'format_price.php';
 	
 	$record_start = '';
 	$record_end = '';
 	
 	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand') {
-		global $record_start,$record_end,$oldid,$company_filter;
+		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
 		$unsorted = array();
-
+		$min = format_price($min_price,'','',true);
+		$max = format_price($max_price,'','',true);
+		
 		if (strlen($record_start)) { $record_start .= ' 00:00:00'; }
 		if (strlen($record_end)) { $record_end .= ' 23:59:59'; }
 
@@ -53,9 +56,11 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
 				$query .= "ORDER BY datetime ASC; ";
-				$unsorted = get_coldata($search_str,'demand');
 
+				$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
@@ -79,7 +84,14 @@
 				break;
 
 			case 'supply':
-				$query = "";
+				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid FROM availability, search_meta, companies ";
+				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND avail_price >= ".$min." ";}
+				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
+				$query .= "ORDER BY datetime ASC; ";;
 				$unsorted = get_coldata($search_str,'supply');
 				break;
 
@@ -175,8 +187,10 @@
 //	$SALE_QUOTES = array();
 	function get_details($id_csv,$table_name,$results) {
 //		global $SALE_QUOTES, $record_start, $record_end;
-		global $record_start, $record_end, $oldid;
-
+		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
+		$min = format_price($min_price,'','',true);
+		$max = format_price($max_price,'','',true);
+		
 		$db_results = array();
 
 		if (!$id_csv && (!$record_start && !$record_end)||(!$id_csv && ($table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote'))){
@@ -222,10 +236,13 @@
 			$query .= $and_where;
 			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
 			$query .= "AND inventory_inventory.id = inventory_id ";
+			if ($min_price){$query .= " AND price >= ".$min." ";}
+			if ($max_price){$query .= " AND price <= ".$max." ";}
+
 			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
 //			echo $orig_table.':<BR>'.$query.'<BR>';
 			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-
+			
 			while ($r = mysqli_fetch_assoc($result)) {
 				$r['partid'] = getPartId($r['part_number'],$r['clei']);
 				$db_results[] = $r;
