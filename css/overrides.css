@@ -128,10 +128,10 @@
 	margin:0px;
 }
 .table tr .action-hover .action-items {
-	display:none;
+	visibility:hidden;
 }
 .table tr:hover .action-hover .action-items {
-	display:inline;
+	visibility:visible;
 }
 /*
 .table tr .action-hover .action-items {
@@ -318,6 +318,9 @@ input[type="text"].inline {
 }
 #s, .product-search, .descr-edit input {
 	text-transform:uppercase;
+}
+.product-search {
+	width:100%;
 }
 #advanced-search-options {
 	position:absolute;

@@ -174,15 +174,15 @@
 
 <?php
 	// verizon morning bid
-	$morning_bid = date("n/j/Y 10:00")." AM";
-	$afternoon_bid = date("n/j/Y 12:00")." PM";
+	$morning_bid = date("m/d/Y 10:00")." AM";
+	$afternoon_bid = date("m/d/Y 12:00")." PM";
 	$N = date("N");
 	if ($N>=5) {//friday should have a monday expiration
 		// if friday, 3 days away (8-5); if saturday, 2 days away (8-6); if sunday, 1 day away (8-7)
-		$evening_bid = format_date(date("m-d-Y 07:00"),"n/j/Y g:i",array("d"=>8-$N))." AM";
+		$evening_bid = format_date(date("m-d-Y 07:00"),"m/d/Y g:i",array("d"=>8-$N))." AM";
 		//$tomoro_j = format_date(date("m-d-Y"),"j",array("d"=>8-$N));
 	} else {
-		$evening_bid = format_date(date("m-d-Y 07:00"),"n/j/Y g:i",array("d"=>1))." AM";
+		$evening_bid = format_date(date("m-d-Y 07:00"),"m/d/Y g:i",array("d"=>1))." AM";
 		//$tomoro_j = format_date(date("m-d-Y"),"j",array("d"=>1));
 	}
 	if ($now>=$today." 07:33:00" AND $now<=$today." 08:45:00") {
@@ -193,7 +193,7 @@
 		$expDate = $evening_bid;
 	} else {
 		// default is one week away, for things like inventory and WTS lists that may not necessariy have an immediate expiration
-		$expDate = format_date(date("m-d-Y 17:00"),"n/j/Y g:i A",array('d'=>7));
+		$expDate = format_date(date("m-d-Y 17:00"),"m/d/Y g:i A",array('d'=>7));
 	}
 ?>
 

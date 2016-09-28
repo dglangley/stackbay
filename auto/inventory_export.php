@@ -167,7 +167,7 @@
 
 		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+		$csvTE .= '"'.$part.' <img src=ven-tel.com/img/parts/'.$part.' width=34 align=left><br>","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
