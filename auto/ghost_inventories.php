@@ -15,8 +15,8 @@ include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
 // $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
 
-$query = "TRUNCATE TABLE staged_qtys; ";
-$result = qdb($query) OR die(qe().' '.$query);
+//$query = "TRUNCATE TABLE staged_qtys; ";
+//$result = qdb($query) OR die(qe().' '.$query);
 
 
 //Get list of parts, with meta id, qty, and company from database
@@ -39,18 +39,17 @@ $results = qdb($getPairedData) OR die(qe());
 //returned rows in the following loop
 $organized = array();
 
-//Declare the percentage value of each of the API's (curated for now)
+//Declare the percentage value of each of the API's
 $weights = array(
-	"Default" => .40,
-	/*"34" => .80,*/
-	"36" => .50,
-	"3" => .70,/*NGT*/
-	"1414" => .70,/*ALU*/
-	"1264" => .60,/*OC Depot*/
-	"4" =>.33,/*TS&S*/
-	"202" => .50,/*Excel*/
-);
+    "Default"=>.50
+    );
 
+$ghosts = "Select * from ghosting_values where ghost_value > 0;";
+$ghosted = qdb($ghosts);
+foreach($ghosted as $row){
+    $weights[$row['companyid']] = $row['ghost_value']/100;
+}
+print_r($weights);
 
 //Parse the result set by row, sort out the data by company
 foreach($results as $row){

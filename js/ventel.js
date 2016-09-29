@@ -394,6 +394,8 @@
 	    // select2 plugin for select elements
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
+		
+		$(document).on(".company-selector")
 	    $(".company-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
@@ -772,7 +774,38 @@
    	    $("input[name='END_DATE']").val('12/31/'.concat(year));
 	});
 		
+		
     });/* close $(document).ready */
+	/*Aaron: Function for inventory ghosting*/
+	$(".ghost_delete").click(function() {
+		$(this).parents("tr").hide();
+		$(this).parents("tr").find(".ghost_percent").val(0);
+		$(this).parents("#ghost").find("#save_changes").trigger("click");
+	});
+	
+	$(document).on("change",".ghost_value",function(){
+		$(this).val();
+		var last = $(".ghost_value:last").val();
+		if (last > 0){
+			$('#ghost tr:last').after('<tr>\
+									<td>\
+							<select name="companyid" class="company-selector ghost_company">\
+								<option value="">- Select a Company -</option>\
+								<?php\
+								if ($company_filter) {echo "<option value="".$company_filter."" selected>".(getCompany($company_filter))."</option>".chr(10);} \
+								else {echo "<option value="">- Select a Company -</option>".chr(10);}\
+								?>\
+							</select>\
+						</td>\
+						<td>\
+							<div class="input-group">\
+                                <input type="text" class="form-control ghost_value" style="height: 28px; padding-top: 3px;padding-bottom: 3px;">\
+                                <span class="input-group-addon">%</span>\
+                            </div>\
+                        </td>\
+			</tr>');
+		} 
+	});	
 
     // build jquery plugin for remote ajax call
     jQuery.fn.loadResults = function(attempt, pricing_only) {
@@ -859,6 +892,8 @@
         return;
     };
 
+	
+	
 	function toggleLoader(msg) {
 		if ($("#loading-bar").is(':visible')) {
 			$("#loading-bar").fadeOut('fast');
