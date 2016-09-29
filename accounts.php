@@ -196,15 +196,21 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($company_filter) {
+		$footer_span2 = 1;
 		if ($report_type=='summary') {
+			$footer_span1 = 2;
 			$widths = array(3,3,2,2);
 		} else {
+			$footer_span1 = 3;
 			$widths = array(2,2,4,1,1,1);
 		}
 	} else {
+		$footer_span2 = 2;
 		if ($report_type=='summary') {
+			$footer_span1 = 3;
 			$widths = array(1,4,4,2,1);
 		} else {
+			$footer_span1 = 4;
 			$widths = array(1,4,1,3,1,1,1);
 		}
 	}
@@ -222,13 +228,17 @@
 	//If there is a company id, translate it to the old identifier
 	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
 //	echo '<br>The value of this company in the old database is: '.$oldid;
+
+	$rows = '';
+	$total_pcs = 0;
+	$total_amt = 0;
 	
 	//Write the query for the gathering of Pipe data
 	$query = "SELECT ";
     $query .= "s.so_date 'datetime', c.`id` 'companyid', c.name 'company_name', q.company_id 'company', ";
     $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id 'id', q.price price ";
     $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id ";
+    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
    	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
    	if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
@@ -258,6 +268,11 @@
 
 	    foreach ($result as $row){
             $id = $row['id'];
+
+			$ext_amt = $row['price']*$row['qty'];
+			$total_pcs += $row['qty'];
+			$total_amt += $ext_amt;
+
             if(!array_key_exists($id, $summary_rows)){
                 $summary_rows[$id] = array(
                     'date' => '',
@@ -268,7 +283,7 @@
             }
 			$summary_rows[$id]['date'] = $row['datetime'];
             $summary_rows[$id]['items'] += $row['qty'];
-            $summary_rows[$id]['summed'] += $row['price']*$row['qty'];
+            $summary_rows[$id]['summed'] += $ext_amt;
             $summary_rows[$id]['company'] = $row['company_name'];
         }
         foreach ($summary_rows as $id => $info) {
@@ -280,7 +295,7 @@
             $rows .='
             		<td>'.$id.'</td>
                     <td>'.$info['items'].'</td>
-                    <td>'.format_price($info['summed']).'</td>
+                    <td class="text-right">'.format_price($info['summed']).'</td>
                 </tr>
             ';
         }
@@ -304,6 +319,9 @@ if ($report_type=='detail') {
 		$this_amt = $r['qty']*$r['price'];
 		$amt += $this_amt;
 		$num_items += $r['qty'];
+
+		$total_pcs += $r['qty'];
+		$total_amt += $amt;
 
 		$qty_col = '
                             <td>
@@ -398,6 +416,16 @@ if ($report_type=='detail') {
                         </thead>
                         <tbody>
                         	<?php echo $rows; ?>
+							<?php if ($rows) { ?>
+                            <!-- row -->
+                            <tr class="warning nohover">
+                                <td colspan="<?php echo $footer_span1; ?>"> </td>
+                                <td><strong><?php echo $total_pcs; ?></td></strong>
+                                <td class="text-right" colspan="<?php echo $footer_span2; ?>">
+                                    <strong><?php echo format_price($total_amt,true,' '); ?></strong>
+                                </td>
+                            </tr>
+							<?php } ?>
                         </tbody>
                     </table>
                 </div>

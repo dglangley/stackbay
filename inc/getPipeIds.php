@@ -1,8 +1,9 @@
 <?php
 	$PIPE_IDS = array();
+	$NOTES = array();
 	$avg_cost = '';
 	function getPipeIds($search_str,$search_by='') {
-		global $PIPE_IDS,$avg_cost;
+		global $PIPE_IDS,$avg_cost,$NOTES;
 
 		// search strings are passed in as space-separated due to our current db using aliases this way (8/2/16)
 		$searches = explode(' ',$search_str);
@@ -28,7 +29,7 @@
 				}
 			} else {
 				$results = array();
-				$query = "SELECT id, avg_cost, clei heci FROM inventory_inventory WHERE (";
+				$query = "SELECT id, avg_cost, CONCAT(notes,'\n',part_of) notes, clei heci FROM inventory_inventory WHERE (";
 				$subquery = "";
 				if ($search_by<>'heci') {
 					$subquery .= "clean_part_number LIKE '".res($search,'PIPE')."%' ";
@@ -51,7 +52,8 @@
 
 				// get ids from aliases
 				if ($search_by<>'heci') {
-					$query = "SELECT inventory_inventory.id, avg_cost, clei heci FROM inventory_inventory, inventory_inventoryalias ";
+					$query = "SELECT inventory_inventory.id, avg_cost, CONCAT(notes,'\n',part_of) notes, clei heci ";
+					$query .= "FROM inventory_inventory, inventory_inventoryalias ";
 					$query .= "WHERE inventory_inventoryalias.clean_part_number LIKE '".res($search,'PIPE')."%' ";
 					$query .= "AND inventory_inventory.id = inventory_inventoryalias.inventory_id; ";
 					$result = qdb($query,'PIPE') OR die(qe('PIPE'));
@@ -64,6 +66,7 @@
 					if ($r['avg_cost']>0) { $avg_cost = $r['avg_cost']; }
 					$ids[$r['id']] = $r;//ids for just this sub-divided search str
 					$pipe_ids[$r['id']] = $r;//ids for all results of exploded search string
+					$NOTES[$r['id']] = trim(str_ireplace('Bot Generated','',$r['notes']));
 				}
 				$PIPE_IDS[$keysearch] = $ids;
 			}

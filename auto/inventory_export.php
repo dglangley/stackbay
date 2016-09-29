@@ -119,7 +119,7 @@
 			}
 		}
 
-		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases,'system'=>$system);
 	}
 
 	// get ghost inventory items
@@ -137,7 +137,8 @@
 		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 		$heci = $r['heci'];
 		$manf = getManf($r['manfid']);
-		$descr = trim(getSys($r['systemid']).' '.$r['description']);
+		$system = getSys($r['systemid']);
+		$descr = trim($system).' '.$r['description']);
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {
 			$falias = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
@@ -145,7 +146,7 @@
 			$aliases[$falias] = $part_numbers[$i];
 		}
 
-		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases,'system'=>$system);
 	}
 
 	$k = 0;
@@ -165,9 +166,24 @@
 		// errantly negative, so don't include these lines...
 		if ($qty<=0) { continue; }
 
+		$url = '//ven-tel.com';
+		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).' width=34>';
+		$exts = array(
+			'/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)),
+			'/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$r['system'])),
+			'/'.strtolower($part),
+			'/'.strtolower($heci),
+		);
+		foreach ($exts as $ext) {
+			$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
+			// Condition max length: 130 chars
+			if (strlen($a_prep)<=130) { $url .= $ext; } else { break; }
+		}
+		$cond = '<a href='.$url.'>'.$img.'</a>';
+
 		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-		$csvTE .= '"'.$part.' <img src=ven-tel.com/img/parts/'.$part.' width=34 align=left><br>","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","'.$cond.'","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
@@ -184,9 +200,19 @@
 		}
 
 		foreach ($aliases as $alias) {
+			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).' width=34>';
+			// replace part# with this alias
+			$exts[2] = '/'.strtolower($alias);
+			foreach ($exts as $ext) {
+				$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
+				// Condition max length: 130 chars
+				if (strlen($a_prep)<=130) { $url .= $ext; } else { break; }
+			}
+			$cond = '<a href='.$url.'>'.$img.'</a>';
+
 			$csvBB .= '"'.$alias.'","","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 			$csvPS .= '"'.($k++).'","'.substr($alias,0,25).'","'.$manf.'","","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-			$csvTE .= '"'.$alias.'","","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+			$csvTE .= '"'.$alias.'","","'.$manf.'","'.$cond.'","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 		}
 	}
 
