@@ -49,7 +49,7 @@ $ghosted = qdb($ghosts);
 foreach($ghosted as $row){
     $weights[$row['companyid']] = $row['ghost_value']/100;
 }
-print_r($weights);
+//print_r($weights);
 
 //Parse the result set by row, sort out the data by company
 foreach($results as $row){
