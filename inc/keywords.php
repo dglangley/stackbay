@@ -124,6 +124,8 @@
 			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
 			$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
+			// on non-heci looking strings (not 7-digits), try to limit bogus results by restricting a trailing integer from an ending integer
+			if (strlen($fsearch)<>7 AND is_numeric(substr($fsearch,(strlen($fsearch)-1),1))) { $query .= "AND SUBSTRING(keyword,".(strlen($fsearch)+1).",1) NOT RLIKE '[0-9]' "; }
 			$query .= "AND parts.id = parts_index.partid ";
 			if ($manfid) { $query .= "AND parts.manfid = '".res($manfid)."' "; }
 			if ($sysid) { $query .= "AND parts.systemid = '".res($sysid)."' "; }
@@ -143,7 +145,9 @@
 			// check that it's not a manf name; added 5-10-16, mainly for email parser
 			$query2 = "SELECT COUNT(manfid) n FROM keywords, manfs_index WHERE keyword = '".res($fsearch)."' AND manfs_index.keywordid = keywords.id; ";
 			$result2 = qdb($query2);
-			if (mysqli_num_rows($result2)==0) {
+			$manf_exists = 0;
+			if (mysqli_num_rows($result2)>0) { $r2 = mysqli_fetch_assoc($result2); $manf_exists = $r2['n']; }
+			if ($manf_exists==0) {
 				$query = "SELECT parts.* FROM parts, parts_index, keywords ";
 				$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND parts_index.keywordid = keywords.id ";
 				if (strlen($fsearch)<7 OR strlen($fsearch)>10) {

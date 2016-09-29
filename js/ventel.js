@@ -244,6 +244,11 @@
 				});
 			});
 		});
+		$(".add-part").click(function() {
+			var pdescr = $(this).closest(".product-descr");
+			var psearch = pdescr.find(".product-search:first").val();
+			modalAlertShow('Create a New Part','Be sure this string ("'+psearch+'") is a Part# (NOT a HECI!), and then click Continue!',true,'addPart',psearch);
+		});
 		$(".parts-index").click(function() {
 			var pdescr = $(this).closest(".product-descr");
 			var psearch = pdescr.find(".product-search:first").val();
@@ -942,6 +947,27 @@
 			$(".upload-options").removeClass('hidden');
 		}
 	}
+	function addPart(search) {
+        console.log(window.location.origin+"/json/addPart.php?search="+search);
+        $.ajax({
+            url: 'json/addPart.php',
+            type: 'get',
+            data: {'search': search},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.message=='Success') {
+					//alert(json.message);
+					location.reload();
+				} else {
+					alert(json.message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
+	}
 	function reindexParts(search) {
         console.log(window.location.origin+"/json/indexer.php?search="+search);
         $.ajax({
@@ -1040,6 +1066,7 @@
 		}
 	}
 	function toggleNotes(e) {
+return;
 		var notes = $("#modalNotes");
 //           notes.modal('toggle');
 

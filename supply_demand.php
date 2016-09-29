@@ -67,7 +67,7 @@
 	$record_start = $startDate;
 	
 	//Market Manager Button
-	$market_table = 'supply';
+	$market_table = 'demand';//default
 	if ($_REQUEST['market_table']){
 		$market_table = $_REQUEST['market_table'];
 	}

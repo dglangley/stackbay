@@ -174,14 +174,26 @@
 
 <?php
 	// verizon morning bid
-	if ($now>=$today." 07:33:00" AND $now<=$today." 08:45:00") {
-		$expDate = date("n/j/Y 10:00 A");
-	} else if ($now>=$today." 09:33:00" AND $now<=$today." 10:45:00") {//vz afternoon bid
-		$expDate = date("n/j/Y 12:00 A");
-	} else if ($now>=$today." 13:33:00" AND $now<=$today." 14:30:00") {//vz evening bid
-		$expDate = format_date(date("m-d-Y 07:00"),"n/j/Y g:i A",array("d"=>1));
+	$morning_bid = date("m/d/Y 10:00")." AM";
+	$afternoon_bid = date("m/d/Y 12:00")." PM";
+	$N = date("N");
+	if ($N>=5) {//friday should have a monday expiration
+		// if friday, 3 days away (8-5); if saturday, 2 days away (8-6); if sunday, 1 day away (8-7)
+		$evening_bid = format_date(date("m-d-Y 07:00"),"m/d/Y g:i",array("d"=>8-$N))." AM";
+		//$tomoro_j = format_date(date("m-d-Y"),"j",array("d"=>8-$N));
 	} else {
-		$expDate = format_date(date("m-d-Y 17:00"),"n/j/Y g:i A",array('d'=>7));
+		$evening_bid = format_date(date("m-d-Y 07:00"),"m/d/Y g:i",array("d"=>1))." AM";
+		//$tomoro_j = format_date(date("m-d-Y"),"j",array("d"=>1));
+	}
+	if ($now>=$today." 07:33:00" AND $now<=$today." 08:45:00") {
+		$expDate = $morning_bid;
+	} else if ($now>=$today." 09:33:00" AND $now<=$today." 10:45:00") {//vz afternoon bid
+		$expDate = $afternoon_bid;
+	} else if ($now>=$today." 13:33:00" AND $now<=$today." 14:30:00") {//vz evening bid
+		$expDate = $evening_bid;
+	} else {
+		// default is one week away, for things like inventory and WTS lists that may not necessariy have an immediate expiration
+		$expDate = format_date(date("m-d-Y 17:00"),"m/d/Y g:i A",array('d'=>7));
 	}
 ?>
 
@@ -227,9 +239,14 @@
 						<div class="row">
 							<div class="col-sm-5">
 								<div class="btn-group">
-									<button class="left btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 10:00"),"m/d/Y g:i A"); ?>"><i class="fa fa-hourglass-1"></i></button>
-									<button class="middle btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 12:00"),"m/d/Y g:i A"); ?>"><i class="fa fa-hourglass-2"></i></button>
-									<button class="right btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo format_date(date("m/d/Y 7:00"),"m/d/Y g:i A",array('d'=>1)); ?>"><i class="fa fa-hourglass-3"></i></button>
+<!--
+									<button class="left btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-hourglass-1"></i></button>
+									<button class="middle btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-hourglass-2"></i></button>
+									<button class="right btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-hourglass-3"></i></button>
+-->
+									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
+									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
+									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
 								</div>
 							</div>
 							<div class="col-sm-7">

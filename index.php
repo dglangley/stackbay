@@ -562,12 +562,17 @@
 									<span class="info">their qty</span>
 								</div>
 								<div class="product-descr action-hover">
-									<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" />
-									<br/>
+				                	<div class="input-group">
+										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" />
+	           		       				<span class="input-group-addon action-items">
+<?php if ($num_results==0) { // add link to create a new part ?>
+											<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
+<?php } else { ?>
+											<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
+<?php } ?>
+										</span>
+									</div><!-- /input-group -->
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
-									<div class="action-items">
-										<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
-									</div>
 								</div>
 								<div class="price pull-right">
 									<div class="form-group target text-right">
@@ -642,24 +647,12 @@
 
 	</form>
 
-<div class="modal fade" id="image-modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="prod-image-title"></h4>
-      </div>
-      <div class="modal-body">
-		<img id="modal-prod-img">
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
+<?php include_once 'inc/footer.php'; ?>
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
-<?php include_once 'inc/footer.php'; ?>
+<?php include_once 'modal/image.php'; ?>
+<?php include_once 'inc/jquery-fileupload.php'; ?>
 
 </body>
 </html>

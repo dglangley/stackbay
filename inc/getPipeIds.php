@@ -12,8 +12,10 @@
 		foreach ($searches as $search) {
 			// strip out non-alphanumeric chars, convert to uppercase and then trim it to be sure no spaces are wrapping it
 			$search = trim(strtoupper(preg_replace('/[^[:alnum:]]+/','',$search)));
+
+			$search_upper = strtoupper($search);
 			// only strings over 2-chars in length
-			if (strlen($search)<=2) { continue; }
+			if (strlen($search)<=2 OR $search_upper=='REV' OR $search_upper=='ISS' OR $search_upper=='REL') { continue; }
 
 			$search_by = strtolower($search_by);
 			$keysearch = $search;
