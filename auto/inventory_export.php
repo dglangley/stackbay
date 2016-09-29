@@ -138,7 +138,7 @@
 		$heci = $r['heci'];
 		$manf = getManf($r['manfid']);
 		$system = getSys($r['systemid']);
-		$descr = trim($system).' '.$r['description']);
+		$descr = trim($system.' '.$r['description']);
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {
 			$falias = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
