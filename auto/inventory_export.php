@@ -79,6 +79,17 @@
 				$descr = trim($system.' '.$descr);
 			}
 		}
+		$query2 = "SELECT system FROM parts, systems WHERE parts.systemid = systems.id AND ";
+		if ($heci) { $query2 .= "heci = '".$heci."' "; }
+		else { $query2 .= "part = '".$part."' "; }
+		$query2 .= "; ";
+		$result2 = qdb($query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$system = $r2['system'];
+			$descr = trim($system.' '.$descr);
+		}
+
 		$descr = trim(str_replace('BOT GENERATED','',str_replace('*',' ',$descr)));
 		if (! $partid) {
 			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));

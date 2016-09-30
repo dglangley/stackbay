@@ -373,7 +373,8 @@
 				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
 			}
 
-			$search_strs = explode(' ',$P['part']);
+			$exploded_strs = explode(' ',$P['part']);
+			$search_strs = array_merge($search_strs,$exploded_strs);
 			if ($P['heci']) {
 				$search_strs[] = substr($P['heci'],0,7);
 			}

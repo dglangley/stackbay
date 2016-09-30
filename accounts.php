@@ -114,8 +114,7 @@
 		</td>
 		<td class = "col-md-1 ">
 					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="
-		            <?php if($endDate){echo $endDate;}else{echo $current_date;}?>" style = "min-width:50px;"/>
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php if($endDate){echo $endDate;}else{echo $current_date;}?>" style = "min-width:50px;"/>
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>

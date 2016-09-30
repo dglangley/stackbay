@@ -34,7 +34,7 @@
     if (! isset($startDate)) { $startDate = format_date($today,'m-d-Y',array('d'=>-7)); }
     else { $startDate = format_date($startDate,'m-d-Y'); }
     if (isset($_REQUEST['startDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['startDate'])) { $startDate = $_REQUEST['startDate']; }
-    $endDate = format_date($today,'m-d-Y');
+	if (! isset($endDate)) { $endDate = format_date($today,'m-d-Y'); }
     if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
 
 	$favorites = 0;
