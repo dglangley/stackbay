@@ -203,7 +203,7 @@
 			$url = '//ven-tel.com';
 			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).'.jpg width=34>';
 			// replace part# with this alias
-			$exts[2] = '/'.strtolower($alias);
+			if ($r['system'] AND isset($exts[2])) { $exts[2] = '/'.strtolower($alias); }
 			foreach ($exts as $ext) {
 				$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
 				// Condition max length: 130 chars
