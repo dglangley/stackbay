@@ -167,7 +167,7 @@
 		if ($qty<=0) { continue; }
 
 		$url = '//ven-tel.com';
-		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).' width=34>';
+		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).'.jpg width=34>';
 		$exts = array('/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)));
 		if ($r['system']) {
 			$exts[] = '/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$r['system']));
@@ -201,7 +201,7 @@
 
 		foreach ($aliases as $alias) {
 			$url = '//ven-tel.com';
-			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).' width=34>';
+			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).'.jpg width=34>';
 			// replace part# with this alias
 			$exts[2] = '/'.strtolower($alias);
 			foreach ($exts as $ext) {
