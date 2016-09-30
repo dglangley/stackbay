@@ -129,7 +129,7 @@
 		/* toggle notes on input focus and blur */
         $("input.price-control").each(function() {
 			$(this).click(function() {
-				toggleNotes($(this));
+				/*toggleNotes($(this));*/
 
 				$(this).focusout(function() {
 					setTimeout("closeNotes()",100);
@@ -1066,23 +1066,54 @@
 		}
 	}
 	function toggleNotes(e) {
-return;
 		var notes = $("#modalNotes");
 //           notes.modal('toggle');
 
+/*
 		var parentBody = e.closest("tbody");
 		var marketBody = parentBody.find(".market-table:first");
 		var pos = marketBody.position();
 		var width = marketBody.outerWidth();
 		var height = marketBody.outerHeight();
+*/
+		//var clickPos = e.position();
+		var outerBody = e.closest(".descr-row");
+		var pos = e.position();
+		var width = outerBody.outerWidth();//-(clickPos.left-100);
+		var productBody = outerBody.find(".product-descr:first");
+		var partid = productBody.data('partid');
+		var pipe_ids = productBody.data('pipeids');
+		/*var height = 400;//clickPos.top+16;*/
+
+        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids);
+        $.ajax({
+            url: 'json/notes.php',
+            type: 'get',
+            data: {'partid': partid, 'pipe_ids': pipe_ids},
+			dataType: 'json',
+            success: function(json, status) {
+				var table_html = '';
+                $.each(json.results, function(dateKey, row) {
+                    /* process each item's data */
+					table_html += '<tr><td>'+row.note+' <div class="source">- <strong>'+row.user+'</strong>, '+row.date+'</div></td></tr>';
+				});
+
+				var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
+				modalBody.html(table_html);
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
 
 		notes.css({
 			display: "block",
 			visibility: "visible",
-			top:pos.top+"px",
-			left:pos.left+"px",
+			top:(pos.top+40)+"px",
+			left:(outerBody.position().left)+"px",
 			width: width,
-			height: height,
+			/*height: height,*/
 		}).show();
 	}
 	function closeModal(e) {

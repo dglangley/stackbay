@@ -53,9 +53,9 @@
 	position:absolute;
 	z-index:1000;
 	overflow:visible;
+	height:300px;
 }
 .modalNotes .modal-content {
-	background-color:#f6f7de;
 }
 .modalNotes .modal-footer {
 	text-align:left !important;
@@ -67,11 +67,14 @@
 	margin:0px;
 	padding:0px;
 }
-.modalNotes .modal-header {
-	position:relative;
-	display:inline-block;
+.modalNotes .modal-body {
+	height:200px;
+	overflow:scroll;
 }
-.modalNotes .modal-header .notes-text {
+.modalNotes .modal-header {
+	width:100%;
+}
+.modalNotes .notes-body .notes-text {
 	width:100%;
 }
 
@@ -86,10 +89,13 @@
 }
 
 /* BUTTONS POSITIONED WITHIN TEXTAREA */
-.modalNotes .modal-header .btn-notes {
+.modalNotes .notes-body {
+	position:relative;
+}
+.modalNotes .notes-body .btn-notes {
 	position:absolute;
-	bottom:8px;
-	right:8px;
+	bottom:1px;
+	right:1px;
 }
 #advanced-search-options .btn-submit {
 	position:absolute;

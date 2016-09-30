@@ -195,5 +195,5 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 	}
 
 	// version control for css and js includes
-	$V = '20160909';
+	$V = '20160920';
 ?>
