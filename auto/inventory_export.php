@@ -168,12 +168,12 @@
 
 		$url = '//ven-tel.com';
 		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).' width=34>';
-		$exts = array(
-			'/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)),
-			'/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$r['system'])),
-			'/'.strtolower($part),
-			'/'.strtolower($heci),
-		);
+		$exts = array('/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)));
+		if ($r['system']) {
+			$exts[] = '/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$r['system']));
+			$exts[] = '/'.strtolower($part);
+			if ($heci) { $exts[] = '/'.strtolower($heci); }
+		}
 		foreach ($exts as $ext) {
 			$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
 			// Condition max length: 130 chars
@@ -200,6 +200,7 @@
 		}
 
 		foreach ($aliases as $alias) {
+			$url = '//ven-tel.com';
 			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).' width=34>';
 			// replace part# with this alias
 			$exts[2] = '/'.strtolower($alias);
@@ -269,4 +270,11 @@
 		echo "problem uploading $attachment<BR>".chr(10);
 	}
 	ftp_close($ftpid);
+
+	$send_success = send_gmail('Report Attached','Tel-Explorer Export','david@ven-tel.com','','',$attachment);
+	if ($send_success) {
+		echo json_encode(array('message'=>'Tel-Explorer Email Export Successful'));
+	} else {
+		echo json_encode(array('message'=>$SEND_ERR));
+	}
 ?>
