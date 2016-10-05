@@ -1,24 +1,28 @@
 <?php
-	$OLDDB_REPS = array(2=>2,18=>1);
+	$OLDDB_REPS = array(2=>2,18=>1,13=>0);
 	$REPS = array();
-	function getRep($repid,$db='new') {
+	function getRep($userid,$input='id',$output='name') {
 		global $OLDDB_REPS,$REPS;
 
-		if ($db=='old') {
-			$repid = $OLDDB_REPS[$repid];
+		if (! $userid) { return false; }
+
+		if ($input=='repid') {
+			$userid = $OLDDB_REPS[$userid];
+			// if all we're doing is cross-referencing old to new, pass it back
+			if ($output=='id') { return ($userid); }
 		}
 
-		if (isset($REPS[$repid])) { return ($REPS[$repid]); }
+		if (isset($REPS[$userid])) { return ($REPS[$userid][$output]); }
 
-		$REPS[$repid] = '';
-		$query = "SELECT name FROM users, contacts ";
-		$query .= "WHERE users.id = '".res($repid)."' AND users.contactid = contacts.id; ";
+		$REPS[$userid] = '';
+		$query = "SELECT users.id, users.id userid, contacts.name, contacts.id contactid FROM users, contacts ";
+		$query .= "WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qdb($query) OR die(qe().' '.$query);
-		if (mysqli_num_rows($result)==0) { return ($REPS[$repid]); }
+		if (mysqli_num_rows($result)==0) { return ($REPS[$userid]); }
 
 		$r = mysqli_fetch_assoc($result);
-		$REPS[$repid] = $r['name'];
+		$REPS[$userid] = $r;
 
-		return ($REPS[$repid]);
+		return ($REPS[$userid][$output]);
 	}
 ?>

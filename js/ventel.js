@@ -781,6 +781,7 @@
 		
 		
     });/* close $(document).ready */
+
 	/*Aaron: Function for inventory ghosting*/
 	$(".ghost_delete").click(function() {
 		$(this).parents("tr").hide();
@@ -1084,6 +1085,7 @@
 		var partid = productBody.data('partid');
 		var pipe_ids = productBody.data('pipeids');
 		/*var height = 400;//clickPos.top+16;*/
+		var user;
 
         console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids);
         $.ajax({
@@ -1094,8 +1096,10 @@
             success: function(json, status) {
 				var table_html = '';
                 $.each(json.results, function(dateKey, row) {
+					user = '';
+					if (row.user!='') user = '- <strong>'+row.user+'</strong, ';
                     /* process each item's data */
-					table_html += '<tr><td>'+row.note+' <div class="source">- <strong>'+row.user+'</strong>, '+row.date+'</div></td></tr>';
+					table_html += '<tr><td>'+row.note+' <div class="source">'+user+row.date+'</div></td></tr>';
 				});
 
 				var modalBody = $("#modalNotes .modal-body:first .table-notes:first");

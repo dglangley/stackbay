@@ -201,6 +201,7 @@
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center">
+<!--
 	                <p>Date Range:</p>
 					<p>
 		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
@@ -209,6 +210,7 @@
 		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
 		                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
 					</p>
+-->
 				</div>
 				<div class="text-center lists-manager">
 					<p>Lists Manager:</p>

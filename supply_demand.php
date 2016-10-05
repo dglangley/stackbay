@@ -337,12 +337,12 @@
 			';
 	
 			$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'repid'=>$r['repid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'userid'=>$r['userid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 	
 			$results[] = $row;
 		}
     	foreach ($results as $r) {
-			  		$rows .= '
+			$rows .= '
                                 <!-- row -->
                                 <tr>
                                     <td>
@@ -354,19 +354,20 @@
                                     </td>
     						 		'.$r['qty_col'].'
     								'.$r['price_col'].'
-                                    <td class="text-right">';
-                                    if($r['amt']){
-                                    	$rows .= format_price($r['amt']);
-                                    }
+                                    <td class="text-right">
+			';
+			if ($r['amt']) {
+				$rows .= format_price($r['amt']);
+			}
 			$rows .='
                                     </td>
                                     <td class="text-center">
-                                        '.getRep($r['repid'],'old').'
+                                        '.getRep($r['userid']).'
                                     </td>
                                 </tr>
     		';
-    	    }
-        }
+		}
+	}
 
 
 ?>
@@ -450,12 +451,12 @@
 		});
 
 		$('.btn-report').click(function() {
-				var btnValue = $(this).data('value');
-				$(this).closest("div").find("input[type=radio]").each(function() {
-					if ($(this).val()==btnValue) { $(this).attr('checked',true); }
-				});
+			var btnValue = $(this).data('value');
+			$(this).closest("div").find("input[type=radio]").each(function() {
+				if ($(this).val()==btnValue) { $(this).attr('checked',true); }
 			});
 		});
+	});
 
 </script>
 </body>

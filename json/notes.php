@@ -10,9 +10,11 @@
 
 	$notes = array();
 
-	$query = "SELECT CONCAT(notes,'\n',part_of) notes FROM inventory_inventory WHERE id IN (".$_REQUEST['pipe_ids']."); ";
+	$query = "SELECT CONCAT(notes,'\n',part_of) notes FROM inventory_inventory WHERE id IN (".$_REQUEST['pipe_ids'].") AND REPLACE('Bot Generated','',notes) <> ''; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
+		// strip out 'Bot Generated' and any outer white space / line feed
+		$note = trim(str_replace('Bot Generated','',$r['notes']));
 		$notes[] = array('user'=>'','date'=>'n/a','note'=>str_replace(chr(10),'<BR>',utf8_encode($r['notes'])));
 	}
 
