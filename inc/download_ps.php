@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/call_remote.php';
 
+	$target_page = '';
 	$PS_CH = false;
 	$PS_ERROR = "";
 	$PS_CREDS = '';
@@ -18,7 +19,7 @@
 	}
 
 	function download_ps($search='',$logout=false) {
-		global $PS_CH,$PS_ERROR,$PS_CREDS,$PS_ID;
+		global $PS_CH,$PS_ERROR,$PS_CREDS,$PS_ID,$target_page;
 
 		$search = trim($search);
 
@@ -53,13 +54,27 @@
 		// even if empty, write to file; session will be checked below
 		file_put_contents($cookiefile,$contents);
 
-		if (! $PS_CH) { $PS_CH = curl_init($ps_base); }
+
+		/***** INITIALIZE CURL SESSION *****/
+		if (! $PS_CH) {
+			// if there's no current connection, get cookies (otherwise, we're assuming cookies are already active
+			// and we can't do anything with the cookies file anyway, with curl still open).
+			// note that if we don't have $contents, try to get it from an existing cookies file
+			if (! $contents) {
+				$contents = file_get_contents($cookiefile);
+			} else {// write to cookies file
+				file_put_contents($cookiefile,$contents);
+			}
+			$PS_CH = curl_init($ps_base);
+		}
+
 
 		/***** LOGIN ATTEMPT *****/
 		if (! $contents OR (! $logout AND ! $search)) {
 			if (! $PS_CREDS) {//user hasn't been prompted to login yet
 				$PS_ERROR = "Please login to initialize a PowerSource session";
 				curl_close($PS_CH);
+				$PS_CH = false;//reset connection variable
 
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
 				$dbres = qdb($query);
@@ -96,6 +111,7 @@
 			$dbres = qdb($query);
 
 			curl_close($PS_CH);
+			$PS_CH = false;//reset connection variable
 		} else if ($search) {/***** PART SEARCH *****/
 			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
 		}
@@ -120,6 +136,16 @@
 					return false;
 				}
 			}
+		} else if (strstr($res,'A session is already in progress')) {
+			// powersource is weird, for some reason even though it warns of an existing session elsewhere for this user,
+			// the message can basically be bypassed by re-trying the home page, which calls up the existing session into
+			// the current request, and logs the user in; the second call_remote() below is commented out for now (10/6/16)
+			// because I couldn't seem to get it working on a repeat call with the $search, but at least the session is
+			// activated using the first call...
+			if ($PS_CH) { curl_close($PS_CH); }
+			$PS_CH = curl_init($ps_base);
+			$res = call_remote($ps_base.'/','',$cookiefile,$cookiejarfile,'GET',$PS_CH,true);
+//			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
 		}
 
 		// update cookies data in db
