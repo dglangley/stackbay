@@ -51,9 +51,6 @@
 		$cookiefile = $temp_dir.'ps-remote-session-1.txt';
 		$cookiejarfile = $cookiefile;
 
-		// even if empty, write to file; session will be checked below
-		file_put_contents($cookiefile,$contents);
-
 
 		/***** INITIALIZE CURL SESSION *****/
 		if (! $PS_CH) {
@@ -89,16 +86,18 @@
             $dom = new domDocument;
             $dom->loadHTML($res);
 //          $form = $dom->getElementById('signInForm');
-            $loginid = $dom->getElementById('Session_LoginId')->getAttribute('value');
+			if ($dom->getElementById('Session_LoginId')) {
+	            $loginid = $dom->getElementById('Session_LoginId')->getAttribute('value');
 
-            // re-query site now with loginid
-			$params = 'Session_Username='.urlencode(trim($_REQUEST['remote_login'])).
-				'&Session_Password='.urlencode(trim($_REQUEST['remote_password'])).
-				'&Session_Remember_Password=true&Session_LoginId='.$loginid.'&Session_PageName=Index'.
-				'&Target_Page='.$target_page.'&JsaTargetPage=true&Session_Remember_Password_Control=true';
+	            // re-query site now with loginid
+				$params = 'Session_Username='.urlencode(trim($_REQUEST['remote_login'])).
+					'&Session_Password='.urlencode(trim($_REQUEST['remote_password'])).
+					'&Session_Remember_Password=true&Session_LoginId='.$loginid.'&Session_PageName=Index'.
+					'&Target_Page='.$target_page.'&JsaTargetPage=true&Session_Remember_Password_Control=true';
 
-            $loginUrl = str_replace('http:','https:',$ps_base).'/cgi/en/session.access.login';
-			$res = call_remote($loginUrl,$params,$cookiefile,$cookiejarfile,'POST',$PS_CH);
+	            $loginUrl = str_replace('http:','https:',$ps_base).'/cgi/en/session.access.login';
+				$res = call_remote($loginUrl,$params,$cookiefile,$cookiejarfile,'POST',$PS_CH);
+			}
 
 			// we have to close the curl session in order for curl to write the cookies file, prior to getting
 			// the contents at the end of this script and writing to the db, otherwise it's an empty file

@@ -79,6 +79,10 @@
         $id_list = array();
         $count = 0;
         $items = $ebay_object->searchResult->item;
+		if (! is_array($items)) {
+			$new_array = array($items);
+			$items = $new_array;
+		}
         //echo("Items is currently returning: ".gettype($items)."<br>");
         //echo("The following are the Item ID's for the matching results:<br>");
         foreach($items as $identifier){

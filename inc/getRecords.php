@@ -4,6 +4,7 @@
 	include_once 'getPartId.php';
 	include_once 'getRep.php';
 	include_once 'format_price.php';
+	include_once 'format_date.php';
 	
 	$record_start = '';
 	$record_end = '';
@@ -14,8 +15,11 @@
 		$min = format_price($min_price,'','',true);
 		$max = format_price($max_price,'','',true);
 		
-		if (strlen($record_start)) { $record_start .= ' 00:00:00'; }
-		if (strlen($record_end)) { $record_end .= ' 23:59:59'; }
+		// append times to start/end dates, if missing (based on strlen)
+		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
+		if (strlen($record_end)==10) { $record_end .= ' 23:59:59'; }
+		$record_start = format_date($record_start,'Y-m-d H:i:s');
+		$record_end = format_date($record_end,'Y-m-d H:i:s');
 
 		// convert a string to an array of string element
 		if (! is_array($search_arr)) {

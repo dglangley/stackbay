@@ -44,26 +44,23 @@
     	$part_string = rtrim($part_string, ",");
     }
 	
-	$endDate = '';
-	if ($_REQUEST['END_DATE']){
-		$endDate = $_REQUEST['END_DATE'];
-	}
-	
 	$startDate = '';
-	if ($_REQUEST['START_DATE']){
-		$startDate = $_REQUEST['START_DATE'];
+	if ($_REQUEST['START_DATE']) {
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	
-	//Calculate the standard year range, output quarters as an array, and make 
-	$year = date('Y');
-	$m = date('m');
-	$q = (ceil($m/3)*3)-2;
-	//prepend a 0 if a single-digit month
-	if (strlen($q)==1) { $q = '0'.$q; }
-	$current_date = date('m/d/Y');
+	// if no start date passed in, or invalid, set to beginning of quarter by default
+	if (! $startDate) {
+		$year = date('Y');
+		$m = date('m');
+		$q = (ceil($m/3)*3)-2;
+		if (strlen($q)==1) { $q = '0'.$q; }
+		$startDate = $q.'/01/'.$year;
+	}
 
-	$quarter_start = $q.'/01/'.$year;
-	if (! $startDate) { $startDate = $quarter_start; }
+	$endDate = date('m/d/Y');
+	if ($_REQUEST['END_DATE']){
+		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
+	}
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -89,7 +86,7 @@
 
     <table class="table table-header">
 		<tr>
-		<td class = "col-md-1">
+		<td class = "col-md-2">
 
 		    <div class="btn-group">
 		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
@@ -103,52 +100,49 @@
 		    </div>
 		</td>
 
-		<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="
-		                <?php if($startDate){echo $startDate;}else{echo $quarter_start;}?>" style = "min-width:50px;"/>
+		<td class = "col-md-3">
+			<div class="form-group">
+				<div class="input-group datepicker-date date datetime-picker-filter">
+		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
 		        </div>
-		</td>
-		<td class = "col-md-1 ">
-					<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php if($endDate){echo $endDate;}else{echo $current_date;}?>" style = "min-width:50px;"/>
+			</div>
+			<div class="form-group">
+				<div class="input-group datepicker-date date datetime-picker-filter">
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
-		    </div>
+			    </div>
+			</div>
+			<div class="form-group">
+					<div class="btn-group" id="dateRanges">
+						<div id="btn-range-options">
+							<button class="btn btn-default btn-sm">&gt;</button>
+							<div class="animated fadeIn hidden" id="date-ranges">
+						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
+								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">YTD</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</td>
-		<td class="col-md-2 btn-group" data-toggle="buttons" id="dateRanges">
-	        <button class="glow left large btn-report" id = "MTD" type="submit" data-value="summary" style="font-size:10px;">
-	        	MTD	
-	        </button>
-			<button class="glow center small btn-report" id = "Q1" type="radio" data-value="summary" style="font-size:10px;">
-				Q1
-			</button>
-			<button class="glow center small btn-report" id = "Q2" type="radio" data-value="summary" style="font-size:10px;">
-				Q2
-			</button>
-			<button class="glow center small btn-report" id = "Q3" type="radio" data-value="summary" style="font-size:10px;">
-				Q3
-			</button>		
-			<button class="glow center small btn-report" id = "Q4" type="radio" data-value="summary" style="font-size:10px;">
-				Q4
-			</button>		
-			<button class="glow right small btn-report" id = "YTD" type="radio" data-value="summary" style="font-size:10px;">
-				YTD
-			</button>		
-		</td>
-		<td class="col-md-1 text-center">
+		<td class="col-md-2 text-center">
 
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
 		</td>
 		
-		<td class="col-md-1 text-center">
+		<td class="col-md-2 text-center">
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 		</td>
-		<td class="col-md-2">
+		<td class="col-md-3">
 			<div class="pull-right form-group">
 			<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>
@@ -157,7 +151,9 @@
 				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
 				?>
 				</select>
-				<input class="btn btn-primary btn-sm" type="submit" value="Apply">
+					<button class="btn btn-primary btn-sm" type="submit" >
+						<i class="fa fa-filter" aria-hidden="true"></i>
+					</button>
 			</div>
 			</td>
 		</tr>

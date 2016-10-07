@@ -24,8 +24,15 @@
 		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
 
+		// eliminate html formatting warnings per http://stackoverflow.com/a/10482622/1356496, set error level
+		$internalErrors = libxml_use_internal_errors(true);
+
 		$newDom = new domDocument;
 		$newDom->loadHTML($res);
+
+		// Restore error level, see $internalErrors explanation above
+		libxml_use_internal_errors($internalErrors);
+
 //		$newDom->preserveWhiteSpace = false;
 		$xpath = new DomXpath($newDom);
 //		$entries = $xpath->query("//*[@id='searchResults']/div[contains(concat(' ', normalize-space(@class), ' '), ' inner ')]");

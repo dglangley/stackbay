@@ -49,9 +49,9 @@
 		$max_price = $_REQUEST['max'];
 	}
 	
-	$endDate = format_date($today,'m-d-Y');
+	$endDate = format_date($today,'m/d/Y');
 	if ($_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'],'m-d-Y');
+		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
 	}
 	// for getRecords()
 	$record_end = $endDate;
@@ -59,9 +59,9 @@
 	//Calculate the standard year range, output quarters as an array, and make 
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
 
-	$startDate = format_date($last_week, 'm-d-Y');
+	$startDate = format_date($last_week, 'm/d/Y');
  	if ($_REQUEST['START_DATE']){
-		$startDate = format_date($_REQUEST['START_DATE'], 'm-d-Y');
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
 	// for getRecords()
 	$record_start = $startDate;
@@ -133,18 +133,18 @@
 			        <input type="radio" name="market_table" value="demand" class="hidden"<?php if ($market_table=='demand') { echo ' checked'; } ?>>
 			    </div>
 			</td>
-			<td class="col-sm-4 form-inline">
+			<td class="col-sm-3">
 				<div class="form-group">
-					<div class="input-group date datetime-picker-filter">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style="width:auto">
+					<div class="input-group datepicker-date date datetime-picker-filter">
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
 			        </div>
 				</div>
 				<div class="form-group">
-					<div class="input-group date datetime-picker-filter">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style="width:auto">
+					<div class="input-group datepicker-date date datetime-picker-filter">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -152,20 +152,21 @@
 				</div>
 				<div class="form-group">
 					<div class="btn-group" id="shortDateRanges">
-					<div id="btn-range-options">
-						<button class="btn btn-default btn-sm">&gt;</button>
-						<div class="animated fadeIn hidden" id="date-ranges">
-					        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
-			    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
-							<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
-							<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
-							<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
-							<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
+						<div id="btn-range-options">
+							<button class="btn btn-default btn-sm">&gt;</button>
+							<div class="animated fadeIn hidden" id="date-ranges">
+						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
+								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">YTD</button>
+							</div>
 						</div>
 					</div>
 				</div>
 			</td>
-			<td class = "col-sm-1">
+			<td class = "col-sm-2">
 				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 			</td>
 			<td class = "col-sm-2">

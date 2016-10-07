@@ -646,6 +646,17 @@ tr.info:hover td, td.info:hover {
 	font-size: 14px;
 }
 
+.input-group.datepicker-date {
+	width:130px;
+	min-width:130px;
+	max-width:130px;
+}
+.input-group.datepicker-datetime {
+	width:190px;
+	min-width:190px;
+	max-width:190px;
+}
+
 
 
 

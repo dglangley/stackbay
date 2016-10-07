@@ -7,7 +7,8 @@
 		if (! $userid) { return false; }
 
 		if ($input=='repid') {
-			$userid = $OLDDB_REPS[$userid];
+			if (isset($OLDDB_REPS[$userid])) { $userid = $OLDDB_REPS[$userid]; }
+			else { return false; }
 			// if all we're doing is cross-referencing old to new, pass it back
 			if ($output=='id') { return ($userid); }
 		}

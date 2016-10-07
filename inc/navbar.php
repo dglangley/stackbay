@@ -252,7 +252,7 @@
 								</div>
 							</div>
 							<div class="col-sm-7">
-				                <div class="input-group date datetime-picker">
+				                <div class="input-group datepicker-datetime date datetime-picker">
 	   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
 	           		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>

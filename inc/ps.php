@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_ps.php';
 
 	$PS_ERROR = '';
-	function ps($search) {
+	function ps($search='') {
 		global $PS_ERROR;
 
 		$res = download_ps($search);
