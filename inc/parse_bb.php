@@ -21,11 +21,26 @@
 
 		$F = $GLOBALS['F'];
 
+		$company_col = array_search('Company',$F);
+		$part_col = array_search('Part/Model',$F);
+		$heci_col = array_search('HECI/CLEI',$F);
+		$manf_col = array_search('Mfg',$F);
+		$price_col = array_search('Price',$F);
+		$qty_col = array_search('Qty',$F);
+		$descr_col = array_search('Product Description',$F);
+
 		$resArray = array();
 		$inserts = array();//all the records to be added
 
+		// eliminate html formatting warnings per http://stackoverflow.com/a/10482622/1356496, set error level
+		$internalErrors = libxml_use_internal_errors(true);
+
 		$newDom = new domDocument;
 		$newDom->loadHTML($res);
+
+		// Restore error level, see $internalErrors explanation above
+		libxml_use_internal_errors($internalErrors);
+
 		$newDom->preserveWhiteSpace = false;
 		$divs = $newDom->getElementsByTagName('div');
 		foreach ($divs as $i => $div) {
@@ -44,7 +59,9 @@
 				if ($j<=1) { continue; }
 
 				$data = array();
+				// get all columns in this row
 				$cols = $row->getElementsByTagName('td');
+				// add relevant text within each column to new array $data for handling below
 				foreach ($cols as $k => $col) {
 					if (! isset($F[$k])) { continue; }
 
@@ -68,16 +85,16 @@
 //				print "<pre>".print_r($data,true)."</pre>";
 
 				$eci = 0;
-				$company = $data[array_search('Company',$F)];
-				$part = $data[array_search('Part/Model',$F)];
-				$heci = preg_replace('/^[^[:alnum:]]*([[:alnum:]]+)[^[:alnum:]]*/$','$1',$data[array_search('HECI/CLEI',$F)]);
+				$company = $data[$company_col];
+				$part = $data[$part_col];
+				$heci = preg_replace('/^[^[:alnum:]]*([[:alnum:]]+)[^[:alnum:]]*$/','$1',$data[$heci_col]);
 				if (strlen($heci)<>7 AND strlen($heci)<>10) { $heci = ''; }
-				$manf = $data[array_search('Mfg',$F)];
+				$manf = $data[$manf_col];
 				if ($manf=='N/A') { $manf = ''; }
-				$price = $data[array_search('Price',$F)];
+				$price = $data[$price_col];
 				if ($price=='CALL') { $price = ''; }
-				$qty = $data[array_search('Qty',$F)];
-				$descr = $data[array_search('Product Description',$F)];
+				$qty = $data[$qty_col];
+				$descr = $data[$descr_col];
 
 				$companyid = getCompany($company,'name','id');
 				if (! $companyid) { $companyid = addCompany($company); }

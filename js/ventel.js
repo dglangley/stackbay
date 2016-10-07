@@ -542,6 +542,9 @@
 		$("#s").change(function() {
 				$("#s2").val("");
 		});
+		$("#btn-range-options").hover(function() {
+			$("#date-ranges").toggleClass('hidden');
+		});
 
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {

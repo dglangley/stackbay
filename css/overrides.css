@@ -707,14 +707,18 @@ h1 a, h2 a, h3 a {
 	width:100%;
 }
 
-.date-options {
-   width:50px;
+#btn-range-options {
+	width:36px;
+	position:relative;
+}
+#date-ranges {
+   width:360px;
    height:30px;
    padding:0px;
+   left:32px;
+   top:0px;
    position:absolute;
    text-align:left;
-   overflow:hidden;
-   top:8px;
    z-index:1001;
 }
 .date-options:hover {

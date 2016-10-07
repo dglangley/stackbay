@@ -98,6 +98,7 @@
     //Does: Pulls single item descriptions from eBay's
     //Output: Array of descriptions, quantities, prices 
     function ebayGetDescriptions($itemIDs){
+		$s_array = array();
         
         //Loop through each of the passed itemID's to get the single item data
         foreach($itemIDs as $id){
@@ -120,7 +121,12 @@
             $result = curl_exec($call);
             
             //Receive the results, and format it as a simpleXML element to parse
+try {
             $formatted = new SimpleXMLElement($result);
+} catch(Exception $e) {
+//do something?
+continue;
+}
             ////print_r ($formatted);
             
             //Combine the title and description into a string for parsing

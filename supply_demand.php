@@ -49,9 +49,9 @@
 		$max_price = $_REQUEST['max'];
 	}
 	
-	$endDate = $today;
+	$endDate = format_date($today,'m-d-Y');
 	if ($_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'],'Y-m-d');
+		$endDate = format_date($_REQUEST['END_DATE'],'m-d-Y');
 	}
 	// for getRecords()
 	$record_end = $endDate;
@@ -59,9 +59,9 @@
 	//Calculate the standard year range, output quarters as an array, and make 
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
 
-	$startDate = format_date($last_week, 'Y-m-d');
+	$startDate = format_date($last_week, 'm-d-Y');
  	if ($_REQUEST['START_DATE']){
-		$startDate = format_date($_REQUEST['START_DATE'], 'Y-m-d');
+		$startDate = format_date($_REQUEST['START_DATE'], 'm-d-Y');
 	}
 	// for getRecords()
 	$record_start = $startDate;
@@ -110,7 +110,7 @@
 
     <table class="table table-header">
 		<tr id = "filterTableOutput">
-			<td class = "col-md-2">
+			<td class = "col-sm-2">
 	
 			    <div class="btn-group">
 			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
@@ -133,44 +133,49 @@
 			        <input type="radio" name="market_table" value="demand" class="hidden"<?php if ($market_table=='demand') { echo ' checked'; } ?>>
 			    </div>
 			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
+			<td class="col-sm-4 form-inline">
+				<div class="form-group">
+					<div class="input-group date datetime-picker-filter">
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style="width:auto">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
-			    </div>
-			</td>
-			<td class = "col-md-1 btn-group" data-toggle="buttons" id="shortDateRanges">
-				<div class="date-options">
-					<div class="btn btn-default btn-sm">&gt;</div>
-			        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
-	    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
-					<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
+			        </div>
+				</div>
+				<div class="form-group">
+					<div class="input-group date datetime-picker-filter">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style="width:auto">
+			            <span class="input-group-addon">
+			                <span class="fa fa-calendar"></span>
+			            </span>
+				    </div>
+				</div>
+				<div class="form-group">
+					<div class="btn-group" id="shortDateRanges">
+					<div id="btn-range-options">
+						<button class="btn btn-default btn-sm">&gt;</button>
+						<div class="animated fadeIn hidden" id="date-ranges">
+					        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
+			    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
+							<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
+							<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
+							<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
+							<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
+						</div>
+					</div>
 				</div>
 			</td>
-			<td class = "col-md-2">
+			<td class = "col-sm-1">
 				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 			</td>
-			<td class = "col-md-2">
+			<td class = "col-sm-2">
 				<div class="input-group">
 					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
 					<span class="input-group-addon">-</span>
 					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
 				</div>
 			</td>
-			<td class = "col-md-3">
+			<td class = "col-sm-3">
 				<div class="pull-right form-inline">
 					<div class="input-group">
 						<select name="companyid" id="companyid" class="company-selector">
@@ -203,7 +208,7 @@
 
 <!-- If there is a company id, output the text of that company id to the top of the screen -->
                 <div class="row head text-center">
-                    <div class="col-md-12">
+                    <div class="col-sm-12">
                         <h2>
                         <?php echo ("Supply and Demand");
                         if($company_filter){ 
@@ -377,7 +382,7 @@
                     <table class="table table-hover table-striped table-condensed">
                         <thead>
                             <tr>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <?php if($report_type == 'summary'){echo("Last Req ");} ?>
                                     Date
 	                            </th>
@@ -385,38 +390,38 @@
 
 
 <?php if (!$company_filter && $report_type == 'detail') {?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Company
                                 </th>
 <?php } ?>
 
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Items
                                 </th>
 <?php if ($report_type == 'summary') { ?>
-								<th class="col-md-<?php echo $widths[$c++]; ?>">
+								<th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     # Requests
                                 </th>
 <?php } ?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     <?php if($report_type == 'summary'){echo ('Sum ');}?>
                                     Qty
                                 </th>
 <?php if ($report_type == 'detail') { ?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Quote Price
                                 </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Total Quote
 									<br>
                                 </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
                                     Sales Rep
 									<br>
@@ -443,12 +448,6 @@
 			
 	$(document).ready(function() {
 		//Change the value of the     	
-    	var dateBoxWidth = $(".date-options").width();
-		$(".date-options").hover(function() {
-			$(this).animate({ width:"360" });
-		}, function() {
-            $(this).animate({ width:dateBoxWidth });
-		});
 
 		$('.btn-report').click(function() {
 			var btnValue = $(this).data('value');
