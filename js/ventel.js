@@ -401,6 +401,8 @@
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 		
 		$(document).on(".company-selector")
+	/**** Invoke all select2() modules *****/
+	if (typeof select2 == 'function') {
 	    $(".company-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
@@ -435,11 +437,6 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 	    });
-		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
-			if ($.isNumeric($(this).val())) {
-				$(this).closest("form").submit();
-			}
-		});
 	    $(".lists-selector").select2({
 			placeholder: 'Upload or Select...',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -469,6 +466,14 @@
 		});
 	    $(".terms-select2").select2({
 		});
+	}
+
+		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
+			if ($.isNumeric($(this).val())) {
+				$(this).closest("form").submit();
+			}
+		});
+
 	    $(".terms-select2.terms-type").change(function() {
 			var selections = [];
 			var type;
@@ -579,6 +584,11 @@
 	    });
 */
 		$('.datetime-picker').each(function() {
+			// these settings are optional; if not set in the 'data-' tags, then set to false
+			var format = false;
+			if ($(this).data('format')) { format = $(this).data('format'); }
+			var maxDate = false;
+			if ($(this).data('maxdate')) { maxDate = $(this).data('maxdate'); }
 			$(this).datetimepicker({
 				/* use font awesome icons instead of glyphicons. because i said so. */
 				icons: {
@@ -592,12 +602,14 @@
 					clear: 'fa fa-trash',
 					close: 'fa fa-close'
 				},
+				format: format,
+				maxDate: maxDate,
 			});
 		});
 		
+/*
 		$('.datetime-picker-filter').each(function() {
 			$(this).datetimepicker({
-				/* use font awesome icons instead of glyphicons. because i said so. */
 				format: 'MM/DD/YYYY',
 				icons: {
 					time: 'fa fa-clock-o',
@@ -613,6 +625,7 @@
 				maxDate: Date(),
 			});
 		});
+*/
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});

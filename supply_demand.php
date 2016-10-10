@@ -135,7 +135,7 @@
 			</td>
 			<td class="col-sm-3">
 				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker-filter">
+					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
 			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
@@ -143,7 +143,7 @@
 			        </div>
 				</div>
 				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker-filter">
+					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
 			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>

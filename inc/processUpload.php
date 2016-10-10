@@ -151,15 +151,16 @@
 			if (isset($keys[0])) { $part = $keys[0]; }
 			if (isset($keys[1])) { $heci = $keys[1]; }
 
-			// get all related partids for favorites but use only the first result for capturing consolidated results
-			$partids = getPartId($part,$heci,0,true);
-			$partid = $partids[0];
-//			if (! $partid) { continue; }
-
 			// concatenate the part string and heci string as our combined search string that produced this result
 			$searchkey = '';
 			if ($heci) { $searchkey = $heci; } else { $searchkey = $part; }
-			$searchkey = preg_replace('/[^[:alnum:]]*/','',$searchkey);
+			$searchkey = preg_replace('/[^[:alnum:]]+/','',$searchkey);
+
+			// get all related partids for favorites but use only the first result for capturing consolidated results
+			$partids = getPartId($part,$heci,0,true);
+			$partid = $searchkey;
+			if (isset($partids[0])) { $partid = $partids[0]; }
+//			if (! $partid) { continue; }
 
 			// create search string log but without hitting the remotes
 			$query2 = "SELECT id FROM searches WHERE search = '".$searchkey."' AND userid = '".$userid."' ";
@@ -273,7 +274,8 @@ $tempfile = '/var/tmp/400004291.xls';
 			$qty = $row['qty'];
 			$searchid = $row['searchid'];
 
-			if (! $qty OR ! $partid) {
+			// on invalid qty or invalid partid (missing or non-numeric), notate it as an unidentified item
+			if (! $qty OR ! $partid OR ! is_numeric($partid)) {
 				$status = '';
 				if (! $qty) { $status = 'Missing Qty'; }
 				if (! $partid) {
@@ -291,7 +293,7 @@ $tempfile = '/var/tmp/400004291.xls';
 				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].'<BR>';// ("'.$status.'")<BR>';
 				$num_favs++;// += count($favs);
 			}
-			if (! $partid OR ! $qty) { continue; }
+			if (! $partid OR ! is_numeric($partid) OR ! $qty) { continue; }
 
 			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,$searchid,$ln);
 			$ln++;

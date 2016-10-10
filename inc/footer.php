@@ -7,6 +7,7 @@
 	<script src="js/bootstrap-datepicker.js"></script>
 -->
 	<script src="js/jquery.cookie.js"></script>
+	<!-- required for datetimepicker -->
 	<script src="js/moment.min.js"></script>
 	<script src="js/bootstrap-datetimepicker.js"></script>
     <script src="js/theme.js"></script>
