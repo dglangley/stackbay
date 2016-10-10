@@ -402,7 +402,7 @@
 		
 		$(document).on(".company-selector")
 	/**** Invoke all select2() modules *****/
-	if (typeof select2 == 'function') {
+	if (!!$.prototype.select2) {
 	    $(".company-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
@@ -685,6 +685,17 @@
 			$('.remote-name').html('<img src="/img/'+remote+'.png"> '+$(this).data('name')+' login');
 			$('#remote-activate').data('remote',remote);
 			$('#remote-modal').modal('show');
+		});
+		$('.btn-notes').click(function() {
+			// get refid passed into save button, and use it to find object for placement of the notes modal,
+			// then get user notes body and pass to toggleNotes() to add new entry and to refresh notes modal
+			var itemRow = $("#"+$(this).data('refid'));
+			var itemObj = itemRow.find(".item-notes:first");
+
+			var user_textarea = $(this).closest(".notes-body").find("textarea[name='user_notes']");
+			var notes = user_textarea.val();
+
+			toggleNotes(itemObj,notes);
 		});
 
 		$('#remote-activate').click(function() {
@@ -1014,44 +1025,34 @@
 			$("#modalNotes").fadeOut(100);
 		}
 	}
-	function toggleNotes(e) {
-		var notes = $("#modalNotes");
-//           notes.modal('toggle');
-
-/*
-		var parentBody = e.closest("tbody");
-		var marketBody = parentBody.find(".market-table:first");
-		var pos = marketBody.position();
-		var width = marketBody.outerWidth();
-		var height = marketBody.outerHeight();
-*/
-		//var clickPos = e.position();
+	function toggleNotes(e,add_notes) {
+		if (! add_notes) { var add_notes = ''; }
 		var outerBody = e.closest(".descr-row");
 		var pos = e.position();
-		var width = outerBody.outerWidth();//-(clickPos.left-100);
+		var width = outerBody.outerWidth();
 		var productBody = outerBody.find(".product-descr:first");
 		var partid = productBody.data('partid');
 		var pipe_ids = productBody.data('pipeids');
-		/*var height = 400;//clickPos.top+16;*/
-		var user;
+		/* save part/pipe ids to the button for when the user saves the notes */
+		$("#save-notes-btn").data("refid",e.closest(".product-results").prop("id"));
 
-        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids);
+        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids+"&add_notes="+escape(add_notes));
         $.ajax({
             url: 'json/notes.php',
             type: 'get',
-            data: {'partid': partid, 'pipe_ids': pipe_ids},
+            data: {'partid': partid, 'pipe_ids': pipe_ids, 'add_notes': escape(add_notes)},
 			dataType: 'json',
             success: function(json, status) {
-				var table_html = '';
-                $.each(json.results, function(dateKey, row) {
-					user = '';
-					if (row.user!='') user = '- <strong>'+row.user+'</strong, ';
-                    /* process each item's data */
-					table_html += '<tr><td>'+row.note+' <div class="source">'+user+row.date+'</div></td></tr>';
-				});
+				if (json.results) {
+					// clear textarea for next entry upon successful results
+					$("#modalNotes").find("textarea[name='user_notes']").val("");
 
-				var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
-				modalBody.html(table_html);
+					updateNotes(json.results);
+				} else {
+					var message = 'There was an error processing your request!';
+					if (json.message) { message = json.message; } // show response from the php script.
+					alert(message);
+				}
             },
             error: function(xhr, desc, err) {
                 console.log(xhr);
@@ -1059,7 +1060,7 @@
             }
         }); // end ajax call
 
-		notes.css({
+		$("#modalNotes").css({
 			display: "block",
 			visibility: "visible",
 			top:(pos.top+40)+"px",
@@ -1073,4 +1074,17 @@
 			display: "none",
 			visibility: "hidden",
 		});
+	}
+	function updateNotes(results) {
+		var table_html = '';
+		var user;
+		$.each(results, function(dateKey, row) {
+			user = '';
+			if (row.user!='') user = '- <strong>'+row.user+'</strong>, ';
+			/* process each item's data */
+			table_html += '<tr><td>'+row.note+' <div class="source">'+user+row.date+'</div></td></tr>';
+		});
+
+		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
+		modalBody.html(table_html);
 	}

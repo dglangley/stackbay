@@ -446,10 +446,13 @@
 			$chkd = '';
 			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
 
-			$notes_flag = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
+			$notes_icon = '';
 			if ($notes) {
-				$notes_flag = '<span class="item-notes"><i class="fa fa-sticky-note text-warning"></i></span>';
+				$notes_icon = 'fa-sticky-note text-warning';
+			} else {
+				$notes_icon = 'fa-sticky-note-o';
 			}
+			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$results_rows .= '
                         <!-- row -->
