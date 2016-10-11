@@ -58,6 +58,15 @@
 			$CONTACTS[$search_field][$input_field] = $r;
 		}
 
+		// if we're returning userid, we need to do an addl query to get the user data
+		if ($output_field=='userid') {
+			$query = "SELECT id userid FROM users WHERE contactid = '".$CONTACTS[$search_field][$input_field]['id']."'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)==0) { return false; }
+			$r = mysqli_fetch_assoc($result);
+			$CONTACTS[$search_field][$input_field][$output_field] = $r['userid'];
+		}
+
 		return ($CONTACTS[$search_field][$input_field][$output_field]);
 	}
 ?>

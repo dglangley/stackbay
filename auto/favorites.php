@@ -16,6 +16,8 @@ include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
 
+
+// initializes Amea's gmail API session
 setGoogleAccessToken(5);
 
 #$credentials = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');

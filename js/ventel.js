@@ -131,18 +131,14 @@
 			$(this).click(function() {
 				/*toggleNotes($(this));*/
 
+/*
 				$(this).focusout(function() {
 					setTimeout("closeNotes()",100);
 				});
+*/
 
 				$(this).select();
 			});
-		});
-		// close notes when switching to a diff input text field
-        $('input[type="text"]').focus(function() {
-        	if (! $(this).hasClass('price-control')) {
-				closeModal($("#modalNotes"));
-			}
 		});
 		$(".item-notes").click(function() {
 			toggleNotes($(this));
@@ -151,13 +147,58 @@
 		  return elem === document.activeElement && (elem.type || elem.href);
 		};
 		$(".notes-close").on('click',function() {
-			closeModal($(this).closest(".modalNotes"));
+//dgl 10-10-16
+//			closeModal($(this).closest(".modalNotes"));
+			// invoke this programmatically so we can include a callback method
+//			closeModal($("#modalNotes"));
+			$("#modalNotes").modal('hide');
 		});
-/*
-		$(".modal-close").on('click',function() {
-			closeModal($(this).closest(".modal"));
+		$('#modalNotes').on('hide.bs.modal', function (e) {
+			if (NOTES_SESSION_ID!==false) {
+				clearInterval(NOTES_SESSION_ID);
+				NOTES_SESSION_ID = false;
+			}
 		});
-*/
+		$('.notification-dropdown .trigger').on('click',function(e) {
+			var notif = $(this).closest(".notification-dropdown").find(".notifications:first");
+			$(this).find(".count").css({display:'none',visibility:'hidden'});
+
+	        console.log(window.location.origin+"/json/notes.php");
+	        $.ajax({
+				url: 'json/notes.php',
+				type: 'get',
+				dataType: 'json',
+				success: function(json, status) {
+					if (json.results) {
+						var notif_html = '';
+
+	                	$.each(json.results, function(i, row) {
+							var read_class = '';
+							if (row.read=='') { read_class = ' unread'; }
+							else if (row.viewed=='') { read_class = ' unviewed'; }
+
+							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\')" class="item'+read_class+'">'+
+								'<div class="user fa-stack fa-lg">'+
+									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
+								'</div> '+
+								'<span class="time pull-right"><i class="fa fa-clock-o"></i> '+row.since+'</span>'+
+								'<div class="note"><strong>'+row.part_label+'</strong><br/>'+row.note+'</div> '+
+								'</a>';
+						})
+
+						notif.html(notif_html);
+					} else {
+						var message = 'There was an error processing your request!';
+						if (json.message) { message = json.message; } // show response from the php script.
+						alert(message);
+					}
+				},
+				error: function(xhr, desc, err) {
+					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
+		});
 
         $(".checkAll").on('click',function(){
             jQuery(this).closest('tbody').find('.item-check:checkbox').not(this).prop('checked', this.checked);
@@ -172,6 +213,7 @@
 		    $('input:checkbox').not(this).prop('checked', this.checked);
 		});
 */
+		/***** AMEA *****/
 		$(".highlight-word").on('click',function() {
 			$("#"+$(this).data("for")).click();
 
@@ -202,6 +244,9 @@
 				$(this).removeClass('btn-'+$(this).data('color')).addClass('btn-default');
 			});
 		});
+		/***** END AMEA *****/
+
+
 		$(".btn-end").click(function() {
 			var aligned = '';
 			var btn = $(this);
@@ -687,15 +732,7 @@
 			$('#remote-modal').modal('show');
 		});
 		$('.btn-notes').click(function() {
-			// get refid passed into save button, and use it to find object for placement of the notes modal,
-			// then get user notes body and pass to toggleNotes() to add new entry and to refresh notes modal
-			var itemRow = $("#"+$(this).data('refid'));
-			var itemObj = itemRow.find(".item-notes:first");
-
-			var user_textarea = $(this).closest(".notes-body").find("textarea[name='user_notes']");
-			var notes = user_textarea.val();
-
-			toggleNotes(itemObj,notes);
+			setNotes();
 		});
 
 		$('#remote-activate').click(function() {
@@ -1020,13 +1057,32 @@
         groupStr += '</div>';
         return (groupStr);
     }
-	function closeNotes() {
-		if ($("#modalNotes").has(document.activeElement).length == 0) {
-			$("#modalNotes").fadeOut(100);
+	function refreshNotes() {
+		// if there are any notes in the textarea, cancel any interval updates
+		if ($("#modalNotes").find("textarea[name='user_notes']").val()!='') {
+			clearInterval(NOTES_SESSION_ID);
+			NOTES_SESSION_ID = false;
+			return;
 		}
+		setNotes();
 	}
+	function setNotes() {
+		// get refid passed into save button, and use it to find object for placement of the notes modal,
+		// then get user notes body and pass to toggleNotes() to add new entry and to refresh notes modal
+		//var itemRow = $("#"+$(this).data('refid'));
+		var itemRow = $("#"+$("#modalNotes").find("#save-notes-btn").data('refid'));
+		var itemObj = itemRow.find(".item-notes:first");
+
+		//var user_textarea = $(this).closest(".notes-body").find("textarea[name='user_notes']");
+		var user_textarea = $("#modalNotes").find("textarea[name='user_notes']");
+		var notes = user_textarea.val();
+
+		toggleNotes(itemObj,notes);
+	}
+	var NOTES_SESSION_ID = false;
 	function toggleNotes(e,add_notes) {
 		if (! add_notes) { var add_notes = ''; }
+		e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
 		var outerBody = e.closest(".descr-row");
 		var pos = e.position();
 		var width = outerBody.outerWidth();
@@ -1048,6 +1104,7 @@
 					$("#modalNotes").find("textarea[name='user_notes']").val("");
 
 					updateNotes(json.results);
+					if (NOTES_SESSION_ID===false) { NOTES_SESSION_ID = setInterval(refreshNotes,5000); }
 				} else {
 					var message = 'There was an error processing your request!';
 					if (json.message) { message = json.message; } // show response from the php script.
@@ -1060,20 +1117,20 @@
             }
         }); // end ajax call
 
-		$("#modalNotes").css({
-			display: "block",
-			visibility: "visible",
-			top:(pos.top+40)+"px",
+		var eTop = productBody.offset().top - $(window).scrollTop();
+		$("#modalNotes .modal-content").css({
+			top:(eTop+40)+"px",
 			left:(outerBody.position().left)+"px",
 			width: width,
-			/*height: height,*/
-		}).show();
+		});
+		$("#modalNotes").modal('show');
 	}
 	function closeModal(e) {
-		e.css({
-			display: "none",
-			visibility: "hidden",
-		});
+		e.modal('hide');
+		if (NOTES_SESSION_ID!==false) {
+			clearInterval(NOTES_SESSION_ID);
+			NOTES_SESSION_ID = false;
+		}
 	}
 	function updateNotes(results) {
 		var table_html = '';
@@ -1087,4 +1144,28 @@
 
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
 		modalBody.html(table_html);
+	}
+	function viewNotification(partid,search) {
+		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
+        console.log(window.location.origin+"/json/notes.php?partid="+partid);
+
+        $.ajax({
+            url: 'json/notes.php',
+            type: 'get',
+            data: {'partid': partid},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.results) {
+					document.location.href = '/?s='+search;
+				} else {
+					var message = 'There was an error processing your request!';
+					if (json.message) { message = json.message; } // show response from the php script.
+					alert(message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
 	}

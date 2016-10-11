@@ -418,11 +418,13 @@
 			// when a single value, handle accordingly; otherwise by array
 			if ($P['pipe_id']) {
 				$itemqty = getPipeQty($P['pipe_id']);
+				// $NOTES is set globally in getPipeQty()
 				$notes = $NOTES[$P['pipe_id']];
 				$pipeids_str = $P['pipe_id'];
 			} else {
 				foreach ($pipe_ids as $pipe_id => $arr) {
 					$itemqty += getPipeQty($pipe_id);
+					// $NOTES is set globally in getPipeQty()
 					if (trim($NOTES[$pipe_id])) {
 						if ($notes) { $notes .= chr(10).'<HR>'.chr(10); }
 						$notes .= $NOTES[$pipe_id];
@@ -431,6 +433,15 @@
 					$pipeids_str .= $pipe_id;
 				}
 				$pipe_ids = array();
+			}
+
+			// if no notes through pipe, check new db
+			if (! $notes) {
+				$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
+				$result2 = qdb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$notes = true;
+				}
 			}
 
 			//$itemqty = getQty($partid);
@@ -448,7 +459,11 @@
 
 			$notes_icon = '';
 			if ($notes) {
-				$notes_icon = 'fa-sticky-note text-warning';
+				if (isset($NOTIFICATIONS[$partid])) {
+					$notes_icon = 'text-danger fa-warning fa-lg';
+				} else {
+					$notes_icon = 'fa-sticky-note text-warning';
+				}
 			} else {
 				$notes_icon = 'fa-sticky-note-o';
 			}

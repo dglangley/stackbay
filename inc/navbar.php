@@ -2,6 +2,7 @@
 	include_once 'dbconnect.php';
 	include_once 'format_date.php';
 	include_once $_SERVER["DOCUMENT_ROOT"].'/modal/alert.php';
+	include_once 'notifications.php';
 
 	$s = '';
 	$s2 = '';
@@ -117,9 +118,16 @@
 				<a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a>
 			</li>
             <li class="notification-dropdown hidden-xs hidden-sm">
+<?php
+	$num_notifications = count($NOTIFICATIONS);
+	$notif_suffix = '';
+	if ($num_notifications<>1) { $notif_suffix = 's'; }
+	if ($num_notifications==0) { $read_notifications = 'no'; }
+	else { $read_notifications = $num_notifications; }
+?>
                 <a href="#" class="trigger">
-                    <i class="fa fa-warning"></i>
-                    <span class="count">3</span>
+                    <i class="fa fa-comments-o"></i>
+                    <?php if ($num_notifications>0) { echo '<span class="count" style="background:#b94a48">'.$num_notifications.'</span>'; } ?>
                 </a>
                 <div class="pop-dialog">
                     <div class="pointer right">
@@ -128,21 +136,8 @@
                     </div>
                     <div class="body">
                         <a href="#" class="close-icon"><i class="fa fa-close"></i></a>
-                        <div class="notifications">
-                            <h3>You have 3 new notifications</h3>
-                            <a href="#" class="item">
-                                <i class="fa fa-sign-in"></i> New user registration
-                                <span class="time"><i class="fa fa-clock-o"></i> 13 min.</span>
-                            </a>
-                            <a href="#" class="item">
-                                <i class="fa fa-sign-in"></i> New user registration
-                                <span class="time"><i class="fa fa-clock-o"></i> 18 min.</span>
-                            </a>
-                            <a href="#" class="item">
-                                <i class="fa fa-envelope-o"></i> New message from Alejandra
-                                <span class="time"><i class="fa fa-clock-o"></i> 28 min.</span>
-                            </a>
-                        </div>
+                        <h5>You have <?php echo $read_notifications; ?> new notification<?php echo $notif_suffix; ?></h5>
+                        <div class="notifications"></div>
                     </div>
                 </div>
             </li>
