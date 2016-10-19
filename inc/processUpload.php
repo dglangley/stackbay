@@ -158,7 +158,7 @@
 
 			// get all related partids for favorites but use only the first result for capturing consolidated results
 			$partids = getPartId($part,$heci,0,true);
-			$partid = $searchkey;
+			$partid = 0;//$searchkey;
 			if (isset($partids[0])) { $partid = $partids[0]; }
 //			if (! $partid) { continue; }
 
@@ -176,8 +176,8 @@
 				$searchid = qid();
 			}
 
-			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids); }
-			$consolidated[$partid]['qty'] += $qty;
+			if (! isset($consolidated[$searchkey])) { $consolidated[$searchkey] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids,'partid'=>$partid); }
+			$consolidated[$searchkey]['qty'] += $qty;
 		}
 
 		return ($consolidated);
@@ -268,7 +268,8 @@ $tempfile = '/var/tmp/400004291.xls';
 		$report = '';
 		$num_favs = 0;
 		$favs_report = '';
-		foreach ($consolidated as $partid => $row) {
+		foreach ($consolidated as $searchkey => $row) {
+			$partid = $row['partid'];
 //			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
 			$qty = $row['qty'];

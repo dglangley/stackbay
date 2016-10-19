@@ -15,8 +15,8 @@ include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
 // $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
 
-//$query = "TRUNCATE TABLE staged_qtys; ";
-//$result = qdb($query) OR die(qe().' '.$query);
+$query = "TRUNCATE TABLE staged_qtys; ";
+$result = qdb($query) OR die(qe().' '.$query);
 
 
 //Get list of parts, with meta id, qty, and company from database
