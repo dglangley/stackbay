@@ -187,6 +187,7 @@
                 //User is now being edited so create the instance and set all the preset variables from the database
                 //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
                 $venEdit->editMember();
+                $editedrErr;
 
                 //If the form has been submitted then run the edit user function and update the user if eveything is valid and good to go
                 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -218,7 +219,6 @@
                         <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8'>
                             <div class="row">
                                 <div class="col-md-5 pb-20">
-                                    <span class="error"><?php echo $userErr;?></span>
                                     <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $venEdit->getUsername(); ?>">
                                 </div>
                                 <div class="col-md-7 pb-20">
@@ -226,29 +226,24 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6 pb-20">
-                                    <span class="error"><?php echo $firstErr;?></span>
                                     <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo $venEdit->user_firstName; ?>">
                                 </div>
                                 <div class="col-md-6 pb-20">
-                                    <span class="error"><?php echo $lastErr;?></span>
                                     <input name="lastName" class="form-control" type="text" placeholder="Last Name" value="<?php echo $venEdit->user_lastName; ?>">
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 pb-20">
-                                    <span class="error"><?php echo $emailErr;?></span>
                                     <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $venEdit->getEmail(); ?>">
                                 </div>
                                 <div class="col-md-6 pb-20">
-                                    <span class="error"><?php echo $phoneErr;?></span>
                                     <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo $venEdit->getPhone(); ?>">
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 pb-30">
-                                    <span class="error"><?php echo $passwordErr;?></span>
                                     <div class="input-group">
                                         <!-- Create password field if the update is successful or allow the admin to see the password typed in if has errors -->
                                         <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $_REQUEST['password']); ?>">

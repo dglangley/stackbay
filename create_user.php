@@ -5,8 +5,6 @@
     require_once 'inc/user_access.php';
     require_once 'inc/user_registration.php';
 
-    $registered = false;
-
     //Create new object for instance to class Ven Reg that extends Ven Priveleges
     $venReg = new venRegistration;
 
@@ -15,7 +13,16 @@
 
     //Form Invoking self with POST method doing very surface validation to make sure email is valid and required fields are set
     //This is a quick screen that will probably be built into the class soon
+    $registered = false;
     $error = false;
+    $registerErr = '';
+    $userErr = '';
+    $firstErr = '';
+    $lastErr = '';
+    $passwordErr = '';
+    $emailErr = '';
+    $phoneErr = '';
+
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (empty($_POST["username"])) {
@@ -38,7 +45,7 @@
             $error = true;
         } else {
             // check if name only contains letters and whitespace
-            if (!preg_match("/^[a-zA-Z ]*$/",$name)) {
+            if (!preg_match("/^[a-zA-Z ]*$/",$_POST["firstName"])) {
                 $firstErr = "Only letters and white space allowed"; 
                 $error = true;
             }
@@ -54,7 +61,7 @@
             $error = true;
         } else {
         // check if name only contains letters and whitespace
-            if (!preg_match("/^[a-zA-Z ]*$/",$name)) {
+            if (!preg_match("/^[a-zA-Z ]*$/",$_POST["lastName"])) {
                 $lastErr = "Only letters and white space allowed"; 
                 $error = true;
             }
@@ -83,11 +90,10 @@
             } else {
                  $registerErr =  '<strong>Success</strong>: User has been created - ' . $_POST['username'];
                  //Clearing $_Post, be aware tho that a refresh will still invoke the data but will be caught in a user exists error
-                 $_POST = array();
+                 //$_POST = array();
                  $registered = true;
                  //unset the object after the user is created
-                 unset($userErr);
-                 unset($venReg);
+                 // unset($userErr);
             }
         }
 
@@ -260,7 +266,7 @@
                                     <select name="privilege[]"  size="6" class="form-control" multiple>
                                         <?php foreach($venReg->getPrivileges() as $type): ?>
                                             <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
-                                            <option value="<?php echo $type['id']; ?>"><?php echo $type['privilege']; ?></option>
+                                            <option value="<?php echo $type['id']; ?>" <?php echo (in_array($type['id'], $_POST['privilege']) ? 'selected' : '') ?>><?php echo $type['privilege']; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -358,25 +364,24 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
                 $( "#gen" ).prop( "checked", false );
             });
 
-/*
-            var availableTags = [
-                <?php 
-                    $init = 0;
-                    foreach ($companies as $cn) {
-                        if($init == 0) {
-                            echo '"' . htmlspecialchars ($cn['name']) . '"';
-                        } else {
-                            echo ', "' . htmlspecialchars ($cn['name']) . '"';
-                        }
-                        $init++;
-                    } 
-                ?>
-            ];
-            $( "#company" ).autocomplete({
-                source: availableTags,
-                delay: 0
-            });
-*/
+            // var availableTags = [
+            //     <?php 
+            //         $init = 0;
+            //         foreach ($companies as $cn) {
+            //             if($init == 0) {
+            //                 echo '"' . htmlspecialchars ($cn['name']) . '"';
+            //             } else {
+            //                 echo ', "' . htmlspecialchars ($cn['name']) . '"';
+            //             }
+            //             $init++;
+            //         } 
+            //     ?>
+            // ];
+            // $( "#company" ).autocomplete({
+            //     source: availableTags,
+            //     delay: 0
+            // });
+            
             $('.phone_us').mask('(000) 000-0000');
         })(jQuery);
     </script>

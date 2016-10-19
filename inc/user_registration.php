@@ -5,16 +5,33 @@
   		//Register a User Function
 		function registerMember() {
 			//Not that I don't trust you but lets prevent any Sequel Injections no matter what :)
-			//Using $_POST vs $_REQUEST the performance difference is negligible but POST > REQUEST and for better readability 
+			//Using $_REQUEST vs $_REQUEST the performance difference is negligible but POST > REQUEST and for better readability 
+			$register_email = '';
+			$register_username = '';
+			$register_type = '';
+			$generated_pass = '';
+			$privilege = '';
+			$phone = '';
+
 			//Since emails is a possible login name we don't want it to be case sensitive
-			$register_email = strtolower($this->Sanitize(trim($_POST["email"])));
+			$register_email = strtolower($this->Sanitize(trim($_REQUEST["email"])));
 			//Make username case insenitive
-			$register_username = strtolower($this->Sanitize(trim($_POST["username"])));
-			$register_type = $this->Sanitize(trim($_POST["type"]));
-			$register_company = $this->Sanitize(trim($_POST["companyid"]));
-			$generated_pass = $this->Sanitize(trim($_POST["generated_pass"]));
+			$register_username = strtolower($this->Sanitize(trim($_REQUEST["username"])));
+			
+			if(isset($_REQUEST["type"])) {
+				$register_type = $this->Sanitize(trim($_REQUEST["type"]));
+			}
+
+			$register_company = ( isset($_REQUEST['companyid']) ? $this->Sanitize( $_REQUEST['companyid']) : 25);
+			
+			if(isset($_REQUEST["generated_pass"])) {
+				$generated_pass = $this->Sanitize(trim($_REQUEST["generated_pass"]));
+			}
 			$privilege = $this->Sanitize($_REQUEST['privilege']);
-			$phone = $this->Sanitize($_REQUEST['phone']);
+
+			if(isset($_REQUEST["phone"])) {
+				$phone = $this->Sanitize($_REQUEST['phone']);
+			}
 
 			//Test Bench Email
 			// $register_email = trim("andrew@ven-tel.com");
@@ -41,8 +58,8 @@
 				$this->setError("User: $register_email already exists in the database.");
 			} else {
 				//Set First and Last Name into the global variables
-				$this->setFirst($this->Sanitize(trim($_POST["firstName"])));
-				$this->setLast($this->Sanitize(trim($_POST["lastName"])));
+				$this->setFirst($this->Sanitize(trim($_REQUEST["firstName"])));
+				$this->setLast($this->Sanitize(trim($_REQUEST["lastName"])));
 
 				//Test Bench Password
 				// $this->setFirst($this->Sanitize(trim('Andrew')));
@@ -51,7 +68,7 @@
 				//Future Dev: Think of a way to handle Company Name
 
 				//Because Admin is creating the user and can change the passwords of any user we will not validate to make sure they match.
-				$register_password = $this->Sanitize(trim($_POST["password"]));
+				$register_password = $this->Sanitize(trim($_REQUEST["password"]));
 
 				$this->setTempPass($register_company);
 			

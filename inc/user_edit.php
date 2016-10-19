@@ -183,20 +183,45 @@
 	    	$this->getUserPhone();
 	    }
 
-	    function editUser($userEdited) {
+	    function editUser($userEdited = false) {
+	    	$generated_pass; 
+	    	$new_username;
+	    	$new_email;
+	    	$new_password;
+	    	$new_status;
+	    	$new_privilege;
+	    	$new_phone;
+	    	$generated_pass;
+
 	    	$this->getUserInfo();
 	    	//Define the new settings and see which ones have changed
-	    	$new_username = $this->Sanitize($_REQUEST['username']);
-	    	$new_email = $this->Sanitize($_REQUEST['email']);
-	    	$new_password = $this->Sanitize($_REQUEST['password']);
-	    	$new_company =$this->Sanitize( $_REQUEST['companyid']);
-	    	$new_status = $this->Sanitize($_REQUEST['status']);
-	    	$new_privilege = $this->Sanitize($_REQUEST['privilege']);
-	    	$new_phone = $this->Sanitize($_REQUEST['phone']);
+	    	if(isset($_REQUEST["username"])) {
+		    	$new_username = $this->Sanitize($_REQUEST['username']);
+		    }
+	    	if(isset($_REQUEST["email"])) {
+		    	$new_email = $this->Sanitize($_REQUEST['email']);
+		    }
+	    	if(isset($_REQUEST["password"])) {
+		    	$new_password = $this->Sanitize($_REQUEST['password']);
+		    }
 
-	    	$generated_pass = $this->Sanitize(trim($_POST["generated_pass"]));
+	    	$new_company = ( isset($_REQUEST['companyid']) ? $this->Sanitize( $_REQUEST['companyid']) : 25);
+	    	
+	    	if(isset($_REQUEST["status"])) {
+		    	$new_status = $this->Sanitize($_REQUEST['status']);
+		    }
+		    if(isset($_REQUEST["privilege"])) {
+		    	$new_privilege = $this->Sanitize($_REQUEST['privilege']);
+		    }
+		    if(isset($_REQUEST["phone"])) {
+		    	$new_phone = $this->Sanitize($_REQUEST['phone']);
+		    }
 
-	    	$this->setGenerated(($generated_pass ? 1 : 0));
+	    	if(isset($_REQUEST["generated_pass"])) {
+	    		$generated_pass = $this->Sanitize(trim($_REQUEST["generated_pass"]));
+	    	}
+
+	    	$this->setGenerated((!empty($generated_pass) ? 1 : 0));
 	    	$this->setPhone($new_phone);
 
 	    	//Check for first name and the last name
@@ -219,7 +244,7 @@
 	    		$this->setError("User <strong>" . $new_username . "</strong> already exists.");
 	    	}
 
-	    	if($new_email != $this->getEmail && filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+	    	if($new_email != $this->getEmail() && filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
 	    		$this->setEmail($new_email);
 	    	}
 

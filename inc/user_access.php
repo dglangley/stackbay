@@ -402,6 +402,21 @@
 				$stmt->execute();
 				$stmt->close();
 
+				//Prepare and Bind for Phone Numbers
+				$stmt = $WLI->prepare('
+					INSERT INTO phones (contactid, type, phone) 
+						VALUES (?, ?, ?) 
+						ON DUPLICATE KEY UPDATE
+				        type = VALUES(type),
+				        phone = VALUES(phone)
+				');
+				//s = string, i - integer, d = double, b = blob for params of mysqli
+				$stmt->bind_param("iss", $contactid, $type, $phone);
+				//Package it all and execute the query
+				$phone = $this->getPhone();
+				$type = 'Office';
+				$stmt->execute();
+
 				// Running for loop to get all privileges
 				foreach($this->getPrivilege() as $priv) {
 					// Prepare and Bind for Privileges
@@ -614,7 +629,7 @@
 
 	    //Function to check if the username already exists in the database
 	    //Should add a new parameter to also allow email checks
-	    function checkUsername($username, $form) {
+	    function checkUsername($username = '', $form = '') {
 	    	$exists = false;
 
 	    	$query = "SELECT * FROM usernames WHERE username='". res($username) ."'";
