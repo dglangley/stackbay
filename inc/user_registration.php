@@ -11,7 +11,7 @@
 			//Make username case insenitive
 			$register_username = strtolower($this->Sanitize(trim($_POST["username"])));
 			$register_type = $this->Sanitize(trim($_POST["type"]));
-			$register_company = $this->Sanitize(trim($_POST["company"]));
+			$register_company = $this->Sanitize(trim($_POST["companyid"]));
 			$generated_pass = $this->Sanitize(trim($_POST["generated_pass"]));
 			$privilege = $this->Sanitize($_REQUEST['privilege']);
 			$phone = $this->Sanitize($_REQUEST['phone']);

@@ -217,9 +217,11 @@
                         <!-- Just reload the page with PHP_SELF -->
                         <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8'>
                             <div class="row">
-                                <div class="col-md-12 pb-20">
+                                <div class="col-md-5 pb-20">
                                     <span class="error"><?php echo $userErr;?></span>
                                     <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $venEdit->getUsername(); ?>">
+                                </div>
+                                <div class="col-md-7 pb-20">
                                 </div>
                             </div>
                             <div class="row">
@@ -245,27 +247,23 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-sm-12 pb-30">
+                                <div class="col-md-6 pb-30">
                                     <span class="error"><?php echo $passwordErr;?></span>
                                     <div class="input-group">
                                         <!-- Create password field if the update is successful or allow the admin to see the password typed in if has errors -->
                                         <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $_REQUEST['password']); ?>">
                                         <span class="input-group-btn">
-                                            <button type="button" class="btn btn-default getNewPass"><span class="fa fa-refresh"> Generate</span></button>
+                                            <button type="button" class="btn btn-default getNewPass"><i class="fa fa-refresh"></i> Generate</button>
                                         </span>
                                         <!-- This is a hidden field that will toggle if the password is generated and will change if the admin changes the password in the textbox -->
                                         <input id="gen" type="checkbox" name="generated_pass" hidden>
                                     </div>
                                     <label class="pull-right">*Generated passwords require user to reset password</label>
                                 </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 pb-20">
-                                    <input id="company" name="company" class="form-control" type="text" placeholder="Company Name"  value="<?php echo ($_POST['company'] ? $_POST['company'] : "Ventura Telephone" ); ?>" disabled>
-                                </div>
-                                <div class="col-md-6 pb-20">
-                                    <input name="type" class="form-control" type="text" placeholder="Type"  value="<?php echo ( $_POST['type'] ? $_POST['type'] : "Work" ); ?>" disabled>
+                                <div class="col-md-6 pb-30">
+                                    <select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
+                                        <option value="25" selected>Ventura Telephone</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -374,23 +372,23 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
                 $( "#gen" ).prop( "checked", false );
             });
 
-            var availableTags = [
-                <?php 
-                    $init = 0;
-                    foreach ($companies as $cn) {
-                        if($init == 0) {
-                            echo '"' . htmlspecialchars ($cn['name']) . '"';
-                        } else {
-                            echo ', "' . htmlspecialchars ($cn['name']) . '"';
-                        }
-                        $init++;
-                    } 
-                ?>
-            ];
-            $( "#company" ).autocomplete({
-                source: availableTags,
-                delay: 0
-            });
+            // var availableTags = [
+            //     <?php 
+            //         $init = 0;
+            //         foreach ($companies as $cn) {
+            //             if($init == 0) {
+            //                 echo '"' . htmlspecialchars ($cn['name']) . '"';
+            //             } else {
+            //                 echo ', "' . htmlspecialchars ($cn['name']) . '"';
+            //             }
+            //             $init++;
+            //         } 
+            //     ?>
+            // ];
+            // $( "#company" ).autocomplete({
+            //     source: availableTags,
+            //     delay: 0
+            // });
             $('.phone_us').mask('(000) 000-0000');
         })(jQuery);
     </script>

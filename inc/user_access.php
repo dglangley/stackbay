@@ -338,7 +338,7 @@
 				//Package it all and execute the query
 				$name = $this->user_firstName . ' ' . $this->user_lastName;
 				$status = "Active";
-				$companyid = $this->companyCheck($this->getCompany());
+				$companyid = $this->getCompany();
 				$stmt->execute();
 				//Get the contact ID to be used in emails and user tables
 				$contactid = $stmt->insert_id;
@@ -441,7 +441,7 @@
 				} else {
 					$status = "Inactive";
 				}
-				$companyid = $this->companyCheck($this->getCompany());
+				$companyid = $this->getCompany();
 				$stmt->execute();
 				$stmt->close();
 

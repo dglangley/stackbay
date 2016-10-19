@@ -189,7 +189,7 @@
 	    	$new_username = $this->Sanitize($_REQUEST['username']);
 	    	$new_email = $this->Sanitize($_REQUEST['email']);
 	    	$new_password = $this->Sanitize($_REQUEST['password']);
-	    	$new_company =$this->Sanitize( $_REQUEST['company']);
+	    	$new_company =$this->Sanitize( $_REQUEST['companyid']);
 	    	$new_status = $this->Sanitize($_REQUEST['status']);
 	    	$new_privilege = $this->Sanitize($_REQUEST['privilege']);
 	    	$new_phone = $this->Sanitize($_REQUEST['phone']);
@@ -207,7 +207,6 @@
 	    	if(isset($_REQUEST['lastName']) && $_REQUEST['lastName'] != '') {
 	    		$this->setLast($this->Sanitize($_REQUEST['lastName']));
 	    	}
-
 
 	    	//Set Company Name
 	    	$this->setCompany($new_company);
