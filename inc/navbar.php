@@ -50,6 +50,18 @@
 		}
 	}
 ?>
+	<!-- Please add this css into the overrides css when it is complete -->
+	<style type="text/css">
+		.list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus {
+			background: rgb(60, 91, 121);
+			border-color: rgb(60, 91, 121);
+		}
+		.dropdown-menu > li > a.active, .dropdown-menu > li > a.active:hover, .dropdown-menu > li > a.active:focus, .dropdown-submenu:hover > a.active, .dropdown-submenu:focus > a.active {
+			background: rgb(60, 91, 121);
+			color: #FFF;
+		}
+	</style>
+	
 	<div id="loading-bar">Loading...</div>
 
 	<div id="loader" class="loader text-muted">
@@ -147,19 +159,16 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-<?php
-	$query = "SELECT name, users.id FROM users, contacts WHERE users.contactid = contacts.id AND users.id <> '".$U['id']."'; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		echo '<li><a href="/switch_user.php?userid='.$r['id'].'">'.$r['name'].'</a></li>';
-	}
-?>
-<!--
-                    <li><a href="#"><i class="fa fa-user"></i> Personal info</a></li>
-                    <li><a href="#"><i class="fa fa-calendar-o"></i> Calendar</a></li>
-                    <li><a href="#">Submit issue</a></li>
-                    <li><a href="#">Logout</a></li>
--->
+                	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
+	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
+	                <?php if($USER_ROLES[array_search(array_search('Administration', $ROLES), $USER_ROLES)] == array_search('Administration', $ROLES)) { ?>
+		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
+		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
+		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
+	                <?php } ?>
+
+	                <li><a href="signout.php">Logout</a></li>
+
                 </ul>
             </li>
           </ul><!-- end navbar-collapse -->

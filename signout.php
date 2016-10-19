@@ -1,21 +1,20 @@
 <?php
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunacera.com/db'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]).'/db'; }
-		else { $root_dir = '/var/www/html/db'; }
+	session_start();
+	
+    // Unset all of the session variables.
+	$_SESSION = array();
+
+	// If it's desired to kill the session, also delete the session cookie.
+	// Note: This will destroy the session, and not just the session data!
+	if (ini_get("session.use_cookies")) {
+	    $params = session_get_cookie_params();
+	    setcookie(session_name(), '', time() - 42000,
+	        $params["path"], $params["domain"],
+	        $params["secure"], $params["httponly"]
+	    );
 	}
-	include_once $root_dir.'/inc/mconnect.php';
-	include_once $root_dir.'/inc/signout.php';
-
-	$signout_url = signout();
-
 	session_destroy();
-
-	if (isset($_REQUEST['json'])) {
-		echo json_encode(array('code'=>0,'message'=>'Success!'));
-	} else {
-		header('Location: /');
-	}
+    
+	header('Location: /marketmanager/index.php?logged_out=true');
 	exit;
 ?>
