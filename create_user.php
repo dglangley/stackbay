@@ -248,8 +248,8 @@
                                 <label class="pull-right">*Generated passwords require user to reset password</label>
                             </div>
                             <div class="col-md-6 pb-30">
-								<select name="companyid" id="companyid" class="company-selector" style="width:100%" readonly>
-									<option value="25" disabled>Ventura Telephone</option>
+								<select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
+									<option value="25" selected>Ventura Telephone</option>
 								</select>
                             </div>
                         </div>
