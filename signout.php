@@ -15,6 +15,6 @@
 	}
 	session_destroy();
     
-	header('Location: /marketmanager/index.php?logged_out=true');
+	header('Location: /index.php?logged_out=true');
 	exit;
 ?>
