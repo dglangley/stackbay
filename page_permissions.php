@@ -7,7 +7,6 @@
 
     //Create new object for instance
     $venEdit = new venEdit;
-
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
@@ -135,6 +134,7 @@
                 ?>
 
                 <h2 class="text-center pb-20">Add Page Permissions</h2>
+				<?php if (get_browser_name()=='Safari') { echo '<div class="alert alert-warning text-center"><h5>Please use a different browser for advanced options on this page!</h5></div>'; } ?>
 
                 <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8'>
                     <div class="row">
