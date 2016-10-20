@@ -355,7 +355,7 @@
 				$stmt->bind_param("sis", $email, $contactid, $type);
 				//Package it all and execute the query
 				$email = $this->getEmail();
-				$type = $this->getType();
+				$type = 'Work';//$this->getType();
 				$stmt->execute();
 				//Get the emailid to be used in User table
 				$emailid = $stmt->insert_id;
@@ -378,6 +378,7 @@
 				$userid = $stmt->insert_id;
 				$stmt->close();
 
+				$salt = $this->getSalt();
 
 				//Prepare and Bind for Salt
 				$stmt = $WLI->prepare('
@@ -464,18 +465,19 @@
 
 	    		//Prepare and Bind for emails
 				$stmt = $WLI->prepare('
-					INSERT INTO emails (id, email, type) 
-						VALUES (?, ?, ?) 
+					INSERT INTO emails (id, email, type, contactid) 
+						VALUES (?, ?, ?, ?) 
 						ON DUPLICATE KEY UPDATE
 				        email = VALUES(email),
-				        type = VALUES(type)
+				        type = VALUES(type),
+				        contactid = VALUES(contactid)
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("iss", $emailid, $email, $type);
+				$stmt->bind_param("issi", $emailid, $email, $type, $contactid);
 				//Package it all and execute the query
 				$emailid = $this->getEmailID();
 				$email = $this->getEmail();
-				$type = $this->getType();
+				$type = 'Work';//$this->getType();
 				$stmt->execute();
 
 				//Prepare and Bind for Phone Numbers
@@ -499,14 +501,16 @@
 				if(!empty($encrypted_pass)) {
 					//Prepare and Bind for Users
 					$stmt = $WLI->prepare('
-						INSERT INTO users (id, encrypted_pass, init) 
-							VALUES (?, ?, ?) 
+						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init) 
+							VALUES (?, ?, ?, ?, ?) 
 							ON DUPLICATE KEY UPDATE
+					        contactid = VALUES(contactid),
+					        login_emailid = VALUES(login_emailid),
 					        encrypted_pass = VALUES(encrypted_pass),
 					        init = VALUES(init)
 					');
 					//s = string, i - integer, d = double, b = blob for params of mysqli
-					$stmt->bind_param("isi", $userid, $encrypted_pass, $init);
+					$stmt->bind_param("iiisi", $userid, $contactid, $emailid, $encrypted_pass, $init);
 					//Package it all and execute the query
 					$init = 0;
 					if($this->generated_pass == '1') {

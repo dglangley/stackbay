@@ -169,7 +169,7 @@
                         ?>
                             <tr>
                                 <td><a href="?user=<?php echo $user['userid']; ?>"><?php echo ucwords($user['username']); ?></a></td>
-                                <td><?php echo $venEdit->idtoEmail($user['emailid']); ?></td>
+                                <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                 <td>
                                     <?php foreach($privNames as $name) { echo $name . ' ';} ?>
                                 </td>

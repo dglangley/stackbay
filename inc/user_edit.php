@@ -38,21 +38,27 @@
 			return $usernames;
 	    }
 
-	    //Get specific email from emailid
-	    function idtoEmail($emailid) {
+	    //Get specific email from emailid, or vice versa
+	    function chkEmail($searchstr,$input_field='id',$output_field='email') {
 	    	$email = ''; 
+			$id = 0;
 
-	    	$query = "SELECT * FROM emails WHERE id='". res($emailid) ."'";
+			// some garbage request, should only be email or id
+			if ($output_field<>'email' AND $output_field<>'id') { return false; }
+
+	    	$query = "SELECT * FROM emails WHERE ".$input_field."='". res($searchstr) ."'";
 			$result = qdb($query);
 			//get the users email and return it
-			while ($row = $result->fetch_assoc()) {
-			  $email = $row['email'];
+			if (mysqli_num_rows($result)>0) {
+				$row = $result->fetch_assoc();
+			    $email = $row['email'];
+				$id = $row['id'];
 			}
 
 			//Save all IDS 
-			$this->setEmailID($emailid);
+			$this->setEmailID($id);
 	    	$this->setEmail($email);
-	    	return $email;
+	    	return $$output_field;
 	    }
 
 	    //Get the user information based on their ID
@@ -67,7 +73,7 @@
 			  $userInfo[] = $row;
 			}
 			//Get the users email and store it
-			$this->idtoEmail($userInfo[0]['login_emailid']);
+			$this->chkEmail($userInfo[0]['login_emailid']);
 			$this->setContactID($userInfo[0]['contactid']);
 	    }
 
