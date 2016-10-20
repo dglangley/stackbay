@@ -7,7 +7,11 @@
 	include_once $root_dir.'/inc/getPartId.php';
 	include_once $root_dir.'/inc/insertMarket.php';
 	include_once $root_dir.'/inc/getCompany.php';
+	include_once $root_dir.'/inc/getContact.php';
 	include_once $root_dir.'/inc/logSearchMeta.php';
+	include_once $root_dir.'/inc/send_gmail.php';
+
+	setGoogleAccessToken(5);
 
 	// use today's date as the initial search date for most recent inventory additions
 	$search_date = date("m-d-Y");
@@ -41,6 +45,8 @@
 	$metaid = logSearchMeta($companyid,false,'','ngt');
 
 //	echo $ngt_html;
+	$favs_report = '';
+	$num_favs = 0;
 	libxml_use_internal_errors(true); //prevent errors from displaying
 	$newDom = new domDocument;
 	$newDom->loadHTML($ngt_html);
@@ -62,12 +68,35 @@
 		$descr = trim($cols->item(1)->nodeValue.' '.$cols->item(4)->nodeValue);
 		$descr = str_replace("'","",str_replace('"','',$descr));
 
+		// get all related partids for favorites but use only the first result for capturing consolidated results
+		$partids = getPartId($part,$heci,0,true);
+		$partid = 0;
+		if (isset($partids[0])) { $partid = $partids[0]; }
 
-		$partid = getPartId($part,$heci);
+		// assess favorites position by gathering all related partids
+		$favs = getFavorites($partids);
+
+		if (count($favs)>0) {
+			$favs_report .= 'qty '.$qty.'- '.$part.' '.$heci.'<BR>';
+			$num_favs++;// += count($favs);
+		}
+
+//dgl 10-20-16
+//		$partid = getPartId($part,$heci);
 		// for now, we don't need to be adding parts into our db that's in NGT's system, just skip 'em
 		if (! $partid) { continue; }
 
 		insertMarket($partid,$qty,false,false,false,$metaid,'availability');
+	}
+	if ($favs_report) {
+		$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
+
+		$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc);
+		if ($send_success) {
+			echo json_encode(array('message'=>'Success'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		}
 	}
 	echo ('success!')
 ?>

@@ -29,7 +29,7 @@ $query .= "FROM  `favorites`, `parts` p ";
 $query .= "Where `partid` = p.`id` ";
 $query .= "Order By ID DESC; ";
 //$query .= "LIMIT 12;";
-//echo ("Initial Query: ".$query."<br>");
+//echo ("Initial Query:<BR>".chr(10).$query."<br>");
 
 //Grab the search results from the database
 $results = qdb($query);

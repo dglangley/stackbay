@@ -27,14 +27,14 @@
 	setcookie('report_type',$report_type);
 	
 	$order = '';
-	if ($_REQUEST['order']){
+	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$report_type = 'detail';
 		$order = $_REQUEST['order'];
 	}
 	
 	$part = '';
 	$part_string = '';
-	if ($_REQUEST['part']){
+	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
     	$part = $_REQUEST['part'];
 
     	$part_list = getPipeIds($part);
@@ -45,7 +45,7 @@
     }
 	
 	$startDate = '';
-	if ($_REQUEST['START_DATE']) {
+	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
 	// if no start date passed in, or invalid, set to beginning of quarter by default
@@ -58,7 +58,7 @@
 	}
 
 	$endDate = date('m/d/Y');
-	if ($_REQUEST['END_DATE']){
+	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 ?>

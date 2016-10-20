@@ -8,7 +8,7 @@
 		$search_field = (string)$search_field;
 		if (! isset($CONTACTS[$search_field])) { $CONTACTS[$search_field] = array(); }
 
-		if (isset($CONTACTS[$search_field][$input_field])) { return ($CONTACTS[$search_field][$input_field][$output_field]); }
+		if (isset($CONTACTS[$search_field]) AND isset($CONTACTS[$search_field][$input_field])) { return ($CONTACTS[$search_field][$input_field][$output_field]); }
 
 		$CONTACTS[$search_field][$input_field] = array($output_field=>false);
 
