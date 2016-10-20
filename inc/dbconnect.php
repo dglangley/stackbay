@@ -19,14 +19,6 @@
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
 
-	//This is Andrews DB connection stuff
-	// $WLI_GLOBALS = array(
-	// 	'RDS_HOSTNAME' => 'localhost',
-	// 	'RDS_USERNAME' =>'ven_admin',
-	// 	'RDS_PASSWORD' => 'Hob@rt777',
-	// 	'db' => 'vmmdb',
-	// 	'RDS_PORT' => '3306'
-	// );
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
 //	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
@@ -54,35 +46,34 @@ $DEV_ENV = true;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
-	$timestamp = mktime();
+	//mktime deprecated
+	//$timestamp = mktime();
+	$timestamp = time();
 
 	//Declaring all Globally used elements
 	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '');
-	$USER_ROLES;
-	$PAGE_ROLES;
-	$ROLES;
+	$USER_ROLES = array();
+	$PAGE_ROLES = array();
+	$ROLES = array();
+
+	//Start the Session or call existing ones
+	session_start();
 
 
 	//This gets the current page that the user is on including the extension
 	$pageName = basename($_SERVER['PHP_SELF']);
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
-		global $U;
-		global $ROLES;
-		global $PAGE_ROLES;
-		global $USER_ROLES;
-		global $pageName;
-
-		//Start the Session or call existing ones
-		session_start();
+		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
 
 		//get the current time
 		$now = time();
 
 		$userid = 0;
-		$user_token = $_SESSION["user_token"];
+		$user_token = '';
 		//Get the users id from the user token
 		if (! $force_userid AND isset($_SESSION["user_token"])) { 
+			$user_token = $_SESSION["user_token"];
 			$query = "SELECT userid FROM user_tokens WHERE user_token = '".res($user_token)."' LIMIT 0,1; ";
 			$result2 = qdb($query);
 				if (mysqli_num_rows($result2)>0) {
@@ -266,17 +257,23 @@ $DEV_ENV = true;
 		exit;
 	}
 */
+	//Check if logged in
 	$is_loggedin = is_loggedin();
-
-	if(!$is_loggedin) {
+	
+	//Check if signin is required
+	if(!is_loggedin()) {
 		require_once 'signin.php';
-		exit;
-	} else if(isset($_SESSION['init'])) {
+	}
+	
+	//Check if user needs to reset password
+	if(isset($_SESSION['init'])) {
 		//Check to see if the user is logging in for the first time
 		require_once 'reset.php';
 		exit;
+	} 
+
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
-	} else if(!array_intersect($USER_ROLES, $PAGE_ROLES) && !empty($PAGE_ROLES)) {
+	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
 		header('Location: permission.php');
 		exit;
 	}

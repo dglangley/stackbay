@@ -122,6 +122,7 @@
             <?php if(isset($_REQUEST['permission'])) { ?>
                 <?php 
                     //This function grabs all the file names that have .php extension to populate a dropdown select in a textfield to better help the user select a page permission
+                    $datalist = '';
                     if ($handle = opendir('.')) {
                         while (false !== ($entry = readdir($handle))) {
 //                            if ($entry != "." && $entry != ".." && strpos($entry, '.php') !== false) {
