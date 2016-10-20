@@ -9,11 +9,11 @@
     $error = false;
 
     //Check if the user used signout template to log out and give a success message
-    if($_GET['logged_out']) {
+    if(isset($_REQUEST['logged_out']) && $_REQUEST['logged_out']) {
         $loggedmsg = 'Successfully logged out';
     }
 
-    if($_GET['reset']) {
+    if(isset($_REQUEST['reset']) && $_REQUEST['reset']) {
         $loggedmsg = 'Password has been reset';
     }
 
@@ -46,8 +46,12 @@
         }
     }
 
+
 //Check if a session exists or not
-if(!isset($_SESSION['loggedin']) && !$_SESSION['loggedin'] && $venLog->generated_pass == '0') { 
+$loggedin = false;
+
+$loggedin = (!empty($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false);
+if(!$loggedin && $venLog->generated_pass == '0') { 
 ?>
 
     <!DOCTYPE html>
@@ -95,10 +99,10 @@ if(!isset($_SESSION['loggedin']) && !$_SESSION['loggedin'] && $venLog->generated
                 <div class="content-wrap">
                     <h6>Log In</h6>
 
-                    <?php echo $session_timeout; if(isset($loginErr) || isset($_REQUEST['timeout'])) { ?>
+                    <?php if(isset($loginErr) || isset($_REQUEST['timeout'])) { ?>
                         <div class="alert alert-danger">
                             <?php 
-                                if($_REQUEST['timeout']) { 
+                                if(isset($_REQUEST['timeout']) && $_REQUEST['timeout']) { 
                                     echo 'Your session has timed out. Please log back in.'; 
                                 } else { 
                                     echo $loginErr; 
@@ -116,13 +120,13 @@ if(!isset($_SESSION['loggedin']) && !$_SESSION['loggedin'] && $venLog->generated
                     <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8'>
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $_POST['username']; ?>">
+                                <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo (isset($_POST['username']) ? $_POST['username'] : ''); ?>">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo $_POST['password']; ?>">
+                                <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo (isset($_POST['password']) ? $_POST['password'] : ''); ?>">
                             </div>
                         </div>
 
@@ -150,12 +154,11 @@ if(!isset($_SESSION['loggedin']) && !$_SESSION['loggedin'] && $venLog->generated
     </html>
 <!-- Begin the form to reset the users password if needed for a genereated password -->
 <?php 
+    exit;
 } else if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']) {
     //Remove the object once the user is logged in
     unset($venLog);
 
-    //User shouldn't be using this page directly as this page is an addon to other pages
-    header("Refresh:0"); /* Redirect browser */
-    exit();
+    $is_loggedin = is_loggedin();
 }
 ?>

@@ -7,9 +7,10 @@
     $venRes = new venReset;
 
     $error = false;
+    $resetErr = '';
 
     //This means the form has been submitted now we will check the login info and decide if the user deserves access
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST['new-password']) {
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['new-password'])) {
         if($_POST['new-password'] === $_POST['confirm-password']) {
             $venRes->resetMember();
             $resetErr = $venRes->getError();
@@ -66,7 +67,7 @@
                 <div class="content-wrap">
                     <h6>Reset Password</h6>
 
-                    <?php if(isset($resetErr)) { ?>
+                    <?php if(!empty($resetErr)) { ?>
                         <div class="alert alert-danger">
                             <?php echo $resetErr; ?>
                         </div>
@@ -75,13 +76,13 @@
                     <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8'>
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="new-password" class="form-control" type="password" placeholder="New Password" value="<?php echo $_POST['new-password']; ?>">
+                                <input name="new-password" class="form-control" type="password" placeholder="New Password" value="">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="confirm-password" class="form-control" type="password" placeholder="Confirm Password" value="<?php echo $_POST['confirm-password']; ?>">
+                                <input name="confirm-password" class="form-control" type="password" placeholder="Confirm Password" value="">
                             </div>
                         </div>
 
@@ -98,12 +99,5 @@
         <script src="http://code.jquery.com/jquery-latest.js"></script>
         <script src="js/bootstrap.min.js"></script>
         <script src="js/theme.js"></script>
-
-        <!-- pre load bg imgs -->
-        <script type="text/javascript">
-            $(function () {
-
-            });
-        </script>
     </body>
     </html>

@@ -213,7 +213,7 @@
                         <div class="row">
                             <div class="col-md-5 pb-20">
                                 <span class="error"><?php echo $userErr;?></span>
-                                <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $_POST['username']; ?>">
+                                <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo ( isset($_POST['username']) ? $_POST['username'] : ''); ?>">
                             </div>
                             <div class="col-md-7 pb-20">
 							</div>
@@ -221,22 +221,22 @@
                         <div class="row">
                             <div class="col-md-6 pb-20">
                                 <span class="error"><?php echo $firstErr;?></span>
-                                <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo $_POST['firstName']; ?>">
+                                <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo ( isset($_POST['firstName']) ? $_POST['firstName'] : ''); ?>">
                             </div>
                             <div class="col-md-6 pb-20">
                                 <span class="error"><?php echo $lastErr;?></span>
-                                <input name="lastName" class="form-control" type="text" placeholder="Last Name" value="<?php echo $_POST['lastName']; ?>">
+                                <input name="lastName" class="form-control" type="text" placeholder="Last Name" value="<?php echo ( isset($_POST['lastName']) ? $_POST['lastName'] : ''); ?>">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 pb-20">
                                 <span class="error"><?php echo $emailErr;?></span>
-                                <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $_POST['email']; ?>">
+                                <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo ( isset($_POST['email']) ? $_POST['email'] : ''); ?>">
                             </div>
                             <div class="col-md-6 pb-20">
                                 <span class="error"><?php echo $phoneErr;?></span>
-                                <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo $_POST['phone']; ?>">
+                                <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo ( isset($_POST['phone']) ? $_POST['phone'] : ''); ?>">
                             </div>
                         </div>
 
@@ -244,7 +244,7 @@
                             <div class="col-md-6 pb-30">
                                 <span class="error"><?php echo $passwordErr;?></span>
                                 <div class="input-group">
-                                    <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="Password"  value="<?php echo $_POST['password']; ?>">
+                                    <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="Password"  value="<?php echo ( isset($_POST['password']) ? $_POST['password'] : ''); ?>">
                                     <span class="input-group-btn">
                                         <button type="button" class="btn btn-default getNewPass"><i class="fa fa-refresh"></i> Generate</button>
                                     </span>
@@ -266,7 +266,7 @@
                                     <select name="privilege[]"  size="6" class="form-control" multiple>
                                         <?php foreach($venReg->getPrivileges() as $type): ?>
                                             <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
-                                            <option value="<?php echo $type['id']; ?>" <?php echo (in_array($type['id'], $_POST['privilege']) ? 'selected' : '') ?>><?php echo $type['privilege']; ?></option>
+                                            <option value="<?php echo $type['id']; ?>" <?php if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['privilege'])) { echo (in_array($type['id'], $_POST['privilege']) ? 'selected' : ''); } ?>><?php echo $type['privilege']; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -381,7 +381,7 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
             //     source: availableTags,
             //     delay: 0
             // });
-            
+
             $('.phone_us').mask('(000) 000-0000');
         })(jQuery);
     </script>

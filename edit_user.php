@@ -187,10 +187,14 @@
                 //User is now being edited so create the instance and set all the preset variables from the database
                 //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
                 $venEdit->editMember();
-                $editedrErr;
+                $editedrErr = '';
+                $password = '';
 
                 //If the form has been submitted then run the edit user function and update the user if eveything is valid and good to go
                 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                    if(isset($_REQUEST['password'])) {
+                        $password = $_REQUEST['password'];
+                    }
                     $edited = $venEdit->editUser();
                     if($edited && !$venEdit->getError()) {
                         $editedrErr = '<strong>' . $venEdit->getUsername() . '</strong> sucessfully updated';
@@ -246,7 +250,7 @@
                                 <div class="col-md-6 pb-30">
                                     <div class="input-group">
                                         <!-- Create password field if the update is successful or allow the admin to see the password typed in if has errors -->
-                                        <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $_REQUEST['password']); ?>">
+                                        <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $password); ?>">
                                         <span class="input-group-btn">
                                             <button type="button" class="btn btn-default getNewPass"><i class="fa fa-refresh"></i> Generate</button>
                                         </span>

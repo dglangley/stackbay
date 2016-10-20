@@ -5,7 +5,10 @@
   		//Edit a User Function
 		function editMember() {
 			//Initiate the variables if the user exists and is being edited
-			$userid = strtolower($this->Sanitize(trim($_GET["user"])));
+			$userid = 0;
+			if(isset($_REQUEST["user"])) {
+				$userid = strtolower($this->Sanitize(trim($_REQUEST["user"])));
+			}
 
 			//Check if the userid is empty, if so lets check if the user token from the session exists to determine if the page is personal user information editing
 			if(empty($userid)) {
@@ -23,7 +26,7 @@
 		//These functions below I dont see it being used alot so keeping it within this file to offload the amount of data user_access has
 		//This function is to grab all usernames
 	    function getAllUsers() {
-	    	$username = '';
+	    	$username = array();
 	    	$query = "SELECT * from usernames";
 	    	$result = qdb($query);
 
@@ -37,6 +40,8 @@
 
 	    //Get specific email from emailid
 	    function idtoEmail($emailid) {
+	    	$email = ''; 
+
 	    	$query = "SELECT * FROM emails WHERE id='". res($emailid) ."'";
 			$result = qdb($query);
 			//get the users email and return it
@@ -52,6 +57,7 @@
 
 	    //Get the user information based on their ID
 	    function idtoUser() {
+	    	$userInfo = array();
 	    	//Don't allow query to pull the encrypted password 
 	    	$query = "SELECT contactid, login_emailid from users WHERE id = '" . res($this->getUserID()) . "'";
 	    	$result = qdb($query);
@@ -87,6 +93,7 @@
 	    }
 
 	    function getUsernameInfo() {
+	    	 $usernameInfo = array();
 	    	//Get the users contact information
 	    	$query = "SELECT username, id from usernames WHERE userid = '" . res($this->getUserID()) . "'";
 	    	$result = qdb($query);
@@ -101,6 +108,7 @@
 	    }
 
 	    function getUserPrivileges() {
+	    	$userPrivileges = array();
 	    	//Get all of the users privileges
 	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($this->getUserID()) . "'";
 	    	$result = qdb($query);
@@ -114,6 +122,7 @@
 	    }
 
 	    function getPrivilegeTitle($userID) {
+	    	$userPrivileges = array();
 	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($userID) . "'";
 	    	$result = qdb($query);
 
@@ -148,19 +157,8 @@
 			return false;
 	    }
 
-	    function getTokenID() {
-	    	$query = "SELECT userid from user_tokens WHERE user_token = '" . res($this->getToken()) . "'";
-	    	$result = qdb($query);
-
-	    	if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$userid = $r['userid'];
-			}
-
-	    	return $userid;
-	    }
-
 	    function getUserPhone() {
+	    	$phone = '';
 	    	//Get the users phone number
 	    	$query = "SELECT phone from phones WHERE contactid = '" . res($this->getContactID()) . "'";
 	    	$result = qdb($query);
@@ -184,14 +182,13 @@
 	    }
 
 	    function editUser($userEdited = false) {
-	    	$generated_pass; 
-	    	$new_username;
-	    	$new_email;
-	    	$new_password;
-	    	$new_status;
-	    	$new_privilege;
-	    	$new_phone;
-	    	$generated_pass;
+	    	$new_username = '';
+	    	$new_email = '';
+	    	$new_password = '';
+	    	$new_status = '';
+	    	$new_privilege = '';
+	    	$new_phone = '';
+	    	$generated_pass = 0;
 
 	    	$this->getUserInfo();
 	    	//Define the new settings and see which ones have changed
@@ -237,9 +234,9 @@
 	    	$this->setCompany($new_company);
 
 	    	//If the New Username inputted is not the same as the current and it does not exists then update the username
-	    	if($new_username != $this->getUsername() && !$this->checkUsername($new_username) && !empty($new_username)) {
+	    	if(!empty($new_username) && $new_username != $this->getUsername() && !$this->checkUsername($new_username)) {
 	    		$this->setUsername($new_username);
-	    	} else if($new_username != $this->getUsername() && !empty($new_username)) {
+	    	} else if(!empty($new_username) && $new_username != $this->getUsername()) {
 	    		//User Exists! Set Error Verbage
 	    		$this->setError("User <strong>" . $new_username . "</strong> already exists.");
 	    	}

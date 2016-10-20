@@ -284,6 +284,7 @@
 			$policyLength = (isset($policy['length']) ?  $policy['length'] : 6);
 
 	    	$error = false;
+	    	$errorListing = '';
 	    	//Check and make sure all basic strong password requirements are met
 			if( strlen($password) < $policyLength ) {
 				$error = true;
@@ -653,6 +654,19 @@
 	    	return $exists;
 	    }
 
+	    //Get the users id from user token
+	    function getTokenID() {
+	    	$query = "SELECT userid from user_tokens WHERE user_token = '" . res($this->getToken()) . "'";
+	    	$result = qdb($query);
+
+	    	if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$userid = $r['userid'];
+			}
+
+	    	return $userid;
+	    }
+
 	    //Function to get all Company Names from the database to be displayed by anywhere it is called
 		//Creating a function so we dont need to do any database calls outside the classes
 		function getCompanyNames() {
@@ -750,8 +764,11 @@
 			');
 
 			//s = string, i - integer, d = double, b = blob for params of mysqli
-			$stmt->bind_param("siii", $this->getToken(), $this->token_length, $this->getUserID(), $userTokenID);
+			$stmt->bind_param("siii", $token, $token_length, $userid, $userTokenID);
 			//Package it all and execute the query
+			$token = $this->getToken();
+			$token_length = $this->token_length;
+			$userid = $this->getUserID();
 			$stmt->execute();
 			$stmt->close();
 

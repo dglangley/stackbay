@@ -199,7 +199,7 @@
                             <div class="col-md-12 pb-20">
                                 <label for="passlength" style="font-weight: normal;">Minimum password length: </label>
                                 <div class="form-group">
-                                    <input name="policy['length']" class="form-control" type="text" placeholder="(Default 6)" value="<?php echo $policy['length']; ?>">
+                                    <input name="policy['length']" class="form-control" type="text" placeholder="(Default 6)" value="<?php echo (isset( $policy['length']) ? $policy['length'] : '' ); ?>">
                                 </div>
                             </div>
                         </div>
@@ -207,35 +207,35 @@
                         <div class="row">       
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_1" name="policy['uppercase']" <?php echo ($policy['uppercase'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_1" name="policy['uppercase']" <?php echo (isset($policy['uppercase']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_1"></label>
                                 </div>
                                 <span class="checkLabel">Require at least one upper case letter</span>
                             </div>
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_2" name="policy['lowercase']" <?php echo ($policy['lowercase'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_2" name="policy['lowercase']" <?php echo (isset($policy['lowercase']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_2"></label>
                                 </div>
                                 <span class="checkLabel">Require at least one lowercase letter</span>
                             </div>
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_3" name="policy['number']" <?php echo ($policy['number'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_3" name="policy['number']" <?php echo (isset($policy['number']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_3"></label>
                                 </div>
                                 <span class="checkLabel">Require at least one number</span>
                             </div>
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_4" name="policy['special']" <?php echo ($policy['special'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_4" name="policy['special']" <?php echo (isset($policy['special']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_4"></label>
                                 </div>
                                 <span class="checkLabel">Require at least one non-alphanumeric character</span>
                             </div>
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input class="expiration" type="checkbox" value="1" id="greyscale_5" name="policy['expiration']" <?php echo ($policy['expiration'] ? 'checked' : ''); ?>/>
+                                    <input class="expiration" type="checkbox" value="1" id="greyscale_5" name="policy['expiration']" <?php echo (isset($policy['expiration']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_5"></label>
                                 </div>
                                 <span class="checkLabel">Enable Password Expiration</span>
@@ -245,14 +245,14 @@
                                 <div class="col-md-12 pb-20" style="padding-left: 60px;">
                                     <label for="passlength" style="font-weight: normal;">Expiration Time: </label>
                                     <div class="form-group">
-                                        <input name="policy['expiration_time']" class="form-control expiration_time" type="text" placeholder="Days (e.g. '14')" value="<?php echo $policy['expiration_time']; ?>" disabled>
+                                        <input name="policy['expiration_time']" class="form-control expiration_time" type="text" placeholder="Days (e.g. '14')" value="<?php echo (isset( $policy['expiration_time']) ? $policy['expiration_time'] : '' ); ?>" disabled>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_6" name="policy['user_edit']" <?php echo ($policy['user_edit'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_6" name="policy['user_edit']" <?php echo (isset($policy['user_edit']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_6"></label>
                                 </div>
                                 <span class="checkLabel">Allow users to change their own password</span>
@@ -260,7 +260,7 @@
 
                              <div class="col-md-12 pb-20">
                                 <div class="greyscale">
-                                    <input type="checkbox" value="1" id="greyscale_7" name="policy['gen_expiry']" <?php echo ($policy['gen_expiry'] ? 'checked' : ''); ?>/>
+                                    <input type="checkbox" value="1" id="greyscale_7" name="policy['gen_expiry']" <?php echo (isset($policy['gen_expiry']) ? 'checked' : ''); ?>/>
                                     <label for="greyscale_7"></label>
                                 </div>
                                 <span class="checkLabel">Generate password expiration (24Hr)</span>

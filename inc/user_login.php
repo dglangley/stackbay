@@ -6,7 +6,9 @@
   		//User Function to login that extends the main class Ven Priveleges
 		function loginMember() {
 			//Sanitize right away for any sequel injections before even dealing with user input values
-
+			$username = '';
+			$email = '';
+			
 			//If no an email then user is using username otherwise login with an email check
 			if (!filter_var($_POST["username"], FILTER_VALIDATE_EMAIL)) {
 				$username = strtolower($this->Sanitize(trim($_POST["username"])));

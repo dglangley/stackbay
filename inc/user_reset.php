@@ -9,12 +9,15 @@
 			//Never bad to be too safe
 			$newPassword = $this->Sanitize(trim($_POST["new-password"]));
 
-			//Set Global Class Variables and since we have a sesssion set the username and get the id using checkUsername function
+			//Get user id from token and set variables
+			$usertoken = $this->Sanitize($_SESSION["user_token"]);
+			$this->setToken($usertoken);
+			$userid = $this->getTokenID();
+			$this->setUserID($userid);
 			$this->setTempPass($newPassword);
-			$this->setUsername($_SESSION['username']);
+
 
 			if($this->validPassword($newPassword)) {
-				$this->checkUsername($this->getUsername());
 				$this->bCrypt($this->getTempPass());
 
 				$this->savetoDatabase('reset');
@@ -23,7 +26,19 @@
 				//Incomplete
 				$this->SendUserConfirmationEmail();
 
-				session_start();
+				// Unset all of the session variables.
+				$_SESSION = array();
+
+				// If it's desired to kill the session, also delete the session cookie.
+				// Note: This will destroy the session, and not just the session data!
+				if (ini_get("session.use_cookies")) {
+				    $params = session_get_cookie_params();
+				    setcookie(session_name(), '', time() - 42000,
+				        $params["path"], $params["domain"],
+				        $params["secure"], $params["httponly"]
+				    );
+				}
+
     			session_destroy(); // Destroy the session
 
 				header('Location: /marketmanager/index.php?reset=true');
