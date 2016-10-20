@@ -41,7 +41,7 @@
 
     			session_destroy(); // Destroy the session
 
-				header('Location: /marketmanager/index.php?reset=true');
+				header('Location: /?reset=true');
 				exit;
 			}
 		}

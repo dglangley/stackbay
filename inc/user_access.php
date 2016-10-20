@@ -381,7 +381,7 @@
 
 				//Prepare and Bind for Salt
 				$stmt = $WLI->prepare('
-					INSERT INTO user_salts (salt, userid) 
+					REPLACE user_salts (salt, userid) 
 						VALUES (?, ?) 
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
@@ -515,6 +515,18 @@
 					$stmt->execute();
 					$stmt->close();
 				}
+
+                //Prepare and Bind for Salt
+                $stmt = $WLI->prepare('
+                    INSERT INTO user_salts (salt, userid)
+                        VALUES (?, ?)
+                ');
+                //s = string, i - integer, d = double, b = blob for params of mysqli
+                $stmt->bind_param("si", $salt, $userid);
+                //Package it all and execute the query
+                $salt = $this->getSalt();
+                $stmt->execute();
+                $stmt->close();
 
 				if(!empty($this->getUsername())) {
 					//Prepare and Bind for Usernames

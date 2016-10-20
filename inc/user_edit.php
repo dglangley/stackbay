@@ -131,6 +131,7 @@
 			  $userPrivileges[] = $row['privilegeid'];
 			}
 
+			$userPrivilegesName = array();
 			foreach($userPrivileges as $privID) {
 				$query = "SELECT privilege from user_privileges WHERE id = '" . res($privID) . "'";
 		    	$result = qdb($query);

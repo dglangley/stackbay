@@ -91,7 +91,7 @@ $DEV_ENV = true;
 		    session_destroy();
 		    session_start();
 
-		    header('Location: index.php?timeout=true');
+		    header('Location: /?timeout=true');
 			exit;
 		} else {
 			//If session is not expired then increase the session time by a week for this computer
