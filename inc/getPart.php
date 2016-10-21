@@ -1,6 +1,4 @@
 <?php
-// $root_dir = getenv('Home');
-
 	include_once $_SERVER["ROOT_DIR"].'/inc/getManf.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSys.php';
 

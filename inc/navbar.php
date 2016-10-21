@@ -1,7 +1,7 @@
 <?php
 	include_once 'dbconnect.php';
 	include_once 'format_date.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/modal/alert.php';
+	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
 	include_once 'notifications.php';
 
 	$s = '';

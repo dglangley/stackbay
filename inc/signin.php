@@ -1,18 +1,10 @@
 <?php
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunamarket'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]).'/db'; }
-		else { $root_dir = '/var/www/html/db'; }
-	}
-
-	include_once $root_dir.'/inc/mconnect.php';
-	include_once $root_dir.'/inc/setTokens.php';
-	include_once $root_dir.'/inc/signout.php';
-	include_once $root_dir.'/inc/mailer.php';
-	include_once $root_dir.'/inc/salt.php';
-	include_once $root_dir.'/inc/getCompany.php';
-	include_once $root_dir.'/inc/setCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setTokens.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/signout.php';
+//	include_once $_SERVER["ROOT_DIR"].'/inc/mailer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/salt.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
     $user_token = md5(uniqid(rand(), TRUE)); // CSRF protection
 
@@ -75,7 +67,7 @@
 				$rem = $remember_me;
 //			}
 
-			setcookie('user_remember',$rem,$to_sec);
+//			setcookie('user_remember',$rem,$to_sec);
 
 			$mfield = 'signin_email'; // where to place tokens error below
 		} else if ((isset($_REQUEST['current_password']) OR isset($_REQUEST['reset_token']))
@@ -231,11 +223,11 @@
 				'If you ever have problems or questions, we\'re always here. <a href="mailto:info@lunacera.com">info@lunacera.com</a>';
 			$html_body = formatEmail($subject,$main_body,$teaser);
 			if (! $GLOBALS['test']) {
-				$sendTo = array($register_email,$fn.' '.$ln);
-				$mailer_err = mailer($sendTo,$subject,$html_body,'','','',$GLOBALS['support_email']);
+//				$sendTo = array($register_email,$fn.' '.$ln);
+//				$mailer_err = mailer($sendTo,$subject,$html_body,'','','',$GLOBALS['support_email']);
 			}
 			// set the tutorial to open for the user since they just registered; this will be deleted after completion
-			setcookie('tutorial','1',$to_sec,'/');
+//			setcookie('tutorial','1',$to_sec,'/');
 
 			$mfield = 'register_firstname'; // where to place tokens error below
 		} else {

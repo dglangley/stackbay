@@ -4,21 +4,21 @@
 	ini_set('mbstring.func_overload', '2');
 	ini_set('mbstring.internal_encoding', 'UTF-8');
 
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPartId.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getFavorites.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getContact.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
-//	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/mailer.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/PHPExcel.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/send_gmail.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/array_find.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/find_fields.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/set_columns.php';
-//	require($_SERVER["DOCUMENT_ROOT"].'/vendor/autoload.php');
+    include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
+    include_once $_SERVER["ROOT_DIR"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
+//	include_once $_SERVER["ROOT_DIR"].'/inc/mailer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/PHPExcel.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/array_find.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/find_fields.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/set_columns.php';
+//	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
 	$test = 0;
 	if (! isset($userid)) { $userid = 1; }

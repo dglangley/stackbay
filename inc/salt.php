@@ -1,12 +1,5 @@
 <?php
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunamarket'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]).'/db'; }
-		else { $root_dir = '/var/www/html/db'; }
-	}
-
-	include_once $root_dir.'/inc/mconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	$saltLog = "10";
 	function salt($userid=0,$returnSaltWithLog=true) {

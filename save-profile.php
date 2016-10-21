@@ -1,6 +1,6 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 $type = '';//for now

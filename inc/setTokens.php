@@ -1,5 +1,5 @@
 <?php
-//	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setDevice.php';
+//	include_once $_SERVER["ROOT_DIR"].'/inc/setDevice.php';
 
 	if (! isset($EDITOR_ROLE)) { $EDITOR_ROLE = ''; }
 	function setTokens($userid=0,$user_token='',$token_expiry=0,$token_type=false,$deviceid=false) {

@@ -216,52 +216,11 @@ $DEV_ENV = true;
 		}
 	}
 
-/*
-	$E = array(
-		0 => array('type'=>'unknown','message'=>'SUCCESS'),
-		1 => array('type'=>'email','message'=>'Email is invalid or does not exist'),
-		2 => array('type'=>'email','message'=>'Email addresses do not match'),
-		3 => array('type'=>'password','message'=>'Password is invalid or does not match'),
-		4 => array('type'=>'email','message'=>'User is already registered'),
-		5 => array('type'=>'password','message'=>'Passwords do not match'),
-		6 => array('type'=>'password','message'=>'Password is too short (min 6 chars)'),
-		7 => array('type'=>'host','message'=>'Entry is missing or invalid'),
-		8 => array('type'=>'phone','message'=>'Phone number is invalid'),
-		9 => array('type'=>'unknown','message'=>'An unknown error occurred, please contact the administrator'),
-		10 => array('type'=>'date','message'=>'Date/time occurs in the past'),
-		11 => array('type'=>'','message'=>'Company name is missing or invalid'),
-		12 => array('type'=>'','message'=>'Postal Code is required to process your application'),
-		13 => array('type'=>'','message'=>'Host Name is required to process your application'),
-		14 => array('type'=>'','message'=>'File has already been uploaded!'),
-		15 => array('type'=>'unknown','message'=>'Missing data!'),
-		16 => array('type'=>'unknown','message'=>'Your calendar service is not properly setup, please check your profile settings'),
-		17 => array('type'=>'unknown','message'=>'This is not a registered walo host'),
-		18 => array('type'=>'','message'=>'Upload failed; please try again later'),
-		19 => array('type'=>'user','message'=>'You must be signed in'),
-		20 => array('type'=>'user','message'=>'First or last name is missing or invalid'),
-		21 => array('type'=>'unknown','message'=>'The data passed in is invalid or corrupt, please try again'),
-		22 => array('type'=>'','message'=>'You must be in closer proximity to submit a wait time'),
-		23 => array('type'=>'','message'=>'Did you mean to say that the wait is MORE than 0:00?'),
-		24 => array('type'=>'','message'=>'Wait awhile to suggest another wait time for the same place, or delete your past suggestion under Rewards.'),
-		25 => array('type'=>'','message'=>'You do not have access to this resource!'),
-		26 => array('type'=>'','message'=>'We cannot accept this Party Size, please try again'),
-		27 => array('type'=>'','message'=>'You have exceeded the allowed usage for this service!'),
-	);
-
-	if ($LOCKED AND ! is_loggedin()) {
-		if (isset($_REQUEST['json'])) {
-			echo json_encode(array('code'=>19,'message'=>$E[19]['message']));
-		} else {
-			header('Location: /');
-		}
-		exit;
-	}
-*/
 	//Check if logged in
 	$is_loggedin = is_loggedin();
 	
 	//Check if signin is required
-	if(!is_loggedin()) {
+	if(!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) {
 		require_once 'signin.php';
 	}
 	
@@ -297,5 +256,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161005';
+	$V = '20161006';
 ?>
