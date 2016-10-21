@@ -23,6 +23,10 @@
 	box-shadow: 2px 1px 2px #888888;
 }
 
+.table-filter {
+	padding-right:12px;
+}
+
 /*
 .table-header tr td:first-child {
 	padding-left:40px;
@@ -764,7 +768,7 @@ h1 a, h2 a, h3 a {
 	position:relative;
 }
 #date-ranges {
-   width:360px;
+   width:480px;
    height:30px;
    padding:0px;
    left:32px;
