@@ -575,6 +575,9 @@
 			});
 	    });
 */
+
+
+
 		$('.datetime-picker').each(function() {
 			$(this).datetimepicker({
 				/* use font awesome icons instead of glyphicons. because i said so. */
@@ -591,7 +594,6 @@
 				},
 			});
 		});
-		
 		$('.datetime-picker-filter').each(function() {
 			$(this).datetimepicker({
 				/* use font awesome icons instead of glyphicons. because i said so. */
@@ -610,6 +612,23 @@
 				maxDate: Date(),
 			});
 		});
+		$('.datetime-picker-line').each(function() {
+			$(this).datetimepicker({
+				/* use font awesome icons instead of glyphicons. because i said so. */
+				format: 'MM/DD/YYYY',
+				icons: {
+					time: 'fa fa-clock-o',
+					date: 'fa fa-calendar',
+					up: 'fa fa-chevron-up',
+					down: 'fa fa-chevron-down',
+					previous: 'fa fa-chevron-left',
+					next: 'fa fa-chevron-right',
+					today: 'fa fa-screenshot',
+					clear: 'fa fa-trash',
+					close: 'fa fa-close'
+				},
+			});
+		});
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});
@@ -618,7 +637,7 @@
 			form.prop('action','/upload.php');
 			form.submit();
 		});
-	
+
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
 			if (! cid) {
@@ -630,6 +649,8 @@
 	
 			event.preventDefault();
 		});
+
+
 		$('#alert-continue').click(function() {
 			if ($(this).data('form')!='') { $(this).data('form').submit(); }
 			else if ($(this).data('callback')!='') { window[$(this).data('callback')]($(this).data('element')); }
@@ -637,7 +658,7 @@
 		$(".qty input[type='text']").click(function() {
 			$(this).select();
 		});
-
+		
 		$("input#upload-file").change(function() {
 			var upload_file = $(this).val().replace("C:\\fakepath\\","");
 			//$("#upload-listid").html("<option value='"+upload_file+"' selected>"+upload_file+"</option>");
@@ -651,11 +672,10 @@
 				/* Let select2 do whatever it likes with this */
 				$("#upload-listid").trigger('change');
 		});
-
+		
 		$(".pagination li a").click(function() {
 			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
 		});
-
 		$(".product-img img").click(function() {
 			$("#modal-prod-img").attr('src',$(this).attr('src'));
 			$("#prod-image-title").text($(this).data('part'));
@@ -788,6 +808,9 @@
 		$(this).parents("#ghost").find("#save_changes").trigger("click");
 	});
 	
+
+
+//Aaron: Function for
 	$(document).on("change",".ghost_value",function(){
 		$(this).val();
 		var last = $(".ghost_value:last").val();

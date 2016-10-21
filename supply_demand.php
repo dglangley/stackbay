@@ -102,12 +102,16 @@
 </head>
 
 <body class="sub-nav accounts-body">
-	
+
+<!-- Outputs the Navbar -->	
 	<?php include 'inc/navbar.php'; ?>
 
-	<!-- Wraps the entire page into a form for the sake of php trickery -->
+	<!-- Wraps the entire page into a form to allow the php to get the filters -->
 	<form class="form-inline" method="get" action="/supply_demand.php">
 
+<!----------------------------------------------------------------------------->
+<!--------------------------- Output the filter bar --------------------------->
+<!----------------------------------------------------------------------------->
     <table class="table table-header">
 		<tr id = "filterTableOutput">
 			<td class = "col-md-2">
@@ -188,12 +192,13 @@
 			</td>
 		</tr>
 	</table>
-	<!-- If the summary button is pressed, inform the page and depress the button -->
+
+
+<!----------------------------------------------------------------------------->
+<!----------------------------- Begin Body Output ----------------------------->
+<!----------------------------------------------------------------------------->
+
 	
-	
-<!---------------------------------------------------------------------------->
-<!------------------------------ FILTERS OUTPUT ------------------------------>
-<!---------------------------------------------------------------------------->
     <div id="pad-wrapper">
 		<div class="row filter-block">
 
@@ -214,8 +219,6 @@
                     </div>
                 </div>
 
-			<!-- If the summary button is pressed, inform the page and depress the button -->
-
 
 <?php
 	// format col widths based on content (company column, items detail, etc)
@@ -233,9 +236,10 @@
 	
 	$c = 0;
 ?>
-<!--================================================================================-->
-<!--=============================   PRINT TABLE ROWS   =============================-->
-<!--================================================================================-->
+
+<!----------------------------------------------------------------------------->
+<!------------------------------- PRINT TABLE ROWS ---------------------------->
+<!----------------------------------------------------------------------------->
 <?php
 	//Establish a blank array for receiving the results from the table
 	$results = array();
