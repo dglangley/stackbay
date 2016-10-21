@@ -15,8 +15,8 @@ include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
 // $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
 
 
-//$query = "TRUNCATE TABLE staged_qtys; ";
-//$result = qdb($query) OR die(qe().' '.$query);
+$query = "TRUNCATE TABLE staged_qtys; ";
+$result = qdb($query) OR die(qe().' '.$query);
 
 
 //Get list of parts, with meta id, qty, and company from database
@@ -49,7 +49,7 @@ $ghosted = qdb($ghosts);
 foreach($ghosted as $row){
     $weights[$row['companyid']] = $row['ghost_value']/100;
 }
-print_r($weights);
+//print_r($weights);
 
 //Parse the result set by row, sort out the data by company
 foreach($results as $row){

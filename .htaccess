@@ -1,5 +1,12 @@
+Options +FollowSymLinks
 RewriteEngine On
 RewriteBase /
+
+<IfModule mod_rewrite.c>
+
+# block libwww-perl clients (used by bad bots)
+RewriteCond %{HTTP_USER_AGENT} libwww-perl.*
+RewriteRule .* – [F,L]
 
 # block libwww-perl clients (used by bad bots)
 RewriteCond %{HTTP_USER_AGENT} libwww-perl.*
@@ -8,3 +15,5 @@ RewriteRule .* – [F,L]
 # product image handler
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)img/parts/(.*)$ prodimg.php [L]
+
+</IfModule>

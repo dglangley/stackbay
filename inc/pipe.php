@@ -1,5 +1,4 @@
 <?php
-// $root_dir = getenv("Home");
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 

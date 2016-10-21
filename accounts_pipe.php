@@ -1,11 +1,10 @@
 <?php
-	$root_dir = getenv('Home');
-	include_once $rootdir.'inc/dbconnect.php';
-	include_once $rootdir.'inc/format_date.php';
-	include_once $rootdir.'inc/format_price.php';
-	include_once $rootdir.'inc/getCompany.php';
-	include_once $rootdir.'inc/getPart.php';
-	include_once $rootdir.'inc/pipe.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	
 	//Company Id is grabbed from the search field at the top, but only if one has been passed in
 	$companyid = 0;
@@ -27,7 +26,7 @@
 	<title>VMM Accounts Home</title>
 	<?php
 		//Standard headers included in the function
-		include_once $rootdir.'inc/scripts.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 	?>
 </head>
 

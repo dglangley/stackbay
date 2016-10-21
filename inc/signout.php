@@ -1,5 +1,5 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/mconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	function signout($user_token=false) {
 		$userid = $_COOKIE["userid"];

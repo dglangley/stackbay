@@ -18,7 +18,7 @@
 	$query = "SELECT image FROM picture_maps, parts_index, keywords ";
 	$query .= "WHERE keyword = '".$basePart."' AND keywords.id = parts_index.keywordid AND picture_maps.partid = parts_index.partid ";
 	$query .= "GROUP BY image ORDER BY picture_maps.id ASC; ";
-	$result = qdb($query);
+	$result = qdb($query) OR die(qe().' '.$query);
 	$i = 0;//iteration counter
 	while ($r = mysqli_fetch_assoc($result)) {
 		// skip the first two pics, assuming they're label pictures

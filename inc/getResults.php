@@ -1,22 +1,16 @@
 <?php
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunacera.com/db'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]).'/db'; }
-		else { $root_dir = '/var/www/html/db'; }
-	}
-	include_once $root_dir.'/inc/mconnect.php';
-	include_once $root_dir.'/inc/format_date.php';
-	include_once $root_dir.'/inc/download_te.php';
-	include_once $root_dir.'/inc/download_bb.php';
-	include_once $root_dir.'/inc/download_ps.php';
-	include_once $root_dir.'/inc/download_ebay.php';
-	include_once $root_dir.'/inc/download_et.php';
-	include_once $root_dir.'/inc/format_price.php';
-	include_once $root_dir.'/inc/insertMarket.php';
-	include_once $root_dir.'/inc/restricted.php';
-	include_once $root_dir.'/inc/matchHeci.php';
-	include_once $root_dir.'/inc/getHotlist.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_te.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_bb.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_ps.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_ebay.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/download_et.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/restricted.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/matchHeci.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getHotlist.php';
 
 	// default settings
 	$REMOTES = array(

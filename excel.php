@@ -1,18 +1,12 @@
 <?php
-	if (! isset($root_dir)) {
-		$root_dir = '';
-		if (isset($_SERVER["HOME"]) AND $_SERVER["HOME"]=='/Users/davidglangley') { $root_dir = '/Users/Shared/WebServer/Sites/lunacera.com/db'; }
-		else if (isset($_SERVER["DOCUMENT_ROOT"]) AND $_SERVER["DOCUMENT_ROOT"]) { $root_dir = preg_replace('/\/$/','',$_SERVER["DOCUMENT_ROOT"]).'/db'; }
-		else { $root_dir = '/var/www/html/db'; }
-	}
 	$LOCKED = true;
-	include_once $root_dir.'/inc/mconnect.php';
-	include_once $root_dir.'/inc/keywords.php';
-	include_once $root_dir.'/inc/getPartId.php';
-	include_once $root_dir.'/inc/setPart.php';
-	include_once $root_dir.'/inc/insertMarket.php';
-	include_once $root_dir.'/inc/getCompany.php';
-	require($root_dir.'/vendor/autoload.php');
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
 	$et_cols = array(
 		0 => 'HECI',

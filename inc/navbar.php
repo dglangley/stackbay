@@ -1,7 +1,8 @@
 <?php
 	include_once 'dbconnect.php';
 	include_once 'format_date.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/modal/alert.php';
+	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
+	include_once 'notifications.php';
 
 	$s = '';
 	$s2 = '';
@@ -34,7 +35,7 @@
     if (! isset($startDate)) { $startDate = format_date($today,'m-d-Y',array('d'=>-7)); }
     else { $startDate = format_date($startDate,'m-d-Y'); }
     if (isset($_REQUEST['startDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['startDate'])) { $startDate = $_REQUEST['startDate']; }
-    $endDate = format_date($today,'m-d-Y');
+	if (! isset($endDate)) { $endDate = format_date($today,'m-d-Y'); }
     if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
 
 	$favorites = 0;
@@ -49,6 +50,18 @@
 		}
 	}
 ?>
+	<!-- Please add this css into the overrides css when it is complete -->
+	<style type="text/css">
+		.list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus {
+			background: rgb(60, 91, 121);
+			border-color: rgb(60, 91, 121);
+		}
+		.dropdown-menu > li > a.active, .dropdown-menu > li > a.active:hover, .dropdown-menu > li > a.active:focus, .dropdown-submenu:hover > a.active, .dropdown-submenu:focus > a.active {
+			background: rgb(60, 91, 121);
+			color: #FFF;
+		}
+	</style>
+	
 	<div id="loading-bar">Loading...</div>
 
 	<div id="loader" class="loader text-muted">
@@ -117,9 +130,16 @@
 				<a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a>
 			</li>
             <li class="notification-dropdown hidden-xs hidden-sm">
+<?php
+	$num_notifications = count($NOTIFICATIONS);
+	$notif_suffix = '';
+	if ($num_notifications<>1) { $notif_suffix = 's'; }
+	if ($num_notifications==0) { $read_notifications = 'no'; }
+	else { $read_notifications = $num_notifications; }
+?>
                 <a href="#" class="trigger">
-                    <i class="fa fa-warning"></i>
-                    <span class="count">3</span>
+                    <i class="fa fa-comments-o"></i>
+                    <?php if ($num_notifications>0) { echo '<span class="count" style="background:#b94a48">'.$num_notifications.'</span>'; } ?>
                 </a>
                 <div class="pop-dialog">
                     <div class="pointer right">
@@ -128,21 +148,8 @@
                     </div>
                     <div class="body">
                         <a href="#" class="close-icon"><i class="fa fa-close"></i></a>
-                        <div class="notifications">
-                            <h3>You have 3 new notifications</h3>
-                            <a href="#" class="item">
-                                <i class="fa fa-sign-in"></i> New user registration
-                                <span class="time"><i class="fa fa-clock-o"></i> 13 min.</span>
-                            </a>
-                            <a href="#" class="item">
-                                <i class="fa fa-sign-in"></i> New user registration
-                                <span class="time"><i class="fa fa-clock-o"></i> 18 min.</span>
-                            </a>
-                            <a href="#" class="item">
-                                <i class="fa fa-envelope-o"></i> New message from Alejandra
-                                <span class="time"><i class="fa fa-clock-o"></i> 28 min.</span>
-                            </a>
-                        </div>
+                        <h5>You have <?php echo $read_notifications; ?> new notification<?php echo $notif_suffix; ?></h5>
+                        <div class="notifications"></div>
                     </div>
                 </div>
             </li>
@@ -152,19 +159,16 @@
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-<?php
-	$query = "SELECT name, users.id FROM users, contacts WHERE users.contactid = contacts.id AND users.id <> '".$U['id']."'; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		echo '<li><a href="/switch_user.php?userid='.$r['id'].'">'.$r['name'].'</a></li>';
-	}
-?>
-<!--
-                    <li><a href="#"><i class="fa fa-user"></i> Personal info</a></li>
-                    <li><a href="#"><i class="fa fa-calendar-o"></i> Calendar</a></li>
-                    <li><a href="#">Submit issue</a></li>
-                    <li><a href="#">Logout</a></li>
--->
+                	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
+	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
+	                <?php if($USER_ROLES[array_search(array_search('Administration', $ROLES), $USER_ROLES)] == array_search('Administration', $ROLES)) { ?>
+		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
+		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
+		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
+	                <?php } ?>
+
+	                <li><a href="signout.php">Logout</a></li>
+
                 </ul>
             </li>
           </ul><!-- end navbar-collapse -->
@@ -201,6 +205,7 @@
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center">
+<!--
 	                <p>Date Range:</p>
 					<p>
 		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
@@ -209,6 +214,7 @@
 		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
 		                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
 					</p>
+-->
 				</div>
 				<div class="text-center lists-manager">
 					<p>Lists Manager:</p>
@@ -250,7 +256,7 @@
 								</div>
 							</div>
 							<div class="col-sm-7">
-				                <div class="input-group date datetime-picker">
+				                <div class="input-group datepicker-datetime date datetime-picker">
 	   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
 	           		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>

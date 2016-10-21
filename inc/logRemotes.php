@@ -57,7 +57,10 @@
 			if ($expired_time===false AND $r['datetime']<$GLOBALS['past_time']) { $expired_time = true; }
 
 			// after we've found a search that was scanned AND we're past the expired time, break from loop
-			if ($expired_time===true AND $datedSearches>1) { break; }
+			if ($expired_time===true AND $datedSearches>=1) { break; }
+//I think this was a bug that it was >1 instead of >=1, it seemed like the condition was never getting met
+//even weeks beyond the expired 'past_time' date, and we were doing needless processing and looping; dgl 10-20-16
+//			if ($expired_time===true AND $datedSearches>1) { break; }
 
 			$foundRemote = false;//if we find at least one remote scanned, this is tripped so we increment $datedSearches
 			// for each remote as keyed by $pos, find its most recent scan time
@@ -65,7 +68,8 @@
 				if (! isset($SEARCHES[$search][$i]) OR ! $SEARCHES[$search][$i]) { $SEARCHES[$search][$i] = ''; }
 				if (! isset($def[$pos[$i]])) { $def[$pos[$i]] = false; }
 
-				if (substr($r['scan'],$i,1)==1) {//scanned recently already
+				if (substr($r['scan'],$i,1)==1) {//currently-iterating remote (in FOR loop) has been scanned recently already
+					// this is the most recent datetime that this search was found to be logged by at least one of the remotes
 					if (! $SEARCHES[$search][$i]) { $SEARCHES[$search][$i] = $r['datetime']; }
 					if ($expired_time===false) {
 						$foundRemote = true;

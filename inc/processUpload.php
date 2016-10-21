@@ -4,21 +4,21 @@
 	ini_set('mbstring.func_overload', '2');
 	ini_set('mbstring.internal_encoding', 'UTF-8');
 
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPartId.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getFavorites.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getContact.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_date.php';
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
-    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
-//	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/mailer.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/PHPExcel.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/send_gmail.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/array_find.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/find_fields.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/set_columns.php';
-//	require($_SERVER["DOCUMENT_ROOT"].'/vendor/autoload.php');
+    include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
+    include_once $_SERVER["ROOT_DIR"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
+//	include_once $_SERVER["ROOT_DIR"].'/inc/mailer.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/PHPExcel.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/array_find.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/find_fields.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/set_columns.php';
+//	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
 	$test = 0;
 	if (! isset($userid)) { $userid = 1; }
@@ -151,15 +151,16 @@
 			if (isset($keys[0])) { $part = $keys[0]; }
 			if (isset($keys[1])) { $heci = $keys[1]; }
 
-			// get all related partids for favorites but use only the first result for capturing consolidated results
-			$partids = getPartId($part,$heci,0,true);
-			$partid = $partids[0];
-//			if (! $partid) { continue; }
-
 			// concatenate the part string and heci string as our combined search string that produced this result
 			$searchkey = '';
 			if ($heci) { $searchkey = $heci; } else { $searchkey = $part; }
-			$searchkey = preg_replace('/[^[:alnum:]]*/','',$searchkey);
+			$searchkey = preg_replace('/[^[:alnum:]]+/','',$searchkey);
+
+			// get all related partids for favorites but use only the first result for capturing consolidated results
+			$partids = getPartId($part,$heci,0,true);
+			$partid = 0;//$searchkey;
+			if (isset($partids[0])) { $partid = $partids[0]; }
+//			if (! $partid) { continue; }
 
 			// create search string log but without hitting the remotes
 			$query2 = "SELECT id FROM searches WHERE search = '".$searchkey."' AND userid = '".$userid."' ";
@@ -175,8 +176,8 @@
 				$searchid = qid();
 			}
 
-			if (! isset($consolidated[$partid])) { $consolidated[$partid] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids); }
-			$consolidated[$partid]['qty'] += $qty;
+			if (! isset($consolidated[$searchkey])) { $consolidated[$searchkey] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids,'partid'=>$partid); }
+			$consolidated[$searchkey]['qty'] += $qty;
 		}
 
 		return ($consolidated);
@@ -267,13 +268,15 @@ $tempfile = '/var/tmp/400004291.xls';
 		$report = '';
 		$num_favs = 0;
 		$favs_report = '';
-		foreach ($consolidated as $partid => $row) {
+		foreach ($consolidated as $searchkey => $row) {
+			$partid = $row['partid'];
 //			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
 			$qty = $row['qty'];
 			$searchid = $row['searchid'];
 
-			if (! $qty OR ! $partid) {
+			// on invalid qty or invalid partid (missing or non-numeric), notate it as an unidentified item
+			if (! $qty OR ! $partid OR ! is_numeric($partid)) {
 				$status = '';
 				if (! $qty) { $status = 'Missing Qty'; }
 				if (! $partid) {
@@ -291,7 +294,7 @@ $tempfile = '/var/tmp/400004291.xls';
 				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].'<BR>';// ("'.$status.'")<BR>';
 				$num_favs++;// += count($favs);
 			}
-			if (! $partid OR ! $qty) { continue; }
+			if (! $partid OR ! is_numeric($partid) OR ! $qty) { continue; }
 
 			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,$searchid,$ln);
 			$ln++;

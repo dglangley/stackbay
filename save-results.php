@@ -1,10 +1,10 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/format_price.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPart.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getCompany.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/logSearchMeta.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/insertMarket.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
 //	print "<pre>".print_r($_REQUEST,true)."</pre>";
 	$submit_type = 'demand';

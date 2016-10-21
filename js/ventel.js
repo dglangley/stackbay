@@ -129,20 +129,16 @@
 		/* toggle notes on input focus and blur */
         $("input.price-control").each(function() {
 			$(this).click(function() {
-				toggleNotes($(this));
+				/*toggleNotes($(this));*/
 
+/*
 				$(this).focusout(function() {
 					setTimeout("closeNotes()",100);
 				});
+*/
 
 				$(this).select();
 			});
-		});
-		// close notes when switching to a diff input text field
-        $('input[type="text"]').focus(function() {
-        	if (! $(this).hasClass('price-control')) {
-				closeModal($("#modalNotes"));
-			}
 		});
 		$(".item-notes").click(function() {
 			toggleNotes($(this));
@@ -151,13 +147,58 @@
 		  return elem === document.activeElement && (elem.type || elem.href);
 		};
 		$(".notes-close").on('click',function() {
-			closeModal($(this).closest(".modalNotes"));
+//dgl 10-10-16
+//			closeModal($(this).closest(".modalNotes"));
+			// invoke this programmatically so we can include a callback method
+//			closeModal($("#modalNotes"));
+			$("#modalNotes").modal('hide');
 		});
-/*
-		$(".modal-close").on('click',function() {
-			closeModal($(this).closest(".modal"));
+		$('#modalNotes').on('hide.bs.modal', function (e) {
+			if (NOTES_SESSION_ID!==false) {
+				clearInterval(NOTES_SESSION_ID);
+				NOTES_SESSION_ID = false;
+			}
 		});
-*/
+		$('.notification-dropdown .trigger').on('click',function(e) {
+			var notif = $(this).closest(".notification-dropdown").find(".notifications:first");
+			$(this).find(".count").css({display:'none',visibility:'hidden'});
+
+	        console.log(window.location.origin+"/json/notes.php");
+	        $.ajax({
+				url: 'json/notes.php',
+				type: 'get',
+				dataType: 'json',
+				success: function(json, status) {
+					if (json.results) {
+						var notif_html = '';
+
+	                	$.each(json.results, function(i, row) {
+							var read_class = '';
+							if (row.read=='') { read_class = ' unread'; }
+							else if (row.viewed=='') { read_class = ' unviewed'; }
+
+							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\')" class="item'+read_class+'">'+
+								'<div class="user fa-stack fa-lg">'+
+									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
+								'</div> '+
+								'<span class="time pull-right"><i class="fa fa-clock-o"></i> '+row.since+'</span>'+
+								'<div class="note"><strong>'+row.part_label+'</strong><br/>'+row.note+'</div> '+
+								'</a>';
+						})
+
+						notif.html(notif_html);
+					} else {
+						var message = 'There was an error processing your request!';
+						if (json.message) { message = json.message; } // show response from the php script.
+						alert(message);
+					}
+				},
+				error: function(xhr, desc, err) {
+					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
+		});
 
         $(".checkAll").on('click',function(){
             jQuery(this).closest('tbody').find('.item-check:checkbox').not(this).prop('checked', this.checked);
@@ -172,6 +213,7 @@
 		    $('input:checkbox').not(this).prop('checked', this.checked);
 		});
 */
+		/***** AMEA *****/
 		$(".highlight-word").on('click',function() {
 			$("#"+$(this).data("for")).click();
 
@@ -202,6 +244,9 @@
 				$(this).removeClass('btn-'+$(this).data('color')).addClass('btn-default');
 			});
 		});
+		/***** END AMEA *****/
+
+
 		$(".btn-end").click(function() {
 			var aligned = '';
 			var btn = $(this);
@@ -401,6 +446,8 @@
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 		
 		$(document).on(".company-selector")
+	/**** Invoke all select2() modules *****/
+	if (!!$.prototype.select2) {
 	    $(".company-selector").select2({
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
@@ -435,11 +482,6 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 	    });
-		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
-			if ($.isNumeric($(this).val())) {
-				$(this).closest("form").submit();
-			}
-		});
 	    $(".lists-selector").select2({
 			placeholder: 'Upload or Select...',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -469,6 +511,14 @@
 		});
 	    $(".terms-select2").select2({
 		});
+	}
+
+		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
+			if ($.isNumeric($(this).val())) {
+				$(this).closest("form").submit();
+			}
+		});
+
 	    $(".terms-select2.terms-type").change(function() {
 			var selections = [];
 			var type;
@@ -542,6 +592,9 @@
 		$("#s").change(function() {
 				$("#s2").val("");
 		});
+		$("#btn-range-options").hover(function() {
+			$("#date-ranges").toggleClass('hidden');
+		});
 
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {
@@ -575,10 +628,12 @@
 			});
 	    });
 */
-
-
-
 		$('.datetime-picker').each(function() {
+			// these settings are optional; if not set in the 'data-' tags, then set to false
+			var format = false;
+			if ($(this).data('format')) { format = $(this).data('format'); }
+			var maxDate = false;
+			if ($(this).data('maxdate')) { maxDate = $(this).data('maxdate'); }
 			$(this).datetimepicker({
 				/* use font awesome icons instead of glyphicons. because i said so. */
 				icons: {
@@ -592,11 +647,14 @@
 					clear: 'fa fa-trash',
 					close: 'fa fa-close'
 				},
+				format: format,
+				maxDate: maxDate,
 			});
 		});
+		
+/*
 		$('.datetime-picker-filter').each(function() {
 			$(this).datetimepicker({
-				/* use font awesome icons instead of glyphicons. because i said so. */
 				format: 'MM/DD/YYYY',
 				icons: {
 					time: 'fa fa-clock-o',
@@ -612,23 +670,7 @@
 				maxDate: Date(),
 			});
 		});
-		$('.datetime-picker-line').each(function() {
-			$(this).datetimepicker({
-				/* use font awesome icons instead of glyphicons. because i said so. */
-				format: 'MM/DD/YYYY',
-				icons: {
-					time: 'fa fa-clock-o',
-					date: 'fa fa-calendar',
-					up: 'fa fa-chevron-up',
-					down: 'fa fa-chevron-down',
-					previous: 'fa fa-chevron-left',
-					next: 'fa fa-chevron-right',
-					today: 'fa fa-screenshot',
-					clear: 'fa fa-trash',
-					close: 'fa fa-close'
-				},
-			});
-		});
+*/
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});
@@ -637,7 +679,7 @@
 			form.prop('action','/upload.php');
 			form.submit();
 		});
-
+	
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
 			if (! cid) {
@@ -649,8 +691,6 @@
 	
 			event.preventDefault();
 		});
-
-
 		$('#alert-continue').click(function() {
 			if ($(this).data('form')!='') { $(this).data('form').submit(); }
 			else if ($(this).data('callback')!='') { window[$(this).data('callback')]($(this).data('element')); }
@@ -658,7 +698,7 @@
 		$(".qty input[type='text']").click(function() {
 			$(this).select();
 		});
-		
+
 		$("input#upload-file").change(function() {
 			var upload_file = $(this).val().replace("C:\\fakepath\\","");
 			//$("#upload-listid").html("<option value='"+upload_file+"' selected>"+upload_file+"</option>");
@@ -672,10 +712,11 @@
 				/* Let select2 do whatever it likes with this */
 				$("#upload-listid").trigger('change');
 		});
-		
+
 		$(".pagination li a").click(function() {
 			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
 		});
+
 		$(".product-img img").click(function() {
 			$("#modal-prod-img").attr('src',$(this).attr('src'));
 			$("#prod-image-title").text($(this).data('part'));
@@ -689,6 +730,9 @@
 			$('.remote-name').html('<img src="/img/'+remote+'.png"> '+$(this).data('name')+' login');
 			$('#remote-activate').data('remote',remote);
 			$('#remote-modal').modal('show');
+		});
+		$('.btn-notes').click(function() {
+			setNotes();
 		});
 
 		$('#remote-activate').click(function() {
@@ -721,86 +765,19 @@
 			});
 		});
 		
-	/*Aaron: Function Suite for filter buttons*/
-	$('td[id*=Ranges]').children().click(function() {
-		$(this).siblings('button[class*=active]').toggleClass("active");
-	});
-/*
-	$('#shortDateRanges').hover(function(){
-		//$(this).parent('td').removeClass("col-md-1");
-    	$(this).removeClass("col-md-1 btn-group");
-		$(this).addClass("col-md-2 btn-group");
-		$(this).next().removeClass("col-md-2 text-center");
-		$(this).next().addClass("col-md-1 text-center");
-		$(this).children('button[class*=center]').show();
-	},function() {
-		$(this).children('button[class*=center]').hide();
-		$(this).removeClass("col-md-2 btn-group");
-		$(this).addClass("col-md-1 btn-group");
-		$(this).next().removeClass("col-md-1 text-center");
-		$(this).next().addClass("col-md-2 text-center");
-	});
-	
-	$('#dateRanges').hover(function(){
-		$(this).parent().children('button[class*=center]').toggle();
-		$(this).parent().removeClass("col-md-2 btn-group");
-		$(this).parent().addClass("col-md-1 btn-group");
-	});
-*/
-	$('#YTD').click(function() {
-		var year = new Date().getFullYear();
-		var month = new Date().getMonth();
-		month++;
-		var day = new Date().getDate(2);
-		day = ("0" + day).slice(-2);
-		month = ("0" + month).slice(-2);
-		var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
-		//alert('Day '.concat(today));
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val('01/01/'.concat(year));
-		$("input[name='END_DATE']").val(today);
-	});
-	$('#MTD').click(function() {
-		var year = new Date().getFullYear();
-		var month = new Date().getMonth();
-		month++;
-		var day = new Date().getDate();
-		day = ("0" + day).slice(-2);
-		month = ("0" + month).slice(-2);
-		var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
-		var begin = ''.concat(month).concat('/01/').concat(year);
-		//alert('Day '.concat(today));
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val(begin);
-		$("input[name='END_DATE']").val(today);
-	});
-	$('#Q1').click(function() {
-		var year = new Date().getFullYear();
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val('01/01/'.concat(year));
-   	    $("input[name='END_DATE']").val('03/31/'.concat(year));
-	});
-	$('#Q2').click(function() {
-		var year = new Date().getFullYear();
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val('04/01/'.concat(year));
-   	    $("input[name='END_DATE']").val('06/30/'.concat(year));
-	});
-	$('#Q3').click(function() {
-		var year = new Date().getFullYear();
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val('07/01/'.concat(year));
-   	    $("input[name='END_DATE']").val('09/30/'.concat(year));
-	});
-	$('#Q4').click(function() {
-		var year = new Date().getFullYear();
-	    $(this).button('toggle');
-	    $("input[name='START_DATE']").val('10/01/'.concat(year));
-   	    $("input[name='END_DATE']").val('12/31/'.concat(year));
-	});
-		
-		
+		/*Aaron: Function Suite for filter buttons*/
+		$('td[id*=Ranges]').children().click(function() {
+			$(this).siblings('button[class*=active]').toggleClass("active");
+		});
+		$(".btn-report").click(function() {
+			var start_date = $(this).data('start');
+			var end_date = $(this).data('end');
+			$("input[name='START_DATE']").val(start_date);
+			$("input[name='END_DATE']").val(end_date);
+		});
+
     });/* close $(document).ready */
+
 	/*Aaron: Function for inventory ghosting*/
 	$(".ghost_delete").click(function() {
 		$(this).parents("tr").hide();
@@ -808,9 +785,6 @@
 		$(this).parents("#ghost").find("#save_changes").trigger("click");
 	});
 	
-
-
-//Aaron: Function for
 	$(document).on("change",".ghost_value",function(){
 		$(this).val();
 		var last = $(".ghost_value:last").val();
@@ -1083,34 +1057,115 @@
         groupStr += '</div>';
         return (groupStr);
     }
-	function closeNotes() {
-		if ($("#modalNotes").has(document.activeElement).length == 0) {
-			$("#modalNotes").fadeOut(100);
+	function refreshNotes() {
+		// if there are any notes in the textarea, cancel any interval updates
+		if ($("#modalNotes").find("textarea[name='user_notes']").val()!='') {
+			clearInterval(NOTES_SESSION_ID);
+			NOTES_SESSION_ID = false;
+			return;
 		}
+		setNotes();
 	}
-	function toggleNotes(e) {
-return;
-		var notes = $("#modalNotes");
-//           notes.modal('toggle');
+	function setNotes() {
+		// get refid passed into save button, and use it to find object for placement of the notes modal,
+		// then get user notes body and pass to toggleNotes() to add new entry and to refresh notes modal
+		//var itemRow = $("#"+$(this).data('refid'));
+		var itemRow = $("#"+$("#modalNotes").find("#save-notes-btn").data('refid'));
+		var itemObj = itemRow.find(".item-notes:first");
 
-		var parentBody = e.closest("tbody");
-		var marketBody = parentBody.find(".market-table:first");
-		var pos = marketBody.position();
-		var width = marketBody.outerWidth();
-		var height = marketBody.outerHeight();
+		//var user_textarea = $(this).closest(".notes-body").find("textarea[name='user_notes']");
+		var user_textarea = $("#modalNotes").find("textarea[name='user_notes']");
+		var notes = user_textarea.val();
 
-		notes.css({
-			display: "block",
-			visibility: "visible",
-			top:pos.top+"px",
-			left:pos.left+"px",
+		toggleNotes(itemObj,notes);
+	}
+	var NOTES_SESSION_ID = false;
+	function toggleNotes(e,add_notes) {
+		if (! add_notes) { var add_notes = ''; }
+		e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
+		var outerBody = e.closest(".descr-row");
+		var pos = e.position();
+		var width = outerBody.outerWidth();
+		var productBody = outerBody.find(".product-descr:first");
+		var partid = productBody.data('partid');
+		var pipe_ids = productBody.data('pipeids');
+		/* save part/pipe ids to the button for when the user saves the notes */
+		$("#save-notes-btn").data("refid",e.closest(".product-results").prop("id"));
+
+        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids+"&add_notes="+escape(add_notes));
+        $.ajax({
+            url: 'json/notes.php',
+            type: 'get',
+            data: {'partid': partid, 'pipe_ids': pipe_ids, 'add_notes': escape(add_notes)},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.results) {
+					// clear textarea for next entry upon successful results
+					$("#modalNotes").find("textarea[name='user_notes']").val("");
+
+					updateNotes(json.results);
+					if (NOTES_SESSION_ID===false) { NOTES_SESSION_ID = setInterval(refreshNotes,5000); }
+				} else {
+					var message = 'There was an error processing your request!';
+					if (json.message) { message = json.message; } // show response from the php script.
+					alert(message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
+
+		var eTop = productBody.offset().top - $(window).scrollTop();
+		$("#modalNotes .modal-content").css({
+			top:(eTop+40)+"px",
+			left:(outerBody.position().left)+"px",
 			width: width,
-			height: height,
-		}).show();
+		});
+		$("#modalNotes").modal('show');
 	}
 	function closeModal(e) {
-		e.css({
-			display: "none",
-			visibility: "hidden",
+		e.modal('hide');
+		if (NOTES_SESSION_ID!==false) {
+			clearInterval(NOTES_SESSION_ID);
+			NOTES_SESSION_ID = false;
+		}
+	}
+	function updateNotes(results) {
+		var table_html = '';
+		var user;
+		$.each(results, function(dateKey, row) {
+			user = '';
+			if (row.user!='') user = '- <strong>'+row.user+'</strong>, ';
+			/* process each item's data */
+			table_html += '<tr><td>'+row.note+' <div class="source">'+user+row.date+'</div></td></tr>';
 		});
+
+		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
+		modalBody.html(table_html);
+	}
+	function viewNotification(partid,search) {
+		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
+        console.log(window.location.origin+"/json/notes.php?partid="+partid);
+
+        $.ajax({
+            url: 'json/notes.php',
+            type: 'get',
+            data: {'partid': partid},
+			dataType: 'json',
+            success: function(json, status) {
+				if (json.results) {
+					document.location.href = '/?s='+search;
+				} else {
+					var message = 'There was an error processing your request!';
+					if (json.message) { message = json.message; } // show response from the php script.
+					alert(message);
+				}
+            },
+            error: function(xhr, desc, err) {
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        }); // end ajax call
 	}

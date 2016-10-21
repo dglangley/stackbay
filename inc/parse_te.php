@@ -23,8 +23,15 @@
 
 		$sorter = 'company';
 
+		// eliminate html formatting warnings per http://stackoverflow.com/a/10482622/1356496, set error level
+		$internalErrors = libxml_use_internal_errors(true);
+
 		$newDom = new domDocument;
 		$newDom->loadHTML($res);
+
+		// Restore error level, see $internalErrors explanation above
+		libxml_use_internal_errors($internalErrors);
+
 		$newDom->preserveWhiteSpace = false;
 		$tables = $newDom->getElementsByTagName('form')->item(1)->getElementsByTagName('table');
 		$n = $tables->length;

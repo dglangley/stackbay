@@ -1,8 +1,8 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getContact.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getCompany.php';
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
 	$from_email = '';
 	$from_name = '';

@@ -2,7 +2,9 @@
 	include_once 'pipe.php';
 	include_once 'getPipeIds.php';
 	include_once 'getPartId.php';
+	include_once 'getRep.php';
 	include_once 'format_price.php';
+	include_once 'format_date.php';
 	
 	$record_start = '';
 	$record_end = '';
@@ -13,8 +15,11 @@
 		$min = format_price($min_price,'','',true);
 		$max = format_price($max_price,'','',true);
 		
-		if (strlen($record_start)) { $record_start .= ' 00:00:00'; }
-		if (strlen($record_end)) { $record_end .= ' 23:59:59'; }
+		// append times to start/end dates, if missing (based on strlen)
+		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
+		if (strlen($record_end)==10) { $record_end .= ' 23:59:59'; }
+		$record_start = format_date($record_start,'Y-m-d H:i:s');
+		$record_end = format_date($record_end,'Y-m-d H:i:s');
 
 		// convert a string to an array of string element
 		if (! is_array($search_arr)) {
@@ -51,7 +56,7 @@
 		switch ($market_table) {
 			case 'demand':
 				
-				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid FROM demand, search_meta, companies ";
+				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid, userid FROM demand, search_meta, companies ";
 				$query .= "WHERE  demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -64,7 +69,7 @@
 				break;
 
 			case 'purchases':
-				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number, qty, price, partid FROM purchase_items, purchase_orders, companies ";
+				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number, qty, price, partid, sales_rep_id userid FROM purchase_items, purchase_orders, companies ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -74,7 +79,7 @@
 				break;
 
 			case 'sales':
-				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number, qty, price, partid FROM sales_items, sales_orders, companies ";
+				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number, qty, price, partid, sales_rep_id userid FROM sales_items, sales_orders, companies ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -84,7 +89,7 @@
 				break;
 
 			case 'supply':
-				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid FROM availability, search_meta, companies ";
+				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid, userid FROM availability, search_meta, companies ";
 				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -102,12 +107,8 @@
 
 		// get local data
 		if ($query AND ($partid_str OR count($search_arr)==0)) {
-			$result = qdb($query);
+			$result = qdb($query) OR die(qe().' '.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				if (! isset($r['repid'])) {
-					if (substr($r['name'],0,7)=='Verizon') { $r['repid'] = 1; }
-					else { $r['repid'] = 2; }
-				}
 				$unsorted[$r['datetime']][] = $r;
 			}
 		}
@@ -128,6 +129,16 @@
 		$k = 0;
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
+				// if we're getting repid from the old db, cross-reference it using getRep() just to get the new db userid
+				if (isset($r['repid']) AND (! isset($r['userid']) OR ! $r['userid'])) {
+					$r['userid'] = getRep($r['repid'],'repid','id');
+				}
+				if (! $r['userid']) {
+					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
+					else { $r['userid'] = 2; }
+				}
+				unset($r['repid']);
+
 				$key = $r['name'].'.'.$date;
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 

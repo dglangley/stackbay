@@ -11,9 +11,15 @@
 		$inserts = array();//gather all records to be inserted into db
 		$resArray = array();
 
+		// eliminate html formatting warnings per http://stackoverflow.com/a/10482622/1356496, set error level
+		$internalErrors = libxml_use_internal_errors(true);
+
 		$newDom = new domDocument;
 		$newDom->loadHTML($res);
 		$newDom->preserveWhiteSpace = false;
+
+		// Restore error level, see $internalErrors explanation above
+		libxml_use_internal_errors($internalErrors);
 
 		$formContents = $newDom->getElementById('SubmitRfq');
 		$rows = (object)array();

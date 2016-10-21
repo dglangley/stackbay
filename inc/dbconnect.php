@@ -18,6 +18,7 @@
 		'db' => $_SERVER['DEFAULT_DB'],
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
+
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
 //	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
@@ -45,65 +46,97 @@ $DEV_ENV = true;
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
-	$timestamp = mktime();
+	//mktime deprecated
+	//$timestamp = mktime();
+	$timestamp = time();
 
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0);
-//	$U = array('name'=>'David Langley','email'=>'david@ven-tel.com','phone'=>'(805) 824-0136','id'=>1);
+	//Declaring all Globally used elements
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '');
+	$USER_ROLES = array();
+	$PAGE_ROLES = array();
+	$ROLES = array();
+
+	//Start the Session or call existing ones
+	session_start();
+
+
+	//This gets the current page that the user is on including the extension
+	$pageName = basename($_SERVER['PHP_SELF']);
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
-		global $U;
+		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
+
+		//get the current time
+		$now = time();
 
 		$userid = 0;
 		$user_token = '';
-		if (! $force_userid AND isset($_COOKIE["userid"])) { $userid = $_COOKIE["userid"]; }
+		//Get the users id from the user token
+		if (! $force_userid AND isset($_SESSION["user_token"])) { 
+			$user_token = $_SESSION["user_token"];
+			$query = "SELECT userid FROM user_tokens WHERE user_token = '".res($user_token)."' LIMIT 0,1; ";
+			$result2 = qdb($query);
+				if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$userid = $r2["userid"]; 
+			}
+		} else { 
+			//If the user session doesn't exists then they haven't logged in so return instant false
+			return false; 
+		}
+
+		if (isset($_SESSION['expiry']) && $now > $_SESSION['expiry']) {
+		    // this session has worn out its welcome; kill it and start a brand new one
+		    session_unset();
+		    session_destroy();
+		    session_start();
+
+		    header('Location: /?timeout=true');
+			exit;
+		} else {
+			//If session is not expired then increase the session time by a week for this computer
+			//$_SESSION['expiry'] = $now + (7 * 24 * 60 * 60);
+		}
 
 		$to_sec = time()-(60*60);
-/*
-		if (! $force_usertoken AND isset($_COOKIE["user_token"])) { $user_token = $_COOKIE["user_token"]; }
-
-		// already logged in, already verified
-		if ($U['id']>0 AND $U['id']==$userid) { return true; }
-
-		if ($force_userid) { $userid = $force_userid; }
-		if ($force_usertoken) { $user_token = $force_usertoken; }
-
-		// if cookies are not set, set them to a guaranteed time an hour ago
-		if (! $userid OR ! $user_token) {
-			setcookie('userid','',$to_sec);
-			setcookie('user_token','',$to_sec);
-			return false;
-		}
-*/
 
 		$query = "SELECT users.id, users.contactid, contacts.name, user_tokens.user_token, user_tokens.userid ";
 		if ($force_userid AND $force_usertoken) { $query .= "FROM contacts, users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
 		else { $query .= "FROM contacts, users, user_tokens WHERE users.id = user_tokens.userid AND contacts.id = users.contactid AND "; }
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
-$query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
+		$query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qdb($query);
-		// if user is not registered in db, reset cookies
-		if (mysqli_num_rows($result)==0) {
-			setcookie('userid','',$to_sec);
-			setcookie('user_token','',$to_sec);
-			return false;
-		} else {
-/*
-			// after validating admin user, re-query with the super_id
-			if ($SUPER_ADMIN AND isset($_REQUEST['super_id']) AND $_REQUEST['super_id']>0) {
-				if (isset($_REQUEST['super_id'])) { $super_id = $_REQUEST['super_id']; }
 
-				$r = mysqli_fetch_assoc($result);
-				$query = "SELECT *, '".res($user_token)."' user_token ";
-				$query .= "FROM users WHERE id = '".res($super_id)."' ";
-				$result = qdb($query);
+		// if user is not registered in db, reset cookies/session
+		// Make sure that the session exists in the first place
+		if (mysqli_num_rows($result)==0) {
+
+			// Unset all of the session variables.
+			$_SESSION = array();
+
+			// If it's desired to kill the session, also delete the session cookie.
+			// Note: This will destroy the session, and not just the session data!
+			if (ini_get("session.use_cookies")) {
+			    $params = session_get_cookie_params();
+			    setcookie(session_name(), '', time() - 42000,
+			        $params["path"], $params["domain"],
+			        $params["secure"], $params["httponly"]
+			    );
 			}
-*/
+			session_destroy();
+
+			return false;
+
+		//If the user exists there should only be 1 record for the user not multiple
+		} else {
 
 			$U = mysqli_fetch_assoc($result);
 
 			$U['email'] = '';
 			$U['phone'] = '';
+			$U['username'] = '';
+			$U['email'] = $userid;
 			$query2 = "SELECT email FROM emails WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Work',0,1) LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
@@ -116,11 +149,49 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['phone'] = $r2['phone'];
 			}
-//			$U['name'] = $U['first_name'].' '.$U['last_name'];
-//			$U['email'] = $U['login_email'];
+			$query2 = "SELECT username FROM usernames WHERE userid = '".res($userid)."' LIMIT 0,1; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$U['username'] = $r2['username'];
+			}
+
+			//Create a global array of all the current logged in users privileges
+			$query2 = "SELECT * FROM user_roles WHERE userid = '" . res($userid) . "'";
+			$result2 = qdb($query2);
+
+			if (mysqli_num_rows($result2)>0) {
+				while ($row = $result2->fetch_assoc()) {
+				  $USER_ROLES[] = $row['privilegeid'];
+				}
+			}
+
+			//Create a global array of all privileges and the id linked to the privilege
+			$query2 = "SELECT * FROM user_privileges";
+			$result2 = qdb($query2);
+
+			if (mysqli_num_rows($result2)>0) {
+				while ($row = $result2->fetch_assoc()) {
+				  $ROLES[$row['id']] = $row['privilege'];
+				}
+			}
+
+			//Create a global array of the privileges for the current page the user is on
+			$query2 = "SELECT * FROM page_roles WHERE page = '" . res($pageName) . "'";
+			$result2 = qdb($query2);
+
+			if (mysqli_num_rows($result2)>0) {
+				while ($row = $result2->fetch_assoc()) {
+				  $PAGE_ROLES[] = $row['privilegeid'];
+				}
+			}
+
 
 			return true;
 		}
+
+		//If all else fails then we will assume the login failed
+		return false;
 	}
 
 	$GMAIL_USERID = 0;
@@ -145,48 +216,26 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 		}
 	}
 
-/*
-	$E = array(
-		0 => array('type'=>'unknown','message'=>'SUCCESS'),
-		1 => array('type'=>'email','message'=>'Email is invalid or does not exist'),
-		2 => array('type'=>'email','message'=>'Email addresses do not match'),
-		3 => array('type'=>'password','message'=>'Password is invalid or does not match'),
-		4 => array('type'=>'email','message'=>'User is already registered'),
-		5 => array('type'=>'password','message'=>'Passwords do not match'),
-		6 => array('type'=>'password','message'=>'Password is too short (min 6 chars)'),
-		7 => array('type'=>'host','message'=>'Entry is missing or invalid'),
-		8 => array('type'=>'phone','message'=>'Phone number is invalid'),
-		9 => array('type'=>'unknown','message'=>'An unknown error occurred, please contact the administrator'),
-		10 => array('type'=>'date','message'=>'Date/time occurs in the past'),
-		11 => array('type'=>'','message'=>'Company name is missing or invalid'),
-		12 => array('type'=>'','message'=>'Postal Code is required to process your application'),
-		13 => array('type'=>'','message'=>'Host Name is required to process your application'),
-		14 => array('type'=>'','message'=>'File has already been uploaded!'),
-		15 => array('type'=>'unknown','message'=>'Missing data!'),
-		16 => array('type'=>'unknown','message'=>'Your calendar service is not properly setup, please check your profile settings'),
-		17 => array('type'=>'unknown','message'=>'This is not a registered walo host'),
-		18 => array('type'=>'','message'=>'Upload failed; please try again later'),
-		19 => array('type'=>'user','message'=>'You must be signed in'),
-		20 => array('type'=>'user','message'=>'First or last name is missing or invalid'),
-		21 => array('type'=>'unknown','message'=>'The data passed in is invalid or corrupt, please try again'),
-		22 => array('type'=>'','message'=>'You must be in closer proximity to submit a wait time'),
-		23 => array('type'=>'','message'=>'Did you mean to say that the wait is MORE than 0:00?'),
-		24 => array('type'=>'','message'=>'Wait awhile to suggest another wait time for the same place, or delete your past suggestion under Rewards.'),
-		25 => array('type'=>'','message'=>'You do not have access to this resource!'),
-		26 => array('type'=>'','message'=>'We cannot accept this Party Size, please try again'),
-		27 => array('type'=>'','message'=>'You have exceeded the allowed usage for this service!'),
-	);
+	//Check if logged in
+	$is_loggedin = is_loggedin();
+	
+	//Check if signin is required
+	if(!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) {
+		require_once 'signin.php';
+	}
+	
+	//Check if user needs to reset password
+	if(isset($_SESSION['init'])) {
+		//Check to see if the user is logging in for the first time
+		require_once 'reset.php';
+		exit;
+	} 
 
-	if ($LOCKED AND ! is_loggedin()) {
-		if (isset($_REQUEST['json'])) {
-			echo json_encode(array('code'=>19,'message'=>$E[19]['message']));
-		} else {
-			header('Location: /');
-		}
+	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
+	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
+		header('Location: permission.php');
 		exit;
 	}
-*/
-	$is_loggedin = is_loggedin();
 
 	$ACCESS_TOKEN = false;
 	$REFRESH_TOKEN = false;
@@ -194,6 +243,18 @@ $query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts W
 		setGoogleAccessToken($U['id']);
 	}
 
+	function get_browser_name() {
+		$user_agent = $_SERVER['HTTP_USER_AGENT'];
+		if (strpos($user_agent, 'Opera') || strpos($user_agent, 'OPR/')) return 'Opera';
+		elseif (strpos($user_agent, 'Edge')) return 'Edge';
+		elseif (strpos($user_agent, 'Chrome')) return 'Chrome';
+		elseif (strpos($user_agent, 'Safari')) return 'Safari';
+		elseif (strpos($user_agent, 'Firefox')) return 'Firefox';
+		elseif (strpos($user_agent, 'MSIE') || strpos($user_agent, 'Trident/7')) return 'Internet Explorer';
+    
+		return 'Other';
+	}
+
 	// version control for css and js includes
-	$V = '20160908';
+	$V = '20161006';
 ?>

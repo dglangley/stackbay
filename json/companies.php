@@ -85,7 +85,8 @@
 	} else {
 		$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
 		$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
-		$query .= "AND (source IS NULL OR LENGTH(source)<=5) ";//this is to filter out ebay results that are amea-pulled
+		$query .= "AND (source IS NULL OR (LENGTH(source)<>2 AND source NOT RLIKE '^[0-9]+$')) ";//this is to filter out ebay results and broker-sites that are amea-pulled
+		if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
 		$query .= "GROUP BY companyid ORDER BY n DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {

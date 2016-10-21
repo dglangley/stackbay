@@ -47,50 +47,56 @@
 	border-color:#357ebd;
 }
 
-.modalNotes {
+.item-notes {
+	cursor:pointer;
+}
+
+
+/***** MODAL NOTES DIALOG BOX *****/
+.modal-notes {
+/*
 	display:none;
 	visibility:hidden;
-	position:absolute;
 	z-index:1000;
+	height:300px;
 	overflow:visible;
+	position:absolute;
+*/
 }
-.modalNotes .modal-content {
-	background-color:#f6f7de;
-}
-.modalNotes .modal-footer {
+.modal-notes .modal-footer {
 	text-align:left !important;
 }
-.modalNotes .modal-header, .modal-footer {
+.modal-notes .modal-header, .modal-footer {
 	padding:8px;
 }
-.modalNotes .modal-body, .modalNotes .modal-body .table {
+.modal-notes .modal-body, .modal-notes .modal-body .table {
 	margin:0px;
 	padding:0px;
 }
-.modalNotes .modal-header {
-	position:relative;
-	display:inline-block;
-}
-.modalNotes .modal-header .notes-text {
-	width:100%;
-}
-
-
-#marketModal .modal-body {
-	height:400px;
+.modal-notes .modal-body {
+	height:200px;
 	overflow:scroll;
 }
-
-#marketModal .message-body {
+.modal-notes .modal-header {
+	width:100%;
+}
+.modal-notes .notes-body .notes-text {
 	width:100%;
 }
 
-/* BUTTONS POSITIONED WITHIN TEXTAREA */
-.modalNotes .modal-header .btn-notes {
-	position:absolute;
-	bottom:8px;
-	right:8px;
+/* save button positioned within textarea */
+.modal-notes .notes-body {
+	position:relative;
 }
+.modal-notes .notes-body .btn-notes {
+	position:absolute;
+	bottom:1px;
+	right:1px;
+}
+/* end save button */
+
+/***** END MODAL NOTES DIALOG BOX *****/
+
 #advanced-search-options .btn-submit {
 	position:absolute;
 	bottom:-1px;
@@ -187,6 +193,10 @@
 .table-products .table .market-row {
 	padding:0px;
 	vertical-align:top !important;
+}
+.table-hover > tbody > tr > td.warning.nohover:hover,
+.table-hover > tbody > tr.warning.nohover:hover > td {
+	background:#fcf8e3 !important;
 }
 .qty-header {
 	padding-left:48px;
@@ -393,21 +403,37 @@ input[type="text"].inline {
 	width:180px;
 }
 
-/*	color:#aa6708;*/
+.business-icon {
+	float:left;
+	padding-right:20px;
+}
+.name {
+	padding-top:8px !important;
+	margin-top:0px !important;
+}
 
-/*
-.market-table {
-	font-size:11px;
-	height:140px;
-	min-height:140px;
-	overflow:hidden;
+/*** PROFILE PAGE ***/
+.user-profile .header {
+	vertical-align:top;
 }
-.market-results {
-	position:absolute;
-	overflow:hidden;
-	width:100%;
+.profile-box table tr td, .profile-body .row > div > .form-group {
+	vertical-align:top !important;
 }
-*/
+.terms-select2.terms-type {
+	width:160px;
+}
+.terms-select2.terms-selections {
+}
+.terms-section {
+	padding-top:20px;
+	padding-bottom:20px;
+	border-top:1px solid #ddd;
+	border-bottom:1px solid #ddd;
+	background-color:#eee;
+}
+
+
+/*** MARKET MANAGER ***/
 .market-table {
 	font-size:11px;
 }
@@ -463,37 +489,6 @@ input[type="text"].inline {
 	box-shadow: 2px 1px 2px #888888;
 	z-index:999;
 }
-.business-icon {
-	float:left;
-	padding-right:20px;
-}
-.name {
-	padding-top:8px !important;
-	margin-top:0px !important;
-}
-
-/*** PROFILE PAGE ***/
-.user-profile .header {
-	vertical-align:top;
-}
-.profile-box table tr td, .profile-body .row > div > .form-group {
-	vertical-align:top !important;
-}
-.terms-select2.terms-type {
-	width:160px;
-}
-.terms-select2.terms-selections {
-}
-.terms-section {
-	padding-top:20px;
-	padding-bottom:20px;
-	border-top:1px solid #ddd;
-	border-bottom:1px solid #ddd;
-	background-color:#eee;
-}
-
-
-/*** MARKET MANAGER ***/
 .market-table hr {
 	margin:8px 0px;
 }
@@ -523,7 +518,6 @@ input[type="text"].inline {
     background: -moz-linear-gradient(#f5dfba, #fff); /* For Firefox 3.6 to 15 */
     background: linear-gradient(#f5dfba, #fff); /* Standard syntax */
 }
-
 
 #market-results {
 	line-height:10px;
@@ -570,6 +564,16 @@ input[type="text"].inline {
 	padding:0px !important;
 	margin:0px !important;
 }
+#marketModal .modal-body {
+	height:400px;
+	overflow:scroll;
+}
+#marketModal .message-body {
+	width:100%;
+}
+
+
+
 .date-group {
 	font-weight:bold;
 	text-align:left;
@@ -610,6 +614,53 @@ tr.info:hover td, td.info:hover {
 }
 
 
+/***** NOTIFICATIONS *****/
+.navbar-inverse .notification-dropdown .count {
+	background:#b94a48;
+}
+.notification-dropdown {
+	text-align:left;
+}
+.navbar-inverse .pop-dialog .notifications {
+	width:400px;
+}
+.navbar-inverse .pop-dialog .notifications .item {
+	padding-left:0px;
+}
+.navbar-inverse .pop-dialog .notifications .item.unread {
+	background-color:#fffff5;
+}
+.navbar-inverse .pop-dialog .notifications .item.unread .time {
+	color:#b94a48;
+}
+.navbar-inverse .pop-dialog .notifications .item.unviewed {
+	background-color:#f3f7fa;
+}
+.notifications .item .user {
+	width:60px;
+	display:block;
+	float:left;
+	padding-left:10px;
+	padding-right:20px;
+}
+.notifications .item .user.fa-stack .user-text {
+	text-align:center;
+	margin-top:10px;
+	margin-left:auto;
+	margin-right:auto;
+	font-size:11px;
+}
+.notifications .note {
+	display:inline-block;
+	max-width:240px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+
+
+
+/***** DATETIME PICKER CUSTOM SETTINGS, SEE templates/datetime-picker-example.html FOR BRAND/CODE GUIDELINES *****/
 .datepicker div table thead tr th {
 
 	border: 0px;
@@ -618,7 +669,6 @@ tr.info:hover td, td.info:hover {
 	border-collapse: collapse !important;
 	font-size: 14px;
 }
-
 
 .datepicker tbody > tr > td{
 	border: none !important;
@@ -629,6 +679,18 @@ tr.info:hover td, td.info:hover {
 	text-transform: none !important;
 	border-collapse: collapse !important;
 	font-size: 14px;
+}
+
+/* here's the money section for defining widths for our date/time pickers */
+.input-group.datepicker-date {
+	width:130px;
+	min-width:130px;
+	max-width:130px;
+}
+.input-group.datepicker-datetime {
+	width:190px;
+	min-width:190px;
+	max-width:190px;
 }
 
 
@@ -692,14 +754,18 @@ h1 a, h2 a, h3 a {
 	width:100%;
 }
 
-.date-options {
-   width:50px;
+#btn-range-options {
+	width:36px;
+	position:relative;
+}
+#date-ranges {
+   width:360px;
    height:30px;
    padding:0px;
+   left:32px;
+   top:0px;
    position:absolute;
    text-align:left;
-   overflow:hidden;
-   top:8px;
    z-index:1001;
 }
 .date-options:hover {

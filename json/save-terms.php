@@ -1,5 +1,5 @@
 <?php
-	include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	header("Content-Type: application/json", true);
 
 	function reportError($err) {

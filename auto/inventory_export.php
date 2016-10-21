@@ -79,6 +79,17 @@
 				$descr = trim($system.' '.$descr);
 			}
 		}
+		$query2 = "SELECT system FROM parts, systems WHERE parts.systemid = systems.id AND ";
+		if ($heci) { $query2 .= "heci = '".$heci."' "; }
+		else { $query2 .= "part = '".$part."' "; }
+		$query2 .= "; ";
+		$result2 = qdb($query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$system = $r2['system'];
+			$descr = trim($system.' '.$descr);
+		}
+
 		$descr = trim(str_replace('BOT GENERATED','',str_replace('*',' ',$descr)));
 		if (! $partid) {
 			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
@@ -119,7 +130,7 @@
 			}
 		}
 
-		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases,'system'=>$system);
 	}
 
 	// get ghost inventory items
@@ -137,7 +148,8 @@
 		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 		$heci = $r['heci'];
 		$manf = getManf($r['manfid']);
-		$descr = trim(getSys($r['systemid']).' '.$r['description']);
+		$system = getSys($r['systemid']);
+		$descr = trim($system.' '.$r['description']);
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {
 			$falias = preg_replace('/[^[:alnum:]]+/','',$part_numbers[$i]);
@@ -145,7 +157,7 @@
 			$aliases[$falias] = $part_numbers[$i];
 		}
 
-		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases);
+		$results[$r['partid']] = array('partid'=>$r['partid'],'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases,'system'=>$system);
 	}
 
 	$k = 0;
@@ -165,9 +177,24 @@
 		// errantly negative, so don't include these lines...
 		if ($qty<=0) { continue; }
 
+		$url = '//ven-tel.com';
+		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).'.jpg width=34>';
+		$exts = array('/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)));
+		if ($r['system']) {
+			$exts[] = '/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$r['system']));
+			$exts[] = '/'.strtolower($part);
+			if ($heci) { $exts[] = '/'.strtolower($heci); }
+		}
+		foreach ($exts as $ext) {
+			$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
+			// Condition max length: 130 chars
+			if (strlen($a_prep)<=130) { $url .= $ext; } else { break; }
+		}
+		$cond = '<a href='.$url.'>'.$img.'</a>';
+
 		$csvBB .= '"'.$part.'","'.$heci.'","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 		$csvPS .= '"'.($k++).'","'.substr($part,0,25).'","'.$manf.'","'.$heci.'","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-		$csvTE .= '"'.$part.' <img src=ven-tel.com/img/parts/'.$part.' width=34 align=left><br>","'.$heci.'","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+		$csvTE .= '"'.$part.'","'.$heci.'","'.$manf.'","'.$cond.'","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 
 		// lastly get all aliases from keywords table, as we want all mutations of heci codes to be included
 		$query3 = "SELECT keyword FROM keywords, parts_index ";
@@ -184,9 +211,20 @@
 		}
 
 		foreach ($aliases as $alias) {
+			$url = '//ven-tel.com';
+			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).'.jpg width=34>';
+			// replace part# with this alias
+			if ($r['system'] AND isset($exts[2])) { $exts[2] = '/'.strtolower($alias); }
+			foreach ($exts as $ext) {
+				$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
+				// Condition max length: 130 chars
+				if (strlen($a_prep)<=130) { $url .= $ext; } else { break; }
+			}
+			$cond = '<a href='.$url.'>'.$img.'</a>';
+
 			$csvBB .= '"'.$alias.'","","'.$manf.'","CALL","CALL","'.$qty.'","'.$descr.'"'.chr(10);
 			$csvPS .= '"'.($k++).'","'.substr($alias,0,25).'","'.$manf.'","","CALL","'.$qty.'","CALL","'.$descr.'","Central Office","1"'.chr(10);
-			$csvTE .= '"'.$alias.'","","'.$manf.'","CALL","'.$qty.'","CALL","'.$descr.'"'.chr(10);
+			$csvTE .= '"'.$alias.'","","'.$manf.'","'.$cond.'","'.$qty.'","CALL","'.$descr.'"'.chr(10);
 		}
 	}
 
@@ -243,4 +281,11 @@
 		echo "problem uploading $attachment<BR>".chr(10);
 	}
 	ftp_close($ftpid);
+
+	$send_success = send_gmail('Report Attached','Tel-Explorer Export','david@ven-tel.com','','',$attachment);
+	if ($send_success) {
+		echo json_encode(array('message'=>'Tel-Explorer Email Export Successful'));
+	} else {
+		echo json_encode(array('message'=>$SEND_ERR));
+	}
 ?>

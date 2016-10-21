@@ -373,7 +373,8 @@
 				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
 			}
 
-			$search_strs = explode(' ',$P['part']);
+			$exploded_strs = explode(' ',$P['part']);
+			$search_strs = array_merge($search_strs,$exploded_strs);
 			if ($P['heci']) {
 				$search_strs[] = substr($P['heci'],0,7);
 			}
@@ -411,14 +412,36 @@
 		$k = 0;
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
+			// add notes from global $NOTES, keyed by this/each pipeid below
+			$notes = '';
+			$pipeids_str = '';
 			// when a single value, handle accordingly; otherwise by array
 			if ($P['pipe_id']) {
 				$itemqty = getPipeQty($P['pipe_id']);
+				// $NOTES is set globally in getPipeQty()
+				$notes = $NOTES[$P['pipe_id']];
+				$pipeids_str = $P['pipe_id'];
 			} else {
 				foreach ($pipe_ids as $pipe_id => $arr) {
 					$itemqty += getPipeQty($pipe_id);
+					// $NOTES is set globally in getPipeQty()
+					if (trim($NOTES[$pipe_id])) {
+						if ($notes) { $notes .= chr(10).'<HR>'.chr(10); }
+						$notes .= $NOTES[$pipe_id];
+					}
+					if ($pipeids_str) { $pipeids_str .= ','; }
+					$pipeids_str .= $pipe_id;
 				}
 				$pipe_ids = array();
+			}
+
+			// if no notes through pipe, check new db
+			if (! $notes) {
+				$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
+				$result2 = qdb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$notes = true;
+				}
 			}
 
 			//$itemqty = getQty($partid);
@@ -433,6 +456,18 @@
 
 			$chkd = '';
 			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
+
+			$notes_icon = '';
+			if ($notes) {
+				if (isset($NOTIFICATIONS[$partid])) {
+					$notes_icon = 'text-danger fa-warning fa-lg';
+				} else {
+					$notes_icon = 'fa-sticky-note text-warning';
+				}
+			} else {
+				$notes_icon = 'fa-sticky-note-o';
+			}
+			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$results_rows .= '
                         <!-- row -->
@@ -450,8 +485,8 @@
                                 <div class="product-img">
                                     <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
                                 </div>
-                                <div class="product-descr" data-partid="'.$partid.'">
-									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span></span>
+                                <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
+									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>
                                    	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
 
 									<div class="descr-edit hidden">
