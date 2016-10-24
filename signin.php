@@ -40,7 +40,25 @@
             //Check and see if any of the errors was flagged during the user login otherwise user will be logged into the website
             if($venLog->getError()) {
                 $loginErr =  $venLog->getError();
-            } 
+            } else {
+                $is_loggedin = is_loggedin();
+                
+                if(isset($U['status']) && $U['status'] == 'Inactive') {
+                    $loginErr = 'User access is denied. Please contact admin for support.';
+                    $_SESSION = array();
+
+                	// If it's desired to kill the session, also delete the session cookie.
+                	// Note: This will destroy the session, and not just the session data!
+                	if (ini_get("session.use_cookies")) {
+                	    $params = session_get_cookie_params();
+                	    setcookie(session_name(), '', time() - 42000,
+                	        $params["path"], $params["domain"],
+                	        $params["secure"], $params["httponly"]
+                	    );
+                	}
+                	session_destroy();
+                }
+            }
         } else {
             $loginErr =  'User credentials missing';
         }
@@ -51,7 +69,7 @@
 $loggedin = false;
 
 $loggedin = (!empty($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false);
-if(!$loggedin && $venLog->generated_pass == '0') { 
+if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U['status'] == 'Inactive')) { 
 ?>
 
     <!DOCTYPE html>
@@ -77,7 +95,7 @@ if(!$loggedin && $venLog->generated_pass == '0') {
         <link rel="stylesheet" href="css/compiled/signin.css" type="text/css" media="screen" />
 
         <!-- open sans font -->
-        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
 
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -140,16 +158,10 @@ if(!$loggedin && $venLog->generated_pass == '0') {
         </div>
 
     	<!-- scripts -->
-        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="//code.jquery.com/jquery-latest.js"></script>
         <script src="js/bootstrap.min.js"></script>
         <script src="js/theme.js"></script>
 
-        <!-- pre load bg imgs -->
-        <script type="text/javascript">
-            $(function () {
-
-            });
-        </script>
     </body>
     </html>
 <!-- Begin the form to reset the users password if needed for a genereated password -->
@@ -158,7 +170,5 @@ if(!$loggedin && $venLog->generated_pass == '0') {
 } else if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']) {
     //Remove the object once the user is logged in
     unset($venLog);
-
-    $is_loggedin = is_loggedin();
 }
 ?>

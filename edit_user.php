@@ -6,6 +6,24 @@
     require_once 'inc/user_edit.php';
 
     $edited = false;
+    
+    //Form Invoking self with POST method doing very surface validation to make sure email is valid and required fields are set
+    //This is a quick screen that will probably be built into the class soon
+    //These variables are specifically for User Registration
+    $registered = false;
+    $error = false;
+    $registerErr = '';
+    $userErr = '';
+    $firstErr = '';
+    $lastErr = '';
+    $passwordErr = '';
+    $emailErr = '';
+    $phoneErr = '';
+    //End User Reg variables
+    
+    $editedrErr = '';
+    $password = '';
+    $updatedUser = false;
 
     //Create new object for instance to class Ven Reg that extends Ven Priveleges
     $venEdit = new VenEdit;
@@ -98,11 +116,23 @@
             padding: 8px 30px;
             color: #fff;
             background-color: rgb(60, 91, 121);
-            borde
-            r-color: #000;
+            border-color: #000;
         }
         .mt-42 {
             margin-top: -42px;
+        }
+        /*.inactive {*/
+        /*    display: none;*/
+        /*}*/
+        .inactive, .inactive:hover td {
+            background: #E7E7E7 !important;
+        }
+        .inactive .username a {
+            color: #999;
+        }
+        
+        .row {
+            margin: 0;
         }
         @media screen and (max-width: 700px) {
             .mt-42 {
@@ -124,35 +154,137 @@
 
     <!-- Class 'pt' is used in padding.css to simulates (p)adding-(t)op: (x)px -->
     <div class="row pt-70">
-        <?php if(isset($_GET['delete']) && $_GET['delete'] != '') {
-            $venEdit->deleteUser();
-            $deletedUser = 'User has successfully passed away.';
+        <?php if(isset($_GET['deactivate']) && $_GET['deactivate'] != '') {
+            $venEdit->deactivateUser();
+            $deactivateUser = 'User has successfully passed away.';
         } ?>
+        <?php if(isset($_GET['activate']) && $_GET['activate'] != '') {
+            $venEdit->activateUser();
+            $deactivateUser = 'User has successfully woken up.';
+        } ?>
+        <?php 
+            //User is now being edited so create the instance and set all the preset variables from the database
+            //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
+            if($_GET['user'] != 'create') {
+                $venEdit->editMember();
+                
+                //If the form has been submitted then run the edit user function and update the user if eveything is valid and good to go
+                if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                    if(isset($_REQUEST['password'])) {
+                        $password = $_REQUEST['password'];
+                    }
+                    $edited = $venEdit->editUser();
+                    if($edited && !$venEdit->getError()) {
+                        $editedrErr = '<strong>' . $venEdit->getUsername() . '</strong> sucessfully updated';
+                        $updatedUser = true;
+                    } else {
+                        $edit = false;
+                        $editedrErr = $venEdit->getError();
+                    }
+                }
+            } else if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+                if (empty($_POST["username"])) {
+                    $userErr = "Username is required";
+                    $error = true;
+                } else {
+                    //Check if the user exists already
+                    $exists = $venEdit->checkUsername($_POST["username"]);
+                    if($exists) {
+                        $userErr = "User " . $_POST["username"] . " already exists.";
+                        $error = true;
+                    }
+                }
+        
+                //Company ID check
+                //print_r($venEdit->companyCheck($_POST["company"]));
+        
+                if (empty($_POST["firstName"])) {
+                    $firstErr = "First Name is required";
+                    $error = true;
+                } else {
+                    // check if name only contains letters and whitespace
+                    if (!preg_match("/^[a-zA-Z ]*$/",$_POST["firstName"])) {
+                        $firstErr = "Only letters and white space allowed"; 
+                        $error = true;
+                    }
+                }
+        
+                if (empty($_POST["password"])) {
+                    $passwordErr = "Password is required";
+                    $error = true;
+                }
+        
+                if (empty($_POST["lastName"])) {
+                    $lastErr = "Last Name is required";
+                    $error = true;
+                } else {
+                // check if name only contains letters and whitespace
+                    if (!preg_match("/^[a-zA-Z ]*$/",$_POST["lastName"])) {
+                        $lastErr = "Only letters and white space allowed"; 
+                        $error = true;
+                    }
+                }
+        
+                if (empty($_POST["email"])) {
+                    $emailErr = "Email is required";
+                    $error = true;
+                } else {
+                    // check if e-mail address is well-formed
+                    if (!filter_var($_POST["email"], FILTER_VALIDATE_EMAIL)) {
+                        $emailErr = "Invalid email format"; 
+                        $error = true;
+                    }
+                }
+                
+                if(!$error) {
+                    //echo 'No Errors and processing request';
+                    //Run thru the user registration
+                    $venEdit->registerMember();
+        
+                    //Check and see if any of the errors was flagged during the user registration, otherwise display success message and clear the form
+                    if($venEdit->getError()) {
+                        $registerErr =  $venEdit->getError();
+                    } else {
+                         $editedrErr =  '<strong>Success</strong>: User has been created - ' . $_POST['username'];
+                         //Clearing $_Post, be aware tho that a refresh will still invoke the data but will be caught in a user exists error
+                         //$_POST = array();
+                         $registered = true;
+                         //unset the object after the user is created
+                         // unset($userErr);
+                    }
+                }
+            }
+        ?>
         <!-- Username ID -->
-        <?php if(!isset($_GET['user'])) { ?>
+        <?php if(!isset($_GET['user']) || $updatedUser || $registered) { ?>
         <?php 
             //Get Variables for select user
             //Get all usernames
             $usernames = $venEdit->getAllUsers();
-        ?>
+            if($edited || $registered) { ?>
+                <div class="alert alert-success text-center">
+                    <?php echo $editedrErr; ?>
+                </div>
+        <?php } ?>
         <div class="login-wrapper">
             <div class="box box-wrap">
                 <div class="col-md-2">
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                 <div class="col-md-10">
-                    <?php if(isset($deletedUser)) { ?>
+                    <?php if(isset($deactivateUser)) { ?>
                         <div class="alert alert-success text-center">
-                            <?php echo $deletedUser; ?>
+                            <?php echo $deactivateUser; ?>
                         </div>
                     <?php } ?>
 
                     <div style="display: inline-block; width: 100%;">
                         <h2>Users</h2>
-                        <a href='create_user.php' class="btn btn-primary pull-right mb-20 create-user mt-42">Add User</a>
+                        <a href='?user=create' class="btn btn-primary pull-right mb-20 create-user mt-42">Add User</a>
                     </div>
                     <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
-
+                    
                     <!-- This table creates a list of all the users on file in the system that way the admin can pick and choose which user to update/edit -->
                     <table class="table table-hover">
                         <thead>
@@ -165,15 +297,28 @@
                         </thead>
                         <tbody>
                         <?php foreach($usernames as $user) { 
+                            $userStatus = '';
+                            
                             $privNames = $venEdit->getPrivilegeTitle($user['userid']);
+                            $userStatus = $venEdit->getUserStatus($user['userid']);
+                            //Check if the user is active or not forloop of all the users currently on the system
+                            //After determine if the user should be greyed out and change the button type to activate
                         ?>
-                            <tr>
-                                <td><a href="?user=<?php echo $user['userid']; ?>"><?php echo ucwords($user['username']); ?></a></td>
+                            <tr class='<?php echo ($userStatus == 'Inactive' ? 'inactive' : ''); ?>'>
+                                <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo ucwords($user['username']); ?></a></td>
                                 <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                 <td>
                                     <?php foreach($privNames as $name) { echo $name . ' ';} ?>
                                 </td>
-                                <td><?php if($user['username'] != $U['username']){ ?><a href="?delete=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to kill <?php echo ucwords($user['username']); ?>?')">Delete</a><?php } else { echo 'Current User'; }?></td>
+                                <td>
+                                    <?php if($user['username'] != $U['username']){ ?>
+                                        <?php if($userStatus != 'Inactive') { ?>
+                                            <a href="?deactivate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to kill <?php echo ucwords($user['username']); ?>?')">Deactivate</a>
+                                        <?php } else { ?>
+                                            <a href="?activate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to revive <?php echo ucwords($user['username']); ?>?')">Activate</a>
+                                        <?php } ?>
+                                    <?php } else { echo 'Current User'; }?>
+                                    </td>
                             </tr>
                         <?php } ?>
                         </tbody>
@@ -182,36 +327,11 @@
             </div>
         </div>
 
-        <?php } else { ?>
-            <?php 
-                //User is now being edited so create the instance and set all the preset variables from the database
-                //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
-                $venEdit->editMember();
-                $editedrErr = '';
-                $password = '';
-
-                //If the form has been submitted then run the edit user function and update the user if eveything is valid and good to go
-                if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                    if(isset($_REQUEST['password'])) {
-                        $password = $_REQUEST['password'];
-                    }
-                    $edited = $venEdit->editUser();
-                    if($edited && !$venEdit->getError()) {
-                        $editedrErr = '<strong>' . $venEdit->getUsername() . '</strong> sucessfully updated';
-                    } else {
-                        $edit = false;
-                        $editedrErr = $venEdit->getError();
-                    }
-                }
-            ?>
+        <?php } else if(isset($_GET['user']) && $_GET['user'] != "create") { ?>
             <div class="login-wrapper">
                 <div class="box">
                     <!-- Check if the user had been successfully created and display a message set above -->
-                    <?php if($edited) { ?>
-                        <div class="alert alert-success text-center">
-                            <?php echo $editedrErr; ?>
-                        </div>
-                    <?php } else if($editedrErr) { ?>
+                    <?php  if($editedrErr) { ?>
                         <div class="alert alert-danger text-center">
                             <?php echo $editedrErr; ?>
                         </div>
@@ -287,6 +407,101 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <button class="btn btn-lg btn-primary create-user pull-right" type='submit' name='Submit'>Update</button>
+                                </div>       
+                            </div>
+                        </form>         
+                    </div>
+                </div>
+            </div>
+        <?php } else { ?>
+            <div class="login-wrapper">
+                <div class="box">
+                    <!-- Check if the user had been successfully created and display a message set above -->
+                    <?php if($registered) { ?>
+                        <div class="alert alert-success text-center">
+                            <?php echo $registerErr; ?>
+                        </div>
+                    <?php } else if($registerErr) { ?>
+                        <div class="alert alert-danger text-center">
+                            <?php echo $registerErr; ?>
+                        </div>
+                    <?php } ?>
+    
+                    <div class="content-wrap">
+                        <h3 class="pb-20 text-center">Create New User</h3>
+                         <!-- Just reload the page with PHP_SELF -->
+                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=create' : '' );?>' method='post' accept-charset='UTF-8'>
+                            <div class="row">
+                                <div class="col-md-5 pb-20">
+                                    <span class="error"><?php echo $userErr;?></span>
+                                    <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo ( isset($_POST['username']) ? $_POST['username'] : ''); ?>">
+                                </div>
+                                <div class="col-md-7 pb-20">
+    							</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 pb-20">
+                                    <span class="error"><?php echo $firstErr;?></span>
+                                    <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo ( isset($_POST['firstName']) ? $_POST['firstName'] : ''); ?>">
+                                </div>
+                                <div class="col-md-6 pb-20">
+                                    <span class="error"><?php echo $lastErr;?></span>
+                                    <input name="lastName" class="form-control" type="text" placeholder="Last Name" value="<?php echo ( isset($_POST['lastName']) ? $_POST['lastName'] : ''); ?>">
+                                </div>
+                            </div>
+    
+                            <div class="row">
+                                <div class="col-md-6 pb-20">
+                                    <span class="error"><?php echo $emailErr;?></span>
+                                    <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo ( isset($_POST['email']) ? $_POST['email'] : ''); ?>">
+                                </div>
+                                <div class="col-md-6 pb-20">
+                                    <span class="error"><?php echo $phoneErr;?></span>
+                                    <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo ( isset($_POST['phone']) ? $_POST['phone'] : ''); ?>">
+                                </div>
+                            </div>
+    
+                            <div class="row">
+                                <div class="col-md-6 pb-30">
+                                    <span class="error"><?php echo $passwordErr;?></span>
+                                    <div class="input-group">
+                                        <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="Password"  value="<?php echo ( isset($_POST['password']) ? $_POST['password'] : ''); ?>">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default getNewPass"><i class="fa fa-refresh"></i> Generate</button>
+                                        </span>
+                                        <!-- This is a hidden field that will toggle if the password is generated and will change if the admin changes the password in the textbox -->
+                                        <input id="gen" type="checkbox" name="generated_pass" <?php echo (isset($_REQUEST['generated_pass']) ? 'checked' : ''); ?> hidden>
+                                    </div>
+                                    <label class="pull-right">*Generated passwords require user to reset password</label>
+                                </div>
+                                <div class="col-md-6 pb-30">
+    								<select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
+    									<option value="25" selected>Ventura Telephone</option>
+    								</select>
+                                </div>
+                            </div>
+    
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <select name="privilege[]"  size="6" class="form-control" multiple>
+                                            <?php foreach($venEdit->getPrivileges() as $type): ?>
+                                                <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
+                                                <option value="<?php echo $type['id']; ?>" <?php if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['privilege'])) { echo (in_array($type['id'], $_POST['privilege']) ? 'selected' : ''); } ?>><?php echo $type['privilege']; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="checkbox">
+                                        <label><input name="status" type="checkbox" value="Active" checked>Active (User Status)</label>
+                                    </div>
+                                </div>
+                            </div>
+    
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-lg btn-primary create-user pull-right" type='submit' name='Submit'>Create User</button>
                                 </div>       
                             </div>
                         </form>         

@@ -51,7 +51,7 @@ $DEV_ENV = true;
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '');
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'');
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
@@ -137,23 +137,33 @@ $DEV_ENV = true;
 			$U['phone'] = '';
 			$U['username'] = '';
 			$U['email'] = $userid;
+			
 			$query2 = "SELECT email FROM emails WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Work',0,1) LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['email'] = $r2['email'];
 			}
+			
 			$query2 = "SELECT phone FROM phones WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Office',0,1) LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['phone'] = $r2['phone'];
 			}
+			
 			$query2 = "SELECT username FROM usernames WHERE userid = '".res($userid)."' LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['username'] = $r2['username'];
+			}
+			
+			$query2 = "SELECT status FROM contacts WHERE id = '".$U['contactid']."' LIMIT 0,1; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$U['status'] = $r2['status'];
 			}
 
 			//Create a global array of all the current logged in users privileges
@@ -219,8 +229,8 @@ $DEV_ENV = true;
 	//Check if logged in
 	$is_loggedin = is_loggedin();
 	
-	//Check if signin is required
-	if(!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) {
+	//Check if signin is required or check if the user status is alive
+	if((!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) || (isset($U['status']) && $U['status'] == 'Inactive')) {
 		require_once 'signin.php';
 	}
 	
@@ -229,7 +239,7 @@ $DEV_ENV = true;
 		//Check to see if the user is logging in for the first time
 		require_once 'reset.php';
 		exit;
-	} 
+	}
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
 	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {

@@ -70,7 +70,7 @@
 				//Because Admin is creating the user and can change the passwords of any user we will not validate to make sure they match.
 				$register_password = $this->Sanitize(trim($_REQUEST["password"]));
 
-				$this->setTempPass($register_company);
+				$this->setTempPass($register_password);
 			
 				//Test Bench Password
 				// $register_password = "A12@fdhlkj";

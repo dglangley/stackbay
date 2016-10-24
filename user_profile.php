@@ -95,8 +95,7 @@
             padding: 8px 30px;
             color: #fff;
             background-color: rgb(60, 91, 121);
-            borde
-            r-color: #000;
+            border-color: #000;
         }
         .mt-42 {
             margin-top: -42px;
