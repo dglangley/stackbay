@@ -21,7 +21,8 @@
 //	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
 	$test = 0;
-	if (! isset($userid)) { $userid = 1; }
+//	if (! isset($userid)) { $userid = $U['id']; }
+	$userid = $U['id'];
 
 	setGoogleAccessToken(5);
 
