@@ -1,8 +1,4 @@
 <?php
-	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
-	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
-	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
-	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -26,6 +22,10 @@
 	if (mysqli_connect_errno($WLI)) {
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
+	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
+	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
+	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
+	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 
 	if (isset($NO_CACHE) AND $NO_CACHE===true) {
 		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
@@ -221,7 +221,7 @@ $DEV_ENV = true;
 	
 	//Check if signin is required
 	if(!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) {
-		require_once 'signin.php';
+		require_once $_SERVER["ROOT_DIR"].'/signin.php';
 	}
 	
 	//Check if user needs to reset password
@@ -233,7 +233,7 @@ $DEV_ENV = true;
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
 	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
-		header('Location: permission.php');
+		header('Location: '.$_SERVER["ROOT_DIR"].'/permission.php');
 		exit;
 	}
 
@@ -254,7 +254,16 @@ $DEV_ENV = true;
     
 		return 'Other';
 	}
+	$alertTop = 32;
+	function alertError($err_msg) {
+		global $alertTop;
+		$alertTop += 60;
+
+		echo '
+	<div class="alert alert-warning text-center" style="position:fixed; top:'.($GLOBALS['alertTop']).'; width:100%; z-index:1001; opacity:0.9"><h3>'.$err_msg.'</h3></div>
+		';
+	}
 
 	// version control for css and js includes
-	$V = '20161006';
+	$V = '20161007';
 ?>

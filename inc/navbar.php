@@ -223,7 +223,10 @@
 						<select name="upload_listid" id="upload-listid" class="lists-selector">
 							<option value="">- Upload or Select a List -</option>
 						</select>
-						<button type="button" class="btn btn-primary btn-sm btn-upload">GO</button>
+						<div id="list-details" class="hidden"></div>
+<!--
+							<button type="button" class="btn btn-primary btn-sm btn-upload">VIEW LIST</button>
+-->
 					</p>
 					<div class="upload-options animated fadeIn hidden">
 						<p>

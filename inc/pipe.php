@@ -8,7 +8,8 @@
 	//$PIPE->real_connect('db.ven-tel.com', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');
 	$PIPE->real_connect('192.69.242.135', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');
 	if (mysqli_connect_errno($PIPE)) {
-		die( "Failed to connect to MySQL: " . mysqli_connect_error() );
+//		die( "Failed to connect to MySQL: " . mysqli_connect_error() );
+		alertError("Failed to connect to the PIPE!");
 	}
 //	echo '<BR><BR><BR>';
 

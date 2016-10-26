@@ -18,11 +18,15 @@
 	if ($q OR $manfid) {
 		$query .= "WHERE ";
 		if ($q) { $query .= "system RLIKE '".res($q)."' "; }
+/* dgl 10-26-16
 		if ($q AND $manfid) { $query .= "AND "; }
 		if ($manfid) { $query .= "manfid = '".$manfid."' "; }
+*/
 	}
 	$query .= "ORDER BY ";
 	if ($q) {
+		//dgl 10-26-16
+		if ($manfid) { $query .= "IF(manfid = '".$manfid."',0,1), "; }
 		$query .= "IF(system = '".res($q)."',0,1), IF(system LIKE '".res($q)."%',0,1), ";
 	}
 	$query .= "system ASC; ";// LIMIT 0,20; ";

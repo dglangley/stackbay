@@ -1,7 +1,7 @@
     $(document).ready(function() {
 		$('#loader').hide();
 		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) { $("#s").select(); }
-		toggleLoader();
+		//toggleLoader();
 
 		// adjust height dynamically to size of the rows within section
 		$(".market-table").each(function() {
@@ -929,12 +929,14 @@
 
 //		var dataArray = [];
 		var upload = false;
+		var listid = 0;
 		e.find("option:selected").each(function() {
 //			console.log($(this).val());
 			if ($(this).val()=='upload') {
 				upload = true;
 			} else {
 //				dataArray.push($(this));
+				listid = $(this).val();
 			}
 		});
 
@@ -942,6 +944,41 @@
 			e.val("");//reset selection
 			$("#upload-file").click();//show().focus().click().hide();
 			$(".upload-options").removeClass('hidden');
+		} else if (listid>0) {
+			var details_html = '';
+			var processed = '';
+        	console.log(window.location.origin+"/json/list-select.php?id="+listid);
+	        $.ajax({
+				url: 'json/list-select.php',
+				type: 'get',
+				data: {'id': listid},
+				dataType: 'json',
+				success: function(json, status) {
+					if (json.processed=='') {
+						processed = '<i class="fa fa-times-rectangle text-danger"></i>';
+					} else {
+						processed = '<i class="fa fa-check-square text-success"></i> '+json.processed;
+					}
+
+					details_html += '<div class="content-box box-default">'+
+						'<h4 class="content-box-title">'+json.name+'</h4>'+
+						'<h5>'+json.filename+'</h5>'+
+						'</h4><p><em>uploaded '+json.datetime+' by '+json.user+'</em><br/>'+
+						'Processed: '+processed+'</p>'+
+						'<p><button class="btn btn-default"><i class="fa fa-download"></i></button>'+
+						'<button class="btn btn-primary"><i class="fa fa-search"></i></button></p>';
+//						'<span class="icon-ar icon-ar-lg icon-ar-circle"><i class="fa fa-download"></i></span> '+
+//						'<span class="icon-ar icon-ar-lg icon-ar-circle"><i class="fa fa-search"></i></span>';
+					$("#list-details").html(details_html);
+
+					// reveal the built html
+					$("#list-details").removeClass('hidden');
+				},
+				error: function(xhr, desc, err) {
+					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
 		}
 	}
 	function addPart(search) {
