@@ -108,7 +108,7 @@
 				<a href="#"><i class="fa fa-wrench"></i><span> Repair Home</span></a>
 			</li>
             <li class="hidden-xs hidden-sm">
-				<a href="#"><i class="fa fa-truck"></i><span> Shipping Home</span></a>
+				<a href="/shipping_home.php"><i class="fa fa-truck"></i><span> Shipping Home</span></a>
 			</li>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->

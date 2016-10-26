@@ -292,12 +292,7 @@ input[type="text"].inline {
 	background:transparent !important;
 	border:0px !important;
 }
-.ui-select {
-	width:180px;
-}
-.ui-select.addresses {
-	width:320px;
-}
+
 
 #loading-bar {
 	background:#f4efd4;

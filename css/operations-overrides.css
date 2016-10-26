@@ -1,0 +1,147 @@
+  /*--------------------------------------------------------------------------*/
+ /*------------------- Aaron: Begin Order / Purchase Forms ------------------*/
+/*--------------------------------------------------------------------------*/
+
+.forms_section{
+	width:100%;
+	overflow:hidden;
+	margin-bottom: 20px;
+}
+
+.forms_dropdown{
+	width: 100%;
+	height:34px;
+}
+
+.forms_dropdown select{
+	width: 100%; 
+}
+
+.ui-select {		
+	width:180px;		
+}		
+.ui-select.addresses {		
+	width:320px;		
+}
+
+.forms_dropdown select{ 
+	padding-top:5px;
+	height:32px;
+	width:100%;
+	font-size: 11pt;
+}
+
+.forms_header{
+	width: 100%;
+	text-align: center;
+	font-size:17pt;
+	padding-bottom: 5px;
+}
+
+
+
+.forms_section .select2-selection{
+	height:34px;
+	
+}
+.forms_section .select2-container{
+	width:100% !important;
+}
+.forms_section .selection{
+	width: 100% !important;
+}
+
+#search_collumn > div > span{	
+	width:100% !important;
+}
+
+#item-selected{
+	max-width: 601px;
+}
+
+#NewSalesOrder{
+	text-align:center;
+	width:100%;
+	padding-left:4px;
+	padding-right:4px;
+}
+#search_collumn{
+	padding-left: 0px;
+	padding-right: 0px;
+}
+#check_collumn{
+	padding-left: 0px;
+	padding-right: 0px;
+	width: 98%;
+}
+
+#hide_page{
+	position: absolute;
+	fill:none;
+	background-color: black;
+	opacity:1;
+	z-index: -100;
+	pointer-events: visible;
+	height:100%; 
+	top:0;
+	bottom:0;
+	left: 0;
+	right:0;
+
+}
+
+/*Aaron: End Order / Purchase Forms */
+
+/*Aaron: Shipping sections!*/
+.shipping-dash{
+	transition:ease visibility 1s;
+	position: absolute;
+	margin-left: 2%;
+	margin-right: 2%;
+	width:46%;
+	border:thin grey solid;
+	border-top-left-radius:5px;
+	border-top-right-radius:5px;
+	float:left;
+}
+
+.sd-completed{
+	top: 55%;
+}
+.sd-outstanding{
+	top: 70px;
+}
+.sd-sales{
+	left: 0%;
+}
+.sd-purchases{
+	right: 0%;
+}
+.shipping_section_head{
+	left: 0;
+	background-color:#5b83af;
+	color: white;
+	font-weight: bold;
+	text-align:center;
+	font-size: 14px;
+	padding-bottom: 8px;
+	padding-top: 8px;
+}
+
+
+.shipping-dash-full{
+	transition:ease all .5s;
+	position: absolute;
+	top: 30px;
+	width: 98% !important;
+	left: 1% !important;
+	border:none;
+	height: auto;
+}
+
+
+
+.shipping_section_foot{
+	padding-top: 20px;
+}
+/*Aaron: end shipping section*/

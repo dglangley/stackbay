@@ -7,6 +7,7 @@
     $venLog = new venLogin;
 
     $error = false;
+    $exists = false;
 
     //Check if the user used signout template to log out and give a success message
     if(isset($_REQUEST['logged_out']) && $_REQUEST['logged_out']) {
@@ -16,9 +17,22 @@
     if(isset($_REQUEST['reset']) && $_REQUEST['reset']) {
         $loggedmsg = 'Password has been reset';
     }
+    
+    if(isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') {
+        $loggedmsg = 'Feature in developement. Password inquery sent a confirmation email has been sent.';
+        //Check if the username exists
+        $exists = $venLog->checkUsername($_POST["username"]);
+        if($exists) {
+            if($venLog->checkEmailtoUsername($_POST["email"])) {
+                // $venLog->resetPasswordEmail($_POST["username"]);
+            }
+        }
+        $_POST["username"] = '';
+        $_POST["email"] = '';
+    }
 
     //This means the form has been submitted now we will check the login info and decide if the user deserves access
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user'])) {
         if (empty($_POST["username"])) {
             $userErr = "Username is required";
             $error = true;
@@ -40,7 +54,25 @@
             //Check and see if any of the errors was flagged during the user login otherwise user will be logged into the website
             if($venLog->getError()) {
                 $loginErr =  $venLog->getError();
-            } 
+            } else {
+                $is_loggedin = is_loggedin();
+                
+                if(isset($U['status']) && $U['status'] == 'Inactive') {
+                    $loginErr = 'User access is denied. Please contact admin for support.';
+                    $_SESSION = array();
+
+                	// If it's desired to kill the session, also delete the session cookie.
+                	// Note: This will destroy the session, and not just the session data!
+                	if (ini_get("session.use_cookies")) {
+                	    $params = session_get_cookie_params();
+                	    setcookie(session_name(), '', time() - 42000,
+                	        $params["path"], $params["domain"],
+                	        $params["secure"], $params["httponly"]
+                	    );
+                	}
+                	session_destroy();
+                }
+            }
         } else {
             $loginErr =  'User credentials missing';
         }
@@ -51,7 +83,7 @@
 $loggedin = false;
 
 $loggedin = (!empty($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false);
-if(!$loggedin && $venLog->generated_pass == '0') { 
+if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U['status'] == 'Inactive')) { 
 ?>
 
     <!DOCTYPE html>
@@ -61,6 +93,9 @@ if(!$loggedin && $venLog->generated_pass == '0') {
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     	
+    	<?php
+            include_once 'inc/scripts.php';
+        ?>
         <!-- bootstrap -->
         <link href="css/bootstrap/bootstrap.css" rel="stylesheet" />
         <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
@@ -77,7 +112,7 @@ if(!$loggedin && $venLog->generated_pass == '0') {
         <link rel="stylesheet" href="css/compiled/signin.css" type="text/css" media="screen" />
 
         <!-- open sans font -->
-        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
 
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -129,6 +164,10 @@ if(!$loggedin && $venLog->generated_pass == '0') {
                                 <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo (isset($_POST['password']) ? $_POST['password'] : ''); ?>">
                             </div>
                         </div>
+                        
+                        <div class="row pb-10">
+                            <a href="reset.php?user=reset">Forgot Password or Username</a>
+                        </div>
 
                         <div class="action">
                             <button class="btn btn-lg btn-primary login" type='submit' name='Submit' >Sign In</button>
@@ -140,16 +179,10 @@ if(!$loggedin && $venLog->generated_pass == '0') {
         </div>
 
     	<!-- scripts -->
-        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="//code.jquery.com/jquery-latest.js"></script>
         <script src="js/bootstrap.min.js"></script>
         <script src="js/theme.js"></script>
 
-        <!-- pre load bg imgs -->
-        <script type="text/javascript">
-            $(function () {
-
-            });
-        </script>
     </body>
     </html>
 <!-- Begin the form to reset the users password if needed for a genereated password -->
@@ -158,7 +191,6 @@ if(!$loggedin && $venLog->generated_pass == '0') {
 } else if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']) {
     //Remove the object once the user is logged in
     unset($venLog);
-
-    $is_loggedin = is_loggedin();
+    header('Location: index.php');
 }
 ?>
