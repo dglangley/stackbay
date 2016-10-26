@@ -7,6 +7,7 @@
     $venLog = new venLogin;
 
     $error = false;
+    $exists = false;
 
     //Check if the user used signout template to log out and give a success message
     if(isset($_REQUEST['logged_out']) && $_REQUEST['logged_out']) {
@@ -16,9 +17,22 @@
     if(isset($_REQUEST['reset']) && $_REQUEST['reset']) {
         $loggedmsg = 'Password has been reset';
     }
+    
+    if(isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') {
+        $loggedmsg = 'Feature in developement. Password inquery sent a confirmation email has been sent.';
+        //Check if the username exists
+        $exists = $venLog->checkUsername($_POST["username"]);
+        if($exists) {
+            if($venLog->checkEmailtoUsername($_POST["email"])) {
+                // $venLog->resetPasswordEmail($_POST["username"]);
+            }
+        }
+        $_POST["username"] = '';
+        $_POST["email"] = '';
+    }
 
     //This means the form has been submitted now we will check the login info and decide if the user deserves access
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user'])) {
         if (empty($_POST["username"])) {
             $userErr = "Username is required";
             $error = true;
@@ -79,6 +93,9 @@ if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U[
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     	
+    	<?php
+            include_once 'inc/scripts.php';
+        ?>
         <!-- bootstrap -->
         <link href="css/bootstrap/bootstrap.css" rel="stylesheet" />
         <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet" />
@@ -147,6 +164,10 @@ if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U[
                                 <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo (isset($_POST['password']) ? $_POST['password'] : ''); ?>">
                             </div>
                         </div>
+                        
+                        <div class="row pb-10">
+                            <a href="reset.php?user=reset">Forgot Password or Username</a>
+                        </div>
 
                         <div class="action">
                             <button class="btn btn-lg btn-primary login" type='submit' name='Submit' >Sign In</button>
@@ -170,5 +191,6 @@ if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U[
 } else if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']) {
     //Remove the object once the user is logged in
     unset($venLog);
+    header('Location: index.php');
 }
 ?>

@@ -171,6 +171,9 @@
         .checkLabel {
             margin-left: 30px;
         }
+        .row {
+            margin: 0;
+        }
     </style>
 </head>
 <body class="sub-nav">

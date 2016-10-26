@@ -55,7 +55,11 @@ $DEV_ENV = true;
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
-
+	
+	//Important pages that always must have minimum admin privileges
+	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
+	
+	session_set_cookie_params(time() + (7 * 24 * 60 * 60));
 	//Start the Session or call existing ones
 	session_start();
 
@@ -65,9 +69,6 @@ $DEV_ENV = true;
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
-
-		//get the current time
-		$now = time();
 
 		$userid = 0;
 		$user_token = '';
@@ -95,7 +96,7 @@ $DEV_ENV = true;
 			exit;
 		} else {
 			//If session is not expired then increase the session time by a week for this computer
-			//$_SESSION['expiry'] = $now + (7 * 24 * 60 * 60);
+			$_SESSION['expiry'] = time() + (7 * 24 * 60 * 60);
 		}
 
 		$to_sec = time()-(60*60);
@@ -225,14 +226,48 @@ $DEV_ENV = true;
 			}
 		}
 	}
+	
+	//This function is here to check and make sure upon initial login of any user that the page permissions are set correctly and not missing.
+	//Putting it on login so it is only invoked once instead of multiple times
+	function checkPagePermissions() {
+		global $WLI, $ADMIN_PAGE;
+		//Find the admin ID from user_privileges table
+		$query = "SELECT id FROM user_privileges WHERE privilege='Administration'";
+		$result = qdb($query);
+		
+		//Set the variable admin ID
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$adminid = $r['id'];
+		}
+		
+		//print_r($ADMIN_PAGE);
+		
+		foreach($ADMIN_PAGE as $pageName) {
+			// Prepare and Bind for Privileges
+			$stmt = $WLI->prepare('
+				REPLACE page_roles (page, privilegeid) 
+					VALUES (?, ?) 
+			');
+			//s = string, i - integer, d = double, b = blob for params of mysqli
+			$stmt->bind_param("si", $pageName, $privid);
+			//Package it all and execute the query
+			$privid = $adminid;
+			$stmt->execute();
+			$stmt->close();
+		}
+	}
 
 	//Check if logged in
 	$is_loggedin = is_loggedin();
 	
 	//Check if signin is required or check if the user status is alive
 	if((!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) || (isset($U['status']) && $U['status'] == 'Inactive')) {
+		checkPagePermissions();
 		require_once 'signin.php';
 	}
+	
+	//print_r($_SESSION);
 	
 	//Check if user needs to reset password
 	if(isset($_SESSION['init'])) {

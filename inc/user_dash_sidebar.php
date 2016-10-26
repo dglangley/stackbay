@@ -1,4 +1,4 @@
-<h3 class="text-center pb-20"><?php echo ucwords($U['username']); ?>'s Dashboard</h3>
+<h3 class="text-center pb-20">My Dashboard</h3>
 
  <div class="list-group">
     <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->

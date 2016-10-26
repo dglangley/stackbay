@@ -281,7 +281,7 @@
 
                     <div style="display: inline-block; width: 100%;">
                         <h2>Users</h2>
-                        <a href='?user=create' class="btn btn-primary pull-right mb-20 create-user mt-42">Add User</a>
+                        <a href='?user=create' class="btn btn-success btn-sm pull-right mb-20 mt-42"  title="Add User"><i class="fa fa-user-plus"></i></a>
                     </div>
                     <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                     
@@ -292,7 +292,7 @@
                                 <th>Username</th>
                                 <th>Email</th>
                                 <th>Privilege</th>
-                                <th></th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,7 +305,7 @@
                             //After determine if the user should be greyed out and change the button type to activate
                         ?>
                             <tr class='<?php echo ($userStatus == 'Inactive' ? 'inactive' : ''); ?>'>
-                                <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo ucwords($user['username']); ?></a></td>
+                                <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
                                 <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                 <td>
                                     <?php foreach($privNames as $name) { echo $name . ' ';} ?>
@@ -313,12 +313,13 @@
                                 <td>
                                     <?php if($user['username'] != $U['username']){ ?>
                                         <?php if($userStatus != 'Inactive') { ?>
-                                            <a href="?deactivate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to kill <?php echo ucwords($user['username']); ?>?')">Deactivate</a>
+                                            <a href="?deactivate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to kill <?php echo ucwords($user['username']); ?>?')"><i  title="Deactivate" class="fa fa-user-times" style="color:#d9534f;"></i></a>
                                         <?php } else { ?>
-                                            <a href="?activate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to revive <?php echo ucwords($user['username']); ?>?')">Activate</a>
+                                            <a href="?activate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to revive <?php echo ucwords($user['username']); ?>?')"><i  title="Activate" class="fa fa-user-plus" style="color:#5cb85c;"></i></a>
                                         <?php } ?>
-                                    <?php } else { echo 'Current User'; }?>
-                                    </td>
+                                    <?php } else { echo '<i class="fa fa-user"></i>'; }?>
+                                    <a href="?user=<?php echo $user['userid']; ?>"><i class="fa fa-pencil pull-right"></i></a>
+                                </td>
                             </tr>
                         <?php } ?>
                         </tbody>
@@ -540,22 +541,22 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
 
         // Generate a password string function
         function randString(id){
-            var dataSet = $(id).attr('data-character-set').split(',');
+            var dataSet = jQuery(id).attr('data-character-set').split(',');
             var possible = '';
 
-            if($.inArray('a-z', dataSet) >= 0){
+            if(jQuery.inArray('a-z', dataSet) >= 0){
                 possible += 'abcdefghijklmnopqrstuvwxyz';
             }
 
-            if($.inArray('A-Z', dataSet) >= 0){
+            if(jQuery.inArray('A-Z', dataSet) >= 0){
                 possible += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             }
 
-            if($.inArray('0-9', dataSet) >= 0){
+            if(jQuery.inArray('0-9', dataSet) >= 0){
                 possible += '0123456789';
             }
 
-            if($.inArray('#', dataSet) >= 0){
+            if(jQuery.inArray('#', dataSet) >= 0){
                 possible += '![]{}()%&*$#^<>~@|';
             }
 
@@ -604,6 +605,8 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
             //     delay: 0
             // });
             $('.phone_us').mask('(000) 000-0000');
+            //Tooltip
+
         })(jQuery);
     </script>
 

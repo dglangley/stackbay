@@ -100,6 +100,9 @@
         .mt-42 {
             margin-top: -42px;
         }
+        .row {
+            margin: 0;
+        }
         @media screen and (max-width: 700px) {
             .mt-42 {
                 margin-top: 0;
@@ -192,10 +195,11 @@
                                             <!-- Create password field if the update is successful or allow the admin to see the password typed in if has errors -->
                                             <input id="pass" type="password" name="password" class="form-control mb-20" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $password); ?>">
                                             <input type="password" class="form-control" placeholder="Confirm Password" id="confirm_password">
-                                            <input name="status" type="checkbox" value="Active" <?php echo $venEdit->getStatus(); ?> hidden>
                                     </div>
                                 </div>
                             <?php } ?>
+                            
+                            <input name="status" type="checkbox" title="If you found this and edit this you will just deny permission to yourself. So becareful!" value="Active" <?php echo $venEdit->getStatus(); ?> hidden>
 
                             <div class="row">
                                 <div class="col-md-12">

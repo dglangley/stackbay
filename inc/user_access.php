@@ -24,6 +24,7 @@
 		private $contact_ID;
 		private $email_ID;
 
+		//Plaintext password
 		private $temp_pass;
 
 		//Set the user Token expiration time
@@ -35,6 +36,7 @@
 		var $user_company;
 		var $token_length;
 		var $generated_pass;
+		var $generated_pass_exp;
 
 		//Error Handler
 		var $error;
@@ -52,6 +54,8 @@
 			$this->token_length = time() + (7 * 86400); //* 86400
 			//We are going to assume the user is an established user with his/her own password
 			$this->generated_pass = 0;
+			//Password expiration to 1 day
+			$this->generated_pass_exp = time() + (86400);
 		}
 
 		function setUsername($username) {
@@ -142,6 +146,11 @@
 		function setGenerated($gen_pass) {
 			//set if the password was generated or not (0:1)
 			$this->generated_pass = $gen_pass;
+		}
+		
+		function setGeneratedExp($gen_pass_exp) {
+			//set if the initial to have a expiration time for the user to reset his/her password
+			$this->generated_pass_exp = $gen_pass_exp;
 		}
 
 		function setError($error) {
@@ -365,16 +374,19 @@
 
 				//Prepare and Bind for Users
 				$stmt = $WLI->prepare('
-					INSERT INTO users (contactid, login_emailid, encrypted_pass, init) 
-						VALUES (?, ?, ?, ?) 
+					INSERT INTO users (contactid, login_emailid, encrypted_pass, init, expiry) 
+						VALUES (?, ?, ?, ?, ?) 
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("iisi", $contactid, $emailid, $encrypted_pass, $init);
+				$stmt->bind_param("iisii", $contactid, $emailid, $encrypted_pass, $init, $expiry);
 				//Package it all and execute the query
 				$encrypted_pass = $this->getPassword();
 				$init = 0;
+				$expiry = null;
 				if($this->generated_pass == '1') {
 					$init = 1;
+					//24 hour expiration
+					$expiry = $this->generated_pass_exp;
 				}
 				$stmt->execute();
 				//Get the emailid to be used in User table
@@ -541,20 +553,24 @@
 				if(!empty($encrypted_pass)) {
 					//Prepare and Bind for Users
 					$stmt = $WLI->prepare('
-						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init) 
-							VALUES (?, ?, ?, ?, ?) 
+						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init, expiry) 
+							VALUES (?, ?, ?, ?, ?, ?) 
 							ON DUPLICATE KEY UPDATE
 					        contactid = VALUES(contactid),
 					        login_emailid = VALUES(login_emailid),
 					        encrypted_pass = VALUES(encrypted_pass),
-					        init = VALUES(init)
+					        init = VALUES(init),
+					        expiry = VALUES(expiry)
 					');
 					//s = string, i - integer, d = double, b = blob for params of mysqli
-					$stmt->bind_param("iiisi", $userid, $contactid, $emailid, $encrypted_pass, $init);
+					$stmt->bind_param("iiisii", $userid, $contactid, $emailid, $encrypted_pass, $init, $expiry);
 					//Package it all and execute the query
 					$init = 0;
+					$expiry = null;
 					if($this->generated_pass == '1') {
 						$init = 1;
+						//24 hour expiration
+						$expiry = $this->generated_pass_exp;
 					}
 					$stmt->execute();
 					$stmt->close();
@@ -562,7 +578,7 @@
 
                 //Prepare and Bind for Salt
                 $stmt = $WLI->prepare('
-                    INSERT INTO user_salts (salt, userid)
+                    REPLACE user_salts (salt, userid)
                         VALUES (?, ?)
                 ');
                 //s = string, i - integer, d = double, b = blob for params of mysqli
@@ -719,18 +735,41 @@
 				$exists = true;
 
 				//Since this seems to be a very widely used ID lets make it globally available
-				while ($row = $result->fetch_assoc()) {
-				  $userid = $row['userid'];
-				}
+				$row = mysqli_fetch_assoc($result);
+				$userid = $row['userid'];
+				$emailid = $row['emailid'];
 			}
 
 			if($exists) {
 				$this->setUserID($userid);
+				$this->setEmailID($emailid);
 			} else if($form == 'login') {
 				$this->setError('Wrong Username or Password.');
 			}
 
 	    	return $exists;
+	    }
+	    
+	    //Get the users email
+	    //This runs together with checkUsername with the defined userID & emailID
+	    function checkEmailtoUsername($email) {
+	    	$emailid = $this->getEmailID();
+	    	$emailDB = '';
+	    	
+	    	$query = "SELECT * FROM emails WHERE id='". res($emailid) ."'";
+			$result = qdb($query);
+
+			if (mysqli_num_rows($result)>0) {
+				$row = mysqli_fetch_assoc($result);
+				$emailDB = $row['email'];
+			}
+			
+			$this->setEmail($emailDB);
+			
+			if(strtolower($email) == strtolower($emailDB)) {
+				return true;
+			}
+			return false;
 	    }
 
 	    //Get the users id from user token
@@ -789,24 +828,42 @@
 		//Function used to authenticate the user
 		//We will also use this to grab user information and see if this is the users first loggin of a admin generated password
 		function authenticateUser() {
+			$ePassword = '';
+			$initLogin = '';
+			$initexpiry = '';
+			$gen_expiry = false;
+			
+			//Check if the password expiration for generated passwords is selected
+			$query = "SELECT * FROM password_policy WHERE policy = 'gen_expiry'";
+			$result = qdb($query);
+
+			if(mysqli_num_rows($result) > 0){
+				$row = mysqli_fetch_assoc($result);
+				$gen_expiry = true;
+			}
+				
 			//Query to get the usernames login info only if the user exists
-			$query = "SELECT encrypted_pass, init FROM users WHERE id ='" . res($this->getUserID()) . "'";
+			$query = "SELECT encrypted_pass, init, expiry FROM users WHERE id ='" . res($this->getUserID()) . "'";
 			$result = qdb($query);
 
 			if(mysqli_num_rows($result) > 0){
 
-				while ($row = $result->fetch_assoc()) {
-				  $ePassword = $row['encrypted_pass'];
-				  $initLogin = $row['init'];
-				}
+				$row = mysqli_fetch_assoc($result);
+				$ePassword = $row['encrypted_pass'];
+				$initLogin = $row['init'];
+				$initExpiry = $row['expiry'];
 
 			}
 
 			//Check credentials and if the passwords match up correctly move into the next phase of generating a user token or refresh a user token
 			//Or set error message
-			if($this->getPassword() === $ePassword) {
+			
+			if($initLogin == 1 && $initExpiry < time() && $gen_expiry) {
+				$this->setError('Password Expired. Please contact an admin for assistance.');
+			} else if($this->getPassword() === $ePassword) {
 				//Set if the user has a generated password
 				$this->setGenerated($initLogin);
+				$this->setGeneratedExp($initExpiry);
 				$this->userToken();
 			} else {
 				$this->setError('Wrong Username or Password.');
@@ -823,10 +880,9 @@
 
 			if(mysqli_num_rows($result) > 0){
 
-				while ($row = $result->fetch_assoc()) {
-				  $userToken = $row['user_token'];
-				  $userTokenID = $row['id'];
-				}
+				$r = mysqli_fetch_assoc($result);
+				$userToken = $r['user_token'];
+				$userTokenID = $r['id'];
 
 				//If the user token exists then we will overwrite the randomly generated one and set that as the one we will be updating
 				$this->setToken($userToken);
@@ -862,6 +918,7 @@
 			//Add a special variables for a user logging in for the first time with a admin generated password
 			if($this->generated_pass == 1) {
 				$_SESSION['init'] = true;
+				$_SESSION['initexp'] = $this->generated_pass_exp;
 			}
 		}
 
@@ -869,17 +926,44 @@
 		function SendUserConfirmationEmail() {
 	        setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 	        
-	  //      // send_gmail($email_body_html,$email_subject,$recipients,$bcc);
-			// // $recipients can be either a single recipient string, or array($rec1,$rec2,etc)
-			// // $bcc is optional
+	        // send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			// $recipients can be either a single recipient string, or array($rec1,$rec2,etc)
+			// $bcc is optional
 			
 			$email_body_html = "Greetings " . $this->user_firstName . " " . $this->user_lastName .",<br><br>";
 			$email_body_html .= "Welcome to MarketManager! Here's how to log in:<br><br>";
 			$email_body_html .= "Link: <a target='_blank' href ='" . $_SERVER['HTTP_HOST'] . "'>Market Manager</a><br>";
 			$email_body_html .= "Username: " . $this->getUsername() . "<br>";
-			$email_body_html .= "Password: " . ($this->generated_pass == '1' ? $this->getTempPass() : "User Preset") . "<br><br>";
+			$email_body_html .= "Password: " . ($this->generated_pass == '1' ? htmlspecialchars($this->getTempPass()) : "User Preset") . "<br><br>";
 			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
 			$email_subject = 'MarketManager User Registration';
+			$recipients = $this->getEmail();
+			$bcc = 'andrew@ven-tel.com';
+			
+			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			if ($send_success) {
+			    // echo json_encode(array('message'=>'Success'));
+			} else {
+			    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+			}
+
+	    }
+	    
+	    //Function generates an email for the user that is being created by the admin
+		function resetPasswordEmail($username = '') {
+	        setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+	        
+	        // send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			// $recipients can be either a single recipient string, or array($rec1,$rec2,etc)
+			// $bcc is optional
+			
+			$email_body_html = "Greetings " . $username .",<br><br>";
+			$email_body_html .= "A request for a password recovery was placed on your account and verified Here is your new password:<br><br>";
+			$email_body_html .= "Link: <a target='_blank' href ='" . $_SERVER['HTTP_HOST'] . "'>Market Manager</a><br>";
+			$email_body_html .= "Username: " . $username . "<br>";
+			$email_body_html .= "Password: Some Crazy Password Here<br><br>";
+			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
+			$email_subject = 'MarketManager Password Recovery';
 			$recipients = $this->getEmail();
 			$bcc = 'andrew@ven-tel.com';
 			
