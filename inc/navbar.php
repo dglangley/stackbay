@@ -350,4 +350,5 @@
 
 <?php
 	if ($s2) { $s = $s2; }
+	$ALERTS = array();//initialize for alert modal, see inc/footer.php
 ?>

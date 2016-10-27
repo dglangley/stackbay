@@ -289,6 +289,7 @@
 					$lines[] = $r2['search'].' '.$r2['qty'];
 				}
 			} else {
+				// if list is not processed, alert the user
 				$ALERTS[] = "Please wait while I process your list. If you do not have an email from me within 10 or 15 minutes, ".
 					"you may have unorganized data in your list that I cannot handle.";
 			}

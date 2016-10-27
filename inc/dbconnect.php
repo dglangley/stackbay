@@ -71,6 +71,7 @@ $DEV_ENV = true;
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
 
+		$now = time();
 		$userid = 0;
 		$user_token = '';
 		//Get the users id from the user token

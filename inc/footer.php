@@ -36,7 +36,7 @@
 
 		echo '
 <script type="text/javascript">
-	modalAlertShow("Alert","'.$alerts.'",false);
+	modalAlertShow("<i class=\"fa fa-female\"></i> A message from Améa...","'.$alerts.'",false);
 </script>
 		';
 	}
