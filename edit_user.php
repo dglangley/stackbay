@@ -317,7 +317,7 @@
                                         <?php } else { ?>
                                             <a href="?activate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to revive <?php echo ucwords($user['username']); ?>?')"><i  title="Activate" class="fa fa-user-plus" style="color:#5cb85c;"></i></a>
                                         <?php } ?>
-                                    <?php } else { echo '<i class="fa fa-user"></i>'; }?>
+                                    <?php } else { echo '<i class="fa fa-user-circle-o" style="color: rgb(60, 91, 121);"></i>'; }?>
                                     <a href="?user=<?php echo $user['userid']; ?>"><i class="fa fa-pencil pull-right"></i></a>
                                 </td>
                             </tr>
