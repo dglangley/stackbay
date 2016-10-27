@@ -84,7 +84,7 @@
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
 
-    <table class="table table-header">
+    <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
 
@@ -127,12 +127,24 @@
 								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
 								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
 								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">YTD</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+<?php
+	for ($m=1; $m<=5; $m++) {
+		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
+		$mfields = explode(' ',$month);
+		$month_name = $mfields[0];
+		$mcomps = explode('/',$mfields[1]);
+		$MM = $mcomps[0];
+		$DD = $mcomps[1];
+		$YYYY = $mcomps[2];
+		echo '
+								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
+		';
+	}
+?>
+							</div><!-- animated fadeIn -->
+						</div><!-- btn-range-options -->
+					</div><!-- btn-group -->
+			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
 

@@ -1,8 +1,4 @@
 <?php
-	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
-	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
-	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
-	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -26,6 +22,10 @@
 	if (mysqli_connect_errno($WLI)) {
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
+	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
+	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
+	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
+	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 
 	if (isset($NO_CACHE) AND $NO_CACHE===true) {
 		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
@@ -51,11 +51,16 @@ $DEV_ENV = true;
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '');
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'');
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
-
+	$ERRS = array();//global errors array for output to alert modal (see inc/footer.php)
+	
+	//Important pages that always must have minimum admin privileges
+	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
+	
+	session_set_cookie_params(time() + (7 * 24 * 60 * 60));
 	//Start the Session or call existing ones
 	session_start();
 
@@ -66,9 +71,7 @@ $DEV_ENV = true;
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
 
-		//get the current time
 		$now = time();
-
 		$userid = 0;
 		$user_token = '';
 		//Get the users id from the user token
@@ -95,7 +98,7 @@ $DEV_ENV = true;
 			exit;
 		} else {
 			//If session is not expired then increase the session time by a week for this computer
-			//$_SESSION['expiry'] = $now + (7 * 24 * 60 * 60);
+			$_SESSION['expiry'] = time() + (7 * 24 * 60 * 60);
 		}
 
 		$to_sec = time()-(60*60);
@@ -137,23 +140,33 @@ $DEV_ENV = true;
 			$U['phone'] = '';
 			$U['username'] = '';
 			$U['email'] = $userid;
+			
 			$query2 = "SELECT email FROM emails WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Work',0,1) LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['email'] = $r2['email'];
 			}
+			
 			$query2 = "SELECT phone FROM phones WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Office',0,1) LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['phone'] = $r2['phone'];
 			}
+			
 			$query2 = "SELECT username FROM usernames WHERE userid = '".res($userid)."' LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['username'] = $r2['username'];
+			}
+			
+			$query2 = "SELECT status FROM contacts WHERE id = '".$U['contactid']."' LIMIT 0,1; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$U['status'] = $r2['status'];
 			}
 
 			//Create a global array of all the current logged in users privileges
@@ -215,25 +228,59 @@ $DEV_ENV = true;
 			}
 		}
 	}
+	
+	//This function is here to check and make sure upon initial login of any user that the page permissions are set correctly and not missing.
+	//Putting it on login so it is only invoked once instead of multiple times
+	function checkPagePermissions() {
+		global $WLI, $ADMIN_PAGE;
+		//Find the admin ID from user_privileges table
+		$query = "SELECT id FROM user_privileges WHERE privilege='Administration'";
+		$result = qdb($query);
+		
+		//Set the variable admin ID
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$adminid = $r['id'];
+		}
+		
+		//print_r($ADMIN_PAGE);
+		
+		foreach($ADMIN_PAGE as $pageName) {
+			// Prepare and Bind for Privileges
+			$stmt = $WLI->prepare('
+				REPLACE page_roles (page, privilegeid) 
+					VALUES (?, ?) 
+			');
+			//s = string, i - integer, d = double, b = blob for params of mysqli
+			$stmt->bind_param("si", $pageName, $privid);
+			//Package it all and execute the query
+			$privid = $adminid;
+			$stmt->execute();
+			$stmt->close();
+		}
+	}
 
 	//Check if logged in
 	$is_loggedin = is_loggedin();
 	
-	//Check if signin is required
-	if(!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) {
-		require_once 'signin.php';
+	//Check if signin is required or check if the user status is alive
+	if((!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) || (isset($U['status']) && $U['status'] == 'Inactive')) {
+		checkPagePermissions();
+		require_once $_SERVER["ROOT_DIR"].'/signin.php';
 	}
+	
+	//print_r($_SESSION);
 	
 	//Check if user needs to reset password
 	if(isset($_SESSION['init'])) {
 		//Check to see if the user is logging in for the first time
 		require_once 'reset.php';
 		exit;
-	} 
+	}
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
 	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
-		header('Location: permission.php');
+		header('Location: '.$_SERVER["ROOT_DIR"].'/permission.php');
 		exit;
 	}
 
@@ -256,5 +303,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161006';
+	$V = '20161008';
 ?>

@@ -97,6 +97,9 @@
         .mt-42 {
             margin-top: -42px;
         }
+        .row {
+            margin: 0;
+        }
         @media screen and (max-width: 700px) {
             .mt-42 {
                 margin-top: 0;
@@ -197,7 +200,7 @@
                         </thead>
                         <tbody>
                         <!-- Parse all the pages that contain a privilege -->
-                        <?php foreach($pages as $page_name) { 
+                        <?php if(!empty($pages)) { foreach($pages as $page_name) { 
                             echo '<tr>';
                                 echo '<td>';
                                     echo $page_name['page'];
@@ -215,7 +218,7 @@
                                     echo '<a href="?delete=' . $page_name['page'] . '" onclick="return confirm(\'Are you sure you want to remove this permission?\')">Delete</a>';
                                 echo '</td>';
                             echo '</tr>';
-                        } ?>
+                        }} ?>
 
                         </tbody>
                     </table>

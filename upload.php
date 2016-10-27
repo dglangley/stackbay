@@ -81,7 +81,7 @@ die('file already is uploaded');
 						}
 
    		             	$query = "INSERT INTO uploads (filename, userid, metaid, exp_datetime, type, processed, link) ";
-   		             	$query .= "VALUES ('".res($_FILES['upload_file']['name'])."','1','".$metaid."',";
+   		             	$query .= "VALUES ('".res($_FILES['upload_file']['name'])."','".$U['id']."','".$metaid."',";
    		             	$query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($temp_file)."'); ";
 					} else {
 		                $upload = $s3->upload($bucket, $filename, fopen($_FILES['upload_file']['tmp_name'], 'rb'), 'public-read');
