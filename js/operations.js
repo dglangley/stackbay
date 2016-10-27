@@ -23,7 +23,7 @@
 		               maxDate: maxDate,
 		           });
 		   }
-		jQuery.fn.initSelect2 = function(load_url,limiter = ''){m 
+		jQuery.fn.initSelect2 = function(load_url,limiter = ''){ 
 			$(this).select2({
 		        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 		            url: load_url,
