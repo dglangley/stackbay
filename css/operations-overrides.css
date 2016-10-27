@@ -1,6 +1,26 @@
   /*--------------------------------------------------------------------------*/
  /*------------------- Aaron: Begin Order / Purchase Forms ------------------*/
 /*--------------------------------------------------------------------------*/
+html{
+	height: 100%;
+}
+body{
+	height: 100%;
+}
+.row-fluid{
+	margin: 0;
+}
+.container-fluid.pad-wrapper{
+	height: 100%;
+}
+.cm_bar{
+	height: 100%;
+}
+
+.company_meta{
+	background-color:#efefef;
+	height:inherit;
+}
 
 .sales{
 	background-color:#faefdd;

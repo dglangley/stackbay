@@ -61,6 +61,13 @@
 		    });
 		}
 		$(document).ready(function() {
+			//get main header height
+	        var height = $('header.navbar').height();
+	        //get possible filter bar height
+	        var heightOPT = $('.table-header').height();
+	        var offset = height + heightOPT + 25;
+	
+	        $('body').css('padding-top', offset);
 			$("#left-side-main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
