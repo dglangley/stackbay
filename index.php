@@ -268,7 +268,7 @@
 	if ($listid) {
 		$search_index = 0;
 		$qty_index = 1;
-		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
+		$query = "SELECT search_meta.id metaid, uploads.type, processed FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)>0) {

@@ -690,6 +690,9 @@
 			form.prop('action','/upload.php');
 			form.submit();
 		});
+		$(document).on("click",".btn-search",function() {
+			document.location.href = '/?listid='+$("#upload-listid").val();
+		});
 	
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
@@ -1013,7 +1016,7 @@
 							'</div><!-- col-sm-6 -->'+
 						'</div><!-- row -->';
 					box_footer = '<a class="btn btn-default btn-action" href="'+json.link+'" title="download this file"><i class="fa fa-download"></i></a>'+
-							'<button class="btn btn-primary btn-upload btn-action" title="view search result(s) for this file"><i class="fa fa-search"></i></button>';
+							'<button class="btn btn-primary btn-search btn-action" type="button" title="view search result(s) for this file"><i class="fa fa-search"></i></button>';
 
 					$("#upload-details").find(".content-box-header").html(box_header);
 					$("#upload-details").find(".content-box-body").html(box_body);

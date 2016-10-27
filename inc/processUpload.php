@@ -79,7 +79,7 @@
 			if ($n==0) {
 				list($part_col,$qty_col,$heci_col,$header_row) = setColumns($row_arr,$condensed);
 				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
-//				if ($header_row===true) { continue; }
+				if ($header_row===true) { continue; }
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
