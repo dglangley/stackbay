@@ -23,6 +23,7 @@
 	}
 	$list = mysqli_fetch_assoc($result);
 	$list['datetime'] = format_date($list['datetime'],'D n/j/y g:ia');
+	$list['exp_datetime'] = format_date($list['exp_datetime'],'D n/j/y g:ia');
 	$user_names = explode(' ',getUser($list['userid']));
 	$list['user'] = $user_names[0];
 	// erase link if it doesn't exist anymore

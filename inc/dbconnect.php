@@ -55,6 +55,7 @@ $DEV_ENV = true;
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
+	$ERRS = array();//global errors array for output to alert modal (see inc/footer.php)
 	
 	//Important pages that always must have minimum admin privileges
 	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
@@ -299,16 +300,7 @@ $DEV_ENV = true;
     
 		return 'Other';
 	}
-	$alertTop = 32;
-	function alertError($err_msg) {
-		global $alertTop;
-		$alertTop += 60;
-
-		echo '
-	<div class="alert alert-warning text-center" style="position:fixed; top:'.($GLOBALS['alertTop']).'; width:100%; z-index:1001; opacity:0.9"><h3>'.$err_msg.'</h3></div>
-		';
-	}
 
 	// version control for css and js includes
-	$V = '20161007';
+	$V = '20161008';
 ?>

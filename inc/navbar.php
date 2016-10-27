@@ -217,57 +217,63 @@
 -->
 				</div>
 				<div class="text-center lists-manager">
-					<p>Lists Manager:</p>
 					<p>
 						<input name="upload_file" type="file" id="upload-file" class="file-upload" />
 						<select name="upload_listid" id="upload-listid" class="lists-selector">
-							<option value="">- Upload or Select a List -</option>
+							<option value="">Upload or Select a List...</option>
 						</select>
-						<div id="list-details" class="hidden"></div>
-<!--
-							<button type="button" class="btn btn-primary btn-sm btn-upload">VIEW LIST</button>
--->
-					</p>
-					<div class="upload-options animated fadeIn hidden">
-						<p>
-							<div class="form-group" style="padding-right:8px">
-								<select name="upload_companyid" id="upload-companyid" class="company-selector">
-									<option value="">- Select a Company -</option>
-								</select>
+						<div id="upload-details" class="animated fadeIn hidden">
+							<div class="content-box box-default">
+								<div class="content-box-header"></div>
+								<div class="content-box-body"></div>
+								<div class="content-box-footer"></div>
 							</div>
-							<div class="form-group" style="padding-left:8px">
-								<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
-								<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
-								<div class="slider-frame success">
-									<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
+						</div>
+						<div id="upload-options" class="animated fadeIn hidden">
+							<div class="content-box box-default">
+								<div class="content-box-header">
+									<select name="upload_companyid" id="upload-companyid" class="company-selector">
+										<option value="">- Select a Company -</option>
+									</select>
 								</div>
-							</div>
-						</p>
-					</div>
-					<div class="upload-options animated fadeIn hidden">
-						<div class="row">
-							<div class="col-sm-5">
-								<div class="btn-group">
-<!--
-									<button class="left btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-hourglass-1"></i></button>
-									<button class="middle btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-hourglass-2"></i></button>
-									<button class="right btn btn-default btn-sm btn-expdate" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-hourglass-3"></i></button>
--->
-									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
-									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
-									<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
+								<div class="content-box-body">
+									<div class="row">
+										<div class="col-sm-6">
+											<p>
+												<div class="btn-group btn-group-bids">
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
+												</div>
+											</p>
+											<p>
+												<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
+												<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
+												<div class="slider-frame success">
+													<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
+												</div>
+											</p>
+										</div><!-- col-sm-6 -->
+										<div class="col-sm-6">
+											<p>
+								                <div class="input-group datepicker-datetime date datetime-picker">
+					   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
+					           		       			 <span class="input-group-addon">
+							       		                 <span class="fa fa-calendar"></span>
+					       					         </span>
+												</div>
+											</p>
+										</div><!-- col-sm-6 -->
+									</div><!-- row -->
 								</div>
-							</div>
-							<div class="col-sm-7">
-				                <div class="input-group datepicker-datetime date datetime-picker">
-	   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
-	           		       			 <span class="input-group-addon">
-			       		                 <span class="fa fa-calendar"></span>
-	       					         </span>
+								<div class="content-box-footer">
+									<button type="button" class="btn btn-primary btn-sm btn-upload btn-action" title="upload this file"><i class="fa fa-upload"></i></button>
 								</div>
 							</div>
 						</div>
-					</div>
+<!--
+-->
+					</p>
 				</div>
 				<div class="text-center">
 					<p>

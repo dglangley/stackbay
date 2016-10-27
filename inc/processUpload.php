@@ -17,7 +17,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_find.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/find_fields.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/set_columns.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setColumns.php';
 //	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
 	$test = 0;
@@ -77,15 +77,20 @@
 
 			// is this a header row? try to find out
 			if ($n==0) {
-				list($part_col,$qty_col,$heci_col,$header_row) = set_columns($row_arr,$condensed);
+				list($part_col,$qty_col,$heci_col,$header_row) = setColumns($row_arr,$condensed);
 				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
-				if ($header_row===true) { continue; }
+//				if ($header_row===true) { continue; }
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
 			if (($part_col===false AND $heci_col===false) OR $qty_col===false) {
 				$mail_msg = 'I could not process your file upload named "'.$filename.'" because '.
-					'I was unable to determine the Part#/HECI and/or Qty field(s).<BR><BR>'.
+					'I was unable to determine the Part#/HECI and/or Qty field(s). Please note the following conditions:<BR><BR>'.
+					'* Lists need EITHER a Part# or HECI column<BR>'.
+					'* Qualifying Part# column names are: "part", "model", "mpn", and "item" (case insensitive)<BR>'.
+					'* You cannot have more than one column with the same type (i.e., only one Part# field, not two)<BR>'.
+					'* Qualifying HECI column names are: "heci" and "clei" (case insensitive)<BR>'.
+					'* Qualifying Qty column names are: "qty", "quantity", and "qnty" (case insensitive)<BR>'.
 					'Please edit the file to add these column names, and then re-upload the file. Thanks!';
 				if (! $test) {
 					// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)

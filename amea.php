@@ -4,7 +4,7 @@
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_part.php';
-	include_once 'inc/set_columns.php';
+	include_once 'inc/setColumns.php';
 	include_once 'inc/keywords.php';
 	include_once 'inc/qty_functions.php';
 	include_once 'inc/format_heci.php';

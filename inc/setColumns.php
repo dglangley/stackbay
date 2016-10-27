@@ -4,7 +4,7 @@
 	include_once 'format_heci.php';
 	include_once 'keywords.php';
 
-	function set_columns($row_arr,$lines) {
+	function setColumns($row_arr,$lines) {
 		$num_lines = count($lines);
 
 		$line_lower = array_map('strtolower',$row_arr);

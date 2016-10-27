@@ -9,7 +9,8 @@
 	$PIPE->real_connect('192.69.242.135', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');
 	if (mysqli_connect_errno($PIPE)) {
 //		die( "Failed to connect to MySQL: " . mysqli_connect_error() );
-		alertError("Failed to connect to the PIPE!");
+		//add error to global array that is outputted to alert modal
+		$ALERTS[] = "Failed to connect to the PIPE!";
 	}
 //	echo '<BR><BR><BR>';
 

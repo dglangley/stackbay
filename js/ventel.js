@@ -483,7 +483,7 @@
 	        minimumInputLength: 0
 	    });
 	    $(".lists-selector").select2({
-			placeholder: 'Upload or Select...',
+			placeholder: 'Upload or Select a List...',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/lists.php",
 	            dataType: 'json',
@@ -674,7 +674,18 @@
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});
-		$(".btn-upload").click(function() {
+		$(document).on("click",".btn-upload",function() {
+			if (! $("#upload-companyid").val()) {
+				modalAlertShow("Company Alert","You must select a company before uploading a file!",false);
+				return;
+			}
+
+			if (! $("#upload-listid").val()) {
+				modalAlertShow("Upload Alert","You must select a file to upload!",false);
+				return;
+			}
+
+			//submit form
 			var form = $(this).closest("form");
 			form.prop('action','/upload.php');
 			form.submit();
@@ -828,6 +839,7 @@
             url: 'json/availability.php',
             type: 'get',
             data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'pricing_only': pricing_only},
+			settings: {async:true},
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
                     qtyTotal = 0;
@@ -941,12 +953,31 @@
 		});
 
 		if (upload===true) {
+			// if details is toggled on, hide it
+			if (! $("#upload-details").hasClass("hidden")) {
+				$("#upload-details").addClass("hidden");
+			}
+
 			e.val("");//reset selection
-			$("#upload-file").click();//show().focus().click().hide();
-			$(".upload-options").removeClass('hidden');
+			$("#upload-file").click();
+
+			$("#upload-options").find(".content-box-header").html(box_header);
+			$("#upload-options").find(".content-box-body").html(box_body);
+			$("#upload-options").find(".content-box-footer").html(box_footer);
+
+			// reveal the built html
+			$("#upload-options").removeClass('hidden');
 		} else if (listid>0) {
-			var details_html = '';
+			// if options box is toggled on, hide it
+			if (! $("#upload-options").hasClass("hidden")) {
+				$("#upload-options").addClass("hidden");
+			}
+
+			var box_header = '';
+			var box_body = '';
+			var box_footer = '';
 			var processed = '';
+			var list_type = '';
         	console.log(window.location.origin+"/json/list-select.php?id="+listid);
 	        $.ajax({
 				url: 'json/list-select.php',
@@ -955,24 +986,41 @@
 				dataType: 'json',
 				success: function(json, status) {
 					if (json.processed=='') {
-						processed = '<i class="fa fa-times-rectangle text-danger"></i>';
+						processed = '<i class="fa-li fa fa-times text-danger"></i> not processed';
 					} else {
-						processed = '<i class="fa fa-check-square text-success"></i> '+json.processed;
+						processed = '<i class="fa-li fa fa-check text-success"></i> processed '+json.processed;
+					}
+					if (json.type=='availability') {
+						list_type = '<i class="fa-li fa fa-info-circle text-warning"></i> Supply';
+					} else {
+						list_type = '<i class="fa-li fa fa-info-circle text-success"></i> Demand';
 					}
 
-					details_html += '<div class="content-box box-default">'+
-						'<h4 class="content-box-title">'+json.name+'</h4>'+
-						'<h5>'+json.filename+'</h5>'+
-						'</h4><p><em>uploaded '+json.datetime+' by '+json.user+'</em><br/>'+
-						'Processed: '+processed+'</p>'+
-						'<p><button class="btn btn-default"><i class="fa fa-download"></i></button>'+
-						'<button class="btn btn-primary"><i class="fa fa-search"></i></button></p>';
-//						'<span class="icon-ar icon-ar-lg icon-ar-circle"><i class="fa fa-download"></i></span> '+
-//						'<span class="icon-ar icon-ar-lg icon-ar-circle"><i class="fa fa-search"></i></span>';
-					$("#list-details").html(details_html);
+					box_header = '<h4 class="content-box-title">'+json.name+'</h4><h5>'+json.filename+'</h5>';
+					box_body = '<div class="row text-left">'+
+							'<div class="col-sm-6">'+
+								'<ul class="fa-ul">'+
+									'<li><i class="fa-li fa fa-user text-primary"></i> '+json.user+'</li>'+
+									'<li>'+list_type+'</li>'+
+									'<li>'+processed+'</li>'+
+								'</ul>'+
+							'</div><!-- col-sm-6 -->'+
+							'<div class="col-sm-6">'+
+								'<ul class="fa-ul">'+
+									'<li><i class="fa-li fa fa-upload text-muted"></i> <em>'+json.datetime+'</em></li>'+
+									'<li><i class="fa-li fa fa-clock-o text-muted"></i> '+json.exp_datetime+'</li>'+
+								'</ul>'+
+							'</div><!-- col-sm-6 -->'+
+						'</div><!-- row -->';
+					box_footer = '<a class="btn btn-default btn-action" href="'+json.link+'" title="download this file"><i class="fa fa-download"></i></a>'+
+							'<button class="btn btn-primary btn-upload btn-action" title="view search result(s) for this file"><i class="fa fa-search"></i></button>';
+
+					$("#upload-details").find(".content-box-header").html(box_header);
+					$("#upload-details").find(".content-box-body").html(box_body);
+					$("#upload-details").find(".content-box-footer").html(box_footer);
 
 					// reveal the built html
-					$("#list-details").removeClass('hidden');
+					$("#upload-details").removeClass('hidden');
 				},
 				error: function(xhr, desc, err) {
 					console.log(xhr);
@@ -1050,8 +1098,15 @@
 	function modalAlertShow(header,body,show_continue,callback,arg1) {
 		$('#modalAlertTitle').html(header);
 		$('#modalAlertBody').html(body);
-		if (show_continue===true) { $('#alert-continue').removeClass('hidden'); }
-		else { $('#alert-continue').removeClass('hidden').addClass('hidden'); }
+		if (show_continue===true) {
+			$('#alert-continue').removeClass('hidden');
+			// change verbiage to "Cancel" when there's a Continue button
+			$('#modal-alert').find('.btn-dismiss').html('Cancel');
+		} else {
+			$('#alert-continue').removeClass('hidden').addClass('hidden');
+			// change verbiage to "Close" when there's no Continue button
+			$('#modal-alert').find('.btn-dismiss').html('Close');
+		}
 		if (! callback) { var callback = ''; }
 		$('#alert-continue').data('callback',callback);
 		if (! arg1) { var arg1 = ''; }

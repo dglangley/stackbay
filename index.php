@@ -268,23 +268,29 @@
 	if ($listid) {
 		$search_index = 0;
 		$qty_index = 1;
-//		$query = "SELECT part, heci FROM market, parts WHERE source = '".res($listid)."' AND parts.id = market.partid; ";
 		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			if ($r['type']=='demand') { $table_qty = 'request_qty'; }
-			else { $table_qty = 'avail_qty'; }
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
 
-			$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
-			$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
-			$result2 = qdb($query2);
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				// does this search string (followed by an appended space, as in the following 'search qty' format) already
-				// exist in the array? if so, don't add to list for duplication of calculations below
-				if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
+			if ($r['processed']) {
+				if ($r['type']=='demand') { $table_qty = 'request_qty'; }
+				else { $table_qty = 'avail_qty'; }
 
-				$lines[] = $r2['search'].' '.$r2['qty'];
+				$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
+				$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
+				$result2 = qdb($query2);
+				while ($r2 = mysqli_fetch_assoc($result2)) {
+					// does this search string (followed by an appended space, as in the following 'search qty' format) already
+					// exist in the array? if so, don't add to list for duplication of calculations below
+					if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
+
+					$lines[] = $r2['search'].' '.$r2['qty'];
+				}
+			} else {
+				$ALERTS[] = "Please wait while I process your list. If you do not have an email from me within 10 or 15 minutes, ".
+					"you may have unorganized data in your list that I cannot handle.";
 			}
 		}
 	} else {

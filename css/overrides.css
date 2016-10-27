@@ -781,12 +781,16 @@ h1 a, h2 a, h3 a {
 .navbar-nav {
 	z-index:1003;
 }
+.btn-group-bids .btn {
+	background:transparent;
+}
+.btn-group-bids .btn-expdate .calendar-text {
+	color:#000;
+	font-size:0.6em;
+}
 .btn-expdate {
 	border:0;
 	padding:0;
-}
-.btn-expdate .calendar-text {
-	font-size:10px;
 }
 .btn-expdate.fa-lg {
 	font-size:1.5em;
@@ -963,30 +967,33 @@ a > .icon-ar.icon-ar-inverse:hover {
   display: block;
   text-align: center;
   overflow: hidden;
-  padding: 8px !important;
-  margin-bottom: 5px;
+  padding: 4px !important;
 }
 .content-box.box-default {
-  background-color: #8f8f8f;
-  border: solid 1px #e5e5e5;
-}
-.content-box.box-default h5, .content-box.box-default h5 a,
-.content-box.box-default h4, .content-box.box-default h4 a {
-  color:#fff;
-}
-.content-box.box-default p {
-  color:#ddd;
+  background-color: #dfdfdf;
+  border: solid 1px #6695e2;
 }
 .content-box.box-default:hover {
-  background-color: #9f9f9f;
+  background-color: #dddddd;
 }
+.content-box.box-default p,
+.content-box.box-default ul li {
+  color:#444;
+}
+.content-box.box-default h5, .content-box.box-default h5 a,
+.content-box.box-default h4, .content-box.box-default h4 a,
 .content-box.box-primary .content-box-title,
 .content-box.box-info .content-box-title,
 .content-box.box-success .content-box-title,
 .content-box.box-warning .content-box-title,
 .content-box.box-danger .content-box-title,
 .content-box.box-royal .content-box-title {
-  color: #fff;
+  color: #000;
+}
+.content-box.box-default .btn-action {
+  margin-left:4px;
+  margin-right:4px;
+  padding:2px 24px;
 }
 .content-box-title.counter {
   font-size: 3em;

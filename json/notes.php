@@ -132,7 +132,7 @@
 
 	// get pricing notes from new system next
 	if ($partid) {
-		$query = "SELECT note, price, datetime, userid FROM prices WHERE partid = '".res($partid)."' ORDER BY datetime DESC; ";
+		$query = "SELECT note, price, datetime, userid FROM prices WHERE partid = '".res($partid)."' ORDER BY datetime DESC LIMIT 0,30; ";
 		$result = qdb($query) OR reportError('Sorry, there was an error getting notes from the new db. Please see Admin immediately!');
 		while ($r = mysqli_fetch_assoc($result)) {
 			$note = trim($r['note']);
