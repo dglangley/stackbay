@@ -1,8 +1,4 @@
 <?php
-	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
-	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
-	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
-	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -26,6 +22,10 @@
 	if (mysqli_connect_errno($WLI)) {
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
+	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
+	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
+	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
+	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 
 	if (isset($NO_CACHE) AND $NO_CACHE===true) {
 		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
@@ -55,6 +55,7 @@ $DEV_ENV = true;
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
+	$ERRS = array();//global errors array for output to alert modal (see inc/footer.php)
 	
 	//Important pages that always must have minimum admin privileges
 	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
@@ -70,6 +71,7 @@ $DEV_ENV = true;
 	function is_loggedin($force_userid=0,$force_usertoken='') {
 		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
 
+		$now = time();
 		$userid = 0;
 		$user_token = '';
 		//Get the users id from the user token
@@ -264,7 +266,7 @@ $DEV_ENV = true;
 	//Check if signin is required or check if the user status is alive
 	if((!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'/auto/')) || (isset($U['status']) && $U['status'] == 'Inactive')) {
 		checkPagePermissions();
-		require_once 'signin.php';
+		require_once $_SERVER["ROOT_DIR"].'/signin.php';
 	}
 	
 	//print_r($_SESSION);
@@ -278,7 +280,7 @@ $DEV_ENV = true;
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
 	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
-		header('Location: permission.php');
+		header('Location: '.$_SERVER["ROOT_DIR"].'/permission.php');
 		exit;
 	}
 
@@ -301,5 +303,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161006';
+	$V = '20161008';
 ?>

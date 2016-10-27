@@ -8,9 +8,9 @@ RewriteBase /
 RewriteCond %{HTTP_USER_AGENT} libwww-perl.*
 RewriteRule .* – [F,L]
 
-# block libwww-perl clients (used by bad bots)
-RewriteCond %{HTTP_USER_AGENT} libwww-perl.*
-RewriteRule .* – [F,L]
+# docs handler
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)uploads/(.*)$ uploads/reader.php [L]
 
 # product image handler
 RewriteCond %{REQUEST_FILENAME} !-f

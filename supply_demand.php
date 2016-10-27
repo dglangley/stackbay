@@ -347,7 +347,17 @@
 			';
 	
 			$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'userid'=>$r['userid'],'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+			$row = array(
+				'datetime'=>$r['datetime'],
+				'company_col'=>$company_col,
+				/*'id'=>$r['id'],*/
+				'detail'=>$descr,
+				'userid'=>$r['userid'],
+				'qty_col'=>$qty_col,
+				'price_col'=>$price_col,
+				'amt'=>$this_amt,
+				'status'=>'<span class="label label-success">Completed</span>'
+			);
 	
 			$results[] = $row;
 		}
