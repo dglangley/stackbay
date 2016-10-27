@@ -27,7 +27,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	}
 	
     function order_left($order_number,$order_type){
-		
+		 
 		//Rather than do a select2 like a sane person would, I will use a method of appended
 		//arrays. Each of these will allow me a greater amount of control (Perhaps)
 		//to output and organize each of the results in a manner which database

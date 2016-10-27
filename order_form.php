@@ -76,6 +76,7 @@
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
 	</head>
+	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
@@ -182,7 +183,7 @@
 						</div>
 					</td>
 		            <td>				
-		            	<div class="input-group date datetime-picker-line" style="display:none;">
+		            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
 				            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>

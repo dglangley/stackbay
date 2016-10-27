@@ -2,6 +2,14 @@
  /*------------------- Aaron: Begin Order / Purchase Forms ------------------*/
 /*--------------------------------------------------------------------------*/
 
+.sales{
+	background-color:#faefdd;
+}
+
+.purchases{
+	background-color:#f7fff1;
+}
+
 .forms_section{
 	width:100%;
 	overflow:hidden;
