@@ -65,7 +65,7 @@
 	        var height = $('header.navbar').height();
 	        //get possible filter bar height
 	        var heightOPT = $('.table-header').height();
-	        var offset = height + heightOPT + 25;
+	        var offset = height + heightOPT;
 	
 	        $('body').css('padding-top', offset);
 			$("#left-side-main").ready(function(){

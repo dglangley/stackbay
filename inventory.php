@@ -32,7 +32,7 @@
 
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav">
 	
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
@@ -77,7 +77,7 @@
 		</tbody>
 	</table>
 	
-	<div class="row" style="padding-top: 120px; margin: 0;">
+	<div class="row" style="margin: 0;">
 		<div class="col-md-2">
 			<div class="row" style="margin: 0">
 				<div class="col-md-2">
@@ -246,6 +246,14 @@
 
 <script>
 	(function($){
+		//get main header height
+		var height = $('header.navbar').height();
+		//get possible filter bar height
+		var heightOPT = $('.table-header').height();
+		var offset = height + heightOPT + 25;
+
+		$('body').css('padding-top', offset);
+	
 		$('.buttonAdd').click(function(){
 			$('.addItem').slideToggle('fast');
 		});
