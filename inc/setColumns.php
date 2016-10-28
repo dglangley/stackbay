@@ -15,6 +15,7 @@
 		$qty_col = array_find('qty',$line_lower);
 		if ($qty_col===false) { $qty_col = array_find('quantity',$line_lower); }
 		if ($qty_col===false) { $qty_col = array_find('qnty',$line_lower); }
+		if ($qty_col===false) { $qty_col = array_find('count',$line_lower); }
 		$heci_col = array_find('heci',$line_lower);
 		if ($heci_col===false) { $heci_col = array_find('clei',$line_lower); }
 

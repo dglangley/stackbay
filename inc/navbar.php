@@ -240,17 +240,15 @@
 									<div class="row">
 										<div class="col-sm-6">
 											<p>
-												<div class="btn-group btn-group-bids">
-													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
-													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
-													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
-												</div>
-											</p>
-											<p>
 												<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
 												<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
 												<div class="slider-frame success">
 													<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
+												</div>
+												<div class="btn-group btn-group-bids">
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
+													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
 												</div>
 											</p>
 										</div><!-- col-sm-6 -->
@@ -267,7 +265,21 @@
 									</div><!-- row -->
 								</div>
 								<div class="content-box-footer">
-									<button type="button" class="btn btn-primary btn-sm btn-upload btn-action" title="upload this file"><i class="fa fa-upload"></i></button>
+									<p>
+										<button type="button" class="btn btn-primary btn-sm btn-upload btn-action" title="upload this file"><i class="fa fa-upload"></i></button>
+									</p>
+									<p class="info text-left">
+										<ul class="fa-ul text-left" style="font-size:10px; margin-bottom:0; padding-bottom:0">
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Column headers are optional but recommended, and case insensitive
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Duplicate headers (i.e., "Part" &amp; "Item") are not allowed
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Required columns: Qty, and either Part or HECI. Allowed headers:
+										</ul>
+										<ul class="fa-ul fa-nav text-center">
+											<li><i class="fa-li fa fa-check text-danger"></i> Part, Item, Model, MPN
+											<li><i class="fa-li fa fa-check text-danger"></i> Qty, Quantity, Qnty, Count
+											<li><i class="fa-li fa fa-check text-danger"></i> HECI, CLEI
+										</ul>
+									</p>
 								</div>
 							</div>
 						</div>

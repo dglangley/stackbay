@@ -320,7 +320,7 @@
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index])) {
 			$qty_text = trim($terms[$qty_index]);
-			$qty_text = preg_replace('/^(qty|qnty|quantity)?([.]|-)?0?([0-9]+)([.]|-)?(x|ea)?/i','$3',$qty_text);
+			$qty_text = preg_replace('/^(qty|qnty|quantity)?([.]|-)?(\\()?0?([0-9]+)(\\))?([.]|-)?(x|ea)?/i','$4',$qty_text);
 
 			if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
 		}
@@ -525,7 +525,7 @@
 									<div class="form-group">
 										<div class="input-group sell">
 											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+												<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1"><i class="fa fa-lock"></i></button>
 											</span>
 											<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
 										</div>

@@ -303,5 +303,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161008';
+	$V = '20161009';
 ?>

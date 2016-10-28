@@ -781,6 +781,16 @@ h1 a, h2 a, h3 a {
 .navbar-nav {
 	z-index:1003;
 }
+.fa-nav {
+	font-size:10px;
+	padding-left:10px;
+	margin-bottom:0;
+	padding-bottom:0;
+}
+.fa-nav li {
+	display:table-cell;
+	padding-right:25px;
+}
 .btn-group-bids .btn {
 	background:transparent;
 }
