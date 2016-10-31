@@ -32,7 +32,7 @@
 
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav">
 	
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
@@ -40,16 +40,17 @@
 
 	<?php include 'inc/navbar.php'; ?>
 	
+<!----------------------------------------------------------------------------->
+<!-------------------------- Header/Filter Bar/Title -------------------------->
+<!----------------------------------------------------------------------------->
+
 	<table class="table table-header">
 		<tbody>
 			<tr>
 				<td class="col-md-1">
 				</td>
 				<td class="col-md-4">
-					<div class="col-md-2" style="margin-top: 9px;"><strong>Filter Bar</strong>:</div>
-					<div class="col-md-10">
-						<input class="form-control" type="text" name="" placeholder="part"/>
-					</div>
+					<input class="form-control" type="text" name="" placeholder="Part"/>
 				</td>
 				<td class="col-md-1">
 					<input class="form-control" type="text" name="" placeholder="Date"/>
@@ -65,11 +66,15 @@
 				</td>
 				<td class="col-md-2">
 					Toggles:
-					<button class="btn btn-default active">Up</button>
-					<button class="btn btn-default">Down</button>
-					  
-					<button class="btn btn-default active">MVP</button>
-					<button class="btn btn-default">...</button>
+					<div class="btn-group" role="group">
+						<button class="btn btn-default active">Up</button>
+						<button class="btn btn-default">Down</button>
+					</div>
+					
+					<div class="btn-group" role="group">  
+						<button class="btn btn-default active">MVP</button>
+						<button class="btn btn-default">...</button>
+					</div>
 				</td>
 				<td class="col-md-1">
 				</td>
@@ -77,7 +82,7 @@
 		</tbody>
 	</table>
 	
-	<div class="row" style="padding-top: 120px; margin: 0;">
+	<div class="row" style="margin: 20px 0 0 0;">
 		<div class="col-md-2">
 			<div class="row" style="margin: 0">
 				<div class="col-md-2">
@@ -125,116 +130,55 @@
 	<div class="row addItem" style="margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;">
 		<div class="row">
 			<div class="col-md-12">
-				<button class="btn btn-default btn-sm active pull-left" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+				<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+				<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;">Save Changes</button>
 				<h3>Part - Amea</h3>
 				<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
 			</div>
 		</div>
 		
 		<hr>
-		<div class="row">
-			<div class="col-md-3">
+		<div class="addRows">
+			<div class="row product-rows" style="padding-bottom: 10px;">
 				<div class="col-md-2">
-					<button class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+					<label for="serial">Serial/Lot Number</label>
+					<input class="form-control" type="text" name="serial" placeholder="#123" value="ABC"/>
+					<div class="form-text"></div>
 				</div>
-				<div class="col-md-10">
-					<label for="serial">Serial Number</label>
-					<input class="form-control" type="text" name="serial" placeholder="#123"/>
-				</div>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Date</label>
-				<input class="form-control" type="text" name="date" placeholder="00/00/0000"/>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Location</label>
-				<input class="form-control" type="text" name="date" placeholder="Warehouse Location"/>
-			</div>
-			<div class="col-md-1">
-				<label for="qty">Qty</label>
-				<input class="form-control" type="text" name="qty" placeholder="Quantity"/>
-			</div>
-			<div class="col-md-2">
-				<label for="condition">Condition</label>
-				<input class="form-control" type="text" name="condition" placeholder="Condition"/>
-			</div>
-			<div class="col-md-1">
-				<label for="status">Status</label>
-				<input class="form-control" type="text" name="status" placeholder="Status"/>
-			</div>
-			<div class="col-md-1">
-				<label for="price">Cost</label>
-				<input class="form-control" type="text" name="price" placeholder="$$$"/>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-3">
 				<div class="col-md-2">
-					<button class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+					<label for="date">Date</label>
+					<input class="form-control" type="text" name="date" placeholder="00/00/0000" value="10/28/2016"/>
 				</div>
-				<div class="col-md-10">
-					<label for="serial">Serial Number</label>
-					<input class="form-control" type="text" name="serial" placeholder="#123"/>
-				</div>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Date</label>
-				<input class="form-control" type="text" name="date" placeholder="00/00/0000"/>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Location</label>
-				<input class="form-control" type="text" name="date" placeholder="Warehouse Location"/>
-			</div>
-			<div class="col-md-1">
-				<label for="qty">Qty</label>
-				<input class="form-control" type="text" name="qty" placeholder="Quantity"/>
-			</div>
-			<div class="col-md-2">
-				<label for="condition">Condition</label>
-				<input class="form-control" type="text" name="condition" placeholder="Condition"/>
-			</div>
-			<div class="col-md-1">
-				<label for="status">Status</label>
-				<input class="form-control" type="text" name="status" placeholder="Status"/>
-			</div>
-			<div class="col-md-1">
-				<label for="price">Cost</label>
-				<input class="form-control" type="text" name="price" placeholder="$$$"/>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-3">
 				<div class="col-md-2">
-					<button class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+					<label for="date">Location</label>
+					<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value="Rancho"/>
 				</div>
-				<div class="col-md-10">
-					<label for="serial">Serial Number</label>
-					<input class="form-control" type="text" name="serial" placeholder="#123"/>
+				<div class="col-md-1">
+					<label for="qty">Qty</label>
+					<input class="form-control" type="text" name="qty" placeholder="Quantity" value="100"/>
 				</div>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Date</label>
-				<input class="form-control" type="text" name="date" placeholder="00/00/0000"/>
-			</div>
-			<div class="col-md-2">
-				<label for="date">Location</label>
-				<input class="form-control" type="text" name="date" placeholder="Warehouse Location"/>
-			</div>
-			<div class="col-md-1">
-				<label for="qty">Qty</label>
-				<input class="form-control" type="text" name="qty" placeholder="Quantity"/>
-			</div>
-			<div class="col-md-2">
-				<label for="condition">Condition</label>
-				<input class="form-control" type="text" name="condition" placeholder="Condition"/>
-			</div>
-			<div class="col-md-1">
-				<label for="status">Status</label>
-				<input class="form-control" type="text" name="status" placeholder="Status"/>
-			</div>
-			<div class="col-md-1">
-				<label for="price">Cost</label>
-				<input class="form-control" type="text" name="price" placeholder="$$$"/>
+				<div class="col-md-2">
+					<label for="condition">Condition</label>
+					<input class="form-control" type="text" name="condition" placeholder="Condition" value="New"/>
+				</div>
+				<div class="col-md-1">
+					<label for="status">Status</label>
+					<input class="form-control" type="text" name="status" placeholder="Status" value="On-shelf"/>
+				</div>
+				<div class="col-md-2">
+					<div class="col-md-7">
+						<div class="row">
+							<label for="price">Cost</label>
+							<input class="form-control" type="text" name="price" placeholder="$$$" value="$10,000.00"/>
+						</div>
+					</div>
+					<div class="col-md-5">
+						<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">
+							<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>
+							<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -246,8 +190,88 @@
 
 <script>
 	(function($){
+		//get main header height
+		var height = $('header.navbar').height();
+		//get possible filter bar height
+		var heightOPT = $('.table-header').height();
+		var offset = height + heightOPT + 25;
+
+		$('body').css('padding-top', offset);
+	
 		$('.buttonAdd').click(function(){
 			$('.addItem').slideToggle('fast');
+		});
+		
+	     $('.update').click(function () {
+	    	// $($(this).siblings('.form-text')).html($(this).val());
+	    	// $(this).hide();
+	     });
+		
+		//Append new row of data
+		var element = '<div class="product-rows row new-row appended" style="padding-bottom: 10px; display: none;">\
+				<div class="col-md-2">\
+					<label for="serial">Serial/Lot Number</label>\
+					<input class="form-control" type="text" name="serial" placeholder="#123" value=""/>\
+				</div>\
+				<div class="col-md-2">\
+					<label for="date">Date</label>\
+					<input class="form-control" type="text" name="date" placeholder="00/00/0000" value=""/>\
+				</div>\
+				<div class="col-md-2">\
+					<label for="date">Location</label>\
+					<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value=""/>\
+				</div>\
+				<div class="col-md-1">\
+					<label for="qty">Qty</label>\
+					<input class="form-control" type="text" name="qty" placeholder="Quantity" value=""/>\
+				</div>\
+				<div class="col-md-2">\
+					<label for="condition">Condition</label>\
+					<input class="form-control" type="text" name="condition" placeholder="Condition" value=""/>\
+				</div>\
+				<div class="col-md-1">\
+					<label for="status">Status</label>\
+					<input class="form-control" type="text" name="status" placeholder="Status" value=""/>\
+				</div>\
+				<div class="col-md-2">\
+					<div class="col-md-7">\
+						<div class="row">\
+							<label for="price">Cost</label>\
+							<input class="form-control" type="text" name="price" placeholder="$$$" value=""/>\
+						</div>\
+					</div>\
+					<div class="col-md-5">\
+						<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">\
+							<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>\
+							<button class="btn btn-danger delete btn-sm"><i class="fa fa-minus" aria-hidden="true"></i></button>\
+						</div>\
+					</div>\
+				</div>\
+			</div>';
+		
+		//Once button is clicked the new row will be appended
+		$('.buttonAddRows').click(function(){
+			$('.addRows').append(element);
+			$('.appended').slideDown().removeClass('appended');
+			
+			$('.delete').click(function(){
+				$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
+			});
+		});
+		
+		//Remove rows
+		$('.delete').click(function(){
+			$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
+		});
+		
+		//Update all query
+		$('.updateAll').click(function() {
+			//Get how many rows created + initial row
+			var totalRows = $('.product-rows').length;
+			var results = new Array();
+			$('.product-rows').each(function() {
+				
+			});
 		});
 	})(jQuery);
 </script>

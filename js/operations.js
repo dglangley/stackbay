@@ -66,6 +66,7 @@
 			//get main header height
 	        var height = $('header.navbar').height();
 	        //get possible filter bar height
+<<<<<<< HEAD
 	        var heightOPT = 0;
 	        if ($('.table-header').css("display")!='none'){
 	        	heightOPT = $('.table-header').height();
@@ -73,6 +74,9 @@
 	        var offset = height + heightOPT;
 			
 			
+=======
+	
+>>>>>>> c0cbb0c8815c14dd9a5652f5d120fbaf0861bdb8
 	        $('body').css('padding-top', offset);
 			$("#left-side-main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");

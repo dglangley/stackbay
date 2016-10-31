@@ -59,26 +59,24 @@
 						Order Info
 					</div>
 					<div class="row-fluid" style="width:100%; padding-top:10px;">
-							<div class="col-md-12">
-								<div class='input-group'>
-									<input class='form-control' type='text' placeholder = 'Order #' value=''>
-									<span class='input-group-btn'>
-								        <button class='btn btn-secondary' type='button'>
-									        <i class='fa fa-paperclip' aria-hidden='true'></i>
-								        </button>
-					    			</span>
-								</div>	
-					
+						<div class="col-md-12">
+							<div class='input-group'>
+								<input class='form-control' type='text' placeholder = 'Order #' value=''>
+								<span class='input-group-btn'>
+							        <button class='btn btn-secondary' type='button'>
+								        <i class='fa fa-paperclip' aria-hidden='true'></i>
+							        </button>
+				    			</span>
+							</div>	
 						</div>
 					</div>
 					<div class="row-fluid" style="width:100%; padding-top:10px;">
 						<div class="col-md-12">						
-								<div class = 'company'>
-									<select name='companyid' id='companyid' class='company-selector' style = "width:100%;">
-										<option>Company</option>
-									</select>
-								</div>
-			
+							<div class = 'company'>
+								<select name='companyid' id='companyid' class='company-selector' style = "width:100%;">
+									<option>Company</option>
+								</select>
+							</div>
 						</div>
 					</div>
 					<div class="row-fluid" style="width:100%; padding-top:10px;">
