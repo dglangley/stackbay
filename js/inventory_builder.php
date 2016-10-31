@@ -16,9 +16,13 @@
 	
 	
 	//Funciton assembly section
-	function build_row(
+	function build_row(){
 		
-		);
-	function append_row();
-	function output_table();
+	};
+	function append_row(){
+		
+	};
+	function output_table(){
+		
+	};
 ?>

@@ -78,7 +78,7 @@
 	</head>
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
-		<div class="container-fluid pad-wrapper">
+		<div class="container-fluid pad-wrapper" style="margin-top:20px;">
 		<?php include 'inc/navbar.php';?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?>
@@ -103,8 +103,7 @@
 				</button>
 			</div>
 		</div>
-		<div class="spacer" style = "margin:120px; width:100%"></div>
-	
+
 	<!-- Row declaration for splitting the two "halves of the page  -->
 	<div class="container-fluid">
 	

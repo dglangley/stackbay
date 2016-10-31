@@ -61,17 +61,29 @@
 		    });
 		}
 		$(document).ready(function() {
+			
+			
 			//get main header height
 	        var height = $('header.navbar').height();
 	        //get possible filter bar height
-	        var heightOPT = $('.table-header').height();
-	        var offset = height + heightOPT + 25;
-	
+	        var heightOPT = 0;
+	        if ($('.table-header').css("display")!='none'){
+	        	heightOPT = $('.table-header').height();
+	        }
+	        var offset = height + heightOPT;
+			
+			
 	        $('body').css('padding-top', offset);
 			$("#left-side-main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
 				var company = "0";
+				
+				$(document).on("change","#ship_to",function() {
+					$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
+					// $(this).parent().find("#ship_to").find("option").text();
+				});
+				
 				$(document).on("change","#companyid",function() {
 					company = $(this).val();
 					$("#account_select").initSelect2("/json/freight-account-search.php",company);
@@ -122,13 +134,20 @@
 					}
 				});
 			});
-			
+
 			$(document).on("click",".forms_edit",function() {
 				$(this).closest("tr").hide();
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php");
 			});
+			$(document).on("dblclick",".easy-output td",function() {
+				$(this).closest("tr").hide();
+				$(this).closest("tr").next().show()
+				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
+				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php");
+			});
+			
 		    $(".item_search").initSelect2("/json/part-search.php");
 	
 		    //This function runs the method append and adds a row to the end of the table

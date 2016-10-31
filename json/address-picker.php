@@ -17,7 +17,7 @@
         foreach($results as $id => $row){
             $line = array(
                 'id' => $row['id'], 
-                'text' => $row['name'].' | '.$row['street'].'\\n'.$row['city'].', '.$row['state'].'\\n'.$row['postal_code'],
+                'text' => $row['name'].' <br> '.$row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'],
                 );
             if (strpos(strtolower($line['text']),strtolower($q)) !== false){
                 $output[] = $line;

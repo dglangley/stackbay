@@ -53,7 +53,7 @@
 		</div>
 
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<div class="row-fluid cm_bar">
+			<div class="row-fluid cmbar">
 				<div class="company_meta col-md-2">
 					<div class="row-fluid" style="width:100%; padding-top:10px;">
 						Order Info
@@ -94,14 +94,14 @@
 				</div>
 			<!---------------------- OUTPUT THE LINE ADDITION TABLE ---------------------->
 				<div class="inventory_lines col-md-10">
-					<table class="table table-hover table-striped table-condensed table-responsive" id="items_table" style="margin-top:30px;">
+					<table class="table table-hover table-striped table-condensed table-responsive" id="items_table" style="table-layout: fixed;margin-top:30px;">
 							<thead>
 						         <tr>
-						            <th class="col-md-4" style="max-width:600px;">
+						            <th class="col-md-4">
 						            	<span class="line"></span>		
 						            	PART	
 						            </th>
-						            <th class="col-md-2" style="max-width:600px;">
+						            <th class="col-md-2">
 						            	<span class="line"></span>		
 						            	Serial	
 						            </th>
@@ -128,29 +128,29 @@
 						         </tr>
 						      </thead>
 							<tbody id="">
-							    <tr>
+							    <tr class = "addRecord">
 						            <td id='search_collumn'>
-						            	<div>
-											<select class='item_search' style="width:100%;">
+						            	<div style="max-width:inherit;">
+											<select class='item_search' style="max-width:inherit;overflow:hidden;">
 												<option data-search = 'Nothing at the moment'>Item</option>
 											</select>
 										</div>
 									</td>
 									<td id='serial'>
-							            <input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE">
+							            <input class="form-control input-sm" type="text" name = "Newitem" placeholder="Serial">
 									</td>
 						            <td>
 										<div class="input-group">
 									    	<input type="text" class="form-control" aria-label="Text input with checkbox">
+							            <span class="input-group-addon">Serialize Each?</span>
 									      	<span class="input-group-addon">
 									        	<input type="checkbox" aria-label="Checkbox for following text input">
 											</span>
-							            <span class="input-group-addon">Serialize</span>
 				
 									    </div>
 								    </td>
 						            <td>
-				                            <div class="ui-select">
+				                            <div class="ui-select" style="width:100%;">
 				                                <select>
 				                                    <option selected="">Warehouse 12</option>
 				                                    <option>Warehouse 12</option>
@@ -160,24 +160,22 @@
 				                    </td>
 						            <td>
 				                    	<button class="btn btn-success">
-				                    		1
+				                    		Rec
 				                    	</button>     
 				                    	<button class="btn btn-danger">
-				                    		2
+				                    		Ret 	
 				                    	</button>
-				                    	<button class="btn btn-primary">
-				                    		3
-				                    	</button>
+
 				                    </td>
 						            <td>
 							           	<button class="btn btn-success">
-				                    		1
+				                    		N
 				                    	</button>     
 				                    	<button class="btn btn-danger">
-				                    		2
+				                    		U
 				                    	</button>
 				                    	<button class="btn btn-primary">
-				                    		3
+				                    		R
 				                    	</button>
 				                    </td>
 				                    <td>

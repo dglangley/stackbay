@@ -123,10 +123,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
             <div class = 'row-fluid forms_section'>
 				<div class='col-md-6'>
 					<h4>Ship to</h4>
-	                    <select id='ship_to' data-ship-id=0>
-	                        <option>Address</option>
-	                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
-	                    </select>
+                    <select id='ship_to' style='overflow:hidden;' data-ship-id=0>
+                        <option>Address</option>
+                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
+                    </select>
             		<div>".
 	                	$s_add['line1']."<br>".
 	                	$s_add['line2']."<br>".
