@@ -344,35 +344,52 @@
 	/*=========================== BEGIN SHIPPING HOME ===========================*/
 			$(".shipping_section_foot a").click(function() {
 				if ($(this).text() == "Show more"){
+					$('.col-lg-6').hide();
 					$(this).closest("body").children(".table-header").show();
-					$(this).closest("div").addClass("shipping-dash-full");
-					$(this).closest("div").children(".shipping_section_head").hide();
-					$(this).closest("div").siblings(".shipping-dash").hide();
+					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
+					
+					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
+					$(this).closest(".shipping-dash").removeClass("shipping-dash");
+					
+					$(".shipping-dash-full").fadeIn('fast');
+					$('body').scrollTop('fast');
+					
+					var title = $(".shipping-dash-full .shipping_section_head").data('title');
+					$(".shipping_section_head").hide();
+					
+					$("#view-head-text").text(title);
+					
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
 					$(this).closest("body").children("#view-head").show();
-					if ($(this).closest(".shipping-dash").hasClass("sd-sales")){
-						$("#view-head-text").text('Sales Orders');
-						$(this).closest("body").find("button[data-value='Sales']").addClass("active");
-						$(this).closest("body").find("button[data-value='Purchases']").removeClass("active");
-					}
-					else{
-						$("#view-head-text").text('Purchase Orders');
-						$(this).closest("body").find("button[data-value='Purchases']").addClass("active");
-						$(this).closest("body").find("button[data-value='Sales']").removeClass("active");
-					}
+					// if ($(this).closest(".shipping-dash").hasClass("sd-sales")){
+					// 	$("#view-head-text").text(title);
+					// 	$(this).closest("body").find("button[data-value='Sales']").addClass("active");
+					// 	$(this).closest("body").find("button[data-value='Purchases']").removeClass("active");
+					// }
+					// else{
+					// 	$("#view-head-text").text('Purchase Orders');
+					// 	$(this).closest("body").find("button[data-value='Purchases']").addClass("active");
+					// 	$(this).closest("body").find("button[data-value='Sales']").removeClass("active");
+					// }
 				}
 				else{
 					$(this).closest("body").children(".table-header").hide();
-					$(this).closest("div").removeClass("shipping-dash-full");
+					$(".shipping-dash-full").removeClass("shipping-dash-full");
 					$(this).closest("table").find(".overview").hide();
-					$(this).parents("body").find(".shipping_section_head").fadeIn("slow");
-					$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
+					$(this).parents("body").find(".shipping_section_head").fadeIn("fast");
+					$('.col-lg-6').show();
+					
+					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
+					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
+					
+					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
 					$(this).parents("body").find(".overview").hide();
 					$(this).parents("body").children("#view-head").hide();
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
 			});
+			
 			$("#sales").click(function() {
 				//If the current view is purchases...
 				if( $(this).closest("body").find(".shipping-dash-full").hasClass("sd-purchases")){
