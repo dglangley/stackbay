@@ -605,7 +605,7 @@
 								</div>
 								<div class="product-descr action-hover">
 				                	<div class="input-group">
-										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" />
+										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" tabindex="-1" />
 	           		       				<span class="input-group-addon action-items">
 <?php if ($num_results==0) { // add link to create a new part ?>
 											<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>

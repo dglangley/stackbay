@@ -120,8 +120,9 @@
 //				$part = preg_replace('/(REV|REL|ISS|SER).+$/','',$part);
 //			}
 
-			// replacing chr(0) is removing null characters, specifically for verizon bid list
-			$qty = preg_replace('/^([0-9]+)(x|ea)$/i','$1',str_replace(chr(0),'',trim($row_arr[$qty_col])));
+			// replacing chr(0) is removing null characters, specifically for verizon bid list;
+			// see http://php.net/manual/en/function.trim.php#98812 for trim() technique on non-breaking spaces
+			$qty = preg_replace('/^([[:space:]]*)?([0-9]+)(x|ea)?([[:space:]]*)?$/i','$2',str_replace(chr(0),'',trim($row_arr[$qty_col],chr(0xC2).chr(0xA0))));
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = '';
 			if ($heci_col!==false) {
