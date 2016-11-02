@@ -14,6 +14,10 @@
 //==============================================================================
 	
 	//The output rows funciton will be the part which echos within the sections on the 
+	
+	function output_module($section){
+		
+	}
 	function output_header($section){
 			echo'<thead>';
 			echo'<tr>';
@@ -183,104 +187,108 @@
 			</td>
 		</tr>
 	</table>
-	
-	
-	
-	<div class="row head text-center" id = "view-head" style="display:none;padding-top:110px;">
+	<div class="row head text-center" id = "view-head" style="display:none;padding-top:120px;">
     	<div class="col-md-12">
         	<h2 id="view-head-text"></h2>
         </div>
     </div>
-	<div style="position:fixed;width:100%; height:100%;"class="generalWrapper">
-		<div class="pad-wrapper shipping-dash sd-outstanding sd-sales">
-            <table class="table table-hover table-striped table-condensed">
-				<div class="shipping_section_head">
+	<div class="row">
+		<div class="col-lg-6 pad-wrapper" style="margin: 25px 0;">
+			<div class="shipping-dash">
+				<div class="shipping_section_head" data-title="Sales Orders">
 					Outstanding Sales Orders
 				</div>
-				<?php
-					output_header("out_so");
-				?>
-                <tbody>
-                	<?php
-						for($i=0;$i<20;$i++){
-							output_rows("out_po",$i);
-						}
-                	?>
-                </tbody>
-            	<tfoot>
-            		<tr>
-            			<td class="col-md-12 text-center shipping_section_foot more" colspan="7"><a href="#">Show more</a></td>
-        			</tr>
-                </tfoot>
-            </table>
+				<div class="table-responsive">
+		            <table class="table heighthover heightstriped table-condensed">
+						<?php
+							output_header("out_so");
+						?>
+		                <tbody>
+		                	<?php
+								for($i=0;$i<20;$i++){
+									output_rows("out_po",$i);
+								}
+		                	?>
+		                </tbody>
+		            </table>
+		    	</div>
+		    	<div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
+	            	<a href="#">Show more</a>
+	            </div>
+            </div>
         </div>
-		<div class="pad-wrapper shipping-dash sd-outstanding sd-purchases">
-            <table class="table table-hover table-striped table-condensed">
-				<div class="shipping_section_head">Outstanding Purchase Orders</div>
-                	<?php
-						output_header("out_po");
-					?>
-                <tbody>
-                	<?php
-						for($i=0;$i<10;$i++){
-							output_rows("out_po",$i);
-						}
-                	?>
-                </tbody>
-            	<tfoot>
-            		<tr>
-            			<td class="col-md-12 text-center shipping_section_foot more" colspan="7"><a href="#">Show more</a></td>
-        			</tr>
-                	
-                </tfoot>
-            </table>
+		<div class="col-lg-6 pad-wrapper" style="margin: 25px 0;">
+			<div class="shipping-dash">
+				<div class="shipping_section_head" data-title="Purchase Orders">Outstanding Purchase Orders</div>
+				<div class="table-responsive">
+		            <table class="table table-hover table-striped table-condensed">
+		                	<?php
+								output_header("out_po");
+							?>
+		                <tbody>
+		                	<?php
+								for($i=0;$i<10;$i++){
+									output_rows("out_po",$i);
+								}
+		                	?>
+		                </tbody>
+		            </table>
+	            </div>
+	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
+	            	<a href="#">Show more</a>
+	            </div>
+			</div>
         </div>
-        <div class="pad-wrapper shipping-dash sd-completed sd-sales">
-            <table class="table table-hover table-striped table-condensed">
-				<div class="shipping_section_head">Completed Sales Orders</div>
-
-					<?php
-						output_header("comp_so");
-					?>
-                
-                <tbody>
-					<?php
-						for($i=0;$i<10;$i++){
-							output_rows("comp_so",$i);
-						}
-                	?>
-
-                </tbody>
-                            	<tfoot>
-            		<tr>
-            			<td class="col-md-12 text-center shipping_section_foot more" colspan="7"><a href="#">Show more</a></td>
-        			</tr>
-                	
-                </tfoot>
-            </table>
+    </div>
+    <div class="row">
+		<div class="col-lg-6 pad-wrapper" style="margin: 0 0 25px 0;">
+			<div class="shipping-dash">
+				<div class="shipping_section_head" data-title="Sales Orders">
+					Outstanding Sales Orders
+				</div>
+				<div class="table-responsive">
+		            <table class="table heighthover heightstriped table-condensed">
+						<?php
+							output_header("out_so");
+						?>
+		                <tbody>
+		                	<?php
+								for($i=0;$i<20;$i++){
+									output_rows("out_po",$i);
+								}
+		                	?>
+		                </tbody>
+		            </table>
+	            </div>
+	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
+	            	<a href="#">Show more</a>
+	            </div>
+            </div>
         </div>
-        <div class="pad-wrapper shipping-dash sd-completed sd-purchases">
-            <table class="table table-hover table-striped table-condensed">
-				<div class="shipping_section_head">Recent Completed Purchases</div>
-                	<?php
-						output_header("comp_po");
-					?>
-                <tbody>
-					<?php
-						for($i=0;$i<10;$i++){
-							output_rows("comp_po",$i);
-						}
-                	?>
-                </tbody>
-				<tfoot>
-            		<tr>
-            			<td class="col-md-12 text-center shipping_section_foot more" colspan="7"><a href="#">Show more</a></td>
-        			</tr>
-                	
-                </tfoot>
-            </table>
+		<div class="col-lg-6 pad-wrapper" style="margin: 0 0 25px 0;">
+			<div class="shipping-dash">
+				<div class="shipping_section_head" data-title="Purchase Orders">Outstanding Purchase Orders</div>
+				<div class="table-responsive">
+		            <table class="table table-hover table-striped table-condensed">
+		                	<?php
+								output_header("out_po");
+							?>
+		                <tbody>
+		                	<?php
+								for($i=0;$i<10;$i++){
+									output_rows("out_po",$i);
+								}
+		                	?>
+		                </tbody>
+		            </table>
+	            </div>
+	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
+	            	<a href="#">Show more</a>
+	            </div>
+            </div>
         </div>
-	</div>
+    </div>
+    
 
 
 

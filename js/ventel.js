@@ -613,21 +613,7 @@
 				toggleFav($(this).data('partid'));
 			}
 		});
-/*
-	    $('.datepicker-date').each(function() {
-			$(this).datepicker().on('changeDate', function(ev){
-		        if (ev.date.valueOf() > endDate.valueOf()) {
-		            $('#alert').show().find('strong').text('The start date can not be greater than the end date');
-		        } else {
-		            $('#alert').hide();
-		            startDate = new Date(ev.date);
-		            $(this).find("span:first").text($(this).data('date'));
-		            $($(this).data('target')).val($(this).data('date'));
-		        }
-		        $(this).datepicker('hide');
-			});
-	    });
-*/
+
 		$('.datetime-picker').each(function() {
 			// these settings are optional; if not set in the 'data-' tags, then set to false
 			var format = false;
@@ -652,25 +638,6 @@
 			});
 		});
 		
-/*
-		$('.datetime-picker-filter').each(function() {
-			$(this).datetimepicker({
-				format: 'MM/DD/YYYY',
-				icons: {
-					time: 'fa fa-clock-o',
-					date: 'fa fa-calendar',
-					up: 'fa fa-chevron-up',
-					down: 'fa fa-chevron-down',
-					previous: 'fa fa-chevron-left',
-					next: 'fa fa-chevron-right',
-					today: 'fa fa-screenshot',
-					clear: 'fa fa-trash',
-					close: 'fa fa-close'
-				},
-				maxDate: Date(),
-			});
-		});
-*/
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
 		});

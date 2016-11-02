@@ -27,7 +27,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	}
 	
     function order_left($order_number,$order_type){
-		
+		 
 		//Rather than do a select2 like a sane person would, I will use a method of appended
 		//arrays. Each of these will allow me a greater amount of control (Perhaps)
 		//to output and organize each of the results in a manner which database
@@ -123,10 +123,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
             <div class = 'row-fluid forms_section'>
 				<div class='col-md-6'>
 					<h4>Ship to</h4>
-	                    <select id='ship_to' data-ship-id=0>
-	                        <option>Address</option>
-	                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
-	                    </select>
+                    <select id='ship_to' style='overflow:hidden;' data-ship-id=0>
+                        <option>Address</option>
+                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
+                    </select>
             		<div>".
 	                	$s_add['line1']."<br>".
 	                	$s_add['line2']."<br>".

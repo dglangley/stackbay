@@ -103,7 +103,7 @@
 	
 	//The initial table output method will call on the load of the page. It
 	//accesses the database and outputs the current rows of the database.
-	function initalTableOutput (){
+	function initalTableOutput (){ 
 		$table = '';
 		
 		//Determine from the post to the page what we are working on. Assume new if there is no number.

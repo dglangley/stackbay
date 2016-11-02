@@ -1,6 +1,38 @@
   /*--------------------------------------------------------------------------*/
  /*------------------- Aaron: Begin Order / Purchase Forms ------------------*/
 /*--------------------------------------------------------------------------*/
+html{
+	height: 100%;
+}
+body{
+	height: 100%;
+}
+.row-fluid{
+	margin: 0;
+}
+.container-fluid.pad-wrapper{
+	height: 100%;
+}
+.cmbar{
+	height: 100%;
+}
+
+#select2-ship_to-container, #select2-bill_to-container{
+	height: inherit;
+}
+
+.company_meta{
+	background-color:#efefef;
+	height:inherit;
+}
+
+.sales{
+	background-color:#faefdd;
+}
+
+.purchases{
+	background-color:#f7fff1;
+}
 
 .forms_section{
 	width:100%;
@@ -37,8 +69,6 @@
 	font-size:17pt;
 	padding-bottom: 5px;
 }
-
-
 
 .forms_section .select2-selection{
 	height:34px;
@@ -92,33 +122,24 @@
 
 /*Aaron: End Order / Purchase Forms */
 
-/*Aaron: Shipping sections!*/
+
+/*===========================================================================*/
+/*======================== Aaron: Shipping sections! ========================*/
+/*===========================================================================*/
 .shipping-dash{
+	/*padding: 0;*/
 	transition:ease visibility 1s;
-	position: absolute;
-	margin-left: 2%;
-	margin-right: 2%;
-	width:46%;
+	/*margin-left: 1%;*/
+	/*margin-right: 1%;*/
+	/*width:48%;*/
 	border:thin grey solid;
 	border-top-left-radius:5px;
 	border-top-right-radius:5px;
-	float:left;
+
 }
 
-.sd-completed{
-	top: 55%;
-}
-.sd-outstanding{
-	top: 70px;
-}
-.sd-sales{
-	left: 0%;
-}
-.sd-purchases{
-	right: 0%;
-}
+
 .shipping_section_head{
-	left: 0;
 	background-color:#5b83af;
 	color: white;
 	font-weight: bold;
@@ -130,13 +151,10 @@
 
 
 .shipping-dash-full{
-	transition:ease all .5s;
-	position: absolute;
-	top: 30px;
-	width: 98% !important;
-	left: 1% !important;
-	border:none;
+	/*transition:ease all .5s;*/
+	width: 100% !important;
 	height: auto;
+	display: none;
 }
 
 
@@ -145,3 +163,10 @@
 	padding-top: 20px;
 }
 /*Aaron: end shipping section*/
+
+/*Media Queries*/
+@media only screen and (max-width: 767px) {
+	.company_meta{
+		height:auto;
+	}
+}

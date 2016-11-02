@@ -76,8 +76,9 @@
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
 	</head>
+	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
-		<div class="container-fluid pad-wrapper">
+		<div class="container-fluid pad-wrapper" style="margin-top:20px;">
 		<?php include 'inc/navbar.php';?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?>
@@ -102,8 +103,7 @@
 				</button>
 			</div>
 		</div>
-		<div class="spacer" style = "margin:120px; width:100%"></div>
-	
+
 	<!-- Row declaration for splitting the two "halves of the page  -->
 	<div class="container-fluid">
 	
@@ -182,7 +182,7 @@
 						</div>
 					</td>
 		            <td>				
-		            	<div class="input-group date datetime-picker-line" style="display:none;">
+		            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
 				            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
