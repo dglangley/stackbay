@@ -8,6 +8,58 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	
+	$results_array = array();
+	
+	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory)";
+	$result = qdb($query);
+	
+	while ($row = $result->fetch_assoc()) {
+		$parts_array[] = $row;
+	}
+	
+	function getManufacture($manfid) {
+		$manf;
+		
+		$query  = "SELECT * FROM manfs where id = $manfid";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$manf = $result['name'];
+		}
+		
+		return $manf;
+	}
+	
+	function getSystemName($systemid) {
+		$system;
+		
+		$query  = "SELECT * FROM systems where id = $systemid";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$system = $result['system'];
+		}
+		
+		return $system;
+	}
+	
+	function getPartSerials($partid) {
+		$query  = "SELECT * FROM inventory where partid = $partid";
+		$result = qdb($query);
+		
+		while ($row = $result->fetch_assoc()) {
+			$partSerial_array[] = $row;
+		}
+		
+		return $partSerial_array;
+	}
+	
+	function updateToDatabase($serial, $date, $locationid, $qty, $condition, $status, $cost) {
+		
+	}
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -75,106 +127,112 @@
 		</div>
 	</div>
 	
-	<div class="row" style="margin: 35px 0 0 0;">
-		<div class="col-md-2 col-sm-2">
-			<div class="row" style="margin: 0">
+	<?php foreach($parts_array as $part): ?>
+		<div class="part-container">
+			<div class="row" style="margin: 35px 0 0 0;">
 				<div class="col-md-2 col-sm-2">
-					<button class="btn btn-success buttonAdd" style="margin-top: 24px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-				</div>
-				<div class="col-md-10 col-sm-10">
-					<img class="img-responsive" src="http://placehold.it/350x150">
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3 col-sm-3">
-			<strong>Part - Amea</strong>
-			<hr>
-			Description, Manufacture<br><br>
-			<i>Alias: David, Aaron, Andrew</i>
-		</div>
-		<div class="col-md-2 col-sm-2">
-			<strong>Order History</strong>
-			<hr>
-			<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <a href="">#123</a>, <a href="">#234</a><br>
-			<span title="Sales Order" style="text-decoration: underline;">SO</span>: <a href="">#111</a>, <a href="">#222</a>
-		</div>
-		<div class="col-md-2 col-sm-2">
-			<strong>Status</strong>
-			<hr>
-			<button title="In-stock" class="btn btn-danger">1</button>
-			<button title="Sold" class="btn btn-success">2</button>
-			<button title="Market" class="btn btn-primary">3</button>
-		</div>
-		<div class="col-md-2 col-sm-2">
-			<strong>Condition</strong>
-			<hr>
-			<button title="Refurb" class="btn btn-info">0</button>
-			<button title="Broken" class="btn btn-danger">1</button>
-			<button title="Used" class="btn btn-success">2</button>
-			<button title="New" class="btn btn-primary">3</button>
-		</div>
-		<div class="col-md-1 col-sm-1">
-			<strong>Cost Avg.</strong>
-			<hr>
-			$1,000 - 1,500
-		</div>
-	</div>
-	
-	<div class="row addItem" style="margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;">
-		<div class="row">
-			<div class="col-md-12 col-sm-12">
-				<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-				<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;">Save Changes</button>
-				<h3>Part - Amea</h3>
-				<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
-			</div>
-		</div>
-		
-		<hr>
-		<div class="addRows">
-			<div class="row product-rows" style="padding-bottom: 10px;">
-				<div class="col-md-2 col-sm-2">
-					<label for="serial">Serial/Lot Number</label>
-					<input class="form-control" type="text" name="serial" placeholder="#123" value="ABC"/>
-					<div class="form-text"></div>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<label for="date">Date</label>
-					<input class="form-control" type="text" name="date" placeholder="00/00/0000" value="10/28/2016"/>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<label for="date">Location</label>
-					<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value="Rancho"/>
-				</div>
-				<div class="col-md-1 col-sm-1">
-					<label for="qty">Qty</label>
-					<input class="form-control" type="text" name="qty" placeholder="Quantity" value="100"/>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<label for="condition">Condition</label>
-					<input class="form-control" type="text" name="condition" placeholder="Condition" value="New"/>
-				</div>
-				<div class="col-md-1 col-sm-1">
-					<label for="status">Status</label>
-					<input class="form-control" type="text" name="status" placeholder="Status" value="On-shelf"/>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<div class="row">
-						<div class="col-md-7 col-sm-7">
-							<label for="price">Cost</label>
-							<input class="form-control" type="text" name="price" placeholder="$$$" value="$10,000.00"/>
+					<div class="row" style="margin: 0">
+						<div class="col-md-2 col-sm-2">
+							<button class="btn btn-success buttonAdd" style="margin-top: 24px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
 						</div>
-						<div class="col-md-5 col-sm-5">
-							<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">
-								<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>
-								<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
-							</div>
+						<div class="col-md-10 col-sm-10">
+							<img class="img-responsive" src="http://placehold.it/350x150">
 						</div>
 					</div>
 				</div>
+				<div class="col-md-3 col-sm-3">
+					<strong><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></strong>
+					<hr>
+					Description, <?php echo getManufacture($part['manfid']); ?><br><br>
+					<i>Alias: David, Aaron, Andrew</i>
+				</div>
+				<div class="col-md-2 col-sm-2">
+					<strong>Order History</strong>
+					<hr>
+					<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <a href="">#123</a>, <a href="">#234</a><br>
+					<span title="Sales Order" style="text-decoration: underline;">SO</span>: <a href="">#111</a>, <a href="">#222</a>
+				</div>
+				<div class="col-md-2 col-sm-2">
+					<strong>Status</strong>
+					<hr>
+					<button title="In-stock" class="btn btn-danger">1</button>
+					<button title="Sold" class="btn btn-success">2</button>
+					<button title="Market" class="btn btn-primary">3</button>
+				</div>
+				<div class="col-md-2 col-sm-2">
+					<strong>Condition</strong>
+					<hr>
+					<button title="Refurb" class="btn btn-info">0</button>
+					<button title="Broken" class="btn btn-danger">1</button>
+					<button title="Used" class="btn btn-success">2</button>
+					<button title="New" class="btn btn-primary">3</button>
+				</div>
+				<div class="col-md-1 col-sm-1">
+					<strong>Cost Avg.</strong>
+					<hr>
+					$1,000 - 1,500
+				</div>
+			</div>
+		
+			<div class="row addItem" style="margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;">
+				<div class="row">
+					<div class="col-md-12 col-sm-12">
+						<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+						<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;">Save Changes</button>
+						<h3><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></h3>
+						<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
+					</div>
+				</div>
+				
+				<hr>
+				<div class="addRows">
+					<?php foreach(getPartSerials($part['id']) as $serial): ?>
+						<div class="row product-rows" style="padding-bottom: 10px;">
+							<div class="col-md-2 col-sm-2">
+								<label for="serial">Serial/Lot Number</label>
+								<input class="form-control" type="text" name="serial" placeholder="#123" value="<?php echo $serial['serial_no']; ?>"/>
+								<div class="form-text"></div>
+							</div>
+							<div class="col-md-2 col-sm-2">
+								<label for="date">Date</label>
+								<input class="form-control" type="text" name="date" placeholder="00/00/0000" value="<?php echo date_format(date_create($serial['date_created']), 'm/d/Y'); ?>"/>
+							</div>
+							<div class="col-md-2 col-sm-2">
+								<label for="date">Location</label>
+								<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value="<?php echo $serial['locationid']; ?>"/>
+							</div>
+							<div class="col-md-1 col-sm-1">
+								<label for="qty">Qty</label>
+								<input class="form-control" type="text" name="qty" placeholder="Quantity" value="<?php echo $serial['qty']; ?>"/>
+							</div>
+							<div class="col-md-2 col-sm-2">
+								<label for="condition">Condition</label>
+								<input class="form-control" type="text" name="condition" placeholder="Condition" value="<?php echo $serial['item_condition']; ?>"/>
+							</div>
+							<div class="col-md-1 col-sm-1">
+								<label for="status">Status</label>
+								<input class="form-control" type="text" name="status" placeholder="Status" value="<?php echo $serial['status']; ?>"/>
+							</div>
+							<div class="col-md-2 col-sm-2">
+								<div class="row">
+									<div class="col-md-7 col-sm-7">
+										<label for="price">Cost</label>
+										<input class="form-control" type="text" name="price" placeholder="$$$" value=""/>
+									</div>
+									<div class="col-md-5 col-sm-5">
+										<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">
+											<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>
+											<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
 			</div>
 		</div>
-	</div>
+	<?php endforeach; ?>
 
 
 
@@ -192,7 +250,10 @@
 		$('body').css('padding-top', offset);
 	
 		$('.buttonAdd').click(function(){
-			$('.addItem').slideToggle('fast');
+			$(this).closest('.part-container').children('.addItem').slideToggle('fast');
+			
+			$(this).children('.fa-plus').toggleClass('fa-minus');
+			$(this).toggleClass('btn-success btn-danger');
 		});
 		
 	     $('.update').click(function () {
