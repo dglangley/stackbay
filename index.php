@@ -478,7 +478,7 @@
 
 			$results_rows .= '
                         <!-- row -->
-                        <tr class="product-results" id="row-'.$partid.'">
+                        <tr class="product-results animated" id="row-'.$partid.'">
                             <td class="descr-row'.$rowcls.'">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
@@ -592,38 +592,42 @@
                         <!-- row -->
                         <tr class="first">
                             <td>
-								<div class="product-action action-hover text-center">
-	                                <div><input type="checkbox" class="checkAll" checked></div>
+								<div class="product-action action-hover text-left">
+									<div>
+										<input type="checkbox" class="checkAll" checked><br/>
+										#<?php echo $x; ?>
+									</div>
 									<div class="action-items">
-						           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
-						           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
+							           	<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil"></i></a><br/>
+							           	<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain"></i></a><br/>
+<?php if ($num_results==0) { // add link to create a new part ?>
+										<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
+<?php } else { ?>
+										<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
+<?php } ?>
 									</div>
 								</div>
 								<div class="qty">
-									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
-									<span class="info">their qty</span>
+									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty" /><br/>
 								</div>
 								<div class="product-descr action-hover">
 				                	<div class="input-group">
 										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" tabindex="-1" />
+<!--
 	           		       				<span class="input-group-addon action-items">
-<?php if ($num_results==0) { // add link to create a new part ?>
-											<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
-<?php } else { ?>
-											<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
-<?php } ?>
 										</span>
+-->
 									</div><!-- /input-group -->
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
 								</div>
 								<div class="price pull-right">
 									<div class="form-group target text-right">
-										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
-										<span class="info">their price</span>
+										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" data-toggle="tooltip" data-placement="top" title="customer target price or vendor asking price" />
 									</div>
 								</div>
 							</td>
-                            <td>
+                            <td class="action-hover toggle-box">
+								<div class="action-items toggle-results"><a href="javascript:void(0);" title="toggle selection of the results in this row"> <i class="fa fa-toggle-on fa-lg"></i> </a></div>
 								<div class="row">
 									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>

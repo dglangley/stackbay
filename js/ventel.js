@@ -745,6 +745,16 @@
                 }
 			});
 		});
+
+		$(".toggle-results a").on('click',function() {
+			$(this).closest("tbody").find(".product-results").each(function() {
+				if ($(this).is(':visible')) {
+					$(this).fadeOut('fast');
+				} else {
+					$(this).fadeIn('fast');
+				}
+			});
+		});
 		
 		/*Aaron: Function Suite for filter buttons*/
 		$('td[id*=Ranges]').children().click(function() {

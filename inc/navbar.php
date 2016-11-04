@@ -165,6 +165,7 @@
 		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
+		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
 	                <?php } ?>
 
 	                <li><a href="signout.php">Logout</a></li>
@@ -297,9 +298,12 @@
 				<button class="btn btn-primary btn-submit" type="submit">Search</button>
 			</div>
 			<div class="col-sm-3 options-group text-left">
+				<div class="row header-border">
+					<h4 class="text-primary">Filters</h4>
+				</div>
 				<div class="row">
 					<div class="col-sm-4 text-center">
-						<p>Search:</p>
+						<span class="info">Search:</span>
 						<p>
 							<div class="form-group">
 			                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
@@ -310,7 +314,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<p>Qty:</p>
+						<span class="info">Qty:</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
@@ -321,7 +325,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<p>Price:</p>
+						<span class="info">Price:</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="price_field" value="" class="form-control input-xs" size="2">
@@ -332,6 +336,7 @@
 						</p>
 					</div>
 				</div>
+<!--
 				<div class="row">
 					<div class="col-sm-12">
 						<p><label><input type="radio">ERB3 qty2 &nbsp; T3PQAE7</label></p>
@@ -339,11 +344,15 @@
 						<p><label><input type="radio">ERB3 &nbsp; T3PQAE7 &nbsp; qty2</label></p>
 					</div>
 				</div>
-				<hr>
+-->
 				<div class="row">
-					<div class="col-sm-6">
+					<div class="col-sm-2">
 						<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
 						<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
+					</div>
+					<div class="col-sm-2">
+					</div>
+					<div class="col-sm-2">
 					</div>
 					<div class="col-sm-6">
 						<div class="form-group">
