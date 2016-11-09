@@ -27,14 +27,6 @@
 	padding-right:12px;
 }
 
-/*
-.table-header tr td:first-child {
-	padding-left:40px;
-}
-.table-header tr td:last-child {
-	padding-right:40px;
-}
-*/
 .input-xs {
   height: 24px;
   padding: 3px 4px 3px 6px !important;
@@ -112,30 +104,84 @@
 	font-style:italic;
 }
 
+.tooltip-inner {
+	color:#000;
+	background-color:#eee;
+	border:1px solid #aaa;
+	box-shadow: 1px 1px 1px #999;
+}
+.tooltip.left .tooltip-arrow {
+	border-left-color:#aaa;
+}
+.tooltip.top .tooltip-arrow {
+	border-top-color:#aaa;
+}
 
-.table-products .table div {
+.table-products .table td > div {
 	vertical-align:top;
 	padding:0px;
 }
-.table-products .table .product-img, .table-products .table .product-descr, .first .qty, .first .price, .table .product-action {
+.table-products .table td a {
+	margin-top:0px;
+}
+.table-products .table .product-img, .table-products .table .product-descr, .first .qty, .first .price, .table .product-action, .table .first .product-action div {
 	font-size:11px;
 	display:inline-block;
 }
+.table-products .table input[type="checkbox"] {
+	margin:0;
+	margin-right:4px;
+}
 .table .product-action div input[type="checkbox"] {
 	position:relative;
-	top:-8px;
-	left:37%;
+	/*top:-8px;*/
+}
+.table .first,
+.table .first .product-action div {
+	vertical-align:top;
 }
 .table .first {
-	vertical-align:top;
-	height:64px;
+	height:48px;
 }
 .table .product-action {
 	vertical-align:top;
 	width:48px;
-	height:22px;
 	padding:0px;
 	margin:0px;
+}
+.table .first .product-action {
+	height:24px;
+}
+.table .product-results .product-action div {
+	height:22px;
+}
+.table .product-results .product-action div input[type="checkbox"] {
+	/*margin-top:6px;*/
+	left:37%;
+}
+.slider-box {
+	position:relative;
+}
+.slider-box .slider-frame {/*.toggle-results {*/
+	z-index:1001;
+	position:absolute;
+	top:6px;
+	right:4px;
+	height:16px;
+	width:60px;
+}
+.slider-box .slider-frame .slider-button {
+	height:16px;
+	line-height:16px;
+	width:44px;
+}
+.slider-box .slider-frame .slider-button.on {
+	margin-left:16px;
+}
+
+.table .first .action-items {
+	margin-left:5px;
+	margin-top:-5px;
 }
 .table tr .action-hover .action-items {
 	visibility:hidden;
@@ -144,6 +190,9 @@
 	visibility:visible;
 }
 /*
+.action-items a {
+	margin:0px;
+}
 .table tr .action-hover .action-items {
 	display:none;
 }
@@ -203,7 +252,7 @@
 	background:#fcf8e3 !important;
 }
 .qty-header {
-	padding-left:48px;
+	padding-left:64px;
 	padding-right:20px;
 }
 .first td {
@@ -332,6 +381,9 @@ input[type="text"].inline {
 .product-search {
 	width:100%;
 }
+
+
+/***** ADVANCED SEARCH OPTIONS *****/
 #advanced-search-options {
 	position:absolute;
 	top:-7px;
@@ -356,15 +408,6 @@ input[type="text"].inline {
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 	width:100%;
-}
-.freeform-text {
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-	width:100%;
-	background:none;
-	border:0px;
-	min-height:400px;
 }
 #advanced-search-options div p, #advanced-search-options .options-group label {
 	color:#fff !important;
@@ -393,6 +436,38 @@ input[type="text"].inline {
 #advanced-search-options .options-group p {
 	margin-top:4px;
 	margin-bottom:4px;
+}
+
+/***** HEADER TAGS WITH LEADING AND TRAILING LINES *****/
+.header-border {
+	position: relative;
+	top:6px;
+    border-top: 1px solid #fff;
+	height:14px;
+	overflow:visible;
+}
+.header-border h1,
+.header-border h2,
+.header-border h3,
+.header-border h4,
+.header-border h5,
+.header-border h6 {
+    position: absolute;
+    top: -12px;
+	padding: 0px 10px;
+    display: inline-block;
+	background-color: #303030;
+}
+
+/***** FREEFORM TEXTAREAS *****/
+textarea.freeform-text {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+	width:100%;
+	background:none;
+	border:0px;
+	min-height:400px;
 }
 
 .company-selector {
@@ -720,6 +795,9 @@ tr.info:hover td, td.info:hover {
 .slider-frame.warning {
   background-color: #f0ad4e;
 }
+.slider-frame.primary {
+  background-color: #357ebd;
+}
 
 h1 a, h2 a, h3 a {
 	text-decoration:none;
@@ -780,6 +858,16 @@ h1 a, h2 a, h3 a {
 
 .navbar-nav {
 	z-index:1003;
+}
+.fa-nav {
+	font-size:10px;
+	padding-left:10px;
+	margin-bottom:0;
+	padding-bottom:0;
+}
+.fa-nav li {
+	display:table-cell;
+	padding-right:25px;
 }
 .btn-group-bids .btn {
 	background:transparent;

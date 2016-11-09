@@ -569,7 +569,7 @@
 		});
 */
 		$('.slider-button').click(function() {
-			setUploadSlider($(this));
+			setSlider($(this));
 		});
 
 		$(".advanced-search").click(function() {
@@ -657,6 +657,9 @@
 			form.prop('action','/upload.php');
 			form.submit();
 		});
+		$(document).on("click",".btn-search",function() {
+			document.location.href = '/?listid='+$("#upload-listid").val();
+		});
 	
 		$(".results-form").submit(function() {
 			var cid = $("#companyid").val();
@@ -701,7 +704,23 @@
 			$("#image-modal").modal('toggle');
 		});
 
-		setUploadSlider($(".slider-button:first"));
+		/* initialize upload slider  to set to 'off' (availability) position by default */
+		setSlider($("#upload-slider"));
+
+		/* initialize results sliders and set to 'off' position, which we're using as on */
+		setSlider($(".slider-box .slider-button"));
+
+		/* when radio's change (see setSlider() above), hide/show product results based on the radio checkboxes */
+		$(".line-number").on('change',function() {
+			var chkbox = $(this);
+			chkbox.closest("tbody").find(".product-results").each(function() {
+				if (chkbox.is(':checked')) {
+					$(this).fadeOut('fast');
+				} else {
+					$(this).fadeIn('fast');
+				}
+			});
+		});
 
 		$('.btn-remote').click(function() {
 			var remote = $(this).prop('id').replace('remote-','');
@@ -886,20 +905,31 @@
 			setTimeout("toggleLoader()",1000);
 		}
 	}
-	function setUploadSlider(e) {
+	function setSlider(e) {
 		var buttonText = '';
+		var sliderFrame = e.closest(".slider-frame");
+
+		// use a default 'success' class but change if a data tag exists for it
+		var onClass = 'success';
+		if (sliderFrame.data('onclass')) { onClass = sliderFrame.data('onclass'); }
+		var offClass = 'warning';
+		if (sliderFrame.data('offclass')) { offClass = sliderFrame.data('offclass'); }
+
 		if (e.hasClass("on")) {
-			e.closest(".slider-frame").removeClass("warning").addClass("success");
+			sliderFrame.removeClass(offClass).addClass(onClass);
 			e.removeClass('on').html(e.data("off-text"));   
 			buttonText = e.data("off-text");
 		} else {
-			e.closest(".slider-frame").removeClass("success").addClass("warning");
+			sliderFrame.removeClass(onClass).addClass(offClass);
 			e.addClass('on').html(e.data("on-text"));
 			buttonText = e.data("on-text");
 		}
-		$("input[name='upload_type']").each(function() {
+		sliderFrame.find("input[type='radio']").each(function() {
 			if (buttonText==$(this).val()) { $(this).prop('checked',true); }
 			else { $(this).prop('checked',false); }
+			// trigger the change event; without this, our radio button 'checked' changes above
+			// don't trigger any js events attached to them
+			$(this).trigger('change');
 		});
 	}
 
@@ -980,7 +1010,7 @@
 							'</div><!-- col-sm-6 -->'+
 						'</div><!-- row -->';
 					box_footer = '<a class="btn btn-default btn-action" href="'+json.link+'" title="download this file"><i class="fa fa-download"></i></a>'+
-							'<button class="btn btn-primary btn-upload btn-action" title="view search result(s) for this file"><i class="fa fa-search"></i></button>';
+							'<button class="btn btn-primary btn-search btn-action" type="button" title="view search result(s) for this file"><i class="fa fa-search"></i></button>';
 
 					$("#upload-details").find(".content-box-header").html(box_header);
 					$("#upload-details").find(".content-box-body").html(box_body);

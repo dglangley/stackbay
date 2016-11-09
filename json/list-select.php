@@ -33,7 +33,7 @@
 	$list['link'] = str_replace($temp_dir,'/uploads/',$list['link']);
 
 	if ($list['processed']) {
-		$list['processed'] = format_date($list['processed'],'D n/j/y g:ia');
+		$list['processed'] = format_date($list['processed'],'n/j/y g:ia');
 	} else {
 		$list['processed'] = '';//utf8_encode($list['processed']);
 	}

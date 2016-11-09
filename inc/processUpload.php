@@ -79,7 +79,7 @@
 			if ($n==0) {
 				list($part_col,$qty_col,$heci_col,$header_row) = setColumns($row_arr,$condensed);
 				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
-//				if ($header_row===true) { continue; }
+				if ($header_row===true) { continue; }
 			}
 			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
@@ -120,8 +120,9 @@
 //				$part = preg_replace('/(REV|REL|ISS|SER).+$/','',$part);
 //			}
 
-			// replacing chr(0) is removing null characters, specifically for verizon bid list
-			$qty = preg_replace('/^([0-9]+)(x|ea)$/i','$1',str_replace(chr(0),'',trim($row_arr[$qty_col])));
+			// replacing chr(0) is removing null characters, specifically for verizon bid list;
+			// see http://php.net/manual/en/function.trim.php#98812 for trim() technique on non-breaking spaces
+			$qty = preg_replace('/^([[:space:]]*)?([0-9]+)(x|ea)?([[:space:]]*)?$/i','$2',str_replace(chr(0),'',trim($row_arr[$qty_col],chr(0xC2).chr(0xA0))));
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = '';
 			if ($heci_col!==false) {

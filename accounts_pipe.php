@@ -23,7 +23,7 @@
 <html>
 <!-- Declaration of the standard head with Accounts home set as title -->
 <head>
-	<title>VMM Accounts Home</title>
+	<title>Accounts Home</title>
 	<?php
 		//Standard headers included in the function
 		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';

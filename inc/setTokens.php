@@ -35,11 +35,13 @@
 
 			setcookie('userid',$userid,$token_expiry,'/');
 			setcookie('user_token',$user_token,$token_expiry,'/');
+/*
 			if ($userid == 1) {
 				setcookie('SUPER_ADMIN',1,$token_expiry,'/');
 			} else {
 				setcookie('SUPER_ADMIN','',time()-3600,'/');
 			}
+*/
 		}
 
 		return true;
