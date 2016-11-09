@@ -1,7 +1,7 @@
 <?php
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
-	include_once $rootdir.'/inc/dbconnect.php';
+	require_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
@@ -9,14 +9,20 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 	
-	$results_array = array();
+	$parts_array = array();
 	
 	$page = $_GET['page'];
+	
+	($page == '' ? $page = 1: '');
 	
 	$offset = ($page - 1) * 2;
 	
 	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT $offset, 2";
 	$result = qdb($query);
+	
+	while ($row = $result->fetch_assoc()) {
+		$parts_array[] = $row;
+	}
 	
 	function getPages() {
 		global $page;
@@ -32,10 +38,6 @@
 		for($i = 1; $i <= $pages; $i++) {
 			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
 		}
-	}
-	
-	while ($row = $result->fetch_assoc()) {
-		$parts_array[] = $row;
 	}
 	
 	function getManufacture($manfid = 0) {
