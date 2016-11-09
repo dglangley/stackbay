@@ -165,6 +165,7 @@
 		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
+		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
 	                <?php } ?>
 
 	                <li><a href="signout.php">Logout</a></li>
@@ -240,17 +241,16 @@
 									<div class="row">
 										<div class="col-sm-6">
 											<p>
+												<div class="slider-frame success">
+													<!-- include radio's inside slider-frame to set appropriate actions to them -->
+													<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
+													<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
+													<span data-on-text="Avail" data-off-text="Req" class="slider-button upload-slider" id="upload-slider">Req</span>
+												</div>
 												<div class="btn-group btn-group-bids">
 													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
 													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $afternoon_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">12p</span></button>
 													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $evening_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">7a</span></button>
-												</div>
-											</p>
-											<p>
-												<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
-												<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
-												<div class="slider-frame success">
-													<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
 												</div>
 											</p>
 										</div><!-- col-sm-6 -->
@@ -267,7 +267,21 @@
 									</div><!-- row -->
 								</div>
 								<div class="content-box-footer">
-									<button type="button" class="btn btn-primary btn-sm btn-upload btn-action" title="upload this file"><i class="fa fa-upload"></i></button>
+									<p>
+										<button type="button" class="btn btn-primary btn-sm btn-upload btn-action" title="upload this file"><i class="fa fa-upload"></i></button>
+									</p>
+									<p class="info text-left">
+										<ul class="fa-ul text-left" style="font-size:10px; margin-bottom:0; padding-bottom:0">
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Column headers are optional but recommended, and case insensitive
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Duplicate headers (i.e., "Part" &amp; "Item") are not allowed
+											<li><i class="fa-li fa fa-asterisk text-danger"></i> Required columns: Qty, and either Part or HECI. Allowed headers:
+										</ul>
+										<ul class="fa-ul fa-nav text-center">
+											<li><i class="fa-li fa fa-check text-danger"></i> Part, Item, Model, MPN
+											<li><i class="fa-li fa fa-check text-danger"></i> Qty, Quantity, Qnty, Count
+											<li><i class="fa-li fa fa-check text-danger"></i> HECI, CLEI
+										</ul>
+									</p>
 								</div>
 							</div>
 						</div>
@@ -285,9 +299,12 @@
 				<button class="btn btn-primary btn-submit" type="submit">Search</button>
 			</div>
 			<div class="col-sm-3 options-group text-left">
+				<div class="row header-border">
+					<h4 class="text-primary">Filters</h4>
+				</div>
 				<div class="row">
 					<div class="col-sm-4 text-center">
-						<p>Search:</p>
+						<span class="info">Search:</span>
 						<p>
 							<div class="form-group">
 			                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
@@ -298,7 +315,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<p>Qty:</p>
+						<span class="info">Qty:</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
@@ -309,7 +326,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<p>Price:</p>
+						<span class="info">Price:</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="price_field" value="" class="form-control input-xs" size="2">
@@ -320,6 +337,7 @@
 						</p>
 					</div>
 				</div>
+<!--
 				<div class="row">
 					<div class="col-sm-12">
 						<p><label><input type="radio">ERB3 qty2 &nbsp; T3PQAE7</label></p>
@@ -327,11 +345,15 @@
 						<p><label><input type="radio">ERB3 &nbsp; T3PQAE7 &nbsp; qty2</label></p>
 					</div>
 				</div>
-				<hr>
+-->
 				<div class="row">
-					<div class="col-sm-6">
+					<div class="col-sm-2">
 						<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
 						<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
+					</div>
+					<div class="col-sm-2">
+					</div>
+					<div class="col-sm-2">
 					</div>
 					<div class="col-sm-6">
 						<div class="form-group">

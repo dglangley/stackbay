@@ -101,14 +101,15 @@ $DEV_ENV = true;
 			$_SESSION['expiry'] = time() + (7 * 24 * 60 * 60);
 		}
 
-		$to_sec = time()-(60*60);
-
+/*
 		$query = "SELECT users.id, users.contactid, contacts.name, user_tokens.user_token, user_tokens.userid ";
 		if ($force_userid AND $force_usertoken) { $query .= "FROM contacts, users LEFT JOIN user_tokens ON users.id = user_tokens.userid WHERE "; }
 		else { $query .= "FROM contacts, users, user_tokens WHERE users.id = user_tokens.userid AND contacts.id = users.contactid AND "; }
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
-		$query = "SELECT users.id, users.contactid, contacts.name FROM users, contacts WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
+*/
+		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status FROM users, contacts ";
+		$query .= "WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qdb($query);
 
 		// if user is not registered in db, reset cookies/session
@@ -162,12 +163,14 @@ $DEV_ENV = true;
 				$U['username'] = $r2['username'];
 			}
 			
+/*
 			$query2 = "SELECT status FROM contacts WHERE id = '".$U['contactid']."' LIMIT 0,1; ";
 			$result2 = qdb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['status'] = $r2['status'];
 			}
+*/
 
 			//Create a global array of all the current logged in users privileges
 			$query2 = "SELECT * FROM user_roles WHERE userid = '" . res($userid) . "'";
@@ -303,5 +306,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161008';
+	$V = '20161101';
 ?>

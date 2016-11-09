@@ -7,7 +7,7 @@
 <html>
 <!-- Declaration of the standard head with S&D home set as title -->
 <head>
-	<title>VMM Ghost Settings</title>
+	<title>Ghost Settings</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';

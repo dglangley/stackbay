@@ -66,7 +66,7 @@
 	// for getRecords()
 	$record_start = $startDate;
 	
-	//Market Manager Button
+	//Stackbay Button
 	$market_table = 'demand';//default
 	if ($_REQUEST['market_table']){
 		$market_table = $_REQUEST['market_table'];
@@ -94,7 +94,7 @@
 <html>
 <!-- Declaration of the standard head with S&D home set as title -->
 <head>
-	<title>VMM Supply and Demand</title>
+	<title>Supply and Demand</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -117,11 +117,11 @@
 			<td class = "col-sm-2">
 	
 			    <div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
 					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
+			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
 			        	<i class="fa fa-history"></i>	
 			        </button>
 			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>

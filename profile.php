@@ -26,7 +26,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VMM Company Profile</title>
+	<title>Company Profile</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>

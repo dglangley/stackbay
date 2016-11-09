@@ -102,7 +102,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VenTel Market Manager</title>
+	<title>Stackbay</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>

@@ -174,7 +174,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VenTel Market Manager</title>
+	<title>Stackbay</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
@@ -199,7 +199,7 @@
     <table class="table">
 		<tr>
 			<td class="col-md-12 text-center">
-				Enter your search above, or tap <i class="fa fa-list-ol"></i> for more options...
+				Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...
 			</td>
 		</tr>
 	</table>
@@ -268,7 +268,7 @@
 	if ($listid) {
 		$search_index = 0;
 		$qty_index = 1;
-		$query = "SELECT search_meta.id metaid, uploads.type FROM search_meta, uploads ";
+		$query = "SELECT search_meta.id metaid, uploads.type, processed FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)>0) {
@@ -320,7 +320,7 @@
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index])) {
 			$qty_text = trim($terms[$qty_index]);
-			$qty_text = preg_replace('/^(qty|qnty|quantity)?([.]|-)?0?([0-9]+)([.]|-)?(x|ea)?/i','$3',$qty_text);
+			$qty_text = preg_replace('/^(qty|qnty|quantity)?([.]|-)?(\\()?0?([0-9]+)(\\))?([.]|-)?(x|ea)?/i','$4',$qty_text);
 
 			if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
 		}
@@ -478,7 +478,7 @@
 
 			$results_rows .= '
                         <!-- row -->
-                        <tr class="product-results" id="row-'.$partid.'">
+                        <tr class="product-results animated" id="row-'.$partid.'">
                             <td class="descr-row'.$rowcls.'">
 								<div class="product-action text-center">
                                 	<div><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
@@ -525,7 +525,7 @@
 									<div class="form-group">
 										<div class="input-group sell">
 											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
+												<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1"><i class="fa fa-lock"></i></button>
 											</span>
 											<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
 										</div>
@@ -569,21 +569,21 @@
 			$k++;
 
 			$results_rows .= '
+<!--
                             <td class="product-actions text-right">
 								<div class="price">
 									<div class="form-group">
-<!--
 										<div class="input-group buy">
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
 											<input name="buyprice['.$ln.'][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
--->
 									</div>
 								</div>
                             </td>
                         </tr>
+-->
 			';
 		}
 ?>
@@ -592,38 +592,54 @@
                         <!-- row -->
                         <tr class="first">
                             <td>
-								<div class="product-action action-hover text-center">
-	                                <div><input type="checkbox" class="checkAll" checked></div>
+								<div class="product-action action-hover text-left">
+									<div>
+										<input type="checkbox" class="checkAll" checked><br/>
+									</div>
 									<div class="action-items">
-						           		<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain fa-lg"></i></a>
-						           		<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil fa-lg"></i></a>
+							           	<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil"></i></a><br/>
+							           	<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain"></i></a><br/>
+<?php if ($num_results==0) { // add link to create a new part ?>
+										<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
+<?php } else { ?>
+										<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
+<?php } ?>
 									</div>
 								</div>
 								<div class="qty">
-									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" /><br/>
-									<span class="info">their qty</span>
+									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty" /><br/>
 								</div>
 								<div class="product-descr action-hover">
 				                	<div class="input-group">
-										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" />
+										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" tabindex="-1" />
+<!--
 	           		       				<span class="input-group-addon action-items">
-<?php if ($num_results==0) { // add link to create a new part ?>
-											<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
-<?php } else { ?>
-											<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
-<?php } ?>
 										</span>
+-->
 									</div><!-- /input-group -->
 									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
 								</div>
 								<div class="price pull-right">
 									<div class="form-group target text-right">
-										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
-										<span class="info">their price</span>
+										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" data-toggle="tooltip" data-placement="top" title="customer target price or vendor asking price" />
 									</div>
 								</div>
 							</td>
-                            <td>
+                            <td class="action-hover slider-box">
+<!--
+								<div class="toggle-results">
+								<a href="javascript:void(0);" title="toggle selection of the results in this row">
+									<i class="fa fa-toggle-on fa-lg animated"></i>
+								</a>
+								</div>
+-->
+									<!-- color-coding the slider backwards because toggled right looks more 'on' in this case than 'off' -->
+									<div class="slider-frame default" data-onclass="default" data-offclass="primary">
+										<!-- include radio's inside slider-frame to set appropriate actions to them -->
+										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Ln <?php echo $ln; ?>">
+										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Off">
+										<span data-on-text="Ln <?php echo $ln; ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo $ln; ?></span>
+									</div>
 								<div class="row">
 									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
@@ -648,7 +664,9 @@
                         <!-- row -->
                         <tr>
                             <td> </td>
+<!--
                             <td> </td>
+-->
                         </tr>
                     </tbody>
 <?php

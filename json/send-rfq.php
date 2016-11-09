@@ -157,7 +157,7 @@
 		$auth_url = $client->createAuthUrl();
 
 		if (! $consent) {
-			$msg = "In order to Send RFQ's through VenTel Market Manager, ".
+			$msg = "In order to Send RFQ's through Stackbay, ".
 				"you need to authorize access to send emails on your behalf. ".
 				"This is a one-time action, but you will lose any unsaved ".
 				"activity on your current page and you will need to reload it ".
