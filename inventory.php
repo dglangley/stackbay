@@ -11,14 +11,34 @@
 	
 	$results_array = array();
 	
-	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory)";
+	$page = $_GET['page'];
+	
+	$offset = ($page - 1) * 2;
+	
+	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT $offset, 2";
 	$result = qdb($query);
+	
+	function getPages() {
+		global $page;
+		
+		$rows = 0;
+		$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory)";
+		$result = qdb($query);
+		
+		while ($row = $result->fetch_assoc()) {
+			$rows++;
+		}
+		$pages = ceil($rows / 2);
+		for($i = 1; $i <= $pages; $i++) {
+			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
+		}
+	}
 	
 	while ($row = $result->fetch_assoc()) {
 		$parts_array[] = $row;
 	}
 	
-	function getManufacture($manfid) {
+	function getManufacture($manfid = 0) {
 		$manf;
 		
 		$query  = "SELECT * FROM manfs where id = $manfid";
@@ -32,7 +52,7 @@
 		return $manf;
 	}
 	
-	function getSystemName($systemid) {
+	function getSystemName($systemid = 0) {
 		$system;
 		
 		$query  = "SELECT * FROM systems where id = $systemid";
@@ -46,8 +66,15 @@
 		return $system;
 	}
 	
-	function getPartSerials($partid) {
-		$query  = "SELECT * FROM inventory where partid = $partid";
+	function getPartSerials($partid = 0) {
+		$partSerial_array = array();
+		
+		$query  = "SELECT * FROM inventory where partid = $partid ORDER BY
+				  CASE item_condition
+				    WHEN 'new' THEN 1
+				    WHEN 'used' THEN 2
+				    ELSE 3
+				  END, qty DESC";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -57,9 +84,75 @@
 		return $partSerial_array;
 	}
 	
-	function updateToDatabase($serial, $date, $locationid, $qty, $condition, $status, $cost) {
+	function getItemHistory($invid = 0) {
+		$partHistory_array = array(); 
 		
+		$query  = "SELECT * FROM inventory_history WHERE invid = $invid";
+		$result = qdb($query);
+		
+		while ($row = $result->fetch_assoc()) {
+			$partHistory_array[] = $row;
+		}
+		
+		return $partHistory_array;
 	}
+	
+	function getRepName($repid = 0) {
+		$name;
+		
+		$query  = "SELECT name FROM contacts WHERE id = $repid";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$name = $result['name'];
+		}
+		
+		return $name;
+	}
+	
+	function getStock($stock = '', $partid = 0) {
+		$stockNumber = 0;
+		
+		//echo $stock . $partid;
+		
+		
+		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = $partid AND item_condition = '$stock'";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$stockNumber = $result['SUM(qty)'];
+		}
+		
+		// while ($row = $result->fetch_assoc()) {
+		// 	$stockNumber= $row['serial_no'];
+		// }
+		if(!$stockNumber) {
+			$stockNumber = 0;
+		}
+
+		return $stockNumber;
+	}
+	
+	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+		$statusVals;
+		
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '{$field}'";
+	    $result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$statusVals = $result;
+		}
+		
+		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
+		
+		$enum = explode("','", $matches[1]);
+		
+		return $enum;
+	}
+	
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -79,6 +172,30 @@
 		hr {
 			margin-top: 0;
 			margin-bottom: 10px;
+		}
+		
+		tbody th {
+			border-top-color: #edf2f7 !important;
+		}
+		
+		.product-rows-edited .btn-primary {
+		    /*color: #ffffff;*/
+		    /*background-color: #5cb85c;*/
+		    /*border-color: #4cae4c;*/
+		}
+		
+		#item-updated, #item-failed {
+			position: fixed;
+		    width: 100%;
+		    z-index: 1;
+		}
+		
+		.serial-page {
+			display: none;
+		}
+		
+		.page-1 {
+			display: block;
 		}
 	</style>
 
@@ -127,9 +244,19 @@
 		</div>
 	</div>
 	
+	<div id="item-updated" class="alert alert-success fade in text-center" style="display: none;">
+	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+	    <strong>Success!</strong> Changes have been updated.
+	</div>
+	
+	<div id="item-failed" class="alert alert-danger fade in text-center" style="display: none;">
+	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+	    <strong>Uh Oh!</strong> Something went wrong with the update, please look into a fix for this error.
+	</div>
+	
 	<?php foreach($parts_array as $part): ?>
-		<div class="part-container">
-			<div class="row" style="margin: 35px 0 0 0;">
+		<div class="part-container" data-partid="<?php echo $part['id']; ?>">
+			<div class="row partDescription" style="margin: 35px 0 0 0;">
 				<div class="col-md-2 col-sm-2">
 					<div class="row" style="margin: 0">
 						<div class="col-md-2 col-sm-2">
@@ -162,10 +289,9 @@
 				<div class="col-md-2 col-sm-2">
 					<strong>Condition</strong>
 					<hr>
-					<button title="Refurb" class="btn btn-info">0</button>
-					<button title="Broken" class="btn btn-danger">1</button>
-					<button title="Used" class="btn btn-success">2</button>
-					<button title="New" class="btn btn-primary">3</button>
+					<button title="New" class="btn btn-success new_stock"><?php echo getStock('new', $part['id']); ?></button>
+					<button title="Used" class="btn btn-primary used_stock"><?php echo getStock('used', $part['id']); ?></button>
+					<button title="Refurbished" class="btn btn-danger refurb_stock"><?php echo getStock('refurbished', $part['id']); ?></button>
 				</div>
 				<div class="col-md-1 col-sm-1">
 					<strong>Cost Avg.</strong>
@@ -178,7 +304,7 @@
 				<div class="row">
 					<div class="col-md-12 col-sm-12">
 						<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-						<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;">Save Changes</button>
+						<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;" disabled>Save Changes</button>
 						<h3><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></h3>
 						<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
 					</div>
@@ -186,53 +312,115 @@
 				
 				<hr>
 				<div class="addRows">
-					<?php foreach(getPartSerials($part['id']) as $serial): ?>
-						<div class="row product-rows" style="padding-bottom: 10px;">
+					<?php $parts = getPartSerials($part['id']); $element = 0; $page = 1; foreach($parts as $serial): (($element % 5) == 0 && $element != 0 ? $page++ : ''); $element++; ?>
+						<div class="product-rows serial-page page-<?php echo $page; ?>" style="padding-bottom: 10px;" data-id="<?php echo $serial['id']; ?>">
+							<div class="row">
 							<div class="col-md-2 col-sm-2">
 								<label for="serial">Serial/Lot Number</label>
-								<input class="form-control" type="text" name="serial" placeholder="#123" value="<?php echo $serial['serial_no']; ?>"/>
+								<input class="form-control serial" type="text" name="serial" placeholder="#123" value="<?php echo $serial['serial_no']; ?>"/>
 								<div class="form-text"></div>
 							</div>
 							<div class="col-md-2 col-sm-2">
 								<label for="date">Date</label>
-								<input class="form-control" type="text" name="date" placeholder="00/00/0000" value="<?php echo date_format(date_create($serial['date_created']), 'm/d/Y'); ?>"/>
+								<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date_format(date_create($serial['date_created']), 'm/d/Y'); ?>"/>
+								<div class="form-text"></div>
 							</div>
 							<div class="col-md-2 col-sm-2">
 								<label for="date">Location</label>
-								<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value="<?php echo $serial['locationid']; ?>"/>
+								<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value="<?php echo $serial['locationid']; ?>"/>
+								<div class="form-text"></div>
 							</div>
 							<div class="col-md-1 col-sm-1">
 								<label for="qty">Qty</label>
-								<input class="form-control" type="text" name="qty" placeholder="Quantity" value="<?php echo $serial['qty']; ?>"/>
+								<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value="<?php echo $serial['qty']; ?>"/>
+								<div class="form-text"></div>
 							</div>
 							<div class="col-md-2 col-sm-2">
-								<label for="condition">Condition</label>
-								<input class="form-control" type="text" name="condition" placeholder="Condition" value="<?php echo $serial['item_condition']; ?>"/>
+								<div class="form-group">
+									<label for="condition">Condition</label>
+									<select class="form-control condition" name="condition">
+										<?php foreach(getEnumValue() as $condition): ?>
+											<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+								<div class="form-text"></div>
 							</div>
 							<div class="col-md-1 col-sm-1">
-								<label for="status">Status</label>
-								<input class="form-control" type="text" name="status" placeholder="Status" value="<?php echo $serial['status']; ?>"/>
+								<div class="form-group">
+									<label for="status">status</label>
+									<select class="form-control status" name="status">
+										<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+											<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+								<div class="form-text"></div>
 							</div>
 							<div class="col-md-2 col-sm-2">
 								<div class="row">
 									<div class="col-md-7 col-sm-7">
 										<label for="price">Cost</label>
-										<input class="form-control" type="text" name="price" placeholder="$$$" value=""/>
+										<input class="form-control cost" type="text" name="price" placeholder="$" value=""/>
+										<div class="form-text"></div>
 									</div>
 									<div class="col-md-5 col-sm-5">
 										<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">
-											<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>
+											<button class="btn btn-primary btn-sm update" disabled><i class="fa fa-check" aria-hidden="true"></i></button>
 											<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
 										</div>
 									</div>
 								</div>
 							</div>
+							</div>
+							<div class="row">
+							<div class="col-sm-12">
+								<a href="#" class="show_history">Show History +</a>
+								
+								<div class="row history_listing" style="display: none;">
+									<div class="col-md-12">
+										<?php //print_r(getItemHistory($serial['id'])); ?>
+										<div class="table-responsive">
+											<table class="table table-striped">
+												<thead>
+													<tr>
+														<th>Date</th>
+														<th>Rep</th>
+														<th>Field Changed</th>
+														<th>History</th>
+													</tr>
+												</thead>
+												<tbody>
+													<?php foreach(getItemHistory($serial['id']) as $history): ?>
+														<tr>
+															<th><?php echo date_format(date_create($history['date_changed']), 'm/d/Y'); ?></th>
+															<td><?php echo getRepName($history['repid']); ?></td>
+															<td><?php echo $history['field_changed']; ?></td>
+															<td><?php echo $history['changed_from']; ?></td>
+														</tr>
+													<?php endforeach; ?>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+							</div>
 						</div>
 					<?php endforeach; ?>
+					<div class="col-md-12 text-center"><a class="show-more" href="#">Show More</a></div>
 				</div>
 			</div>
 		</div>
 	<?php endforeach; ?>
+	
+	<div class="row" style="margin: 0;">
+		<div class="col-md-12">
+			<ul class="pagination">
+				<?php getPages(); ?>
+		    </ul>
+	    </div>
+    </div>
 
 
 
@@ -241,14 +429,8 @@
 
 <script>
 	(function($){
-		//get main header height
-		var height = $('header.navbar').height();
-		//get possible filter bar height
-		var heightOPT = $('.table-header').height();
-		var offset = height + heightOPT + 25;
-
-		$('body').css('padding-top', offset);
 	
+		//Show more data for a specific product, Serial etc
 		$('.buttonAdd').click(function(){
 			$(this).closest('.part-container').children('.addItem').slideToggle('fast');
 			
@@ -256,47 +438,145 @@
 			$(this).toggleClass('btn-success btn-danger');
 		});
 		
-	     $('.update').click(function () {
-	    	// $($(this).siblings('.form-text')).html($(this).val());
-	    	// $(this).hide();
-	     });
+		//Drop down a list of the history of the specific item
+		$('.show_history'). click(function(e) {
+			e.preventDefault();
+			$(this).next('.history_listing').slideToggle();
+		});
+		
+		
+		$('.updateAll, .update').click(function () {
+			var serial, date, location, qty, condition, status, cost, id, partid;
+			//run through each of the rows that pertains to the class stated below and grab all the data
+			$(this).closest('.addItem').find('.product-rows-edited').each(function () {
+				//Declare Variables
+				var element = this;
+
+				//Add value to each variable depending on the data in the row
+				id = $(this).data('id');
+				serial = $(this).find('.serial').val();
+				date = $(this).find('.date').val();
+				location = $(this).find('.location').val();
+				qty = $(this).find('.qty').val();
+				condition = $(this).find('.condition').val();
+				status = $(this).find('.status').val();
+				cost = $(this).find('.cost').val();
+				
+				//get the specific part id based on position of the element
+				partid = $(element).closest('.part-container').data('partid');
+
+				$.ajax({
+					type: 'POST',
+					url: '/json/inventory-edit.php',
+					data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
+					dataType: 'json',
+					success: function(data) {
+						if(data.result){
+							$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
+							$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
+							$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
+							
+							$(element).closest('.addItem').find('.product-rows-edited').find('.update').prop("disabled", true);
+							$(element).closest('.addItem').find('.product-rows-edited').removeClass('product-rows-edited');
+							
+							$('#item-updated').show();
+							setTimeout(function() { 
+								$('#item-updated').fadeOut(); 
+							}, 5000);
+
+						} else {
+							$('#item-failed').show();
+							setTimeout(function() { 
+								$('#item-failed').fadeOut(); 
+							}, 5000);
+						}
+					}
+				});
+				
+			});
+			
+		});
+		
+		$('input, select').on('change keyup paste', function() {
+			$(this).closest('.addItem').find('.updateAll').prop("disabled", false);
+			$(this).closest('.product-rows').addClass('product-rows-edited');
+			$(this).closest('.product-rows').find('.update').prop("disabled", false);
+		});
+		
+		//$('.update').click(function () {
+			// $($(this).closest('.product-rows').find('.serial').next('.form-text')).html($(this).closest('.product-rows').find('.serial').val());
+			// $(this).closest('.product-rows').find('.serial').hide();
+			
+			// $($(this).closest('.product-rows').find('.date').next('.form-text')).html($(this).closest('.product-rows').find('.date').val());
+			// $(this).closest('.product-rows').find('.date').hide();
+			
+			// $($(this).closest('.product-rows').find('.location').next('.form-text')).html($(this).closest('.product-rows').find('.location').val());
+			// $(this).closest('.product-rows').find('.location').hide();
+			
+			// $($(this).closest('.product-rows').find('.qty').next('.form-text')).html($(this).closest('.product-rows').find('.qty').val());
+			// $(this).closest('.product-rows').find('.qty').hide();
+			
+			// $($(this).closest('.product-rows').find('.condition').next('.form-text')).html($(this).closest('.product-rows').find('.condition').val());
+			// $(this).closest('.product-rows').find('.condition').hide();
+			
+			// $($(this).closest('.product-rows').find('.status').next('.form-text')).html($(this).closest('.product-rows').find('.status').val());
+			// $(this).closest('.product-rows').find('.status').hide();
+			
+			// $($(this).closest('.product-rows').find('.cost').next('.form-text')).html($(this).closest('.product-rows').find('.cost').val());
+			// $(this).closest('.product-rows').find('.cost').hide();
+			// alert($(this).closest('.product-rows').find('.serial').val());
+		//});
 		
 		//Append new row of data
 		var element = '<div class="product-rows row new-row appended" style="padding-bottom: 10px; display: none;">\
 				<div class="col-md-2 col-sm-2">\
 					<label for="serial">Serial/Lot Number</label>\
-					<input class="form-control" type="text" name="serial" placeholder="#123" value=""/>\
+					<input class="form-control serial" type="text" name="serial" placeholder="#123" value=""/>\
 				</div>\
 				<div class="col-md-2 col-sm-2">\
 					<label for="date">Date</label>\
-					<input class="form-control" type="text" name="date" placeholder="00/00/0000" value=""/>\
+					<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date("n/j/Y");  ?>"/>\
 				</div>\
 				<div class="col-md-2 col-sm-2">\
 					<label for="date">Location</label>\
-					<input class="form-control" type="text" name="date" placeholder="Warehouse Location" value=""/>\
+					<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value=""/>\
 				</div>\
 				<div class="col-md-1 col-sm-1">\
 					<label for="qty">Qty</label>\
-					<input class="form-control" type="text" name="qty" placeholder="Quantity" value=""/>\
+					<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value=""/>\
 				</div>\
 				<div class="col-md-2 col-sm-2">\
-					<label for="condition">Condition</label>\
-					<input class="form-control" type="text" name="condition" placeholder="Condition" value=""/>\
+					<div class="form-group">\
+						<label for="condition">Condition</label>\
+						<select class="form-control condition" name="condition">\
+							<?php foreach(getEnumValue() as $condition): ?>
+								<option><?php echo $condition; ?></option>\
+							<?php endforeach; ?>
+						</select>\
+					</div>\
+					<div class="form-text"></div>\
 				</div>\
 				<div class="col-md-1 col-sm-1">\
-					<label for="status">Status</label>\
-					<input class="form-control" type="text" name="status" placeholder="Status" value=""/>\
+					<div class="form-group">\
+						<label for="status">status</label>\
+						<select class="form-control status" name="status">\
+							<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+								<option><?php echo $status; ?></option>\
+							<?php endforeach; ?>
+						</select>\
+					</div>\
+					<div class="form-text"></div>\
 				</div>\
 				<div class="col-md-2 col-sm-2">\
 					<div class="col-md-7 col-sm-7">\
 						<div class="row">\
 							<label for="price">Cost</label>\
-							<input class="form-control" type="text" name="price" placeholder="$$$" value=""/>\
+							<input class="form-control cost" type="text" name="price" placeholder="$$$" value=""/>\
 						</div>\
 					</div>\
 					<div class="col-md-5 col-sm-5">\
 						<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">\
-							<button class="btn btn-primary btn-sm"><i class="fa fa-check" aria-hidden="true"></i></button>\
+							<button class="btn btn-primary btn-sm inserted-row"><i class="fa fa-check" aria-hidden="true"></i></button>\
 							<button class="btn btn-danger delete btn-sm"><i class="fa fa-minus" aria-hidden="true"></i></button>\
 						</div>\
 					</div>\
@@ -305,28 +585,82 @@
 		
 		//Once button is clicked the new row will be appended
 		$('.buttonAddRows').click(function(){
-			$('.addRows').append(element);
-			$('.appended').slideDown().removeClass('appended');
+			$(this).closest('.part-container').find('.addRows').append(element);
+			$(this).closest('.part-container').find('.appended').slideDown().removeClass('appended');
 			
 			$('.delete').click(function(){
 				$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
 			});
+			
+			$('.inserted-row').click(function(){
+				var serial, date, location, qty, condition, status, cost, partid;
+				var element = $(this).closest('.product-rows');
+				
+				id = "";
+				serial = $(element).find('.serial').val();
+				date = $(element).find('.date').val();
+				location = $(element).find('.location').val();
+				qty = $(element).find('.qty').val();
+				condition = $(element).find('.condition').val();
+				status = $(element).find('.status').val();
+				cost = $(element).find('.cost').val();
+				
+				partid = $(element).closest('.part-container').data('partid');
+
+				$.ajax({
+					type: 'POST',
+					url: '/json/inventory-edit.php',
+					data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
+					dataType: 'json',
+					success: function(data) {
+						if(data.result){
+							$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
+							$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
+							$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
+							
+							$(element).closest('.product-rows').find('.inserted-row').prop("disabled", true);
+							$(element).closest('.product-rows').find('.delete').prop("disabled", true);
+							
+							$('#item-updated').show();
+							setTimeout(function() { 
+								$('#item-updated').fadeOut(); 
+							}, 5000);
+
+						} else {
+							$('#item-failed').show();
+							setTimeout(function() { 
+								$('#item-failed').fadeOut(); 
+							}, 5000);
+						}
+					}
+				});
+			});
 		});
+		
 		
 		//Remove rows
 		$('.delete').click(function(){
 			$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
 		});
 		
-		//Update all query
-		$('.updateAll').click(function() {
-			//Get how many rows created + initial row
-			var totalRows = $('.product-rows').length;
-			var results = new Array();
-			$('.product-rows').each(function() {
-				
-			});
+		//Show hide serial products
+		$('.show-more').click(function(e){
+			e.preventDefault();
+			$(this).closest('.addItem').find('.page-2').slideToggle();
+			
+			$(this).closest('.addItem').find('.page-2').toggleClass('show-less');
+			
 		});
+		
+		//Update all query
+		// $('.updateAll').click(function() {
+		// 	//Get how many rows created + initial row
+		// 	var totalRows = $('.product-rows').length;
+		// 	var results = new Array();
+		// 	$('.product-rows').each(function() {
+				
+		// 	});
+		// });
 	})(jQuery);
 </script>
 
