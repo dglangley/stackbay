@@ -404,7 +404,7 @@
 						var on = form["order"];
 						var ps = form["type"];
 						alert(form['stupid']);
-						window.location = "https://aaronventel-aaronventel.c9users.io/order_form.php?ps="+ps+"&on="+on;
+						window.location = "/order_form.php?ps="+ps+"&on="+on;
 					}
 				});
 			});

@@ -13,16 +13,18 @@
 	
 	$page = $_GET['page'];
 	
+	($page == '' ? $page = 1 : '');
+	
 	$offset = ($page - 1) * 2;
 	
-	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT $offset, 2";
+	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 2;";
 	$result = qdb($query);
 	
 	function getPages() {
 		global $page;
 		
 		$rows = 0;
-		$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory)";
+		$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory);";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -41,7 +43,7 @@
 	function getManufacture($manfid = 0) {
 		$manf;
 		
-		$query  = "SELECT * FROM manfs where id = $manfid";
+		$query  = "SELECT * FROM manfs where id = " . res($manfid) . ";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -55,7 +57,7 @@
 	function getSystemName($systemid = 0) {
 		$system;
 		
-		$query  = "SELECT * FROM systems where id = $systemid";
+		$query  = "SELECT * FROM systems where id = " . res($systemid) . ";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -69,12 +71,12 @@
 	function getPartSerials($partid = 0) {
 		$partSerial_array = array();
 		
-		$query  = "SELECT * FROM inventory where partid = $partid ORDER BY
+		$query  = "SELECT * FROM inventory where partid = " . res($partid) . " ORDER BY
 				  CASE item_condition
 				    WHEN 'new' THEN 1
 				    WHEN 'used' THEN 2
 				    ELSE 3
-				  END, qty DESC";
+				  END, qty DESC;";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -87,7 +89,7 @@
 	function getItemHistory($invid = 0) {
 		$partHistory_array = array(); 
 		
-		$query  = "SELECT * FROM inventory_history WHERE invid = $invid";
+		$query  = "SELECT * FROM inventory_history WHERE invid =" . res($invid) . ";";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -100,7 +102,7 @@
 	function getRepName($repid = 0) {
 		$name;
 		
-		$query  = "SELECT name FROM contacts WHERE id = $repid";
+		$query  = "SELECT name FROM contacts WHERE id =" . res($repid) .";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -117,7 +119,7 @@
 		//echo $stock . $partid;
 		
 		
-		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = $partid AND item_condition = '$stock'";
+		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND item_condition = '" . res($stock) . "';";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -138,7 +140,7 @@
 	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
 		$statusVals;
 		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '{$field}'";
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
 	    $result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {

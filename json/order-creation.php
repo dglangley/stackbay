@@ -87,6 +87,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		
 		$carrier = getFreight('carrier');
+
 		
 		if ($carrier){
 			foreach ($carrier as $c){
