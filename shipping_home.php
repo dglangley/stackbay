@@ -13,12 +13,35 @@
 //============================ Function Delcaration ============================
 //==============================================================================
 	
-	//The output rows funciton will be the part which echos within the sections on the 
-	
-	function output_module($section){
+	//Output Module acts as the general output for each of the dashboard sections.
+	//	INPUTS: Order(p,s);  Status(Active,Complete)
+	function output_module($order,$status){
 		
+		$status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
+		$order_out = ($order =="p") ? "Purchase" : "Sales";
+
+		echo"
+			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
+			<div class='shipping-dash'>
+				<div class='shipping_section_head' data-title='Sales Orders'>";
+		echo $status_out.$order_out.' Orders';
+		echo	'</div>
+				<div class="table-responsive">
+		            <table class="table heighthover heightstriped table-condensed">';
+		            output_header($status);
+		echo	'<tbody>';
+            		output_rows($order,$status);
+		echo '	</tbody>
+		            </table>
+		    	</div>
+		    	<div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 15px;">
+	            	<a href="#">Show more</a>
+	            </div>
+            </div>
+        </div>';
 	}
-	function output_header($section){
+	
+	function output_header($status){
 			echo'<thead>';
 			echo'<tr>';
 			echo'	<th class="col-md-1">';
@@ -32,7 +55,7 @@
             echo'		<span class="line"></span>';
             echo'		Order#';
             echo'	</th>';
-        if($section=="comp_po" || $section=="comp_so"){
+        if($status=="Active"){
             echo'   <th class="col-md-5">';
         }
         else {
@@ -45,7 +68,7 @@
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
-		if($section=="out_po" || $section=="out_so"){
+		if($status=="Complete"){
             echo'  	<th class="col-md-1">';
             echo'   	Pending';
             echo'  	</th>';
@@ -56,31 +79,79 @@
             echo'</thead>';
 		}	
 	}
-	function output_rows($section,$count){
-		$date = "6/19/16";
-		$company = "ICBS";
-		$purchaseOrder = "19678";
-		$items = "D90-311670 &nbsp; T1S1CKUAAA";
-		$quantity = "2";
-		$pending = "2";
-		$status = "Pending";
+	
+	//Inputs expected:
+	//	- Status: Completed, Active
+	//	- Order: s, p
+	function output_rows($order, $status){
 		
-		if($count<10){
-			echo'	<tr>';
+		//Select a joint summary query of the order we are requesting
+		$query = "SELECT * FROM ";
+		if ($order == 'p'){
+			$query .= "purchase_orders o, purchase_items i ";
+			$query .= "WHERE o.po_number = i.po_number ";
 		}
 		else{
-			echo'	<tr class="overview" style="display:none;">';
+			$query .= "sales_orders o, sales_items i ";
+			$query .= "WHERE o.so_number = i.so_number ";
 		}
-			echo'        <td>'.$date.'</td>';
-			echo'        <td><a href="#">'.$company.'</a></td>';
-			echo'        <td><a href="#">'.$purchaseOrder.'</a></td>';
-			echo'        <td>'.$items.'</td>';
-			echo'    	<td>'.$quantity.'</td>';
-		if($section=="out_po" || $section=="out_so"){
-			echo'        <td class="pending">'.$pending.'</td>';
-			echo'    	<td class="status">'.$count.'</td>';
-		}
+		$query .= "AND status = '$status' ";
+		$query .= "LIMIT 0 , 100;";
+		
+		$results = qdb($query);
+	
+		//display only the first N rows, but output all of them
+		$count = 1;
+		
+		//Loop through the results.
+		foreach ($results as $r){
+			$count++;
+			if ($order == 's'){
+				$purchaseOrder = $r['so_number'];
+			}
+			else{
+				$purchaseOrder = $r['po_number'];
+			}
+			$date = date("m/d/Y", strtotime($r['created']));
+			$company = getCompany($r['companyid']);
+			$item = getPart($r['partid']);
+			$qty = $r['qty'];
+		
+		
+			if($count<10){
+				echo'	<tr>';
+			}
+			else{
+				echo'	<tr style="display:none;">';
+			}
+				echo'        <td>'.$date.'</td>';
+				echo'        <td><a href="#">'.$company.'</a></td>';
+				echo'        <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+				echo'        <td>'.$item.'</td>';
+				echo'    	<td>'.$qty.'</td>';
+			if($status=="Complete"){
+				echo'        <td class="pending">'.$pending.'</td>';
+				echo'    	<td class="status">'.$count.'</td>';
+			}
 			echo'	</tr>';
+		}
+		
+		// //If there are less than ten rows, fill with blanks
+		while ($count < 10){
+			echo'	<tr class = "empty_row">';
+				echo'        <td>&nbsp;</td>';
+				echo'        <td>&nbsp;</td>';
+				echo'        <td>&nbsp;</td>';
+				echo'        <td>&nbsp;</td>';
+				echo'    	<td>&nbsp;</td>';
+			if($status=="Active" || $status=="Active"){
+				echo'        <td class="pending">&nbsp;</td>';
+				echo'    	<td class="status">&nbsp;</td>';
+			}
+			echo'	</tr>';
+		 echo'	</tr>';
+		 $count++;
+		}
 	}
 ?>
 
@@ -89,7 +160,7 @@
 <!----------------------------------------------------------------------------->
 <!DOCTYPE html>
 <html>
-<!-- Declaration of the standard head with Accounts home set as title -->
+<!-- Declaration of the standard head with  home set as title -->
 <head>
 	<title>VMM Shipping Home</title>
 	<?php
@@ -193,102 +264,17 @@
         </div>
     </div>
 	<div class="row">
-		<div class="col-lg-6 pad-wrapper" style="margin: 25px 0;">
-			<div class="shipping-dash">
-				<div class="shipping_section_head" data-title="Sales Orders">
-					Outstanding Sales Orders
-				</div>
-				<div class="table-responsive">
-		            <table class="table heighthover heightstriped table-condensed">
-						<?php
-							output_header("out_so");
-						?>
-		                <tbody>
-		                	<?php
-								for($i=0;$i<20;$i++){
-									output_rows("out_po",$i);
-								}
-		                	?>
-		                </tbody>
-		            </table>
-		    	</div>
-		    	<div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
-	            	<a href="#">Show more</a>
-	            </div>
-            </div>
-        </div>
-		<div class="col-lg-6 pad-wrapper" style="margin: 25px 0;">
-			<div class="shipping-dash">
-				<div class="shipping_section_head" data-title="Purchase Orders">Outstanding Purchase Orders</div>
-				<div class="table-responsive">
-		            <table class="table table-hover table-striped table-condensed">
-		                	<?php
-								output_header("out_po");
-							?>
-		                <tbody>
-		                	<?php
-								for($i=0;$i<10;$i++){
-									output_rows("out_po",$i);
-								}
-		                	?>
-		                </tbody>
-		            </table>
-	            </div>
-	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
-	            	<a href="#">Show more</a>
-	            </div>
-			</div>
-        </div>
+		<?php 
+			output_module("p","Active");
+			output_module("s","Active");
+		?>
     </div>
-    <div class="row">
-		<div class="col-lg-6 pad-wrapper" style="margin: 0 0 25px 0;">
-			<div class="shipping-dash">
-				<div class="shipping_section_head" data-title="Sales Orders">
-					Outstanding Sales Orders
-				</div>
-				<div class="table-responsive">
-		            <table class="table heighthover heightstriped table-condensed">
-						<?php
-							output_header("out_so");
-						?>
-		                <tbody>
-		                	<?php
-								for($i=0;$i<20;$i++){
-									output_rows("out_po",$i);
-								}
-		                	?>
-		                </tbody>
-		            </table>
-	            </div>
-	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
-	            	<a href="#">Show more</a>
-	            </div>
-            </div>
-        </div>
-		<div class="col-lg-6 pad-wrapper" style="margin: 0 0 25px 0;">
-			<div class="shipping-dash">
-				<div class="shipping_section_head" data-title="Purchase Orders">Outstanding Purchase Orders</div>
-				<div class="table-responsive">
-		            <table class="table table-hover table-striped table-condensed">
-		                	<?php
-								output_header("out_po");
-							?>
-		                <tbody>
-		                	<?php
-								for($i=0;$i<10;$i++){
-									output_rows("out_po",$i);
-								}
-		                	?>
-		                </tbody>
-		            </table>
-	            </div>
-	            <div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 20px;">
-	            	<a href="#">Show more</a>
-	            </div>
-            </div>
-        </div>
-    </div>
-    
+	<div class="row">
+		<?php 
+			output_module("p","Complete");
+			output_module("s","Complete");
+		?>
+    </div>    
 
 
 

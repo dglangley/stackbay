@@ -30,29 +30,43 @@
 //------------------------------------------------------------------------------
 	//The general purpose array-to-row output
 	function build_row($row = array()){
+		$mode = ($_REQUEST['mode'])? ($_REQUEST['mode']) : "load";
+		//Process the search ID into readable text.
+		$display = '';
+		
+		$partid = $row['search'];
+		$date = date("m/d/Y",strtotime($row['date']));
+
+		
+		$p = hecidb($partid,'id');
+		foreach ($p as $r){
+             $display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
+		}
+		
 	   	$row_out = "
-			<tr class = 'easy-output'>
+			<tr class='easy-output' data-record='".$row['id']."'>
 		        <td>".$row['line']."</td>
-	            <td data-search='".$row['search']."'>".$row['display']."</td>
-	            <td>".$row['date']."</td>
+	            <td data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
+	            <td>".$date."</td>
 	            <td>".$row['qty']."</td>
 	            <td>".format_price($row['uPrice'])."</td>
 	            <td>".format_price($row['qty']*$row['uPrice'])."</td>
 				<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 				<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
-		    </tr>
-		    <tr class='lazy-entry' style='display:none;'>
+		    </tr>";
+	   if ($mode != 'update'){
+	   $row_out .= "<tr class='lazy-entry' style='display:none;'>
 				<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
 	            <td id='search_collumn'>
 	            	<div class = 'item-selected'>
 						<select class='item_search'>
-							<option data-search = '".$row['search']."'>".$row['display']."</option>
+							<option data-search = '$partid'>".$display."</option>
 						</select>
 					</div>
 				</td>
 	            <td>				
 	            	<div class='input-group date datetime-picker-line'>
-			            <input type='text' name='ni_date' class='form-control input-sm' value='".$row['date']."' style = 'min-width:50px;'/>
+			            <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
 			            <span class='input-group-addon'>
 			                <span class='fa fa-calendar'></span>
 			            </span>
@@ -67,11 +81,12 @@
 					</a>
 				</td>
 		    </tr>";
+	   }
 	    return $row_out;
 	}
 	
 	//This function will append to the table any changes made while on the page
-	function append_row(){
+	function append_row($mode){
 		
 		//Get the posted values from the form
 		$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '0';
@@ -79,16 +94,11 @@
 		$qty = isset($_REQUEST['qty']) ?  trim($_REQUEST['qty']) : '0';
 		$uPrice = isset($_REQUEST['unitPrice']) ? trim($_REQUEST['unitPrice']) : '0';
 		$line = isset($_REQUEST['line']) ? trim($_REQUEST['line']) : '';
-		
-		//Process the search ID into readable text.
-		$display = '';
-		$p = hecidb($search,'id');
-		foreach ($p as $r){
-             $display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
-		}
-		
+		$id = isset($_REQUEST['id']) ? trim($_REQUEST['id']) : '';
+
 		//Store all caught data into the standard array and build the row.
 		$row = array(
+			'id' => $id,
 			'search' => $search,
 			'display' => $display,
 			'date' => $date,
@@ -104,42 +114,65 @@
 	//The initial table output method will call on the load of the page. It
 	//accesses the database and outputs the current rows of the database.
 	function initalTableOutput (){ 
+		
+		//Prep the initial 
 		$table = '';
 		
 		//Determine from the post to the page what we are working on. Assume new if there is no number.
-	    $order_type = isset($_REQUEST['type']) ? trim($_REQUEST['type']) : 'po';
-	    $order_number = isset($_REQUEST['number']) ? trim($_REQUEST['number']) : 'new';
-	    
+	    $order_type = isset($_REQUEST['type']) ? trim($_REQUEST['type']) : 'Purchase';
+	    $order_number = isset($_REQUEST['number']) ? trim($_REQUEST['number']) : 'New';
+
 	    //If this is not a new order, load the already existing information from the table.
 	    if ($order_number != 'New'){
-			$q_line = "SELECT * FROM ";
-			$q_line .= ($order_type == 'po') ? 'purchase_items' : 'sales_items';
-			$q_line .= "WHERE ".($order_type == 'po') ? 'po_number' : 'so_number';
-			$q_line .= " = '$number';";
-			$old = qdb($q_line);
+	    	
+			$q_form = "SELECT * FROM ";
+			$q_form .= ($order_type == 'Purchase') ? 'purchase_items' : 'sales_items';
+			$q_form .= " WHERE ";
+			$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
+			$q_form .= " = '$order_number';";
 			
-			//Parse the prexisting lines into the output format.
-			foreach ($old as $db_row) {
-				//Each of the rows will be built into the table here.
-				$r = array(
-				'line' => '',
-				'number' => '',
-				'search' => '',
-				'date' => '',
-				'qty' => '',
-				'uPrice' => '',
+			$old = qdb($q_form);
+			foreach ($old as $r){
+				$new_row = array(
+				'id' => $r['id'],
+				'line' => $r['line_number'],
+				'search' => $r['partid'],
+				'date' => $r['delivery_date'],
+				'qty' => $r['qty'],
+				'uPrice' => $r['price'],
 				);
-				$table .= build_row($r);
+				$table .= build_row($new_row);			
+				
 			}
-	    }
-		echo json_encode($table);
-		exit;
+	    	
+			echo json_encode($table); 
+			exit;
+			
+		// 	$old = qdb($q_line);
+			
+		// 	//Parse the prexisting lines into the output format.
+		// 	foreach ($old as $db_row) {
+		// 		//Each of the rows will be built into the table here.
+		// 		$r = array(
+		// 		'line' => 'C',
+		// 		'number' => 'H',
+		// 		'search' => 'I',
+		// 		'date' => 'N',
+		// 		'qty' => 'A',
+		// 		'uPrice' => '2',
+		// 		);
+		// 		$table .= build_row($r);
+		// 	}
+	 //   }
+		// echo json_encode($table);
+		// exit;
+	}
 	}
 //------------------------------------------------------------------------------
 //------------------------------------ Main ------------------------------------ 
 //------------------------------------------------------------------------------
 	if ($mode == "append" || $mode == "update"){
-		append_row();
+		append_row($mode);
 	}
 	elseif ($mode == "load"){
 		initalTableOutput();

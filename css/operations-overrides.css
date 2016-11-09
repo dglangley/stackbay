@@ -17,8 +17,10 @@ body{
 	height: 100%;
 }
 
-#select2-ship_to-container, #select2-bill_to-container{
+.select2-container{
 	height: inherit;
+	width:100% !important;
+	overflow:hidden;
 }
 
 .company_meta{
@@ -49,9 +51,9 @@ body{
 	width: 100%; 
 }
 
-.ui-select {		
-	width:180px;		
-}		
+/*.ui-select {		*/
+/*	width:180px;		*/
+/*}		*/
 .ui-select.addresses {		
 	width:320px;		
 }
@@ -75,7 +77,7 @@ body{
 	
 }
 .forms_section .select2-container{
-	width:100% !important;
+	width:100%;
 }
 .forms_section .selection{
 	width: 100% !important;
@@ -120,6 +122,11 @@ body{
 
 }
 
+.accounts-body .row {
+	margin: 0;	
+} 
+
+
 /*Aaron: End Order / Purchase Forms */
 
 
@@ -162,7 +169,81 @@ body{
 .shipping_section_foot{
 	padding-top: 20px;
 }
-/*Aaron: end shipping section*/
+/*Aaron: end shipping_home section*/
+
+/*Andrew: shipping.php media fixes*/
+			.left-sidebar{
+				/*position: absolute;*/
+				left: 0;
+				bottom: 0;
+			}
+			
+			.arrow:after, .arrow:before {
+				left: 100%;
+				top: 50%;
+				border: solid transparent;
+				content: " ";
+				height: 0;
+				width: 0;
+				position: absolute;
+				pointer-events: none;
+			}
+			
+			.arrow:after {
+				border-color: rgba(239, 239, 239, 0);
+				border-left-color: #efefef;
+				border-width: 30px;
+				margin-top: -30px;
+			}
+			.arrow:before {
+				border-color: rgba(0, 0, 0, 0);
+				/*border-left-color: #;*/
+				border-width: 36px;
+				margin-top: -36px;
+			}
+			
+			.arrow {
+				display: block;
+			    position: absolute;
+			    top: 50%;
+			    right: 0;
+				cursor: pointer;
+			}
+			
+			.arrow i {
+				left: 4px;
+			    position: absolute;
+			    z-index: 9;
+			    top: -5px;
+			}
+			
+			@media only screen and (max-width: 767px) {
+				.company_meta:after, .company_meta:before {
+					top: 100%;
+					left: 50%;
+					border: solid transparent;
+					content: " ";
+					height: 0;
+					width: 0;
+					position: absolute;
+					pointer-events: none;
+				}
+				
+				.company_meta:after {
+					border-color: rgba(239, 239, 239, 0);
+					border-top-color: #efefef;
+					border-width: 30px;
+					margin-left: -30px;
+				}
+				.company_meta:before {
+					border-color: rgba(0, 0, 0, 0);
+					/*border-top-color: #;*/
+					border-width: 36px;
+					margin-left: -36px;
+				}
+			}
+/*End shipping.php*/
+
 
 /*Media Queries*/
 @media only screen and (max-width: 767px) {

@@ -23,6 +23,10 @@
                 $output[] = $line;
             }
         }
+        $output[] = array(
+            'id' => "Add $q",
+            'text' => "Add $q..."
+            );
 	}
 
     

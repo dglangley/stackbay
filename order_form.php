@@ -23,48 +23,10 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
-	//include_once $rootdir.'/inc/order-creation.php';
-	/*function outputCompleteRow($params = array(),$row){
-	echo("<tr class = 'easy-output'>
-		        <td>".$row."</td>
-	            <td>".$params['part']." &nbsp; ".$params['heci']." &nbsp; ".$params['descr']."</td>
-	            <td>".$params['date']."</td>
-	            <td>".$params['qty']."</td>
-	            <td>".format_price($params['price'])."</td>
-	            <td>".format_price($params['qty']*$params['price'])."</td>
-				<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
-				<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
-	    </tr>
-	    <tr class='lazy-entry' style='display:none;'>
-					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value = '$row' style='height:28px;padding:0;text-align:center;'></td>
-		            <td id='search_collumn'>
-		            	<div \ id = 'item-selected'>
-							<select class='item_search'>
-								<option>".$params['part']."
-							</select>
-						</div>
-					</td>
-		            <td>				
-		            	<div class='input-group date datetime-picker-line'>
-				            <input type='text' name='ni_date' class='form-control input-sm' value='".$params['date']."' style = 'min-width:50px;'/>
-				            <span class='input-group-addon'>
-				                <span class='fa fa-calendar'></span>
-				            </span>
-			            </div>
-				    </td>
-		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$params['qty']."'></td>
-		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value=  '".$params['price']."'></td>
-		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>
-					<td colspan='2' id = 'check_collumn'>
-						<a class='btn-flat success pull-right line_item_submit' >
-							<i class='fa fa-check fa-4' aria-hidden='true'></i>
-						</a>
-					</td>
-	    </tr>");
-	}*/
-	
+	include_once $rootdir.'/modal/address.php';
+
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_type = ($_REQUEST['ps'] == 'p') ? "Purchase" : "Sales";
+	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps' == 'Purchase']) ? "Purchase" : "Sales";
 
 ?>
 
@@ -78,7 +40,7 @@
 	</head>
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
-		<div class="container-fluid pad-wrapper" style="margin-top:20px;">
+		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?>
@@ -108,19 +70,19 @@
 	<div class="container-fluid">
 	
 		<!--================== Begin Left Half ===================-->
-		<div class="col-md-4" id="left-side-main">
-			<?php //echo order_left($order_number,$order_type); ?>
+		<div id="left-side-main">
+			<!-- Everything here is put out by the order creation ajax script -->
 		</div>
 		<!--======================= End Left half ======================-->
 	
 
 		<!--===================== Begin Right half =====================-->
-		<div class="col-md-8">
+		<div class="col-md-10">
 			
 			<!-- Output the sales-rep dropdown in the top right corner -->
 			<div class="forms_section">
-				<div style="float:right;">
-					<div class="ui-select" style="width:125px;margin-bottom:0;">
+				<div style="float:right;padding-top:15px;">
+					<div class="ui-select" style="width:125px; 'margin-bottom:0;">
 	                    <select id="sales-rep">
 	                        <option data-rep-id=1><?=getRep(1)?></option>
 	                        <option data-rep-id=2><?=getRep(2)?></option>
