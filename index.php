@@ -174,7 +174,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VenTel Market Manager</title>
+	<title>Stackbay</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
@@ -199,7 +199,7 @@
     <table class="table">
 		<tr>
 			<td class="col-md-12 text-center">
-				Enter your search above, or tap <i class="fa fa-list-ol"></i> for more options...
+				Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...
 			</td>
 		</tr>
 	</table>
@@ -569,21 +569,21 @@
 			$k++;
 
 			$results_rows .= '
+<!--
                             <td class="product-actions text-right">
 								<div class="price">
 									<div class="form-group">
-<!--
 										<div class="input-group buy">
 											<span class="input-group-btn">
 												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
 											</span>
 											<input name="buyprice['.$ln.'][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
 										</div>
--->
 									</div>
 								</div>
                             </td>
                         </tr>
+-->
 			';
 		}
 ?>
@@ -595,7 +595,6 @@
 								<div class="product-action action-hover text-left">
 									<div>
 										<input type="checkbox" class="checkAll" checked><br/>
-										#<?php echo $x; ?>
 									</div>
 									<div class="action-items">
 							           	<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil"></i></a><br/>
@@ -626,8 +625,21 @@
 									</div>
 								</div>
 							</td>
-                            <td class="action-hover toggle-box">
-								<div class="action-items toggle-results"><a href="javascript:void(0);" title="toggle selection of the results in this row"> <i class="fa fa-toggle-on fa-lg"></i> </a></div>
+                            <td class="action-hover slider-box">
+<!--
+								<div class="toggle-results">
+								<a href="javascript:void(0);" title="toggle selection of the results in this row">
+									<i class="fa fa-toggle-on fa-lg animated"></i>
+								</a>
+								</div>
+-->
+									<!-- color-coding the slider backwards because toggled right looks more 'on' in this case than 'off' -->
+									<div class="slider-frame default" data-onclass="default" data-offclass="primary">
+										<!-- include radio's inside slider-frame to set appropriate actions to them -->
+										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Ln <?php echo $ln; ?>">
+										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Off">
+										<span data-on-text="Ln <?php echo $ln; ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo $ln; ?></span>
+									</div>
 								<div class="row">
 									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
 									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
@@ -652,7 +664,9 @@
                         <!-- row -->
                         <tr>
                             <td> </td>
+<!--
                             <td> </td>
+-->
                         </tr>
                     </tbody>
 <?php

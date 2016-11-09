@@ -241,10 +241,11 @@
 									<div class="row">
 										<div class="col-sm-6">
 											<p>
-												<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
-												<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
 												<div class="slider-frame success">
-													<span data-on-text="Avail" data-off-text="Req" class="slider-button" id="upload-slider">Req</span>
+													<!-- include radio's inside slider-frame to set appropriate actions to them -->
+													<input type="radio" name="upload_type" class="upload-type hidden" value="Req">
+													<input type="radio" name="upload_type" class="upload-type hidden" value="Avail">
+													<span data-on-text="Avail" data-off-text="Req" class="slider-button upload-slider" id="upload-slider">Req</span>
 												</div>
 												<div class="btn-group btn-group-bids">
 													<button class="btn btn-default btn-expdate fa-stack fa-lg" type="button" data-date="<?php echo $morning_bid; ?>"><i class="fa fa-calendar-o fa-stack-2x"></i><span class="calendar-text">10a</span></button>
