@@ -87,18 +87,24 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		
 		$carrier = getFreight('carrier');
-		foreach ($carrier as $c){
-			$carrier_options .= "<option data-carrier-id=".$c['id'].">".$c['name']."</option>";
+		
+		if ($carrier){
+			foreach ($carrier as $c){
+				$carrier_options .= "<option data-carrier-id=".$c['id'].">".$c['name']."</option>";
+			}
 		}
 		
 		$account = '';
+		$freight = array();
 		$freight = getFreight('max');
-		foreach ($freight as $f){
-			if(isset($f['method'])){
-				$account .= "<option data-carrier-id=".$f['freight_co_id'].$f['id'].">".$f['method']."</option>";
+		if ($freight){
+			foreach ($freight as $f){
+				if(isset($f['method'])){
+					$account .= "<option data-carrier-id=".$f['freight_co_id'].$f['id'].">".$f['method']."</option>";
+				}
+				// $f['account_no'];
+				// $freight .= '';
 			}
-			// $f['account_no'];
-			// $freight .= '';
 		}
 		
 		// foreach($freight as $f){
