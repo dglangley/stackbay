@@ -708,16 +708,21 @@
 		setSlider($("#upload-slider"));
 
 		/* initialize results sliders and set to 'off' position, which we're using as on */
-		setSlider($(".slider-box .slider-button"));
+		$(".slider-box .slider-button").each(function() {
+			setSlider($(this));
+		});
 
 		/* when radio's change (see setSlider() above), hide/show product results based on the radio checkboxes */
 		$(".line-number").on('change',function() {
 			var chkbox = $(this);
-			chkbox.closest("tbody").find(".product-results").each(function() {
+			var rowbody = chkbox.closest("tbody");
+			rowbody.find(".product-results").each(function() {
 				if (chkbox.is(':checked')) {
 					$(this).fadeOut('fast');
+					rowbody.find("input").prop('disabled',true);
 				} else {
 					$(this).fadeIn('fast');
+					rowbody.find("input").prop('disabled',false);
 				}
 			});
 		});

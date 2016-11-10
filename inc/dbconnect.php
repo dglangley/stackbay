@@ -55,7 +55,7 @@ $DEV_ENV = true;
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
 	$ROLES = array();
-	$ERRS = array();//global errors array for output to alert modal (see inc/footer.php)
+	$ALERTS = array();//global errors array for output to alert modal (see inc/footer.php)
 	
 	//Important pages that always must have minimum admin privileges
 	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');

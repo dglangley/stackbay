@@ -636,9 +636,9 @@
 									<!-- color-coding the slider backwards because toggled right looks more 'on' in this case than 'off' -->
 									<div class="slider-frame default" data-onclass="default" data-offclass="primary">
 										<!-- include radio's inside slider-frame to set appropriate actions to them -->
-										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Ln <?php echo $ln; ?>">
+										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Ln <?php echo ($ln+1); ?>">
 										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Off">
-										<span data-on-text="Ln <?php echo $ln; ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo $ln; ?></span>
+										<span data-on-text="Ln <?php echo ($ln+1); ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo ($ln+1); ?></span>
 									</div>
 								<div class="row">
 									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
