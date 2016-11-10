@@ -13,11 +13,7 @@
 	
 	$page = $_GET['page'];
 	
-<<<<<<< HEAD
-	($page == '' ? $page = 1 : '');
-=======
 	($page == '' ? $page = 1: '');
->>>>>>> eec01f277557233d2b97f74c49f770eead3c6269
 	
 	$offset = ($page - 1) * 2;
 	
