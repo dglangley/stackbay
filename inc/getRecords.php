@@ -3,6 +3,7 @@
 	include_once 'getPipeIds.php';
 	include_once 'getPartId.php';
 	include_once 'getRep.php';
+	include_once 'getCompany.php';
 	include_once 'format_price.php';
 	include_once 'format_date.php';
 	
@@ -256,6 +257,8 @@
 			
 			while ($r = mysqli_fetch_assoc($result)) {
 				$r['partid'] = getPartId($r['part_number'],$r['clei']);
+				// translate old id to new
+				$r['cid'] = dbTranslate($r['cid']);
 				$db_results[] = $r;
 			}
 

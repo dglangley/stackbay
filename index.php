@@ -50,7 +50,10 @@
 		foreach ($results as $r) {
 			$datetime = substr($r['datetime'],0,10);
 			if ($num_detailed==0 OR $market_table<>'demand' OR $datetime>=$summary_past) {
-				$group_date = substr($r['datetime'],0,10);
+				// append the companyid to the date to avoid grouping results on the same date
+				// because otherwise we end up with averaged prices when we want to see breakouts instead
+				$group_date = substr($r['datetime'],0,10).'-'.$r['cid'];
+
 				$last_date = $group_date;
 				if ($num_detailed==0 AND $datetime<$summary_past) {
 					$summary_past = substr($datetime,0,7).'-01';
@@ -82,6 +85,9 @@
 		$cls1 = '';
 		$cls2 = '';
 		foreach ($grouped as $order_date => $r) {
+			// because we're grouping dates above with suffixed companyid's, we need to shorten them back to just the date
+			$order_date = substr($order_date,0,10);
+
 			// summarized date for heading line
 			$sum_date = summarize_date($r['datetime']);
 

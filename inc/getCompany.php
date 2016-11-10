@@ -1,4 +1,6 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
+
 	//Declare the company array which will be used to globally communicate the found companies
 	$COMPANIES = array();
 	
@@ -6,14 +8,12 @@
 	//to the new one via the curated table called company_aliases.
 
 	function dbTranslate($companyid, $oldToNew = true){
-		include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
 		
-			if ($oldToNew){
-				$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid'";
-			}
-			else{
-				$query = "Select inventory_companyid `c` From company_maps where companyid = '$companyid';";
-			}
+		if ($oldToNew){
+			$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid';";
+		} else {
+			$query = "Select inventory_companyid `c` From company_maps where companyid = '$companyid';";
+		}
 
 		$result = qdb($query);
 		if(mysqli_num_rows($result)){
