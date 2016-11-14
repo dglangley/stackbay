@@ -176,7 +176,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<input id='mismo' type=checkbox></input> (Same as shipping)
  </label>
 	                    <select id='bill_to' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value ='$b_add'>$b_name</option>
+							<option value = '$b_add'>$b_name</option>
 	                    </select>
 				    </div>
 			    </div>
