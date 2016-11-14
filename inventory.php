@@ -17,7 +17,7 @@
 	
 	$offset = ($page - 1) * 2;
 	
-	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT $offset, 2";
+	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 2;";
 	$result = qdb($query);
 	
 	while ($row = $result->fetch_assoc()) {
@@ -28,7 +28,7 @@
 		global $page;
 		
 		$rows = 0;
-		$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory)";
+		$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory);";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -43,7 +43,7 @@
 	function getManufacture($manfid = 0) {
 		$manf;
 		
-		$query  = "SELECT * FROM manfs where id = $manfid";
+		$query  = "SELECT * FROM manfs where id = " . res($manfid) . ";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -57,7 +57,7 @@
 	function getSystemName($systemid = 0) {
 		$system;
 		
-		$query  = "SELECT * FROM systems where id = $systemid";
+		$query  = "SELECT * FROM systems where id = " . res($systemid) . ";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -71,12 +71,12 @@
 	function getPartSerials($partid = 0) {
 		$partSerial_array = array();
 		
-		$query  = "SELECT * FROM inventory where partid = $partid ORDER BY
+		$query  = "SELECT * FROM inventory where partid = " . res($partid) . " ORDER BY
 				  CASE item_condition
 				    WHEN 'new' THEN 1
 				    WHEN 'used' THEN 2
 				    ELSE 3
-				  END, qty DESC";
+				  END, qty DESC;";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -89,7 +89,7 @@
 	function getItemHistory($invid = 0) {
 		$partHistory_array = array(); 
 		
-		$query  = "SELECT * FROM inventory_history WHERE invid = $invid";
+		$query  = "SELECT * FROM inventory_history WHERE invid =" . res($invid) . ";";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {
@@ -102,7 +102,7 @@
 	function getRepName($repid = 0) {
 		$name;
 		
-		$query  = "SELECT name FROM contacts WHERE id = $repid";
+		$query  = "SELECT name FROM contacts WHERE id =" . res($repid) .";";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -119,7 +119,7 @@
 		//echo $stock . $partid;
 		
 		
-		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = $partid AND item_condition = '$stock'";
+		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND item_condition = '" . res($stock) . "';";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
@@ -140,7 +140,7 @@
 	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
 		$statusVals;
 		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '{$field}'";
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
 	    $result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {
@@ -199,6 +199,24 @@
 		.page-1 {
 			display: block;
 		}
+		
+		.addRows label {
+			display: none;
+		}
+		
+		.addRows .product-rows:first-child label {
+			display: block;
+		}
+		
+		.loading_element {
+			visibility: hidden;
+		}
+		
+		@media screen and (max-width: 767px){
+			.addRows label {
+				display: block;
+			}
+		}
 	</style>
 
 </head>
@@ -256,173 +274,176 @@
 	    <strong>Uh Oh!</strong> Something went wrong with the update, please look into a fix for this error.
 	</div>
 	
-	<?php foreach($parts_array as $part): ?>
-		<div class="part-container" data-partid="<?php echo $part['id']; ?>">
-			<div class="row partDescription" style="margin: 35px 0 0 0;">
-				<div class="col-md-2 col-sm-2">
-					<div class="row" style="margin: 0">
-						<div class="col-md-2 col-sm-2">
-							<button class="btn btn-success buttonAdd" style="margin-top: 24px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-						</div>
-						<div class="col-md-10 col-sm-10">
-							<img class="img-responsive" src="http://placehold.it/350x150">
+	<div class="loading_element">
+		<?php foreach($parts_array as $part): ?>
+			<div class="part-container" data-partid="<?php echo $part['id']; ?>">
+				<div class="row partDescription" style="margin: 35px 0 0 0;">
+					<div class="col-md-2 col-sm-2">
+						<div class="row" style="margin: 0">
+							<div class="col-md-2 col-sm-2 col-xs-2">
+								<button class="btn btn-success buttonAdd" style="margin-top: 24px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+							</div>
+							<div class="col-md-10 col-sm-10 col-xs-10">
+								<img class="img-responsive" src="http://placehold.it/350x150">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="col-md-3 col-sm-3">
-					<strong><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></strong>
-					<hr>
-					Description, <?php echo getManufacture($part['manfid']); ?><br><br>
-					<i>Alias: David, Aaron, Andrew</i>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<strong>Order History</strong>
-					<hr>
-					<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <a href="">#123</a>, <a href="">#234</a><br>
-					<span title="Sales Order" style="text-decoration: underline;">SO</span>: <a href="">#111</a>, <a href="">#222</a>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<strong>Status</strong>
-					<hr>
-					<button title="In-stock" class="btn btn-danger">1</button>
-					<button title="Sold" class="btn btn-success">2</button>
-					<button title="Market" class="btn btn-primary">3</button>
-				</div>
-				<div class="col-md-2 col-sm-2">
-					<strong>Condition</strong>
-					<hr>
-					<button title="New" class="btn btn-success new_stock"><?php echo getStock('new', $part['id']); ?></button>
-					<button title="Used" class="btn btn-primary used_stock"><?php echo getStock('used', $part['id']); ?></button>
-					<button title="Refurbished" class="btn btn-danger refurb_stock"><?php echo getStock('refurbished', $part['id']); ?></button>
-				</div>
-				<div class="col-md-1 col-sm-1">
-					<strong>Cost Avg.</strong>
-					<hr>
-					$1,000 - 1,500
-				</div>
-			</div>
-		
-			<div class="row addItem" style="margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;">
-				<div class="row">
-					<div class="col-md-12 col-sm-12">
-						<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-						<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;" disabled>Save Changes</button>
-						<h3><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></h3>
-						<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
+					<div class="col-md-3 col-sm-3">
+						<strong><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></strong>
+						<hr>
+						Description, <?php echo getManufacture($part['manfid']); ?><br><br>
+						<i>Alias: David, Aaron, Andrew</i>
+					</div>
+					<div class="col-md-2 col-sm-2">
+						<strong>Order History</strong>
+						<hr>
+						<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <a href="">#123</a>, <a href="">#234</a><br>
+						<span title="Sales Order" style="text-decoration: underline;">SO</span>: <a href="">#111</a>, <a href="">#222</a>
+					</div>
+					<div class="col-md-2 col-sm-2">
+						<strong>Status</strong>
+						<hr>
+						<button title="In-stock" class="btn btn-danger">1</button>
+						<button title="Sold" class="btn btn-success">2</button>
+						<button title="Market" class="btn btn-primary">3</button>
+					</div>
+					<div class="col-md-2 col-sm-2">
+						<strong>Condition</strong>
+						<hr>
+						<button title="New" class="btn btn-success new_stock"><?php echo getStock('new', $part['id']); ?></button>
+						<button title="Used" class="btn btn-primary used_stock"><?php echo getStock('used', $part['id']); ?></button>
+						<button title="Refurbished" class="btn btn-danger refurb_stock"><?php echo getStock('refurbished', $part['id']); ?></button>
+					</div>
+					<div class="col-md-1 col-sm-1">
+						<strong>Cost Avg.</strong>
+						<hr>
+						$1,000 - 1,500
 					</div>
 				</div>
-				
-				<hr>
-				<div class="addRows">
-					<?php $parts = getPartSerials($part['id']); $element = 0; $page = 1; foreach($parts as $serial): (($element % 5) == 0 && $element != 0 ? $page++ : ''); $element++; ?>
-						<div class="product-rows serial-page page-<?php echo $page; ?>" style="padding-bottom: 10px;" data-id="<?php echo $serial['id']; ?>">
-							<div class="row">
-							<div class="col-md-2 col-sm-2">
-								<label for="serial">Serial/Lot Number</label>
-								<input class="form-control serial" type="text" name="serial" placeholder="#123" value="<?php echo $serial['serial_no']; ?>"/>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-2 col-sm-2">
-								<label for="date">Date</label>
-								<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date_format(date_create($serial['date_created']), 'm/d/Y'); ?>"/>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-2 col-sm-2">
-								<label for="date">Location</label>
-								<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value="<?php echo $serial['locationid']; ?>"/>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-1 col-sm-1">
-								<label for="qty">Qty</label>
-								<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value="<?php echo $serial['qty']; ?>"/>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-2 col-sm-2">
-								<div class="form-group">
-									<label for="condition">Condition</label>
-									<select class="form-control condition" name="condition">
-										<?php foreach(getEnumValue() as $condition): ?>
-											<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
-										<?php endforeach; ?>
-									</select>
-								</div>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-1 col-sm-1">
-								<div class="form-group">
-									<label for="status">status</label>
-									<select class="form-control status" name="status">
-										<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-											<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
-										<?php endforeach; ?>
-									</select>
-								</div>
-								<div class="form-text"></div>
-							</div>
-							<div class="col-md-2 col-sm-2">
+			
+				<div class="row addItem" style="margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;">
+					<div class="row">
+						<div class="col-md-12 col-sm-12">
+							<button class="btn btn-success buttonAddRows btn-sm add pull-right" style="margin-right: 5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
+							<button class="btn btn-warning btn-sm add pull-right updateAll" style="margin-right: 5px;" disabled>Save Changes</button>
+							<h3><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></h3>
+							<p style="">Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>
+						</div>
+					</div>
+					
+					<hr>
+					<div class="addRows">
+						<?php $parts = getPartSerials($part['id']); $element = 0; $page = 1; foreach($parts as $serial): (($element % 5) == 0 && $element != 0 ? $page++ : ''); $element++; ?>
+							<div class="product-rows serial-page page-<?php echo $page; ?>" style="padding-bottom: 10px;" data-id="<?php echo $serial['id']; ?>">
 								<div class="row">
-									<div class="col-md-7 col-sm-7">
-										<label for="price">Cost</label>
-										<input class="form-control cost" type="text" name="price" placeholder="$" value=""/>
-										<div class="form-text"></div>
+								<div class="col-md-2 col-sm-2">
+									<label for="serial">Serial/Lot Number</label>
+									<input class="form-control serial" type="text" name="serial" placeholder="#123" value="<?php echo $serial['serial_no']; ?>"/>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-2 col-sm-2">
+									<label for="date">Date</label>
+									<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date_format(date_create($serial['date_created']), 'm/d/Y'); ?>"/>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-2 col-sm-2">
+									<label for="date">Location</label>
+									<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value="<?php echo $serial['locationid']; ?>"/>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-1 col-sm-1">
+									<label for="qty">Qty</label>
+									<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value="<?php echo $serial['qty']; ?>"/>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-2 col-sm-2">
+									<div class="form-group">
+										<label for="condition">Condition</label>
+										<select class="form-control condition" name="condition">
+											<?php foreach(getEnumValue() as $condition): ?>
+												<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+											<?php endforeach; ?>
+										</select>
 									</div>
-									<div class="col-md-5 col-sm-5">
-										<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">
-											<button class="btn btn-primary btn-sm update" disabled><i class="fa fa-check" aria-hidden="true"></i></button>
-											<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-1 col-sm-1">
+									<div class="form-group">
+										<label for="status">status</label>
+										<select class="form-control status" name="status">
+											<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+												<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
+											<?php endforeach; ?>
+										</select>
+									</div>
+									<div class="form-text"></div>
+								</div>
+								<div class="col-md-2 col-sm-2">
+									<div class="row">
+										<div class="col-md-7 col-sm-7">
+											<label for="price">Cost</label>
+											<input class="form-control cost" type="text" name="price" placeholder="$" value=""/>
+											<div class="form-text"></div>
+										</div>
+										<div class="col-md-5 col-sm-5">
+											<label for="add-delete">&nbsp;</label>
+											<div class="btn-group" role="group" name="add-delete" style="display: block;">
+												<button class="btn btn-primary btn-sm update" disabled><i class="fa fa-check" aria-hidden="true"></i></button>
+												<button class="btn btn-danger delete btn-sm" disabled><i class="fa fa-minus" aria-hidden="true"></i></button>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-							</div>
-							<div class="row">
-							<div class="col-sm-12">
-								<a href="#" class="show_history">Show History +</a>
-								
-								<div class="row history_listing" style="display: none;">
-									<div class="col-md-12">
-										<?php //print_r(getItemHistory($serial['id'])); ?>
-										<div class="table-responsive">
-											<table class="table table-striped">
-												<thead>
-													<tr>
-														<th>Date</th>
-														<th>Rep</th>
-														<th>Field Changed</th>
-														<th>History</th>
-													</tr>
-												</thead>
-												<tbody>
-													<?php foreach(getItemHistory($serial['id']) as $history): ?>
+								</div>
+								<div class="row">
+								<div class="col-sm-12">
+									<a href="#" class="show_history">Show History +</a>
+									
+									<div class="row history_listing" style="display: none;">
+										<div class="col-md-12">
+											<?php //print_r(getItemHistory($serial['id'])); ?>
+											<div class="table-responsive">
+												<table class="table table-striped">
+													<thead>
 														<tr>
-															<th><?php echo date_format(date_create($history['date_changed']), 'm/d/Y'); ?></th>
-															<td><?php echo getRepName($history['repid']); ?></td>
-															<td><?php echo $history['field_changed']; ?></td>
-															<td><?php echo $history['changed_from']; ?></td>
+															<th>Date</th>
+															<th>Rep</th>
+															<th>Field Changed</th>
+															<th>History</th>
 														</tr>
-													<?php endforeach; ?>
-												</tbody>
-											</table>
+													</thead>
+													<tbody>
+														<?php foreach(getItemHistory($serial['id']) as $history): ?>
+															<tr>
+																<th><?php echo date_format(date_create($history['date_changed']), 'm/d/Y'); ?></th>
+																<td><?php echo getRepName($history['repid']); ?></td>
+																<td><?php echo $history['field_changed']; ?></td>
+																<td><?php echo $history['changed_from']; ?></td>
+															</tr>
+														<?php endforeach; ?>
+													</tbody>
+												</table>
+											</div>
 										</div>
 									</div>
 								</div>
+								</div>
 							</div>
-							</div>
-						</div>
-					<?php endforeach; ?>
-					<div class="col-md-12 text-center"><a class="show-more" href="#">Show More</a></div>
+						<?php endforeach; ?>
+						<div class="col-md-12 text-center"><a class="show-more" href="#">Show More</a></div>
+					</div>
 				</div>
 			</div>
-		</div>
-	<?php endforeach; ?>
-	
-	<div class="row" style="margin: 0;">
-		<div class="col-md-12">
-			<ul class="pagination">
-				<?php getPages(); ?>
-		    </ul>
+		<?php endforeach; ?>
+		
+		<div class="row" style="margin: 0;">
+			<div class="col-md-12">
+				<ul class="pagination">
+					<?php getPages(); ?>
+			    </ul>
+		    </div>
 	    </div>
-    </div>
+	</div>
 
 
 

@@ -819,10 +819,13 @@
 			month = ("0" + month).slice(-2);
 			var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
 			var begin = ''.concat(month).concat('/01/').concat(year);
+			
 			//alert('Day '.concat(today));
 		    $(this).button('toggle');
 		    $("input[name='START_DATE']").val(begin);
 			$("input[name='END_DATE']").val(today);
+			
+			//$("input[name='START_DATE']").initDatetimePicker("MM/DD/YYYY");
 		});
 		$('#Q1').click(function() {
 			var year = new Date().getFullYear();

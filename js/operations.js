@@ -65,17 +65,29 @@
 			
 
 		// ======== Output the header clear for the padding on the page ========
+			function headerOffset() {
+				var height = $('header.navbar').height();
+		        //get possible filter bar height
+		        var heightOPT = 0;
+		        if ($('.table-header').css("display")!='none'){
+		        	heightOPT = $('.table-header').height();
+		        }
+		        var offset = height + heightOPT;
+				
+				
+				$('body').css('padding-top', offset);
+			}
 			//get main header height
-	        var height = $('header.navbar').height();
-	        //get possible filter bar height
-	        var heightOPT = 0;
-	        if ($('.table-header').css("display")!='none'){
-	        	heightOPT = $('.table-header').height();
-	        }
-	        var offset = height + heightOPT;
+			$( window ).resize(function() {
+		        headerOffset();
+			});
 			
+			//headerOffset();
+
+			$.when(headerOffset()).then(function(){
+				$('.loading_element').css('visibility','visible').hide().fadeIn();
+			});
 			
-			$('body').css('padding-top', offset);
 		
 		//======================== End the header clear ========================
 
@@ -416,6 +428,25 @@
 				});
 			});
 			//Cancel button?
+			
+			//Order Form Calendar Toggle Dates
+			
+			$('.toggle-cal-options').click(function(e){
+				e.preventDefault();
+				if ($(this).data('name') == 'show') {
+		            $('.date-options').animate({
+		                width: '295px'
+		            });
+		            $(this).data('name', 'hide')
+		        } else {
+		            $('.date-options').animate({
+		                width: '100%'
+		            }, function() {
+		            	$('.cal-buttons').attr( "style", "" );;
+		            });
+		            $(this).data('name', 'show')
+		        }
+			});
   /*=============================================================================*/
  /*============================ Aaron - END ORDER FORM =========================*/
 /*=============================================================================*/
@@ -425,7 +456,9 @@
   /*===========================================================================*/
  /*=========================== BEGIN SHIPPING HOME ===========================*/
 /*===========================================================================*/
-
+			
+			$('.date').initDatetimePicker("MM/DD/YYYY");
+			
 			$(".shipping_section_foot a").click(function() {
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
@@ -472,6 +505,7 @@
 					$(this).parents("body").children("#view-head").hide();
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
+				headerOffset();
 			});
 			
 			$("#sales").click(function() {

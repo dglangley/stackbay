@@ -116,81 +116,99 @@
 		
 		<div class="col-sm-10 shipping-list" style="padding-top: 20px">
 			<button class="btn btn-success pull-right" style="margin-top: -5px;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-			<h3>Items Shipped</h3>
+			<h3>Items to be Shipped</h3>
 			<!--<hr style="margin-top : 10px;">-->
 		
-			<table class="table table-hover table-striped table-condensed table-responsive" style="margin-top: 15px;">
-				<thead>
+			<div class="table-responsive">
+				<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+					<thead>
+						<tr>
+							<th>Item</th>
+							<th>Serial</th>
+							<th>Qty</th>
+							<th>Location</th>
+							<th>Box #</th>
+							<th>Condition</th>
+							<th>Shipped</th>
+						</tr>
+					</thead>
 					<tr>
-						<th>Item</th>
-						<th>Serial</th>
-						<th>Qty</th>
-						<th>Location</th>
-						<th>Box #</th>
-						<th>Condition</th>
+						<td>
+							<strong>ERB 3</strong>
+						</td>
+						<td>
+							1L080B50230
+						</td>
+						<td>
+							5
+						</td>
+						<td>
+							Warehouse A1
+						</td>
+						<td>
+							2
+						</td>
+						<td>
+							Refurbished
+						</td>
+						<td>
+							<div class="checkbox">
+								<label><input type="checkbox" value=""></label>
+							</div>
+						</td>
 					</tr>
-				</thead>
-				<tr>
-					<td>
-						<strong>ERB 3</strong>
-					</td>
-					<td>
-						1L080B50230
-					</td>
-					<td>
-						5
-					</td>
-					<td>
-						Warehouse A1
-					</td>
-					<td>
-						2
-					</td>
-					<td>
-						Refurbished
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<strong>Aaron Bot</strong>
-					</td>
-					<td>
-						1L080B50232
-					</td>
-					<td>
-						5
-					</td>
-					<td>
-						Warehouse Rancho
-					</td>
-					<td>
-						1
-					</td>
-					<td>
-						Young
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<strong>David Bot</strong>
-					</td>
-					<td>
-						1L080B50332
-					</td>
-					<td>
-						5
-					</td>
-					<td>
-						Warehouse Rancho
-					</td>
-					<td>
-						1
-					</td>
-					<td>
-						Old
-					</td>
-				</tr>
-			</table>
+					<tr>
+						<td>
+							<strong>Aaron Bot</strong>
+						</td>
+						<td>
+							1L080B50232
+						</td>
+						<td>
+							5
+						</td>
+						<td>
+							Warehouse Rancho
+						</td>
+						<td>
+							1
+						</td>
+						<td>
+							Young
+						</td>
+						<td>
+							<div class="checkbox">
+								<label><input type="checkbox" value=""></label>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<strong>David Bot</strong>
+						</td>
+						<td>
+							1L080B50332
+						</td>
+						<td>
+							5
+						</td>
+						<td>
+							Warehouse Rancho
+						</td>
+						<td>
+							1
+						</td>
+						<td>
+							Old
+						</td>
+						<td>
+							<div class="checkbox">
+								<label><input type="checkbox" value=""></label>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
 		</div>
 		
 		<!-- End true body -->

@@ -39,6 +39,11 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<style>
+			.select2-container--open .select2-dropdown--below {
+			    z-index: 1 !important;
+			}
+		</style>
 	</head>
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
@@ -93,79 +98,80 @@
 	                </div>
 				</div>
 			</div>
-			
-			<table class="table table-hover table-striped table-condensed table-responsive" id="items_table" style="margin-top:1.5%;">
-			<thead>
-		         <tr>
-		            <th style = "min-width:30px;">
-		            	<span class="line"></span>
-		        	</th>
-		            <th class="col-md-7" style="max-width:600px;">
-		            	<span class="line"></span>		
-		            	Item	
-		            </th>
-		            <th class="col-md-2" style="min-width:130px;">
-		            	<span class="line"></span>   	
-		            	Date
-		            </th>
-		            <th class="col-md-1">   	
-		            	<span class="line"></span>   	
-		            	Qty
-		            </th>
-		            <th class="col-md-1">
-						<span class="line"></span>   	
-   		            	Unit Price
-		        	</th>
-		            <th class="col-md-1">
-		            	<span class="line"></span>
-		            	Ext. Price 
-		        	</th>
-		        	<th>
-		            	<span class="line"></span>   	
-		        	</th>
-					<th>
-						&nbsp;
-		        	</th>
-		         </tr>
-		      </thead>
-			<tbody id="right_side_main">
-				
-	        </tbody>
-			<tfoot>
-				<tr id="add_row">
-		            <td>
-		            	<a class="btn-flat gray pull-left" id="NewSalesOrder">
-							<i class="fa fa-plus fa-4" aria-hidden="true"></i>
-						</a>
-					</td>
-					<td style="display:none;padding:0;" class = "newLineNumber"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" style="height:28px;display:none;padding:0;text-align:center;width:100%;"></td>
-		            <td id="search_collumn">
-		            	<div style="display:none;" id = "item-selected">
-							<select class="item_search">
-							</select>
-						</div>
-					</td>
-		            <td>				
-		            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
-				            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-			            </div>
-				    </td>
-		            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
-		            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
-		            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
-					<td colspan="2" id = "check_collumn">
-						<a class="btn-flat success pull-right" id = "forms_submit" style="display:none;">
-							<i class="fa fa-check fa-4" aria-hidden="true"></i>
-						</a>
-					</td>
+			<div class="table-responsive">
+				<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
+				<thead>
+			         <tr>
+			            <th style = "min-width:30px;">
+			            	<span class="line"></span>
+			        	</th>
+			            <th class="col-md-7" style="max-width:600px;">
+			            	<span class="line"></span>		
+			            	Item	
+			            </th>
+			            <th class="col-md-2" style="min-width:130px;">
+			            	<span class="line"></span>   	
+			            	Date
+			            </th>
+			            <th class="col-md-1">   	
+			            	<span class="line"></span>   	
+			            	Qty
+			            </th>
+			            <th class="col-md-1">
+							<span class="line"></span>   	
+	   		            	Unit Price
+			        	</th>
+			            <th class="col-md-1">
+			            	<span class="line"></span>
+			            	Ext. Price 
+			        	</th>
+			        	<th>
+			            	<span class="line"></span>   	
+			        	</th>
+						<th>
+							&nbsp;
+			        	</th>
+			         </tr>
+			      </thead>
+				<tbody id="right_side_main">
+					
+		        </tbody>
+				<tfoot>
+					<tr id="add_row">
+			            <td>
+			            	<a class="btn-flat gray pull-left" id="NewSalesOrder">
+								<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+							</a>
+						</td>
+						<td style="display:none;padding:0;" class = "newLineNumber"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" style="height:28px;display:none;padding:0;text-align:center;width:100%;"></td>
+			            <td id="search_collumn">
+			            	<div style="display:none;" id = "item-selected">
+								<select class="item_search">
+								</select>
+							</div>
+						</td>
+			            <td>				
+			            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
+					            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
+					            <span class="input-group-addon">
+					                <span class="fa fa-calendar"></span>
+					            </span>
+				            </div>
+					    </td>
+			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
+			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
+			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
+						<td colspan="2" id = "check_collumn">
+							<a class="btn-flat success pull-right" id = "forms_submit" style="display:none;">
+								<i class="fa fa-check fa-4" aria-hidden="true"></i>
+							</a>
+						</td>
+		
+			         </tr>
+				</tfoot> 
 	
-		         </tr>
-			</tfoot> 
-
-		   </table>
+			   </table>
+		   </div>
 	</div>
 		<!--====================== End Right half ======================-->
 	</div>
