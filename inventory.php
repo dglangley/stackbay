@@ -208,10 +208,6 @@
 			display: block;
 		}
 		
-		.loading_element {
-			visibility: hidden;
-		}
-		
 		@media screen and (max-width: 767px){
 			.addRows label {
 				display: block;

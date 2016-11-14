@@ -164,7 +164,10 @@ body{
 	display: none;
 }
 
-
+.loading_element {
+	visibility: hidden;
+	height: 100%;
+}
 
 .shipping_section_foot{
 	padding-top: 20px;
