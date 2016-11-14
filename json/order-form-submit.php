@@ -60,7 +60,7 @@
         qdb($update);
         
         //Create a new update number
-        $order_number = qid();
+        $order_number = qid() OR die(qe());
         $andrew = "wright";
     }
     else{
@@ -81,7 +81,7 @@
         $update .= "='$order_number'";
         
         //Query the database
-        qdb($update);
+        qdb($update) OR die(qe().' '.$update);
     }
     
     $stupid = 0;

@@ -133,8 +133,8 @@
 		        	<i class="fa fa-chevron-up shoot_me icon-button-mobile" aria-hidden="true" style="color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;"></i>
 				</div>
 			<!---------------------- OUTPUT THE LINE ADDITION TABLE ---------------------->
-				<div class="inventory_lines col-md-10 table-responsive" style="margin-top:30px;">
-					<table class="table table-hover table-striped table-condensed" id="items_table">
+				<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+					<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 							<thead>
 						         <tr>
 						            <th class="col-sm-4">

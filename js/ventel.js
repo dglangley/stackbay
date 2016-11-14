@@ -766,12 +766,12 @@
 		$('td[id*=Ranges]').children().click(function() {
 			$(this).siblings('button[class*=active]').toggleClass("active");
 		});
-		$(".btn-report").click(function() {
-			var start_date = $(this).data('start');
-			var end_date = $(this).data('end');
-			$("input[name='START_DATE']").val(start_date);
-			$("input[name='END_DATE']").val(end_date);
-		});
+		// $(".btn-report").click(function() {
+		// 	var start_date = $(this).data('start');
+		// 	var end_date = $(this).data('end');
+		// 	$("input[name='START_DATE']").val(start_date);
+		// 	$("input[name='END_DATE']").val(end_date);
+		// });
 
     });/* close $(document).ready */
 
@@ -823,10 +823,13 @@
 			month = ("0" + month).slice(-2);
 			var today = ''.concat(month).concat('/').concat(day).concat('/').concat(year);
 			var begin = ''.concat(month).concat('/01/').concat(year);
+			
 			//alert('Day '.concat(today));
 		    $(this).button('toggle');
 		    $("input[name='START_DATE']").val(begin);
 			$("input[name='END_DATE']").val(today);
+			
+			//$("input[name='START_DATE']").initDatetimePicker("MM/DD/YYYY");
 		});
 		$('#Q1').click(function() {
 			var year = new Date().getFullYear();
