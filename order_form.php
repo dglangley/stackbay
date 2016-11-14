@@ -24,6 +24,8 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/modal/address.php';
+	include_once $rootdir.'/inc/getAddresses.php';
+
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps' == 'Purchase']) ? "Purchase" : "Sales";

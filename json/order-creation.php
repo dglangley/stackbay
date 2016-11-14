@@ -15,6 +15,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/getFreight.php';
+	include_once $rootdir.'/inc/getAddresses.php';
+
 
 	
 	$number = $_REQUEST['number'];
@@ -76,7 +78,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$company = (isset($row['companyid'])) ? getCompany($row['companyid']) : '- Select a Company -';
 				$contact = getRep($row['contactid']);
 				$b_add = $row['bill_to_id'];
-				$s_add = $row['bill_to_id'];
+				$b_name = getAddresses($b_add,'name');
+				$s_add = $row['ship_to_id'];
+				$s_name = getAddresses($s_add,'name');
 				$f_carrier = $row['freight_carrier_id'];
 				$f_service = $row['freight_services_id'];
 				$f_account = $row['freight_account_id'];
@@ -153,10 +157,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		    	
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to'>Ship to:</label>
-	                    <select id='ship_to' style='overflow:hidden;' data-ship-id=0>
-	                        <option>Address</option>
-	                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
+						<label for='ship_to' >Ship to:</label>
+	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
+							<option value = '$s_add' >$s_name</option>
 	                    </select>
 				    </div>
 			    </div>
@@ -172,9 +175,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='bill_to'>Bill to:
 						<input id='mismo' type=checkbox></input> (Same as shipping)
  </label>
-	                    <select id='bill_to' style='overflow:hidden;' data-ship-id=0>
-	                        <option>Address</option>
-	                        <option class='add_new_dropdown' data-new-field='address'>Add New</option>
+	                    <select id='bill_to' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+							<option value ='$b_add'>$b_name</option>
 	                    </select>
 				    </div>
 			    </div>
@@ -198,7 +200,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12'>
 						<div class = 'account forms_section'>
 							<select name='account' id='account_select'>
-								<option>".$f_account."</option>
+								<option >".$f_account."</option>
 							</select>
 						</div>
 				</div>
