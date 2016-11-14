@@ -8,7 +8,7 @@
     $companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
     $output = array();
     
-    $query = "SELECT * FROM `contacts` WHERE `companyid` = $companyid";
+    $query = "SELECT * FROM `contacts` WHERE `companyid` = '".res($companyid)."'";
     $primary = qdb($query);
     
     if (isset($primary)){

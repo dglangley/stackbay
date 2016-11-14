@@ -93,7 +93,7 @@
 				var company = "0";
 				
 				$(document).on("change","#ship_to",function() {
-					$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
+					//$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
 					// $(this).parent().find("#ship_to").find("option").text();
 				});
 				
@@ -164,6 +164,7 @@
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php");
 			});
+
 			$(document).on("dblclick",".easy-output td",function() {
 				$(this).closest("tr").hide();
 				$(this).closest("tr").next().show()
@@ -296,8 +297,8 @@
 				}
 			});
 			
-
-			$(document).on("change","#ship_to",function() {
+			
+			$(document).on("change","#ship_to, #bill_to",function() {
 				if($(this).val().indexOf("Add") > -1){
 					$("#modal-address").modal('show');
 				}
@@ -313,41 +314,44 @@
 			    		address.push('');
 			    	}
 			    });
-			    $.post("/json/addressSubmit.php", {'test[]' : address} ,alert('GreatSuccess!'));
-			    alert (address[0]);
+			    $.post("/json/addressSubmit.php", {'test[]' : address});
 			});
 			
 			$(document).on("click","#mismo",function() {
 				if ( $(this).prop( "checked" )){
+					
 					var ship = $('#ship_to').val();
 					alert(ship);
-					$('#bill_to').val(ship);
-					$('#bill_to').select2('disable')
+					$('#bill_to').select2().val("12").trigger("change");
+					// $('#bill_to').select2('<option selected>laaaaaame</option>');
+					// $('#bill_to').select2('enable');
+
 				}
 				else{
-					$('#bill_to').select2('enable')
+					$('#bill_to').select2('enable');
 				}
 			});
 			
 			//-------------------------- Page Save Button --------------------------
 			$('#save_button').click(function() {
-				//alert('pressed');
+				alert('pressed');
 				//Get page macro information
 				var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 				var order_number = $(this).closest("body").attr("data-order-number");
-				
+
 				//Get General order information
 				var userid = $("#sales-rep option:selected").attr("data-rep-id");
 				var company = $("#companyid").val();
 				var contact = $("#contactid").val();
-				var ship_to = $('#ship_to').val();
-				var bill_to = $('#bill_to').val();
+				var ship_to = $('#ship_to').last('option').val();
+				var bill_to = $('#bill_to').last('option').val();
 				var carrier = $('#carrier').val();
 				var freight = $('#terms').val();
 				var account = $('#account_select').val();
 				var pri_notes = $('#private_notes').val();
 				var pub_notes = $('#public_notes').val();
 				
+				alert(ship_to);
 				//-------------------------- Right hand side --------------------------
 				//Get Line items from the right half of the page
 				var i = 0;
@@ -379,7 +383,6 @@
 					});
 				});
 
-
 				//Submit All of it and simplify the shit out of your life.
 				$.ajax({
 					type: "POST",
@@ -403,9 +406,13 @@
 					success: function(form) {
 						var on = form["order"];
 						var ps = form["type"];
-						alert(form['stupid']);
-						window.location = "https://aaronventel-aaronventel.c9users.io/order_form.php?ps="+ps+"&on="+on;
-					}
+						alert(form["insert"]);
+						//alert(form['stupid']);
+						window.location = "/order_form.php?ps="+ps+"&on="+on;
+					},
+					error: function(xhr, status, error) {
+					   	alert(error);
+					},
 				});
 			});
 			//Cancel button?
@@ -566,6 +573,34 @@
 //=========== END OF FUNCTION FOR THE SHIPPING HOME PAGE =======================
 
 
+//============================= Inventory Addition =============================
+	$(document).on("click",".toggle_group",function() {
+	    $(this).toggleClass('active');
+	    $(this).siblings().removeClass('active');
+	});
+	
+	$(document).on('click',"#inv_add_record",function() {
 		
+		alert($("#search_collumn").find(".item_search").val());
+		alert($("#serial").find('input[name="NewSerial"]').val());
+		alert($("#new_qty").val());
+		alert($("input[name='serialize']").prop("checked"));
+		alert($("#new_location").val());
+		
+		
+		// alert(new_record);
+		// $.ajax({
+		// 	type: "POST",
+		// 	url: '/json/order-creation.php',
+		// 	data: {
+		// 		 'chum' : new_record,
+		// 		},
+		// 	dataType: 'json',
+		// 	success: function(lines) {
+		// 		alert(lines);
+		// 	}
+		// 	});
+	});
+//=========================== End Inventory Addition ===========================
 		
 	});

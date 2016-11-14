@@ -19,7 +19,7 @@
 	        //Build the insert statements
 	        $delete = "DELETE FROM ";
 	        $delete .= ($order_type == 'Purchase')? '`purchase_items`' : '`sales_items`';
-	        $delete .= " WHERE `id` = $record";
+	        $delete .= " WHERE `id` = $record;";
 	        
 	         qdb($delete);
 

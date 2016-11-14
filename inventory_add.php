@@ -134,8 +134,8 @@
 				</div>
 			<!---------------------- OUTPUT THE LINE ADDITION TABLE ---------------------->
 				<div class="inventory_lines col-md-10 table-responsive" style="margin-top:30px;">
-					<table class="table table-hover table-striped table-condensed" id="items_table">
-							<thead>
+					<table class="table table-hover table-striped table-condensed" style="table-layout: fixed;" id="items_table">
+						<thead>
 						         <tr>
 						            <th class="col-sm-4">
 						            	<span class="line"></span>		
@@ -166,8 +166,7 @@
 						        	</th>
 				
 						         </tr>
-						      </thead>
-							<tbody id="">
+
 							    <tr class = "addRecord">
 						            <td id='search_collumn'>
 						            	<div style="max-width:inherit;">
@@ -177,35 +176,36 @@
 										</div>
 									</td>
 									<td id='serial'>
-							            <input class="form-control input-sm" type="text" name = "Newitem" placeholder="Serial">
+							            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
 									</td>
 						            <td>
 										<div class="input-group">
-									    	<input type="text" class="form-control" aria-label="Text input with checkbox">
+									    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox">
 							            <span class="input-group-addon">Serialize Each?</span>
 									      	<span class="input-group-addon">
-									        	<input type="checkbox" aria-label="Checkbox for following text input">
+									        	<input type="checkbox" name="serialize">
 											</span>
 				
 									    </div>
 								    </td>
 						            <td>
 				                            <div class="ui-select" style="width:100%;">
-				                                <select>
+				                                <select id = "new_location">
 				                                    <option selected="">Warehouse 12</option>
-				                                    <option>Warehouse 12</option>
-				                                    <option>Warehouse 12</option>
+				                                    <option>Warehouse 13</option>
+				                                    <option>Warehouse 15</option>
 				                                </select>
 				                            </div>
 				                    </td>
 						            <td>
-				                    	<button class="btn btn-success">
-				                    		Rec
-				                    	</button>     
-				                    	<button class="btn btn-danger">
-				                    		Ret 	
-				                    	</button>
-
+						            	<div class="btn-group">
+					                    	<button class="btn btn-success toggle_group" data-value="Received">
+					                    		Rec
+					                    	</button>     
+					                    	<button class="btn btn-danger toggle_group" data-value="Returned">
+					                    		Ret
+					                    	</button>
+										</div>
 				                    </td>
 						            <td>
 							           	<button class="btn btn-success">
@@ -219,15 +219,15 @@
 				                    	</button>
 				                    </td>
 				                    <td>
-				                    	<button class="btn-flat">
+				                    	<button class="btn-flat" id="inv_add_record">
 				                    		ADD RECORD
 				                    	</button>
 				                    </td>
 							    </tr>
-				
-					        </tbody>
-				
-						   </table>
+							</thead>
+						<tbody id="">
+				        </tbody>
+					</table>
 						
 				</div>
 			</div>
