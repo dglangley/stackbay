@@ -10,25 +10,30 @@
     
     $query = "SELECT * FROM `contacts` WHERE `companyid` = '".res($companyid)."'";
     $primary = qdb($query);
-    
+
     if (isset($primary)){
         foreach($primary as $id => $row){
             $line = array(
-                'id' => $id, 
+                'id' => $row['id'], 
                 'text' => $row['name']
             );
             $output[] = $line;
         }
+        
     }   
-
+    $output[] = array(
+        'id' => 'NULL', 
+        'text' => "--------------------------------"
+        );
+    
     //Then append the rest of the contacts ordered by alphabetical
-    $secondary = "SELECT * FROM `contacts` WHERE `companyid` != $companyid AND `name` LIKE '%$q%' ORDER BY `name`;";
+    $secondary = "SELECT DISTINCT * FROM `contacts` WHERE `companyid` != $companyid AND `name` LIKE '%$q%' ORDER BY `name`;";
     $second = qdb($secondary);
 
     if (isset($second)){
         foreach($second as $id => $row){
             $line = array(
-                'id' => $id, 
+                'id' => $row['id'], 
                 'text' => $row['name']
             );
             $output[] = $line;

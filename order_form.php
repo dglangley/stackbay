@@ -115,6 +115,10 @@
 			            </th>
 			            <th class="col-md-1">   	
 			            	<span class="line"></span>   	
+			            	Warranty
+			            </th>
+			            <th class="col-md-1">   	
+			            	<span class="line"></span>   	
 			            	Qty
 			            </th>
 			            <th class="col-md-1">
@@ -133,10 +137,10 @@
 			        	</th>
 			         </tr>
 			      </thead>
-				<tbody id="right_side_main">
+				<tbody id="right_side_main" style = "font-size:13px;">
 					
 		        </tbody>
-				<tfoot>
+				<tfoot style = "font-size:13px;">
 					<tr id="add_row">
 			            <td>
 			            	<a class="btn-flat gray pull-left" id="NewSalesOrder">
@@ -158,6 +162,7 @@
 					            </span>
 				            </div>
 					    </td>
+						<td><input class="form-control input-sm" type="text" name="ni_war" placeholder="Warranty" style="display:none;"></td>
 			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
 			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
 			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>

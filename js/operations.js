@@ -44,7 +44,10 @@
 			            return {
 							results: $.map(data, function(obj) {
 								//alert(obj.text);
-								return { id: obj.id, text: obj.text };
+								return { 
+									id: obj.id, 
+									text: obj.text
+								};
 							})
 	/*
 							results: data.results,
@@ -115,7 +118,7 @@
 	        }
 		});
 		
-		$('.click_me').click(function() {
+		$(document).on("click", ".click_me", function(){
 			var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
 			$marginLefty.animate({
 				marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
@@ -126,22 +129,23 @@
 					}
 				}
 			});
+				if(check == 'collapsed') {
+					//$('.shipping-list').animate({width: '90%'}, 550);
+					$('.icon-button').addClass('fa-chevron-right');
+					$('.icon-button').removeClass('fa-chevron-left');
+					//$('.company_meta .row').hide();
+				} 
+				
+				if(check != 'collapsed') {
+					//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
+					$('.icon-button').addClass('fa-chevron-left');
+					$('.icon-button').removeClass('fa-chevron-right');
+					//$('.company_meta .row').show();
+				}
+			});
 			
-			if(check == 'collapsed') {
-				//$('.shipping-list').animate({width: '90%'}, 550);
-				$('.icon-button').addClass('fa-chevron-right');
-				$('.icon-button').removeClass('fa-chevron-left');
-				//$('.company_meta .row').hide();
-			} 
-			
-			if(check != 'collapsed') {
-				//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
-				$('.icon-button').addClass('fa-chevron-left');
-				$('.icon-button').removeClass('fa-chevron-right');
-				//$('.company_meta .row').show();
-			}
-		});
 		
+
 		$('.shoot_me').click(function() {
 			$('.left-sidebar .sidebar-container').slideToggle(function(){
 				if($('.left-sidebar .sidebar-container').is(':visible')){
@@ -171,7 +175,7 @@
 				$(document).on("change","#companyid",function() {
 					company = $(this).val();
 					$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
-					$("#bill_to").initSelect2("/json/address-picker.php");
+					$("#bill_to").select2("/json/address-picker.php");
 					$("#ship_to").initSelect2("/json/address-picker.php");
 					$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
 				});
@@ -287,7 +291,9 @@
 	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
 			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $(this).closest("tr").find("input[name=ni_war]").val();
 	   		    var editRow = ((parseInt($(this).closest("tr").index())));
+	   		    
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -298,6 +304,7 @@
 		   		    	"qty":qty,
 		   		    	"unitPrice":price,
 		   		    	"id":line_item_id,
+		   		    	"warranty":warranty,
 		   		    	"mode":'update'
 						},
 					dataType: 'json',
@@ -318,6 +325,7 @@
 	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
 			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $(this).closest("tr").find("input[name=ni_war]").val();
 				
 	
 				$.ajax({
@@ -330,6 +338,7 @@
 		   		    	"date":date,
 		   		    	"qty":qty,
 		   		    	"unitPrice":price,
+						"warranty":warranty,
 		   		    	"id": 'new',
 		   		    	"mode":'append'
 						}, // serializes the form's elements.
@@ -392,8 +401,7 @@
 				if ( $(this).prop( "checked" )){
 					
 					var ship = $('#ship_to').text();
-					alert(ship);
-					
+
 						$("#bill_to").initSelect2("/json/address-picker.php").val({id:111,text:"Blargh"});
 					// $('#bill_to').select2('<option selected>laaaaaame</option>');
 					// $('#bill_to').select2('enable');
@@ -406,7 +414,6 @@
 			
 			//-------------------------- Page Save Button --------------------------
 			$('#save_button').click(function() {
-				alert('pressed');
 				//Get page macro information
 				var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 				var order_number = $(this).closest("body").attr("data-order-number");
@@ -423,7 +430,8 @@
 				var pri_notes = $('#private_notes').val();
 				var pub_notes = $('#public_notes').val();
 				
-				alert(ship_to);
+				alert(contact);
+				
 				//-------------------------- Right hand side --------------------------
 				//Get Line items from the right half of the page
 				var i = 0;
@@ -433,11 +441,11 @@
 				//This loop runs through the right-hand side and parses out the general values from the page
 				$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 
-
+					var cols = 7;
 					//For each element in a row
 					$(this).children("td").each(function(){
-						if (i != 1 && i < 6){
-							//If it is one of the first six collumns, and not the "item" field, grab the text
+						if (i != 1 && i < cols){
+							//If it is one of the first sevem collumns, and not the "item" field, grab the text
 							row.push($(this).text());
 						}
 						else if (i==1){
@@ -448,10 +456,11 @@
 						else{
 							//Move on to the next row once you get to the end, and clear out the row buffer.
 							submit.push(row);
+							alert(row);
 							row = [];
 						}
 						i++;
-						i %= 8;
+						i %= (cols + 2);
 					});
 				});
 
@@ -478,7 +487,6 @@
 					success: function(form) {
 						var on = form["order"];
 						var ps = form["type"];
-						alert(form["insert"]);
 						//alert(form['stupid']);
 						window.location = "/order_form.php?ps="+ps+"&on="+on;
 					},

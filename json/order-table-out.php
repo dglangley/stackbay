@@ -21,6 +21,7 @@
 		include_once $rootdir.'/inc/keywords.php';
 		include_once $rootdir.'/inc/getRecords.php';
 		include_once $rootdir.'/inc/getRep.php';
+		include_once $rootdir.'/inc/form_handle.php';
 
 	//Mode expects one of the following: initial, append, load
 	$mode = ($_REQUEST['mode'])? ($_REQUEST['mode']) : "load";
@@ -37,52 +38,54 @@
 		$partid = $row['search'];
 		$date = date("m/d/Y",strtotime($row['date']));
 
-		
 		$p = hecidb($partid,'id');
 		foreach ($p as $r){
              $display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
 		}
 		
 	   	$row_out = "
-			<tr class='easy-output' data-record='".$row['id']."'>
-		        <td>".$row['line']."</td>
-	            <td data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
-	            <td>".$date."</td>
-	            <td>".$row['qty']."</td>
-	            <td>".format_price($row['uPrice'])."</td>
-	            <td>".format_price($row['qty']*$row['uPrice'])."</td>
-				<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
-				<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
-		    </tr>";
+		<tr class='easy-output' data-record='".$row['id']."'>
+	        <td>".$row['line']."</td>
+            <td data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
+            <td>".$date."</td>
+            <td>".$row['warranty']."</td>
+            <td>".$row['qty']."</td>
+            <td>".format_price($row['uPrice'])."</td>
+            <td>".format_price($row['qty']*$row['uPrice'])."</td>
+			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
+			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
+		</tr>";
+		    
 	   if ($mode != 'update'){
-	   $row_out .= "<tr class='lazy-entry' style='display:none;'>
-				<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
-	            <td id='search_collumn'>
-	            	<div class = 'item-selected'>
-						<select class='item_search'>
-							<option data-search = '$partid'>".$display."</option>
-						</select>
-					</div>
-				</td>
-	            <td>				
-	            	<div class='input-group date datetime-picker-line'>
-			            <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
-			            <span class='input-group-addon'>
-			                <span class='fa fa-calendar'></span>
-			            </span>
-		            </div>
-			    </td>
-	            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."'></td>
-	            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='".$row['uPrice']."'></td>
-	            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>
-				<td colspan='2' id = 'check_collumn'>
-					<a class='btn-flat success pull-right line_item_submit' >
-						<i class='fa fa-check fa-4' aria-hidden='true'></i>
-					</a>
-				</td>
-		    </tr>";
-	   }
-	    return $row_out;
+		   $row_out .= "<tr class='lazy-entry' style='display:none;'>
+					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
+		            <td id='search_collumn'>
+		            	<div class = 'item-selected'>
+							<select class='item_search'>
+								<option data-search = '$partid'>".$display."</option>
+							</select>
+						</div>
+					</td>
+		            <td>				
+		            	<div class='input-group date datetime-picker-line'>
+				            <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
+				            <span class='input-group-addon'>
+				                <span class='fa fa-calendar'></span>
+				            </span>
+			            </div>
+				    </td>
+		            <td><input class='form-control input-sm' type='text' name='ni_war' placeholder='WAR' value = '".$row['warranty']."'></td>
+		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."'></td>
+		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='".$row['uPrice']."'></td>
+		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>
+					<td colspan='2' id = 'check_collumn'>
+						<a class='btn-flat success pull-right line_item_submit' >
+							<i class='fa fa-check fa-4' aria-hidden='true'></i>
+						</a>
+					</td>
+				</tr>";
+		}
+		return $row_out;
 	}
 	
 	//This function will append to the table any changes made while on the page
@@ -94,7 +97,8 @@
 		$qty = isset($_REQUEST['qty']) ?  trim($_REQUEST['qty']) : '0';
 		$uPrice = isset($_REQUEST['unitPrice']) ? trim($_REQUEST['unitPrice']) : '0';
 		$line = isset($_REQUEST['line']) ? trim($_REQUEST['line']) : '';
-		$id = isset($_REQUEST['id']) ? trim($_REQUEST['id']) : '';
+		$id = isset($_REQUEST['id']) ? trim($_REQUEST['id']) : 'NULL';
+		$warranty = isset($_REQUEST['warranty']) ? trim($_REQUEST['warranty']) : 'NULL';
 
 		//Store all caught data into the standard array and build the row.
 		$row = array(
@@ -105,6 +109,7 @@
 			'qty' => $qty,
 			'uPrice' => $uPrice,
 			'line' => $line,
+			'warranty' => $warranty,
 			);
 		$row_out = build_row($row);
 		
@@ -140,6 +145,7 @@
 				'date' => $r['delivery_date'],
 				'qty' => $r['qty'],
 				'uPrice' => $r['price'],
+				'warranty' => $r['warranty'],
 				);
 				$table .= build_row($new_row);			
 				

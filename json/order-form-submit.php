@@ -25,38 +25,22 @@
 		include_once $rootdir.'/inc/getRecords.php';
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/getAddresses.php';
-		
+		include_once $rootdir.'/inc/form_handle.php';
+
 //=============================== Inputs section ==============================
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
 
-    function grab($string){
-        return (!is_null($_REQUEST[$string]) ? trim($_REQUEST[$string]) :  null);
-    }
-    
-    function updateNull($field,$var){
-        if ($var){
-            $return = " `$field`= '".res($var)."',";
-        }
-        else{
-            $return = " `$field`= NULL,";
-        }
-        return $return;
-    }
-    
-    function prep($var){
-        $output = ($var) ? "'".res($var)."'" : "NULL";
-    	return $output;
-    }
+
 
     
     
     //Form Specifics
     $companyid = is_numeric($_REQUEST['companyid'])? trim($_REQUEST['companyid']) : trim(getCompany($_REQUEST['companyid'],'name','id'));
     $company_name = getCompany($companyid);
-    $rep = grab('sales-rep');
+    $contact = grab('contact');
     $ship = grab('ship_to');
     $bill = grab('bill_to');
     $carrier = grab('carrier');
@@ -64,7 +48,7 @@
     $account = grab('account');
     $private = (trim($_REQUEST['pri_notes']));
     $public = (trim($_REQUEST['pub_notes']));
-    $contact = grab("sales-rep");
+    $rep = grab("sales-rep");
 
     $andrew = "wrong";
 
@@ -125,8 +109,9 @@
             $item_id = prep($r[1]);
             $record = $r[2];
             $date = prep(format_date($r[3],'y-m-d'));
-            $qty = prep($r[4]);
-            $unitPrice = prep(format_price($r[5],true,'',true));
+            $warranty = prep($r[4]);
+            $qty = prep($r[5]);
+            $unitPrice = prep(format_price($r[6],true,'',true));
             
             if ($record == 'new'){
                 
@@ -135,8 +120,8 @@
                 $insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
                 $insert .=  " (`partid`, ";
                 $insert .=  ($order_type=="Purchase") ? "`po_number`, " : "`so_number`, ";
-                $insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `id`) VALUES ";
-                $insert .=   "($item_id, $order_number , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, NULL);";
+                $insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`,`warranty`, `id`) VALUES ";
+                $insert .=   "($item_id, $order_number , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty ,NULL);";
                 
                 qdb($insert);
             }
@@ -148,7 +133,8 @@
                 `line_number`= $line_number,
                 `qty`= $qty,
                 `price`= $unitPrice,
-                `delivery_date` = $date
+                `delivery_date` = $date,
+                `warranty` = $warranty
                 WHERE id = $record;";
                 qdb($update);
             }
