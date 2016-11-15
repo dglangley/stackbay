@@ -396,9 +396,10 @@
 			$(document).on("click","#mismo",function() {
 				if ( $(this).prop( "checked" )){
 					
-					var ship = $('#ship_to').val();
+					var ship = $('#ship_to').text();
 					alert(ship);
-					$('#bill_to').select2().val("12").trigger("change");
+					
+						$("#bill_to").initSelect2("/json/address-picker.php").val({id:111,text:"Blargh"});
 					// $('#bill_to').select2('<option selected>laaaaaame</option>');
 					// $('#bill_to').select2('enable');
 
