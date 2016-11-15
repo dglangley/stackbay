@@ -100,13 +100,27 @@
 
 		//Adding in all slide sidebar options to pages that utilize the classes depicted below
 		
-		var $marginLefty = $('.left-sidebar');
+		function toggleSidebar() {
+		
+			var $marginLefty = $('.left-sidebar');
+					
+			$(window).resize(function() {
+				$marginLefty.animate({
+					marginLeft: 0
+				});
 				
-		$(window).resize(function() {
-			$marginLefty.animate({
-				marginLeft: 0
+				$('.icon-button').addClass('fa-chevron-left');
+				$('.icon-button').removeClass('fa-chevron-right');
+				
+				if($('.left-sidebar .sidebar-container').is(':hidden')){
+		            $('.icon-button-mobile').removeClass('fa-chevron-up');
+					$('.icon-button-mobile').addClass('fa-chevron-down');
+					
+					$('.left-sidebar .sidebar-container').fadeIn();
+		        }
 			});
 			
+<<<<<<< HEAD
 			$('.icon-button').addClass('fa-chevron-left');
 			$('.icon-button').removeClass('fa-chevron-right');
 			
@@ -126,7 +140,32 @@
 				complete: function() {
 					if(check == 'collapsed') {
 						//$('.company_meta .row').hide();
+=======
+			$('.click_me').click(function() {
+				var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
+				$marginLefty.animate({
+					marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
+					},{
+					complete: function() {
+						if(check == 'collapsed') {
+							//$('.company_meta .row').hide();
+						}
+>>>>>>> d4b60ce395fea48984368d0864403f591d4de759
 					}
+				});
+				
+				if(check == 'collapsed') {
+					//$('.shipping-list').animate({width: '90%'}, 550);
+					$('.icon-button').addClass('fa-chevron-right');
+					$('.icon-button').removeClass('fa-chevron-left');
+					//$('.company_meta .row').hide();
+				} 
+				
+				if(check != 'collapsed') {
+					//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
+					$('.icon-button').addClass('fa-chevron-left');
+					$('.icon-button').removeClass('fa-chevron-right');
+					//$('.company_meta .row').show();
 				}
 			});
 				if(check == 'collapsed') {
@@ -144,7 +183,7 @@
 				}
 			});
 			
-		
+
 
 		$('.shoot_me').click(function() {
 			$('.left-sidebar .sidebar-container').slideToggle(function(){
@@ -156,7 +195,9 @@
 					$('.icon-button-mobile').removeClass('fa-chevron-up');
 		        }
 			});
-		});
+		}
+		
+		toggleSidebar();
 
 		//========================= Left side main page =========================
 		//Load the meta information panel, initialize the clickable fields, and
@@ -196,7 +237,7 @@
 						$("#bill_to").initSelect2("/json/address-picker.php");
 						$("#ship_to").initSelect2("/json/address-picker.php");
 						$("#contactid").initSelect2("/json/contacts.php");
-
+						toggleSidebar();
 					}
 				});
 				$(document).on("change load","#freight-carrier",function() {
