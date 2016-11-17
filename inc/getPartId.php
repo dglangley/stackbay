@@ -12,7 +12,7 @@
 
 		$num_results = 0;
 		if ($heci AND strlen($heci)>=7 AND strlen($heci)<=10) {
-			$query = "SELECT id FROM parts WHERE heci LIKE '".res($heci)."%' ORDER BY ";
+			$query = "SELECT id FROM parts WHERE heci LIKE '".res(substr($heci,0,7))."%' ORDER BY ";
 			if (strlen($heci)==10) { $query .= "IF(heci='".res($heci)."',0,1), "; }
 			if ($part) { $query .= "IF(part LIKE '".res($part)."%',0,1), "; }
 			$query .= "part, rel, heci; ";

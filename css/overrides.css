@@ -113,8 +113,14 @@
 .tooltip.left .tooltip-arrow {
 	border-left-color:#aaa;
 }
+.tooltip.right .tooltip-arrow {
+	border-right-color:#aaa;
+}
 .tooltip.top .tooltip-arrow {
 	border-top-color:#aaa;
+}
+.tooltip.bottom .tooltip-arrow {
+	border-bottom-color:#aaa;
 }
 
 .table-products .table td > div {
@@ -152,10 +158,10 @@
 .table .first .product-action {
 	height:24px;
 }
-.table .product-results .product-action div {
+.table .product-results .product-action .action-box {
 	height:22px;
 }
-.table .product-results .product-action div input[type="checkbox"] {
+.table .product-results .product-action .action-box input[type="checkbox"] {
 	/*margin-top:6px;*/
 	left:37%;
 }
@@ -182,6 +188,10 @@
 .table .first .action-items {
 	margin-left:5px;
 	margin-top:-5px;
+}
+.table .first .btn-group.btn-marketpricing.action-items {
+	margin-top:0px;
+	margin-bottom:-2px;
 }
 .table tr .action-hover .action-items {
 	visibility:hidden;
@@ -679,7 +689,8 @@ a.fa {
 	vertical-align:bottom;
 }
 
-.first .row div {
+/*.first .row > div {*/
+.header-text {
 	font-weight:bold;
 }
 .info {
@@ -868,6 +879,10 @@ h1 a, h2 a, h3 a {
 .fa-nav li {
 	display:table-cell;
 	padding-right:25px;
+}
+/* fixes a bootstrap bug I was experiencing when hovering over a button in a .btn-group */
+.btn-group .btn {
+	margin-left:-1px !important;
 }
 .btn-group-bids .btn {
 	background:transparent;

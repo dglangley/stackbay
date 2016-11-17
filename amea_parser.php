@@ -12,6 +12,7 @@
 	include_once 'inc/qty_functions.php';
 	include_once 'inc/format_heci.php';
 	include_once 'inc/imap_decode.php';
+	include_once 'inc/hecidb_filter.php';
 
 	function parseHtmlTable($tables) {
 		global $signature,$intro;
@@ -117,20 +118,6 @@
 		}
 
 		return ($results);
-	}
-	function get_db($part_str,$line_str,$part_col) {
-		$fpart = trim(filter_var(format_part($part_str), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH));
-		$part_matches = array();
-//		echo 'part str: ['.$fpart.']('.$line_str.')<BR>';
-		// if the first column is a type of header/placeholder such as "MPN: xxxx" then process the entire line accordingly
-		if ($part_col==0 AND preg_match('/^(product|upn|mpn|part|model|item)[[:alpha:][:space:]\\/#-]*[:]?[[:space:]]*/i',$fpart,$part_matches)) {
-//			$part_str = preg_replace('/^(product|upn|mpn|part|model|item)([[:alpha:][:space:]\\/#-]*[:]?[[:space:]]*)([[:alnum:]-]+).*/i','$3',$line_str);//.'<BR>';
-			$part_str = preg_replace('/^(product|upn|mpn|part|model|item)([[:space:]\\/#-]*[:]?[[:space:]]*)([[:alnum:]-]+).*/i','$3',$line_str);//.'<BR>';
-			$fpart = $part_str;
-		}
-		$fpart = preg_replace('/-RF$/','',$fpart);
-		$hecidb = hecidb($fpart);
-		return ($hecidb);
 	}
 
 //	$signoff = '^([A-Z][a-z][[:alpha:]]*([[:space:]][[:alpha:]]+){0,2}[,.!]+[[:space:]]*)[\n]';
@@ -371,7 +358,7 @@ exit;
 			$hecidb = array();
 			// so we don't have a part col, qty or heci; let's treat every line as its own and attempt to parse based on inline flags
 			if ($part_col===false AND $qty_col===false AND $heci_col===false) {
-				$hecidb = get_db($fields[0],$result_strings[$k],0);
+				$hecidb = hecidb_filter($fields[0],$result_strings[$k],0);
 				if (count($hecidb)>0) {
 					$part_col = 0;//can be anything, this is just to not be false
 					foreach ($hecidb as $result) {
@@ -387,7 +374,7 @@ exit;
 			if ($part_col!==false) {
 				if (! $part_str) { $part_str = $fields[$part_col]; }
 				if (count($hecidb)==0) {
-					$hecidb = get_db($part_str,$result_strings[$k],$part_col);
+					$hecidb = hecidb_filter($part_str,$result_strings[$k],$part_col);
 				}
 
 				$num_parts = count($hecidb);
@@ -402,7 +389,7 @@ exit;
 					$cleaned_str = trim(preg_replace('/((^[[:punct:]]*[[:alnum:]][[:punct:]]*[[:space:]]+)|([[:space:]]+[[:punct:]]*[[:alnum:]][[:punct:]]*[[:space:]]+))/','',$noqty));
 					$breakups = preg_split('/[[:space:]]+/',$cleaned_str);
 					foreach ($breakups as $word) {
-						$hecidb = get_db($word,$cleaned_str,$part_col);
+						$hecidb = hecidb_filter($word,$cleaned_str,$part_col);
 						if (count($hecidb)>0) {
 							$part_str = $word;
 							// fetch the original column for this word so we can set that as the new column for ensuing rows

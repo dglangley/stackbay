@@ -20,12 +20,12 @@
 			var productSearch = $(this).closest(".product-results").siblings(".first").find(".product-search").val().toUpperCase();
 			var partids = $(this).closest(".market-results").data('partids');
 			var ln = $(this).closest(".market-results").data('ln');
-			var pricing_only = $(this).data('pricing');
-            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&pricing_only="+pricing_only);
+			var results_mode = $(this).data('results');
+            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&results_mode="+results_mode);
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
-                data: {'attempt': '0', 'partids': partids, 'pricing_only': pricing_only, 'detail': '1'},
+                data: {'attempt': '0', 'partids': partids, 'results_mode': results_mode, 'detail': '1'},
                 success: function(json, status) {
 					rowHtml = '';
                     $.each(json.results, function(dateKey, item) {
@@ -290,13 +290,15 @@
 			});
 		});
 		$(".add-part").click(function() {
-			var pdescr = $(this).closest(".product-descr");
-			var psearch = pdescr.find(".product-search:first").val();
+//			var pdescr = $(this).closest(".product-descr");
+//			var psearch = pdescr.find(".product-search:first").val();
+			var psearch = $(this).closest(".first").find(".product-search:first").val();
 			modalAlertShow('Create a New Part','Be sure this string ("'+psearch+'") is a Part# (NOT a HECI!), and then click Continue!',true,'addPart',psearch);
 		});
 		$(".parts-index").click(function() {
-			var pdescr = $(this).closest(".product-descr");
-			var psearch = pdescr.find(".product-search:first").val();
+//			var pdescr = $(this).closest(".product-descr");
+//			var psearch = pdescr.find(".product-search:first").val();
+			var psearch = $(this).closest(".first").find(".product-search:first").val();
 			modalAlertShow("Updating DB Keywords Index!","Re-indexing the database for this search term will reload the entire page. Are you ready to proceed?",true,'reindexParts',psearch);
 		});
 		$(".parts-merge").click(function() {
@@ -427,8 +429,11 @@
 			mr.loadResults(2);
 		});
 
-		$(".marketpricing-toggle").click(function() {
+//dgl 11-15-16
+/*		$(".marketpricing-toggle").click(function() { */
+		$(".btn-marketpricing .btn").click(function() {
 			var mr = $(this).closest("tbody").find(".market-results:first");
+/*
 			$(this).find(".fa").each(function() {
 				if ($(this).hasClass('fa-toggle-off')) {
 					$(this).removeClass('fa-toggle-off').addClass('fa-toggle-on');
@@ -438,6 +443,8 @@
 					mr.loadResults(0);
 				}
 			});
+*/
+			mr.loadResults(1,$(this).data('results'));
 			$(this).blur();
 		});
 
@@ -812,8 +819,8 @@
 	});	
 
     // build jquery plugin for remote ajax call
-    jQuery.fn.loadResults = function(attempt, pricing_only) {
-		if (! pricing_only) { var pricing_only = ''; }
+    jQuery.fn.loadResults = function(attempt, results_mode) {
+		if (! results_mode) { var results_mode = '0'; }
         var newHtml = '';
         var rowHtml = '';
         var qtyTotal = 0;
@@ -825,11 +832,11 @@
 		}
 		var doneFlag = '';
 
-        console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&pricing_only="+pricing_only);
+        console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&results_mode="+results_mode);
         $.ajax({
             url: 'json/availability.php',
             type: 'get',
-            data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'pricing_only': pricing_only},
+            data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'results_mode': results_mode},
 			settings: {async:true},
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
@@ -853,7 +860,7 @@
 					doneFlag = json.done;
 
                     /* add section header of date and qty total */
-                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only)+rowHtml;
+                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,results_mode)+rowHtml;
                 });
                 container.html(newHtml);
 
@@ -863,8 +870,9 @@
 				});
 
 				// reset market pricing amounts and toggle, and shelflife
-				$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
-				$("#marketpricing-"+ln).html('');
+//dgl 11-15-16
+//				$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
+				$("#marketpricing-"+ln).html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 //					$("#shelflife-"+ln).html('');
 
                 if (! json.done && attempt==0) {
@@ -880,9 +888,11 @@
 						} else {
 							price_range = '$'+pr.min+' - $'+pr.max;
 						}
-						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
+//dgl 11-15-16
+//						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").removeClass('hidden');
 					} else {
-						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
+//dgl 11-15-16
+//						$("#marketpricing-"+ln).closest("tbody").find(".marketpricing-toggle").addClass('hidden');
 					}
 					$("#marketpricing-"+ln).html(price_range);
 //						$("#shelflife-"+ln).html(json.shelflife);
@@ -1142,8 +1152,8 @@
 
 		return;
 	}
-    function addDateGroup(dateKey,qtyTotal,doneFlag,pricing_only) {
-        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal" data-pricing="'+pricing_only+'">'+
+    function addDateGroup(dateKey,qtyTotal,doneFlag,results_mode) {
+        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal" data-results="'+results_mode+'">'+
             dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
         if (! doneFlag && dateKey=='Today') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';

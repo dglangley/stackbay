@@ -12,8 +12,9 @@
 //	if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
-	$pricing_only = 0;
-	if (isset($_REQUEST['pricing_only']) AND $_REQUEST['pricing_only']<>'') { $pricing_only = 1; }
+	// 0=all results; 1=pricing only; 2=ghosted inventories
+	$results_mode = 0;
+	if (isset($_REQUEST['results_mode']) AND is_numeric($_REQUEST['results_mode']) AND $_REQUEST['results_mode']>0) { $results_mode = $_REQUEST['results_mode']; }
 	$detail = 0;
 	if (isset($_REQUEST['detail']) AND $_REQUEST['detail']=='1') { $detail = 1; }
 

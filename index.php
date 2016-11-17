@@ -487,8 +487,8 @@
                         <tr class="product-results animated" id="row-'.$partid.'">
                             <td class="descr-row'.$rowcls.'">
 								<div class="product-action text-center">
-                                	<div><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
-                                    <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon"></a>
+                                	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
+                                    <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite"></a>
 								</div>
 								<div class="qty">
 									<div class="form-group">
@@ -531,7 +531,7 @@
 									<div class="form-group">
 										<div class="input-group sell">
 											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1"><i class="fa fa-lock"></i></button>
+												<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="group/ungroup prices for item"><i class="fa fa-lock"></i></button>
 											</span>
 											<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
 										</div>
@@ -647,10 +647,21 @@
 										<span data-on-text="Ln <?php echo ($ln+1); ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo ($ln+1); ?></span>
 									</div>
 								<div class="row">
-									<div class="col-sm-3 text-center"><span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a><br/><span class="info">market pricing</span></div>
-									<div class="col-sm-3 text-center"><?php echo format_price($avg_cost); ?><br/><span class="info">avg cost</span></div>
-									<div class="col-sm-3 text-center"><?php echo $shelflife; ?><br/><span class="info">shelflife</span></div>
-									<div class="col-sm-3 text-center"><br/><span class="info">quotes-to-sale</span></div>
+									<div class="col-sm-3 text-center">
+<!--
+										<span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a>
+-->
+										<div id="marketpricing-<?php echo $ln; ?>" class="header-text">&nbsp;</div>
+										<div class="btn-group btn-marketpricing action-items">
+											<button class="btn btn-default btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
+											<button class="btn btn-default btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
+											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
+										</div><!-- <br/>
+										<span class="info">market pricing</span> -->
+									</div>
+									<div class="col-sm-3 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
+									<div class="col-sm-3 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
+									<div class="col-sm-3 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
 								</div>
 							</td>
 <!--

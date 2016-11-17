@@ -10,7 +10,7 @@
 	$record_start = '';
 	$record_end = '';
 	
-	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand') {
+	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0) {
 		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
 		$unsorted = array();
 		$min = format_price($min_price,'','',true);
@@ -64,6 +64,8 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
 				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				$unsorted = get_coldata($search_str,'demand');
@@ -74,6 +76,8 @@
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				$unsorted = get_coldata($search_str,'purchases');
@@ -84,6 +88,8 @@
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				$unsorted = get_coldata($search_str,'sales');
@@ -97,6 +103,8 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND avail_price >= ".$min." ";}
 				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";;
 				$unsorted = get_coldata($search_str,'supply');
 				break;
@@ -259,6 +267,7 @@
 				$r['partid'] = getPartId($r['part_number'],$r['clei']);
 				// translate old id to new
 				$r['cid'] = dbTranslate($r['cid']);
+				$r['name'] = getCompany($r['cid']);
 				$db_results[] = $r;
 			}
 

@@ -1,5 +1,8 @@
 <?php
-	function get_db($part_str,$line_str,$part_col) {
+	include_once 'format_part.php';
+	include_once 'keywords.php';
+
+	function hecidb_filter($part_str,$line_str,$part_col) {
 		$fpart = trim(filter_var(format_part($part_str), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH));
 		$part_matches = array();
 //		echo 'part str: ['.$fpart.']('.$line_str.')<BR>';

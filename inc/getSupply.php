@@ -38,7 +38,8 @@
 	$err = array();
 	$errmsgs = array();
 	$rfq_base_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-21));//look up rfq's within the past 3 weeks
-	if (! isset($pricing_only)) { $pricing_only = 0; }
+	// 0=all results; 1=pricing only; 2=ghosted inventories
+	if (! isset($results_mode)) { $results_mode = 0; }
 	if (! isset($detail)) { $detail = 0; }
 	$urls = array(
 		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
@@ -48,7 +49,7 @@
 	);
 
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date,$pricing_only,$detail,$urls,$REMOTES;
+		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$REMOTES;
 
 		if (! $partid_array) { $partid_array = array(); }
 
@@ -57,15 +58,18 @@
 		$matches = array();
 
 		// partids are passed in with comma-separated format
-		$partid_str = "";
+//		$partid_str = "";
+		$partid_csv = "";
 		foreach ($partid_array as $partid) {
-			if ($partid_str) { $partid_str .= "OR "; }
-			$partid_str .= "partid = '".$partid."' ";
+//			if ($partid_str) { $partid_str .= "OR "; }
+//			$partid_str .= "partid = '".$partid."' ";
+			if ($partid_csv) { $partid_csv .= ','; }
+			$partid_csv .= $partid;
 		}
 
 		$results = array();
 
-		if (! $partid_str) {
+		if (! $partid_csv) {
 			if ($ln<=$max_ln OR $attempt==2) { $results = array($today=>array()); }
 			$newResults = array('results'=>$results,'price_range'=>'','done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 			return ($newResults);
@@ -84,7 +88,9 @@
 		$checked_ids = array();
 		// get primary keywords (part, heci, etc) and corresponding partid's
 		$query = "SELECT keyword, partid FROM keywords, parts_index ";
-		$query .= "WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
+		//dgl 11-17-16
+		//$query .= "WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
+		$query .= "WHERE partid IN (".$partid_csv.") AND keywordid = keywords.id AND rank = 'primary' ";
 		$query .= "ORDER BY LENGTH(keyword) DESC; ";//sort in desc length so we can work backwards to eliminate matching substrings later
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -232,7 +238,9 @@
 
 		$rfqs = array();
 //		$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
-		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
+		//dgl 11-17-16
+		//$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
+		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND partid IN (".$partid_csv."); ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			//$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
@@ -242,20 +250,25 @@
 		$prices = array();//track prices in query results below so we can post-humously price later-dated results
 		$rows = array();
 
-		$query = "SELECT partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, avail_price price, source, companyid, '' rfq, searchid ";
+		$query = "SELECT availability.partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, ";
+		$query .= "avail_price price, source, search_meta.companyid, '' rfq, searchid ";
 		$query .= "FROM availability, search_meta, companies ";
-		$query .= "WHERE (".$partid_str.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
+		// view only ghosted inventories
+		if ($results_mode==2) { $query .= ", staged_qtys "; }
+		$query .= "WHERE availability.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
-//		$query .= "GROUP BY search_meta.datetime, companyid, source ORDER BY datetime DESC; ";
-		$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
+		// view only ghosted inventories
+		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }
+//		$query .= "GROUP BY search_meta.datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
+		$query .= "GROUP BY availability.partid, datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
 			if ($r['price']>0) {
-				if (! $pricing_only) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+				if ($results_mode<>1) {// we don't want grouped or summed or averaged prices when in pricing-only mode
 					$prices[$r['companyid']][$date] = $r['price'];
 				}
-			} else if ($pricing_only) {//in modes where the user wants to see only records that have prices
+			} else if ($results_mode==1) {//in modes where the user wants to see only records that have prices
 				continue;
 			}
 			$rows[] = $r;
@@ -279,7 +292,7 @@
 
 			// add missing gaps of info from previous iterations (ie, same date but earlier in the day had a price, whereas the first found record had no price)
 			if (isset($results[$key])) {
-				if (! $pricing_only) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+				if ($results_mode<>1) {// we don't want grouped or summed or averaged prices when in pricing-only mode
 					// if price is in this iteration whereas not found in previous ($results), set it to this price
 					if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 				}
@@ -304,14 +317,18 @@
 		}
 
 		// legacy code/query
-		$query = "SELECT partid, name, datetime, SUM(qty) qty, price, source, companyid, '' rfq, '' searchid FROM market, companies ";
-		$query .= "WHERE (".$partid_str.") AND market.companyid = companies.id ";
+		$query = "SELECT market.partid, name, datetime, SUM(qty) qty, price, source, market.companyid, '' rfq, '' searchid FROM market, companies ";
+		// view only ghosted inventories
+		if ($results_mode==2) { $query .= ", staged_qtys "; }
+		$query .= "WHERE partid IN (".$partid_csv.") AND market.companyid = companies.id ";
 		$query .= "AND companies.id <> '1118' AND companies.id <> '669' ";
+		// view only ghosted inventories
+		if ($results_mode==2) { $query .= "AND staged_qtys.partid = market.partid AND staged_qtys.companyid = market.companyid "; }
 //		$query .= "GROUP BY datetime, companyid, source ORDER BY datetime DESC; ";
-		$query .= "GROUP BY partid, datetime, companyid, source ORDER BY datetime DESC; ";
+		$query .= "GROUP BY market.partid, datetime, market.companyid, source ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			if (($r['price']=='0.00' OR ! $r['price']) AND $pricing_only) {//in modes where the user wants to see only records that have prices
+			if (($r['price']=='0.00' OR ! $r['price']) AND $results_mode==1) {//in modes where the user wants to see only records that have prices
 				continue;
 			}
 
@@ -344,7 +361,7 @@
 		}
 
 		// get piped data
-		$pipe_results = getRecords($searches,'','','supply');
+		$pipe_results = getRecords($searches,'','','supply',$results_mode);
 		// re-group data into $results array as with other results above
 		foreach ($pipe_results as $r) {
 			$key = $r['datetime'].'.B'.$r['cid'].'.'.$r['quote_id'];
@@ -461,7 +478,7 @@
 		$market = array();
 		// include today's date preset in case there are no results, since we still need the header, so long as
 		// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
-		if (! $pricing_only AND ($ln<=$max_ln OR $attempt==2)) {
+		if ($results_mode<>1 AND ($ln<=$max_ln OR $attempt==2)) {
 			$market = array($today=>array());
 		}
 		array_append($market,$priced);
@@ -469,9 +486,11 @@
 
 
 		// create date-separated headers for each group of results
-		if (! $pricing_only) {
+		if ($results_mode<>1) {
 			$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
-			$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
+			//dgl 11-17-16
+			//$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
+			$query .= "WHERE parts_index.partid IN (".$partid_csv.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
 			$query .= "GROUP BY date; ";
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
@@ -492,7 +511,7 @@
 		$n = 0;
 		foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates
-			if ($n>=5 AND ! $pricing_only AND ! $detail) { break; }
+			if ($n>=5 AND $results_mode<>1 AND ! $detail) { break; }
 
 			$rDate = summarize_date($rDate);
 

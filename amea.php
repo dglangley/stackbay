@@ -12,7 +12,7 @@
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContact.php';
 	include_once 'inc/imap_parsers.php';
-	include_once 'inc/get_db.php';
+//	include_once 'inc/get_db.php';
 
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';

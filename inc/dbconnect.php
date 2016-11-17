@@ -33,6 +33,9 @@
 		header('Cache-Control: no-store, no-cache, must-revalidate');
 		header('Cache-Control: post-check=0, pre-check=0', false);
 		header('Pragma: no-cache'); 
+	} else {
+		ini_set('session.cache_limiter','public');
+		session_cache_limiter(false);
 	}
 	// requires login, see below
 	if (! isset($LOCKED)) { $LOCKED = false; }
@@ -60,7 +63,9 @@ $DEV_ENV = true;
 	//Important pages that always must have minimum admin privileges
 	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
 	
-	session_set_cookie_params(time() + (7 * 24 * 60 * 60));
+	$session_ttl = (7 * 24 * 60 * 60);
+	session_set_cookie_params(time() + $session_ttl);
+	ini_set('session.gc_maxlifetime',$session_ttl);
 	//Start the Session or call existing ones
 	session_start();
 
@@ -306,5 +311,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161102';
+	$V = '20161103';
 ?>
