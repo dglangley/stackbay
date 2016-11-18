@@ -296,6 +296,8 @@
 					// if price is in this iteration whereas not found in previous ($results), set it to this price
 					if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 				}
+				// add search string to result if we don't have it in a previously-iterated result
+				if ($r['searchid'] AND ! $results[$key]['searchid']) { $results[$key]['searchid'] = $r['searchid']; }
 
 				// check array of partids and if partid hasn't been logged, sum qty; otherwise we don't count it to avoid duplicating qty
 				if (array_search($r['partid'],$results[$key]['partids'])===false) {
@@ -369,6 +371,7 @@
 			$key = $r['datetime'].'.B'.$r['cid'].'.'.$r['quote_id'];
 			$r['datetime'] .= ' 00:00:00';
 			$r['id'] = '';
+			$r['searchid'] = '';
 
 			// rename fields to match naming conventions above
 			$r['source'] = $r['quote_id'];

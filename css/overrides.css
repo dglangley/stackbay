@@ -686,6 +686,9 @@ textarea.freeform-text {
 	text-overflow:ellipsis;
 	white-space:nowrap;
 }
+#marketModal .modal-body .row div {
+	white-space:nowrap;
+}
 .modal-striped .row {
   line-height:24px;
 }

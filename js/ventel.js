@@ -45,8 +45,9 @@
 						return;
 					}
 
-					var rfqFlag,actionBox,price,inputDis;
+					var rfqFlag,actionBox,price,inputDis,sources;
 					var rowHtml = '';
+					var searchHeader = 'Listed As';//set for the first header row, but then erased after that; see usage below
 					var priceHeader = 'Price';//set for the first header row, but then erased after that; see usage below
                     $.each(json.results, function(dateKey, item) {
 	                    rowHtml += '<div class="check-group">\
@@ -54,14 +55,18 @@
 								<div class="col-sm-1">\
 									<input type="checkbox" class="checkTargetAll" data-target=".check-group"/>\
 								</div>\
-								<div class="col-sm-9">\
+								<div class="col-sm-7">\
 									'+dateKey+'\
+								</div>\
+								<div class="col-sm-2">\
+									'+searchHeader+'\
 								</div>\
 								<div class="col-sm-2">\
 									'+priceHeader+'\
 								</div>\
 							</div>';
 						priceHeader = '&nbsp;';//reset for all ensuing header rows; see init above
+						searchHeader = '&nbsp;';//reset for all ensuing header rows; see init above
                         /* process each item's data */
                         $.each(item, function(key, row) {
 							/***** SET UP FIELDS FOR USE WITHIN ROW COLUMNS ****/
@@ -72,7 +77,7 @@
 							// set flag when an rfq has been sent
 							rfqFlag = '';
 							if (row.rfq && row.rfq!='') {
-								rfqFlag = '<br/><i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i> '+row.rfq;
+								rfqFlag = ' <i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i>';
 							}
 							price = '';
 							if (row.cid!=34 && row.price!="") {
@@ -80,11 +85,22 @@
 							}
 							search_str = '&nbsp;';
 							if (row.search!='') { search_str = '<span class="info">'+row.search+'</span>'; }
+							sources = '';
+                            $.each(row.sources, function(i, src) {
+								var source_lower = src.toLowerCase();
+								var source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
+								if (row.lns[source_lower]) {
+									sources += '<a href="http://'+row.lns[source_lower]+'" target="_new">'+source_img+'</a> ';
+								} else {
+									sources += source_img+' ';
+								}
+							});
+							if (sources=='') { sources = '&nbsp;'; }
 							/***** END FIELDS SETUP *****/
 
 							rowHtml += '<div class="row">\
 								<div class="col-sm-1">\
-									'+actionBox+' '+rfqFlag+'\
+									'+actionBox+rfqFlag+'\
 								</div>\
 								<div class="col-sm-1">\
 									<strong>'+row.qty+'</strong>\
@@ -92,17 +108,9 @@
 								<div class="col-sm-4 company-name">\
 									'+row.company+'\
 								</div>\
-								<div class="col-sm-2">';
-                            $.each(row.sources, function(i, src) {
-								var source_lower = src.toLowerCase();
-								var source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
-								if (row.lns[source_lower]) {
-									rowHtml += '<a href="http://'+row.lns[source_lower]+'" target="_new">'+source_img+'</a> ';
-								} else {
-									rowHtml += source_img+' ';
-								}
-							});
-							rowHtml += '</div><!-- col-sm -->\
+								<div class="col-sm-2">\
+									'+sources+'\
+								</div><!-- col-sm -->\
 								<div class="col-sm-2">\
 									'+search_str+'\
 								</div><!-- col-sm -->\
