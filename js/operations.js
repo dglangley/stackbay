@@ -172,7 +172,6 @@
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
 				var company = "0";
-				
 				$(document).on("change","#ship_to",function() {
 					//$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
 					// $(this).parent().find("#ship_to").find("option").text();
@@ -533,7 +532,8 @@
 			
 			$('.date').initDatetimePicker("MM/DD/YYYY");
 			
-			$(".shipping_section_foot a").click(function() {
+			$(".shipping_section_foot a").click(function(e) {
+				e.preventDefault();
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
 					$(this).closest("body").children(".table-header").show();

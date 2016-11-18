@@ -52,7 +52,10 @@
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?>
 		;">
-			<div class="col-md-4"></div>
+			<div class="col-md-4">
+				<?= ($order_type == "Sales")? '<a href="/shipping.php?order_no= ' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i> Shipping Info</a>' : '';?>
+				
+			</div>
 			<div class="col-md-4 text-center">
 				<?php
 				echo"<h1>";

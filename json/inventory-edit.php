@@ -30,9 +30,9 @@
 		$query;
 		
 	    if($id && $id != "") {
-		    $query  = "UPDATE inventory SET serial_no = $serial, date_created = '$date', locationid = $locationid, qty = $qty, item_condition = '$condition', status = '$status' WHERE id = $id";
+		    $query  = "UPDATE inventory SET serial_no = ". res($serial) .", date_created = '". res($date) ."', locationid = ". res($locationid) .", qty = ". res($qty) .", item_condition = '". res($condition) ."', status = '". res($status) ."' WHERE id = ". res($id) .";";
 	    } else {
-	        $query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('$serial', '$qty', '$partid', '$condition', '$status', '$locationid', NULL, NULL, NULL, '1', '$date', NULL)";
+	        $query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '". res($qty) ."', '". res($partid) ."', '". res($condition) ."', '". res($status) ."', '". res($locationid) ."', NULL, NULL, NULL, '1', '". res($date) ."', NULL);";
 	    }
 	    
 	    // INSERT INTO vmmdb.inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('111', '1', '1', 'new', 'ordered', '1', NULL, NULL, NULL, '1', '2016-11-08 00:00:00', NULL);
@@ -48,7 +48,7 @@
 		//echo $stock . $partid;
 		
 		
-		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = $partid AND item_condition = '$stock'";
+		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = ". res($partid) ." AND item_condition = '". res($stock) ."';";
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
