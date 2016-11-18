@@ -107,7 +107,7 @@
 									'+search_str+'\
 								</div><!-- col-sm -->\
 								<div class="col-sm-2">\
-									<input type="text" value="'+price+'" class="form-control input-xs market-price" data-date="'+row.date+'" size="4" onFocus="this.select()"'+inputDis+'/>\
+									<input type="text" value="'+price+'" class="form-control input-xs market-price" data-date="'+row.date+'" data-cid="'+row.cid+'" size="4" onFocus="this.select()"'+inputDis+'/>\
 								</div><!-- col-sm -->\
 							</div><!-- row -->';
                         });
@@ -715,9 +715,13 @@
 			$("#exp-date").val($(this).data('date'));
 		});
 		$(document).on("change",".market-price",function() {
-			var cid = $(this).closest(".row").find(".item-check").val();
+			var cid = $(this).data('cid');/*closest(".row").find(".item-check").val();*/
 			var date = $(this).data('date');
-			var partids = $(this).closest(".modal-body").find("input[name='partids']").val();
+			if ($(this).closest(".market-table").data('partids')) {
+				var partids = $(this).closest(".market-table").data('partids');
+			} else {
+				var partids = $(this).closest(".modal-body").find("input[name='partids']").val();
+			}
 			var price = $(this).val();
             console.log(window.location.origin+"/json/save-market.php?companyid="+cid+"&date="+date+"&price="+price+"&partids="+partids);
             $.ajax({
@@ -914,6 +918,7 @@
         var newHtml = '';
         var rowHtml = '';
         var qtyTotal = 0;
+        var inputDis;
         var container = $(this);
         var ln = $(this).data('ln');
 		var thisId = container.prop('id');
@@ -936,16 +941,18 @@
                     rowHtml = '';
                     /* process each item's data */
                     $.each(item, function(key, row) {
+						//disable input fields for ebay
+						inputDis = '';
+						if (row.cid==34) inputDis = ' disabled';
+
                         qtyTotal += parseInt(row.qty,10);
                         rowHtml += '<div class="market-data"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
                             '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                         $.each(row.sources, function(i, src) {
                             rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
                         });
-                        if (row.price) {
-                            rowHtml += '&nbsp; <span class="pa">'+row.price+'</span>';
-                        }
-                        rowHtml += '</div>';
+                        rowHtml += '&nbsp; <input type="text" class="form-control input-xxs market-price" value="'+row.price+'" '+
+									'data-date="'+row.date+'" data-cid="'+row.cid+'" onFocus="this.select()"'+inputDis+'/></div>';
                     });
 
 					doneFlag = json.done;
