@@ -29,7 +29,9 @@
 	$result = qdb($query) OR reportError(qe());
 	while ($r = mysqli_fetch_assoc($result)) {
 		// update all records associated with metaid and all partids
-		$query2 = "UPDATE ".$records_table." SET ".$price_field." = '".res($price)."' WHERE metaid = '".$r['id']."' AND partid IN (".$partids."); ";
+		$query2 = "UPDATE ".$records_table." SET ".$price_field." = ";
+		if ($price) { $query2 .= "'".res($price)."' "; } else { $query2 .= "NULL "; }
+		$query2 .= "WHERE metaid = '".$r['id']."' AND partid IN (".$partids."); ";
 //		echo json_encode(array('message'=>$query2));
 //		exit;
 

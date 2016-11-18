@@ -45,7 +45,7 @@
 						return;
 					}
 
-					var rfqFlag,actionBox,price,chkStatus;
+					var rfqFlag,actionBox,price,inputDis;
 					var rowHtml = '';
 					var priceHeader = 'Price';//set for the first header row, but then erased after that; see usage below
                     $.each(json.results, function(dateKey, item) {
@@ -66,18 +66,20 @@
                         $.each(item, function(key, row) {
 							/***** SET UP FIELDS FOR USE WITHIN ROW COLUMNS ****/
 							// checkbox for rfqing, but disable ebay items
-							chkStatus = '';
-							if (row.cid==34) { chkStatus = ' disabled'; }
-							actionBox = '<input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"'+chkStatus+'/>';
+							inputDis = '';
+							if (row.cid==34) { inputDis = ' disabled'; }
+							actionBox = '<input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"'+inputDis+'/>';
 							// set flag when an rfq has been sent
 							rfqFlag = '';
 							if (row.rfq && row.rfq!='') {
 								rfqFlag = '<br/><i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i> '+row.rfq;
 							}
 							price = '';
-							if (row.price!="") {
+							if (row.cid!=34 && row.price!="") {
 								price = Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
 							}
+							search_str = '&nbsp;';
+							if (row.search!='') { search_str = '<span class="info">'+row.search+'</span>'; }
 							/***** END FIELDS SETUP *****/
 
 							rowHtml += '<div class="row">\
@@ -102,10 +104,10 @@
 							});
 							rowHtml += '</div><!-- col-sm -->\
 								<div class="col-sm-2">\
-									<span class="info">'+row.search+'</span>\
+									'+search_str+'\
 								</div><!-- col-sm -->\
 								<div class="col-sm-2">\
-									<input type="text" value="'+price+'" class="form-control input-xs market-price" data-date="'+row.date+'" size="4" onFocus="this.select()"/>\
+									<input type="text" value="'+price+'" class="form-control input-xs market-price" data-date="'+row.date+'" size="4" onFocus="this.select()"'+inputDis+'/>\
 								</div><!-- col-sm -->\
 							</div><!-- row -->';
                         });
