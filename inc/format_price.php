@@ -1,5 +1,9 @@
 <?php
 	function format_price($price,$ext=true,$sep='',$dbformat=false) {
+		//$ext = show extension
+		//$sep = separator between "$" and dollar value
+		//$dbformat = output in db format
+
 		$price = trim($price);
 		$price = str_replace(array('$',','),'',$price);
 

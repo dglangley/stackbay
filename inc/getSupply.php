@@ -251,7 +251,7 @@
 		$rows = array();
 
 		$query = "SELECT availability.partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, ";
-		$query .= "avail_price price, source, search_meta.companyid, '' rfq, searchid ";
+		$query .= "avail_price price, source, search_meta.companyid, '' rfq, searchid, availability.id ";
 		$query .= "FROM availability, search_meta, companies ";
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= ", staged_qtys "; }
@@ -265,7 +265,7 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
 			if ($r['price']>0) {
-				if ($results_mode<>1) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+				if ($results_mode==0) {// we don't want grouped or summed or averaged prices when in pricing-only mode
 					$prices[$r['companyid']][$date] = $r['price'];
 				}
 			} else if ($results_mode==1) {//in modes where the user wants to see only records that have prices
@@ -292,7 +292,7 @@
 
 			// add missing gaps of info from previous iterations (ie, same date but earlier in the day had a price, whereas the first found record had no price)
 			if (isset($results[$key])) {
-				if ($results_mode<>1) {// we don't want grouped or summed or averaged prices when in pricing-only mode
+				if ($results_mode==0) {// we don't want grouped or summed or averaged prices when in pricing-only mode
 					// if price is in this iteration whereas not found in previous ($results), set it to this price
 					if ($r['price']>0 AND (! $results[$key]['price'] OR $results[$key]['price']=='0.00')) { $results[$key]['price'] = $r['price']; }
 				}
@@ -317,7 +317,9 @@
 		}
 
 		// legacy code/query
-		$query = "SELECT market.partid, name, datetime, SUM(qty) qty, price, source, market.companyid, '' rfq, '' searchid FROM market, companies ";
+		$query = "SELECT market.partid, name, datetime, SUM(qty) qty, price, source, market.companyid, ";
+		$query .= "'' rfq, '' searchid, '' id ";
+		$query .= "FROM market, companies ";
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= ", staged_qtys "; }
 		$query .= "WHERE partid IN (".$partid_csv.") AND market.companyid = companies.id ";
@@ -366,6 +368,7 @@
 		foreach ($pipe_results as $r) {
 			$key = $r['datetime'].'.B'.$r['cid'].'.'.$r['quote_id'];
 			$r['datetime'] .= ' 00:00:00';
+			$r['id'] = '';
 
 			// rename fields to match naming conventions above
 			$r['source'] = $r['quote_id'];
@@ -403,10 +406,11 @@
 			$source = false;
 			$ref_ln = '';
 			$companyid_key = $r['companyid'];
+			$search = getSearch($r['searchid']);
 			if (! is_numeric($r['source']) AND $r['source']<>'List') {
 				$source = strtolower($r['source']);
 				if (isset($urls[$r['source']]) AND $r['searchid']) {
-					$ref_ln = $urls[$r['source']].getSearch($r['searchid']);
+					$ref_ln = $urls[$r['source']].$search;
 				}
 			} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
 //				$companyid_key .= '.'.$r['source'];
@@ -421,12 +425,14 @@
 					'cid' => $r['companyid'],
 					'qty' => $r['qty'],
 					'price' => $price,
+					'date' => $date,
 					'changeFlag' => 'circle-o',
 					'rfq' => $r['rfq'],
 					'sources' => array(),
 					'min_price' => $price,
 					'max_price' => $price,
 					'lns' => array(),
+					'search' => $search,
 				);
 			} else {
 				// on ebay results, sum the qtys and show price range rather than every individual result
@@ -478,7 +484,7 @@
 		$market = array();
 		// include today's date preset in case there are no results, since we still need the header, so long as
 		// within the first few lines of results; after that, we want the user to see that broker searches didn't happen
-		if ($results_mode<>1 AND ($ln<=$max_ln OR $attempt==2)) {
+		if ($results_mode==0 AND ($ln<=$max_ln OR $attempt==2)) {
 			$market = array($today=>array());
 		}
 		array_append($market,$priced);
@@ -486,7 +492,7 @@
 
 
 		// create date-separated headers for each group of results
-		if ($results_mode<>1) {
+		if ($results_mode==0) {
 			$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
 			//dgl 11-17-16
 			//$query .= "WHERE (".$partid_str.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
@@ -511,7 +517,7 @@
 		$n = 0;
 		foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates
-			if ($n>=5 AND $results_mode<>1 AND ! $detail) { break; }
+			if ($n>=5 AND $results_mode==0 AND ! $detail) { break; }
 
 			$rDate = summarize_date($rDate);
 

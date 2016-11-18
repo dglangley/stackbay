@@ -4,8 +4,10 @@
 	include_once 'setPart.php';
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
+	include_once 'logRemotes.php';
 
 	function parse_ps($res,$return_type='db') {
+		$SIDS = $GLOBALS['SEARCH_IDS'];
 		if (! $res) { return false; }
 
 		$inserts = array();//gather all records to be inserted into db
@@ -83,17 +85,35 @@ continue;//8-8-16
 			}
 //			echo 'Identifying '.$part.' '.$heci.' = '.$partid.' to be added...'.chr(10);
 
+			//dgl 11-18-16 added so that we can store *how* the supplier is posting their data, so when rfqing them
+			//we can refer to their original posted search string instead of an alias they can't match
+			if ($heci) {
+				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
+				// if not stored in our db, create the entry so we have record of their exact match
+				if (! $SIDS[$heci7]) {
+					logRemotes($heci7,'000000');
+				}
+				$searchid = $SIDS[$heci7];
+			} else {
+				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+				// if not stored in our db, create the entry so we have record of their exact match
+				if (! $SIDS[$fpart]) {
+					logRemotes($fpart,'000000');
+				}
+				$searchid = $SIDS[$fpart];
+			}
+
 			//must return a variable so this function doesn't happen asynchronously
 			if ($return_type=='db') {
 //				$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'PS');
-				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid,'price'=>$price);
+				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'companyid'=>$companyid,'price'=>$price,'searchid'=>$searchid);
 			}
 		}
 
 		if ($return_type=='db') {
 			foreach ($inserts as $r) {
 				$metaid = logSearchMeta($r['companyid'],false,'','ps');
-				$added = insertMarket($r['partid'],$r['qty'],$r['price'],false,false,$metaid,'availability');
+				$added = insertMarket($r['partid'],$r['qty'],$r['price'],false,false,$metaid,'availability',$r['searchid']);
 			}
 		}
 

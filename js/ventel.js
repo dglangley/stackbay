@@ -17,30 +17,80 @@
 		});
 
         $("body").on('click','a.modal-results',function(e) {
-			var productSearch = $(this).closest(".product-results").siblings(".first").find(".product-search").val().toUpperCase();
-			var partids = $(this).closest(".market-results").data('partids');
+			var first = $(this).closest(".product-results").siblings(".first");
+			var productSearch = first.find(".product-search").val().toUpperCase();
+			var partids = $(this).closest(".market-table").data('partids');
 			var ln = $(this).closest(".market-results").data('ln');
-			var results_mode = $(this).data('results');
+			var results_mode = '0';//default
+			var results_title = 'Supply Results';
+			first.find(".btn-resultsmode").find(".btn").each(function() {
+				if (! $(this).hasClass('btn-primary')) { return; }
+				results_mode = $(this).data('results');
+			});
+			if (results_mode=='1') { results_title += ' - Prices Only'; }
+			else if (results_mode=='2') { results_title += ' - Ghosted Inventories'; }
+			else { results_title += ' - All'; }
+            $("#marketModal .modal-title").html(results_title);
+			// reset html so when it pops open, there's no old data
+			$("#marketModal .modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
+
             console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&results_mode="+results_mode);
             $.ajax({
                 url: 'json/availability.php',
                 type: 'get',
                 data: {'attempt': '0', 'partids': partids, 'results_mode': results_mode, 'detail': '1'},
                 success: function(json, status) {
-					rowHtml = '';
+					if (json.err!='') {
+						alert(json.err);
+						return;
+					}
+
+					var rfqFlag,actionBox,price,chkStatus;
+					var rowHtml = '';
+					var priceHeader = 'Price';//set for the first header row, but then erased after that; see usage below
                     $.each(json.results, function(dateKey, item) {
-	                    rowHtml += '<div class="check-group">'+
-							'<div class="row bg-success"><div class="col-sm-2"><input type="checkbox" class="checkTargetAll" data-target=".check-group"/></div>'+
-							'<div class="col-sm-10">'+dateKey+'</div></div>';
+	                    rowHtml += '<div class="check-group">\
+							<div class="row">\
+								<div class="col-sm-1">\
+									<input type="checkbox" class="checkTargetAll" data-target=".check-group"/>\
+								</div>\
+								<div class="col-sm-9">\
+									'+dateKey+'\
+								</div>\
+								<div class="col-sm-2">\
+									'+priceHeader+'\
+								</div>\
+							</div>';
+						priceHeader = '&nbsp;';//reset for all ensuing header rows; see init above
                         /* process each item's data */
                         $.each(item, function(key, row) {
-							rowHtml += '<div class="row"><div class="col-sm-2"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"/>';
+							/***** SET UP FIELDS FOR USE WITHIN ROW COLUMNS ****/
+							// checkbox for rfqing, but disable ebay items
+							chkStatus = '';
+							if (row.cid==34) { chkStatus = ' disabled'; }
+							actionBox = '<input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'"'+chkStatus+'/>';
+							// set flag when an rfq has been sent
+							rfqFlag = '';
 							if (row.rfq && row.rfq!='') {
-								rowHtml += ' <i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i>';
+								rfqFlag = '<br/><i class="fa fa-paper-plane text-primary" title="'+row.rfq+'"></i> '+row.rfq;
 							}
-							rowHtml += '</div><div class="col-sm-2"><strong>'+row.qty+'</strong></div>'+
-								'<div class="col-sm-6">'+row.company+'</div>'+
-								'<div class="col-sm-2">';
+							price = '';
+							if (row.price!="") {
+								price = Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
+							}
+							/***** END FIELDS SETUP *****/
+
+							rowHtml += '<div class="row">\
+								<div class="col-sm-1">\
+									'+actionBox+' '+rfqFlag+'\
+								</div>\
+								<div class="col-sm-1">\
+									<strong>'+row.qty+'</strong>\
+								</div>\
+								<div class="col-sm-4 company-name">\
+									'+row.company+'\
+								</div>\
+								<div class="col-sm-2">';
                             $.each(row.sources, function(i, src) {
 								var source_lower = src.toLowerCase();
 								var source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
@@ -50,7 +100,14 @@
 									rowHtml += source_img+' ';
 								}
 							});
-							rowHtml += '</div></div>';
+							rowHtml += '</div><!-- col-sm -->\
+								<div class="col-sm-2">\
+									<span class="info">'+row.search+'</span>\
+								</div><!-- col-sm -->\
+								<div class="col-sm-2">\
+									<input type="text" value="'+price+'" class="form-control input-xs market-price" data-date="'+row.date+'" size="4" onFocus="this.select()"/>\
+								</div><!-- col-sm -->\
+							</div><!-- row -->';
                         });
 						rowHtml += '</div>';/*end check-group*/
                     });
@@ -67,11 +124,6 @@
 					rowHtml += '<input type="hidden" name="partids" value="'+partids+'">';
                     var modalBody = $("#marketModal .modal-body");
 					modalBody.html(rowHtml);
-
-					// alert the user when there are errors with any/all remotes by unhiding alert buttons
-					$.each(json.err, function(i, remote) {
-						$("#remote-"+remote).removeClass('hidden');
-					});
                 },
                 error: function(xhr, desc, err) {
                     console.log(xhr);
@@ -431,8 +483,16 @@
 
 //dgl 11-15-16
 /*		$(".marketpricing-toggle").click(function() { */
-		$(".btn-marketpricing .btn").click(function() {
+		$(".btn-resultsmode .btn").click(function() {
 			var mr = $(this).closest("tbody").find(".market-results:first");
+
+			var this_btn = $(this);
+			// reset all market pricing button styles, and depress the selected one
+			$(this).closest(".btn-resultsmode").find(".btn").each(function() {
+				$(this).removeClass('btn-primary').addClass('btn-default');
+			});
+			$(this).removeClass('btn-default').addClass('btn-primary');
+
 /*
 			$(this).find(".fa").each(function() {
 				if ($(this).hasClass('fa-toggle-off')) {
@@ -444,6 +504,10 @@
 				}
 			});
 */
+			// reset html with a loader/spinner while loading new data
+            mr.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+
+			// load new results with selected results mode
 			mr.loadResults(1,$(this).data('results'));
 			$(this).blur();
 		});
@@ -597,7 +661,7 @@
 			}
 		});
 		$("#s").change(function() {
-				$("#s2").val("");
+			$("#s2").val("");
 		});
 		$("#btn-range-options").hover(function() {
 			$("#date-ranges").toggleClass('hidden');
@@ -647,6 +711,30 @@
 		
 		$(".btn-expdate").click(function() {
 			$("#exp-date").val($(this).data('date'));
+		});
+		$(document).on("change",".market-price",function() {
+			var cid = $(this).closest(".row").find(".item-check").val();
+			var date = $(this).data('date');
+			var partids = $(this).closest(".modal-body").find("input[name='partids']").val();
+			var price = $(this).val();
+            console.log(window.location.origin+"/json/save-market.php?companyid="+cid+"&date="+date+"&price="+price+"&partids="+partids);
+            $.ajax({
+                url: 'json/save-market.php',
+                type: 'get',
+                data: {'companyid' : cid, 'date' : date, 'price' : price, 'partids' : partids},
+                success: function(json, status) {
+					if (json.message=='Success') {
+						toggleLoader('Price Updated Successfully');
+					} else {
+						// alert the user when there are errors
+						alert(json.message);
+					}
+				},
+                error: function(xhr, desc, err) {
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+            }); // end ajax call
 		});
 		$(document).on("click",".btn-upload",function() {
 			if (! $("#upload-companyid").val()) {
@@ -831,12 +919,13 @@
             container.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 		}
 		var doneFlag = '';
+		var partids = container.closest(".market-table").data('partids');
 
-        console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+$(this).data('partids')+"&ln="+ln+"&results_mode="+results_mode);
+        console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+partids+"&ln="+ln+"&results_mode="+results_mode);
         $.ajax({
             url: 'json/availability.php',
             type: 'get',
-            data: {'attempt': attempt, 'partids': $(this).data('partids'), 'ln': ln, 'results_mode': results_mode},
+            data: {'attempt': attempt, 'partids': partids, 'ln': ln, 'results_mode': results_mode},
 			settings: {async:true},
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
@@ -860,7 +949,7 @@
 					doneFlag = json.done;
 
                     /* add section header of date and qty total */
-                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag,results_mode)+rowHtml;
+                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag)+rowHtml;
                 });
                 container.html(newHtml);
 
@@ -1152,9 +1241,9 @@
 
 		return;
 	}
-    function addDateGroup(dateKey,qtyTotal,doneFlag,results_mode) {
-        var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal" data-results="'+results_mode+'">'+
-            dateKey+': qty '+qtyTotal+' <i class="fa fa-list-alt"></i></a> ';
+    function addDateGroup(dateKey,qtyTotal,doneFlag) {
+        //var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'+
+        var groupStr = '<div class="date-group">'+dateKey+': qty '+qtyTotal+' ';
         if (! doneFlag && dateKey=='Today') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
         }

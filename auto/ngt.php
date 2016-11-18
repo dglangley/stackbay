@@ -10,6 +10,7 @@
 	include_once $root_dir.'/inc/getContact.php';
 	include_once $root_dir.'/inc/logSearchMeta.php';
 	include_once $root_dir.'/inc/send_gmail.php';
+	include_once $root_dir.'/inc/logRemotes.php';
 
 	setGoogleAccessToken(5);
 
@@ -86,7 +87,25 @@
 		// for now, we don't need to be adding parts into our db that's in NGT's system, just skip 'em
 		if (! $partid) { continue; }
 
-		insertMarket($partid,$qty,false,false,false,$metaid,'availability');
+		//dgl 11-18-16 added so that we can store *how* the supplier is posting their data, so when rfqing them
+		//we can refer to their original posted search string instead of an alias they can't match
+		if ($heci) {
+			$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
+			// if not stored in our db, create the entry so we have record of their exact match
+			if (! $SIDS[$heci7]) {
+				logRemotes($heci7,'000000');
+			}
+			$searchid = $SIDS[$heci7];
+		} else {
+			$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+			// if not stored in our db, create the entry so we have record of their exact match
+			if (! $SIDS[$fpart]) {
+				logRemotes($fpart,'000000');
+			}
+			$searchid = $SIDS[$fpart];
+		}
+
+		insertMarket($partid,$qty,false,false,false,$metaid,'availability',$searchid);
 	}
 	if ($favs_report) {
 		$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;

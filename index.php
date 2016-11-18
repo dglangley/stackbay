@@ -552,11 +552,11 @@
 				$results_rows .= '
 							<!-- market-row for all items within search result section -->
                             <td rowspan="'.($num_results+1).'" class="market-row">
-								<table class="table market-table">
+								<table class="table market-table" data-partids="'.$partids.'">
 									<tr>
 										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title">Supply</a> <a href="javascript:void(0);" class="market-download"><i class="fa fa-download"></i></a>
-											<div class="market-results" id="'.$ln.'-'.$partid.'" data-partids="'.$partids.'" data-ln="'.$ln.'"></div>
+											<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal">Supply <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
+											<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'"></div>
 										</td>
 										<td class="col-sm-3 bg-purchases">
 											'.$purchases_col.'
@@ -652,8 +652,8 @@
 										<span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a>
 -->
 										<div id="marketpricing-<?php echo $ln; ?>" class="header-text">&nbsp;</div>
-										<div class="btn-group btn-marketpricing action-items">
-											<button class="btn btn-default btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
+										<div class="btn-group btn-resultsmode action-items">
+											<button class="btn btn-primary btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
 											<button class="btn btn-default btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
 											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
 										</div><!-- <br/>
