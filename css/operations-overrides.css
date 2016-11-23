@@ -15,12 +15,13 @@ body{
 }
 .cmbar{
 	height: 100%;
+	overflow: auto;
 }
 
 .select2-container{
-	height: inherit;
-	width:100% !important;
-	overflow:hidden;
+	/*height: inherit;*/
+	/*width:100% !important;*/
+	/*overflow:hidden;*/
 }
 
 .company_meta{

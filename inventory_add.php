@@ -24,6 +24,24 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	//include_once $rootdir.'/inc/order-creation.php';
+	
+	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+		$statusVals;
+		
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
+	    $result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$statusVals = $result;
+		}
+		
+		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
+		
+		$enum = explode("','", $matches[1]);
+		
+		return $enum;
+	}
 
 ?>
 
@@ -190,34 +208,29 @@
 									    </div>
 								    </td>
 						            <td>
-				                            <div class="ui-select" style="width:100%;">
-				                                <select id = "new_location">
-				                                    <option selected="">Warehouse 12</option>
-				                                    <option>Warehouse 13</option>
-				                                    <option>Warehouse 15</option>
-				                                </select>
-				                            </div>
+				                            <!--<div class="ui-select" style="width:100%;">-->
+		                                <select class="form-control" id = "new_location">
+		                                    <option selected="">W: 12</option>
+		                                    <option>W: 13</option>
+		                                    <option>W: 15</option>
+		                                </select>
+				                            <!--</div>-->
 				                    </td>
 						            <td>
 						            	<div class="btn-group">
-					                    	<button class="btn btn-success toggle_group" data-value="Received">
-					                    		Rec
-					                    	</button>     
-					                    	<button class="btn btn-danger toggle_group" data-value="Returned">
-					                    		Ret
-					                    	</button>
+						            		<select class="form-control status" name="status">
+					                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+												<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
+											<?php endforeach; ?>
+											</select>
 										</div>
 				                    </td>
 						            <td>
-							           	<button class="btn btn-success">
-				                    		N
-				                    	</button>     
-				                    	<button class="btn btn-danger">
-				                    		U
-				                    	</button>
-				                    	<button class="btn btn-primary">
-				                    		R
-				                    	</button>
+										<select class="form-control condition_field condition" name="condition">
+											<?php foreach(getEnumValue() as $condition): ?>
+												<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+											<?php endforeach; ?>
+										</select>
 				                    </td>
 				                    <td>
 				                    	<button class="btn-flat" id="inv_add_record">
@@ -226,8 +239,16 @@
 				                    </td>
 							    </tr>
 							</thead>
-						<tbody id="">
+						<tbody id="serial_each_table">
+							
 				        </tbody>
+						<tfoot>
+							<tr>
+								<td>
+					        		<a class="show_link" href="#"  style="display: none;">Show More</a>
+								</td>
+							</tr>
+						</tfoot>
 					</table>
 						
 				</div>
