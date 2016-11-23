@@ -149,6 +149,24 @@
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<?php include 'inc/navbar.php'; ?>
+		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
+			<div class="col-md-4">
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
+			</div>
+			<div class="col-md-4 text-center">
+				<?php
+				echo"<h1>";
+				echo " Shipping Order";
+				if ($order_number!='New'){
+					echo " #$order_number";
+				}
+				echo"</h1>"
+				?>
+			</div>
+			<div class="col-md-4">
+				<button class="btn btn-success pull-right btn-update" style="margin-top: 10px;">Update Order</button>
+			</div>
+		</div>
 		<div class="loading_element">
 			<!--================== Begin Left Half ===================-->
 			<div id="left-side-main">
@@ -157,7 +175,7 @@
 			<!--======================= End Left half ======================-->
 			
 			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
-				<button class="btn btn-success pull-right" style="margin-top: -5px;">Update Order</button>
+				
 				<h3>Items to be Shipped</h3>
 				<!--<hr style="margin-top : 10px;">-->
 			
@@ -169,8 +187,8 @@
 								<th>Serial</th>
 								<th>Qty</th>
 								<th>Location</th>
-								<th>Box #</th>
 								<th>Condition</th>
+								<th>Ship by</th>
 								<th>Shipped</th>
 							</tr>
 						</thead>
@@ -192,14 +210,14 @@
 									<?php echo (!empty($location) ? getWarehouse($location['warehouseid']) . ' ' . $location['aisle'] . ': ' . $location['shelf'] : '') ?>
 								</td>
 								<td>
-									<?php //$inventory['item_condition'] ?>
-								</td>
-								<td>
 									<?php $inventory['item_condition'] ?>
 								</td>
 								<td>
+									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
+								</td>
+								<td>
 									<div class="checkbox">
-										<label><input type="checkbox" data-serial="<?php echo $inventory['serial_no']; ?>" value="" <?php echo (!empty($item['delivery_date']) ? 'checked disabled' : ''); ?>> <?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?></label>
+										<label><input type="checkbox" data-serial="<?php echo $inventory['serial_no']; ?>" data-part="<?php echo $item['partid']; ?>" value="<?php echo $item['partid']; ?>" <?php echo (!empty($item['ship_date']) ? 'checked disabled' : ''); ?>> <?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?></label>
 									</div>
 								</td>
 							</tr>
@@ -211,6 +229,44 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
+		
+		<script>
+			(function($){
+			    
+				$('.btn-update').click(function(){
+					var getChecked = $("input:checkbox:checked").map(function(){
+						if(!$(this).is(":disabled")) {
+			    			return $(this).data('part');
+						}
+				    }).get();
+
+					$.ajax({
+						type: 'POST',
+						url: '/json/shipping-update.php',
+						data: ({so_number : <?php echo $sales_order; ?>, partids : getChecked}),
+						dataType: 'json',
+						success: function(data) {
+							var i;
+							
+							var d = new Date();
+
+							var month = d.getMonth()+1;
+							var day = d.getDate();
+							
+							var output = (month<10 ? '0' : '') + month + '/' +
+										 (day<10 ? '0' : '') + day + '/' +
+										 d.getFullYear();
+									  
+							
+							for (i = 0; i < data.length; ++i) {
+							    $('input[data-part=' + data[i] + ']').attr('disabled', true);
+							    $('input[data-part=' + data[i] + ']').after(output);
+							}
+						}
+					});
+				});
+			})(jQuery);
+		</script>
 
 	</body>
 </html>

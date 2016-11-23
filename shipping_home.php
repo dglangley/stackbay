@@ -10,7 +10,7 @@
 	include_once $rootdir.'/inc/getPipeIds.php';
 	
 //==============================================================================
-//============================ Function Delcaration ============================
+//============================ Function Delcaration (Declaration?) ============================
 //==============================================================================
 	
 	//Output Module acts as the general output for each of the dashboard sections.
@@ -85,23 +85,31 @@
 	//	- Order: s, p
 	function output_rows($order, $status){
 		
+		
+		
 		//Select a joint summary query of the order we are requesting
 		$query = "SELECT * FROM ";
 		if ($order == 'p'){
 			$query .= "purchase_orders o, purchase_items i ";
 			$query .= "WHERE o.po_number = i.po_number ";
+			$query .= "AND status = '" . res($status) . "' ";
+			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";
 		}
 		else{
 			$query .= "sales_orders o, sales_items i ";
 			$query .= "WHERE o.so_number = i.so_number ";
+			if($status == 'Active') {
+				$query .= "AND i.ship_date IS NULL ";
+			} else {
+				$query .= "AND i.ship_date IS NOT NULL ";
+			}
+			$query .= "ORDER BY o.so_number LIMIT 0 , 100;";
 		}
-		$query .= "AND status = '$status' ";
-		$query .= "LIMIT 0 , 100;";
 		
 		$results = qdb($query);
 	
 		//display only the first N rows, but output all of them
-		$count = 1;
+		$count = 0;
 		
 		//Loop through the results.
 		foreach ($results as $r){
@@ -118,7 +126,7 @@
 			$qty = $r['qty'];
 		
 		
-			if($count<10){
+			if($count<=10){
 				echo'	<tr>';
 			}
 			else{

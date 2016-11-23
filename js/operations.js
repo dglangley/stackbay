@@ -171,7 +171,7 @@
 			$("#left-side-main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
-				
+
 				$(document).on("change","#ship_to",function() {
 					//$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
 					// $(this).parent().find("#ship_to").find("option").text();
@@ -645,7 +645,8 @@
 			
 			$('.date').initDatetimePicker("MM/DD/YYYY");
 			
-			$(".shipping_section_foot a").click(function() {
+			$(".shipping_section_foot a").click(function(e) {
+				e.preventDefault();
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
 					$(this).closest("body").children(".table-header").show();
@@ -794,33 +795,113 @@
 
 
 //============================= Inventory Addition =============================
-	$(document).on("click",".toggle_group",function() {
-	    $(this).toggleClass('active');
-	    $(this).siblings().removeClass('active');
-	});
+		$(document).on("click",".toggle_group",function() {
+		    $(this).toggleClass('active');
+		    $(this).siblings().removeClass('active');
+		});
+		
+		$(document).on("change","input[name='serialize']",function() {
+		    if(this.checked) {
+		         $(this).closest('.addRecord').find('#inv_add_record').text('SERIALIZE');
+		         $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
+		         $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
+		    } else {
+		    	 $(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
+		    	 $(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
+		    }
+		});
+		$(document).on("change","#new_qty",function() {
+			//$('table:last').find('input[name="serialize"]').prop('checked', false);
+		    if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
+		        $(this).closest('.addRecord').find('#inv_add_record').text('SERIALIZE');
+		        $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
+		        $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
+		    } else {
+		    	$(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
+		    	$(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+		    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
+		    }
+		});
+		
+		$(document).on("click",".show_link",function() {
+		    $(this).closest('.table').find('#serial_each_table').fadeIn();
+		});
+		
+		$(document).on('click',"#inv_add_record",function() {
 	
-	$(document).on('click',"#inv_add_record",function() {
-		
-		alert($("#search_collumn").find(".item_search").val());
-		alert($("#serial").find('input[name="NewSerial"]').val());
-		alert($("#new_qty").val());
-		alert($("input[name='serialize']").prop("checked"));
-		alert($("#new_location").val());
-		
-		
-		// alert(new_record);
-		// $.ajax({
-		// 	type: "POST",
-		// 	url: '/json/order-creation.php',
-		// 	data: {
-		// 		 'chum' : new_record,
-		// 		},
-		// 	dataType: 'json',
-		// 	success: function(lines) {
-		// 		alert(lines);
-		// 	}
-		// 	});
-	});
+			var qty = $(this).closest('.table').find("#new_qty").val();
+			var location = $(this).closest('.table').find("#new_location option:selected").text();
+			var info;
+			
+			var $element = $(this).closest('.table').find('#serial_each_table');
+			if($(this).hasClass('serialize_data')) {
+				$element.children('.added_serial').remove();
+			} else if($(this).hasClass('add_data')) {
+				$element.children('.added_serial').remove();
+				$(this).closest('.table').find('#serial input').prop('disabled', false);
+				$element.closest('.table').find('#new_location').prop('disabled', false);
+				$element.closest('.table').find('.condition_field').prop('disabled', false);
+			}
+			
+			var $conditions = $element.closest('.table').find('.condition_field').clone();
+			var $status = $element.closest('.table').find('.status').clone();
+			
+			if($element.closest('.table').find("input[name='serialize']").prop("checked") && qty > 1 && $(this).hasClass('serialize_data')) {
+				for(var i = 1; i <= qty; i++) {
+					$(this).closest('.table').find('#serial input').prop('disabled', true);
+					info = '<tr class="added_serial"><td><strong>' + i;
+					info += '.</strong> Enter Serial for Part #' + $("#search_collumn").find(".item_search").val();
+					info += '</td><td><input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial"></td><td></td>';
+					info += '<td><select class="location_clone form-control"></select></td><td class="add_status"></td><td class="add_condition">';
+					info += '</td></tr>';
+					$element.append(info);
+				}
+				$element.closest('.table').find('.condition_field').prop('disabled', true);
+				$element.find('.add_condition').append($conditions);
+				$element.find('.add_status').append($status);
+				$element.closest('.table').find('.add_condition select').prop('disabled', false);
+				$element.closest('.table').find('.add_status select').prop('disabled', false);
+				$element.closest('.table').find('#new_location').find('option').clone().appendTo($element.find('.location_clone'));
+				$element.find('.location_clone').val(location);
+				$element.closest('.table').find('#new_location').prop('disabled', true);
+				$(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
+				$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
+			} else {
+				var $newTr = $('#items_table:last').clone();
+				$.when($(this).closest('.inventory_lines').append($newTr)).then(function() {
+					$('table:last').find('#serial_each_table').children('.added_serial').remove();
+				});
+				$element.closest('.table').find('#serial_each_table').fadeOut('fast');
+				
+				//$(this).closest("tbody").find("tr").length === 0
+				if($element.closest('.table').find('#serial_each_table').find("tr").length > 0) {
+					$element.closest('.table').find('.show_link').fadeIn();
+				}
+				//Clear all past values
+				$('table:last').find('#new_qty').val('');
+				$('table:last').find('input[name="serialize"]').prop('checked', false);
+				$('table:last').find('#serial input').prop('disabled', false);
+				$('table:last').find('#new_location').prop('disabled', false);
+				$('table:last').find('.condition_field').prop('disabled', false);
+				$('table:last').find('.select2').remove();
+				$(".item_search").initSelect2("/json/part-search.php");
+			}
+			
+			
+			// alert(new_record);
+			// $.ajax({
+			// 	type: "POST",
+			// 	url: '/json/order-creation.php',
+			// 	data: {
+			// 		 'chum' : new_record,
+			// 		},
+			// 	dataType: 'json',
+			// 	success: function(lines) {
+			// 		alert(lines);
+			// 	}
+			// 	});
+		});
 //=========================== End Inventory Addition ===========================
 		
 	});
