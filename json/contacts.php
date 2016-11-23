@@ -1,16 +1,32 @@
 <?php
-	include '../inc/dbconnect.php';
-	include '../inc/format_date.php';
-	include '../inc/keywords.php';
+	include_once '../inc/dbconnect.php';
+	include_once '../inc/format_date.php';
+	include_once '../inc/keywords.php';
+	include_once '../inc/getContact.php';
+	include_once '../inc/getContacts.php';
+	include_once '../inc/form_handle.php';
+
+
 
 	$q = '';
+	   
+	
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-    $companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
+    $q = grab('q');
+
+    
+    //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
+    $companyid = prep(grab('limit'));
     $output = array();
     
-    $query = "SELECT * FROM `contacts` WHERE `companyid` = '".res($companyid)."'";
+    $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' AND `companyid` = $companyid;";
     $primary = qdb($query);
-
+    
+    // $output[] = array(
+    //     'id' => 'co',
+    //     'text' => $companyid
+    //     );
+    
     if (isset($primary)){
         foreach($primary as $id => $row){
             $line = array(
@@ -27,7 +43,9 @@
         );
     
     //Then append the rest of the contacts ordered by alphabetical
-    $secondary = "SELECT DISTINCT * FROM `contacts` WHERE `companyid` != $companyid AND `name` LIKE '%$q%' ORDER BY `name`;";
+    $secondary = " SELECT DISTINCT * FROM `contacts`
+    WHERE `companyid` != $companyid AND `name` LIKE '%$q%' 
+    ORDER BY `name`;";
     $second = qdb($secondary);
 
     if (isset($second)){

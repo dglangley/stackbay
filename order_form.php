@@ -24,11 +24,13 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/modal/address.php';
+	include_once $rootdir.'/modal/accounts.php';
 	include_once $rootdir.'/inc/getAddresses.php';
-
+	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/dropPop.php';
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps' == 'Purchase']) ? "Purchase" : "Sales";
+	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 
 ?>
 
@@ -50,7 +52,7 @@
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
-		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?>
+		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
 		;">
 			<div class="col-md-4"></div>
 			<div class="col-md-4 text-center">
@@ -105,7 +107,7 @@
 			            <th style = "min-width:30px;">
 			            	<span class="line"></span>
 			        	</th>
-			            <th class="col-md-7" style="max-width:600px;">
+			            <th class="col-md-6" style="max-width:600px;">
 			            	<span class="line"></span>		
 			            	Item	
 			            </th>
@@ -162,7 +164,7 @@
 					            </span>
 				            </div>
 					    </td>
-						<td><input class="form-control input-sm" type="text" name="ni_war" placeholder="Warranty" style="display:none;"></td>
+						<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false)?></div></td>
 			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
 			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
 			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>

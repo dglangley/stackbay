@@ -1,23 +1,60 @@
 <?php
-	include '../inc/dbconnect.php';
-	include '../inc/format_date.php';
-	include '../inc/keywords.php';
 
-	$q = '';
-	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-    $companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
+	include_once '../inc/dbconnect.php';
+	include_once '../inc/format_date.php';
+	include_once '../inc/keywords.php';
+	include_once '../inc/getContact.php';
+	include_once '../inc/getContacts.php';
+	include_once '../inc/form_handle.php';
+
+    $q = grab('q');
+
+    
+    //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
+    $companyid = prep(grab('limit'),"'%'"); 
     $output = array();
     
-    $query = "SELECT * FROM `freight_accounts` WHERE `companyid` = $companyid";
+    $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '%$q%' AND `companyid` LIKE $companyid;";
     $results = qdb($query);
-        
-    foreach($results as $id => $row){
-        $line = array(
-            'id' => $id, 
-            'text' => $row['account_no']
-        );
-        $output[] = $line;
+    
+    if (isset($results)){
+        foreach($results as $row){
+            $line = array(
+                'id' => $row['id'], 
+                'text' => $row['account_no']
+            );
+            $output[] = $line;
+        }
     }
+
+    
+    $output[] = array(
+    'id' => 'NULL', 
+    'text' => "--------------------------------"
+    );
+    
+    //Then append the rest of the contacts ordered by alphabetical
+    $secondary = " SELECT DISTINCT * FROM `freight_accounts`
+    WHERE `companyid` != $companyid AND `account_no` LIKE '%$q%' 
+    ORDER BY `account_no`;";
+    $second = qdb($secondary);
+
+    if (isset($second)){
+        foreach($second as $id => $row){
+            $line = array(
+                'id' => $row['id'], 
+                'text' => $row['name']
+            );
+            $output[] = $line;
+        }
+    }
+    
+
+    $output[] = array(
+        'id' => "Add: $q",
+        'text' => "Add New: $q"
+    );
+    
 //	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 /*    
     $items = array();

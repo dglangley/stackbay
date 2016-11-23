@@ -17,8 +17,7 @@ body{
 	height: 100%;
 }
 
-.select2-container{
-	height: inherit;
+.select2{
 	width:100% !important;
 	overflow:hidden;
 }
@@ -220,31 +219,38 @@ body{
 			    top: -5px;
 			}
 			
-			@media only screen and (max-width: 767px) {
-				.company_meta:after, .company_meta:before {
-					top: 100%;
-					left: 50%;
-					border: solid transparent;
-					content: " ";
-					height: 0;
-					width: 0;
-					position: absolute;
-					pointer-events: none;
-				}
-				
-				.company_meta:after {
-					border-color: rgba(239, 239, 239, 0);
-					border-top-color: #efefef;
-					border-width: 30px;
-					margin-left: -30px;
-				}
-				.company_meta:before {
-					border-color: rgba(0, 0, 0, 0);
-					/*border-top-color: #;*/
-					border-width: 36px;
-					margin-left: -36px;
-				}
-			}
+		.shoot_me {
+                display: none;
+            }
+            
+            @media only screen and (max-width: 767px) {
+                .company_meta:after, .company_meta:before {
+                    top: 100%;
+                    left: 50%;
+                    border: solid transparent;
+                    content: " ";
+                    height: 0;
+                    width: 0;
+                    position: absolute;
+                    pointer-events: none;
+                }
+                
+                .company_meta:after {
+                    border-color: rgba(239, 239, 239, 0);
+                    border-top-color: #efefef ;
+                    border-width: 30px;
+                    margin-left: -30px;
+                }
+                .company_meta:before {
+                    border-color: rgba(0, 0, 0, 0);
+                    /*border-top-color: #;*/
+                    border-width: 36px;
+                    margin-left: -36px;
+                }
+                .shoot_me {
+                    display: block;
+                }
+            }
 /*End shipping.php*/
 
 

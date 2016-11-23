@@ -5,7 +5,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
         <h4 class="modal-title" id="modalAlertTitle">Add New Address</h4>
 	  </div>
-      <div class="modal-body" id="address-modal-body">
+      <div class="modal-body" id="address-modal-body" data-origin = "ship_to">
           <div class="row-fluid">
             <div class="row-fluid">
               <div class="col-md-12">

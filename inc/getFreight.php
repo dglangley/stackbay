@@ -7,15 +7,10 @@
 	
 	    include_once $rootdir.'/inc/dbconnect.php';	
 	    
-		function getFreight($type = 'max',$value = '0'){
+		function getFreight($type = 'max',$value = "",$id = ""){
             
-    //         if ($type == 'max'){
-    // 		    $select = "
-    // 		    SELECT companyid, fc.id, fs.method, fs.notes, fa.account_no 
-    // 		    FROM freight_carriers fc, companies, freight_services fs, freight_accounts fa  
-    // 		    WHERE fc.companyid = companies.id AND fs.carrierid = fc.id AND fa.freight_co_id = fc.id;";
-    // 		}
-    // 		else 
+            $value = prep($value,"'%'");
+            $id = prep($id,"'%'");
     		if($type == 'max'){
     		    $select = "
     		    SELECT freight_carriers.companyid, companies.name, freight_accounts.account_no,
@@ -25,16 +20,18 @@
                 LEFT JOIN (companies) ON (companies.id = freight_carriers.companyid)
                 LEFT JOIN (freight_accounts) ON (freight_accounts.freight_co_id = freight_carriers.id)";
     		}
-            else if('carrier'){
-                $select = "SELECT freight_carriers.id, name FROM freight_carriers, companies where companies.id = companyid;";
+            else if($type == 'carrier'){
+                $select = "SELECT freight_carriers.id id, name FROM freight_carriers, companies where companies.id = companyid AND freight_carriers.id LIKE '%';";
             }
-            else if('services'){
-                $select = "SELECT * FROM freight_services WHERE carrierid = $value;";
+            else if($type == 'services'){
+                $select = "SELECT * FROM freight_services WHERE `id` LIKE $id AND `carrierid` LIKE $value;";
             }
-            else if('account'){
-                $select = "SELECT * FROM freight_accounts WHERE freight_co_id = $value;";
+            else if($type == 'account'){
+                $select = "SELECT * FROM freight_accounts WHERE `freight_co_id` LIKE $value;";
             }
             $results = qdb($select);
+            
+            
             return $results;
 	}
 ?>

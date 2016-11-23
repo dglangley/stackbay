@@ -171,20 +171,12 @@
 			$("#left-side-main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
-				var company = "0";
 				
 				$(document).on("change","#ship_to",function() {
 					//$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
 					// $(this).parent().find("#ship_to").find("option").text();
 				});
 				
-				$(document).on("change","#companyid",function() {
-					company = $(this).val();
-					$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
-					$("#bill_to").select2("/json/address-picker.php");
-					$("#ship_to").initSelect2("/json/address-picker.php");
-					$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
-				});
 				//Left Side Main output on load of the page
 				$.ajax({
 					type: "POST",
@@ -197,20 +189,65 @@
 					dataType: 'json',
 					success: function(right) {
 						$("#left-side-main").append(right);
+						var company = $("#companyid").val();
 						$("#companyid").initSelect2("/json/companies.php");
-						$("#account_select").initSelect2("/json/freight-account-search.php",company);
+						$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 						$("#bill_to").initSelect2("/json/address-picker.php");
 						$("#ship_to").initSelect2("/json/address-picker.php");
-						$("#contactid").initSelect2("/json/contacts.php");
-						toggleSidebar();
+						if($("#bill_to").val() == $("#ship_to").val()){
+							$("#mismo").prop("checked",true);
+						}
+						$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
 					}
 				});
+				toggleSidebar();
 				$(document).on("change load","#freight-carrier",function() {
 					var carrier = ($("#freight-carrier :selected").attr('data-carrier-id'));
 					$("#freight-services").val("Freight Services");
 					$("#freight-services").children("option[data-carrier-id!='"+carrier+"']").hide();
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 	
+				});
+			});
+			$(document).on("change","#companyid",function() {
+				var company = $(this).val();
+				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
+				$("#bill_to").initSelect2("/json/address-picker.php",'',company);
+				$("#ship_to").initSelect2("/json/address-picker.php",'',company);
+				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
+				$.ajax({
+					type: "POST",
+					url: '/json/order-table-out.php',
+					data: {
+						"ajax":true,
+						"field":"terms",
+						"limit":company,
+						"size": "col-sm-6",
+						"label": "Terms:"
+						}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						$('#terms_div').replaceWith(result);
+					}
+				});
+			});
+			
+			$(document).on("change","#carrier",function() {
+				var limit = $(this).val();
+				$.ajax({
+					type: "POST",
+					url: '/json/order-table-out.php',
+					data: {
+						"ajax":true,
+						"field":"services",
+						"limit":limit,
+						"size": "col-sm-6",
+						"label": "Service:"
+						}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						$('#services_div').replaceWith(result);
+					}
 				});
 			});
 			
@@ -297,7 +334,7 @@
 	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
 			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(this).closest("tr").find("input[name=ni_war]").val();
+	   		    var warranty = $(this).closest("tr").find(".warranty").val();
 	   		    var editRow = ((parseInt($(this).closest("tr").index())));
 	   		    
 				$.ajax({
@@ -331,7 +368,7 @@
 	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
 			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(this).closest("tr").find("input[name=ni_war]").val();
+	   		    var warranty = $(this).closest("tr").find(".warranty").val();
 				
 	
 				$.ajax({
@@ -358,10 +395,12 @@
 				$(this).closest("tr").children("td").slice(1).children()
 				.val("")
 				.toggle();
-				$(this).closest("tr").find("select").html("\
+				$(this).closest("tr").find(".item_search").html("\
 								<select class='item_search'>\
 								</select>\
 				")
+				$(this).closest("tr").find(".select2-selection__rendered").html('');
+				
 			});
 			
 			//Delete Button
@@ -384,38 +423,113 @@
 			});
 			
 			
+			function updateBillTo(){
+				if ( $("#mismo").prop( "checked" )){
+					var display = $("#select2-ship_to-container").html()
+					var value = $("#ship_to").val();
+		    		$("#select2-bill_to-container").html(display)
+		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
+				}
+			}
 			$(document).on("change","#ship_to, #bill_to",function() {
+				//Get the identifier of the initial textbox
+				var origin = ($(this).parent().find('select').attr('id'));
+				var right = $(this).text();
+				
+				
 				if($(this).val().indexOf("Add") > -1){
+					//Gather the address from the select2 field
+					var addy = ($(this).val().slice(4));
+					if (isNaN(addy.slice(0,1))){
+						//If the first number is the address, assume the user is searching by an address name
+						$("#address-modal-body").find("input[name='na_name']").val(addy);
+					}
+					else{
+						//Otherwise, if it is a number, assume they were searching by the address itself
+						$("#address-modal-body").find("input[name='na_line_1']").val(addy);
+					}
+					$("#address-modal-body").attr('data-origin',origin);
 					$("#modal-address").modal('show');
 				}
+				else{
+					if (origin == "ship_to"){
+						$("#ship_display").replaceWith(right);	
+						updateBillTo();
+					}
+					else{
+						$("#bill_display").hr("<div id='bill_display'>"+right+"</div>");	
+						$("#mismo").prop("checked",false);
+					}
+				}
 			});
-			
+		
 			$(document).on("click", "#address-continue", function() {
 			    var address = [];
+			    var text = '';
+			    var field = '';
+			    field = $("#address-modal-body").attr("data-origin");
+			    
 			    $("#address-modal-body").find('input').each(function(){
-			    	if($(this).val()){ 
+			    	if($(this).val()){
 			    		address.push($(this).val());
+			    		text = text+($(this).val())+"<br>";
+			    		$(this).val('');
 			    	}
 			    	else{
 			    		address.push('');
 			    	}
 			    });
-			    $.post("/json/addressSubmit.php", {'test[]' : address});
+			    $.post("/json/addressSubmit.php", {'test[]' : address},function(data){
+			    	if (field == "ship_to"){
+			    		$("#select2-ship_to-container").html(text);
+			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
+			    		updateBillTo();
+			    		$("#ship_display").html();	
+			    	}
+			    	else{
+			    		$("#select2-bill_to-container").html(text);
+			    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
+						$("#bill_display").replaceWith(("<div id='bill_display'>"+$(this).text())+"</div>");	
+						$("#mismo").prop("checked",false);
+			    	}
+			    });
+			});
+			
+			$(document).on("change","#account_select",function() {
+				if($(this).val().indexOf("Add") > -1){
+					
+					//Gather the address from the select2 field
+					var acct = ($(this).val().slice(4));
+					
+					//If the first number is the address, assume the user is searching by an address name
+					$("#account-modal-body").find("input[name='na_account']").val(acct);
+					$("#modal-account").modal('show');
+				}
+			});
+			$(document).on("click", "#account-continue", function() {
+			    var company = '';
+			    var text = '';
+			    var field = '';
+
+			    var carrier = $("#account-modal-body").find('#modal_carrier').val();
+			    var account = $("#account-modal-body").find("input[name='na_account']").val();
+			    var comp_check = $("#account-modal-body").find('input[name="associate"]').prop("checked");
+				if (comp_check){
+					company = $("#companyid").val();
+				}
+			    var data = [account, carrier, company];
+			    alert (data);
+			    $.post("/json/accountSubmit.php", {'test[]' : data},function(data){
+					$("#select2-account_select-container").html(account);
+					$("#account_select").append("<option selected value='"+data+"'>"+account+"</option>");	
+			    	$("#account-modal-body").find('#modal_carrier').val('');
+			    	$("#account-modal-body").find("input[name='na_account']").val('');
+			    	$("#account-modal-body").find('input[name="associate"]').prop("checked",false);
+			    });
 			});
 			
 			$(document).on("click","#mismo",function() {
-				if ( $(this).prop( "checked" )){
-					
-					var ship = $('#ship_to').text();
-
-						$("#bill_to").initSelect2("/json/address-picker.php").val({id:111,text:"Blargh"});
-					// $('#bill_to').select2('<option selected>laaaaaame</option>');
-					// $('#bill_to').select2('enable');
-
-				}
-				else{
-					$('#bill_to').select2('enable');
-				}
+				updateBillTo();
 			});
 			
 			//-------------------------- Page Save Button --------------------------
@@ -428,16 +542,22 @@
 				var userid = $("#sales-rep option:selected").attr("data-rep-id");
 				var company = $("#companyid").val();
 				var contact = $("#contactid").val();
+				if (contact == "new"){
+					contact = $("#select2-contactid-container").text();
+					contact = contact.slice(9);
+				}
+				var terms = $("#terms").val();
 				var ship_to = $('#ship_to').last('option').val();
 				var bill_to = $('#bill_to').last('option').val();
 				var carrier = $('#carrier').val();
 				var freight = $('#terms').val();
+				var service = $('#services').val();
 				var account = $('#account_select').val();
 				var pri_notes = $('#private_notes').val();
 				var pub_notes = $('#public_notes').val();
-				
-				alert(contact);
-				
+				var warranty = $('.warranty').val();
+
+
 				//-------------------------- Right hand side --------------------------
 				//Get Line items from the right half of the page
 				var i = 0;
@@ -446,31 +566,19 @@
 				
 				//This loop runs through the right-hand side and parses out the general values from the page
 				$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
-
-					var cols = 7;
-					//For each element in a row
-					$(this).children("td").each(function(){
-						if (i != 1 && i < cols){
-							//If it is one of the first sevem collumns, and not the "item" field, grab the text
-							row.push($(this).text());
-						}
-						else if (i==1){
-							//If it is the item field, grab the attribute, not the text.
-							row.push($(this).attr("data-search"));
-							row.push($(this).attr("data-record"));
-						}
-						else{
-							//Move on to the next row once you get to the end, and clear out the row buffer.
-							submit.push(row);
-							alert(row);
-							row = [];
-						}
-						i++;
-						i %= (cols + 2);
-					});
+					var row = {
+						"line_number" : $(this).find(".line_line").attr("data-line-number"),
+						"part" : $(this).find(".line_part").attr("data-search"),
+						"id" : $(this).find(".line_part").attr("data-record"),
+						"date" : $(this).find(".line_date").attr("data-date"),
+						"warranty" : $(this).find(".line_war").attr("data-war"),
+						"qty" : $(this).find(".line_qty").attr("data-qty"),
+						"price" : $(this).find(".line_price").text(),
+					}
+					submit.push(row);
 				});
 
-				//Submit All of it and simplify the shit out of your life.
+				//Submit all rows and meta data for unpacking later
 				$.ajax({
 					type: "POST",
 					url: '/json/order-form-submit.php',
@@ -485,21 +593,25 @@
 						"carrier": carrier,
 						"freight": freight,
 						"account": account,
+						"terms" : terms,
+						"service" : service,
 						"pri_notes": pri_notes,
 						"pub_notes": pub_notes,
+						"warranty": warranty,
 						"table_rows":submit,
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(form) {
 						var on = form["order"];
 						var ps = form["type"];
-						//alert(form['stupid']);
+						alert(form["error"]);
 						window.location = "/order_form.php?ps="+ps+"&on="+on;
 					},
 					error: function(xhr, status, error) {
 					   	alert(error);
 					},
 				});
+
 			});
 			//Cancel button?
 			

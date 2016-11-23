@@ -48,13 +48,32 @@
     $account = grab('account');
     $private = (trim($_REQUEST['pri_notes']));
     $public = (trim($_REQUEST['pub_notes']));
+    $terms = grab('terms');
     $rep = grab("sales-rep");
 
-    $andrew = "wrong";
+    //Process the contact, see if a new one was added
+    if (!is_numeric($contact) && !is_null($contact) && ($contact)){
+        $title = '';
+        if (strpos($contact,'.')){
+            list($title, $contact) = explode('.',$contact,2);
+        }
+        $contact = prep($contact);
+        $title = prep($title);
+
+        if ($contact != "NULL" && strtolower($contact) != "'null'"){
+            $new_con = "INSERT INTO `contacts`(`name`,`title`,`notes`,`status`,`companyid`,`id`) 
+            VALUES ($contact,$title,NULL,'Active',$companyid,NULL)";
+            
+            qdb($new_con);
+            $contact = qid();
+        }
+    }
+    
 
     if ($order_number == "New"){
         //If this is a new entry, save the value, insert the row, and return the
         //new-fangled ID from the mega-sketch qid function
+        $cid = prep($companyid);
         $rep = prep($rep);
         $ship = prep($ship);
         $bill = prep($bill); 
@@ -62,13 +81,18 @@
         $service = prep($service);
         $account = prep($account);
         $contact = prep($contact);
+        $terms = prep($terms);
+        $public = prep($public);
+        $private = prep($private);
+        
         
         $insert = "INSERT INTO ";
         $insert .= ($order_type=="Purchase") ? "`purchase_orders`" : "`sales_orders`";
         $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-        ($rep, $companyid, $rep, $contact, $bill, $ship, $carrier, $service, $account, NULL, $public, $private, 'Active');";
-    
-        //Run the update
+        ($rep, $cid, $rep, $contact, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+        
+
+    //Run the update
         qdb($insert);
         
         //Create a new update number
@@ -83,6 +107,8 @@
         $macro .= updateNull('companyid',$companyid);
         $macro .= updateNull('sales_rep_id',$rep);
         $macro .= updateNull('contactid',$contact);
+        $macro .= updateNull('termsid',$terms);
+        $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
         $macro .= updateNull('public_notes',$public);
@@ -105,25 +131,25 @@
     if(isset($form_rows)){
         foreach ($form_rows as $r){
             $stupid++;
-            $line_number = prep($r[0]);
-            $item_id = prep($r[1]);
-            $record = $r[2];
-            $date = prep(format_date($r[3],'y-m-d'));
-            $warranty = prep($r[4]);
-            $qty = prep($r[5]);
-            $unitPrice = prep(format_price($r[6],true,'',true));
+            $line_number = prep($r['line_number']);
+            $item_id = prep($r['part']);
+            $record = $r['id'];
+            $date = prep(format_date($r['date'],'y-m-d'));
+            $warranty = prep($r['warranty']);
+            $qty = prep($r['qty']);
+            $unitPrice = prep(format_price($r['price'],true,'',true));
             
             if ($record == 'new'){
                 
                 //Build the insert statements
-                $insert = "INSERT INTO ";
-                $insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
-                $insert .=  " (`partid`, ";
-                $insert .=  ($order_type=="Purchase") ? "`po_number`, " : "`so_number`, ";
-                $insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`,`warranty`, `id`) VALUES ";
-                $insert .=   "($item_id, $order_number , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty ,NULL);";
+                $line_insert = "INSERT INTO ";
+                $line_insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
+                $line_insert .=  " (`partid`, ";
+                $line_insert .=  ($order_type=="Purchase") ? "`po_number`, " : "`so_number`, ";
+                $line_insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty` , `id`) VALUES ";
+                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty ,NULL);";
                 
-                qdb($insert);
+                //qdb($line_insert);
             }
             else{
                 $update = "UPDATE ";
@@ -148,7 +174,8 @@
     $form = array(
         'type' => $order_type,
         'order' => $order_number,
-        'insert' => qe().' '.$insert,
+        'insert' => $line_insert,
+        'error' => qe(),
         'stupid' => $stupid
     );
     
