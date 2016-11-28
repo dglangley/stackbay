@@ -18,16 +18,9 @@ body{
 	overflow: auto;
 }
 
-<<<<<<< HEAD
 .select2{
 	width:100% !important;
 	overflow:hidden;
-=======
-.select2-container{
-	/*height: inherit;*/
-	/*width:100% !important;*/
-	/*overflow:hidden;*/
->>>>>>> a41744666145beda5da7db0cee42efd04a99186c
 }
 
 .company_meta{
