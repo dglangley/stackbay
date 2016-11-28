@@ -55,7 +55,8 @@
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
 		;">
 			<div class="col-md-4">
-				<?= ($order_type == "Sales")? '<a href="/shipping.php?order_no= ' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>' : '';?>
+				<?= ($order_type == "Sales")? '<a href="/shipping.php?order_no= ' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>' : 
+				'<a href="/inventory_add.php?order_no= ' . $order_number . '" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';?>
 				
 			</div>
 			<div class="col-md-4 text-center">

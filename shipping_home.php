@@ -23,8 +23,12 @@
 		echo"
 			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
 			<div class='shipping-dash'>
+
 				<div class='shipping_section_head' data-title='Sales Orders'>";
 		echo $status_out.$order_out.' Orders';
+		echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
+		<i class='fa fa-plus'></i> 
+		</div></a>";
 		echo	'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed">';

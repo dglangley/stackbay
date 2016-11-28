@@ -69,7 +69,6 @@
 				</button>
 			</div>
 		</div>
-
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 			<div class="row-fluid cmbar">
 				<div class="col-sm-2  company_meta left-sidebar">
@@ -253,7 +252,7 @@
 						
 				</div>
 			</div>
-		</div>
+		</div> 
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>

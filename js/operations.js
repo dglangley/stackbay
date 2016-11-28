@@ -616,7 +616,7 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(form) {
-						var on = form["order"].trim();
+						var on = form["order"];
 						var ps = form["type"];
 						// alert(form["error"]);
 						window.location = "/order_form.php?ps="+ps+"&on="+on;
