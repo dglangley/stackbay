@@ -72,24 +72,23 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Account information
-		$account = '';
-		$freight = array();
-		$freight = getFreight('max');
-		if ($freight){
-			foreach ($freight as $f){
-				if(isset($f['method'])){
-					$account .= "<option data-carrier-id=".$f['freight_co_id'].$f['id'].">".$f['account_no']."</option>";
+		$account = array();
+		$account = getFreight('account','',$slected_account);
+		if ($account){
+			foreach ($account as $a){
+				if ($selected_account == $a['id']){
+					$acct_display .= "<option selected data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
 				}
 			}
 		}
 		
-		// foreach($freight as $f){
+		// foreach($account as $f){
 		// 	$f[''];
 		// }
 		
 		//THis will be split into distinct elements at some point in the next few weeks.
 		$right = "
-			<div class='col-sm-2  company_meta left-sidebar'>
+			<div class='col-md-3 col-lg-2  company_meta left-sidebar'>
 			<div class='sidebar-container' style='padding-top: 20px'>
 				
 				<div class='row'>
@@ -134,16 +133,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	                    </select>
 				    </div>
 			    </div>
-				<div class='row'>
-					<div class='col-sm-6'>
-						Ship to:
-						<div id='ship_display'>11953 Walnut St.<br>Bloomington, CA 92316</div>
-					</div>
-					<div class='col-sm-6'>
-						Bill to:
-						<div id='bill_display'>11953 Walnut St.<br>Bloomington, CA 92316</div>
-					</div>
-				</div>
+
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='bill_to'>Bill to:
@@ -158,22 +148,22 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			    
 			    <div class='row' style='padding-bottom: 10px;'>
 					".dropdown('terms',$terms,$companyid)."
-			    	".dropdown('warranty','','','col-sm-6')."
-			    </div>
-			    <div class='row' style='padding-bottom: 10px;'>
-				    ".dropdown('carrier',$selected_carrier)."
-			    	".dropdown('services',$services)."
+			    	".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 			    </div>
 			    <div class='row'>
 					<div class='col-sm-12'>
 						<div class = 'account forms_section'>
 							<label for='account'>Account:</label>
 							<select id='account_select'>
-								$account
+								$acct_display
 							</select>
 						</div>
 					</div>
 				</div>
+			    <div class='row' style='padding-bottom: 10px;'>
+				    ".dropdown('carrier',$selected_carrier)."
+			    	".dropdown('services',$services,$selected_carrier)."
+			    </div>
 				<div class = 'row'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes:</label>

@@ -55,7 +55,7 @@
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
 		;">
 			<div class="col-md-4">
-				<?= ($order_type == "Sales")? '<a href="/shipping.php?order_no= ' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i> Shipping Info</a>' : '';?>
+				<?= ($order_type == "Sales")? '<a href="/shipping.php?order_no= ' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>' : '';?>
 				
 			</div>
 			<div class="col-md-4 text-center">
@@ -89,7 +89,7 @@
 	
 
 		<!--===================== Begin Right half =====================-->
-		<div class="col-md-10">
+		<div class="col-md-9 col-lg-10">
 			
 			<!-- Output the sales-rep dropdown in the top right corner -->
 			<div class="forms_section">
@@ -167,7 +167,7 @@
 					            </span>
 				            </div>
 					    </td>
-						<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false)?></div></td>
+						<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false,"new_row_warranty")?></div></td>
 			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
 			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
 			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
@@ -176,7 +176,6 @@
 								<i class="fa fa-check fa-4" aria-hidden="true"></i>
 							</a>
 						</td>
-		
 			         </tr>
 				</tfoot> 
 	

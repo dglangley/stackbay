@@ -22,7 +22,10 @@
     function dropdown($field, $selected = '', $limit = '',$size ='col-sm-6',$label=true,$custom_id=false){
 
         if (strtolower($field) == 'carrier'){
+        //Carrier outputs the carrier information based off of no selector parameters
             $carrier = getFreight('carrier');
+    		
+    		//if there is any value returned from the carrier function
     		if ($carrier){
     			foreach ($carrier as $c){
     				if($c['id'] == $selected){
@@ -33,15 +36,20 @@
     				}
     			}
     	   	}
-        $id = ($custom_id) ? $custom_id : "carrier";
-        $output = "<div class='$size'>	            	
-    			    <label for='$id'>Carrier:</label>
-    			    <select id = '$id' class='form-control'>
-    				    $carrier_options
-    			    </select>
-    	        </div>";
+            
+            //Check to see if there is a particular id set, if not default to carrier
+            $id = ($custom_id) ? $custom_id : "carrier";
+            
+            //Output the final dropdown menu
+            $output = "<div class='$size'>	            	
+        			    <label for='$id'>Carrier:</label>
+        			    <select id = '$id' class='form-control'>
+        				    $carrier_options
+        			    </select>
+        	        </div>";
         }
         else if (strtolower($field) == 'services'){
+        //Services outputs service values based off a passed in carrier limit.
             $service = getFreight('services',$limit);
     		if ($service){
     			foreach ($service as $s){
@@ -77,6 +85,9 @@
         $output = "<div class='$size'>";          	
         $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
         $output .= "<select id = '$id' class='form-control warranty'>";
+    	if($id == 'warranty_global'){
+    	    $output .= "<option selected value='no'>No Global</option>";
+    	}
     	$output .= "	    $warranty_options
     			    </select>
     	        </div>";
@@ -154,7 +165,9 @@
         $limit = grab('limit');
         $size = grab('size');
         $label = grab('label');
-        echo json_encode(dropdown($field, $selected, $limit, $size, $label));
+        $id = grab('id');
+        
+        echo json_encode(dropdown($field, $selected, $limit, $size, $label,$id));
     }
     
 ?>
