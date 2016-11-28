@@ -64,7 +64,7 @@
 				<h1>Inventory Addition</h1>
 			</div>
 			<div class="col-sm-4">
-				<button class="btn-flat pull-right" id = "save_button" style="margin-top:2%;margin-bottom:2%;">
+				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
 					Complete
 				</button>
 			</div>

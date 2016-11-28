@@ -833,8 +833,10 @@
 			var qty = $(this).closest('.table').find("#new_qty").val();
 			var location = $(this).closest('.table').find("#new_location option:selected").text();
 			var info;
+			var item = $(this).closest('.table').find("#search_collumn").find(".item_search").val();
 			
 			var $element = $(this).closest('.table').find('#serial_each_table');
+			
 			if($(this).hasClass('serialize_data')) {
 				$element.children('.added_serial').remove();
 			} else if($(this).hasClass('add_data')) {
@@ -851,7 +853,7 @@
 				for(var i = 1; i <= qty; i++) {
 					$(this).closest('.table').find('#serial input').prop('disabled', true);
 					info = '<tr class="added_serial"><td><strong>' + i;
-					info += '.</strong> Enter Serial for Part #' + $("#search_collumn").find(".item_search").val();
+					info += '.</strong> Enter Serial for Part #' + item;
 					info += '</td><td><input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial"></td><td></td>';
 					info += '<td><select class="location_clone form-control"></select></td><td class="add_status"></td><td class="add_condition">';
 					info += '</td></tr>';
@@ -880,6 +882,7 @@
 				}
 				//Clear all past values
 				$('table:last').find('#new_qty').val('');
+				$('table:last').find('input[name="NewSerial"]').val('');
 				$('table:last').find('input[name="serialize"]').prop('checked', false);
 				$('table:last').find('#serial input').prop('disabled', false);
 				$('table:last').find('#new_location').prop('disabled', false);
@@ -887,20 +890,60 @@
 				$('table:last').find('.select2').remove();
 				$(".item_search").initSelect2("/json/part-search.php");
 			}
+		});
+		
+		$(document).on('click',"#save_button_inventory",function() {
 			
+			//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array']
+			var items = [];
+
+			$('table .addRecord').each( function() {
+				var productid = $(this).closest('.table').find("#search_collumn").find(".item_search").val();
+				//Push the part ID first
+				items.push(productid);
+				
+				//If the item is serialized then push an array of all the serials
+				if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
+					var serialList = [];
+					var locationList = [];
+					var statusList = [];
+					var conditionList = [];
+					$(this).closest('.table').find('#serial_each_table').find('tr').each( function() {
+						serialList.push($(this).find('input[name="NewSerial"]').val());
+						locationList.push($(this).find('.location_clone').val());
+						statusList.push($(this).find('.status').val());
+						conditionList.push($(this).find('.condition_field ').val());
+					});
+					//alert('Serialized: ' + productid);
+					items.push(serialList);
+					items.push('1');
+					items.push(locationList);
+					items.push(statusList);
+					items.push(conditionList);
+				} else {
+					items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
+					items.push($(this).closest('.table').find('.addRecord').find('#new_qty').val());
+					items.push($(this).closest('.table').find('.addRecord').find('#new_location').val());
+					items.push($(this).closest('.table').find('.addRecord').find('.status').val());
+					items.push($(this).closest('.table').find('.addRecord').find('.condition_field ').val());
+					//else push a just the single serial
+					//items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
+				}
+			});
 			
 			// alert(new_record);
-			// $.ajax({
-			// 	type: "POST",
-			// 	url: '/json/order-creation.php',
-			// 	data: {
-			// 		 'chum' : new_record,
-			// 		},
-			// 	dataType: 'json',
-			// 	success: function(lines) {
-			// 		alert(lines);
-			// 	}
-			// 	});
+			$.ajax({
+				type: "POST",
+				url: '/json/inventory-add.php',
+				data: {
+					 'productid' : items
+					 ,
+				},
+				dataType: 'json',
+				success: function(lines) {
+					console.log(lines);
+				}
+			});
 		});
 //=========================== End Inventory Addition ===========================
 		
