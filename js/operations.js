@@ -910,7 +910,7 @@
 					var conditionList = [];
 					$(this).closest('.table').find('#serial_each_table').find('tr').each( function() {
 						serialList.push($(this).find('input[name="NewSerial"]').val());
-						locationList.push($(this).find('.location_clone').val());
+						locationList.push($(this).find('.location_clone').val().replace("W: ",""));
 						statusList.push($(this).find('.status').val());
 						conditionList.push($(this).find('.condition_field ').val());
 					});
@@ -923,21 +923,20 @@
 				} else {
 					items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
 					items.push($(this).closest('.table').find('.addRecord').find('#new_qty').val());
-					items.push($(this).closest('.table').find('.addRecord').find('#new_location').val());
+					items.push($(this).closest('.table').find('.addRecord').find('#new_location').val().replace("W: ",""));
 					items.push($(this).closest('.table').find('.addRecord').find('.status').val());
 					items.push($(this).closest('.table').find('.addRecord').find('.condition_field ').val());
 					//else push a just the single serial
 					//items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
 				}
 			});
-			
+			console.log(items);
 			// alert(new_record);
 			$.ajax({
 				type: "POST",
 				url: '/json/inventory-add.php',
 				data: {
 					 'productid' : items
-					 ,
 				},
 				dataType: 'json',
 				success: function(lines) {

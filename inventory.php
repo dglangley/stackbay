@@ -15,9 +15,9 @@
 	
 	($page == '' ? $page = 1: '');
 	
-	$offset = ($page - 1) * 2;
+	$offset = ($page - 1) * 5;
 	
-	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 2;";
+	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 5;";
 	$result = qdb($query);
 	
 	while ($row = $result->fetch_assoc()) {
@@ -34,7 +34,7 @@
 		while ($row = $result->fetch_assoc()) {
 			$rows++;
 		}
-		$pages = ceil($rows / 2);
+		$pages = ceil($rows / 5);
 		for($i = 1; $i <= $pages; $i++) {
 			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
 		}
@@ -57,15 +57,17 @@
 	function getSystemName($systemid = 0) {
 		$system;
 		
-		$query  = "SELECT * FROM systems where id = " . res($systemid) . ";";
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$system = $result['system'];
+		if($system != 0) {
+			$query  = "SELECT * FROM systems where id = " . res($systemid) . ";";
+			$result = qdb($query);
+			
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$system = $result['system'];
+			}
 		}
 		
-		return $system;
+		return $systemid;
 	}
 	
 	function getPartSerials($partid = 0) {
