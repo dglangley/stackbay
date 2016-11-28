@@ -44,7 +44,7 @@
     $ship = grab('ship_to');
     $bill = grab('bill_to');
     $carrier = grab('carrier');
-    $service = grab('freight');
+    $service = grab('service');
     $account = grab('account');
     $private = (trim($_REQUEST['pri_notes']));
     $public = (trim($_REQUEST['pub_notes']));
@@ -75,15 +75,15 @@
         //new-fangled ID from the mega-sketch qid function
         $cid = prep($companyid);
         $rep = prep($rep);
+        $contact = prep($contact);
+        $carrier = prep($carrier);
+        $terms = prep($terms);
         $ship = prep($ship);
         $bill = prep($bill); 
-        $carrier = prep($carrier);
-        $service = prep($service);
-        $account = prep($account);
-        $contact = prep($contact);
-        $terms = prep($terms);
         $public = prep($public);
         $private = prep($private);
+        $service = prep($service);
+        $account = prep($account);
         
         
         $insert = "INSERT INTO ";
@@ -111,6 +111,8 @@
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
+        $macro .= updateNull('freight_services_id',$service);
+        $macro .= updateNull('freight_account_id',$account);
         $macro .= updateNull('public_notes',$public);
         $macro .= rtrim(updateNull('private_notes',$private),',');
         $macro .= " WHERE ";
@@ -149,7 +151,7 @@
                 $line_insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty` , `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty ,NULL);";
                 
-                //qdb($line_insert);
+                qdb($line_insert);
             }
             else{
                 $update = "UPDATE ";

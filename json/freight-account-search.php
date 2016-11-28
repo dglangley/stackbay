@@ -11,7 +11,7 @@
 
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
-    $companyid = prep(grab('limit'),"'%'"); 
+    $companyid = prep(grab('limit')); 
     $output = array();
     
     $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '%$q%' AND `companyid` LIKE $companyid;";
@@ -35,7 +35,7 @@
     
     //Then append the rest of the contacts ordered by alphabetical
     $secondary = " SELECT DISTINCT * FROM `freight_accounts`
-    WHERE `companyid` != $companyid AND `account_no` LIKE '%$q%' 
+    WHERE (`companyid` <> $companyid OR `companyid` IS NULL) AND `account_no` LIKE '%$q%' 
     ORDER BY `account_no`;";
     $second = qdb($secondary);
 

@@ -13,12 +13,12 @@
             $id = prep($id,"'%'");
     		if($type == 'max'){
     		    $select = "
-    		    SELECT freight_carriers.companyid, companies.name, freight_accounts.account_no,
+    		    SELECT freight_accounts.id accountid, freight_accounts.account_no, freight_carriers.companyid car_co_id, companies.name carrier_co,
     		     freight_accounts.companyid, freight_services.method, freight_services.notes 
                 FROM freight_carriers
                 LEFT JOIN (freight_services) ON (freight_carriers.id = freight_services.carrierid)
                 LEFT JOIN (companies) ON (companies.id = freight_carriers.companyid)
-                LEFT JOIN (freight_accounts) ON (freight_accounts.freight_co_id = freight_carriers.id)";
+                LEFT JOIN (freight_accounts) ON (freight_accounts.freight_co_id = freight_carriers.id);";
     		}
             else if($type == 'carrier'){
                 $select = "SELECT freight_carriers.id id, name FROM freight_carriers, companies where companies.id = companyid AND freight_carriers.id LIKE '%';";
@@ -27,7 +27,7 @@
                 $select = "SELECT * FROM freight_services WHERE `id` LIKE $id AND `carrierid` LIKE $value;";
             }
             else if($type == 'account'){
-                $select = "SELECT * FROM freight_accounts WHERE `freight_co_id` LIKE $value;";
+                $select = "SELECT * FROM freight_accounts WHERE `id` LIKE $id;";
             }
             $results = qdb($select);
             

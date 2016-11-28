@@ -242,11 +242,12 @@
 						"field":"services",
 						"limit":limit,
 						"size": "col-sm-6",
-						"label": "Service:"
+						"label": "Service:",
+						"id" : "service"
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						$('#services_div').replaceWith(result);
+						$('#service_div').replaceWith(result);
 					}
 				});
 			});
@@ -305,7 +306,7 @@
 			});
 			
 			//Total Price output
-			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
+			$(document).on("keydown","input[name=ni_qty], input[name=ni_price]",function(){
 				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
 			    var price = ($(this).closest("tr").find("input[name=ni_price]").val());
 			    var ext = qty*price;
@@ -421,8 +422,8 @@
 					});
 				}
 			});
-			
-			
+
+//Address Suite of functions
 			function updateBillTo(){
 				if ( $("#mismo").prop( "checked" )){
 					var display = $("#select2-ship_to-container").html()
@@ -453,16 +454,15 @@
 				}
 				else{
 					if (origin == "ship_to"){
-						$("#ship_display").replaceWith(right);	
+						//$("#ship_display").replaceWith(right);	
 						updateBillTo();
 					}
 					else{
-						$("#bill_display").hr("<div id='bill_display'>"+right+"</div>");	
+						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
 						$("#mismo").prop("checked",false);
 					}
 				}
 			});
-		
 			$(document).on("click", "#address-continue", function() {
 			    var address = [];
 			    var text = '';
@@ -484,17 +484,21 @@
 			    		$("#select2-ship_to-container").html(text);
 			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
 			    		updateBillTo();
-			    		$("#ship_display").html();	
+			    		//$("#ship_display").html();	
 			    	}
 			    	else{
 			    		$("#select2-bill_to-container").html(text);
 			    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
-						$("#bill_display").replaceWith(("<div id='bill_display'>"+$(this).text())+"</div>");	
+						//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
 						$("#mismo").prop("checked",false);
 			    	}
 			    });
 			});
+			$(document).on("click","#mismo",function() {
+				updateBillTo();
+			});
 			
+//Account handling function
 			$(document).on("change","#account_select",function() {
 				if($(this).val().indexOf("Add") > -1){
 					
@@ -518,21 +522,32 @@
 					company = $("#companyid").val();
 				}
 			    var data = [account, carrier, company];
-			    alert (data);
+
 			    $.post("/json/accountSubmit.php", {'test[]' : data},function(data){
 					$("#select2-account_select-container").html(account);
+					$("#carrier").val(carrier);
 					$("#account_select").append("<option selected value='"+data+"'>"+account+"</option>");	
 			    	$("#account-modal-body").find('#modal_carrier').val('');
 			    	$("#account-modal-body").find("input[name='na_account']").val('');
 			    	$("#account-modal-body").find('input[name="associate"]').prop("checked",false);
+			    	
 			    });
 			});
-			
-			$(document).on("click","#mismo",function() {
-				updateBillTo();
+
+//Warranty Global Change function
+			$(document).on("change","#warranty_global",function() {
+				var value = $(this).val();
+				var text = $("#warranty_global option:selected").text();
+				if (value != "no"){
+					$(".line_war").text(text)
+					.attr("data-war",value);
+					// $("#new_line_war").
+				}
 			});
+
+
+//==============================================================================
 			
-			//-------------------------- Page Save Button --------------------------
 			$('#save_button').click(function() {
 				//Get page macro information
 				var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
@@ -591,7 +606,6 @@
 						"ship_to": ship_to,
 						"bill_to": bill_to,
 						"carrier": carrier,
-						"freight": freight,
 						"account": account,
 						"terms" : terms,
 						"service" : service,
@@ -602,9 +616,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(form) {
-						var on = form["order"];
+						var on = form["order"].trim();
 						var ps = form["type"];
-						alert(form["error"]);
+						// alert(form["error"]);
 						window.location = "/order_form.php?ps="+ps+"&on="+on;
 					},
 					error: function(xhr, status, error) {
@@ -613,10 +627,12 @@
 				});
 
 			});
+			
+//========================== END COMPLETE PAGE SUBMIT ==========================
 			//Cancel button?
 			
-			//Order Form Calendar Toggle Dates
-			
+
+//Order Form Calendar Toggle Dates
 			$('.toggle-cal-options').click(function(e){
 				e.preventDefault();
 				if ($(this).data('name') == 'show') {
@@ -743,6 +759,7 @@
 					}
 				}	
 			});
+			
 			$("#purchases").click(function() {
 				//If the current view is purchases...
 				if( $(this).closest("body").find(".shipping-dash-full").hasClass("sd-sales")){
