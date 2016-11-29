@@ -25,6 +25,9 @@
 	include_once $rootdir.'/inc/getRep.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
+	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
+	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
+
 	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
 		$statusVals;
 		
@@ -42,7 +45,11 @@
 		
 		return $enum;
 	}
-
+	
+	//Associated Order: If none, assume nothing happens.
+	//
+	
+	
 ?>
 
 <!DOCTYPE html>
@@ -54,7 +61,7 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
 	</head>
 	
-	<body class="sub-nav">
+	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
@@ -69,89 +76,15 @@
 				</button>
 			</div>
 		</div>
+		
+		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<div class="row-fluid cmbar">
-				<div class="col-sm-2  company_meta left-sidebar">
-					<div class="sidebar-container" style="padding-top: 20px">
-						<div class="row">
-							<div class="col-sm-12" style="padding-bottom: 10px;">	            	
-								<label for="orderid">Order #:</label>
-								<input class="form-control" type="text" name="orderid" placeholder="Order #"/>
-						    </div>
-						</div>
-						
-						<div class="row">
-							<div class="col-sm-12" style="padding-bottom: 10px;">						
-								<div class ='company'>
-									<label for="companyid">Company:</label>
-									<select name='companyid' id='companyid' class='company-selector' style = "width:100%;">
-										<option>Company</option>
-									</select>
-								</div>
-							</div>
-						</div>
-						
-						<div class="row">
-							<div class="col-sm-12" style="padding-bottom: 10px;">	            	
-								<label for="address">Address:</label>
-								<input class="form-control" type="text" name="address" placeholder="Street"/>
-						    </div>
-						    <div class="col-sm-6" style="padding-bottom: 10px;">	            	
-								<label for="city">City:</label>
-								<input class="form-control" type="text" name="city" placeholder="City"/>
-						    </div>
-						    <div class="col-sm-6" style="padding-bottom: 10px;">	            	
-								<label for="zip">Zip:</label>
-								<input class="form-control" type="text" name="zip" placeholder="Zip"/>
-						    </div>
-					    </div>
-					    
-					    <div class="row">
-							<div class="col-sm-12" style="padding-bottom: 10px;">
-								<label for="ni_date">Ship by:</label>	            	
-								<div class='input-group date datetime-picker-line'>
-									<input type='text' name='ni_date' class='form-control input-sm' value='' placeholder="1/20/2016" style = 'min-width:50px;'/>
-									<span class='input-group-addon'>
-										<span class='fa fa-calendar'></span>
-									</span>
-						    	</div>
-						    </div>
-					    </div>
-					    
-					  <!--  <div class="row">-->
-							<!--<div class="col-sm-12" style="padding-bottom: 10px;">	            	-->
-							<!--	<label for="freight">Freight:</label>-->
-							<!--	<select class="form-control">-->
-							<!--		<option>USPS</option>-->
-							<!--		<option>UPS</option>-->
-							<!--		<option>Fedex</option>-->
-							<!--	</select>-->
-						 <!--   </div>-->
-					  <!--  </div>-->
-					    
-					  <!--  <div class="row">-->
-							<!--<div class="col-sm-12" style="padding-bottom: 10px;">	            	-->
-							<!--	<label for="tracking">Tracking Info:</label>-->
-							<!--	<input class="form-control" type="text" name="tracking" placeholder="Tracking #"/>-->
-						 <!--   </div>-->
-					  <!--  </div>-->
-					    
-					    <div class="row">
-							<div class="col-sm-12" style="padding-bottom: 10px;">	            	
-								<label for="warranty">Warranty:</label>
-								<input class="form-control" type="text" name="zip" placeholder="Warranty"/>
-						    </div>
-					    </div>
-				    </div>
-				    <div class="arrow click_me">   
-				    	<i class="icon-button fa fa-chevron-left" aria-hidden="true"></i>
-		        	</div>
-		        	
-		        	<i class="fa fa-chevron-up shoot_me icon-button-mobile" aria-hidden="true" style="color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;"></i>
-				</div>
-			<!---------------------- OUTPUT THE LINE ADDITION TABLE ---------------------->
+			<div class="left-side-main" data-page="addition">
+				<!-- Everything here is put out by the order creation ajax script -->
+			</div>
 
-				<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+
+			<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
 					<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 							<thead>
 						         <tr>

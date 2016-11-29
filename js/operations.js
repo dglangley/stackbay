@@ -166,40 +166,48 @@
 
 		//========================= Left side main page =========================
 		//Load the meta information panel, initialize the clickable fields, and
-		//populate whatever fields are prefilled.
-		
-			$("#left-side-main").ready(function(){
-				var order_number = $("#order_body").attr("data-order-number");
-				var order_type = $("#order_body").attr("data-order-type");
-
-				$(document).on("change","#ship_to",function() {
-					//$(this).parent().find("div").first().html($(this).find("select2-ship_to-container").attr("title"));
-					// $(this).parent().find("#ship_to").find("option").text();
-				});
+		//populate whatever fields are prefilled. THIS WILL WORK ACROSS MULTIPLE PAGES!
+			
+			$(".left-side-main").ready(function(){
+				var order_number = 'new';
+				var order_type = 'Sale';
+				var page = 'order';
 				
+				order_number = $("body").attr("data-order-number");
+				order_type = $("body").attr("data-order-type");
+				page = $(".left-side-main").attr("data-page");
+
+
 				//Left Side Main output on load of the page
 				$.ajax({
 					type: "POST",
-					url: '/json/order-creation.php',
+					url: '/json/operations_sidebar.php',
 					data: {
-						"type": order_type,
 						"number": order_number,
-						"mode":'load'
+						"type": order_type,
+						"page": page,
 						},
 					dataType: 'json',
 					success: function(right) {
-						$("#left-side-main").append(right);
-						var company = $("#companyid").val();
-						$("#companyid").initSelect2("/json/companies.php");
-						$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
-						$("#bill_to").initSelect2("/json/address-picker.php");
-						$("#ship_to").initSelect2("/json/address-picker.php");
-						if($("#bill_to").val() == $("#ship_to").val()){
-							$("#mismo").prop("checked",true);
+						$(".left-side-main").append(right);
+						//If this is an edit page, limit all the appropriate dropdowns
+						if (page == 'order'){
+							var company = $("#companyid").val();
+							$("#companyid").initSelect2("/json/companies.php");
+							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
+							$("#bill_to").initSelect2("/json/address-picker.php");
+							$("#ship_to").initSelect2("/json/address-picker.php");
+							if($("#bill_to").val() == $("#ship_to").val()){
+								$("#mismo").prop("checked",true);
+							}
+							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
 						}
-						$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
+						else{
+							$("#order_selector").initSelect2("/json/order-select.php","Select an Order",page);
+						}
 					}
 				});
+				
 				toggleSidebar();
 				$(document).on("change load","#freight-carrier",function() {
 					var carrier = ($("#freight-carrier :selected").attr('data-carrier-id'));

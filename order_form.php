@@ -83,7 +83,7 @@
 	<div class="container-fluid">
 	
 		<!--================== Begin Left Half ===================-->
-		<div id="left-side-main">
+		<div class="left-side-main" data-page="order">
 			<!-- Everything here is put out by the order creation ajax script -->
 		</div>
 		<!--======================= End Left half ======================-->
@@ -103,7 +103,7 @@
 	                    </select>
 	                </div>
 				</div>
-			</div>
+			</div> 
 			<div class="table-responsive">
 				<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
 				<thead>

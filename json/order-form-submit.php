@@ -8,7 +8,7 @@
 // to create new fields with minimal updates, and handle the varience between | 
 // new and pre-existing forms. Primarily, this will work with the orders table|
 //                                                                            | 
-// Last update: Aaron Morefield - October 18th, 2016                          |
+// Last update: Aaron Morefield - November 28th, 2016                         |
 //=============================================================================
     
     //Prepare the page as a JSON type

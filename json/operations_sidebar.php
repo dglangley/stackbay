@@ -1,5 +1,16 @@
 <?php
 
+//=============================================================================
+//============================= Operations Sidebar ============================
+//=============================================================================
+// The operations sidebar has two major functions: output the sidebar edit,   |
+// and the display mode. Each gets the mode the number and the type. It then  |
+// counts and outputs the row function.                                       | 
+//                                                                            |
+//                                                                            | 
+// Last update: Aaron Morefield - November 29th, 2016                         |
+//=============================================================================
+
 //Prepare the page as a JSON type
 header('Content-Type: application/json');
 
@@ -22,11 +33,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 
 	
-	$number = $_REQUEST['number'];
-	$type = $_REQUEST['type'];
-	$mode = $_REQUEST['mode'];
+	$number = grab('number');
+	$type = grab('type');
+	$mode = grab('page');
 	
-    function order_left($order_number,$order_type){
+
+	
+    function edit($order_number,$order_type){
 		
 	//======================= DECLARE VARIABLE DEFAULTS ======================= 
 		//This will have the reference order number(s) and associated files attached to it
@@ -71,7 +84,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			}
 		}
 		
-		//Account information
+		//Account information (Similar to Drop Pop, but for a select2)
 		$account = array();
 		$account = getFreight('account','',$slected_account);
 		if ($account){
@@ -87,10 +100,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// }
 		
 		//THis will be split into distinct elements at some point in the next few weeks.
-		$right = "
-			<div class='col-md-3 col-lg-2  company_meta left-sidebar'>
-			<div class='sidebar-container' style='padding-top: 20px'>
-				
+		$right =  "	<div class='col-md-3 col-lg-2  company_meta left-sidebar' style='height:100%;'>";
+		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
+
+		//Company						
+		$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='company'>
@@ -100,7 +114,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							</select>
 						</div>
 					</div>
-				</div>
+				</div>";
+		
+		//Contact
+		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='contact'>
@@ -110,10 +127,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							</select>
 						</div>
 					</div>
-				</div>
+				</div>";
+		
+		//Associated order module
+		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' id='assoc_order' style='padding-bottom: 10px;'>
-					<label for='assoc'>Customer Order:</label>
+						<label for='assoc'>Customer Order:</label>
 						<div class = 'input-group'>
 							<input class='form-control' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 							<span class='input-group-btn'>
@@ -123,8 +143,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			    			</span>
 		    			</div>
 	    			</div>
-		    	</div>
-		    	
+		    	</div>";
+		
+		//Shipping Address 	
+		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='ship_to' >Ship to:</label>
@@ -132,8 +154,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							<option value = '$s_add' >$s_name</option>
 	                    </select>
 				    </div>
-			    </div>
-
+			    </div>";
+		
+		//Billing Address
+		$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='bill_to'>Bill to:
@@ -143,14 +167,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							<option value = '$b_add'>$b_name</option>
 	                    </select>
 				    </div>
-			    </div>
+			    </div>";
 
-			    
-			    <div class='row' style='padding-bottom: 10px;'>
+		//Payment Terms and warranty
+		$right .="
+				<div class='row' style='padding-bottom: 10px;'>
 					".dropdown('terms',$terms,$companyid)."
 			    	".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
-			    </div>
-			    <div class='row'>
+			    </div>";
+		
+		//Shipping Account Section
+		$right .="
+				<div class='row'>
 					<div class='col-sm-12'>
 						<div class = 'account forms_section'>
 							<label for='account'>Account:</label>
@@ -159,11 +187,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							</select>
 						</div>
 					</div>
-				</div>
-			    <div class='row' style='padding-bottom: 10px;'>
+				</div>";
+		
+		
+		//Carrier and service
+		$right .= "
+				<div class='row' style='padding-bottom: 10px;'>
 				    ".dropdown('carrier',$selected_carrier)."
 			    	".dropdown('services',$services,$selected_carrier)."
-			    </div>
+			    </div>";
+		
+		//NOTES SECTION (Band together)
+		$right .= "
 				<div class = 'row'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes:</label>
@@ -175,8 +210,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='public_notes'>Public Notes:</label>
 						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
 					</div>
-				</div>
-	    	</div>
+				</div>";
+		//Closing Tag (Leave Outside of any if statment)
+	    	$right .= "</div>
 		    <div class='arrow click_me'>   
 		    	<i class='icon-button fa fa-chevron-left' aria-hidden='true'></i>
         	</div>
@@ -187,6 +223,69 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
     }
+	function display($order_number = '2',$order_type = 'Sales'){
+		$q_form = "SELECT * FROM ";
+		$q_form .= ($order_type == 'Purchase') ? 'purchase_orders' : 'sales_orders';
+		$q_form .= " WHERE ";
+		$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
+		$q_form .= " = '$order_number';";
+		$results = qdb($q_form);
+		
+		foreach ($results as $row){
+			$companyid = $row['companyid'];
+			$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
+			$contact = $row['contactid'];
+			$b_add = $row['bill_to_id'];
+			$b_name = getAddresses($b_add,'name');
+			$s_add = $row['ship_to_id'];
+			$s_name = getAddresses($s_add,'name');
+			$selected_carrier = $row['freight_carrier_id'];
+			// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
+			$selected_service = $row['freight_services_id'];
+			$selected_account = $row['freight_account_id'];
+			$public = $row['public_notes'];
+			$private = $row['private_notes'];
+			$terms = $row['termsid'];
+			
+		}
+		
+		//Opens the sidebar
+		$right =  "	<div class='col-md-3 col-lg-2  company_meta left-sidebar' style='height:100%;'>";
+		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
+		
+		$right.="
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>						
+						<div class ='order'>
+							<label for='order_selector'>Associated PO:</label>
+							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
+		//$right .= "<div>$order_number.$order_type</div>";
+		if($order_number){ 
+			$right.="		<option value = $order_number>$order_number</option>";
+		}
+		$right.="			</select>
+						</div>
+					</div>
+				</div>";
+
+
+		//Closing Tag (Leave Outside of any if statment)
+	    $right .= "</div>
+		    <div class='arrow click_me'>   
+		    	<i class='icon-button fa fa-chevron-left' aria-hidden='true'></i>
+        	</div>
+
+        	<i class='fa fa-chevron-up shoot_me icon-button-mobile' aria-hidden='true' style='color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;'></i>
+		</div>";
+		
+			echo json_encode($right);
+	}
 	
-	order_left($number,$type);
+	if ($mode == 'order'){
+		edit($number,$type);
+	}
+	else{
+		display($number,$type);
+	}
+		
 ?>
