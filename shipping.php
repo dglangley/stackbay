@@ -169,7 +169,7 @@
 		</div>
 		<div class="loading_element">
 			<!--================== Begin Left Half ===================-->
-			<div id="left-side-main">
+			<div id="left-side-main col-sm-2">
 				<!-- Everything here is put out by the order creation ajax script -->
 			</div>
 			<!--======================= End Left half ======================-->

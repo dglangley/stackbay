@@ -100,7 +100,7 @@
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number; ?>&ps=p": '?ps=p'); ?>" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center">
 				<h1>Inventory <?php echo ($order_number != '' ? 'for Purchase Order #' . $order_number : 'Addition'); ?></h1>
 			</div>
@@ -113,17 +113,17 @@
 		
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<div class="left-side-main" data-page="addition">
+			<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
 				<!-- Everything here is put out by the order creation ajax script -->
 			</div>
 
-
+			<div class="col-sm-10">
 
 				<?php 
 					if($partsListing) {
 						foreach($partsListing as $part): 
 				?>
-					<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+					<div class="inventory_lines table-responsive" style="margin-top:30px;">
 						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 								<thead>
 							         <tr>
@@ -334,7 +334,8 @@
 							</tfoot>
 						</table>
 					</div>
-				<?php } ?>
+					<?php } ?>
+				</div>
 			</div>
 		</div> 
 		<!-- End true body -->
