@@ -23,7 +23,10 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/form_handle.php';
 	//include_once $rootdir.'/inc/order-creation.php';
+	
+	$po_num = grab('order_no');
 	
 	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
 		$statusVals;
@@ -42,7 +45,43 @@
 		
 		return $enum;
 	}
-
+	
+	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
+	function getPOParts () {
+		global $po_num;
+		
+		$listParts;
+		
+		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($po_num) .";";
+		$result = qdb($query);
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listParts[] = $row;
+			}
+		}
+		
+		return $listParts;
+	}
+	
+	//Get the part name from the part id
+	function getPartName($partid) {
+		$part;
+		
+		$query = "SELECT parts.part, parts.heci, parts.description, systems.system FROM parts LEFT JOIN systems ON systems.id = parts.systemid WHERE parts.id = ". res($partid) .";";
+		$result = qdb($query) OR die(qe());
+	
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$part[] = $result;
+		}
+	
+		return $part;
+	}
+	
+	
+	$partsListing = getPOParts();
 ?>
 
 <!DOCTYPE html>
@@ -59,9 +98,9 @@
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"></div>
+			<div class="col-sm-4"><a href="/order_form.php<?php echo ($po_num != '' ? "?on=$po_num; ?>&ps=p": '?ps=p'); ?>" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center">
-				<h1>Inventory Addition</h1>
+				<h1>Inventory <?php echo ($po_num != '' ? 'for Purchase Order #' . $po_num : 'Addition'); ?></h1>
 			</div>
 			<div class="col-sm-4">
 				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
@@ -118,24 +157,6 @@
 						    </div>
 					    </div>
 					    
-					  <!--  <div class="row">-->
-							<!--<div class="col-sm-12" style="padding-bottom: 10px;">	            	-->
-							<!--	<label for="freight">Freight:</label>-->
-							<!--	<select class="form-control">-->
-							<!--		<option>USPS</option>-->
-							<!--		<option>UPS</option>-->
-							<!--		<option>Fedex</option>-->
-							<!--	</select>-->
-						 <!--   </div>-->
-					  <!--  </div>-->
-					    
-					  <!--  <div class="row">-->
-							<!--<div class="col-sm-12" style="padding-bottom: 10px;">	            	-->
-							<!--	<label for="tracking">Tracking Info:</label>-->
-							<!--	<input class="form-control" type="text" name="tracking" placeholder="Tracking #"/>-->
-						 <!--   </div>-->
-					  <!--  </div>-->
-					    
 					    <div class="row">
 							<div class="col-sm-12" style="padding-bottom: 10px;">	            	
 								<label for="warranty">Warranty:</label>
@@ -150,114 +171,237 @@
 		        	<i class="fa fa-chevron-up shoot_me icon-button-mobile" aria-hidden="true" style="color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;"></i>
 				</div>
 			<!---------------------- OUTPUT THE LINE ADDITION TABLE ---------------------->
-
-				<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
-					<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
-							<thead>
-						         <tr>
-						            <th class="col-sm-4">
-						            	<span class="line"></span>		
-						            	PART	
-						            </th>
-						            <th class="col-sm-2">
-						            	<span class="line"></span>		
-						            	Serial	
-						            </th>
-						            <th class="col-sm-2">   	
-						            	<span class="line"></span>   	
-						            	Qty
-						            </th>
-						            <th class="col-sm-1">
-										<span class="line"></span>   	
-										Location	
-									</th>
-						        	<th class="col-sm-1">
-						            	Status
-						        	</th>
-						            <th class="col-sm-1">
-						            	<span class="line"></span>
-										Condition
-						        	</th>
-						            <th class="col-sm-1">
-						            	<span class="line"></span>
-						            	&nbsp;
-						        	</th>
 				
-						         </tr>
-
-							    <tr class = "addRecord">
-						            <td id='search_collumn'>
-						            	<div style="max-width:inherit;">
-											<select class='item_search' style="max-width:inherit;overflow:hidden;">
-												<option data-search = 'Nothing at the moment'>Item</option>
+				<?php 
+					if($partsListing) {
+						foreach($partsListing as $part): 
+				?>
+					<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
+								<thead>
+							         <tr>
+							            <th class="col-sm-4">
+							            	<span class="line"></span>		
+							            	PART	
+							            </th>
+							            <th class="col-sm-2">
+							            	<span class="line"></span>		
+							            	Serial	
+							            </th>
+							            <th class="col-sm-2">   	
+							            	<span class="line"></span>   	
+							            	Qty
+							            </th>
+							            <th class="col-sm-1">
+											<span class="line"></span>   	
+											Location	
+										</th>
+							        	<th class="col-sm-1">
+							            	Status
+							        	</th>
+							            <th class="col-sm-1">
+							            	<span class="line"></span>
+											Condition
+							        	</th>
+							            <th class="col-sm-1">
+							            	<span class="line"></span>
+							            	&nbsp;
+							        	</th>
+					
+							         </tr>
+	
+								    <tr class = "addRecord">
+							            <td id='search_collumn'>
+							            	<div style="max-width:inherit;">
+												<select class='item_search' style="max-width:inherit;overflow:hidden;">
+													<option data-search = 'Nothing at the moment'>Item</option>
+													<option selected value="<?php echo $part['partid']; ?>">
+														<?php 
+															$item = getPartName($part['partid'])[0];
+															echo $item['part'] . '&nbsp;&nbsp;';
+															echo $item['heci'] . '&nbsp;&nbsp;';
+															echo $item['heci'] . '&nbsp;';
+															echo $item['description'];
+														?>
+													</option>
+												</select>
+											</div>
+										</td>
+										<td id='serial'>
+								            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
+										</td>
+							            <td>
+											<div class="input-group">
+										    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox" value="<?php echo $part['qty']; ?>">
+								            <span class="input-group-addon">Serialize Each?</span>
+										      	<span class="input-group-addon">
+										        	<input type="checkbox" name="serialize">
+												</span>
+					
+										    </div>
+									    </td>
+							            <td>
+					                            <!--<div class="ui-select" style="width:100%;">-->
+			                                <select class="form-control" id = "new_location">
+			                                    <option selected="">W: 12</option>
+			                                    <option>W: 13</option>
+			                                    <option>W: 15</option>
+			                                </select>
+					                            <!--</div>-->
+					                    </td>
+							            <td>
+							            	<div class="btn-group">
+							            		<select class="form-control status" name="status">
+						                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+													<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
+												<?php endforeach; ?>
+												</select>
+											</div>
+					                    </td>
+							            <td>
+											<select class="form-control condition_field condition" name="condition">
+												<?php foreach(getEnumValue() as $condition): ?>
+													<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+												<?php endforeach; ?>
 											</select>
-										</div>
+					                    </td>
+					                    <td>
+					                    	<button class="btn-flat" id="inv_add_record">
+					                    		ADD RECORD
+					                    	</button>
+					                    </td>
+								    </tr>
+								</thead>
+							<tbody id="serial_each_table">
+								
+					        </tbody>
+							<tfoot>
+								<tr>
+									<td>
+						        		<a class="show_link" href="#"  style="display: none;">Show More</a>
 									</td>
-									<td id='serial'>
-							            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
-									</td>
-						            <td>
-										<div class="input-group">
-									    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox">
-							            <span class="input-group-addon">Serialize Each?</span>
-									      	<span class="input-group-addon">
-									        	<input type="checkbox" name="serialize">
-											</span>
-				
-									    </div>
-								    </td>
-						            <td>
-				                            <!--<div class="ui-select" style="width:100%;">-->
-		                                <select class="form-control" id = "new_location">
-		                                    <option selected="">W: 12</option>
-		                                    <option>W: 13</option>
-		                                    <option>W: 15</option>
-		                                </select>
-				                            <!--</div>-->
-				                    </td>
-						            <td>
-						            	<div class="btn-group">
-						            		<select class="form-control status" name="status">
-					                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-												<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
-											<?php endforeach; ?>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				<?php 
+						endforeach;
+					} else {
+				?>
+					<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
+								<thead>
+							         <tr>
+							            <th class="col-sm-4">
+							            	<span class="line"></span>		
+							            	PART	
+							            </th>
+							            <th class="col-sm-2">
+							            	<span class="line"></span>		
+							            	Serial	
+							            </th>
+							            <th class="col-sm-2">   	
+							            	<span class="line"></span>   	
+							            	Qty
+							            </th>
+							            <th class="col-sm-1">
+											<span class="line"></span>   	
+											Location	
+										</th>
+							        	<th class="col-sm-1">
+							            	Status
+							        	</th>
+							            <th class="col-sm-1">
+							            	<span class="line"></span>
+											Condition
+							        	</th>
+							            <th class="col-sm-1">
+							            	<span class="line"></span>
+							            	&nbsp;
+							        	</th>
+					
+							         </tr>
+	
+								    <tr class = "addRecord">
+							            <td id='search_collumn'>
+							            	<div style="max-width:inherit;">
+												<select class='item_search' style="max-width:inherit;overflow:hidden;">
+													<option data-search = 'Nothing at the moment'>Item</option>
+												</select>
+											</div>
+										</td>
+										<td id='serial'>
+								            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
+										</td>
+							            <td>
+											<div class="input-group">
+										    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox" value="">
+								            <span class="input-group-addon">Serialize Each?</span>
+										      	<span class="input-group-addon">
+										        	<input type="checkbox" name="serialize">
+												</span>
+					
+										    </div>
+									    </td>
+							            <td>
+					                            <!--<div class="ui-select" style="width:100%;">-->
+			                                <select class="form-control" id = "new_location">
+			                                    <option selected="">W: 12</option>
+			                                    <option>W: 13</option>
+			                                    <option>W: 15</option>
+			                                </select>
+					                            <!--</div>-->
+					                    </td>
+							            <td>
+							            	<div class="btn-group">
+							            		<select class="form-control status" name="status">
+						                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
+													<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
+												<?php endforeach; ?>
+												</select>
+											</div>
+					                    </td>
+							            <td>
+											<select class="form-control condition_field condition" name="condition">
+												<?php foreach(getEnumValue() as $condition): ?>
+													<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+												<?php endforeach; ?>
 											</select>
-										</div>
-				                    </td>
-						            <td>
-										<select class="form-control condition_field condition" name="condition">
-											<?php foreach(getEnumValue() as $condition): ?>
-												<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
-											<?php endforeach; ?>
-										</select>
-				                    </td>
-				                    <td>
-				                    	<button class="btn-flat" id="inv_add_record">
-				                    		ADD RECORD
-				                    	</button>
-				                    </td>
-							    </tr>
-							</thead>
-						<tbody id="serial_each_table">
-							
-				        </tbody>
-						<tfoot>
-							<tr>
-								<td>
-					        		<a class="show_link" href="#"  style="display: none;">Show More</a>
-								</td>
-							</tr>
-						</tfoot>
-					</table>
-						
-				</div>
+					                    </td>
+					                    <td>
+					                    	<button class="btn-flat" id="inv_add_record">
+					                    		ADD RECORD
+					                    	</button>
+					                    </td>
+								    </tr>
+								</thead>
+							<tbody id="serial_each_table">
+								
+					        </tbody>
+							<tfoot>
+								<tr>
+									<td>
+						        		<a class="show_link" href="#"  style="display: none;">Show More</a>
+									</td>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				<?php } ?>
 			</div>
 		</div> 
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
 		<script type="text/javascript">
-
+			function updateBillTo(){
+				if ( $("#mismo").prop( "checked" )){
+					var display = $("#select2-ship_to-container").html()
+					var value = $("#ship_to").val();
+		    		$("#select2-bill_to-container").html(display)
+		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
+				}
+			}
 		</script>
 
 	</body>
