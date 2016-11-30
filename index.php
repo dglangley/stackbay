@@ -170,8 +170,11 @@
 		else { $date = format_date($order_date,'M j, y'); }
 */
 		$date = summarize_date($order_date);
+		// highlight any records in the past week
+		$dateSty = '';
+		if ($order_date>$GLOBALS['lastWeek']) { $dateSty = ' style="font-weight:bold"'; }
 
-		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'.$date.': '.
+		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal"'.$dateSty.'>'.$date.': '.
 			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
@@ -339,6 +342,9 @@
 			if ($price_text) { $search_price = number_format($price_text,2,'.',''); }
 		}
 
+		// can contain additional info about the results, if set; presents itself after the "X results" row below the row's search field
+		$explanation = '';
+
 		// if 10-digit string, detect if qualifying heci, determine if heci so we can search by 7-digit instead of full 10
 		$heci7_search = false;
 		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
@@ -351,6 +357,13 @@
 			$results = hecidb(substr($search_str,0,7));
 		} else {
 			$results = hecidb(format_part($search_str));
+		}
+
+		// the LARGE majority of items don't have more than 20 results within a certain group of 7-digit hecis
+		if (count($results)>20) {
+			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 20!';
+			// take the top 20 results
+			$results = array_slice($results,0,20);
 		}
 
 		// gather all partid's first
@@ -623,7 +636,7 @@
 										</span>
 -->
 									</div><!-- /input-group -->
-									<span class="info"><?php echo $num_results.' result'.$s; ?></span>
+									<span class="info"><?php echo $num_results.' result'.$s; ?></span> &nbsp; <span class="text-danger"><?php echo $explanation; ?></span>
 								</div>
 								<div class="price pull-right">
 									<div class="form-group target text-right">

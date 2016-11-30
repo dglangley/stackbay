@@ -5,6 +5,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 exit;
 
+	$query = "DELETE FROM picture_maps; ";
+	$result = qdb($query) OR die(qe().' '.$query);
+
 	$query = "SELECT part_numbers, hecis, id FROM inventory_looseinventoryimagegroup; ";
 	$result = qdb($query,'PIPE');
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -17,9 +20,10 @@ exit;
 			$imgs[] = str_replace('LooseInventory/','',$r2['image']);
 		}
 
-		$part = format_part($r['part_numbers']);
-		$heci = $r['hecis'];
+		$part = format_part(trim($r['part_numbers']));
+		$heci = trim(substr($r['hecis'],0,7));
 
+		// 4th parameter is 'true' for returning all results
 		$results = getPartId($part,$heci,0,true);
 		if (count($results)==0) { continue; }
 
@@ -34,4 +38,5 @@ exit;
 			}
 		}
 	}
+	echo 'Success!';
 ?>

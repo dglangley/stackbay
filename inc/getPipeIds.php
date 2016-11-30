@@ -19,8 +19,12 @@
 			if (strlen($search)<=2 OR $search_upper=='REV' OR $search_upper=='ISS' OR $search_upper=='REL') { continue; }
 
 			$search_by = strtolower($search_by);
+
+			// key each search string within global array so we don't duplicate lookups; also, call the search type 'part'
+			// if it doesn't qualify as a heci in any way (not 7-digits, not 10-digits, or all-numeric)
 			$keysearch = $search;
 			if ($search_by) { $keysearch .= '.'.$search_by; }
+			else if ((strlen($search)<>7 AND strlen($search)<>10) OR is_numeric($search)) { $keysearch .= '.part'; }
 
 			$ids = array();
 			if (isset($PIPE_IDS[$keysearch])) {
@@ -43,7 +47,7 @@
 					}
 				}
 				if (! $subquery) { $subquery .= "1 = 2 "; }
-				$query .= $subquery."); ";
+				$query .= $subquery.") LIMIT 0,20; ";
 
 				$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 				while ($r = mysqli_fetch_assoc($result)) {
@@ -55,7 +59,7 @@
 					$query = "SELECT inventory_inventory.id, avg_cost, notes, part_of notes2, clei heci ";
 					$query .= "FROM inventory_inventory, inventory_inventoryalias ";
 					$query .= "WHERE inventory_inventoryalias.clean_part_number LIKE '".res($search,'PIPE')."%' ";
-					$query .= "AND inventory_inventory.id = inventory_inventoryalias.inventory_id; ";
+					$query .= "AND inventory_inventory.id = inventory_inventoryalias.inventory_id LIMIT 0,20; ";
 					$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 					while ($r = mysqli_fetch_assoc($result)) {
 						$results[] = $r;

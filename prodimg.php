@@ -19,12 +19,18 @@
 	$query .= "WHERE keyword = '".$basePart."' AND keywords.id = parts_index.keywordid AND picture_maps.partid = parts_index.partid ";
 	$query .= "GROUP BY image ORDER BY picture_maps.id ASC; ";
 	$result = qdb($query) OR die(qe().' '.$query);
+	$n = mysqli_num_rows($result);
 	$i = 0;//iteration counter
 	while ($r = mysqli_fetch_assoc($result)) {
-		// skip the first two pics, assuming they're label pictures
-		if ($i<=1) { $i++; continue; }
-		else if ($i<>$sequence) { $i++; continue; }
-		$i++;
+		// skip the first two pics, assuming they're label pictures and as long as there are at least 3 pics
+		if ($n>2) {
+			if ($i<=1) { $i++; continue; }
+			else if ($i<>$sequence) { $i++; continue; }
+			$i++;
+		} else if ($n==2 AND $i==0) {//if 2 pics, skip the first pic (we're assuming it's a label pic)
+			$i++;
+			continue;
+		}
 
 		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
 		break;
