@@ -158,16 +158,6 @@
         }
         return $output;
     }
-    if (isset($_REQUEST['ajax'])){
-        header('Content-Type: application/json');
-        $field = grab('field');
-        $selected = grab('selected');
-        $limit = grab('limit');
-        $size = grab('size');
-        $label = grab('label');
-        $id = grab('id');
-        
-        echo json_encode(dropdown($field, $selected, $limit, $size, $label,$id));
-    }
-    
+
+
 ?>

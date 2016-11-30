@@ -12,7 +12,8 @@
     if (strlen($q) > 1){
          $results = (hecidb($qlower));
          foreach($results as $id=> $row){
-             $name = $row['part']." &nbsp; ".$row['heci'].' &nbsp; '.$row['Manf'].' '.$row['system'].' '.$row['Descr'];
+            //  $select = "Select qty from `inventory` where partid = $"
+             $name = $row['part']." &nbsp; ".$row['heci'].' &nbsp; '.$row['Manf'].' '.$row['system'].' '.$row['Descr']." (In Stock: )";
              $items[] = array('id' => $id, 'text' => $name);
          }
     }
