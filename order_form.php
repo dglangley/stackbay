@@ -31,6 +31,37 @@
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
+	
+	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+		$statusVals;
+		
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
+	    $result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$statusVals = $result;
+		}
+		
+		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
+		
+		$enum = explode("','", $matches[1]);
+		
+		return $enum;
+	}
+	
+	function getStock($condition = 'new', $partid) {
+		$stock;
+		
+		$partid = res($partid);
+		$condition = res($condition);
+		
+		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND item_condition = '$condition';";
+         $result = qdb($query);
+         if (mysqli_num_rows($result)>0) { $stock = mysqli_fetch_assoc($result);}
+		
+		return $stock['total'];
+	}
 
 ?>
 
@@ -97,9 +128,9 @@
 				<div style="float:right;padding-top:15px;">
 					<div class="ui-select" style="width:125px; 'margin-bottom:0;">
 	                    <select id="sales-rep">
-	                        <option data-rep-id=1><?=getRep(1)?></option>
-	                        <option data-rep-id=2><?=getRep(2)?></option>
-							<option data-rep-id=3><?=getRep(3)?></option>
+	                        <option selected data-rep-id='<?php echo $U['contactid']; ?>'><?php echo $U['name']; ?></option>
+	                        <option data-rep-id='2'><?=getRep(2)?></option>
+							<option data-rep-id='3'><?=getRep(3)?></option>
 	                    </select>
 	                </div>
 				</div>
@@ -115,13 +146,17 @@
 			            	<span class="line"></span>		
 			            	Item	
 			            </th>
-			            <th class="col-md-2" style="min-width:130px;">
+			            <th class="col-md-1">
 			            	<span class="line"></span>   	
 			            	Date
 			            </th>
 			            <th class="col-md-1">   	
 			            	<span class="line"></span>   	
 			            	Warranty
+			            </th>
+			            <th class="col-md-1">
+			            	<span class="line"></span>   	
+			            	Condition
 			            </th>
 			            <th class="col-md-1">   	
 			            	<span class="line"></span>   	
@@ -169,6 +204,13 @@
 				            </div>
 					    </td>
 						<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false,"new_row_warranty")?></div></td>
+						<td><div style="display:none;">
+							<select id="new_row_condition" class="form-control">
+								<?php foreach(getEnumValue() as $condition): ?>
+									<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo ucwords($condition);?></option>
+								<?php endforeach; ?>
+							</select>
+						</div></td>
 			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
 			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
 			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
@@ -188,6 +230,29 @@
 </div>
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
+		<script>
+			(function($){
+				$('.item_search').select2().on("change", function(e) {
+					var $itemRow = $(this).closest('#add_row');
+				    var obj = $(this).select2("data");
+				    $.ajax({
+						type: "POST",
+						url: '/json/condition_stock.php',
+						data: {
+			   		    	"partid" : obj[0].id,
+						},
+						dataType: 'json',
+						success: function(data) {
+							console.log("change val=" + data); 
+							$itemRow.find('#new_row_condition').empty();
+							for(var i = 0; i < data.length; i++) {
+								$itemRow.find('#new_row_condition').append('<option>' + data[i] + '</option>');
+							}
+						}
+					});
+				});
+			})(jQuery);
+		</script>
 
 	</body>
 </html>

@@ -235,7 +235,7 @@
 						endforeach;
 					} else {
 				?>
-					<div class="inventory_lines col-sm-10 table-responsive" style="margin-top:30px;">
+					<div class="inventory_lines table-responsive" style="margin-top:30px;">
 						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 								<thead>
 							         <tr>
