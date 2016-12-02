@@ -12,6 +12,7 @@
 		//add error to global array that is outputted to alert modal
 		$ALERTS[] = "Failed to connect to the PIPE!";
 	}
+
 //	echo '<BR><BR><BR>';
 
 //	$search = 'NT5C07AC';

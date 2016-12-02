@@ -105,15 +105,18 @@
 				<a href="/profile.php"><i class="fa fa-book"></i><span> Companies</span></a>
 			</li>
             <li class="hidden-xs hidden-sm">
-				<a href="#"><i class="fa fa-wrench"></i><span> Repair Home</span></a>
+				<a href="services.php"><i class="fa fa-cogs"></i><span> Services</span></a>
 			</li>
             <li class="hidden-xs hidden-sm">
-				<a href="/shipping_home.php"><i class="fa fa-truck"></i><span> Shipping Home</span></a>
+				<a href="#"><i class="fa fa-wrench"></i><span> Repairs</span></a>
+			</li>
+            <li class="hidden-xs hidden-sm">
+				<a href="/shipping_home.php"><i class="fa fa-truck"></i><span> Shipping</span></a>
 			</li>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
             <li class="hidden-xs hidden-sm">
-				<a href="/accounts.php"><i class="fa fa-building-o"></i><span> Accounts Home</span></a>
+				<a href="/accounts.php"><i class="fa fa-building-o"></i><span> Accounts</span></a>
 			</li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
