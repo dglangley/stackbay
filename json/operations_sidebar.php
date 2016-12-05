@@ -122,7 +122,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='contact'>
 							<label for='contactid'>Contact:</label>
-							<select name='contactid' id='contactid' class='contact-selector' style = 'width:100%;'>
+							<select name='contactid' id='contactid' class='contact-selector required' style = 'width:100%;'>
 								<option value = $contact>".getContact($contact)."</option>
 							</select>
 						</div>
@@ -135,7 +135,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' id='assoc_order' style='padding-bottom: 10px;'>
 						<label for='assoc'>Customer Order:</label>
 						<div class = 'input-group'>
-							<input class='form-control' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+							<input class='form-control required' name='assoc-email' type='text' placeholder = 'Order #' value='$associated_order'>
 							<span class='input-group-btn'>
 						        <button class='btn btn-secondary' type='button'>
 							        <i class='fa fa-paperclip' aria-hidden='true'></i>
@@ -202,7 +202,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class = 'row'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes:</label>
-						<textarea id='private_notes' class='form-control' rows='4' style=''>$private</textarea>
+						<textarea id='private_notes' class='form-control required' name='email' rows='4' style=''>$private</textarea>
 					</div>
 				</div>	
 				<div class = 'row'>

@@ -72,10 +72,13 @@
 				var height = $('header.navbar').height();
 		        //get possible filter bar height
 		        var heightOPT = 0;
+		        var heightError = 0;
 		        if ($('.table-header').css("display")!='none'){
 		        	heightOPT = $('.table-header').height();
 		        }
-		        var offset = height + heightOPT;
+		        //heightError = $('.general-form-error').height();
+		        
+		        var offset = height + heightOPT + heightError;
 				
 				
 				$('body').css('padding-top', offset);
@@ -556,84 +559,88 @@
 
 //==============================================================================
 			
-			$('#save_button').click(function() {
-				//Get page macro information
-				var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
-				var order_number = $(this).closest("body").attr("data-order-number");
-
-				//Get General order information
-				var userid = $("#sales-rep option:selected").attr("data-rep-id");
-				var company = $("#companyid").val();
-				var contact = $("#contactid").val();
-				if (contact == "new"){
-					contact = $("#select2-contactid-container").text();
-					contact = contact.slice(9);
-				}
-				var terms = $("#terms").val();
-				var ship_to = $('#ship_to').last('option').val();
-				var bill_to = $('#bill_to').last('option').val();
-				var carrier = $('#carrier').val();
-				var freight = $('#terms').val();
-				var service = $('#services').val();
-				var account = $('#account_select').val();
-				var pri_notes = $('#private_notes').val();
-				var pub_notes = $('#public_notes').val();
-				var warranty = $('.warranty').val();
-
-
-				//-------------------------- Right hand side --------------------------
-				//Get Line items from the right half of the page
-				var i = 0;
-				var submit = [];
-				var row = [];
+			$('#save_button').click(function(e) {
 				
-				//This loop runs through the right-hand side and parses out the general values from the page
-				$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
-					var row = {
-						"line_number" : $(this).find(".line_line").attr("data-line-number"),
-						"part" : $(this).find(".line_part").attr("data-search"),
-						"id" : $(this).find(".line_part").attr("data-record"),
-						"date" : $(this).find(".line_date").attr("data-date"),
-						"warranty" : $(this).find(".line_war").attr("data-war"),
-						"qty" : $(this).find(".line_qty").attr("data-qty"),
-						"price" : $(this).find(".line_price").text(),
+				var isValid = nonFormCase($(this), e);
+				
+				if(isValid) {
+					//Get page macro information
+					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
+					var order_number = $(this).closest("body").attr("data-order-number");
+	
+					//Get General order information
+					var userid = $("#sales-rep option:selected").attr("data-rep-id");
+					var company = $("#companyid").val();
+					var contact = $("#contactid").val();
+					if (contact == "new"){
+						contact = $("#select2-contactid-container").text();
+						contact = contact.slice(9);
 					}
-					submit.push(row);
-				});
-
-				//Submit all rows and meta data for unpacking later
-				$.ajax({
-					type: "POST",
-					url: '/json/order-form-submit.php',
-					data: {
-						"sales-rep":userid,
-						"companyid":company,
-						"order_type":order_type,
-		   		    	"order_number":order_number,
-						"contact": contact,
-						"ship_to": ship_to,
-						"bill_to": bill_to,
-						"carrier": carrier,
-						"account": account,
-						"terms" : terms,
-						"service" : service,
-						"pri_notes": pri_notes,
-						"pub_notes": pub_notes,
-						"warranty": warranty,
-						"table_rows":submit,
-						}, // serializes the form's elements.
-					dataType: 'json',
-					success: function(form) {
-						var on = form["order"];
-						var ps = form["type"];
-						// alert(form["error"]);
-						window.location = "/order_form.php?ps="+ps+"&on="+on;
-					},
-					error: function(xhr, status, error) {
-					   	alert(error);
-					},
-				});
-
+					var terms = $("#terms").val();
+					var ship_to = $('#ship_to').last('option').val();
+					var bill_to = $('#bill_to').last('option').val();
+					var carrier = $('#carrier').val();
+					var freight = $('#terms').val();
+					var service = $('#services').val();
+					var account = $('#account_select').val();
+					var pri_notes = $('#private_notes').val();
+					var pub_notes = $('#public_notes').val();
+					var warranty = $('.warranty').val();
+	
+	
+					//-------------------------- Right hand side --------------------------
+					//Get Line items from the right half of the page
+					var i = 0;
+					var submit = [];
+					var row = [];
+					
+					//This loop runs through the right-hand side and parses out the general values from the page
+					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
+						var row = {
+							"line_number" : $(this).find(".line_line").attr("data-line-number"),
+							"part" : $(this).find(".line_part").attr("data-search"),
+							"id" : $(this).find(".line_part").attr("data-record"),
+							"date" : $(this).find(".line_date").attr("data-date"),
+							"warranty" : $(this).find(".line_war").attr("data-war"),
+							"qty" : $(this).find(".line_qty").attr("data-qty"),
+							"price" : $(this).find(".line_price").text(),
+						}
+						submit.push(row);
+					});
+	
+					//Submit all rows and meta data for unpacking later
+					$.ajax({
+						type: "POST",
+						url: '/json/order-form-submit.php',
+						data: {
+							"sales-rep":userid,
+							"companyid":company,
+							"order_type":order_type,
+			   		    	"order_number":order_number,
+							"contact": contact,
+							"ship_to": ship_to,
+							"bill_to": bill_to,
+							"carrier": carrier,
+							"account": account,
+							"terms" : terms,
+							"service" : service,
+							"pri_notes": pri_notes,
+							"pub_notes": pub_notes,
+							"warranty": warranty,
+							"table_rows":submit,
+							}, // serializes the form's elements.
+						dataType: 'json',
+						success: function(form) {
+							var on = form["order"];
+							var ps = form["type"];
+							// alert(form["error"]);
+							window.location = "/order_form.php?ps="+ps+"&on="+on;
+						},
+						error: function(xhr, status, error) {
+						   	alert(error);
+						},
+					});
+				}
 			});
 			
 //========================== END COMPLETE PAGE SUBMIT ==========================
