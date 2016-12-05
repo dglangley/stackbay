@@ -70,15 +70,12 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
-		<style>
-			.select2-container--open .select2-dropdown--below {
-			    z-index: 1 !important;
-			}
-		</style>
+
 	</head>
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		<div class="container-fluid pad-wrapper">
+
 		<?php include 'inc/navbar.php';
 		include_once $rootdir.'/modal/address.php';
 		include_once $rootdir.'/modal/accounts.php';
@@ -109,128 +106,128 @@
 					<?=($order_number=="New") ? 'Create' :'Save'?>
 				</button>
 			</div>
-		</div>
-
-	<!-- Row declaration for splitting the two "halves of the page  -->
-	<div class="container-fluid">
 	
-		<!--================== Begin Left Half ===================-->
-		<div class="left-side-main col-md-3 col-lg-2" data-page="order">
-			<!-- Everything here is put out by the order creation ajax script -->
-		</div>
-		<!--======================= End Left half ======================-->
+		<!-- Row declaration for splitting the two "halves of the page  -->
+		<div class="container-fluid">
+		
+			<!--================== Begin Left Half ===================-->
+			<div class="left-side-main col-md-3 col-lg-2" data-page="order">
+				<!-- Everything here is put out by the order creation ajax script -->
+			</div>
+			<!--======================= End Left half ======================-->
+		
 	
-
-		<!--===================== Begin Right half =====================-->
-		<div class="col-md-9 col-lg-10">
-			
-			<!-- Output the sales-rep dropdown in the top right corner -->
-			<div class="forms_section">
-				<div style="float:right;padding-top:15px;">
-					<div class="ui-select" style="width:125px; 'margin-bottom:0;">
-	                    <select id="sales-rep">
-	                        <option selected data-rep-id='<?php echo $U['contactid']; ?>'><?php echo $U['name']; ?></option>
-	                        <option data-rep-id='2'><?=getRep(2)?></option>
-							<option data-rep-id='3'><?=getRep(3)?></option>
-	                    </select>
-	                </div>
-				</div>
-			</div> 
-			<div class="table-responsive">
-				<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
-				<thead>
-			         <tr>
-			            <th style = "min-width:30px;">
-			            	<span class="line"></span>
-			        	</th>
-			            <th class="col-md-6" style="max-width:600px;">
-			            	<span class="line"></span>		
-			            	Item	
-			            </th>
-			            <th class="col-md-1">
-			            	<span class="line"></span>   	
-			            	Date
-			            </th>
-			            <th class="col-md-1">   	
-			            	<span class="line"></span>   	
-			            	Warranty
-			            </th>
-			            <th class="col-md-1">
-			            	<span class="line"></span>   	
-			            	Condition
-			            </th>
-			            <th class="col-md-1">   	
-			            	<span class="line"></span>   	
-			            	Qty
-			            </th>
-			            <th class="col-md-1">
-							<span class="line"></span>   	
-	   		            	Unit Price
-			        	</th>
-			            <th class="col-md-1">
-			            	<span class="line"></span>
-			            	Ext. Price 
-			        	</th>
-			        	<th>
-			            	<span class="line"></span>   	
-			        	</th>
-						<th>
-							&nbsp;
-			        	</th>
-			         </tr>
-			      </thead>
-				<tbody id="right_side_main" style = "font-size:13px;">
-					
-		        </tbody>
-				<tfoot style = "font-size:13px;">
-					<tr id="add_row">
-			            <td>
-			            	<a class="btn-flat gray pull-left" id="NewSalesOrder">
-								<i class="fa fa-plus fa-4" aria-hidden="true"></i>
-							</a>
-						</td>
-						<td style="display:none;padding:0;" class = "newLineNumber"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" style="height:28px;display:none;padding:0;text-align:center;width:100%;"></td>
-			            <td id="search_collumn">
-			            	<div style="display:none;" id = "item-selected">
-								<select class="item_search">
+			<!--===================== Begin Right half =====================-->
+			<div class="col-md-9 col-lg-10">
+				
+				<!-- Output the sales-rep dropdown in the top right corner -->
+				<div class="forms_section">
+					<div style="float:right;padding-top:15px;">
+						<div class="ui-select" style="width:125px; 'margin-bottom:0;">
+		                    <select id="sales-rep">
+		                        <option selected data-rep-id='<?php echo $U['contactid']; ?>'><?php echo $U['name']; ?></option>
+		                        <option data-rep-id='2'><?=getRep(2)?></option>
+								<option data-rep-id='3'><?=getRep(3)?></option>
+		                    </select>
+		                </div>
+					</div>
+				</div> 
+				<div class="table-responsive">
+					<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
+					<thead>
+				         <tr>
+				            <th style = "min-width:30px;">
+				            	<span class="line"></span>
+				        	</th>
+				            <th class="col-md-6" style="max-width:600px;">
+				            	<span class="line"></span>		
+				            	Item	
+				            </th>
+				            <th class="col-md-1">
+				            	<span class="line"></span>   	
+				            	Date
+				            </th>
+				            <th class="col-md-1">   	
+				            	<span class="line"></span>   	
+				            	Warranty
+				            </th>
+				            <th class="col-md-1">
+				            	<span class="line"></span>   	
+				            	Condition
+				            </th>
+				            <th class="col-md-1">   	
+				            	<span class="line"></span>   	
+				            	Qty
+				            </th>
+				            <th class="col-md-1">
+								<span class="line"></span>   	
+		   		            	Unit Price
+				        	</th>
+				            <th class="col-md-1">
+				            	<span class="line"></span>
+				            	Ext. Price 
+				        	</th>
+				        	<th>
+				            	<span class="line"></span>   	
+				        	</th>
+							<th>
+								&nbsp;
+				        	</th>
+				         </tr>
+				      </thead>
+					<tbody id="right_side_main" style = "font-size:13px;">
+						
+			        </tbody>
+					<tfoot style = "font-size:13px;">
+						<tr id="add_row">
+				            <td>
+				            	<a class="btn-flat gray pull-left" id="NewSalesOrder">
+									<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+								</a>
+							</td>
+							<td style="display:none;padding:0;" class = "newLineNumber"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" style="height:28px;display:none;padding:0;text-align:center;width:100%;"></td>
+				            <td id="search_collumn">
+				            	<div style="display:none;" id = "item-selected">
+									<select class="item_search">
+									</select>
+								</div>
+							</td>
+				            <td>				
+				            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
+						            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
+						            <span class="input-group-addon">
+						                <span class="fa fa-calendar"></span>
+						            </span>
+					            </div>
+						    </td>
+							<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false,"new_row_warranty")?></div></td>
+							<td><div style="display:none;">
+								<select id="new_row_condition" class="form-control">
+									<?php foreach(getEnumValue() as $condition): ?>
+										<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo ucwords($condition);?></option>
+									<?php endforeach; ?>
 								</select>
-							</div>
-						</td>
-			            <td>				
-			            	<div class="input-group datetime-picker" data-format="MM/DD/YYYY" style="display:none;">
-					            <input type="text" name="ni_date" class="form-control input-sm" value="<?=$endDate?>" style = "min-width:50px;"/>
-					            <span class="input-group-addon">
-					                <span class="fa fa-calendar"></span>
-					            </span>
-				            </div>
-					    </td>
-						<td><div class = 'row' style="display:none;"><?=dropdown('warranty','','','col-md-12',false,"new_row_warranty")?></div></td>
-						<td><div style="display:none;">
-							<select id="new_row_condition" class="form-control">
-								<?php foreach(getEnumValue() as $condition): ?>
-									<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo ucwords($condition);?></option>
-								<?php endforeach; ?>
-							</select>
-						</div></td>
-			            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
-			            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
-			            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
-						<td colspan="2" id = "check_collumn">
-							<a class="btn-flat success pull-right" id = "forms_submit" style="display:none;">
-								<i class="fa fa-check fa-4" aria-hidden="true"></i>
-							</a>
-						</td>
-			         </tr>
-				</tfoot> 
-	
-			   </table>
-		   </div>
-	</div>
+							</div></td>
+				            <td><input class="form-control input-sm" type="text" name="ni_qty" placeholder="QTY" style="display:none;"></td>
+				            <td><input class="form-control input-sm" type="text" name = "ni_price" placeholder="UNIT PRICE" style="display:none;"></td>
+				            <td><input class="form-control input-sm" readonly="readonly" type="text" name="ni_ext" placeholder="ExtPrice"  style="display:none;"></td>
+							<td colspan="2" id = "check_collumn">
+								<a class="btn-flat success pull-right" id = "forms_submit" style="display:none;">
+									<i class="fa fa-check fa-4" aria-hidden="true"></i>
+								</a>
+							</td>
+				         </tr>
+					</tfoot> 
+		
+				   </table>
+			   </div>
+		</div>
 		<!--====================== End Right half ======================-->
 	</div>
 </div>
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
+		
 		<script>
 			(function($){
 				$('.item_search').select2().on("change", function(e) {
