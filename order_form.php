@@ -23,8 +23,6 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
-	include_once $rootdir.'/modal/address.php';
-	include_once $rootdir.'/modal/accounts.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
@@ -32,23 +30,23 @@
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 	
-	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
-		$statusVals;
+	// function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+	// 	$statusVals;
 		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	    $result = qdb($query);
+	//     $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
+	//     $result = qdb($query);
 	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$statusVals = $result;
-		}
+	//     if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$statusVals = $result;
+	// 	}
 		
-		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
+	// 	preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
 		
-		$enum = explode("','", $matches[1]);
+	// 	$enum = explode("','", $matches[1]);
 		
-		return $enum;
-	}
+	// 	return $enum;
+	// }
 	
 	function getStock($condition = 'new', $partid) {
 		$stock;
@@ -81,7 +79,10 @@
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		<div class="container-fluid pad-wrapper">
-		<?php include 'inc/navbar.php';?>
+		<?php include 'inc/navbar.php';
+		include_once $rootdir.'/modal/address.php';
+		include_once $rootdir.'/modal/accounts.php';
+		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
 		;">

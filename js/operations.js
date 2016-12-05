@@ -290,17 +290,17 @@
 				$(this).closest("tr").hide();
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php");
+				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 			});
 
 			$(document).on("dblclick",".easy-output td",function() {
 				$(this).closest("tr").hide();
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php");
+				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 			});
 			
-		    $(".item_search").initSelect2("/json/part-search.php");
+		    $(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 	
 		    //This function runs the method append and adds a row to the end of the table
 			$(document).on("click","#NewSalesOrder",function() {
@@ -932,7 +932,7 @@
 				$('table:last').find('#new_location').prop('disabled', false);
 				$('table:last').find('.condition_field').prop('disabled', false);
 				$('table:last').find('.select2').remove();
-				$(".item_search").initSelect2("/json/part-search.php");
+				$(".item_search").initSelect2("/json/part-search.php","Part Search",$("body").attr('data-page'));
 			}
 		});
 		

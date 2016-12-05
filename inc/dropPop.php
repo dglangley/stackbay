@@ -18,6 +18,25 @@
 	include_once $rootdir.'/inc/getTerms.php';
 
     
+    function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+		$statusVals;
+		
+	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
+	    $result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$statusVals = $result;
+		}
+		
+		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
+		
+		$enum = explode("','", $matches[1]);
+		
+		return $enum;
+	}
+	
+    
     //This function works to prepopulate the dropdowns and output their selected option
     function dropdown($field, $selected = '', $limit = '',$size ='col-sm-6',$label=true,$custom_id=false){
 
@@ -153,6 +172,33 @@
     			    </select>
     	        </div>";
         }
+        else if ($field == 'condition'){
+            
+            // Grab all the variations of the enum into an iterable array
+            $condition = getEnumValue();
+		    
+		    //If the condition value returns any results
+		    if ($condition){
+    			foreach ($condition as $c){
+    				if($c == $selected){
+    					$cond .= "<option selected value=$c>$c</option>";
+    				}
+    				else{
+    					$cond .= "<option value=$c>$c</option>";
+    				}
+    			}
+    	   	}
+   	        $id = ($custom_id) ? $custom_id : "condition";
+            $output = "<div class='$size'>";
+            $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
+            $output .= "<select id = '$id' class='form-control warranty'>";
+    	    $output .= "    $cond
+    			    </select>
+    	        </div>";
+
+    	   	
+        }
+        
         else{
             $output = 'dicks and a half';
         }
