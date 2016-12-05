@@ -64,6 +64,8 @@
 		        minimumInputLength: 0
 		    });
 		}
+		
+
 		$(document).ready(function() {
 			
 
@@ -228,9 +230,8 @@
 				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
 				$.ajax({
 					type: "POST",
-					url: '/json/order-table-out.php',
+					url: '/json/dropPop.php',
 					data: {
-						"ajax":true,
 						"field":"terms",
 						"limit":company,
 						"size": "col-sm-6",
@@ -245,11 +246,11 @@
 			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
+            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				$.ajax({
 					type: "POST",
-					url: '/json/order-table-out.php',
+					url: '/json/dropPop.php',
 					data: {
-						"ajax":true,
 						"field":"services",
 						"limit":limit,
 						"size": "col-sm-6",
@@ -348,6 +349,7 @@
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
 	   		    var warranty = $(this).closest("tr").find(".warranty").val();
 	   		    var editRow = ((parseInt($(this).closest("tr").index())));
+	   		    
 	   		    
 				$.ajax({
 					type: "POST",
@@ -549,10 +551,27 @@
 			$(document).on("change","#warranty_global",function() {
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
+				
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
 				if (value != "no"){
 					$(".line_war").text(text)
 					.attr("data-war",value);
-					// $("#new_line_war").
+					$.ajax({
+						type: "POST",
+						url: '/json/dropPop.php',
+						data: {
+							"field": "warranty",
+							"selected": value,
+							"limit": '',
+							"size": "col-md-12",
+							"id":"new_row_warranty"
+							},
+						dataType: 'json',
+						success: function(result) {
+							// alert(result);
+							$("#new_row_warranty").replaceWith(result);
+						}
+					});
 				}
 			});
 

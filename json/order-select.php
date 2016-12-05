@@ -16,9 +16,7 @@
     $number = ($order_type == 'Purchase') ? 'po_number' : 'so_number';
 
 
-	$query = "SELECT * FROM ";
-	$query .= ($order_type == 'Purchase') ? 'purchase_orders' : 'sales_orders';
-	$query .= " WHERE $number LIKE '$q';";
+	$query = "SELECT po_number, name FROM `purchase_orders`, `companies` WHERE companyid = companies.id AND (`po_number` LIKE '%$q%' OR `name` LIKE '%$q%');";
 // 	$query .= " OR WHERE ;";
     
     $results = qdb($query);
@@ -26,8 +24,8 @@
     if (isset($results)){
         foreach($results as $row){
             $line = array(
-                'id' => $row[$number], 
-                'text' => $row[$number]." (".$row['companyid'].")"
+                'id' => $row['po_number'], 
+                'text' => $row['po_number']." - ".$row['name']
             );
             $output[] = $line;
         }
