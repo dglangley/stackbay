@@ -272,6 +272,7 @@
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
 				
+			
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -285,8 +286,49 @@
 						$('#right_side_main').append(result);
 					}
 				});
+				$.ajax({
+					type: "POST",
+					url: '/json/new_paradigm.php',
+					data: {
+
+					}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						if (result){
+							$('#search_input').append(result);
+							$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
+						}
+						else{
+							
+						}
+					},
+					error: function(xhr, status, error) {
+					   	alert(error+" | "+status+" | "+xhr);
+					},					
+				});
 			});
 		
+			$(document).on("click",".li_search_button",function() {
+				var search = $("#go_find_me").val();
+				//Ajax Call the new paradigm
+				$.ajax({
+					type: "POST",
+					url: '/json/new_paradigm.php',
+					data: {
+						"mode" : "search",
+						"item": search,
+					}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						$(".search_lines").empty();
+						$("#search_input").append(result)
+					},
+					error: function(xhr, status, error) {
+					   	alert(error+" | "+status+" | "+xhr);
+					},					
+				});
+
+			});
 		//Any time a field is clicked for editing, or double clicked at all, show
 		//the easy output portion of the row, populated with the relevant updated pages.
 			$(document).on("click",".forms_edit",function() {

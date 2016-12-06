@@ -181,10 +181,10 @@
 		    if ($condition){
     			foreach ($condition as $c){
     				if($c == $selected){
-    					$cond .= "<option selected value=$c>$c</option>";
+    					$cond .= "<option selected value=$c>".ucwords($c)."</option>";
     				}
     				else{
-    					$cond .= "<option value=$c>$c</option>";
+    					$cond .= "<option value=$c>".ucwords($c)."</option>";
     				}
     			}
     	   	}
