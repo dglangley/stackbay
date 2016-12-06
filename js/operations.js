@@ -853,30 +853,48 @@
 		
 		$(document).on("change","input[name='serialize']",function() {
 		    if(this.checked) {
-		         $(this).closest('.addRecord').find('#inv_add_record').text('SERIALIZE');
+		         $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
 		         $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
 		         $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
+		         $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
 		    } else {
-		    	 $(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
+		    	 $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
 		    	 $(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
 		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
 		    }
 		});
-		$(document).on("change","#new_qty",function() {
-			//$('table:last').find('input[name="serialize"]').prop('checked', false);
-		    if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
-		        $(this).closest('.addRecord').find('#inv_add_record').text('SERIALIZE');
-		        $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
-		        $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
-		    } else {
-		    	$(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
-		    	$(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
-		    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
-		    }
+		
+		var lastValue = '';
+		
+		$(document).on("keyup change mouseup","#new_qty",function() {
+			if ($(this).val() != lastValue) {
+        		lastValue = $(this).val();
+				//$('table:last').find('input[name="serialize"]').prop('checked', false);
+			    if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
+			        $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
+			        $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
+			        $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
+			        $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
+			    } else {
+			    	$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
+			    	$(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
+			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
+			    }
+			}
 		});
 		
 		$(document).on("click",".show_link",function() {
-		    $(this).closest('.table').find('#serial_each_table').fadeIn();
+			var data = $(this).is(':visible') ? 'Show Less' : 'Show More';
+    		$(this).text(data);
+		    $(this).closest('.table').find('#serial_each_table').fadeToggle();
+		});
+		
+		$(document).on('click',"#inv_delete_record",function() {
+		    if (confirm("Please confirm you want to delete inventory add for selected part" + ".")) {
+		        $(this).closest('.inventory_lines').remove();
+		    }
 		});
 		
 		$(document).on('click',"#inv_add_record",function() {
@@ -918,11 +936,12 @@
 				$element.closest('.table').find('#new_location').find('option').clone().appendTo($element.find('.location_clone'));
 				$element.find('.location_clone').val(location);
 				$element.closest('.table').find('#new_location').prop('disabled', true);
-				$(this).closest('.addRecord').find('#inv_add_record').text('ADD RECORD');
+				$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
 				$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
+				$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
 			} else {
-				var $newTr = $('#items_table:last').clone();
-				$.when($(this).closest('.inventory_lines').append($newTr)).then(function() {
+				var $newTr = $('#items_table:last').closest('.inventory_lines').clone();
+				$.when($(this).closest('.inventory_lines').parent().find('.inventory_lines:last').after($newTr)).then(function() {
 					$('table:last').find('#serial_each_table').children('.added_serial').remove();
 				});
 				$element.closest('.table').find('#serial_each_table').fadeOut('fast');
@@ -932,6 +951,7 @@
 					$element.closest('.table').find('.show_link').fadeIn();
 				}
 				//Clear all past values
+				$('table:last').find('.item_search').val('');
 				$('table:last').find('#new_qty').val('');
 				$('table:last').find('input[name="NewSerial"]').val('');
 				$('table:last').find('input[name="serialize"]').prop('checked', false);
@@ -996,5 +1016,4 @@
 			});
 		});
 //=========================== End Inventory Addition ===========================
-		
 	});
