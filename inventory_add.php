@@ -213,9 +213,12 @@
 											</select>
 					                    </td>
 					                    <td>
-					                    	<button class="btn-flat" id="inv_add_record">
-					                    		ADD RECORD
-					                    	</button>
+					                    	<div class="btn-group">
+					                    		<div class="btn-group" role="group">
+													<button class="btn btn-primary" id="inv_add_record"><i class="fa fa-plus" aria-hidden="true"></i></button>
+													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
+												</div>
+					                    	</div>
 					                    </td>
 								    </tr>
 								</thead>
@@ -316,9 +319,12 @@
 											</select>
 					                    </td>
 					                    <td>
-					                    	<button class="btn-flat" id="inv_add_record">
-					                    		ADD RECORD
-					                    	</button>
+					                    	<div class="btn-group">
+					                    		<div class="btn-group" role="group">
+													<button class="btn btn-primary" id="inv_add_record"><i class="fa fa-plus" aria-hidden="true"></i></button>
+													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
+												</div>
+					                    	</div>
 					                    </td>
 								    </tr>
 								</thead>
