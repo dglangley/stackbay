@@ -29,7 +29,7 @@
     }
 	    echo json_encode($items);//array('results'=>$companies,'more'=>false));
 	}
-    else{
+    else{ 
         echo(json_encode(sales_rep_view($q)));
     }
     
