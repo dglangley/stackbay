@@ -6,7 +6,7 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/svcs_pipe.php';
+	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 
 	//=========================================================================================
@@ -64,9 +64,9 @@
 <!------------------------------------------------------------------------------------------->
 <!DOCTYPE html>
 <html>
-<!-- Declaration of the standard head with Services home set as title -->
+<!-- Declaration of the standard head with P&L home set as title -->
 <head>
-	<title>Services Home</title>
+	<title>Profit and Loss Report</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -83,7 +83,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
-	<form class="form-inline" method="get" action="/services.php">
+	<form class="form-inline" method="get" action="/profit_loss.php">
 
     <table class="table table-header table-filter">
 		<tr>
@@ -177,7 +177,7 @@
 <!-- If there is a company id, output the text of that company id to the top of the screen -->
                 <div class="row head text-center">
                     <div class="col-md-12">
-                        <h2>Services Jobs</h2>
+                        <h2>Profit and Loss Report</h2>
                     </div>
                 </div>
 
@@ -200,86 +200,94 @@
 	$rows = '';
 	$total_pcs = 0;
 	$total_amt = 0;
+
+	$results = array();
 	
 	//Write the query for the gathering of Pipe data
-	$query = "SELECT s.*, u.fullname ";
-	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
+	$query = "SELECT si.serial, si.cost actual_cost, i.id, si.so_id, si.price, si.rep_id, si.freight_cost, si.po, si.avg_cost, ";
+	$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.heci, i.clei, c.name, so.so_date, oq_id ";
+	$query .= "FROM inventory_solditem si, inventory_salesorder so, inventory_inventory i, inventory_outgoing_quote oq, inventory_company c ";
+	$query .= "WHERE so.quote_ptr_id = si.so_id AND si.inventory_id = i.id AND oq_id = oq.id AND c.id = company_id ";
+
    	if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
    		//$dbStartDate = date("Y-j-m", strtotime($startDate));
    		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
+   		$query .= "AND so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
-	$query .= "ORDER BY date_entered DESC; ";
-/*
-    $query .= "FROM services_job j, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-    $query .= "ORDER BY s.so_date DESC;";
-*/
-	
-##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
-	//$query = "SELECT * FROM sales_orders ";
-	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
-	//$query .= "ORDER BY datetime DESC, id DESC; ";
-#####
-
-//Search for the results. Leave the second parameter null if the pipe is not being used
-
-	$result = qdb($query,'SVCS_PIPE');
+	$query .= "ORDER BY so_id ASC, so_date ASC; ";
+	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$key = $r['so_id'].$r['oq_id'];
+		if (! isset($results[$key])) {
+			$results[$key] = array(
+				'qty'=>0,
+				'cogs'=>0,
+				'order'=>$r['so_id'],
+				'part'=>$r['part_number'],
+				'heci'=>$r['clei'],
+				'price'=>$r['price'],
+				'company'=>$r['name'],
+				'actual_cost'=>$r['actual_cost'],
+				'avg_cost'=>$r['avg_cost'],
+				'date'=>$r['so_date'],
+				'po_number'=>$r['po_number'],
+			);
+		}
+		$results[$key]['qty']++;
+		$results[$key]['cogs'] += $r['actual_cost'];//$r['avg_cost'];
+		$results[$key]['income'] += $r['price'];
+	}
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 
-	foreach ($result as $r) {
+	$sum_qty = 0;
+	$sum_ext_price = 0;
+	$sum_cogs = 0;
+	$sum_profit = 0;
+	foreach ($results as $r) {
+		if ($r['cogs']=='') { $r['cogs'] = '0.00'; }
+		$ext_price = ($r['qty']*$r['price']);
+		$profit = ($r['income']-$r['cogs']);
+
+		$sum_qty += $r['qty'];
+		$sum_ext_price += $ext_price;
+		$sum_cogs += $r['cogs'];
+		$sum_profit += $profit;
+
 		$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($r['date_entered'],'M j, Y').'
+                                    '.format_date($r['date'],'M j, Y').'
                                 </td>
                                 <td>
-                                    <a href="job.php?id='.$r['id'].'">'.$r['job_no'].'</a>
+                                    '.$r['part'].' '.$r['heci'].'
                                 </td>
                                 <td>
-	                                <a href="#">'.$r['customer'].'</a><br/>
-									<span class="info">'.str_replace(chr(10),'<br/>',trim($r['site_access_info_address'])).'</span>
-                                </td>
-                                <td>
-                                    '.$r['customer_job_no'].'
-                                </td>
-                                <td>
-                                    '.$r['purchase_order'].'
-                                </td>
-                                <td>
-                                    '.format_date($r['scheduled_date_of_work'],'D, M j, Y').'
-                                </td>
-                                <td>
-                                    '.format_date($r['scheduled_completion_date'],'D, M j, Y').'
-                                </td>
-                                <td>
-                                    '.$r['fullname'].'
+                                    '.$r['qty'].'
                                 </td>
                                 <td class="text-right">
-                                    '.format_price($r['price_quote'],true,' ').'
+                                    '.format_price($r['price'],true,' ').'
                                 </td>
                                 <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
+                                    '.format_price($ext_price,true,' ').'
+                                </td>
+                                <td>
+                                    <strong>'.$r['order'].'</strong>
+                                </td>
+                                <td>
+	                                <a href="#">'.$r['company'].'</a>
                                 </td>
                                 <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
+                                    '.format_price($r['cogs'],true,' ').'
                                 </td>
-
+                                <td class="text-right">
+                                    '.format_price($profit,true,' ').'
+                                </td>
                             </tr>
 		';
 	}
@@ -295,9 +303,25 @@
                                     <span class="line"></span>
                                     Date 
                                 </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>
+                                    Description
+                                </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Job#
+                                    Qty
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
+                                    Price
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
+                                    Ext Price
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
+                                    Order#
                                 </th>
                                 <th class="col-md-2">
                                     <span class="line"></span>
@@ -305,29 +329,7 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Customer Job#
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>
-                                    PO#
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>
-                                    Start Date
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>
-                                    End Date
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>
-									Project Manager
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Quote
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Cost
+									COGS
                                 </th>
                                 <th class="col-md-1 text-right">
                                     Profit
@@ -336,6 +338,21 @@
                         </thead>
                         <tbody>
                         	<?php echo $rows; ?>
+							<tr>
+								<td colspan="2"> </td>
+								<td><?php echo $sum_qty; ?></td>
+								<td> </td>
+                                <td class="text-right">
+                                    <?php echo format_price($sum_ext_price,true,' '); ?>
+                                </td>
+								<td colspan="2"> </td>
+                                <td class="text-right">
+                                    <?php echo format_price($sum_cogs,true,' '); ?>
+                                </td>
+                                <td class="text-right">
+                                    <?php echo format_price($sum_profit,true,' '); ?>
+                                </td>
+							</tr>
                         </tbody>
                     </table>
                 </div>

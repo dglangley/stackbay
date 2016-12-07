@@ -124,9 +124,12 @@
                     <span>Reports</span>
                     <b class="caret"></b>
                 </a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu text-left">
                     <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
+                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
+<!--
                     <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>
+-->
 				</ul>
 			</li>
             <li class="hidden-xs hidden-sm">

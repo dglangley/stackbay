@@ -363,7 +363,7 @@
 		if (count($results)>20) {
 			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 20!';
 			// take the top 20 results
-			$results = array_slice($results,0,20);
+			$results = array_slice($results,0,20,true);
 		}
 
 		// gather all partid's first

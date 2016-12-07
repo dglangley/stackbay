@@ -1195,3 +1195,155 @@ a > .icon-ar.icon-ar-inverse:hover {
 .content-box.box-royal:hover {
   background-color: #a24cca;
 }
+
+
+/* ICON-AR STYLES COPIED FROM ARTIFICIAL REASON */
+.text-icon {
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+.text-icon .icon-ar {
+  float: left;
+  margin-top: 5px;
+}
+.icon-ar {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  background-color: #0099da;
+  color: #fff;
+  border-radius: 2px;
+  display: inline-block;
+  margin: 0 5px 5px 0;
+  text-align: center;
+  line-height: 2.2;
+}
+.icon-ar.icon-ar-square {
+  border-radius: 0;
+}
+.icon-ar.icon-ar-round {
+  border-radius: 5px;
+}
+.icon-ar.icon-ar-circle {
+  border-radius: 100px;
+}
+.icon-ar.icon-ar-inverse {
+  background-color: transparent;
+  color: #0099da;
+  border: solid 1px #0099da;
+}
+.icon-ar.icon-ar-inverse.icon-ar-no-border {
+  width: auto;
+  height: auto;
+  line-height: 1;
+  border: none;
+  font-size: 60px;
+}
+.icon-ar.icon-ar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  line-height: 2;
+}
+.icon-ar.icon-ar-lg {
+  width: 50px;
+  height: 50px;
+  font-size: 22px;
+  line-height: 2.2;
+}
+.icon-ar.icon-ar-xl-lg {
+  width: 80px;
+  height: 80px;
+  font-size: 36px;
+  line-height: 2.2;
+}
+.icon-ar.icon-ar-xxl-lg {
+  width: 120px;
+  height: 120px;
+  font-size: 48px;
+  line-height: 2.6;
+}
+.icon-ar.icon-ar-white {
+  background-color: #fff;
+  color: #0099da;
+}
+.icon-ar.icon-ar-white.icon-ar-inverse {
+  background-color: transparent;
+  color: #fff;
+  border: solid 1px #fff;
+}
+.icon-ar.icon-ar-danger {
+  background-color: #d9534f;
+}
+.icon-ar.icon-ar-warning {
+  background-color: #f0ad4e;
+}
+.icon-ar.icon-ar-success {
+  background-color: #02c66c;
+}
+.icon-ar.icon-ar-info {
+  background-color: #54c8eb;
+}
+.icon-ar.icon-ar-help {
+  background-color: #ac60d0;
+}
+.icon-ar.icon-ar-black {
+  background-color: #333;
+}
+.icon-ar.icon-ar-inverse.icon-ar-white {
+  background-color: transparent;
+  color: #fff;
+  border-color: #fff;
+}
+.icon-ar.icon-ar-inverse.icon-ar-danger {
+  background-color: transparent;
+  color: #d9534f;
+  border-color: #d9534f;
+}
+.icon-ar.icon-ar-inverse.icon-ar-warning {
+  background-color: transparent;
+  color: #f0ad4e;
+  border-color: #f0ad4e;
+}
+.icon-ar.icon-ar-inverse.icon-ar-success {
+  background-color: transparent;
+  color: #02c66c;
+  border-color: #02c66c;
+}
+.icon-ar.icon-ar-inverse.icon-ar-info {
+  background-color: transparent;
+  color: #54c8eb;
+  border-color: #54c8eb;
+}
+.icon-ar.icon-ar-inverse.icon-ar-help {
+  background-color: transparent;
+  color: #ac60d0;
+  border-color: #ac60d0;
+}
+.icon-ar.icon-ar-inverse.icon-ar-black {
+  background-color: transparent;
+  color: #333;
+  border-color: #333;
+}
+a > .icon-ar.icon-ar-inverse:hover {
+  background-color: #0099da;
+  color: #fff;
+}
+
+.right-line {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  color: #000;
+  margin: 30px 0;
+}
+.right-line:after {
+  position: absolute;
+  top: 55%;
+  overflow: hidden;
+  width: 100%;
+  height: 1px;
+  content: '\a0';
+  background-color: #ddd;
+  border-left: solid 20px #f7f7f7;
+}
