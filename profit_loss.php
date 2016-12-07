@@ -212,21 +212,20 @@
    	if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
    		$query .= "AND so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY so_id ASC, so_date ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$key = $r['so_id'].$r['oq_id'];
+		$key = $r['so_date'].'.A'.$r['so_id'].'.'.$r['oq_id'];
 		if (! isset($results[$key])) {
 			$results[$key] = array(
+				'type'=>'Sale',
 				'qty'=>0,
 				'cogs'=>0,
+				'income'=>0,
 				'order'=>$r['so_id'],
-				'part'=>$r['part_number'],
-				'heci'=>$r['clei'],
+				'description'=>$r['part_number'].' '.$r['clei'],
 				'price'=>$r['price'],
 				'company'=>$r['name'],
 				'actual_cost'=>$r['actual_cost'],
@@ -240,9 +239,41 @@
 		$results[$key]['income'] += $r['price'];
 	}
 
-	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
-	//will prepare the results rows to make sorting and grouping easier without having to change the results
-	$summary_rows = array();
+	$query = "SELECT cm.id cm_id, cm.date, cm.ref_no, cm.po_number, cm.rma_id, ";
+	$query .= "li.desc, li.quantity qty, li.amount, c.name, si.cost actual_cost, si.avg_cost ";
+	$query .= "FROM inventory_creditmemo cm, inventory_creditmemoli li, inventory_rmaticket r, inventory_solditem si, inventory_company c ";
+	$query .= "WHERE li.cm_id = cm.id AND customer_id = c.id AND cm.voided = 0 AND cm.rma_id = r.id AND r.item_id = si.id ";
+   	if ($startDate) {
+   		$dbStartDate = format_date($startDate, 'Y-m-d');
+   		$dbEndDate = format_date($endDate, 'Y-m-d');
+   		$query .= "AND cm.date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
+	}
+	$query .= "ORDER BY li.cm_id ASC, cm.date ASC; ";
+	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$key = $r['date'].'.B'.$r['cm_id'];
+		if (! isset($results[$key])) {
+			$results[$key] = array(
+				'type'=>'Credit',
+				'qty'=>0,
+				'cogs'=>0,
+				'income'=>0,
+				'order'=>$r['cm_id'],
+				'description'=>$r['desc'],
+				'price'=>$r['amount'],
+				'company'=>$r['name'],
+				'actual_cost'=>$r['actual_cost'],
+				'avg_cost'=>$r['avg_cost'],
+				'date'=>$r['date'],
+				'po_number'=>$r['po_number'],
+			);
+		}
+		$results[$key]['qty']++;
+		$results[$key]['cogs'] += $r['actual_cost'];//$r['avg_cost'];
+		$results[$key]['income'] += $r['price'];
+	}
+
+	ksort($results);
 
 	$sum_qty = 0;
 	$sum_ext_price = 0;
@@ -253,19 +284,30 @@
 		$ext_price = ($r['qty']*$r['price']);
 		$profit = ($r['income']-$r['cogs']);
 
-		$sum_qty += $r['qty'];
-		$sum_ext_price += $ext_price;
-		$sum_cogs += $r['cogs'];
-		$sum_profit += $profit;
+		if ($r['type']=='Sale') {
+        	$type = '<span class="label label-success label-box">Sale</span>';
+
+			$sum_qty += $r['qty'];
+			$sum_ext_price += $ext_price;
+			$sum_cogs += $r['cogs'];
+			$sum_profit += $profit;
+		} else {
+        	$type = '<span class="label label-danger label-box">Credit</span>';
+
+			$sum_qty -= $r['qty'];
+			$sum_ext_price -= $ext_price;
+			$sum_cogs -= $r['cogs'];
+			$sum_profit += $profit;
+		}
 
 		$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($r['date'],'M j, Y').'
+                                    '.$type.' '.format_date($r['date'],'M j, Y').'
                                 </td>
                                 <td>
-                                    '.$r['part'].' '.$r['heci'].'
+                                    '.$r['description'].'
                                 </td>
                                 <td>
                                     '.$r['qty'].'
@@ -311,13 +353,13 @@
                                     <span class="line"></span>
                                     Qty
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-1 text-right">
                                     <span class="line"></span>
-                                    Price
+                                    Price &nbsp;
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-1 text-right">
                                     <span class="line"></span>
-                                    Ext Price
+                                    Ext Price &nbsp;
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
@@ -327,9 +369,9 @@
                                     <span class="line"></span>
                                     Company
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-1 text-right">
                                     <span class="line"></span>
-									COGS
+									COGS &nbsp;
                                 </th>
                                 <th class="col-md-1 text-right">
                                     Profit

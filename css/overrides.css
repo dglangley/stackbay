@@ -358,6 +358,14 @@
 	float: left;
 	width: 100%;
 }
+.label-box {
+	display:inline-block;
+	font-size:8px;
+	width:28px;
+	padding-left:2px;
+	padding-right:2px;
+	margin-right:2px;
+}
 .inline-form.order-form .field-box textarea {
 	width:60%;
 }
