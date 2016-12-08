@@ -15,6 +15,9 @@
 	
 	//Output Module acts as the general output for each of the dashboard sections.
 	//	INPUTS: Order(p,s);  Status(Active,Complete)
+	
+	$updated = $_REQUEST['po'];
+	
 	function output_module($order,$status){
 		
 		$status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
@@ -48,9 +51,15 @@
 	function output_header($status){
 			echo'<thead>';
 			echo'<tr>';
-			echo'	<th class="col-md-1">';
-			echo'		Date';
-			echo'	</th>';
+			if($status=="Complete"){
+				echo'	<th class="col-md-1">';
+				echo'		Ship Date';
+				echo'	</th>';
+			} else {
+				echo'	<th class="col-md-1">';
+				echo'		Date';
+				echo'	</th>';
+			}
 			echo'	<th class="col-md-4">';
 			echo'	<span class="line"></span>';
 			echo'		Company';
@@ -66,16 +75,13 @@
         	echo'   <th class="col-md-3">';
         }
             echo'   	<span class="line"></span>';
-            echo'       Items';
+            echo'       Item';
             echo'	</th>';
             echo'   <th class="col-md-1">';
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
 		if($status=="Complete"){
-            echo'  	<th class="col-md-1">';
-            echo'   	Pending';
-            echo'  	</th>';
             echo'  	<th class="col-md-1">';
             echo'  		Status';
             echo'  	</th>';
@@ -89,14 +95,17 @@
 	//	- Order: s, p
 	function output_rows($order, $status){
 		
-		
-		
 		//Select a joint summary query of the order we are requesting
 		$query = "SELECT * FROM ";
 		if ($order == 'p'){
 			$query .= "purchase_orders o, purchase_items i ";
 			$query .= "WHERE o.po_number = i.po_number ";
-			$query .= "AND status = '" . res($status) . "' ";
+			if($status == 'Active') {
+				$query .= "AND i.receive_date IS NULL ";
+			} else {
+				$query .= "AND i.receive_date IS NOT NULL ";
+			}
+			//$query .= "AND status = '" . res($status) . "' ";
 			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";
 		}
 		else{
@@ -104,10 +113,11 @@
 			$query .= "WHERE o.so_number = i.so_number ";
 			if($status == 'Active') {
 				$query .= "AND i.ship_date IS NULL ";
+				$query .= "ORDER BY o.so_number LIMIT 0 , 100;";
 			} else {
 				$query .= "AND i.ship_date IS NOT NULL ";
+				$query .= "ORDER BY i.ship_date DESC LIMIT 0 , 100;";
 			}
-			$query .= "ORDER BY o.so_number LIMIT 0 , 100;";
 		}
 		
 		$results = qdb($query);
@@ -124,7 +134,7 @@
 			else{
 				$purchaseOrder = $r['po_number'];
 			}
-			$date = date("m/d/Y", strtotime($r['created']));
+			$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 			$company = getCompany($r['companyid']);
 			$item = getPart($r['partid']);
 			$qty = $r['qty'];
@@ -142,8 +152,7 @@
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
-				echo'        <td class="pending">'.$pending.'</td>';
-				echo'    	<td class="status">'.$count.'</td>';
+				echo'    	<td class="status">'.'Completed'.'</td>';
 			}
 			echo'	</tr>';
 		}
@@ -151,13 +160,12 @@
 		// //If there are less than ten rows, fill with blanks
 		while ($count < 10){
 			echo'	<tr class = "empty_row">';
-				echo'        <td>&nbsp;</td>';
-				echo'        <td>&nbsp;</td>';
-				echo'        <td>&nbsp;</td>';
-				echo'        <td>&nbsp;</td>';
-				echo'    	<td>&nbsp;</td>';
-			if($status=="Active" || $status=="Active"){
-				echo'        <td class="pending">&nbsp;</td>';
+			echo'        <td>&nbsp;</td>';
+			echo'        <td>&nbsp;</td>';
+			echo'        <td>&nbsp;</td>';
+			echo'        <td>&nbsp;</td>';
+			echo'   	 <td>&nbsp;</td>';
+			if($status=="Active"){
 				echo'    	<td class="status">&nbsp;</td>';
 			}
 			echo'	</tr>';
@@ -230,7 +238,21 @@
 <!----------------------------------------------------------------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-	
+	<div class="row-fluid table-header initial-header" id="order_header" style="width:100%;">
+		<div class="col-md-4">
+		</div>
+		<div class="col-md-4 text-center">
+			<h1>Shipping Dashboard</h1>			</div>
+		<div class="col-md-4">
+			<a href="/order_form.php?ps=Sales" class="btn btn-warning pull-right" style="margin-top: 10px;">
+				<i class="fa fa-plus"></i> Sales Order
+			</a>
+			<a href="/order_form.php?ps=Purchase" class="btn btn-success pull-right" style="margin-top: 10px; margin-right: 10px;">
+				<i class="fa fa-plus"></i> Purchase Order
+			</a>	
+		</div>
+	</div>
+		
 	<div class="table-header" style="width: 100%; min-height: 60px; display: none;">
 		<div class="row" style="padding: 15px">
 			<div class = "col-md-2">
@@ -313,6 +335,13 @@
 			</div>
 		</div>
 	</div>
+	
+	<?php if($updated): ?>
+		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
+		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+		    <strong>Success!</strong> Purchase Order Updated.
+		</div>
+	<?php endif; ?>
 	
 	<table class="" style="display:none;">
 		<tr id = "filterTableOutput">
@@ -416,7 +445,11 @@
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js"></script>
-
+<script>
+	(function($){
+		$('#item-updated-timer').delay(3000).fadeOut('fast');
+	})(jQuery);
+</script>
 
 </body>
 </html>

@@ -125,7 +125,8 @@
 		        }
 			});
 			
-			$('.click_me').click(function() {
+			$('.click_me').on('click', function() {
+				alert('clicked');
 				var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
 				$marginLefty.animate({
 					marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
@@ -151,8 +152,6 @@
 					//$('.company_meta .row').show();
 				}
 			});
-			
-
 
 			$('.shoot_me').click(function() {
 				$('.left-sidebar .sidebar-container').slideToggle(function(){
@@ -166,8 +165,6 @@
 				});
 			});
 		}
-		
-		toggleSidebar();
 
 		//========================= Left side main page =========================
 		//Load the meta information panel, initialize the clickable fields, and
@@ -742,6 +739,7 @@
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
 					$(this).closest("body").children(".table-header").show();
+					$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
 					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
@@ -771,6 +769,7 @@
 				}
 				else{
 					$(this).closest("body").children(".table-header").hide();
+					$(this).closest("body").children(".initial-header").show();
 					$(".shipping-dash-full").removeClass("shipping-dash-full");
 					$(this).closest("table").find(".overview").hide();
 					$(this).parents("body").find(".shipping_section_head").fadeIn("fast");
@@ -893,15 +892,25 @@
 		    $(this).siblings().removeClass('active');
 		});
 		
+		$(document).ready(function() {
+			//$('.inventory_lines').find('add-delete-group').show();
+			$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
+		});
+		
 		$(document).on("change","input[name='serialize']",function() {
 		    if(this.checked) {
 		         $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
 		         $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
+		         $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').show();
 		         $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
 		         $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
 		    } else {
 		    	 $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
 		    	 $(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+		    	 
+		    	 $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
+		    	 $('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
+		    	 
 		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
 		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
 		    }
@@ -915,12 +924,17 @@
 				//$('table:last').find('input[name="serialize"]').prop('checked', false);
 			    if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
 			        $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
+			        $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').show();
 			        $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
 			        $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
 			        $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
 			    } else {
 			    	$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
 			    	$(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
+			    	
+			    	$(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
+			    	$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
+			    	
 			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
 			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
 			    }
@@ -936,6 +950,7 @@
 		$(document).on('click',"#inv_delete_record",function() {
 		    if (confirm("Please confirm you want to delete inventory add for selected part" + ".")) {
 		        $(this).closest('.inventory_lines').remove();
+		        $('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
 		    }
 		});
 		
@@ -970,7 +985,12 @@
 					info += '</td></tr>';
 					$element.append(info);
 				}
+		
 				$element.closest('.table').find('.condition_field').prop('disabled', true);
+				
+				$element.closest('.table').find('#serial_each_table').show();
+				$element.closest('.table').find('.show_link').fadeIn();
+				
 				$element.find('.add_condition').append($conditions);
 				$element.find('.add_status').append($status);
 				$element.closest('.table').find('.add_condition select').prop('disabled', false);
@@ -981,6 +1001,17 @@
 				$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
 				$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
 				$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
+				
+				$(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
+		    	$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
+		    	
+		    	//On Return focus onto next item
+				$('input[name="NewSerial"]').on('keypress', function(e) {
+					var $serial = $(this);
+				    if(e.which == 13) {
+						$serial.closest('.added_serial').next('.added_serial').find('input[name="NewSerial"]').focus();
+				    }
+				});
 			} else {
 				var $newTr = $('#items_table:last').closest('.inventory_lines').clone();
 				$.when($(this).closest('.inventory_lines').parent().find('.inventory_lines:last').after($newTr)).then(function() {
@@ -1002,13 +1033,33 @@
 				$('table:last').find('.condition_field').prop('disabled', false);
 				$('table:last').find('.select2').remove();
 				$(".item_search").initSelect2("/json/part-search.php","Part Search",$("body").attr('data-page'));
+				
+				$('.inventory_lines').find('.add-delete-group').find('.btn-add').hide();
+				$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
 			}
 		});
+		
+		//Get the url argument parameter
+		function getUrlParameter(sParam) {
+		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
+		
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+		
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		};
 		
 		$(document).on('click',"#save_button_inventory",function() {
 			
 			//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array']
 			var items = [];
+			var po_number = getUrlParameter('on');
 
 			$('table .addRecord').each( function() {
 				var productid = $(this).closest('.table').find("#search_collumn").find(".item_search").val();
@@ -1043,17 +1094,18 @@
 					//items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
 				}
 			});
-			console.log(items);
+			//console.log(po_number);
 			// alert(new_record);
 			$.ajax({
 				type: "POST",
 				url: '/json/inventory-add.php',
 				data: {
-					 'productid' : items
+					 'productid' : items, 'po_number' : po_number
 				},
 				dataType: 'json',
 				success: function(lines) {
-					console.log(lines);
+					//console.log(lines);
+					window.location = "/shipping_home.php?po=true";
 				}
 			});
 		});
