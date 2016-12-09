@@ -66,7 +66,7 @@ function head_out(){
 function search_row(){
     //The macro row will carry the same information as the sub rows, but will be
     //a global-set matching row. It will mirror David's Item output page?
-        $line = "<tr class ='search_row' style = 'padding:50px;'>";
+        $line = "<tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>";
         
         //Line Number
         $line .= "<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>";
@@ -96,7 +96,7 @@ function search_row(){
         //Condition | condition can be set per each part. Will play around with the tactile (DROPPOP, BABY)
         $line .= "<td>".dropdown('condition','','','',false)."</td>";
         //Warranty
-        $line .= "<td>".dropdown('warranty',$warranty,'','',false)."</td>";
+        $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
 
         
         //Price
@@ -120,7 +120,7 @@ function search_row(){
     //The macro row will /NOT/ be stored, and will dissappear after each new item is added.
 }
 
-function another_planet($parts){
+function format($parts){
     $name = $parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr'];
     return $name;
 }
@@ -128,25 +128,99 @@ function another_planet($parts){
 
 //==================== Build the individual version output ====================
 function sub_rows($search = ''){
+    $page = grab('page');
     //On Click of the "GO!" Button, populate a dropped down list of each of the parameters.
     
     //Declare general collection variables
     $row = '';
+    $stock = array();
+    $inc = array();
     
     //General Collumn information
         //Item information
         $items = hecidb($search);
+            foreach ($items as $id => $data){
+                //Here is where I will produce and maintain the display text
+                $matches[] = $id;
+            }
+            if(isset($matches)){
+                $match_string = implode(", ",$matches);
+            
+                //Get all the in stock
+                $inventory = "Select SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) ";
+
+                $inventory .= "GROUP BY partid;";
+                $purchased = "Select SUM(qty) total, partid FROM purchase_items WHERE partid in ($match_string) GROUP BY partid;";
+                
+                $in_stock  = qdb($inventory);
+                $incoming = qdb($purchased);
+                if (mysqli_num_rows($in_stock) > 0){
+                    foreach ($in_stock as $r){
+                        $stock[$r['partid']] = $r['total'];
+                    }
+                }
+                if (mysqli_num_rows($incoming) > 0){
+                    foreach ($incoming as $i){
+                        $inc[$i['partid']] = $i['total'];
+                    }
+                }
+            }
+                // $rows = "
+                // <tr class = 'search_lines' data-line-id = $id>
+                //     <td></td>
+                //     <td></td>
+                //     <td></td>
+                //     <td></td>
+                //     <td></td>
+                //     <td></td>
+                //     <td></td>
+                //     <td>
+                //         <div class='row-fluid'>
+                //             <div class='col-md-4'>T</div>
+                //             <div class='col-md-4'>h</div>
+                //             <div class='col-md-4'>e</div>
+                //         </div>
+                //     </td>
+                //     <td></td>
+                // </tr>";
             foreach ($items as $id => $info){
+                $sellable = false;
+                
+                $text = "<div class='row-fluid'>";
+                $text .= "<div title='New' class='col-md-4 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding-left:0%;padding-right:0%;'><b>";
+                if(array_key_exists($id, $stock)){
+                    $sellable = true;
+                    $text .= $stock[$id];
+                }
+                else{
+                    $text .= "&nbsp;";
+                }
+                $text .= "</b></div>";
+                
+                $text .= "<div title='New' class='col-md-4 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
+                if(array_key_exists($id, $inc)){
+                    $sellable = true;
+                    $text .= $inc[$id];
+                }
+                else{
+                    $text .= "&nbsp;";
+                }
+                $text .= "</div>";
+                $text .= "</div>";
+                if (($page == 'Sales' || $page == 's') && !$sellable){
+                    $text = '';
+                    continue;
+                }
                 $rows .= "
                 <tr class = 'search_lines' data-line-id = $id>
                     <td></td>
-                    <td>".another_planet($info)."</td>
+                    <td>".format($info)."</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-                    <td>test | test | test</td>
+                    <td>$text</td>
                     <td></td>
                 </tr>
                 ";

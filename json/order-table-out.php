@@ -58,10 +58,10 @@
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
             <td class = 'line_date' data-date = '$date'>".$date."</td>
+            <td class = 'line_cond'  data-cond = ".$row['condition'].">".ucwords($row['condition'])."</td>
             <td class = 'line_war'  data-war = ".$row['warranty'].">".getWarranty($row['warranty'],'name')."</td>
-            <td class = 'line_qty'  data-cond = ".$row['cond'].">"."filler"."</td>
-            <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
+            <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
@@ -86,10 +86,10 @@
 				            </span>
 			            </div>
 				    </td>
+		            <td>".dropdown('condition',$row['condition'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td>".dropdown('condition','','','',false)."</td>
-		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='".$row['uPrice']."'></td>
+		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<a class='btn-flat success pull-right line_item_submit' >
@@ -102,16 +102,17 @@
 	}
 	
 	//This function will append to the table any changes made while on the page
-	function append_row($mode){
+	function append_row($mode){ 
 		
 		//Get the posted values from the form
-		$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '0';
-		$date = isset($_REQUEST['date']) ? trim($_REQUEST['date']) : '1/1/1991';
-		$qty = isset($_REQUEST['qty']) ?  trim($_REQUEST['qty']) : '0';
-		$uPrice = isset($_REQUEST['unitPrice']) ? trim($_REQUEST['unitPrice']) : '0';
-		$line = isset($_REQUEST['line']) ? trim($_REQUEST['line']) : '';
-		$id = isset($_REQUEST['id']) ? trim($_REQUEST['id']) : 'NULL';
-		$warranty = isset($_REQUEST['warranty']) ? trim($_REQUEST['warranty']) : 'NULL';
+		$search = grab('search');
+		$date = grab('date');
+		$qty = grab('qty','0');
+		$uPrice = grab('unitPrice','0');
+		$line = grab('line');
+		$id = grab('id','NULL');
+		$warranty = grab('warranty','NULL');
+		$condition = grab('condition');
 
 		//Store all caught data into the standard array and build the row.
 		$row = array(
@@ -123,6 +124,7 @@
 			'uPrice' => $uPrice,
 			'line' => $line,
 			'warranty' => $warranty,
+			'condition' => $condition,
 			);
 		$row_out = build_row($row);
 		
@@ -159,6 +161,7 @@
 				'qty' => $r['qty'],
 				'uPrice' => $r['price'],
 				'warranty' => $r['warranty'],
+				'condition' => $r['condition']
 				);
 				$table .= build_row($new_row);			
 				

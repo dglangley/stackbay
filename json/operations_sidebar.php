@@ -129,6 +129,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					</div>
 				</div>";
 		
+		
+		
 		//Associated order module
 		$right .= "
 				<div class='row'>
@@ -144,18 +146,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		    			</div>
 	    			</div>
 		    	</div>";
-		
-		//Shipping Address 	
-		$right .= "
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to' >Ship to:</label>
-	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
-							<option value = '$s_add' >$s_name</option>
-	                    </select>
-				    </div>
-			    </div>";
-		
 		//Billing Address
 		$right .="
 				<div class='row'>
@@ -169,6 +159,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				    </div>
 			    </div>";
 
+		//Shipping Address 	
+		$right .= "
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
+						<label for='ship_to' >Ship to:</label>
+	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
+							<option value = '$s_add' >$s_name</option>
+	                    </select>
+				    </div>
+			    </div>";
 		//Payment Terms and warranty
 		$right .="
 				<div class='row' style='padding-bottom: 10px;'>

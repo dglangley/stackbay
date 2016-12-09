@@ -86,6 +86,7 @@
 				$('body').css('padding-top', offset);
 			}
 			//get main header height
+			
 			$( window ).resize(function() {
 		        headerOffset();
 			});
@@ -196,12 +197,20 @@
 					success: function(right) {
 						$(".left-side-main").append(right);
 						//If this is an edit page, limit all the appropriate dropdowns
+						// alert("success");
 						if (page == 'order'){
 							var company = $("#companyid").val();
+							if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
+								var limit = "25";
+							}
+							else{
+								var limit = company;
+							}
 							$("#companyid").initSelect2("/json/companies.php");
 							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
-							$("#bill_to").initSelect2("/json/address-picker.php");
-							$("#ship_to").initSelect2("/json/address-picker.php");
+							$("#bill_to").initSelect2("/json/address-picker.php","Bill to", limit);
+							$("#ship_to").initSelect2("/json/address-picker.php","Ship to", limit);
+							// alert(order_type+", "+company);
 							if($("#bill_to").val() == $("#ship_to").val()){
 								$("#mismo").prop("checked",true);
 							}
@@ -224,9 +233,17 @@
 			});
 			$(document).on("change","#companyid",function() {
 				var company = $(this).val();
+				var	order_type = $("body").attr("data-order-type");
+
 				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
-				$("#bill_to").initSelect2("/json/address-picker.php",'',company);
-				$("#ship_to").initSelect2("/json/address-picker.php",'',company);
+				if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
+					limit = "25";
+				}
+				else{
+					limit = company;
+				}
+				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
+				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
 				$.ajax({
 					type: "POST",
@@ -290,7 +307,7 @@
 					type: "POST",
 					url: '/json/new_paradigm.php',
 					data: {
-
+						
 					}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -307,7 +324,6 @@
 					},					
 				});
 			});
-		
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
 				//Ajax Call the new paradigm
@@ -317,10 +333,11 @@
 					data: {
 						"mode" : "search",
 						"item": search,
+						"page" : $("#order_body").attr("data-order-type"),
 					}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						$(".search_lines").empty();
+						$(".search_lines").html("").remove();
 						$("#search_input").append(result)
 					},
 					error: function(xhr, status, error) {
@@ -329,6 +346,8 @@
 				});
 
 			});
+			
+			
 		//Any time a field is clicked for editing, or double clicked at all, show
 		//the easy output portion of the row, populated with the relevant updated pages.
 			$(document).on("click",".forms_edit",function() {
@@ -360,7 +379,7 @@
 			});
 			
 			//Total Price output
-			$(document).on("keydown","input[name=ni_qty], input[name=ni_price]",function(){
+			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
 				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
 			    var price = ($(this).closest("tr").find("input[name=ni_price]").val());
 			    var ext = qty*price;
@@ -375,7 +394,7 @@
 			    }
 			});
 			
-			//Function to submit the individual line item edits
+//Function to submit the individual line item edits
 			$(document).on("click",".line_item_submit",function() {
 				
 				var new_search = $(this).closest("tr").find('.item-selected').find("option").last().val();
@@ -391,75 +410,119 @@
 	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
 	   		    var warranty = $(this).closest("tr").find(".warranty").val();
 	   		    var editRow = ((parseInt($(this).closest("tr").index())));
-	   		    
-	   		    
+	   		    var condition = $(this).closest("tr").find(".condition").val();
+
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
 					data: {
-		   		    	"line":lineNumber,
-		   		    	"search":search,
-		   		    	"date":date,
-		   		    	"qty":qty,
-		   		    	"unitPrice":price,
-		   		    	"id":line_item_id,
-		   		    	"warranty":warranty,
-		   		    	"mode":'update'
+						"line":lineNumber,
+						"search":search,
+						"date":date,
+						"qty":qty,
+						"unitPrice":price,
+						"id":line_item_id,
+						"warranty":warranty,
+						"condition":condition,
+						"mode":'update'
 						},
 					dataType: 'json',
 					success: function(row_out) {
 						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
-					}
+					},
+					error: function(xhr, status, error) {
+						   	alert(error);
+					},
+					
 				});
 	
 		    	$(this).closest(".lazy-entry").hide();
 		    	$(this).closest("tr").prev(".easy-output").show();
 			});
-			
-			//This function submits a new row
-			$('#forms_submit').on("click", function() {
-				var company = $("#").find('.item-selected').find("option").last().val();
-			    var search = $(this).closest("tr").find('#item-selected').find("option").val();
-			    var date = $(this).closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
-			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(this).closest("tr").find(".warranty").val();
+
+//New Multi-line insertion 			
+			$(document).on("click",".multipart_sub",function() {
+	   		    $(".search_lines").each(function() {
+				    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
+				    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
+		   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
+		   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
+	   		    	var partid = $(this).attr("data-line-id");
+	   		        var qty = $(this).find("input[name=ni_qty]").val();
+					var condition = $(".multipart_sub").closest("tr").find(".condition").val();
 				
-	
-				$.ajax({
-					
-					type: "POST",
-					url: '/json/order-table-out.php',
-					data: {
-		   		    	"line":lineNumber,
-		   		    	"search":search,
-		   		    	"date":date,
-		   		    	"qty":qty,
-		   		    	"unitPrice":price,
-						"warranty":warranty,
-		   		    	"id": 'new',
-		   		    	"mode":'append'
-						}, // serializes the form's elements.
-					dataType: 'json',
-					success: function(row_out) {
-						$("#right_side_main").append(row_out);
-					}
-				});
-	
-				$(this).closest("tr").children("td:first-child").show();
-				$(this).closest("tr").children("td").slice(1).children()
-				.val("")
-				.toggle();
-				$(this).closest("tr").find(".item_search").html("\
-								<select class='item_search'>\
-								</select>\
-				")
-				$(this).closest("tr").find(".select2-selection__rendered").html('');
-				
+	   		        if(qty){
+       					$.ajax({
+							type: "POST",
+							url: '/json/order-table-out.php',
+							data: {
+				   		    	"line":lineNumber,
+				   		    	"search":partid,
+				   		    	"date":date,
+				   		    	"qty":qty,
+				   		    	"unitPrice":price,
+								"warranty":warranty,
+								"condition":condition,
+				   		    	"id": 'new',
+				   		    	"mode":'append'
+								}, // serializes the form's elements.
+							dataType: 'json',
+							success: function(row_out) {
+								$("#right_side_main").append(row_out);
+								$(".search_lines").html("").remove();
+ 							}
+						});
+	   		        }
+	   		    });
+				$("#go_find_me").val("");
+    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
+       			$(".multipart_sub").closest("tr").find("input[name=ni_line]").val("");
 			});
 			
-			//Delete Button
+//This function submits a new row
+			// $('#forms_submit').on("click", function() {
+			// 	var company = $("#").find('.item-selected').find("option").last().val();
+			//     var search = $(this).closest("tr").find('#item-selected').find("option").val();
+			//     var date = $(this).closest("tr").find("input[name=ni_date]").val();
+	  // 		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
+			//     var price = $(this).closest("tr").find("input[name=ni_price]").val();
+	  // 		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
+	  // 		    var warranty = $(this).closest("tr").find(".warranty").val();
+				
+	
+			// 	$.ajax({
+					
+			// 		type: "POST",
+			// 		url: '/json/order-table-out.php',
+			// 		data: {
+		 //  		    	"line":lineNumber,
+		 //  		    	"search":search,
+		 //  		    	"date":date,
+		 //  		    	"qty":qty,
+		 //  		    	"unitPrice":price,
+			// 			"warranty":warranty,
+		 //  		    	"id": 'new',
+		 //  		    	"mode":'append'
+			// 			}, // serializes the form's elements.
+			// 		dataType: 'json',
+			// 		success: function(row_out) {
+			// 			$("#right_side_main").append(row_out);
+			// 		}
+			// 	});
+	
+			// 	$(this).closest("tr").children("td:first-child").show();
+			// 	$(this).closest("tr").children("td").slice(1).children()
+			// 	.val("")
+			// 	.toggle();
+			// 	$(this).closest("tr").find(".item_search").html("\
+			// 					<select class='item_search'>\
+			// 					</select>\
+			// 	")
+			// 	$(this).closest("tr").find(".select2-selection__rendered").html('');
+				
+			// });
+			
+//Delete Button
 			$(document).on("click",".forms_trash",function() {
 				if(confirm("Are you sure you want to delete this row?")){
 					var id = $(this).closest("tr").data('record');
@@ -487,6 +550,7 @@
 		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
 			}
+			
 			$(document).on("change","#ship_to, #bill_to",function() {
 				//Get the identifier of the initial textbox
 				var origin = ($(this).parent().find('select').attr('id'));
@@ -605,13 +669,15 @@
 							"field": "warranty",
 							"selected": value,
 							"limit": '',
-							"size": "col-md-12",
+							"size": "warranty",
 							"id":"new_row_warranty"
 							},
 						dataType: 'json',
 						success: function(result) {
 							// alert(result);
 							$("#new_row_warranty").replaceWith(result);
+							$('#new_warranty').parent().replaceWith(result)
+							.parent().removeClass('col-md-12');
 						}
 					});
 				}
@@ -662,10 +728,11 @@
 							"part" : $(this).find(".line_part").attr("data-search"),
 							"id" : $(this).find(".line_part").attr("data-record"),
 							"date" : $(this).find(".line_date").attr("data-date"),
+							"condition" : $(this).find(".line_cond").attr("data-cond"),
 							"warranty" : $(this).find(".line_war").attr("data-war"),
-							"qty" : $(this).find(".line_qty").attr("data-qty"),
 							"price" : $(this).find(".line_price").text(),
-						}
+							"qty" : $(this).find(".line_qty").attr("data-qty"),
+						};
 						submit.push(row);
 					});
 	

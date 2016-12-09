@@ -190,8 +190,8 @@
     	   	}
    	        $id = ($custom_id) ? $custom_id : "condition";
             $output = "<div class='$size'>";
-            $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
-            $output .= "<select id = '$id' class='form-control warranty'>";
+            $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
+            $output .= "<select id = '$id' class='form-control condition'>";
     	    $output .= "    $cond
     			    </select>
     	        </div>";

@@ -3,8 +3,8 @@
     $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/dbconnect.php';
     
-    function grab($string){
-        return (!is_null($_REQUEST[$string]) ? trim($_REQUEST[$string]) :  '');
+    function grab($string, $default = ''){
+        return (!is_null($_REQUEST[$string]) ? trim($_REQUEST[$string]) :  $default);
     }
     
     function prep($var, $default = "NULL"){
