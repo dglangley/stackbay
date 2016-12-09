@@ -54,7 +54,7 @@
 		
 		$listParts;
 		
-		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) .";";
+		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND receive_date IS NULL;";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -82,7 +82,6 @@
 		return $part;
 	}
 	
-	
 	$partsListing = getPOParts();
 ?>
 
@@ -102,7 +101,7 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center">
-				<h1>Inventory <?php echo ($order_number != '' ? 'for Purchase Order #' . $order_number : 'Addition'); ?></h1>
+				<h1><?php echo ($order_number != '' ? 'Outstanding Items for PO #' . $order_number : 'Inventory Addition'); ?></h1>
 			</div>
 			<div class="col-sm-4">
 				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
@@ -213,9 +212,9 @@
 											</select>
 					                    </td>
 					                    <td>
-					                    	<div class="btn-group">
+					                    	<div class="btn-group add-delete-group">
 					                    		<div class="btn-group" role="group">
-													<button class="btn btn-primary" id="inv_add_record"><i class="fa fa-plus" aria-hidden="true"></i></button>
+													<button class="btn btn-primary btn-add" id="inv_add_record" style="display: none;"><i class="fa fa-plus" aria-hidden="true"></i></button>
 													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
 												</div>
 					                    	</div>
@@ -319,9 +318,9 @@
 											</select>
 					                    </td>
 					                    <td>
-					                    	<div class="btn-group">
+					                    	<div class="btn-group add-delete-group">
 					                    		<div class="btn-group" role="group">
-													<button class="btn btn-primary" id="inv_add_record"><i class="fa fa-plus" aria-hidden="true"></i></button>
+													<button class="btn btn-primary btn-add" id="inv_add_record" style="display: none;"><i class="fa fa-plus" aria-hidden="true"></i></button>
 													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
 												</div>
 					                    	</div>

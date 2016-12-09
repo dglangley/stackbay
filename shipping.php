@@ -25,7 +25,7 @@
 	include_once $rootdir.'/inc/getRep.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
-	$order_number = $_REQUEST['order_no'];
+	$order_number = $_REQUEST['on'];
 	$order_type = "Sales";
 	
 	//If no order is selected then return to shipping home
@@ -169,7 +169,7 @@
 		</div>
 		<div class="loading_element">
 			<!--================== Begin Left Half ===================-->
-			<div id="left-side-main col-sm-2">
+			<div class="left-side-main col-sm-2" style="height: 100%;">
 				<!-- Everything here is put out by the order creation ajax script -->
 			</div>
 			<!--======================= End Left half ======================-->

@@ -15,6 +15,8 @@
 	
 	($page == '' ? $page = 1: '');
 	
+	//echo "<br><br><br>" . $page;
+	
 	$offset = ($page - 1) * 5;
 	
 	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 5;";
@@ -36,6 +38,7 @@
 		}
 		$pages = ceil($rows / 5);
 		for($i = 1; $i <= $pages; $i++) {
+			//echo $page;
 			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
 		}
 	}
@@ -115,8 +118,84 @@
 		return $name;
 	}
 	
+	function getStatusStock($stock = '', $partid = 0) {
+		$stockNumber;
+		
+		if($stock == 'pending') {
+			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'ordered');";
+		} else if($stock == 'instock') {
+			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'received' OR status = 'shelved');";
+		}
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$stockNumber = $result['SUM(qty)'];
+		}
+		
+		// while ($row = $result->fetch_assoc()) {
+		// 	$stockNumber= $row['serial_no'];
+		// }
+		if(!$stockNumber) {
+			$stockNumber = 0;
+		}
+		
+		return $stockNumber;
+	}
+	
+	//Get the past Purchase/Sales Order for each part in the inventory
+	function getOrder($order_type,$partid = 0) {
+		$order_array = array();
+		$order_message = "";
+		
+		//Determine which order type to look for in this system
+		$order_table = $order_type == 'po' ? 'purchase_items' : 'sales_items';
+		$selector = $order_type == 'po' ? 'po_number' : 'so_number';
+		
+		//Order by the lastest order and limit the order # to 3 at a time
+		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." ORDER BY ". res($selector) ." DESC LIMIT 3;";
+		$result = qdb($query) or die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			$order_array[] = $row;
+		}
+		
+		if(!empty($order_array)){
+			//$order_message = strtoupper($order_type) . " Number Found";
+			foreach($order_array as $item) {
+				$order_message .= "<a href='order_form.php?on=$item[$selector]&ps=" . ($order_type == 'po' ? 'p' : 's') . "'>#" .$item[$selector] . "</a> ";
+			}
+		} else {
+			//Else there is no record order number matched to this inventory addition
+			//Assuming that in item was added manually
+			$order_message = "No " . strtoupper($order_type) . " Orders Found";
+		}
+		
+		return $order_message;
+	}
+	
+	function getAvgPrice($partid) {
+		$order_array = array();
+		$avg = 0;
+		$counter = 0;
+		
+		$query = "SELECT price FROM sales_items WHERE partid = ". res($partid) .";";
+		$result = qdb($query) or die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			$order_array[] = $row;
+		}
+		
+		foreach($order_array as $price){
+			$avg += $price['price'];
+			$counter++;
+		}
+		
+		return $avg;
+	}
+	
 	function getStock($stock = '', $partid = 0) {
-		$stockNumber = 0;
+		$stockNumber;
 		
 		//echo $stock . $partid;
 		
@@ -290,30 +369,36 @@
 						<strong><?php echo getSystemName($part['systemid']); ?> - <?php echo $part['part']; ?></strong>
 						<hr>
 						Description, <?php echo getManufacture($part['manfid']); ?><br><br>
-						<i>Alias: David, Aaron, Andrew</i>
+						<i>Alias: </i>
 					</div>
 					<div class="col-md-2 col-sm-2">
 						<strong>Order History</strong>
 						<hr>
-						<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <a href="">#123</a>, <a href="">#234</a><br>
-						<span title="Sales Order" style="text-decoration: underline;">SO</span>: <a href="">#111</a>, <a href="">#222</a>
+						<span title="Purchase Order" style="text-decoration: underline;">PO</span>: <?php echo getOrder('po', $part['id']); ?><br>
+						<span title="Sales Order" style="text-decoration: underline;">SO</span>: <?php echo getOrder('so', $part['id']); ?>
 					</div>
-					<div class="col-md-2 col-sm-2">
+					<div class="col-md-1 col-sm-1">
 						<strong>Status</strong>
 						<hr>
-						<button title="In-stock" class="btn btn-danger">1</button>
-						<button title="Sold" class="btn btn-success">2</button>
-						<button title="Market" class="btn btn-primary">3</button>
+						<p>In Stock: <span style="color: #5cb85c;"><?php echo getStatusStock('instock', $part['id']); ?></span></p>
+						<p>Incoming: <span style="color: #f0ad4e;"><?php echo getStatusStock('pending', $part['id']); ?></span></p>
+						<!--<p>Out of Stock: <span style="color: #d9534f;"><?php echo getStock('refurbished', $part['id']); ?></span></p>-->
+						<!--<button title="In-stock" class="btn btn-danger">1</button>-->
+						<!--<button title="Sold" class="btn btn-success">2</button>-->
+						<!--<button title="Market" class="btn btn-primary">3</button>-->
 					</div>
 					<div class="col-md-2 col-sm-2">
 						<strong>Condition</strong>
 						<hr>
+						<!--<p>New: <span style="color: #5cb85c;"><?php echo getStock('new', $part['id']); ?></span></p>-->
+						<!--<p>Used: <span style="color: #f0ad4e;"><?php echo getStock('used', $part['id']); ?></span></p>-->
+						<!--<p>Refurbished: <span style="color: #d9534f;"><?php echo getStock('refurbished', $part['id']); ?></span></p>-->
 						<button title="New" class="btn btn-success new_stock"><?php echo getStock('new', $part['id']); ?></button>
-						<button title="Used" class="btn btn-primary used_stock"><?php echo getStock('used', $part['id']); ?></button>
+						<button title="Used" class="btn btn-warning used_stock"><?php echo getStock('used', $part['id']); ?></button>
 						<button title="Refurbished" class="btn btn-danger refurb_stock"><?php echo getStock('refurbished', $part['id']); ?></button>
 					</div>
-					<div class="col-md-1 col-sm-1">
-						<strong>Cost Avg.</strong>
+					<div class="col-md-2 col-sm-2">
+						<strong>Cost Avg. (SO Based)</strong>
 						<hr>
 						$1,000 - 1,500
 					</div>
@@ -331,8 +416,8 @@
 					
 					<hr>
 					<div class="addRows">
-						<?php $parts = getPartSerials($part['id']); $element = 0; $page = 1; foreach($parts as $serial): (($element % 5) == 0 && $element != 0 ? $page++ : ''); $element++; ?>
-							<div class="product-rows serial-page page-<?php echo $page; ?>" style="padding-bottom: 10px;" data-id="<?php echo $serial['id']; ?>">
+						<?php $parts = getPartSerials($part['id']); $element = 0; $page_no = 1; foreach($parts as $serial): (($element % 5) == 0 && $element != 0 ? $page_no++ : ''); $element++; ?>
+							<div class="product-rows serial-page page-<?php echo $page_no; ?>" style="padding-bottom: 10px;" data-id="<?php echo $serial['id']; ?>">
 								<div class="row">
 								<div class="col-md-2 col-sm-2">
 									<label for="serial">Serial/Lot Number</label>
@@ -606,7 +691,7 @@
 		
 		//Once button is clicked the new row will be appended
 		$('.buttonAddRows').click(function(){
-			$(this).closest('.part-container').find('.addRows').append(element);
+			$(this).closest('.part-container').find('.product-rows:last').after(element);
 			$(this).closest('.part-container').find('.appended').slideDown().removeClass('appended');
 			
 			$('.delete').click(function(){
