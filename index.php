@@ -201,7 +201,7 @@
 	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
 
 <?php
-	if (! $s AND ! $listid) {
+	if (! $s AND ! $listid AND ! $favorites) {
 ?>
     <div id="pad-wrapper">
 
@@ -247,6 +247,29 @@
 	</table>
 
     <div id="pad-wrapper">
+
+<?php
+	/* FILTER CONTROLS */
+	$start_date = '';
+	if ($startDate) { $start_date = format_date($startDate,'Y-m-d'); }
+	$end_date = '';
+	if ($endDate) { $end_date = format_date($endDate,'Y-m-d'); }
+	if ($favorites) {
+		echo '
+	<div class="alert alert-danger">
+		<i class="fa fa-star fa-2x"></i>
+		Results may be limited due to filters
+	</div>
+		';
+	} else if ($sales_count<>'' OR $sales_min<>'' OR $sales_max<>'' OR $stock_min<>'' OR $stock_max<>'' OR $demand_min<>'' OR $demand_max<>'' OR $start_date<>'' OR $end_date<>$today) {
+		echo '
+	<div class="alert alert-warning">
+		<i class="fa fa-warning fa-2x"></i>
+		Results may be limited due to filters
+	</div>
+		';
+	}
+?>
 
         <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
         <div class="table-products">
@@ -304,7 +327,28 @@
 			}
 		}
 	} else {
-		$lines = explode(chr(10),$s);
+		// if user is just pulling favorites list
+		if (! $s AND $favorites) {
+			// build results using heci7 as key, or part# if no heci
+			$results = array();
+			$query = "SELECT part, LEFT(heci,7) heci7 FROM parts, favorites ";
+			$query .= "WHERE parts.id = favorites.partid ";
+			$query .= "ORDER BY part, rel, heci ";
+			$result = qdb($query) OR die(qe().' '.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				if ($r['heci7']) { $key = $r['heci7']; }
+				else { $key = format_part($r['part']); }
+				$results[$key] = $r;
+			}
+
+			// using keyed results, build $lines for an auto-indexed array
+			$lines = array();
+			foreach ($results as $key => $r) {
+				$lines[] = $key;
+			}
+		} else {
+			$lines = explode(chr(10),$s);
+		}
 	}
 
 	foreach ($lines as $n => $line) {

@@ -207,9 +207,14 @@ $DEV_ENV = true;
 				}
 			}
 
+			// see http://stackoverflow.com/questions/15686572/two-simultaneous-ajax-requests-wont-run-in-parallel
+			session_write_close();
 
 			return true;
 		}
+
+		// see http://stackoverflow.com/questions/15686572/two-simultaneous-ajax-requests-wont-run-in-parallel
+		session_write_close();
 
 		//If all else fails then we will assume the login failed
 		return false;
@@ -311,5 +316,5 @@ $DEV_ENV = true;
 	}
 
 	// version control for css and js includes
-	$V = '20161109';
+	$V = '20161201';
 ?>

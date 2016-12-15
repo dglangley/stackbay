@@ -701,6 +701,8 @@
 			if ($(this).data('format')) { format = $(this).data('format'); }
 			var maxDate = false;
 			if ($(this).data('maxdate')) { maxDate = $(this).data('maxdate'); }
+			var hPosition = 'auto';
+			if ($(this).data('hposition')) { hPosition = $(this).data('hposition'); }
 			$(this).datetimepicker({
 				/* use font awesome icons instead of glyphicons. because i said so. */
 				icons: {
@@ -716,6 +718,7 @@
 				},
 				format: format,
 				maxDate: maxDate,
+				widgetPositioning: { horizontal: hPosition }
 			});
 		});
 		

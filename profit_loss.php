@@ -235,7 +235,12 @@
 			);
 		}
 		$results[$key]['qty']++;
-		$results[$key]['cogs'] += $r['actual_cost'];//$r['avg_cost'];
+		// Brian uses a COGS basis that floats between avg cost and actual cost: when avg is 0, use actual
+		if ($r['avg_cost']>0) {
+			$results[$key]['cogs'] += $r['avg_cost'];
+		} else {
+			$results[$key]['cogs'] += $r['actual_cost'];
+		}
 		$results[$key]['income'] += $r['price'];
 	}
 
@@ -269,7 +274,12 @@
 			);
 		}
 		$results[$key]['qty']++;
-		$results[$key]['cogs'] += $r['actual_cost'];//$r['avg_cost'];
+		// Brian uses a COGS basis that floats between avg cost and actual cost: when avg is 0, use actual
+		if ($r['avg_cost']>0) {
+			$results[$key]['cogs'] += $r['avg_cost'];
+		} else {
+			$results[$key]['cogs'] += $r['actual_cost'];
+		}
 		$results[$key]['income'] += $r['price'];
 	}
 

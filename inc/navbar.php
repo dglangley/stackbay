@@ -32,11 +32,27 @@
 	$price_index = false;
 	if ($price_field) { $price_index = $price_field-1; }
 
-    if (! isset($startDate)) { $startDate = format_date($today,'m-d-Y',array('d'=>-7)); }
-    else { $startDate = format_date($startDate,'m-d-Y'); }
+    if (! isset($startDate)) { $startDate = ''; }//format_date($today,'m-d-Y',array('d'=>-7)); }
+    else { $startDate = format_date($startDate,'m/d/Y'); }
     if (isset($_REQUEST['startDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['startDate'])) { $startDate = $_REQUEST['startDate']; }
-	if (! isset($endDate)) { $endDate = format_date($today,'m-d-Y'); }
+	if (! isset($endDate)) { $endDate = format_date($today,'m/d/Y'); }
     if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
+
+	/* FILTERS */
+	$sales_count = false;
+	if (isset($_REQUEST['sales_count']) AND trim($_REQUEST['sales_count'])<>'') { $sales_count = trim($_REQUEST['sales_count']); }
+	$sales_min = false;
+	if (isset($_REQUEST['sales_min']) AND trim($_REQUEST['sales_min'])<>'') { $sales_min = trim($_REQUEST['sales_min']); }
+	$sales_max = false;
+	if (isset($_REQUEST['sales_max']) AND trim($_REQUEST['sales_max'])<>'') { $sales_max = trim($_REQUEST['sales_max']); }
+	$stock_min = false;
+	if (isset($_REQUEST['stock_min']) AND trim($_REQUEST['stock_min'])<>'') { $stock_min = trim($_REQUEST['stock_min']); }
+	$stock_max = false;
+	if (isset($_REQUEST['stock_max']) AND trim($_REQUEST['stock_max'])<>'') { $stock_max = trim($_REQUEST['stock_max']); }
+	$demand_min = false;
+	if (isset($_REQUEST['demand_min']) AND trim($_REQUEST['demand_min'])<>'') { $demand_min = trim($_REQUEST['demand_min']); }
+	$demand_max = false;
+	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
 
 	$favorites = 0;
 	if (isset($_REQUEST['favorites'])) { $favorites = 1; }
@@ -211,18 +227,6 @@
 	<div id="advanced-search-options" class="animated fadeInDown hidden">
 		<div class="row">
 			<div class="col-sm-3 options-group">
-				<div class="text-center">
-<!--
-	                <p>Date Range:</p>
-					<p>
-		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" data-date-format="mm-dd-yyyy" data-date="<?php echo $startDate; ?>" data-target="startDate"><span><?php echo $startDate; ?></span></a>
-		                <input type="hidden" name="startDate" id="startDate" value="<?php echo $startDate; ?>">
-		                to
-		                <a href="javascript:void(0);" class="btn btn-default btn-sm datepicker-date" id="dp2" data-date-format="mm-dd-yyyy" data-date="<?php echo $endDate; ?>"><span id="dp2Label"><?php echo $endDate; ?></span></a>
-		                <input type="hidden" name="endDate" id="endDate" value="<?php echo $endDate; ?>">
-					</p>
--->
-				</div>
 				<div class="text-center lists-manager">
 					<p>
 						<input name="upload_file" type="file" id="upload-file" class="file-upload" />
@@ -262,7 +266,7 @@
 										</div><!-- col-sm-6 -->
 										<div class="col-sm-6">
 											<p>
-								                <div class="input-group datepicker-datetime date datetime-picker">
+								                <div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
 					   		    			         <input type="text" name="expDate" id="exp-date" class="form-control input-sm" value="<?php echo $expDate; ?>" />
 					           		       			 <span class="input-group-addon">
 							       		                 <span class="fa fa-calendar"></span>
@@ -310,7 +314,7 @@
 				</div>
 				<div class="row">
 					<div class="col-sm-4 text-center">
-						<span class="info">Search:</span>
+						<span class="info">Search</span>
 						<p>
 							<div class="form-group">
 			                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
@@ -321,7 +325,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<span class="info">Qty:</span>
+						<span class="info">Qty</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
@@ -332,7 +336,7 @@
 						</p>
 					</div>
 					<div class="col-sm-4 text-center">
-						<span class="info">Price:</span>
+						<span class="info">Price</span>
 						<p>
 							<div class="form-group">
 			                  	<input type="text" name="price_field" value="" class="form-control input-xs" size="2">
@@ -353,21 +357,78 @@
 				</div>
 -->
 				<div class="row">
-					<div class="col-sm-2">
-						<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
-						<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
+					<div class="col-sm-2 text-center">
+						<span class="info">Favorites</span>
+						<p>
+							<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
+							<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
+						</p>
 					</div>
-					<div class="col-sm-2">
+					<div class="col-sm-10 text-center">
+						<span class="info">Date Range</span>
+						<p>
+							<div class="form-group">
+				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
+   			    			         <input type="text" name="startDate" id="startDate" class="form-control input-sm" value="<?php echo $startDate; ?>" />
+   	        		       			 <span class="input-group-addon">
+			       		                 <span class="fa fa-calendar"></span>
+   	    					         </span>
+								</div>
+							</div>
+							<div class="form-group">
+				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
+   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value="<?php echo $endDate; ?>" />
+   	        		       			 <span class="input-group-addon">
+			       		                 <span class="fa fa-calendar"></span>
+   	    					         </span>
+								</div>
+							</div>
+						</p>
 					</div>
-					<div class="col-sm-2">
+				</div>
+				<div class="row">
+					<div class="col-sm-2 text-center">
+						<span class="info">Min Sales</span>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="sales_count" value="" class="form-control input-xs" size="3" placeholder="0">
+							</div>
+						</p>
 					</div>
-					<div class="col-sm-6">
-						<div class="form-group">
-		                  	<input type="text" name="value_min" value="" class="form-control input-xs" size="6" placeholder="min price">
-						</div>
-						<div class="form-group">
-		                  	<input type="text" name="value_max" value="" class="form-control input-xs" size="6" placeholder="max price">
-						</div>
+					<div class="col-sm-4 text-center">
+						<span class="info">Sales $$$</span>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="sales_min" value="" class="form-control input-xs" size="5" placeholder="min">
+							</div>
+							<div class="form-group">
+			                  	<input type="text" name="sales_max" value="" class="form-control input-xs" size="5" placeholder="max">
+							</div>
+						</p>
+					</div>
+					<div class="col-sm-3 text-center">
+						<span class="info">Stock Qty</span>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="stock_min" value="" class="form-control input-xs" size="3" placeholder="0">
+							</div>
+							<div class="form-group">
+			                  	<input type="text" name="stock_max" value="" class="form-control input-xs" size="3" placeholder="9999">
+							</div>
+						</p>
+					</div>
+					<div class="col-sm-3 text-center">
+						<span class="info">Requests</span>
+						<p>
+							<div class="form-group">
+			                  	<input type="text" name="demand_min" value="" class="form-control input-xs" size="3" placeholder="0">
+							</div>
+							<div class="form-group">
+			                  	<input type="text" name="demand_max" value="" class="form-control input-xs" size="3" placeholder="9999">
+							</div>
+						</p>
+					</div>
+					<div class="col-sm-3">
 					</div>
 				</div>
 			</div>

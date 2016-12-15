@@ -7,10 +7,14 @@
 	$PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
 	//$PIPE->real_connect('db.ven-tel.com', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');
 	$PIPE->real_connect('192.69.242.135', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '13306');
+//	$PIPE->real_connect('192.168.1.112', 'david', '33WbkcY6YBMs5cLWe7sD', 'inventory', '3306');
 	if (mysqli_connect_errno($PIPE)) {
-//		die( "Failed to connect to MySQL: " . mysqli_connect_error() );
 		//add error to global array that is outputted to alert modal
-		$ALERTS[] = "Failed to connect to the PIPE!";
+		if (isset($ALERTS)) {
+			$ALERTS[] = "Failed to connect to the PIPE!";
+		} else {
+			die( "Failed to connect to MySQL: " . mysqli_connect_error() );
+		}
 	}
 
 //	echo '<BR><BR><BR>';

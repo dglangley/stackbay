@@ -469,6 +469,9 @@ input[type="text"].inline {
 	margin-top:4px;
 	margin-bottom:4px;
 }
+.alert i.fa {
+	vertical-align:middle;
+}
 
 /***** HEADER TAGS WITH LEADING AND TRAILING LINES *****/
 .header-border {
@@ -1121,7 +1124,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 .content-box {
   display: block;
   text-align: center;
-  overflow: hidden;
+  /*overflow: hidden;*/
   padding: 4px !important;
 }
 .content-box.box-default {
