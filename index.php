@@ -14,7 +14,9 @@
 	$pg = 1;
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
+	// frequent companies within scope of demand and supply
 	$FREQS = array('demand'=>array(),'supply'=>array());
+
 	$freq_min = 2;
 	$query = "SELECT * FROM company_activity WHERE demand_volume > $freq_min OR supply_volume > $freq_min; ";
 	$result = qdb($query);
@@ -27,8 +29,9 @@
 		}
 	}
 
+	$SALES = false;
 	function format_market($partid_csv,$market_table,$search_strs) {
-		global $FREQS;
+		global $FREQS,$SALES;
 
 		$last_date = '';
 		$last_sum = '';
@@ -36,7 +39,12 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 
-		$results = getRecords($search_strs,$partid_csv,'csv',$market_table);
+		// re-use data within global scope, if previously set from use with filters
+		if ($market_table=='sales' AND $SALES!==false) {
+			$results = $SALES;
+		} else {
+			$results = getRecords($search_strs,$partid_csv,'csv',$market_table);
+		}
 
 		$num_results = count($results);
 		// number of detailed results instead of month-groups, which is normally only results within the past month
@@ -377,7 +385,7 @@
 	}
 	unset($lines);
 
-	$per_pg = 30;
+	$per_pg = 3;
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -451,6 +459,15 @@
 		// pre-process results so that we can build a partid string for this group as well as to group results
 		// if the user is showing just favorites; lastly, also get all pipe ids for qty gathering
 		foreach ($results as $partid => $P) {
+			$exploded_strs = explode(' ',$P['part']);
+			$search_strs = array_merge($search_strs,$exploded_strs);
+			if ($P['heci']) {
+				$search_strs[] = substr($P['heci'],0,7);
+			}
+
+			if ($partid_csv) { $partid_csv .= ","; }
+			$partid_csv .= $partid;
+
 //			print "<pre>".print_r($P,true)."</pre>";
 //                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
 			$results[$partid]['pipe_id'] = 0;
@@ -492,18 +509,31 @@
 		// if by now no favorites have been found, and user is asking for favorites, skip line
 		if ($favorites AND $num_favs==0) { continue; }
 
+		$SALES = false;//reset as a boolean because in format_market(), it helps us know if we've previously searched sales
+
+		// if sales-related filters are set, get sales here and set within a global scope so we can re-use
+		// data within getRecords()
+		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
+			// set now as array in preparation to store data, and to let format_market() know that we've previously searched sales
+			$SALES = getRecords($search_strs,$partid_csv,'csv','sales');
+
+			if ($sales_count!==false AND count($SALES)<$sales_count) { continue; }
+
+			if ($sales_min!==false OR $sales_max!==false) {
+				$qualified_sales = 0;
+				foreach ($SALES as $sale) {
+					$sale_price = format_price($sale['price'],false,'',true);//reformat in true float format, for comparison
+					if (($sales_min!==false AND $sale_price<$sales_min) OR ($sales_max!==false AND $sale_price>$sales_max)) { continue; }
+
+					$qualified_sales++;
+				}
+				if ($qualified_sales==0) { continue; }
+			}
+		}
+
 		// now pre-process to get grouped qtys, but it needs to be a separate foreach loop since we're now gathering
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
 		foreach ($results as $partid => $P) {
-			if ($partid_csv) { $partid_csv .= ","; }
-			$partid_csv .= $partid;
-
-			$exploded_strs = explode(' ',$P['part']);
-			$search_strs = array_merge($search_strs,$exploded_strs);
-			if ($P['heci']) {
-				$search_strs[] = substr($P['heci'],0,7);
-			}
-
 			$itemqty = 0;
 			if ($P['pipe_id']) {//exact 10-digit heci match from pipe
 				$itemqty = getQty($P['pipe_id'],'PIPE');
@@ -528,7 +558,8 @@
 		// reject lines that don't have qtys that meet filter parameters, if set
 		if (($stock_min!==false AND $lineqty<$stock_min) OR ($stock_max!==false AND $lineqty>$stock_max)) { continue; }
 
-		// if favorites is set, we're counting rows based on favorites results
+		// if favorites is set, we're counting rows based on favorites results; we do NOT WANT TO MOVE THIS code until after
+		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
 		if ($favorites) {
 			if ($x<$min_ln) { $x++; continue; }
 			else if ($x>$max_ln) { break; }
@@ -552,31 +583,6 @@
 			$itemqty = $P['qty'];
 			$notes = $P['notes'];
 			$pipeids_str = $P['pipeids_str'];
-
-/*
-			// add notes from global $NOTES, keyed by this/each pipeid below
-			$notes = '';
-			$pipeids_str = '';
-			// when a single value, handle accordingly; otherwise by array
-			if ($P['pipe_id']) {
-				$itemqty = getPipeQty($P['pipe_id']);
-				// $NOTES is set globally in getPipeQty()
-				$notes = $NOTES[$P['pipe_id']];
-				$pipeids_str = $P['pipe_id'];
-			} else {
-				foreach ($pipe_ids as $pipe_id => $arr) {
-					$itemqty += getPipeQty($pipe_id);
-					// $NOTES is set globally in getPipeQty()
-					if (trim($NOTES[$pipe_id])) {
-						if ($notes) { $notes .= chr(10).'<HR>'.chr(10); }
-						$notes .= $NOTES[$pipe_id];
-					}
-					if ($pipeids_str) { $pipeids_str .= ','; }
-					$pipeids_str .= $pipe_id;
-				}
-				$pipe_ids = array();
-			}
-*/
 
 			// if no notes through pipe, check new db (this is just for the notes flag)
 			if (! $notes) {

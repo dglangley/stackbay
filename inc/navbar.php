@@ -391,7 +391,7 @@
 						<span class="info">Min Sales</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="sales_count" value="" class="form-control input-xs" size="3" placeholder="0" disabled>
+			                  	<input type="text" name="sales_count" value="" class="form-control input-xs" size="3" placeholder="0">
 							</div>
 						</p>
 					</div>
@@ -399,10 +399,10 @@
 						<span class="info">Sales $$$</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="sales_min" value="" class="form-control input-xs" size="5" placeholder="min" disabled>
+			                  	<input type="text" name="sales_min" value="" class="form-control input-xs" size="5" placeholder="min">
 							</div>
 							<div class="form-group">
-			                  	<input type="text" name="sales_max" value="" class="form-control input-xs" size="5" placeholder="max" disabled>
+			                  	<input type="text" name="sales_max" value="" class="form-control input-xs" size="5" placeholder="max">
 							</div>
 						</p>
 					</div>
