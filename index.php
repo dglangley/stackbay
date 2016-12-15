@@ -27,7 +27,7 @@
 		}
 	}
 
-	function format_market($partid_str,$market_table,$search_strs) {
+	function format_market($partid_csv,$market_table,$search_strs) {
 		global $FREQS;
 
 		$last_date = '';
@@ -36,7 +36,7 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 
-		$results = getRecords($search_strs,$partid_str,'statement',$market_table);
+		$results = getRecords($search_strs,$partid_csv,'csv',$market_table);
 
 		$num_results = count($results);
 		// number of detailed results instead of month-groups, which is normally only results within the past month
@@ -254,18 +254,32 @@
 	if ($startDate) { $start_date = format_date($startDate,'Y-m-d'); }
 	$end_date = '';
 	if ($endDate) { $end_date = format_date($endDate,'Y-m-d'); }
+
+	// check for any filters to be set
+	$filtersOn = false;
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
+		$filtersOn = true;
+	}
+
+	// set alert message if favorites and/or filters
+	$alert_msg = '';
 	if ($favorites) {
-		echo '
-	<div class="alert alert-danger">
-		<i class="fa fa-star fa-2x"></i>
-		Results may be limited due to filters
-	</div>
-		';
-	} else if ($sales_count<>'' OR $sales_min<>'' OR $sales_max<>'' OR $stock_min<>'' OR $stock_max<>'' OR $demand_min<>'' OR $demand_max<>'' OR $start_date<>'' OR $end_date<>$today) {
+		$alert_msg = 'limited to Favorites';
+	}
+	if ($filtersOn) {
+		if ($favorites) { $alert_msg .= ', and may be limited due to other filters'; }
+		else { $alert_msg = 'may be limited due to filters'; }
+		$alert_icon = 'warning';
+	} else {
+		$alert_msg .= ' only';
+		$alert_icon = 'star';
+	}
+
+	if ($favorites or $filtersOn) {
 		echo '
 	<div class="alert alert-warning">
-		<i class="fa fa-warning fa-2x"></i>
-		Results may be limited due to filters
+		<i class="fa fa-'.$alert_icon.' fa-2x"></i>
+		Results '.$alert_msg.'
 	</div>
 		';
 	}
@@ -336,8 +350,12 @@
 			$query .= "ORDER BY part, rel, heci ";
 			$result = qdb($query) OR die(qe().' '.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['heci7']) { $key = $r['heci7']; }
-				else { $key = format_part($r['part']); }
+				if ($r['heci7']) {
+					$key = $r['heci7'];
+				} else {
+					$partstrs = explode(' ',$r['part']);
+					$key = format_part($partstrs[0]);
+				}
 				$results[$key] = $r;
 			}
 
@@ -359,7 +377,7 @@
 	}
 	unset($lines);
 
-	$per_pg = 50;
+	$per_pg = 30;
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -411,42 +429,53 @@
 		}
 
 		// gather all partid's first
-		$partid_str = "";
-		$partids = "";//comma-separated for data-partids tag
+		$partid_csv = "";//comma-separated for data-partids tag
 		$search_strs = array();
+
+		// if favorites is NOT set, we're counting rows based on global results and don't need to waste pre-processing in first loop below
+		if (! $favorites) {
+			if ($x<$min_ln) { $x++; continue; }
+			else if ($x>$max_ln) { break; }
+			$x++;
+		}
 
 		$favs = array();
 		$num_favs = 0;
 
+		$lineqty = 0;
 		$pipe_ids = array();
+		// stores exact 10-digit heci matched pipe id with partid
 		$pipe_id_assoc = array();
+
+		$num_results = count($results);
 		// pre-process results so that we can build a partid string for this group as well as to group results
-		// if the user is showing just favorites
+		// if the user is showing just favorites; lastly, also get all pipe ids for qty gathering
 		foreach ($results as $partid => $P) {
 //			print "<pre>".print_r($P,true)."</pre>";
 //                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
-			if ($partid_str) { $partid_str .= "OR "; }
-			$partid_str .= "partid = '".$partid."' ";
-			if ($partids) { $partids .= ","; }
-			$partids .= $partid;
-
 			$results[$partid]['pipe_id'] = 0;
 			if ($P['heci']) {
+				// get all ids based on 7-digit heci code
 				$ids = getPipeIds(substr($P['heci'],0,7),'heci');
 				foreach ($ids as $id => $arr) {
-					if ($arr['heci']===$P['heci']) { $pipe_id_assoc[$id] = $partid; unset($pipe_ids[$id]); $results[$partid]['pipe_id'] = $id; }
-					else if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
+					// if exact 10-digit heci match to the currently-iterating heci, this is an exact match
+					if ($arr['heci']===$P['heci']) {
+						// stores exact 10-digit heci matched pipe id with partid
+						$pipe_id_assoc[$id] = $partid;
+						// remove pipe id from general array of pipe ids (since this is an exact match, we're storing in $results)
+						unset($pipe_ids[$id]);
+						// store for a singular lookup below
+						$results[$partid]['pipe_id'] = $id;
+					} else if (! isset($pipe_id_assoc[$id])) {
+						// add to pipe id results so long as not associated with 10-digit heci match
+						$pipe_ids[$id] = $arr;
+					}
 				}
 			}
 			$ids = getPipeIds($P['part'],'part');
 			foreach ($ids as $id => $arr) {
+				// add to pipe id results so long as not associated with 10-digit heci match
 				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
-			}
-
-			$exploded_strs = explode(' ',$P['part']);
-			$search_strs = array_merge($search_strs,$exploded_strs);
-			if ($P['heci']) {
-				$search_strs[] = substr($P['heci'],0,7);
 			}
 
 			// check favorites
@@ -460,7 +489,51 @@
 			}
 		}
 
+		// if by now no favorites have been found, and user is asking for favorites, skip line
 		if ($favorites AND $num_favs==0) { continue; }
+
+		// now pre-process to get grouped qtys, but it needs to be a separate foreach loop since we're now gathering
+		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
+		foreach ($results as $partid => $P) {
+			if ($partid_csv) { $partid_csv .= ","; }
+			$partid_csv .= $partid;
+
+			$exploded_strs = explode(' ',$P['part']);
+			$search_strs = array_merge($search_strs,$exploded_strs);
+			if ($P['heci']) {
+				$search_strs[] = substr($P['heci'],0,7);
+			}
+
+			$itemqty = 0;
+			if ($P['pipe_id']) {//exact 10-digit heci match from pipe
+				$itemqty = getQty($P['pipe_id'],'PIPE');
+			}
+			if (! $P['pipe_id'] OR $num_results==1) {//no exact match or only one match
+				$itemqty += getQty($pipe_ids,'PIPE');
+				// VERY important array reset, so that we're effectively applying all 'misc' pipe ids to the first non-exact match,
+				// and also not re-applying same ids to subsequent revisions. no duplicates!
+				$pipe_ids = array();
+			}
+			$results[$partid]['notes'] = $PIPE_NOTES;
+			$PIPE_NOTES = '';
+			$results[$partid]['pipeids_str'] = $PIPEIDS_STR;
+			$PIPEIDS_STR = '';
+
+			// change to this after migration, remove ~7-10 lines above
+			//$itemqty = getQty($partid);
+			$lineqty += $itemqty;
+			$results[$partid]['qty'] = $itemqty;
+		}
+
+		// reject lines that don't have qtys that meet filter parameters, if set
+		if (($stock_min!==false AND $lineqty<$stock_min) OR ($stock_max!==false AND $lineqty>$stock_max)) { continue; }
+
+		// if favorites is set, we're counting rows based on favorites results
+		if ($favorites) {
+			if ($x<$min_ln) { $x++; continue; }
+			else if ($x>$max_ln) { break; }
+			$x++;
+		}
 
 		$id_array = "";//pass in comma-separated values for getShelflife()
 		foreach ($pipe_id_assoc as $pipe_id => $partid) {
@@ -469,11 +542,6 @@
 		}
 		$shelflife = getShelflife($id_array);
 
-		if ($x<$min_ln) { $x++; continue; }
-		else if ($x>$max_ln) { break; }
-		$x++;
-
-		$num_results = count($results);
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
 
@@ -481,7 +549,11 @@
 		$results_rows = '';
 		$k = 0;
 		foreach ($results as $partid => $P) {
-			$itemqty = 0;
+			$itemqty = $P['qty'];
+			$notes = $P['notes'];
+			$pipeids_str = $P['pipeids_str'];
+
+/*
 			// add notes from global $NOTES, keyed by this/each pipeid below
 			$notes = '';
 			$pipeids_str = '';
@@ -504,8 +576,9 @@
 				}
 				$pipe_ids = array();
 			}
+*/
 
-			// if no notes through pipe, check new db
+			// if no notes through pipe, check new db (this is just for the notes flag)
 			if (! $notes) {
 				$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
 				$result2 = qdb($query2);
@@ -514,7 +587,6 @@
 				}
 			}
 
-			//$itemqty = getQty($partid);
 			$rowcls = '';
 			if ($itemqty>0) { $rowcls = ' info'; }
 
@@ -599,9 +671,9 @@
 
 			// if on the first result, build out the market column that runs down all rows of results
 			if ($k==0) {
-				$sales_col = format_market($partid_str,'sales',$search_strs);
-				$demand_col = format_market($partid_str,'demand',$search_strs);
-				$purchases_col = format_market($partid_str,'purchases',$search_strs);
+				$sales_col = format_market($partid_csv,'sales',$search_strs);
+				$demand_col = format_market($partid_csv,'demand',$search_strs);
+				$purchases_col = format_market($partid_csv,'purchases',$search_strs);
 
 				// reset after getting col data in format_market() above, which  may alter this date for item-specific results
 				$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
@@ -609,7 +681,7 @@
 				$results_rows .= '
 							<!-- market-row for all items within search result section -->
                             <td rowspan="'.($num_results+1).'" class="market-row">
-								<table class="table market-table" data-partids="'.$partids.'">
+								<table class="table market-table" data-partids="'.$partid_csv.'">
 									<tr>
 										<td class="col-sm-3 bg-availability">
 											<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal">Supply <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
@@ -778,6 +850,24 @@
 ?>
 
     </div>
+
+	<!-- hidden values for pagination above -->
+	<input type="hidden" name="search_field" value="<?php echo $search_field; ?>" class="search-filter">
+	<input type="hidden" name="qty_field" value="<?php echo $qty_field; ?>" class="search-filter">
+	<input type="hidden" name="price_field" value="<?php echo $price_field; ?>" class="search-filter">
+	<input type="hidden" name="search_from_right" value="<?php echo $search_from_right; ?>" class="search-filter">
+	<input type="hidden" name="qty_from_right" value="<?php echo $qty_from_right; ?>" class="search-filter">
+	<input type="hidden" name="price_from_right" value="<?php echo $price_from_right; ?>" class="search-filter">
+	<input type="hidden" name="startDate" value="<?php echo $startDate; ?>" class="search-filter">
+	<input type="hidden" name="endDate" value="<?php echo $endDate; ?>" class="search-filter">
+	<input type="hidden" name="favorites" value="<?php echo $favorites; ?>" class="search-filter">
+	<input type="hidden" name="sales_count" value="<?php echo $sales_count; ?>" class="search-filter">
+	<input type="hidden" name="sales_min" value="<?php echo $sales_min; ?>" class="search-filter">
+	<input type="hidden" name="sales_max" value="<?php echo $sales_max; ?>" class="search-filter">
+	<input type="hidden" name="stock_min" value="<?php echo $stock_min; ?>" class="search-filter">
+	<input type="hidden" name="stock_max" value="<?php echo $stock_max; ?>" class="search-filter">
+	<input type="hidden" name="demand_min" value="<?php echo $demand_min; ?>" class="search-filter">
+	<input type="hidden" name="demand_max" value="<?php echo $demand_max; ?>" class="search-filter">
 
 	</form>
 

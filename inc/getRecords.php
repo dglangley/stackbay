@@ -48,9 +48,9 @@
 		$partid_str = '';
 		
 		if ($partid_array){
-			if ($array_format=='statement') {
+			if ($array_format=='statement') {//legacy method, deprecated
 				$partid_str = $partid_array;
-			} else if ($array_format=='csv') {
+			} else if ($array_format=='csv') {//aaron's enlightenment
 				$partid_str = 'partid IN ('.$partid_array.')';
 			}
 		}
