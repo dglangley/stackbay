@@ -807,7 +807,11 @@
 		});
 
 		$(".pagination li a").click(function() {
-			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg');
+			var urlstr = '';
+			$(".search-filter").each(function() {
+				urlstr += '&'+$(this).prop("name")+'='+escape($(this).prop("value"));
+			});
+			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg')+urlstr;
 		});
 
 		$(".product-img img").click(function() {

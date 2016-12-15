@@ -317,10 +317,10 @@
 						<span class="info">Search</span>
 						<p>
 							<div class="form-group">
-			                   <input type="text" name="search_field" value="1" class="form-control input-xs" size="2">
+			                   <input type="text" name="search_field" value="1" class="form-control input-xs search-filter" size="2">
 							</div>
 							<div class="form-group">
-			                   <label for="searchFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="search_from_right" id="searchFromRight" value="1"></label>
+			                   <label for="searchFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="search_from_right" id="searchFromRight" class="search-filter" value="1"></label>
 							</div>
 						</p>
 					</div>
@@ -328,10 +328,10 @@
 						<span class="info">Qty</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs" size="2">
+			                  	<input type="text" name="qty_field" value="2" class="form-control input-xs search-filter" size="2">
 							</div>
 							<div class="form-group">
-			                  	<label for="qtyFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="qty_from_right" id="qtyFromRight" value="1"></label>
+			                  	<label for="qtyFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="qty_from_right" id="qtyFromRight" value="1" class="search-filter"></label>
 							</div>
 						</p>
 					</div>
@@ -339,10 +339,10 @@
 						<span class="info">Price</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="price_field" value="" class="form-control input-xs" size="2">
+			                  	<input type="text" name="price_field" value="" class="form-control input-xs search-filter" size="2">
 							</div>
 							<div class="form-group">
-			                  	<label for="priceFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="price_from_right" id="priceFromRight" value="1"></label>
+			                  	<label for="priceFromRight"><i class="fa fa-long-arrow-left"></i> <input type="checkbox" name="price_from_right" id="priceFromRight" value="1" class="search-filter"></label>
 							</div>
 						</p>
 					</div>
@@ -360,7 +360,7 @@
 					<div class="col-sm-2 text-center">
 						<span class="info">Favorites</span>
 						<p>
-							<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden">
+							<input type="checkbox" name="favorites" id="favorites" value="1" class="hidden search-filter">
 							<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
 						</p>
 					</div>
@@ -369,7 +369,7 @@
 						<p>
 							<div class="form-group">
 				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
-   			    			         <input type="text" name="startDate" id="startDate" class="form-control input-sm" value="<?php echo $startDate; ?>" />
+   			    			         <input type="text" name="startDate" id="startDate" class="form-control input-sm search-filter" value="<?php echo $startDate; ?>" />
    	        		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>
    	    					         </span>
@@ -377,7 +377,7 @@
 							</div>
 							<div class="form-group">
 				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
-   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value="<?php echo $endDate; ?>" />
+   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm search-filter" value="<?php echo $endDate; ?>" />
    	        		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>
    	    					         </span>
@@ -391,7 +391,7 @@
 						<span class="info">Min Sales</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="sales_count" value="" class="form-control input-xs" size="3" placeholder="0">
+			                  	<input type="text" name="sales_count" value="" class="form-control input-xs search-filter" size="3" placeholder="0">
 							</div>
 						</p>
 					</div>
@@ -399,10 +399,10 @@
 						<span class="info">Sales $$$</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="sales_min" value="" class="form-control input-xs" size="5" placeholder="min">
+			                  	<input type="text" name="sales_min" value="" class="form-control input-xs search-filter" size="5" placeholder="min">
 							</div>
 							<div class="form-group">
-			                  	<input type="text" name="sales_max" value="" class="form-control input-xs" size="5" placeholder="max">
+			                  	<input type="text" name="sales_max" value="" class="form-control input-xs search-filter" size="5" placeholder="max">
 							</div>
 						</p>
 					</div>
@@ -410,10 +410,10 @@
 						<span class="info">Stock Qty</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="stock_min" value="" class="form-control input-xs" size="3" placeholder="0">
+			                  	<input type="text" name="stock_min" value="" class="form-control input-xs search-filter" size="3" placeholder="0">
 							</div>
 							<div class="form-group">
-			                  	<input type="text" name="stock_max" value="" class="form-control input-xs" size="3" placeholder="9999">
+			                  	<input type="text" name="stock_max" value="" class="form-control input-xs search-filter" size="3" placeholder="9999">
 							</div>
 						</p>
 					</div>
@@ -421,10 +421,10 @@
 						<span class="info">Requests</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="demand_min" value="" class="form-control input-xs" size="3" placeholder="0">
+			                  	<input type="text" name="demand_min" value="" class="form-control input-xs search-filter" size="3" placeholder="0">
 							</div>
 							<div class="form-group">
-			                  	<input type="text" name="demand_max" value="" class="form-control input-xs" size="3" placeholder="9999">
+			                  	<input type="text" name="demand_max" value="" class="form-control input-xs search-filter" size="3" placeholder="9999">
 							</div>
 						</p>
 					</div>
