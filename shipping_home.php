@@ -148,7 +148,11 @@
 			}
 				echo'        <td>'.$date.'</td>';
 				echo'        <td><a href="#">'.$company.'</a></td>';
-				echo'        <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+				//Either go to inventory add or PO or shipping for SO
+				if($order == 'p')
+					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+				else
+					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
@@ -316,22 +320,20 @@
 				</div>
 			</div>
 			<div class = "col-md-3">
-				<!--<div class="pull-right form-inline">-->
-					<div class="input-group" style="width: 100%">
-						<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-						<?php 
-						if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-						else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-						?>
-						</select>
-			            <span class="input-group-btn">
-							<button class="btn btn-primary btn-sm" type="submit" >
-								<i class="fa fa-filter" aria-hidden="true"></i>
-							</button>
-						</span>
-					</div>
-				<!--</div>-->
+				<div class="input-group" style="width: 100%">
+					<select name="companyid" id="companyid" class="company-selector">
+					<option value="">- Select a Company -</option>
+					<?php 
+					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+					?>
+					</select>
+		            <span class="input-group-btn">
+						<button class="btn btn-primary btn-sm" type="submit" >
+							<i class="fa fa-filter" aria-hidden="true"></i>
+						</button>
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>

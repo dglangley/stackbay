@@ -954,158 +954,6 @@
 
 
 //============================= Inventory Addition =============================
-		$(document).on("click",".toggle_group",function() {
-		    $(this).toggleClass('active');
-		    $(this).siblings().removeClass('active');
-		});
-		
-		$(document).ready(function() {
-			//$('.inventory_lines').find('add-delete-group').show();
-			$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-		});
-		
-		$(document).on("change","input[name='serialize']",function() {
-		    if(this.checked) {
-		         $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
-		         $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
-		         $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').show();
-		         $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
-		         $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
-		    } else {
-		    	 $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
-		    	 $(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
-		    	 
-		    	 $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
-		    	 $('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-		    	 
-		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
-		    	 $(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
-		    }
-		});
-		
-		var lastValue = '';
-		
-		$(document).on("keyup change mouseup","#new_qty",function() {
-			if ($(this).val() != lastValue) {
-        		lastValue = $(this).val();
-				//$('table:last').find('input[name="serialize"]').prop('checked', false);
-			    if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
-			        $(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-list-ul" aria-hidden="true"></i>');
-			        $(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').show();
-			        $(this).closest('.addRecord').find('#inv_add_record').addClass('serialize_data');
-			        $(this).closest('.addRecord').find('#inv_add_record').addClass('btn-warning');
-			        $(this).closest('.addRecord').find('#inv_add_record').removeClass('add_data');
-			    } else {
-			    	$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
-			    	$(this).closest('.addRecord').find('#inv_add_record').addClass('add_data');
-			    	
-			    	$(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
-			    	$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-			    	
-			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
-			    	$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
-			    }
-			}
-		});
-		
-		$(document).on("click",".show_link",function() {
-			var data = $(this).is(':visible') ? 'Show Less' : 'Show More';
-    		$(this).text(data);
-		    $(this).closest('.table').find('#serial_each_table').fadeToggle();
-		});
-		
-		$(document).on('click',"#inv_delete_record",function() {
-		    if (confirm("Please confirm you want to delete inventory add for selected part" + ".")) {
-		        $(this).closest('.inventory_lines').remove();
-		        $('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-		    }
-		});
-		
-		$(document).on('click',"#inv_add_record",function() {
-	
-			var qty = $(this).closest('.table').find("#new_qty").val();
-			var location = $(this).closest('.table').find("#new_location option:selected").text();
-			var info;
-			var item = $(this).closest('.table').find("#search_collumn").find(".item_search").val();
-			
-			var $element = $(this).closest('.table').find('#serial_each_table');
-			
-			if($(this).hasClass('serialize_data')) {
-				$element.children('.added_serial').remove();
-			} else if($(this).hasClass('add_data')) {
-				$element.children('.added_serial').remove();
-				$(this).closest('.table').find('#serial input').prop('disabled', false);
-				$element.closest('.table').find('#new_location').prop('disabled', false);
-				$element.closest('.table').find('.condition_field').prop('disabled', false);
-			}
-			
-			var $conditions = $element.closest('.table').find('.condition_field').clone();
-			var $status = $element.closest('.table').find('.status').clone();
-			
-			if($element.closest('.table').find("input[name='serialize']").prop("checked") && qty > 1 && $(this).hasClass('serialize_data')) {
-				for(var i = 1; i <= qty; i++) {
-					$(this).closest('.table').find('#serial input').prop('disabled', true);
-					info = '<tr class="added_serial"><td><strong>' + i;
-					info += '.</strong> Enter Serial for Part #' + item;
-					info += '</td><td><input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial"></td><td></td>';
-					info += '<td><select class="location_clone form-control"></select></td><td class="add_status"></td><td class="add_condition">';
-					info += '</td></tr>';
-					$element.append(info);
-				}
-		
-				$element.closest('.table').find('.condition_field').prop('disabled', true);
-				
-				$element.closest('.table').find('#serial_each_table').show();
-				$element.closest('.table').find('.show_link').fadeIn();
-				
-				$element.find('.add_condition').append($conditions);
-				$element.find('.add_status').append($status);
-				$element.closest('.table').find('.add_condition select').prop('disabled', false);
-				$element.closest('.table').find('.add_status select').prop('disabled', false);
-				$element.closest('.table').find('#new_location').find('option').clone().appendTo($element.find('.location_clone'));
-				$element.find('.location_clone').val(location);
-				$element.closest('.table').find('#new_location').prop('disabled', true);
-				$(this).closest('.addRecord').find('#inv_add_record').html('<i class="fa fa-plus" aria-hidden="true"></i>');
-				$(this).closest('.addRecord').find('#inv_add_record').removeClass('serialize_data');
-				$(this).closest('.addRecord').find('#inv_add_record').removeClass('btn-warning');
-				
-				$(this).closest('.addRecord').find('.add-delete-group').find('.btn-add').hide();
-		    	$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-		    	
-		    	//On Return focus onto next item
-				$('input[name="NewSerial"]').on('keypress', function(e) {
-					var $serial = $(this);
-				    if(e.which == 13) {
-						$serial.closest('.added_serial').next('.added_serial').find('input[name="NewSerial"]').focus();
-				    }
-				});
-			} else {
-				var $newTr = $('#items_table:last').closest('.inventory_lines').clone();
-				$.when($(this).closest('.inventory_lines').parent().find('.inventory_lines:last').after($newTr)).then(function() {
-					$('table:last').find('#serial_each_table').children('.added_serial').remove();
-				});
-				$element.closest('.table').find('#serial_each_table').fadeOut('fast');
-				
-				//$(this).closest("tbody").find("tr").length === 0
-				if($element.closest('.table').find('#serial_each_table').find("tr").length > 0) {
-					$element.closest('.table').find('.show_link').fadeIn();
-				}
-				//Clear all past values
-				$('table:last').find('.item_search').val('');
-				$('table:last').find('#new_qty').val('');
-				$('table:last').find('input[name="NewSerial"]').val('');
-				$('table:last').find('input[name="serialize"]').prop('checked', false);
-				$('table:last').find('#serial input').prop('disabled', false);
-				$('table:last').find('#new_location').prop('disabled', false);
-				$('table:last').find('.condition_field').prop('disabled', false);
-				$('table:last').find('.select2').remove();
-				$(".item_search").initSelect2("/json/part-search.php","Part Search",$("body").attr('data-page'));
-				
-				$('.inventory_lines').find('.add-delete-group').find('.btn-add').hide();
-				$('.inventory_lines:last').find('.add-delete-group').find('.btn-add').show();
-			}
-		});
-		
 		//Get the url argument parameter
 		function getUrlParameter(sParam) {
 		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
@@ -1122,57 +970,150 @@
 		    }
 		};
 		
+		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
+			var $serial = $(this);
+			var po_number = getUrlParameter('on');
+			var savedSerial = $serial.attr('data-saved');
+			var qty = $serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val();
+			if(e.which == 13) {
+		    	if((qty > 0 & $serial.val() != '') || savedSerial != '') {
+		    		var partid = $serial.closest('tr').find('.part_id').data('partid');
+		    		var condition = $serial.closest('tr').find('.condition_field').val();
+		    		var location = '';
+		    		var serial = $serial.val();
+		    		var $serialClone = $serial.clone();
+		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
+		    		
+		    		//alert($conditionClone);
+		    		
+		    		// console.log(partid);
+		    		// console.log(savedSerial);
+		    		
+		    		$.ajax({
+						type: "POST",
+						url: '/json/inventory-add-dynamic.php',
+						data: {
+							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial
+						},
+						dataType: 'json',
+						success: function(result) {
+							//console.log(lines);
+							// window.location = "/shipping_home.php?po=true";
+							
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+							qty--;
+								
+							if(result['query'] && !result['saved']) {
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+								}
+								$serialClone.val("");
+								//$conditionClone.val("");
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								if(qty == 0) {
+							    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+
+							} else if(result['saved']) {
+								$serial.attr("data-saved", serial);
+								alert('Item has been updated.');
+							} else {
+								alert('Serial already exists for this item.');
+							}
+							
+						}
+					});
+					//alert($serialClone);
+			    } else if($serial.val() == '') {
+			    	alert('Serial Missing');
+			    } else if(qty <= 0) {
+			    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order in Order to Continue');
+			    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+			    }
+			}
+		});
+		
+		//If the lot inventory is checked then update the look and feel of the form
+		$(document).on('change', '.lot_inventory', function() {
+			var qty;
+			if(this.checked) {
+				qty = $(this).closest('tr').find('.remaining_qty').children('input').val();
+				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', true);
+				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', false);
+				$(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty', qty);
+			} else {
+				qty = $(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty');
+				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', false);
+				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', true);
+				$(this).closest('tr').find('.remaining_qty').children('input').val(qty);
+			}
+		});
+				
 		$(document).on('click',"#save_button_inventory",function() {
-			
-			//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array']
+
+			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+			//Include location in the near future
 			var items = [];
 			var po_number = getUrlParameter('on');
-
-			$('table .addRecord').each( function() {
-				var productid = $(this).closest('.table').find("#search_collumn").find(".item_search").val();
-				//Push the part ID first
-				items.push(productid);
+			
+			//Get everything from the form and place it into its own array
+			$('.inventory_add').children('tbody').children('tr').each(function() {
+				var partid = $(this).find('.part_id').data('partid');
+				var serials = [];
+				var savedSerials = [];
+				var conditions = [];
+				var lot = false;
+				var qty;
 				
-				//If the item is serialized then push an array of all the serials
-				if($(this).closest('.addRecord').find("input[name='serialize']").is(":checked")) {
-					var serialList = [];
-					var locationList = [];
-					var statusList = [];
-					var conditionList = [];
-					$(this).closest('.table').find('#serial_each_table').find('tr').each( function() {
-						serialList.push($(this).find('input[name="NewSerial"]').val());
-						locationList.push($(this).find('.location_clone').val().replace("W: ",""));
-						statusList.push($(this).find('.status').val());
-						conditionList.push($(this).find('.condition_field ').val());
-					});
-					//alert('Serialized: ' + productid);
-					items.push(serialList);
-					items.push('1');
-					items.push(locationList);
-					items.push(statusList);
-					items.push(conditionList);
+				$(this).find('.infiniteCondition').children('select').each(function() {
+					conditions.push($(this).val());
+				});
+				
+				$(this).find('.infiniteSerials').children('input').each(function() {
+					serials.push($(this).val());
+					savedSerials.push($(this).attr('data-saved'));
+					//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
+					//if($(this).attr('data-saved') == '')
+					$(this).attr("data-saved", $(this).val());
+				});
+				
+				//Check if the lot is checked or not
+				if($(this).find('.lot_inventory').prop('checked') == true) {
+					lot = true;
 				} else {
-					items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
-					items.push($(this).closest('.table').find('.addRecord').find('#new_qty').val());
-					items.push($(this).closest('.table').find('.addRecord').find('#new_location').val().replace("W: ",""));
-					items.push($(this).closest('.table').find('.addRecord').find('.status').val());
-					items.push($(this).closest('.table').find('.addRecord').find('.condition_field ').val());
-					//else push a just the single serial
-					//items.push($(this).closest('.table').find('.addRecord').find('input[name="NewSerial"]').val());
+					lot = false
 				}
+				qty = $(this).find('.remaining_qty').children('input').val();
+				
+				items.push(partid);
+				items.push(savedSerials);
+				items.push(serials);
+				items.push(conditions);
+				items.push(lot);
+				items.push(qty);
 			});
+			
+			console.log(items);
 			//console.log(po_number);
-			// alert(new_record);
+			
 			$.ajax({
 				type: "POST",
 				url: '/json/inventory-add.php',
 				data: {
-					 'productid' : items, 'po_number' : po_number
+					 'productItems' : items, 'po_number' : po_number
 				},
 				dataType: 'json',
-				success: function(lines) {
-					//console.log(lines);
-					window.location = "/shipping_home.php?po=true";
+				success: function(result) {
+					console.log(result);
+					
+					//if(result['query']) {
+						//window.location = "/shipping_home.php?po=true";
+					//}
 				}
 			});
 		});
