@@ -33,13 +33,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $incomplete->num_rows;
 	}
 	
-	function checkNewItems($partid, $serial_no) {
+	function checkNewItems($partid, $serial_no, $condition) {
 		//Check if the item already exists in the database
 		//Prevent duplicate entries or initiates a update on the item
 		
 		//Seperate Lot query from standard serialized queries
+		//Lot matches condition and determines if a new lot record needs to be created or not
 		if($serial_no == 'null') {
-			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) .";";
+			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."';";
 		} else {
 			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) .";";
 		}
@@ -166,28 +167,28 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				
 				if($matchCond == '0') {
-					$query = "UPDATE purchase_items SET qty_received = '" . res($curQty) . "' WHERE po_number = ". res($po_number) ." AND partid = ". res(reset($product)) .";";
+					$query = "UPDATE purchase_items SET qty_received = " . res($curQty) . " WHERE po_number = ". res($po_number) ." AND partid = ". res(reset($product)) .";";
 					qdb($query);
+					
+					$result['lot_received'] = $curQty;
 					
 					//Quick check to see if the inventory has been fulfilled
 					checkPOReceived($po_number, reset($product));
 					
 					//Check if the item already exists in the inventory
-					$exists = checkNewItems(reset($product), 'null');
+					$exists = checkNewItems(reset($product), 'null', reset($product[3]));
 					
 					//If exists then update the lot with no serial else insert
 					if($exists) {
-						$query  = "UPDATE inventory SET qty = qty +  ". res($product[5]) .", item_condition = '" . res(reset($product[3])) . "' WHERE serial_no IS NULL AND partid = ". res(reset($product)) .";";
+						$query  = "UPDATE inventory SET qty = qty +  ". res($product[5]) ." WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res(reset($product[3])) ."';";
 						$result['query'] = qdb($query);
 					} else {
 						$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', NULL, '" . res($product[5]) . "', '". res(reset($product[3])) ."', 'received', '', NULL, NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 						$result['query'] = qdb($query);	
 					}
-					//$result['query'] = 	$exists;
+				} else {
+					$result['error'] = 'Lot exceeds the amount ordered.';
 				}
-				
-				//$result = $result['query'];
-				
 			}
 			//Else do not touch the item
 		}

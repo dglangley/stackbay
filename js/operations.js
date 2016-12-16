@@ -1046,6 +1046,7 @@
 				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', true);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', false);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty', qty);
+				$(this).closest('tr').find('.infiniteSerials').children('input').val('');
 			} else {
 				qty = $(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty');
 				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', false);
@@ -1111,9 +1112,11 @@
 				success: function(result) {
 					console.log(result);
 					
-					//if(result['query']) {
-						//window.location = "/shipping_home.php?po=true";
-					//}
+					if(result['query']) {
+						window.location = "/shipping_home.php?po=true";
+					}
+					
+					alert(result['error']);
 				}
 			});
 		});
