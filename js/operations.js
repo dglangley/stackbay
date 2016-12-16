@@ -1056,7 +1056,9 @@
 		});
 				
 		$(document).on('click',"#save_button_inventory",function() {
-
+			//Prevent Button Spamming
+			$(this).removeAttr('id');
+			//$(this).css('background-color','#eeeeee');
 			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			//Include location in the near future
 			var items = [];
@@ -1114,9 +1116,9 @@
 					
 					if(result['query']) {
 						window.location = "/shipping_home.php?po=true";
+					} else {
+						alert(result['error']);
 					}
-					
-					alert(result['error']);
 				}
 			});
 		});
