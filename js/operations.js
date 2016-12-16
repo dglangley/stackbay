@@ -970,6 +970,11 @@
 		    }
 		};
 		
+		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
+		    if( $( this ).val() != '' )
+		        window.onbeforeunload = function() { return "You have unsaved changes."; }
+		});
+		
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			var $serial = $(this);
 			var po_number = getUrlParameter('on');
@@ -1025,6 +1030,7 @@
 							} else {
 								alert('Serial already exists for this item.');
 							}
+							window.onbeforeunload = null;
 							
 						}
 					});
@@ -1058,6 +1064,8 @@
 		$(document).on('click',"#save_button_inventory",function() {
 			//Prevent Button Spamming
 			$(this).removeAttr('id');
+			
+			$click = $(this);
 			//$(this).css('background-color','#eeeeee');
 			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			//Include location in the near future
@@ -1114,10 +1122,21 @@
 				success: function(result) {
 					console.log(result);
 					
+					//Error handler or success handler
 					if(result['query']) {
+						//In case a warning is triggered but data is still saved successfully
+						if(result['error'] != undefined)
+							alert(result['error']);
+						window.onbeforeunload = null;
 						window.location = "/shipping_home.php?po=true";
-					} else {
+					//Error occured enough to stop the page from continuing
+					} else if(result['error'] != undefined) {
 						alert(result['error']);
+						$click.attr('id','save_button_inventory');
+					//Nothing was change
+					} else {
+						alert('No changes have been made.');
+						$click.attr('id','save_button_inventory');
 					}
 				}
 			});

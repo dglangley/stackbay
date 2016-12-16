@@ -33,13 +33,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $incomplete->num_rows;
 	}
 	
-	function checkNewItems($partid, $serial_no, $condition) {
+	function checkNewItems($partid, $serial_no, $condition = '') {
 		//Check if the item already exists in the database
 		//Prevent duplicate entries or initiates a update on the item
 		
 		//Seperate Lot query from standard serialized queries
 		//Lot matches condition and determines if a new lot record needs to be created or not
-		if($serial_no == 'null') {
+		if($serial_no == 'null' && $condition != '') {
 			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."';";
 		} else {
 			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) .";";
@@ -137,7 +137,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					//$result = 'Serial NEW ' . sizeof($product[2]);
 				//The item already exists (Any updates will be made to the actual product EG Serial edits)
 				} else {
-					$result['conflict'] = 'Error: Serial# ' . reset($product[2]) . ' already exists.';
+					$result['error'] = 'Warning: Serial# ' . reset($product[2]) . ' already exists, item will be ignored, all other items have been saved.';
 					//return $result;
 				}
 			//Handler if lot is checked
