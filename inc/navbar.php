@@ -417,14 +417,14 @@
 							</div>
 						</p>
 					</div>
-					<div class="col-sm-3 text-center">
+					<div class="col-sm-3 text-center" data-toggle="tooltip" data-placement="left" title="Uniquely-Dated Requests">
 						<span class="info">Requests</span>
 						<p>
 							<div class="form-group">
-			                  	<input type="text" name="demand_min" value="" class="form-control input-xs" size="3" placeholder="0" disabled>
+			                  	<input type="text" name="demand_min" value="" class="form-control input-xs" size="3" placeholder="0">
 							</div>
 							<div class="form-group">
-			                  	<input type="text" name="demand_max" value="" class="form-control input-xs" size="3" placeholder="9999" disabled>
+			                  	<input type="text" name="demand_max" value="" class="form-control input-xs" size="3" placeholder="9999">
 							</div>
 						</p>
 					</div>

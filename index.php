@@ -222,44 +222,74 @@
 	}
 
 	// the user is db-mining: no search string passed in, but filters are on to find certain subsets of parts
-	if (! $s AND $filtersOn) {
+	if (! $s AND $filtersOn AND $start_date<>'') {
 		// set start and end dates for getRecords() calls below, then reset at the end of this section
-		if ($start_date<>'') {
-			if (! $end_date) { $end_date = $today; }
-			$record_start = $start_date;
-			$record_end = $end_date;
-		}
+		if (! $end_date) { $end_date = $today; }
+		$record_start = $start_date;
+		$record_end = $end_date;
 
-//echo '<BR><BR><BR><BR>';
+//echo '<BR><BR>';
+		$results = array();
 		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
 			$sales = getRecords('','','','sales');
-			$lines = array();
-			$groups = array();
+			// build new array with specific fields to fit the form of sales within the broader array, and to match partid keys
 			foreach ($sales as $r) {
 				// exclude results outside of pricing parameters
-				$fprice = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
-				if (($sales_min!==false AND $fprice<$sales_min) OR ($sales_max!==false AND $fprice>$sales_max)) { continue; }
+				if (($sales_min!==false AND $r['price']<$sales_min) OR ($sales_max!==false AND $r['price']>$sales_max)) { continue; }
 
-				$keystr = '';
-				// verify data is sound from pipe
-				if ($r['clei'] AND ! is_numeric($r['clei']) AND preg_match('/^[[:alnum:]]{10}$/',$r['clei'])) { $keystr = substr($r['clei'],0,7); }
-				else if ($r['heci'] AND ! is_numeric($r['heci']) AND preg_match('/^[[:alnum:]]{10}$/',$r['heci'])) { $keystr = substr($r['heci'],0,7); }
-				else { $keystr = format_part($r['part_number']); }
-
-				if (! isset($groups[$keystr])) { $groups[$keystr] = array(); }
-				$groups[$keystr][] = $r['price'];
-			}
-			// iterate through groups and add only those items that match filters
-			foreach ($groups as $keystr => $r) {
-				// exclude results not meeting minimum count, if set
-				if ($sales_count!==false AND count($r)<$sales_count) { continue; }
-
-				$s .= $keystr.chr(10);
+				if (! isset($results[$r['partid']])) {
+					$r['sales'] = array();
+					$r['demand'] = array();
+					$results[$r['partid']] = $r;
+				}
+				// add every sale to array
+				$results[$r['partid']]['sales'][] = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
 			}
 		}
-//print "<pre>".print_r($sales,true)."</pre>";
+
+		// if demand-related filters are set, get data from getRecords() as above with sales
+		if ($demand_min!==false OR $demand_max!==false) {
+			$demand = getRecords('','','','demand');
+			// build new array with specific fields to fit the form of demand within the broader array, and to match partid keys
+			foreach ($demand as $r) {
+				if (! isset($results[$r['partid']])) {
+					$r['sales'] = array();
+					$r['demand'] = array();
+					$results[$r['partid']] = $r;
+				}
+				// add uniquely-dated demand
+				$results[$r['partid']]['demand'][$r['datetime']] = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
+			}
+		}
+
+		// consolidate into a string-keyed array so, with one simple section of code, we can generate a simplified array for building our list of line strings
+		$groups = array();
+		foreach ($results as $pid => $r) {
+			// exclude results not meeting minimum sales count, if set
+			if ($sales_count!==false AND count($r['sales'])<$sales_count) { continue; }
+
+			// exclude results not meeting minimum demand count, if set
+			if (($demand_min!==false AND count($r['demand'])<$demand_min) OR ($demand_max!==false AND count($r['demand'])>$demand_max)) { continue; }
+
+			$keystr = '';
+			// verify data is sound from pipe
+			if ($r['clei'] AND ! is_numeric($r['clei']) AND preg_match('/^[[:alnum:]]{10}$/',$r['clei'])) { $keystr = substr($r['clei'],0,7); }
+			else if ($r['heci'] AND ! is_numeric($r['heci']) AND preg_match('/^[[:alnum:]]{10}$/',$r['heci'])) { $keystr = substr($r['heci'],0,7); }
+			else { $keystr = format_part($r['part_number']); }
+
+			$groups[$keystr] = true;
+		}
+		unset($results);
+
+//print "<pre>".print_r($groups,true)."</pre>";
 //echo str_replace(chr(10),'<BR>',$s);
 //exit;
+
+		// iterate through groups and add only those items that match filters
+		foreach ($groups as $keystr => $r) {
+			$s .= $keystr.chr(10);
+		}
+		unset($groups);
 
 		$record_start = '';
 		$record_end = '';
