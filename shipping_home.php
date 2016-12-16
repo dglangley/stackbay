@@ -87,7 +87,13 @@
             echo'  	</th>';
             echo'</tr>';
             echo'</thead>';
-		}	
+		} else {
+			echo'  	<th class="col-md-1">';
+            echo'  		&nbsp;';
+            echo'  	</th>';
+            echo'</tr>';
+			echo'</thead>';
+		}
 	}
 	
 	//Inputs expected:
@@ -157,6 +163,8 @@
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
 				echo'    	<td class="status">'.'Completed'.'</td>';
+			} else {
+				echo'    	<td class="status">'.'<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>'.'</td>'; 
 			}
 			echo'	</tr>';
 		}
