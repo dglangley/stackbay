@@ -44,7 +44,6 @@
 			$search_str .= $each_search;
 		}
 
-
 		$partid_str = '';
 		
 		if ($partid_array){
@@ -213,7 +212,11 @@
 		
 		$db_results = array();
 
-		if (!$id_csv && (!$record_start && !$record_end)||(!$id_csv && ($table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote'))){
+//		if (! $record_start AND ! $record_end AND ! $id_csv AND ($table_name == 'sales' OR $table_name=='purchases' OR $table_name == 'incoming_quote')) {
+//revised 12/16/16 to allow for date-period lookups without a search string
+//		if ((!$id_csv && (!$record_start && !$record_end))||(!$id_csv && ($table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote'))){
+//		if (! $id_csv && ((! $record_start && ! $record_end) || $table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote')) {
+		if (! $id_csv AND ! $record_start AND ! $record_end) {
 //			echo 'Valid search result or date range not entered';
 			return $db_results;
 		}

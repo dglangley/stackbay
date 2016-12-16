@@ -55,7 +55,7 @@
 	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
 
 	$favorites = 0;
-	if (isset($_REQUEST['favorites'])) { $favorites = 1; }
+	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) { $favorites = 1; }
 	$invlistid = 0;
 	if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
 		// validate id in uploads table
@@ -369,7 +369,7 @@
 						<p>
 							<div class="form-group">
 				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
-   			    			         <input type="text" name="startDate" id="startDate" class="form-control input-sm" value="<?php echo $startDate; ?>" disabled />
+   			    			         <input type="text" name="startDate" id="startDate" class="form-control input-sm" value=""/>
    	        		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>
    	    					         </span>
@@ -377,7 +377,7 @@
 							</div>
 							<div class="form-group">
 				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
-   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value="<?php echo $endDate; ?>" disabled />
+   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value="<?php echo date("m/d/Y"); ?>"/>
    	        		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>
    	    					         </span>

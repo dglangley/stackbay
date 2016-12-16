@@ -209,6 +209,62 @@
 	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
 
 <?php
+	/* FILTER CONTROLS */
+	$start_date = '';
+	if ($startDate) { $start_date = format_date($startDate,'Y-m-d'); }
+	$end_date = '';
+	if ($endDate) { $end_date = format_date($endDate,'Y-m-d'); }
+
+	// check for any filters to be set
+	$filtersOn = false;
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
+		$filtersOn = true;
+	}
+
+	// the user is db-mining: no search string passed in, but filters are on to find certain subsets of parts
+	if (! $s AND $filtersOn) {
+		// set start and end dates for getRecords() calls below, then reset at the end of this section
+		if ($start_date<>'') {
+			if (! $end_date) { $end_date = $today; }
+			$record_start = $start_date;
+			$record_end = $end_date;
+		}
+
+//echo '<BR><BR><BR><BR>';
+		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
+			$sales = getRecords('','','','sales');
+			$lines = array();
+			$groups = array();
+			foreach ($sales as $r) {
+				// exclude results outside of pricing parameters
+				$fprice = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
+				if (($sales_min!==false AND $fprice<$sales_min) OR ($sales_max!==false AND $fprice>$sales_max)) { continue; }
+
+				$keystr = '';
+				// verify data is sound from pipe
+				if ($r['clei'] AND ! is_numeric($r['clei']) AND preg_match('/^[[:alnum:]]{10}$/',$r['clei'])) { $keystr = substr($r['clei'],0,7); }
+				else if ($r['heci'] AND ! is_numeric($r['heci']) AND preg_match('/^[[:alnum:]]{10}$/',$r['heci'])) { $keystr = substr($r['heci'],0,7); }
+				else { $keystr = format_part($r['part_number']); }
+
+				if (! isset($groups[$keystr])) { $groups[$keystr] = array(); }
+				$groups[$keystr][] = $r['price'];
+			}
+			// iterate through groups and add only those items that match filters
+			foreach ($groups as $keystr => $r) {
+				// exclude results not meeting minimum count, if set
+				if ($sales_count!==false AND count($r)<$sales_count) { continue; }
+
+				$s .= $keystr.chr(10);
+			}
+		}
+//print "<pre>".print_r($sales,true)."</pre>";
+//echo str_replace(chr(10),'<BR>',$s);
+//exit;
+
+		$record_start = '';
+		$record_end = '';
+	}
+
 	if (! $s AND ! $listid AND ! $favorites) {
 ?>
     <div id="pad-wrapper">
@@ -257,18 +313,6 @@
     <div id="pad-wrapper">
 
 <?php
-	/* FILTER CONTROLS */
-	$start_date = '';
-	if ($startDate) { $start_date = format_date($startDate,'Y-m-d'); }
-	$end_date = '';
-	if ($endDate) { $end_date = format_date($endDate,'Y-m-d'); }
-
-	// check for any filters to be set
-	$filtersOn = false;
-	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
-		$filtersOn = true;
-	}
-
 	// set alert message if favorites and/or filters
 	$alert_msg = '';
 	if ($favorites) {
@@ -385,7 +429,7 @@
 	}
 	unset($lines);
 
-	$per_pg = 3;
+	$per_pg = 30;
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -441,7 +485,7 @@
 		$search_strs = array();
 
 		// if favorites is NOT set, we're counting rows based on global results and don't need to waste pre-processing in first loop below
-		if (! $favorites) {
+		if (! $favorites AND ! $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
 			else if ($x>$max_ln) { break; }
 			$x++;
@@ -560,7 +604,7 @@
 
 		// if favorites is set, we're counting rows based on favorites results; we do NOT WANT TO MOVE THIS code until after
 		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
-		if ($favorites) {
+		if ($favorites OR $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
 			else if ($x>$max_ln) { break; }
 			$x++;
