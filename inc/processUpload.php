@@ -10,6 +10,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
     include_once $_SERVER["ROOT_DIR"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
 //	include_once $_SERVER["ROOT_DIR"].'/inc/mailer.php';
@@ -61,6 +62,7 @@
 		$part_col = false;
 		$heci_col = false;
 		$qty_col = false;
+		$price_col = false;
 
 		// identify the columns and curate the results by removing punctuations
 		$curated = array();
@@ -77,7 +79,7 @@
 
 			// is this a header row? try to find out
 			if ($n==0) {
-				list($part_col,$qty_col,$heci_col,$header_row) = setColumns($row_arr,$condensed);
+				list($part_col,$qty_col,$heci_col,$price_col,$header_row) = setColumns($row_arr,$condensed);
 				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
 				if ($header_row===true) { continue; }
 			}
@@ -132,6 +134,13 @@
 			}
 			if (! $part AND ! $heci) { continue; }
 
+			$price = false;
+			if ($price_col!==false) {
+				$price = strtoupper(trim($row_arr[$price_col]));
+				// we don't want to store a float in the db if there's no price
+				if (! $price) { $price = false; }
+			}
+
 			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
 			$partKey = '';
 			if ($part) { $partKey = preg_replace('/[^[:alnum:]]+/','',$part); }
@@ -139,8 +148,9 @@
 			if ($heci) { $partKey .= $heci; }
 //			if ($test) { echo $partKey.' '.$qty.'<BR>'; }
 
-			if (! isset($curated[$partKey])) { $curated[$partKey] = 0; }
-			$curated[$partKey] += $qty;
+			if (! isset($curated[$partKey])) { $curated[$partKey] = array('qty'=>0,'price'=>0); }
+			$curated[$partKey]['qty'] += $qty;
+			if ($price!==false AND $price>0) { $curated[$partKey]['price'] = $price; }
 //			if ($n>10000) { break; }
 		}
 
@@ -151,7 +161,10 @@
 
 		// further consolidate results by tapping the db for partid's, and keying on that id to get summed qtys
 		$consolidated = array();
-		foreach ($curated as $partKey => $qty) {
+		foreach ($curated as $partKey => $r) {
+			$qty = $r['qty'];
+			$price = $r['price'];
+
 			$keys = explode('.',$partKey);
 			$part = '';
 			$heci = '';
@@ -183,8 +196,12 @@
 				$searchid = qid();
 			}
 
-			if (! isset($consolidated[$searchkey])) { $consolidated[$searchkey] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids,'partid'=>$partid); }
+			if (! isset($consolidated[$searchkey])) {
+				$consolidated[$searchkey] = array('qty'=>0,'searchid'=>$searchid,'part'=>$part,'heci'=>$heci,'partids'=>$partids,'partid'=>$partid,'price'=>$price);
+			}
 			$consolidated[$searchkey]['qty'] += $qty;
+			// update price every time it's found, we really don't know how to distinguish a righter price over another
+			if ($price!==false AND $price>0) { $consolidated[$searchkey]['price'] = $price; }
 		}
 
 		return ($consolidated);
@@ -280,6 +297,8 @@ $tempfile = '/var/tmp/400004291.xls';
 //			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
 			$qty = $row['qty'];
+			$price = $row['price'];
+			if ($price!==false) { $price = format_price($price,false,'',true); }
 			$searchid = $row['searchid'];
 
 			// on invalid qty or invalid partid (missing or non-numeric), notate it as an unidentified item
@@ -303,7 +322,7 @@ $tempfile = '/var/tmp/400004291.xls';
 			}
 			if (! $partid OR ! is_numeric($partid) OR ! $qty) { continue; }
 
-			insertMarket($partid,$qty,false,false,false,$metaid,$upload_type,$searchid,$ln);
+			insertMarket($partid,$qty,$price,false,false,$metaid,$upload_type,$searchid,$ln);
 			$ln++;
 		}
 

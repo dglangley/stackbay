@@ -18,6 +18,9 @@
 		if ($qty_col===false) { $qty_col = array_find('count',$line_lower); }
 		$heci_col = array_find('heci',$line_lower);
 		if ($heci_col===false) { $heci_col = array_find('clei',$line_lower); }
+		$price_col = array_find('price',$line_lower);
+//use this for a price alternate, but I don't know of any right now 12/19/16
+//		if ($price_col===false) { $price_col = array_find('price',$line_lower); }
 
 		// search all fields for qualifying hecis to eliminate header-style fields such as "HECI: ENPQA0J"
 		$heci_exists = false;
@@ -33,10 +36,10 @@
 			// if actual heci exists, return it as the column and indicate that it's not a header row
 			if ($heci_exists) {
 				if ($heci_exists==$part_col) { $part_col = false; }
-				return (array($part_col,$qty_col,$heci_exists,false));
+				return (array($part_col,$qty_col,$heci_exists,$price_col,false));
 			} else {
 				// actual heci doesn't exist, return columns and indicate that we have a header row ('true')
-				return (array($part_col,$qty_col,$heci_col,true));
+				return (array($part_col,$qty_col,$heci_col,$price_col,true));
 			}
 		}
 
@@ -50,11 +53,12 @@
 			$qty_col = false;
 			$heci_col = false;
 		} else {
-			// send in ALL lines of data so we can sample fields throughout, to find a common theme
+			// send in ALL lines of data so we can sample fields throughout, to find a common theme;
+			// however we don't include price in sample fields - that field must be headed explicitly
 			list($part_col,$qty_col,$heci_col) = sample_fields($lines,$num_lines,$qty_col);
 		}
 
-		return (array($part_col,$qty_col,$heci_col,false));
+		return (array($part_col,$qty_col,$heci_col,$price_col,false));
 	}
 
 	function sample_fields($lines,$num_lines,$qty_col=false) {/* passes in qty column (optionally) in case the field reads "qty" or as such */

@@ -284,7 +284,7 @@ exit;
 //			echo $result_strings[$k].'<BR>';
 			if ($k==0) {//first row
 				if ($num_fields>1) {
-					list($part_col,$qty_col,$heci_col,$header_row_exists) = setColumns($fields,$results);
+					list($part_col,$qty_col,$heci_col,$price_col,$header_row_exists) = setColumns($fields,$results);
 
 //					echo "part: $part_col, qty: $qty_col, heci: $heci_col<BR>";
 //					print "<pre>".print_r($fields,true)."</pre>";
@@ -305,7 +305,7 @@ exit;
 					}
 //					echo "part: $part_col, qty: $qty_col, heci: $heci_col<BR>";
 				} else {/* $num_fields==1 */
-					list($part_col,$qty_col,$heci_col,$header_row_exists) = setColumns($fields,$results);
+					list($part_col,$qty_col,$heci_col,$price_col,$header_row_exists) = setColumns($fields,$results);
 
 					//no qty is set so default to 1
 					if ($qty_col===false AND $master_qty===false) { $master_qty = 1; }

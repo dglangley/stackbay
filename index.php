@@ -11,6 +11,7 @@
 
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
+	else if (isset($_REQUEST['upload_listid']) AND is_numeric($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']>0) { $listid = $_REQUEST['upload_listid']; }
 	$pg = 1;
 	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
@@ -234,6 +235,8 @@
 			$sales = getRecords('','','','sales');
 			// build new array with specific fields to fit the form of sales within the broader array, and to match partid keys
 			foreach ($sales as $r) {
+// just for now
+if (! $r['partid']) { continue; }
 				// exclude results outside of pricing parameters
 				if (($sales_min!==false AND $r['price']<$sales_min) OR ($sales_max!==false AND $r['price']>$sales_max)) { continue; }
 
@@ -252,6 +255,8 @@
 			$demand = getRecords('','','','demand');
 			// build new array with specific fields to fit the form of demand within the broader array, and to match partid keys
 			foreach ($demand as $r) {
+// just for now
+if (! $r['partid']) { continue; }
 				if (! isset($results[$r['partid']])) {
 					$r['sales'] = array();
 					$r['demand'] = array();
