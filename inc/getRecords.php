@@ -182,7 +182,10 @@
 
 		if ($search){
 			$pipe_ids = getPipeIds($search);
+			// if a search string is passed in but there are no results from brians db, don't continue
+			if (count($pipe_ids)==0) { return ($unsorted); }
 		}
+
 		$id_csv = '';
 		foreach ($pipe_ids as $r) {
 			if ($id_csv) { $id_csv .= ','; }

@@ -31,8 +31,9 @@
 	}
 
 	$SALES = false;
+	$DEMAND = false;
 	function format_market($partid_csv,$market_table,$search_strs) {
-		global $FREQS,$SALES;
+		global $FREQS,$SALES,$DEMAND;
 
 		$last_date = '';
 		$last_sum = '';
@@ -43,6 +44,8 @@
 		// re-use data within global scope, if previously set from use with filters
 		if ($market_table=='sales' AND $SALES!==false) {
 			$results = $SALES;
+		} else if ($market_table=='demand' AND $DEMAND!==false) {
+			$results = $DEMAND;
 		} else {
 			$results = getRecords($search_strs,$partid_csv,'csv',$market_table);
 		}
@@ -188,6 +191,83 @@
 		return ($dtitle);
 	}
 
+
+	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
+		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
+
+		if (! $search_strs) { $search_strs = array(); }
+
+		// set start and end dates for getRecords() calls below, then reset at the end of this section
+		if (! $start_date) { $start_date = '0000-00-00'; }
+		if (! $end_date) { $end_date = $today; }
+		$record_start = $start_date;
+		$record_end = $end_date;
+
+//echo '<BR><BR>';
+		$results = array();
+		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
+			$sales = getRecords($search_strs,$partid_csv,'csv','sales');
+
+			// exclude results not meeting minimum sales count, if set
+			if ($sales_count!==false AND count($sales)<$sales_count) { return ($results); }
+
+			// if sales-related filters are set, get sales here and set within a global scope so we can re-use data within getRecords()
+			if ((count($search_strs)>0 OR $partid_csv) AND $start_date=='' AND $end_date==$today) {
+				$SALES = $sales;
+			}
+
+			// build new array with specific fields to fit the form of sales within the broader array, and to match partid keys
+			foreach ($sales as $r) {
+// just for now
+if (! $r['partid']) { return ($results); }
+				$fprice = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
+
+				// exclude results outside of pricing parameters
+				if (($sales_min!==false AND $fprice<$sales_min) OR ($sales_max!==false AND $fprice>$sales_max)) { return ($results); }
+
+				if (! isset($results[$r['partid']])) {
+					$r['sales'] = array();
+					$r['demand'] = array();
+					$results[$r['partid']] = $r;
+				}
+				// add every sale to array
+				$results[$r['partid']]['sales'][] = $fprice;
+			}
+		}
+
+		// if demand-related filters are set, get data from getRecords() as above with sales
+		if ($demand_min!==false OR $demand_max!==false) {
+			$demand = getRecords($search_strs,$partid_csv,'csv','demand');
+
+			// exclude results not meeting minimum demand count or exceeding max count, if set
+			if (($demand_min!==false AND count($demand)<$demand_min) OR ($demand_max!==false AND count($demand)>$demand_max)) { return ($results); }
+
+			// if sales-related filters are set, get sales here and set within a global scope so we can re-use data within getRecords()
+			if ((count($search_strs)>0 OR $partid_csv) AND $start_date=='' AND $end_date==$today) {
+				$DEMAND = $demand;
+			}
+
+			// build new array with specific fields to fit the form of demand within the broader array, and to match partid keys
+			foreach ($demand as $r) {
+// just for now
+if (! $r['partid']) { return ($results); }
+
+				if (! isset($results[$r['partid']])) {
+					$r['sales'] = array();
+					$r['demand'] = array();
+					$results[$r['partid']] = $r;
+				}
+				// add uniquely-dated demand
+				$results[$r['partid']]['demand'][$r['datetime']] = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
+			}
+		}
+
+		$record_start = '';
+		$record_end = '';
+
+		return ($results);
+	}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -223,49 +303,9 @@
 	}
 
 	// the user is db-mining: no search string passed in, but filters are on to find certain subsets of parts
-	if (! $s AND $filtersOn AND $start_date<>'') {
-		// set start and end dates for getRecords() calls below, then reset at the end of this section
-		if (! $end_date) { $end_date = $today; }
-		$record_start = $start_date;
-		$record_end = $end_date;
-
-//echo '<BR><BR>';
-		$results = array();
-		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
-			$sales = getRecords('','','','sales');
-			// build new array with specific fields to fit the form of sales within the broader array, and to match partid keys
-			foreach ($sales as $r) {
-// just for now
-if (! $r['partid']) { continue; }
-				// exclude results outside of pricing parameters
-				if (($sales_min!==false AND $r['price']<$sales_min) OR ($sales_max!==false AND $r['price']>$sales_max)) { continue; }
-
-				if (! isset($results[$r['partid']])) {
-					$r['sales'] = array();
-					$r['demand'] = array();
-					$results[$r['partid']] = $r;
-				}
-				// add every sale to array
-				$results[$r['partid']]['sales'][] = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
-			}
-		}
-
-		// if demand-related filters are set, get data from getRecords() as above with sales
-		if ($demand_min!==false OR $demand_max!==false) {
-			$demand = getRecords('','','','demand');
-			// build new array with specific fields to fit the form of demand within the broader array, and to match partid keys
-			foreach ($demand as $r) {
-// just for now
-if (! $r['partid']) { continue; }
-				if (! isset($results[$r['partid']])) {
-					$r['sales'] = array();
-					$r['demand'] = array();
-					$results[$r['partid']] = $r;
-				}
-				// add uniquely-dated demand
-				$results[$r['partid']]['demand'][$r['datetime']] = format_price($r['price'],false,'',true);//reformat in true float format, for comparison
-			}
-		}
+	if (! $s AND ! $listid AND $filtersOn AND $start_date<>'') {
+		// get filtered results and then build linebreak-separated search string
+		$results = filterResults();
 
 		// consolidate into a string-keyed array so, with one simple section of code, we can generate a simplified array for building our list of line strings
 		$groups = array();
@@ -284,6 +324,7 @@ if (! $r['partid']) { continue; }
 
 			$groups[$keystr] = true;
 		}
+		// release memory
 		unset($results);
 
 //print "<pre>".print_r($groups,true)."</pre>";
@@ -294,10 +335,8 @@ if (! $r['partid']) { continue; }
 		foreach ($groups as $keystr => $r) {
 			$s .= $keystr.chr(10);
 		}
+		// release memory
 		unset($groups);
-
-		$record_start = '';
-		$record_end = '';
 	}
 
 	if (! $s AND ! $listid AND ! $favorites) {
@@ -473,7 +512,10 @@ if (! $r['partid']) { continue; }
 	foreach ($rows as $ln => $line) {
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = strtoupper(trim($terms[$search_index]));
-		if (! $search_str) { continue; }
+		if (! $search_str) {
+			$num_rows--;//mostly impacting pagination
+			continue;
+		}
 
 		$search_qty = 1;//default
 		if (isset($terms[$qty_index])) {
@@ -508,11 +550,11 @@ if (! $r['partid']) { continue; }
 			$results = hecidb(format_part($search_str));
 		}
 
-		// the LARGE majority of items don't have more than 20 results within a certain group of 7-digit hecis
-		if (count($results)>20) {
-			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 20!';
-			// take the top 20 results
-			$results = array_slice($results,0,20,true);
+		// the LARGE majority of items don't have more than 25 results within a certain group of 7-digit hecis
+		if (count($results)>25) {
+			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 25!';
+			// take the top 25 results
+			$results = array_slice($results,0,25,true);
 		}
 
 		// gather all partid's first
@@ -586,27 +628,26 @@ if (! $r['partid']) { continue; }
 		}
 
 		// if by now no favorites have been found, and user is asking for favorites, skip line
-		if ($favorites AND $num_favs==0) { continue; }
+		if ($favorites AND $num_favs==0) {
+			$num_rows--;//mostly impacting pagination
+			continue;
+		}
 
-		$SALES = false;//reset as a boolean because in format_market(), it helps us know if we've previously searched sales
+		//reset as a boolean because in format_market(), it helps us know if we've previously searched sales/demand; values set to it in filterResults()
+		$SALES = false;
+		$DEMAND = false;
 
-		// if sales-related filters are set, get sales here and set within a global scope so we can re-use
-		// data within getRecords()
-		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false) {
-			// set now as array in preparation to store data, and to let format_market() know that we've previously searched sales
-			$SALES = getRecords($search_strs,$partid_csv,'csv','sales');
+		// allow only real items with results (i.e., exclude invalid searches)
+		if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $demand_min!==false OR $demand_max!==false) {
+			if (count($search_strs)==0 AND ! $partid_csv) {
+				$num_rows--;//mostly impacting pagination
+				continue;
+			}
 
-			if ($sales_count!==false AND count($SALES)<$sales_count) { continue; }
-
-			if ($sales_min!==false OR $sales_max!==false) {
-				$qualified_sales = 0;
-				foreach ($SALES as $sale) {
-					$sale_price = format_price($sale['price'],false,'',true);//reformat in true float format, for comparison
-					if (($sales_min!==false AND $sale_price<$sales_min) OR ($sales_max!==false AND $sale_price>$sales_max)) { continue; }
-
-					$qualified_sales++;
-				}
-				if ($qualified_sales==0) { continue; }
+			$subResults = filterResults($search_strs,$partid_csv);
+			if (count($subResults)==0) {
+				$num_rows--;//mostly impacting pagination
+				continue;
 			}
 		}
 
@@ -635,7 +676,10 @@ if (! $r['partid']) { continue; }
 		}
 
 		// reject lines that don't have qtys that meet filter parameters, if set
-		if (($stock_min!==false AND $lineqty<$stock_min) OR ($stock_max!==false AND $lineqty>$stock_max)) { continue; }
+		if (($stock_min!==false AND $lineqty<$stock_min) OR ($stock_max!==false AND $lineqty>$stock_max)) {
+			$num_rows--;//mostly impacting pagination
+			continue;
+		}
 
 		// if favorites is set, we're counting rows based on favorites results; we do NOT WANT TO MOVE THIS code until after
 		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
