@@ -11,7 +11,7 @@
 
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
-    $companyid = prep(grab('limit')); 
+    $companyid = prep(grab('limit'),"'%'"); 
     $output = array();
     
     $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '%$q%' AND `companyid` LIKE $companyid;";

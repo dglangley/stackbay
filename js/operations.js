@@ -179,8 +179,7 @@
 				order_number = $("body").attr("data-order-number");
 				order_type = $("body").attr("data-order-type");
 				page = $(".left-side-main").attr("data-page");
-
-
+				
 				//Left Side Main output on load of the page
 				$.ajax({
 					type: "POST",
@@ -198,11 +197,15 @@
 						if (page == 'order'){
 							var company = $("#companyid").val();
 							if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
+								//For any purchase order, I expect that we want to ship and bill to ourselves
 								var limit = "25";
 							}
 							else{
+								//On a sales order, we want to find shipping address information.
 								var limit = company;
 							}
+
+							//Initialize each of the select2 fields when the left side loads.
 							$("#companyid").initSelect2("/json/companies.php");
 							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 							$("#bill_to").initSelect2("/json/address-picker.php","Bill to", limit);
@@ -228,10 +231,12 @@
 	
 				});
 			});
+			
+		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
-
+				var limit = '';
 				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
 				if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
 					limit = "25";
@@ -239,9 +244,53 @@
 				else{
 					limit = company;
 				}
+				var carrier = $("#carrier").val();
+				//Default selector for the addresses
+				$.ajax({
+					type: "POST",
+					url: '/json/address-default.php',
+					data: {
+						"company": limit,
+						},
+					dataType: 'json',
+					success: function(right) {
+						var bvalue = right['b_value'];
+						var bdisplay = right['b_display'];
+			    		$("#select2-bill_to-container").html(bdisplay)
+			    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
+						
+						var svalue = right['s_value'];
+						var sdisplay = right['s_display'];
+			    		$("#select2-ship_to-container").html(sdisplay)
+			    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
+					},
+				});
+				
+				//Account default picker on update of the company
+				$.ajax({
+					type: "POST",
+					url: '/json/account-default.php',
+					data: {
+						"company": limit,
+						"carrier": carrier,
+						},
+					dataType: 'json',
+					success: function(right) {
+						var value = right['value'];
+						var display = right['display'];
+			    		$("#select2-account_select-container").html(display)
+			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
+					},
+				});
+				
+				//Reload the Addresses
 				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
 				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
+				
+				//Reload the contact
 				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
+				
+				//Populate the terms with the company preferences
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -277,7 +326,13 @@
 					}
 				});
 			});
-			
+			$(document).on("change","#services",function() {
+				var limit = $(this).val();
+            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+				$.ajax({
+ 
+				});
+			});
 		//======================== Right side page load ========================
 		// This function outputs each of the items on the table, as well as the
 		// old information from the database
@@ -311,6 +366,9 @@
 						if (result){
 							$('#search_input').append(result);
 							$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
+							var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+							if (!lineNumber){lineNumber = 0;}
+							$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(lineNumber + 1);
 						}
 						else{
 							
@@ -320,6 +378,31 @@
 					   	alert(error+" | "+status+" | "+xhr);
 					},					
 				});
+			});
+		
+		//MultiPart Search Feature
+			$(document).on("keyup","#go_find_me",function(e){
+				if (e.keyCode == 13) {
+					var search = $("#go_find_me").val();
+					//Ajax Call the new paradigm
+					$.ajax({
+						type: "POST",
+						url: '/json/new_paradigm.php',
+						data: {
+							"mode" : "search",
+							"item": search,
+							"page" : $("#order_body").attr("data-order-type"),
+						}, // serializes the form's elements.
+						dataType: 'json',
+						success: function(result) {
+							$(".search_lines").html("").remove();
+							$("#search_input").append(result)
+						},
+						error: function(xhr, status, error) {
+						   	alert(error+" | "+status+" | "+xhr);
+						},					
+					});
+				}
 			});
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
@@ -344,7 +427,9 @@
 
 			});
 			
-			
+	//========================== Usability Functions ==========================
+	
+	
 		//Any time a field is clicked for editing, or double clicked at all, show
 		//the easy output portion of the row, populated with the relevant updated pages.
 			$(document).on("click",".forms_edit",function() {
@@ -360,8 +445,10 @@
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 			});
-			
-		    $(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+	
+//No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
+		    //(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+	
 	
 		    //This function runs the method append and adds a row to the end of the table
 			$(document).on("click","#NewSalesOrder",function() {
@@ -448,7 +535,7 @@
 	   		        var qty = $(this).find("input[name=ni_qty]").val();
 					var condition = $(".multipart_sub").closest("tr").find(".condition").val();
 				
-	   		        if(qty){
+   		        if(qty){
        					$.ajax({
 							type: "POST",
 							url: '/json/order-table-out.php',
@@ -467,57 +554,19 @@
 							success: function(row_out) {
 								$("#right_side_main").append(row_out);
 								$(".search_lines").html("").remove();
+								
  							}
 						});
 	   		        }
 	   		    });
+	   		    
+				var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+				if (!lineNumber){lineNumber = 0;}
+				$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(lineNumber + 1);
 				$("#go_find_me").val("");
     			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-       			$(".multipart_sub").closest("tr").find("input[name=ni_line]").val("");
+       			
 			});
-			
-//This function submits a new row
-			// $('#forms_submit').on("click", function() {
-			// 	var company = $("#").find('.item-selected').find("option").last().val();
-			//     var search = $(this).closest("tr").find('#item-selected').find("option").val();
-			//     var date = $(this).closest("tr").find("input[name=ni_date]").val();
-	  // 		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
-			//     var price = $(this).closest("tr").find("input[name=ni_price]").val();
-	  // 		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	  // 		    var warranty = $(this).closest("tr").find(".warranty").val();
-				
-	
-			// 	$.ajax({
-					
-			// 		type: "POST",
-			// 		url: '/json/order-table-out.php',
-			// 		data: {
-		 //  		    	"line":lineNumber,
-		 //  		    	"search":search,
-		 //  		    	"date":date,
-		 //  		    	"qty":qty,
-		 //  		    	"unitPrice":price,
-			// 			"warranty":warranty,
-		 //  		    	"id": 'new',
-		 //  		    	"mode":'append'
-			// 			}, // serializes the form's elements.
-			// 		dataType: 'json',
-			// 		success: function(row_out) {
-			// 			$("#right_side_main").append(row_out);
-			// 		}
-			// 	});
-	
-			// 	$(this).closest("tr").children("td:first-child").show();
-			// 	$(this).closest("tr").children("td").slice(1).children()
-			// 	.val("")
-			// 	.toggle();
-			// 	$(this).closest("tr").find(".item_search").html("\
-			// 					<select class='item_search'>\
-			// 					</select>\
-			// 	")
-			// 	$(this).closest("tr").find(".select2-selection__rendered").html('');
-				
-			// });
 			
 //Delete Button
 			$(document).on("click",".forms_trash",function() {
@@ -547,7 +596,6 @@
 		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
 			}
-			
 			$(document).on("change","#ship_to, #bill_to",function() {
 				//Get the identifier of the initial textbox
 				var origin = ($(this).parent().find('select').attr('id'));
@@ -614,7 +662,7 @@
 				updateBillTo();
 			});
 			
-//Account handling function
+//Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
 				if($(this).val().indexOf("Add") > -1){
 					
@@ -626,11 +674,10 @@
 					$("#modal-account").modal('show');
 				}
 			});
+			
+//Account modal handling function
 			$(document).on("click", "#account-continue", function() {
 			    var company = '';
-			    var text = '';
-			    var field = '';
-
 			    var carrier = $("#account-modal-body").find('#modal_carrier').val();
 			    var account = $("#account-modal-body").find("input[name='na_account']").val();
 			    var comp_check = $("#account-modal-body").find('input[name="associate"]').prop("checked");
@@ -650,7 +697,7 @@
 			    });
 			});
 
-//Warranty Global Change function
+//Global Warranty function
 			$(document).on("change","#warranty_global",function() {
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
@@ -680,14 +727,43 @@
 				}
 			});
 
-
-//==============================================================================
+//Conditional Global change
+			$(document).on("change","#condition_global",function() {
+				var value = $(this).val();
+				var text = $("#condition_global option:selected").text();
+				
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
+				if (value != "no"){
+					$(".line_cond").text(text)
+					.attr("data-cond",value);
+					$.ajax({
+						type: "POST",
+						url: '/json/dropPop.php',
+						data: {
+							"field": "condition",
+							"selected": value,
+							"limit": '',
+							"size": "condition",
+							"id":"condition"
+							},
+						dataType: 'json',
+						success: function(result) {
+							// alert(result);
+							$("#condition").replaceWith(result);
+							// $('#new_warranty').parent().replaceWith(result)
+							// .parent().removeClass('col-md-12');
+						}
+					});
+				}
+			});
 			
-			$('#save_button').click(function(e) {
+
+//================================ PAGE SUBMIT ================================
+			
+			$('#save_button').click(function() {
 				
-				var isValid = nonFormCase($(this), e);
+				//var isValid = nonFormCase($(this), e);
 				
-				if(isValid) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
@@ -709,15 +785,13 @@
 					var account = $('#account_select').val();
 					var pri_notes = $('#private_notes').val();
 					var pub_notes = $('#public_notes').val();
-					var warranty = $('.warranty').val();
+					//var warranty = $('.warranty').val();
 	
 	
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
-					var i = 0;
 					var submit = [];
-					var row = [];
-					
+
 					//This loop runs through the right-hand side and parses out the general values from the page
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 						var row = {
@@ -730,6 +804,18 @@
 							"price" : $(this).find(".line_price").text(),
 							"qty" : $(this).find(".line_qty").attr("data-qty"),
 						};
+
+							// alert("line_number "+row["line_number"]);
+							// alert("part "+row["part"]);
+							// alert("id "+row["id"]);
+							// alert("date "+row["date"]);
+							// alert("condition "+row["condition"]);
+							// alert("warranty "+row["warranty"]);
+							// alert("price "+row["price"]);
+							// alert("qty "+row["qty"]);
+							
+							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty
+
 						submit.push(row);
 					});
 	
@@ -751,13 +837,14 @@
 							"service" : service,
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
-							"warranty": warranty,
 							"table_rows":submit,
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
 							var on = form["order"];
 							var ps = form["type"];
+							alert("SAVED"+on+" | Order"+ps);
+							alert(form['insert']);
 							// alert(form["error"]);
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
@@ -765,10 +852,9 @@
 						   	alert(error);
 						},
 					});
-				}
 			});
 			
-//========================== END COMPLETE PAGE SUBMIT ==========================
+//========================== END COMPLETE PAGE SUBMIT =========================
 			//Cancel button?
 			
 
@@ -1176,5 +1262,78 @@
 				}
 			});
 		});
-//=========================== End Inventory Addition ===========================
 	});
+//=========================== End Inventory Addition ===========================
+
+//=============================== Inventory Edit ===============================
+	// $(document).ready(function() {
+	// 	var search = $("body").attr("data-search");
+	// 	//Inventory
+	// 	$.ajax({
+	// 		type: "POST",
+	// 		url: '/json/inventory-out.php',
+	// 		data: {
+	// 			"search": search,
+	// 			},
+	// 		dataType: 'json',
+	// 		success: function(right) {
+	// 			$(".loading_element").append(right);
+	// 		}
+	// 	});
+
+		
+	// 	$(document).on("click",".part_filter",function() {
+			
+	// 	});
+	// });
+	
+
+		
+//============================= END INVENTORY EDIT =============================
+
+
+//************************* Legacy Code Worth Keeping *************************
+
+
+//This function submited a new row on the order forms when the row was static.
+	// $('#forms_submit').on("click", function() {
+	// 	var company = $("#").find('.item-selected').find("option").last().val();
+	//     var search = $(this).closest("tr").find('#item-selected').find("option").val();
+	//     var date = $(this).closest("tr").find("input[name=ni_date]").val();
+	// 		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
+	//     var price = $(this).closest("tr").find("input[name=ni_price]").val();
+	// 		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
+	// 		    var warranty = $(this).closest("tr").find(".warranty").val();
+		
+	
+	// 	$.ajax({
+			
+	// 		type: "POST",
+	// 		url: '/json/order-table-out.php',
+	// 		data: {
+	//  		    	"line":lineNumber,
+	//  		    	"search":search,
+	//  		    	"date":date,
+	//  		    	"qty":qty,
+	//  		    	"unitPrice":price,
+	// 			"warranty":warranty,
+	//  		    	"id": 'new',
+	//  		    	"mode":'append'
+	// 			}, // serializes the form's elements.
+	// 		dataType: 'json',
+	// 		success: function(row_out) {
+	// 			$("#right_side_main").append(row_out);
+	// 		}
+	// 	});
+	
+	// 	$(this).closest("tr").children("td:first-child").show();
+	// 	$(this).closest("tr").children("td").slice(1).children()
+	// 	.val("")
+	// 	.toggle();
+	// 	$(this).closest("tr").find(".item_search").html("\
+	// 					<select class='item_search'>\
+	// 					</select>\
+	// 	")
+	// 	$(this).closest("tr").find(".select2-selection__rendered").html('');
+		
+	// });

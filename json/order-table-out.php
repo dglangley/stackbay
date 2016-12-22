@@ -161,7 +161,7 @@
 				'qty' => $r['qty'],
 				'uPrice' => $r['price'],
 				'warranty' => $r['warranty'],
-				'condition' => $r['condition']
+				'condition' => $r['cond']
 				);
 				$table .= build_row($new_row);			
 				

@@ -39,7 +39,8 @@
     
     //This function works to prepopulate the dropdowns and output their selected option
     function dropdown($field, $selected = '', $limit = '',$size ='col-sm-6',$label=true,$custom_id=false){
-
+    //Fields Allowed: Carrier, Services, Warranty
+        $field = strtolower($field);
         if (strtolower($field) == 'carrier'){
         //Carrier outputs the carrier information based off of no selector parameters
             $carrier = getFreight('carrier');
@@ -103,9 +104,9 @@
         $id = ($custom_id) ? $custom_id : "warranty";
         $output = "<div class='$size'>";          	
         $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
-        $output .= "<select id = '$id' class='form-control warranty'>";
+        $output .= "<select id = '$id' class='form-control warranty $limit'>";
     	if($id == 'warranty_global'){
-    	    $output .= "<option selected value='no'>No Global</option>";
+    	    $output .= "<option selected value='no'>Warranty</option>";
     	}
     	$output .= "	    $warranty_options
     			    </select>
@@ -189,16 +190,45 @@
     			}
     	   	}
    	        $id = ($custom_id) ? $custom_id : "condition";
-            $output = "<div class='$size'>";
+            $output = "<div class=''>";
             $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
             $output .= "<select id = '$id' class='form-control condition'>";
+                	if($id == 'condition_global'){
+                        $output .= "<option selected value='no'>Condition</option>";
+                	}
     	    $output .= "    $cond
     			    </select>
     	        </div>";
 
     	   	
         }
-        
+        else if ($field == 'status'){
+            
+            // Grab all the variations of the enum into an iterable array
+            $status = getEnumValue("inventory","status");
+		    
+		    //If the condition value returns any results
+		    if ($status){
+    			foreach ($status as $s){
+    				if($s == $selected){
+    					$status .= "<option selected value=$s>".ucwords($s)."</option>";
+    				}
+    				else{
+    					$status .= "<option value=$s>".ucwords($s)."</option>";
+    				}
+    			}
+    	   	}
+   	        $id = ($custom_id) ? $custom_id : "status";
+            $output = "<div class=''>";
+            $output .= ($label)? "<label for='status'>Status:</label>" : '';
+            $output .= "<select id = '$id' class='form-control status'>";
+                	if($id == 'status_global'){
+                        $output .= "<option selected value='no'>Status</option>";
+                	}
+    	    $output .= "    $status
+    			    </select>
+    	        </div>";
+        }
         else{
             $output = 'dicks and a half';
         }

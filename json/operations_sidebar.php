@@ -173,7 +173,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .="
 				<div class='row' style='padding-bottom: 10px;'>
 					".dropdown('terms',$terms,$companyid)."
-			    	".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
+			    </div>";
+		
+			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
+		
+		//Carrier and service
+		$right .= "
+				<div class='row' style='padding-bottom: 10px;'>
+				    ".dropdown('carrier',$selected_carrier)."
+			    	".dropdown('services',$services,$selected_carrier)."
 			    </div>";
 		
 		//Shipping Account Section
@@ -188,14 +196,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						</div>
 					</div>
 				</div>";
-		
-		
-		//Carrier and service
-		$right .= "
-				<div class='row' style='padding-bottom: 10px;'>
-				    ".dropdown('carrier',$selected_carrier)."
-			    	".dropdown('services',$services,$selected_carrier)."
-			    </div>";
 		
 		//NOTES SECTION (Band together)
 		$right .= "

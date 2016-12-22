@@ -62,13 +62,19 @@
 		<?php include 'inc/navbar.php';
 		include_once $rootdir.'/modal/address.php';
 		include_once $rootdir.'/modal/accounts.php';
+		include_once $rootdir.'/modal/alert.php'
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
 		;">
+			
 			<div class="col-md-4">
-				<?= ($order_type == "Sales")? '<a href="/shipping.php?on=' . $order_number . '&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>' : 
-				'<a href="/inventory_add.php?on=' . $order_number . '" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';?>
+				<?php
+				if($order_number != "New"){
+					$url = ($order_type == "Sales")?"shipping":"inventory_add";
+					echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';
+				}
+				?>
 				
 			</div>
 			<div class="col-md-4 text-center">
@@ -123,8 +129,20 @@
 	    				<th style='min-width:30px;'>#</th>
 	    				<th class='col-md-5'>Item Information</th>
 	    				<th class='col-md-2'>Delivery Date</th>
-	    				<th class='col-md-1'>Condition</th>
-	    				<th class='col-md-1'>Warranty</th>
+	    				<th class='col-md-1'>
+	    				<?php
+	    					$rootdir = $_SERVER['ROOT_DIR'];
+	    					include_once($rootdir.'/inc/dropPop.php');
+	    					echo(dropdown("condition","","full_drop","",false,"condition_global"));
+	    				?>
+	    				</th>
+	    				<th class='col-md-1'>
+	    					<?php
+	    					$rootdir = $_SERVER['ROOT_DIR'];
+	    					include_once($rootdir.'/inc/dropPop.php');
+	    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
+	    					?>
+    					</th>
 	    				<th class='col-md-1'>Price</th>
 	    				<th class='col-md-1'>Qty</th>
 	    				<th class='col-md-1'>Ext. Price</th>
@@ -146,6 +164,7 @@
 		<script src="js/operations.js"></script>
 		
 		<script>
+
 			(function($){
 				$('.item_search').select2().on("change", function(e) {
 					var $itemRow = $(this).closest('#add_row');

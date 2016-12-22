@@ -52,7 +52,7 @@ function head_out(){
     $head .= "<th class='col-md-5'>Item Information</th>";
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
-    $head .= "<th class='col-md-1'>Warranty</th>";
+    $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
     $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
@@ -77,12 +77,20 @@ function search_row(){
             <div class='input-group'>
               <input type='text' class='form-control' id = 'go_find_me' placeholder='Search for...'>
               <span class='input-group-btn'>
-                <button class='btn btn-secondary li_search_button' type='button'>Go!</button>
-              </span>
+                <button class='btn btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+            </span>
             </div>
         </td>";
 
-        //Delivery Date
+        // //Delivery Date
+        // $start_date = date('Y-m-d');
+        // $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
+        // $counter = 7;
+
+        // // $date = date("m/d/Y");
+        // while($counter > NETWORKDAYS($start_date,$stop_date)){
+        //     $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
+        // };
         $line .= "
         <td>				
 		    <div class='input-group date datetime-picker-line'>
@@ -100,7 +108,13 @@ function search_row(){
 
         
         //Price
-        $line .= "<td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='$price'></td>";
+        $line .= "
+            <td>
+                <div class='input-group'>
+                    <span class='input-group-addon'>$</span>
+                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='$price'>
+                </div>
+            </td>";
         
         //Qty | Each of the qty inputs had supplimental inventory information
         $line .="<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
@@ -111,7 +125,7 @@ function search_row(){
         //Submission button
         $line .= "<td colspan='2' id = 'check_collumn'> 
                     <a class='btn-flat success pull-right multipart_sub' >
-                    <i class='fa fa-plus fa-4' aria-hidden='true'></i></a>
+                    <i class='fa fa-check fa-4' aria-hidden='true'></i></a>
                 </td>";
 
     $line .= "</tr>";

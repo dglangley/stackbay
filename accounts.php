@@ -118,7 +118,7 @@
 			    </div>
 			</div>
 			<div class="form-group">
-					<div class="btn-group" id="dateRanges">
+			<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
 							<div class="animated fadeIn hidden" id="date-ranges">
