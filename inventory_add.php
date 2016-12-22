@@ -170,24 +170,24 @@
 									<td>
 										<div class="row-fluid">
 											<div class="col-md-4" style="padding: 0 0 0 5px;">
-												<select class="form-control">
+												<select class="form-control" style=" height: 31px;">
 													<option>Warehouse</option>
 												</select>
 											</div>
 											<div class="col-md-4" style="padding: 0 0 0 5px;">
-												<select class="form-control">
+												<select class="form-control" style=" height: 31px;">
 													<option>Aisle</option>
 												</select>
 											</div>
 											<div class="col-md-4" style="padding: 0 0 0 5px">
-												<select class="form-control">
+												<select class="form-control" style=" height: 31px;">
 													<option>Shelf</option>
 												</select>
 											</div>
 										</div>
 									</td>
 									<td class="infiniteCondition">
-										<select class="form-control condition_field condition" name="condition" style="margin-bottom: 5px;">
+										<select class="form-control condition_field condition" name="condition" style="margin-bottom: 5px; height: 31px;">
 											<?php foreach(getEnumValue() as $condition): ?>
 												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
 											<?php endforeach; ?>

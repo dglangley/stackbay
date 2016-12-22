@@ -968,31 +968,46 @@
 		            return sParameterName[1] === undefined ? true : sParameterName[1];
 		        }
 		    }
-		};
+		}
+		
+		
+		//This function gets the pages title without the extension aka .php
+		function getPageName(url = window.location.href) {
+		    var index = url.lastIndexOf("/") + 1;
+		    var filenameWithExtension = url.substr(index);
+		    var filename = filenameWithExtension.split(".")[0]; 
+		    return filename;                                    
+		}
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
-		    if( $( this ).val() != '' )
-		        window.onbeforeunload = function() { return "You have unsaved changes."; }
+		    // if( $( this ).val() != '' )
+		    //     window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 		
+		//This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			var $serial = $(this);
+			//po_number gets any parameter set to on, E.G. Sales Number is also pulled
 			var po_number = getUrlParameter('on');
 			var savedSerial = $serial.attr('data-saved');
-			var qty = $serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val();
+			var qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
+			var page = getPageName();
+			var serial = $serial.val();
+			var partid = $serial.closest('tr').find('.part_id').data('partid');
+			var condition = $serial.closest('tr').find('.condition_field').val();
+			
+			if(condition == '') {
+				condition = $serial.closest('tr').find('.condition_field').data('condition');
+			}
+			
+			//Clone the serial field for usage when appending more fields
+			var $serialClone = $serial.clone();
+			
+			//alert(getPageName());
 			if(e.which == 13) {
-		    	if((qty > 0 & $serial.val() != '') || savedSerial != '') {
-		    		var partid = $serial.closest('tr').find('.part_id').data('partid');
-		    		var condition = $serial.closest('tr').find('.condition_field').val();
+		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
 		    		var location = '';
-		    		var serial = $serial.val();
-		    		var $serialClone = $serial.clone();
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
-		    		
-		    		//alert($conditionClone);
-		    		
-		    		// console.log(partid);
-		    		// console.log(savedSerial);
 		    		
 		    		$.ajax({
 						type: "POST",
@@ -1002,19 +1017,18 @@
 						},
 						dataType: 'json',
 						success: function(result) {
-							//console.log(lines);
-							// window.location = "/shipping_home.php?po=true";
 							
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
 							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-							qty--;
-								
+
 							if(result['query'] && !result['saved']) {
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+								
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								}
 								$serialClone.val("");
-								//$conditionClone.val("");
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
@@ -1034,8 +1048,44 @@
 							
 						}
 					});
-					//alert($serialClone);
-			    } else if($serial.val() == '') {
+			    } else if(serial != '' && page == 'shipping') {
+			  
+			    	$.ajax({
+						type: "POST",
+						url: '/json/shipping-update-dynamic.php',
+						data: {
+							 'partid' : partid, 'serial' : serial, 'so_number' : po_number, 'condition' : condition
+						},
+						dataType: 'json',
+						success: function(result) {
+							
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							//$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+								
+							if(result['query']) {
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+								
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+								}
+								$serialClone.val("");
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								if(qty == 0) {
+							    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+							} else {
+								alert(result['error']);
+							}
+							window.onbeforeunload = null;
+							
+						}
+					});
+			    } else if(serial == '') {
 			    	alert('Serial Missing');
 			    } else if(qty <= 0) {
 			    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order in Order to Continue');
@@ -1062,15 +1112,19 @@
 		});
 				
 		$(document).on('click',"#save_button_inventory",function() {
-			//Prevent Button Spamming
-			$(this).removeAttr('id');
-			
+			//Save to reactivate button if needed
 			$click = $(this);
+			//Prevent Button Spamming
+			$click.removeAttr('id');
+			
 			//$(this).css('background-color','#eeeeee');
 			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			//Include location in the near future
 			var items = [];
 			var po_number = getUrlParameter('on');
+			
+			//check if anything at all was changed on the page, including a scanned / entered item
+			var checkSaved = false;
 			
 			//Get everything from the form and place it into its own array
 			$('.inventory_add').children('tbody').children('tr').each(function() {
@@ -1088,9 +1142,15 @@
 				$(this).find('.infiniteSerials').children('input').each(function() {
 					serials.push($(this).val());
 					savedSerials.push($(this).attr('data-saved'));
+					
+					//If an item was saved previously then mark the page as soemthing was edited
+					if($(this).attr('data-saved') != '') {
+						checkSaved = true;
+					}
+					
 					//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
 					//if($(this).attr('data-saved') == '')
-					$(this).attr("data-saved", $(this).val());
+					//$(this).attr("data-saved", $(this).val());
 				});
 				
 				//Check if the lot is checked or not
@@ -1109,7 +1169,7 @@
 				items.push(qty);
 			});
 			
-			console.log(items);
+			//console.log(items);
 			//console.log(po_number);
 			
 			$.ajax({
@@ -1123,7 +1183,7 @@
 					console.log(result);
 					
 					//Error handler or success handler
-					if(result['query']) {
+					if(result['query'] || checkSaved) {
 						//In case a warning is triggered but data is still saved successfully
 						if(result['error'] != undefined)
 							alert(result['error']);
@@ -1137,6 +1197,92 @@
 					} else {
 						alert('No changes have been made.');
 						$click.attr('id','save_button_inventory');
+					}
+				}
+			});
+		});
+		
+		
+		//Shipping update button, mainly used for lot and serial redirection
+		$('#btn_update').click(function(){
+			//Save to reactivate button if needed
+			$click = $(this);
+			//Prevent Button Spamming
+			$click.removeAttr('id');
+			
+			var so_number = getUrlParameter('on');
+			var items = [];
+			
+			var checkChanges = false;
+			
+			//Get everything from the form and place it into its own array
+			$('.shipping_update').children('tbody').children('tr').each(function() {
+				//Overlook all the rows that are complete in the order and grab all the others
+				if(!$(this).hasClass('order-complete')) {
+					var partid = $(this).find('.part_id').data('partid');
+					var serials = [];
+					var savedSerials = [];
+					var condition;
+					var lot = false;
+					var qty;
+
+					//Grab the conidtion value set by the sales order
+					condition = $(this).find('.condition_field').data('condition');
+					
+					$(this).find('.infiniteSerials').children('input').each(function() {
+						serials.push($(this).val());
+						savedSerials.push($(this).attr('data-saved'));
+						
+						//If an item was saved previously then mark the page as soemthing was edited
+						if($(this).attr('data-saved') != '') {
+							checkChanges = true;
+						}
+						
+						//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
+						//if($(this).attr('data-saved') == '')
+						//$(this).attr("data-saved", $(this).val());
+					});
+					
+					//Check if the lot is checked or not
+					if($(this).find('.lot_inventory').prop('checked') == true) {
+						lot = true;
+					} else {
+						lot = false
+					}
+					qty = $(this).find('.remaining_qty').children('input').val();
+					
+					items.push(partid);
+					items.push(savedSerials);
+					items.push(serials);
+					items.push(condition);
+					items.push(lot);
+					items.push(qty);
+				}
+			});
+			
+			console.log(items);
+			$.ajax({
+				type: 'POST',
+				url: '/json/shipping-update.php',
+				data: {'so_number' : so_number, 'items' : items},
+				dataType: 'json',
+				success: function(data) {
+					console.log(data);
+					
+					if(data['query'] || checkChanges) {
+						//In case a warning is triggered but data is still saved successfully
+						if(data['error'] != undefined)
+							alert(data['error']);
+						window.onbeforeunload = null;
+						window.location = "/shipping_home.php?so=true";
+					//Error occured enough to stop the page from continuing
+					} else if(data['error'] != undefined) {
+						alert(data['error']);
+						$click.attr('id','btn_update');
+					//Nothing was change
+					} else {
+						alert('No changes have been made.');
+						$click.attr('id','btn_update');
 					}
 				}
 			});

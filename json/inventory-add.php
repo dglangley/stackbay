@@ -105,6 +105,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 								$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', '" . res($product[2][$i]) . "', '1', '". res($product[3][$i]) ."', 'received', '', NULL, NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 								$result['query'] = qdb($query);	
+							} else {
+								$result['error'] = 'Warning: Serial# ' . reset($product[2]) . ' already exists, item will be ignored, all other items have been saved.';
 							}
 						//Else if the 2 do not match (Saved Serial and New Serial) and the new serial does not exists yet
 						} else if(!$exists) {

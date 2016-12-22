@@ -16,7 +16,8 @@
 	//Output Module acts as the general output for each of the dashboard sections.
 	//	INPUTS: Order(p,s);  Status(Active,Complete)
 	
-	$updated = $_REQUEST['po'];
+	$po_updated = $_REQUEST['po'];
+	$so_updated = $_REQUEST['so'];
 	
 	function output_module($order,$status){
 		
@@ -346,10 +347,10 @@
 		</div>
 	</div>
 	
-	<?php if($updated): ?>
+	<?php if($po_updated || $so_updated): ?>
 		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
 		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-		    <strong>Success!</strong> Purchase Order Updated.
+		    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
 		</div>
 	<?php endif; ?>
 	
