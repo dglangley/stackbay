@@ -1017,7 +1017,7 @@
 						},
 						dataType: 'json',
 						success: function(result) {
-							
+							console.log(result);
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
 							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 
