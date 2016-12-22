@@ -28,7 +28,9 @@
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
-
+	
+	
+	//Get the ENUM values of the specified table and column (field)
 	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
 		$statusVals;
 		
@@ -79,7 +81,7 @@
 			$part[] = $result;
 		}
 	
-		return $part;
+		return $part[0];
 	}
 	
 	$partsListing = getPOParts();
@@ -92,6 +94,13 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<style type="text/css">
+			.table td {
+				vertical-align: top !important;
+				padding-top: 10px !important;
+				padding-bottom: 0px !important;
+			}
+		</style>
 	</head>
 	
 	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
@@ -117,229 +126,89 @@
 			</div>
 
 			<div class="col-sm-10">
-
-				<?php 
-					if($partsListing) {
-						foreach($partsListing as $part): 
-				?>
-					<div class="inventory_lines table-responsive" style="margin-top:30px;">
-						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
-								<thead>
-							         <tr>
-							            <th class="col-sm-4">
-							            	<span class="line"></span>		
-							            	PART	
-							            </th>
-							            <th class="col-sm-2">
-							            	<span class="line"></span>		
-							            	Serial	
-							            </th>
-							            <th class="col-sm-2">   	
-							            	<span class="line"></span>   	
-							            	Qty
-							            </th>
-							            <th class="col-sm-1">
-											<span class="line"></span>   	
-											Location	
-										</th>
-							        	<th class="col-sm-1">
-							            	Status
-							        	</th>
-							            <th class="col-sm-1">
-							            	<span class="line"></span>
-											Condition
-							        	</th>
-							            <th class="col-sm-1">
-							            	<span class="line"></span>
-							            	&nbsp;
-							        	</th>
-					
-							         </tr>
-	
-								    <tr class = "addRecord">
-							            <td id='search_collumn'>
-							            	<div style="max-width:inherit;">
-												<select class='item_search' style="max-width:inherit;overflow:hidden;">
-													<option data-search = 'Nothing at the moment'>Item</option>
-													<option selected value="<?php echo $part['partid']; ?>">
-														<?php 
-															$item = getPartName($part['partid'])[0];
-															echo $item['part'] . '&nbsp;&nbsp;';
-															echo $item['heci'] . '&nbsp;&nbsp;';
-															echo $item['heci'] . '&nbsp;';
-															echo $item['description'];
-														?>
-													</option>
-												</select>
-											</div>
-										</td>
-										<td id='serial'>
-								            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
-										</td>
-							            <td>
-											<div class="input-group">
-										    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox" value="<?php echo $part['qty']; ?>">
-								            <span class="input-group-addon">Serialize Each?</span>
-										      	<span class="input-group-addon">
-										        	<input type="checkbox" name="serialize">
-												</span>
-					
-										    </div>
-									    </td>
-							            <td>
-					                            <!--<div class="ui-select" style="width:100%;">-->
-			                                <select class="form-control" id = "new_location">
-			                                    <option selected="">W: 12</option>
-			                                    <option>W: 13</option>
-			                                    <option>W: 15</option>
-			                                </select>
-					                            <!--</div>-->
-					                    </td>
-							            <td>
-							            	<div class="btn-group">
-							            		<select class="form-control status" name="status">
-						                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-													<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
-												<?php endforeach; ?>
-												</select>
-											</div>
-					                    </td>
-							            <td>
-											<select class="form-control condition_field condition" name="condition">
-												<?php foreach(getEnumValue() as $condition): ?>
-													<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
-												<?php endforeach; ?>
-											</select>
-					                    </td>
-					                    <td>
-					                    	<div class="btn-group add-delete-group">
-					                    		<div class="btn-group" role="group">
-													<button class="btn btn-primary btn-add" id="inv_add_record" style="display: none;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
-												</div>
-					                    	</div>
-					                    </td>
-								    </tr>
-								</thead>
-							<tbody id="serial_each_table">
-								
-					        </tbody>
-							<tfoot>
+				<div class="table-responsive">
+					<table class="inventory_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
+						<thead>
+					         <tr>
+					            <th class="col-sm-3">
+					            	PART	
+					            </th>
+					            <th class="col-sm-3">
+									Location (*Auto Conditional Populating)	
+								</th>
+			                    <th class="col-sm-1">
+									Condition
+					        	</th>
+								<th class="col-sm-3">
+					            	Serial	(*Scan or Press Enter on Input for More)
+					            </th>
+					            <th class="col-sm-1">
+									Remaining Qty
+					        	</th>
+					            <th class="col-sm-1">
+					            	Lot Inventory (No Serial)
+					        	</th>
+					         </tr>
+						</thead>
+						
+						<tbody>
+						<?php 
+							//Grab all the parts from the specified PO #
+							if($partsListing) {
+								foreach($partsListing as $part): 
+						?>
 								<tr>
+									<td class="part_id" data-partid="<?php echo $part['partid']; ?>">
+										<?php 
+											$item = getPartName($part['partid']);
+											echo $item['part'] . '&nbsp;&nbsp;';
+											echo $item['heci'] . '&nbsp;&nbsp;';
+											echo $item['heci'] . '&nbsp;';
+											echo $item['description']; 
+										?>
+									</td>
 									<td>
-						        		<a class="show_link" href="#"  style="display: none;">Show More</a>
+										<div class="row-fluid">
+											<div class="col-md-4" style="padding: 0 0 0 5px;">
+												<select class="form-control" style=" height: 31px;">
+													<option>Warehouse</option>
+												</select>
+											</div>
+											<div class="col-md-4" style="padding: 0 0 0 5px;">
+												<select class="form-control" style=" height: 31px;">
+													<option>Aisle</option>
+												</select>
+											</div>
+											<div class="col-md-4" style="padding: 0 0 0 5px">
+												<select class="form-control" style=" height: 31px;">
+													<option>Shelf</option>
+												</select>
+											</div>
+										</div>
+									</td>
+									<td class="infiniteCondition">
+										<select class="form-control condition_field condition" name="condition" style="margin-bottom: 5px; height: 31px;">
+											<?php foreach(getEnumValue() as $condition): ?>
+												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
+											<?php endforeach; ?>
+										</select>
+									</td>
+									<td class="infiniteSerials">
+										<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 10px;">
+									</td>
+									<td class="remaining_qty">
+										<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $part['qty'] - $part['qty_received']; ?>" readonly>
+									</td>
+									<td>
+										<div class="checkbox">
+											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox"></label>
+										</div>
 									</td>
 								</tr>
-							</tfoot>
-						</table>
-					</div>
-				<?php 
-						endforeach;
-					} else {
-				?>
-					<div class="inventory_lines table-responsive" style="margin-top:30px;">
-						<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
-								<thead>
-							         <tr>
-							            <th class="col-sm-4">
-							            	<span class="line"></span>		
-							            	PART	
-							            </th>
-							            <th class="col-sm-2">
-							            	<span class="line"></span>		
-							            	Serial	
-							            </th>
-							            <th class="col-sm-2">   	
-							            	<span class="line"></span>   	
-							            	Qty
-							            </th>
-							            <th class="col-sm-1">
-											<span class="line"></span>   	
-											Location	
-										</th>
-							        	<th class="col-sm-1">
-							            	Status
-							        	</th>
-							            <th class="col-sm-1">
-							            	<span class="line"></span>
-											Condition
-							        	</th>
-							            <th class="col-sm-1">
-							            	<span class="line"></span>
-							            	&nbsp;
-							        	</th>
-					
-							         </tr>
-	
-								    <tr class = "addRecord">
-							            <td id='search_collumn'>
-							            	<div style="max-width:inherit;">
-												<select class='item_search' style="max-width:inherit;overflow:hidden;">
-													<option data-search = 'Nothing at the moment'>Item</option>
-												</select>
-											</div>
-										</td>
-										<td id='serial'>
-								            <input class="form-control input-sm" type="text" name = "NewSerial" placeholder="Serial">
-										</td>
-							            <td>
-											<div class="input-group">
-										    	<input type="text" class="form-control" id="new_qty" aria-label="Text input with checkbox" value="">
-								            <span class="input-group-addon">Serialize Each?</span>
-										      	<span class="input-group-addon">
-										        	<input type="checkbox" name="serialize">
-												</span>
-					
-										    </div>
-									    </td>
-							            <td>
-					                            <!--<div class="ui-select" style="width:100%;">-->
-			                                <select class="form-control" id = "new_location">
-			                                    <option selected="">W: 12</option>
-			                                    <option>W: 13</option>
-			                                    <option>W: 15</option>
-			                                </select>
-					                            <!--</div>-->
-					                    </td>
-							            <td>
-							            	<div class="btn-group">
-							            		<select class="form-control status" name="status">
-						                    	<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-													<option <?php echo ($status == $serial['status'] ? 'selected' : '') ?>><?php echo $status; ?></option>
-												<?php endforeach; ?>
-												</select>
-											</div>
-					                    </td>
-							            <td>
-											<select class="form-control condition_field condition" name="condition">
-												<?php foreach(getEnumValue() as $condition): ?>
-													<option <?php echo ($condition == $serial['item_condition'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
-												<?php endforeach; ?>
-											</select>
-					                    </td>
-					                    <td>
-					                    	<div class="btn-group add-delete-group">
-					                    		<div class="btn-group" role="group">
-													<button class="btn btn-primary btn-add" id="inv_add_record" style="display: none;"><i class="fa fa-plus" aria-hidden="true"></i></button>
-													<button class="btn btn-danger" id="inv_delete_record"><i class="fa fa-minus" aria-hidden="true"></i></button>
-												</div>
-					                    	</div>
-					                    </td>
-								    </tr>
-								</thead>
-							<tbody id="serial_each_table">
-								
-					        </tbody>
-							<tfoot>
-								<tr>
-									<td>
-						        		<a class="show_link" href="#"  style="display: none;">Show More</a>
-									</td>
-								</tr>
-							</tfoot>
-						</table>
-					</div>
-					<?php } ?>
+							<?php endforeach; ?>
+						<?php } ?>
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div> 

@@ -16,7 +16,8 @@
 	//Output Module acts as the general output for each of the dashboard sections.
 	//	INPUTS: Order(p,s);  Status(Active,Complete)
 	
-	$updated = $_REQUEST['po'];
+	$po_updated = $_REQUEST['po'];
+	$so_updated = $_REQUEST['so'];
 	
 	function output_module($order,$status){
 		
@@ -87,7 +88,13 @@
             echo'  	</th>';
             echo'</tr>';
             echo'</thead>';
-		}	
+		} else {
+			echo'  	<th class="col-md-1">';
+            echo'  		&nbsp;';
+            echo'  	</th>';
+            echo'</tr>';
+			echo'</thead>';
+		}
 	}
 	
 	//Inputs expected:
@@ -148,11 +155,17 @@
 			}
 				echo'        <td>'.$date.'</td>';
 				echo'        <td><a href="#">'.$company.'</a></td>';
-				echo'        <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+				//Either go to inventory add or PO or shipping for SO
+				if($order == 'p')
+					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+				else
+					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
 				echo'    	<td class="status">'.'Completed'.'</td>';
+			} else {
+				echo'    	<td class="status">'.'<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>'.'</td>'; 
 			}
 			echo'	</tr>';
 		}
@@ -316,30 +329,28 @@
 				</div>
 			</div>
 			<div class = "col-md-3">
-				<!--<div class="pull-right form-inline">-->
-					<div class="input-group" style="width: 100%">
-						<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-						<?php 
-						if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-						else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-						?>
-						</select>
-			            <span class="input-group-btn">
-							<button class="btn btn-primary btn-sm" type="submit" >
-								<i class="fa fa-filter" aria-hidden="true"></i>
-							</button>
-						</span>
-					</div>
-				<!--</div>-->
+				<div class="input-group" style="width: 100%">
+					<select name="companyid" id="companyid" class="company-selector">
+					<option value="">- Select a Company -</option>
+					<?php 
+					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+					?>
+					</select>
+		            <span class="input-group-btn">
+						<button class="btn btn-primary btn-sm" type="submit" >
+							<i class="fa fa-filter" aria-hidden="true"></i>
+						</button>
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
 	
-	<?php if($updated): ?>
+	<?php if($po_updated || $so_updated): ?>
 		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
 		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-		    <strong>Success!</strong> Purchase Order Updated.
+		    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
 		</div>
 	<?php endif; ?>
 	

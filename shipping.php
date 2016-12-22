@@ -117,21 +117,6 @@
 		
 		return $warehouse;
 	}
-	
-	
-	// function getAddress($addressid = 0) {
-	// 	$address;
-		
-	// 	$query = "SELECT * FROM addresses WHERE id = ". res($addressid) .";";
-	// 	$result = qdb($query) OR die(qe());
-		
-	// 	if (mysqli_num_rows($result)>0) {
-	// 		$result = mysqli_fetch_assoc($result);
-	// 		$address = $result[''];
-	// 	}
-		
-	// 	return $address;
-	// }
 
 ?>
 
@@ -143,6 +128,18 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		
+		<style type="text/css">
+			.table td {
+				vertical-align: top !important;
+				padding-top: 10px !important;
+				padding-bottom: 0px !important;
+			}
+			
+			.table .order-complete td {
+				background-color: #efefef !important;
+			}
+		</style>
 
 	</head>
 	
@@ -164,7 +161,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn btn-success pull-right btn-update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn btn-success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
 			</div>
 		</div>
 		<div class="loading_element">
@@ -180,44 +177,48 @@
 				<!--<hr style="margin-top : 10px;">-->
 			
 				<div class="table-responsive">
-					<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+					<table class="shipping_update table table-hover table-striped table-condensed" style="margin-top: 15px;">
 						<thead>
 							<tr>
 								<th>Item</th>
-								<th>Serial</th>
-								<th>Qty</th>
-								<th>Location</th>
-								<th>Condition</th>
+								<th>SERIAL	(*SCAN OR PRESS ENTER ON INPUT FOR MORE)</th>
+								<th>Qty to be Shipped</th>
+								<!--<th>Location</th>-->
+								<th>Item Condition</th>
 								<th>Ship by</th>
-								<th>Shipped</th>
+								<th>Ship Date</th>
+								<th>Lot Shipment</th>
 							</tr>
 						</thead>
 						<?php foreach(getItems($sales_order) as $item): 
 								$inventory = getInventory($item['partid']);
 								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
-							<tr>
-								<td>
+							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
+								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" style="padding-top: 15px !important;">
 									<strong><?php echo getPartName($item['partid']); ?></strong>
 								</td>
-								<td>
-									<?php echo $inventory['serial_no']; ?>
+								<td class="infiniteSerials">
+									<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 5px;" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>>
 								</td>
-								<td>
-									<?php echo $inventory['qty']; ?>
+								<td class="remaining_qty">
+									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
 								</td>
-								<td>
-									<?php echo (!empty($location) ? getWarehouse($location['warehouseid']) . ' ' . $location['aisle'] . ': ' . $location['shelf'] : '') ?>
+								<!--<td>-->
+								<!--	<?php echo (!empty($location) ? getWarehouse($location['warehouseid']) . ' ' . $location['aisle'] . ': ' . $location['shelf'] : '') ?>-->
+								<!--</td>-->
+								<td style="padding-top: 15px !important;">
+									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
 								</td>
-								<td>
-									<?php $inventory['item_condition'] ?>
-								</td>
-								<td>
+								<td style="padding-top: 15px !important;">
 									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
 								</td>
+								<td style="padding-top: 15px !important;">
+									<?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?>
+								</td>
 								<td>
-									<div class="checkbox">
-										<label><input type="checkbox" data-serial="<?php echo $inventory['serial_no']; ?>" data-part="<?php echo $item['partid']; ?>" value="<?php echo $item['partid']; ?>" <?php echo (!empty($item['ship_date']) ? 'checked disabled' : ''); ?>> <?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?></label>
+									 <div class="checkbox">
+										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
 									</div>
 								</td>
 							</tr>
@@ -233,38 +234,7 @@
 		<script>
 			(function($){
 			    
-				$('.btn-update').click(function(){
-					var getChecked = $("input:checkbox:checked").map(function(){
-						if(!$(this).is(":disabled")) {
-			    			return $(this).data('part');
-						}
-				    }).get();
-
-					$.ajax({
-						type: 'POST',
-						url: '/json/shipping-update.php',
-						data: ({so_number : <?php echo $sales_order; ?>, partids : getChecked}),
-						dataType: 'json',
-						success: function(data) {
-							var i;
-							
-							var d = new Date();
-
-							var month = d.getMonth()+1;
-							var day = d.getDate();
-							
-							var output = (month<10 ? '0' : '') + month + '/' +
-										 (day<10 ? '0' : '') + day + '/' +
-										 d.getFullYear();
-									  
-							
-							for (i = 0; i < data.length; ++i) {
-							    $('input[data-part=' + data[i] + ']').attr('disabled', true);
-							    $('input[data-part=' + data[i] + ']').after(output);
-							}
-						}
-					});
-				});
+				
 			})(jQuery);
 		</script>
 
