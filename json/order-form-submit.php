@@ -163,7 +163,7 @@
                 `line_number`= $line_number,
                 `qty`= $qty,
                 `price`= $unitPrice,
-                `delivery_date` = $date,
+                `receive_date` = $date,
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";

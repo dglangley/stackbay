@@ -127,7 +127,7 @@
 			});
 			
 			$('.click_me').on('click', function() {
-				alert('clicked');
+				// alert('clicked');
 				var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
 				$marginLefty.animate({
 					marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
@@ -843,8 +843,8 @@
 						success: function(form) {
 							var on = form["order"];
 							var ps = form["type"];
-							alert("SAVED"+on+" | Order"+ps);
-							alert(form['insert']);
+							// alert("SAVED"+on+" | Order"+ps);
+							// alert(form['insert']);
 							// alert(form["error"]);
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
