@@ -150,7 +150,7 @@
                 $line_insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
                 $line_insert .=  " (`partid`, ";
                 $line_insert .=  ($order_type=="Purchase") ? "`po_number`, " : "`so_number`, ";
-                $line_insert .=  "`delivery_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
+                $line_insert .=  "`receive_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
                 qdb($line_insert);
