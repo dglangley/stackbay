@@ -960,6 +960,18 @@ h1 a, h2 a, h3 a {
 .btn-expdate .fa-stack-2x {
 	font-size:1.6666666em;
 }
+.fa-stack-2x.fa-stack-lg {
+	font-size:1.6666666em;
+	height:1.33333333em;
+	line-height:1.33333333em;
+}
+.fa-stack-sm {
+	display:block;
+	padding-top:15px;
+	padding-left:2px;
+	font-size:0.75em;
+	line-height:1.6666666em;
+}
 
 @media (max-width: 1320px) {
   .navbar-nav .hidden-xs.hidden-sm span {
@@ -1358,3 +1370,22 @@ a > .icon-ar.icon-ar-inverse:hover {
   background-color: #ddd;
   border-left: solid 20px #f7f7f7;
 }
+
+
+
+/* From Bootstrap 3.3.6 */
+.bg-primary{color:#fff;background-color:#337ab7}
+a.bg-primary:focus,a.bg-primary:hover{background-color:#286090}
+.bg-success{background-color:#02c66c}
+a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}
+.bg-info{background-color:gray}
+a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}
+.bg-warning{background-color:#fcf8e3}
+a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}
+.bg-danger{background-color:#f2dede}
+a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
+
+
+
+.bg-brown{color:#fff;background-color:#c37744;}
+.text-icon-content.text-icon-absolute {position:absolute;left:70px;}
