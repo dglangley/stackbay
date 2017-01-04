@@ -918,6 +918,9 @@
 					$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
+					//Show everything
+					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					
 					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
 					$(this).closest(".shipping-dash").removeClass("shipping-dash");
 					
@@ -952,6 +955,10 @@
 					$('.col-lg-6').show();
 					
 					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
+					
+					//Hide all elements over the count of 10
+					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').hide();
+					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 					
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
@@ -1190,6 +1197,7 @@
 							//$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 								
 							if(result['query']) {
+								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 								//Decrement the qty by 1 after success and no errors detected
 								qty--;
 								
@@ -1371,6 +1379,13 @@
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');
 						}
 						$row.closest('.infiniteSerials').children('.input-group:first').find('input').attr('readonly', false);
+						
+						//Settings to 2 because the row has not been deleted yet and will be after this execution
+						//If 1 row then there are no serials, so re-enable lot
+						if($row.closest('.infiniteSerials').children('.input-group').length <= 2) {
+							$row.closest('tr').find('.lot_inventory').attr('disabled', false);
+						}
+					
 						$row.remove();
 					}
 				});

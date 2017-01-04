@@ -151,7 +151,7 @@
 				echo'	<tr>';
 			}
 			else{
-				echo'	<tr style="display:none;">';
+				echo'	<tr class="show_more" style="display:none;">';
 			}
 				echo'        <td>'.$date.'</td>';
 				echo'        <td><a href="#">'.$company.'</a></td>';
