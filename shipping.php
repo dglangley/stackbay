@@ -45,10 +45,13 @@
 		$sales_order = $result['so_number'];
 	}
 	
-	// print_r($sales_order);
-	
 	function getItems($so_number = 0) {
 		$sales_items = array();
+		
+		//First run a check just in case the sales order was changed recently and reflect the changes (E.G. qty order was increase, if qty is less than order admin may need to intervene)
+		
+		$query = "UPDATE sales_items SET ship_date = NULL WHERE so_number = ". res($so_number) ." AND qty_shipped < qty;";
+		qdb($query);
 		
 		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
 		$result = qdb($query) OR die(qe());

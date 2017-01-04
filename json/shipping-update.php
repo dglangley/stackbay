@@ -43,9 +43,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// Seperate Lot query from standard serialized queries
 		// Lot matches condition and determines if a new lot record needs to be created or not
 		if($serial_no == 'null' && $condition != '') {
-			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."';";
+			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."' AND qty > 0;";
 		} else {
-			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) .";";
+			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) ." AND qty > 0;";
 		}
 		$match = qdb($query);
 		$exists = false;
