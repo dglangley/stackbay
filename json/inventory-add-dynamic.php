@@ -27,7 +27,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$savedSerial = grab('savedSerial');
 	$po_number = grab('po_number');
 	
-	//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array'];
+	//items = ['partid', 'serial', 'qty', 'location', 'status', 'condition'];
 	function savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial){
 		$result = array();
 		
@@ -42,21 +42,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				qdb($query);
 				
-				//Check to see if the aty received and the qty ordered is matching or not
-				$query = "SELECT qty, qty_received, CASE WHEN qty = qty_received THEN '1' ELSE '0' END AS is_matching FROM purchase_items WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
-				$match = qdb($query);
-				
-				if (mysqli_num_rows($match)>0) {
-					$match = mysqli_fetch_assoc($match);
-					$result['qty_match'] = $match['is_matching'];
-				}
-	
-				//If the qty matches then the order is compelete. Mark it as received with the date received
-				if($result['qty_match'] == 1) {
-					$query = "UPDATE purchase_items SET receive_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
-					qdb($query);
-				}
-				
 				//Insert the item into the inventory
 		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 				$result['query'] = qdb($query);
@@ -64,7 +49,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$result['query'] = false;
 			}
 		} else {
-			$query = "UPDATE inventory SET serial_no = '". res($serial) ."' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
+			$query = "UPDATE inventory SET serial_no = '". res($serial) ."' AND item_condition = '". res($condition) . "' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 			$result['query'] = qdb($query) or die(qe());
 			$result['saved'] = true;
 		}

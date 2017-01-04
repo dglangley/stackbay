@@ -50,7 +50,7 @@
 	function getItems($so_number = 0) {
 		$sales_items = array();
 		
-		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) .";";
+		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
@@ -136,6 +136,14 @@
 				padding-bottom: 0px !important;
 			}
 			
+			.btn-secondary {
+				/*color: #373a3c;*/
+				background-color: transparent;
+				border: 0;
+				padding: 0;
+				line-height: 0;
+			}
+			
 			.table .order-complete td {
 				background-color: #efefef !important;
 			}
@@ -197,11 +205,17 @@
 								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
-								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" style="padding-top: 15px !important;">
+								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
 									<strong><?php echo getPartName($item['partid']); ?></strong>
 								</td>
 								<td class="infiniteSerials">
-									<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 5px;" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>>
+									<div class="input-group" style="margin-bottom: 6px;">
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+									    <span class="input-group-addon">
+									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+									    </span>
+						            </div>
+									<!--<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 5px;" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>>-->
 								</td>
 								<td class="remaining_qty">
 									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
@@ -215,11 +229,11 @@
 								<td style="padding-top: 15px !important;">
 									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
 								</td>
-								<td style="padding-top: 15px !important;">
+								<td class="ship-date" style="padding-top: 15px !important;">
 									<?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?>
 								</td>
 								<td>
-									 <div class="checkbox">
+									<div class="checkbox">
 										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
 									</div>
 								</td>

@@ -1082,6 +1082,13 @@
 		    var filename = filenameWithExtension.split(".")[0]; 
 		    return filename;                                    
 		}
+	
+		//This function checks to see if month is less than 10, after add 0 in front if so
+		function getFormattedPartTime(partTime){
+	        if (partTime<10)
+	           return "0"+partTime;
+	        return partTime;
+	    }
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		    // if( $( this ).val() != '' )
@@ -1099,13 +1106,14 @@
 			var serial = $serial.val();
 			var partid = $serial.closest('tr').find('.part_id').data('partid');
 			var condition = $serial.closest('tr').find('.condition_field').val();
+			var part = $serial.closest('tr').find('.part_id').data('part');
 			
 			if(condition == '') {
 				condition = $serial.closest('tr').find('.condition_field').data('condition');
 			}
 			
 			//Clone the serial field for usage when appending more fields
-			var $serialClone = $serial.clone();
+			var $serialClone = $serial.parent().clone();
 			
 			//alert(getPageName());
 			if(e.which == 13) {
@@ -1129,15 +1137,25 @@
 								//Decrement the qty by 1 after success and no errors detected
 								qty--;
 								
+								//Update the value of the qty left avoiding if it hits below 0
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								}
-								$serialClone.val("");
+								
+								//Set matching condition field to the serial saved
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+								
+								$serialClone.find('input').val("");
+								
+								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+								$serialClone.find('button').attr('disabled', true);
+								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	alert('Part: ' + part + ' has been received.');
 							    }
 							    
 							    $serial.attr("data-saved", serial);
@@ -1173,12 +1191,21 @@
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								}
-								$serialClone.val("");
+								$serialClone.find('input').val("");
+								
+								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+								$serialClone.find('button').attr('disabled', true);
+								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	var date = new Date();
+							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
+							    	
+							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
+							    	alert('Part: ' + part + ' has been shipped.');
 							    }
 							    
 							    $serial.attr("data-saved", serial);
@@ -1203,13 +1230,15 @@
 			var qty;
 			if(this.checked) {
 				qty = $(this).closest('tr').find('.remaining_qty').children('input').val();
-				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', true);
+				$(this).closest('tr').find('.infiniteSerials').find('input').attr('readonly', true);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', false);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty', qty);
-				$(this).closest('tr').find('.infiniteSerials').children('input').val('');
+				$(this).closest('tr').find('.remaining_qty').children('input').val('');
+				$(this).closest('tr').find('.infiniteSerials').find('input').val('');
+				$(this).closest('tr').find('.remaining_qty').children('input').focus();
 			} else {
 				qty = $(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty');
-				$(this).closest('tr').find('.infiniteSerials').children('input').attr('readonly', false);
+				$(this).closest('tr').find('.infiniteSerials').find('input').attr('readonly', false);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', true);
 				$(this).closest('tr').find('.remaining_qty').children('input').val(qty);
 			}
@@ -1243,7 +1272,7 @@
 					conditions.push($(this).val());
 				});
 				
-				$(this).find('.infiniteSerials').children('input').each(function() {
+				$(this).find('.infiniteSerials').find('input').each(function() {
 					serials.push($(this).val());
 					savedSerials.push($(this).attr('data-saved'));
 					
@@ -1307,6 +1336,42 @@
 		});
 		
 		
+		//Handle if the user deletes a serial from inventory add or shipping
+		$(document).on('click', '.deleteSerialRow', function() {
+			var page = getPageName();
+			var po_number = getUrlParameter('on');
+			$row = $(this).closest('.input-group');
+			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
+			//Grab the serial being deleted for futher usage to delete the item from the system
+			var serial = $row.find('input').attr('data-saved');
+			
+			//Grab all the required data to be passed into the delete ajax
+			var partid = $row.closest('tr').find('.part_id').attr('data-partid');
+			
+			if (confirm("Are you sure you want to delete serial: '"+ serial +"'?")) {
+				$.ajax({
+					type: 'POST',
+					url: '/json/inventory-delete.php',
+					data: {'po_number' : po_number, 'partid' : partid,'serial' : serial, 'page' : page},
+					dataType: 'json',
+					success: function(data) {
+						console.log(data);
+						qty++; 
+						
+						if(page != 'shipping') {
+							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
+							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+						} else {
+							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
+							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');
+						}
+						$row.closest('.infiniteSerials').children('.input-group:first').find('input').attr('readonly', false);
+						$row.remove();
+					}
+				});
+			}
+		});
+		
 		//Shipping update button, mainly used for lot and serial redirection
 		$('#btn_update').click(function(){
 			//Save to reactivate button if needed
@@ -1333,11 +1398,11 @@
 					//Grab the conidtion value set by the sales order
 					condition = $(this).find('.condition_field').data('condition');
 					
-					$(this).find('.infiniteSerials').children('input').each(function() {
+					$(this).find('.infiniteSerials').find('input').each(function() {
 						serials.push($(this).val());
 						savedSerials.push($(this).attr('data-saved'));
 						
-						//If an item was saved previously then mark the page as soemthing was edited
+						//If an item was saved previously then mark the page as something was edited
 						if($(this).attr('data-saved') != '') {
 							checkChanges = true;
 						}
