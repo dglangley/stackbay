@@ -913,6 +913,9 @@
 					$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
+					//Show everything
+					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					
 					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
 					$(this).closest(".shipping-dash").removeClass("shipping-dash");
 					
@@ -947,6 +950,10 @@
 					$('.col-lg-6').show();
 					
 					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
+					
+					//Hide all elements over the count of 10
+					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').hide();
+					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 					
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
