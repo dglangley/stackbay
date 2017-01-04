@@ -1064,6 +1064,13 @@
 		    var filename = filenameWithExtension.split(".")[0]; 
 		    return filename;                                    
 		}
+	
+		//This function checks to see if month is less than 10, after add 0 in front if so
+		function getFormattedPartTime(partTime){
+	        if (partTime<10)
+	           return "0"+partTime;
+	        return partTime;
+	    }
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		    // if( $( this ).val() != '' )
@@ -1166,12 +1173,21 @@
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								}
-								$serialClone.val("");
+								$serialClone.find('input').val("");
+								
+								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+								$serialClone.find('button').attr('disabled', true);
+								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	var date = new Date();
+							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
+							    	
+							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
+							    	alert('Part: ' + part + ' has been shipped.');
 							    }
 							    
 							    $serial.attr("data-saved", serial);
@@ -1304,6 +1320,7 @@
 		
 		//Handle if the user deletes a serial from inventory add or shipping
 		$(document).on('click', '.deleteSerialRow', function() {
+			var page = getPageName();
 			var po_number = getUrlParameter('on');
 			$row = $(this).closest('.input-group');
 			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
@@ -1317,14 +1334,19 @@
 				$.ajax({
 					type: 'POST',
 					url: '/json/inventory-delete.php',
-					data: {'po_number' : po_number, 'partid' : partid,'serial' : serial},
+					data: {'po_number' : po_number, 'partid' : partid,'serial' : serial, 'page' : page},
 					dataType: 'json',
 					success: function(data) {
 						console.log(data);
 						qty++; 
 						
-						$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
-						$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+						if(page != 'shipping') {
+							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
+							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+						} else {
+							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
+							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');
+						}
 						$row.closest('.infiniteSerials').children('.input-group:first').find('input').attr('readonly', false);
 						$row.remove();
 					}

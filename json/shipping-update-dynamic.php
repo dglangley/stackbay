@@ -37,7 +37,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//If the serial is declared then search for it, otherwise query for a lot item.
 		if($serial != '') {
-			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."';";
+			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND qty > 0;";
 			$check = qdb($query);
 			
 			//If the serial exists then run the single serial query... (This is assuming that the serial law is well maintained and not the same item has the same serial number)
@@ -72,7 +72,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			} else {
 				$result['query'] = false;
-				$result['error'] = "Item does not exist or is out of stock.";
+				$result['error'] = "Item does not exist or is out of stock for current serial.";
 			}
 		//Lot item query here
 		} else {
