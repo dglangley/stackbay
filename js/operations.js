@@ -1098,8 +1098,8 @@
 	    }
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
-		    // if( $( this ).val() != '' )
-		    //     window.onbeforeunload = function() { return "You have unsaved changes."; }
+		     if( $( this ).val() != '' )
+		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 		
 		//This function also handles the functionality for the shipping page
