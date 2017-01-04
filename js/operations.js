@@ -785,6 +785,11 @@
 					//Get General order information
 					var userid = $("#sales-rep option:selected").attr("data-rep-id");
 					var company = $("#companyid").val();
+					if (!company){
+						alert("Must enter company before continuing");
+						return;
+					}
+					
 					var contact = $("#contactid").val();
 					if (contact == "new"){
 						contact = $("#select2-contactid-container").text();
