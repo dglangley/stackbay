@@ -80,7 +80,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$public = $row['public_notes'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
-				
+				$associated_order = $row['assoc_order'];
 			}
 		}
 		
@@ -134,12 +134,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//Associated order module
 		$right .= "
 				<div class='row'>
-					<div class='col-sm-12' id='assoc_order' style='padding-bottom: 10px;'>
+					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
 						<label for='assoc'>Customer Order:</label>
 						<div class = 'input-group'>
-							<input class='form-control required' name='assoc-email' type='text' placeholder = 'Order #' value='$associated_order'>
+							<input class='form-control required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 							<span class='input-group-btn'>
-						        <button class='btn btn-secondary' type='button'>
+						        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
 							        <i class='fa fa-paperclip' aria-hidden='true'></i>
 						        </button>
 			    			</span>

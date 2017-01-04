@@ -152,12 +152,14 @@
 			$q_form .= " = '$order_number';";
 			
 			$old = qdb($q_form);
+			
 			foreach ($old as $r){
+				
 				$new_row = array(
 				'id' => $r['id'],
 				'line' => $r['line_number'],
 				'search' => $r['partid'],
-				'date' => $r['delivery_date'],
+				'date' => $r['delivery_date'].$r['receive_date'], //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
 				'qty' => $r['qty'],
 				'uPrice' => $r['price'],
 				'warranty' => $r['warranty'],

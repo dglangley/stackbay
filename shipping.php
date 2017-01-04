@@ -190,7 +190,9 @@
 								<th>Lot Shipment</th>
 							</tr>
 						</thead>
-						<?php foreach(getItems($sales_order) as $item): 
+						<?php 
+							$items = getItems($sales_order);
+							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
 								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>

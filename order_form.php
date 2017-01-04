@@ -126,7 +126,8 @@
 				<div class="table-responsive">
 					<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
 					<thead>
-	    				<th style='min-width:30px;'>#</th>
+						
+	    				<th style='min-width:30px;'>#</th>		
 	    				<th class='col-md-5'>Item Information</th>
 	    				<th class='col-md-2'>Delivery Date</th>
 	    				<th class='col-md-1'>
@@ -146,7 +147,8 @@
 	    				<th class='col-md-1'>Price</th>
 	    				<th class='col-md-1'>Qty</th>
 	    				<th class='col-md-1'>Ext. Price</th>
-	    				<th></th>
+	    				<th style='min-width:30px;'></th>
+						<th style='min-width:30px;'></th>
     				</thead>
 					<tbody id="right_side_main" style = "font-size:13px;">
 						
@@ -164,7 +166,7 @@
 		<script src="js/operations.js"></script>
 		
 		<script>
-
+ 
 			(function($){
 				$('.item_search').select2().on("change", function(e) {
 					var $itemRow = $(this).closest('#add_row');

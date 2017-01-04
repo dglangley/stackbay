@@ -50,6 +50,7 @@
     $public = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
     $rep = grab("sales-rep");
+    $assoc_order = grab('assoc');
 
     //Process the contact, see if a new one was added
     if (!is_numeric($contact) && !is_null($contact) && ($contact)){
@@ -84,12 +85,14 @@
         $private = prep($private);
         $service = prep($service);
         $account = prep($account);
+        $assoc_order = prep($assoc_order);
         
         
         $insert = "INSERT INTO ";
         $insert .= ($order_type=="Purchase") ? "`purchase_orders`" : "`sales_orders`";
-        $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-        ($rep, $cid, $rep, $contact, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+        $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`, `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`,
+        `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+        ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         
 
     //Run the update
@@ -108,6 +111,7 @@
         $macro .= updateNull('sales_rep_id',$rep);
         $macro .= updateNull('contactid',$contact);
         $macro .= updateNull('termsid',$terms);
+        $macro .= updateNull('assoc_order',$assoc_order);
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
@@ -136,7 +140,7 @@
             $line_number = prep($r['line_number']);
             $item_id = prep($r['part']);
             $record = $r['id'];
-            $date = prep(format_date($r['date'],'y-m-d'));
+            $date = prep(format_date($r['date'],'Y-m-d'));
             $warranty = prep($r['warranty']);
             $condition = prep($r['condition']);
             $qty = prep($r['qty']);
@@ -149,8 +153,8 @@
                 $line_insert = "INSERT INTO ";
                 $line_insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
                 $line_insert .=  " (`partid`, ";
-                $line_insert .=  ($order_type=="Purchase") ? "`po_number`, " : "`so_number`, ";
-                $line_insert .=  "`receive_date`, `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
+                $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
+                $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
                 qdb($line_insert);
@@ -162,8 +166,11 @@
                 `partid`= $item_id,
                 `line_number`= $line_number,
                 `qty`= $qty,
-                `price`= $unitPrice,
-                `receive_date` = $date,
+                `price`= $unitPrice, ";
+    $update .=  ($order_type == "Purchase")? "
+                `receive_date` = $date, " : "
+                `delivery_date` = $date, ";
+    $update .= "
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
@@ -182,6 +189,7 @@
         'insert' => $line_insert,
         'error' => qe(),
         'stupid' => $stupid,
+        'update' => $update,
     );
     
     echo json_encode($form);

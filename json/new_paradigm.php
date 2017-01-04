@@ -123,7 +123,8 @@ function search_row(){
         $line .= "<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>";
         
         //Submission button
-        $line .= "<td colspan='2' id = 'check_collumn'> 
+        $line .= "
+                <td colspan='2' id = 'check_collumn'> 
                     <a class='btn-flat success pull-right multipart_sub' >
                     <i class='fa fa-check fa-4' aria-hidden='true'></i></a>
                 </td>";
@@ -190,9 +191,8 @@ function sub_rows($search = ''){
                 //     <td></td>
                 //     <td>
                 //         <div class='row-fluid'>
-                //             <div class='col-md-4'>T</div>
-                //             <div class='col-md-4'>h</div>
-                //             <div class='col-md-4'>e</div>
+                //             <div class='col-md-6' style='padding:0%;'>Stock</div>
+                //             <div class='col-md-6' style='padding:0%;'>Order</div>
                 //         </div>
                 //     </td>
                 //     <td></td>
@@ -201,7 +201,7 @@ function sub_rows($search = ''){
                 $sellable = false;
                 
                 $text = "<div class='row-fluid'>";
-                $text .= "<div title='New' class='col-md-4 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding-left:0%;padding-right:0%;'><b>";
+                $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding:0%;'><b>";
                 if(array_key_exists($id, $stock)){
                     $sellable = true;
                     $text .= $stock[$id];
@@ -211,7 +211,7 @@ function sub_rows($search = ''){
                 }
                 $text .= "</b></div>";
                 
-                $text .= "<div title='New' class='col-md-4 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
+                $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
                 if(array_key_exists($id, $inc)){
                     $sellable = true;
                     $text .= $inc[$id];

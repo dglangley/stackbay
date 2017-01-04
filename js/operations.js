@@ -166,7 +166,6 @@
 				});
 			});
 		}
-
 		//========================= Left side main page =========================
 		//Load the meta information panel, initialize the clickable fields, and
 		//populate whatever fields are prefilled. THIS WILL WORK ACROSS MULTIPLE PAGES!
@@ -231,7 +230,12 @@
 	
 				});
 			});
-			
+		
+		$(document).on("change","#order_selector",function() {
+			var change = ($(this).val());
+			window.location = "/inventory_add.php?on="+change;
+		});	
+		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
 				var company = $(this).val();
@@ -326,22 +330,30 @@
 					}
 				});
 			});
-			$(document).on("change","#services",function() {
-				var limit = $(this).val();
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
-				$.ajax({
+			// $(document).on("change","#services",function() {
+			// 	var limit = $(this).val();
+   //         	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+			// 	$.ajax({
  
-				});
-			});
+			// 	});
+			// });
 		//======================== Right side page load ========================
 		// This function outputs each of the items on the table, as well as the
 		// old information from the database
 		
+			function linenumber(){
+				var last = $("#right_side_main").find(".line_line:last").attr("data-line-number");
+				if(last){
+					return parseInt(last)+1
+				}
+				else{
+					return 1;
+				}
+				// #right_side_main > tr.easy-output > td.line_line
+			}
 			$("#right_side_main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
-				
-			
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -366,9 +378,8 @@
 						if (result){
 							$('#search_input').append(result);
 							$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
-							var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-							if (!lineNumber){lineNumber = 0;}
-							$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(lineNumber + 1);
+							// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+							$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
 						}
 						else{
 							
@@ -534,6 +545,7 @@
 	   		    	var partid = $(this).attr("data-line-id");
 	   		        var qty = $(this).find("input[name=ni_qty]").val();
 					var condition = $(".multipart_sub").closest("tr").find(".condition").val();
+					
 				
    		        if(qty){
        					$.ajax({
@@ -554,7 +566,7 @@
 							success: function(row_out) {
 								$("#right_side_main").append(row_out);
 								$(".search_lines").html("").remove();
-								
+								$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
  							}
 						});
 	   		        }
@@ -562,7 +574,6 @@
 	   		    
 				var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
 				if (!lineNumber){lineNumber = 0;}
-				$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(lineNumber + 1);
 				$("#go_find_me").val("");
     			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
        			
@@ -757,7 +768,10 @@
 				}
 			});
 			
-
+	$(document).on("click","#associate_clip",function() {
+		// var assoc = $("#assoc_order").val();
+		// alert(assoc);
+	});
 //================================ PAGE SUBMIT ================================
 			
 			$('#save_button').click(function() {
@@ -776,6 +790,7 @@
 						contact = $("#select2-contactid-container").text();
 						contact = contact.slice(9);
 					}
+					var assoc = $("#assoc_order").val();
 					var terms = $("#terms").val();
 					var ship_to = $('#ship_to').last('option').val();
 					var bill_to = $('#bill_to').last('option').val();
@@ -829,6 +844,7 @@
 							"order_type":order_type,
 			   		    	"order_number":order_number,
 							"contact": contact,
+							"assoc": assoc,
 							"ship_to": ship_to,
 							"bill_to": bill_to,
 							"carrier": carrier,
@@ -846,6 +862,8 @@
 							// alert("SAVED"+on+" | Order"+ps);
 							// alert(form['insert']);
 							// alert(form["error"]);
+							// alert(form["update"]);
+
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
