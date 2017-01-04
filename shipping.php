@@ -50,7 +50,7 @@
 	function getItems($so_number = 0) {
 		$sales_items = array();
 		
-		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) .";";
+		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
