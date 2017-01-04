@@ -82,9 +82,13 @@ body{
 .forms_section .selection{
 	width: 100% !important;
 }
-
-#search_collumn > div > span{	
+.select2-container .select2-selection--single .select2-selection__rendered{
+	white-space: normal !important
+}
+.search_collumn > div > span{	
 	width:100% !important;
+	text-overflow: ellipsis;
+	
 }
 
 #item-selected{

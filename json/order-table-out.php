@@ -71,7 +71,7 @@
 	   if ($mode != 'update'){
 		   $row_out .= "<tr class='lazy-entry' style='display:none;'>
 					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
-		            <td id='search_collumn'>
+		            <td class='search_collumn'>
 		            	<div class = 'item-selected'>
 							<select class='item_search'>
 								<option data-search = '$partid'>".$display."</option>
