@@ -216,7 +216,8 @@
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
 						}
 						else{
-							$("#order_selector").initSelect2("/json/order-select.php","Select an Order",page);
+							// alert(order_type);
+							$("#order_selector").initSelect2("/json/order-select.php","Select an Order",order_type);
 						}
 					}
 				});
@@ -227,13 +228,32 @@
 					$("#freight-services").val("Freight Services");
 					$("#freight-services").children("option[data-carrier-id!='"+carrier+"']").hide();
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
-	
 				});
 			});
-		
+			$(document).on("keyup","#search_input > tr > td > input",function() {
+				var qty = 0;
+				
+				$.each($(".search_lines"),function(){
+					var s_qty = ($(this).find("input[name=ni_qty]").val());
+					if (s_qty){
+						qty += (parseInt($(this).find("input[name=ni_qty]").val()));
+					}
+				});
+				var display = price_format(qty * parseInt($(".search_row").find("input[name=ni_price]").val()));
+				$("tfoot").find("input[name=ni_ext]").val(display);
+				
+				
+			});
 		$(document).on("change","#order_selector",function() {
+			var order_type = $("body").attr("data-order-type");
+			// alert(order_type);
 			var change = ($(this).val());
-			window.location = "/inventory_add.php?on="+change;
+			if(order_type == 'Purchase'){
+				window.location = "/inventory_add.php?on="+change;
+			}
+			else{
+				window.location = "/shipping.php?on="+change;
+			}
 		});	
 		
 		//If the company information changes, run
@@ -473,14 +493,18 @@
 			    $(this).closest("body").find(".easy-output").show();
 			});
 			
+			function price_format(ext){
+				var display = ext.toFixed(2);
+				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			    display = '$'+(display);
+			    return display;
+			}
 			//Total Price output
 			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
 				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
 			    var price = ($(this).closest("tr").find("input[name=ni_price]").val());
 			    var ext = qty*price;
-			    var display = ext.toFixed(2);
-				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-			    display = '$'+(display);
+			    var display = price_format(ext);
 			    if (qty && price){
 					$(this).closest("tr").find("input[name=ni_ext]").val(display);
 			    }

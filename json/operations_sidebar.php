@@ -223,19 +223,26 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
     }
-	function display($order_number = ''){
+	function display($order_number = '',$page = 'Purchase'){
 		//Opens the sidebar
+		// $file = basename(__FILE__);
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
 		$right.="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='order'>
-							<label for='order_selector'>Associated PO:</label>
+							<label for='order_selector'>Associated ";
+		$right .= ($page == "Purchase")? "PO" : "SO";
+		$right .= ":</label>
 							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
 		
 		if ($order_number) {
-			$query = "SELECT * FROM `purchase_orders` WHERE `po_number` = '$order_number';";
+			
+			$order = ($page == "Purchase") ? '`purchase_orders`' : '`sales_orders`';
+			$num_type = ($page == "Purchase") ? '`po_number`' : '`so_number`';
+			
+			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
 			$results = qdb($query);
 			
 			foreach ($results as $row){
@@ -287,7 +294,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
 	}
-	
 	function address_out($address_id){
 		$address = '';
 		//Address Handling
