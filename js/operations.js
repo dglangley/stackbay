@@ -394,6 +394,7 @@
 		//MultiPart Search Feature
 			$(document).on("keyup","#go_find_me",function(e){
 				if (e.keyCode == 13) {
+					$(".search_loading").show();
 					var search = $("#go_find_me").val();
 					//Ajax Call the new paradigm
 					$.ajax({
@@ -406,7 +407,13 @@
 						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(result) {
+							$(".search_loading").hide();
 							$(".search_lines").html("").remove();
+							if(result == "") {
+								$('.nothing_found').show();
+							} else {
+								$('.nothing_found').hide();
+							}
 							$("#search_input").append(result)
 						},
 						error: function(xhr, status, error) {

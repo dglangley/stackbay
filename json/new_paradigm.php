@@ -95,9 +95,9 @@ function search_row(){
         <td>				
 		    <div class='input-group date datetime-picker-line'>
 			    <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
-				    <span class='input-group-addon'>
-				        <span class='fa fa-calendar'></span>
-				    </span>
+			    <span class='input-group-addon'>
+			        <span class='fa fa-calendar'></span>
+			    </span>
             </div>
         </td>";
         
@@ -131,6 +131,12 @@ function search_row(){
 
     $line .= "</tr>";
     
+    //Adding load bar feature here
+    $line .= "<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>";
+    
+    //Adding dummy line for nothing found
+    $line .= "<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>";
+    
     return $line;
     //The macro row will /NOT/ be stored, and will dissappear after each new item is added.
 }
@@ -162,10 +168,10 @@ function sub_rows($search = ''){
                 $match_string = implode(", ",$matches);
             
                 //Get all the in stock
-                $inventory = "Select SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) ";
+                $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) ";
 
                 $inventory .= "GROUP BY partid;";
-                $purchased = "Select SUM(qty) total, partid FROM purchase_items WHERE partid in ($match_string) GROUP BY partid;";
+                $purchased = "SELECT SUM(qty) total, partid FROM purchase_items WHERE partid in ($match_string) GROUP BY partid;";
                 
                 $in_stock  = qdb($inventory);
                 $incoming = qdb($purchased);
@@ -180,23 +186,7 @@ function sub_rows($search = ''){
                     }
                 }
             }
-                // $rows = "
-                // <tr class = 'search_lines' data-line-id = $id>
-                //     <td></td>
-                //     <td></td>
-                //     <td></td>
-                //     <td></td>
-                //     <td></td>
-                //     <td></td>
-                //     <td></td>
-                //     <td>
-                //         <div class='row-fluid'>
-                //             <div class='col-md-6' style='padding:0%;'>Stock</div>
-                //             <div class='col-md-6' style='padding:0%;'>Order</div>
-                //         </div>
-                //     </td>
-                //     <td></td>
-                // </tr>";
+            
             foreach ($items as $id => $info){
                 $sellable = false;
                 
