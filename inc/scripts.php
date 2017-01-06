@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="css/padding.css" />
 
 	<!-- development overrides -->
-    <link rel="stylesheet" type="text/css" href="css/overrides.css?id=<?php echo $V; ?>" />
+    <link rel="stylesheet" type="text/css" href="css/overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" />
 
     <!-- open sans font -->
 <!--
