@@ -186,8 +186,24 @@ function sub_rows($search = ''){
                         $inc[$i['partid']] = $i['total'];
                     }
                 }
-            }
-            
+                $rows = "
+                <tr class = 'search_lines' data-line-id = $id>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <div class='row-fluid'>
+                            <div class='col-md-6' style='padding:0%;'>Stock</div>
+                            <div class='col-md-6' style='padding:0%;'>Order</div>
+                        </div>
+                    </td>
+                    <td></td>
+                </tr>";
+
             foreach ($items as $id => $info){
                 $sellable = false;
                 
@@ -237,7 +253,17 @@ function sub_rows($search = ''){
             //Qty | Each of the qty inputs had supplimental inventory information
             //Price 
             //EXT price
+            }
         }
+            else{
+                $rows .= "
+                    <tr class = 'search_lines' data-line-id = $id>
+                        <td></td>
+                        <td colspan='6' style=''>Nothing Found</td>
+                        <td style=''></td>
+                    </tr>
+                ";
+            }
     return $rows;
 }
 

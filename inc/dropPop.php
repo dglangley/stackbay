@@ -74,10 +74,10 @@
     		if ($service){
     			foreach ($service as $s){
     				if($s['id'] == $selected){
-    					$service_options .=	"<option selected value=".$s['id'].">".$s['method']."</option>";
+    					$service_options .=	"<option selected value=".$s['id']." data-days=".$s['days'].">".$s['method']."</option>";
     				}
     				else{
-    					$service_options .= "<option value = ".$s['id'].">".$s['method']."</option>";
+    					$service_options .= "<option value = ".$s['id']." data-days=".$s['days'].">".$s['method']."</option>";
     				}
     			}
     	   	}

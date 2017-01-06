@@ -210,13 +210,14 @@
 							$("#bill_to").initSelect2("/json/address-picker.php","Bill to", limit);
 							$("#ship_to").initSelect2("/json/address-picker.php","Ship to", limit);
 							// alert(order_type+", "+company);
-							if($("#bill_to").val() == $("#ship_to").val()){
+							if($("#ship_to").val() == $("#bill_to").val()){
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
 						}
 						else{
-							$("#order_selector").initSelect2("/json/order-select.php","Select an Order",page);
+							// alert(order_type);
+							$("#order_selector").initSelect2("/json/order-select.php","Select an Order",order_type);
 						}
 					}
 				});
@@ -227,13 +228,30 @@
 					$("#freight-services").val("Freight Services");
 					$("#freight-services").children("option[data-carrier-id!='"+carrier+"']").hide();
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
-	
 				});
 			});
-		
+			$(document).on("keyup","#search_input > tr > td > input",function() {
+				var qty = 0;
+				$.each($(".search_lines"),function(){
+					var s_qty = ($(this).find("input[name=ni_qty]").val());
+					if (s_qty){
+						qty += (parseInt($(this).find("input[name=ni_qty]").val()));
+					}
+				});
+				var display = price_format(qty * parseFloat($(".search_row").find("input[name=ni_price]").val()));
+				$("tfoot").find("input[name=ni_ext]").val(display);
+				$("#search_input > tr.search_row > td:nth-child(7) > input").val(qty);
+			});
 		$(document).on("change","#order_selector",function() {
+			var order_type = $("body").attr("data-order-type");
+			// alert(order_type);
 			var change = ($(this).val());
-			window.location = "/inventory_add.php?on="+change;
+			if(order_type == 'Purchase'){
+				window.location = "/inventory_add.php?on="+change;
+			}
+			else{
+				window.location = "/shipping.php?on="+change;
+			}
 		});	
 		
 		//If the company information changes, run
@@ -311,6 +329,29 @@
 				});
 			});
 			
+			function getWorkingDays(startDate, endDate){
+				var result = 0;
+				var currentDate = startDate;
+				while (currentDate <= endDate)  {  
+				
+				var weekDay = currentDate.getDay();
+				if(weekDay != 0 && weekDay != 6)
+					result++;
+					currentDate.setDate(currentDate.getDate()+1); 
+				}
+				return result;
+			}
+			function freight_date(days){
+				var today = new Date();
+				today.setDate(today.getDate() + days);
+				
+				var formatted = ('0' + (today.getMonth()+1)).slice(-2) + '/' 
+            		+ ('0' + today.getDate()).slice(-2) + '/'
+            		+ today.getFullYear();
+				
+				return formatted;
+			}
+			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
@@ -327,16 +368,21 @@
 					dataType: 'json',
 					success: function(result) {
 						$('#service_div').replaceWith(result);
+						var days = parseInt($("#service :selected").attr("data-days"));
+						$("input[name=ni_date]").val(freight_date(days));
+						
 					}
 				});
 			});
-			// $(document).on("change","#services",function() {
-			// 	var limit = $(this).val();
-   //         	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
-			// 	$.ajax({
+			$(document).on("change","#service",function() {
+				var days = parseInt($("#service :selected").attr("data-days"));
+				$("input[name=ni_date]").val(freight_date(days));
+				
+            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+				// $.ajax({
  
-			// 	});
-			// });
+				// });
+			});
 		//======================== Right side page load ========================
 		// This function outputs each of the items on the table, as well as the
 		// old information from the database
@@ -480,14 +526,18 @@
 			    $(this).closest("body").find(".easy-output").show();
 			});
 			
+			function price_format(ext){
+				var display = ext.toFixed(2);
+				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			    display = '$'+(display);
+			    return display;
+			}
 			//Total Price output
 			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
 				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
 			    var price = ($(this).closest("tr").find("input[name=ni_price]").val());
 			    var ext = qty*price;
-			    var display = ext.toFixed(2);
-				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-			    display = '$'+(display);
+			    var display = price_format(ext);
 			    if (qty && price){
 					$(this).closest("tr").find("input[name=ni_ext]").val(display);
 			    }
@@ -595,7 +645,8 @@
 				if (!lineNumber){lineNumber = 0;}
 				$("#go_find_me").val("");
     			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-       			
+       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
 			});
 			
 //Delete Button
@@ -618,12 +669,12 @@
 			});
 
 //Address Suite of functions
-			function updateBillTo(){
+			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					var display = $("#select2-ship_to-container").html()
-					var value = $("#ship_to").val();
-		    		$("#select2-bill_to-container").html(display)
-		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
+					var display = $("#select2-bill_to-container").html()
+					var value = $("#bill_to").val();
+		    		$("#select2-ship_to-container").html(display)
+		    		$("#ship_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
 			}
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -647,9 +698,9 @@
 					$("#modal-address").modal('show');
 				}
 				else{
-					if (origin == "ship_to"){
+					if (origin == "bill_to"){
 						//$("#ship_display").replaceWith(right);	
-						updateBillTo();
+						updateShipTo();
 					}
 					else{
 						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
@@ -677,7 +728,7 @@
 			    	if (field == "ship_to"){
 			    		$("#select2-ship_to-container").html(text);
 			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
-			    		updateBillTo();
+			    		updateShipTo();
 			    		//$("#ship_display").html();	
 			    	}
 			    	else{
@@ -689,7 +740,7 @@
 			    });
 			});
 			$(document).on("click","#mismo",function() {
-				updateBillTo();
+				updateShipTo();
 			});
 			
 //Account Modal Popup Instigation
@@ -715,7 +766,7 @@
 					company = $("#companyid").val();
 				}
 			    var data = [account, carrier, company];
-
+		
 			    $.post("/json/accountSubmit.php", {'test[]' : data},function(data){
 					$("#select2-account_select-container").html(account);
 					$("#carrier").val(carrier);
