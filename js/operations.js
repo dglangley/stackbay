@@ -465,7 +465,7 @@
 			});
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
-		    //(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+		    //$(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 	
 	
 		    //This function runs the method append and adds a row to the end of the table
@@ -538,6 +538,18 @@
 					
 				});
 	
+		    	$(this).closest(".lazy-entry").hide();
+		    	$(this).closest("tr").prev(".easy-output").show();
+			});
+			
+			$(document).on("click",".line_item_unsubmit",function() {
+				var defaultQty;
+				
+				$(this).closest("tr").find("input").each(function() {
+					defaultQty = $(this).data('value');
+					$(this).val(defaultQty);	
+				});
+				
 		    	$(this).closest(".lazy-entry").hide();
 		    	$(this).closest("tr").prev(".easy-output").show();
 			});

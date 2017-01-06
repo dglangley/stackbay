@@ -239,6 +239,7 @@
 				</div>
 			</div>
 		</div> 
+
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>

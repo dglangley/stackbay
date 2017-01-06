@@ -102,6 +102,7 @@ function search_row(){
         </td>";
         
         //Condition | condition can be set per each part. Will play around with the tactile (DROPPOP, BABY)
+        //Aaron is going to marry Lauren 2036
         $line .= "<td>".dropdown('condition','','','',false)."</td>";
         //Warranty
         $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
