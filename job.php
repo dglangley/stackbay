@@ -307,12 +307,12 @@
                 <div class="text-icon">
                     <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_date_of_work'],'d'); ?></span></span>
                     <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo format_date($job['scheduled_date_of_work'],'D M d, Y'); ?></h5>
+                        <h5 class="no-margin"><?php echo format_date($job['scheduled_date_of_work'],'D M j, Y'); ?></h5>
                         <p class="info"><small>Scheduled Work</small></p>
                     </div>
                     <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_completion_date'],'d'); ?></span></span>
                     <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo format_date($job['scheduled_completion_date'],'D M d, Y'); ?></h5>
+                        <h5 class="no-margin"><?php echo format_date($job['scheduled_completion_date'],'D M j, Y'); ?></h5>
                         <p class="info"><small>Scheduled Completion</small></p>
                     </div>
                 </div>
@@ -502,7 +502,7 @@ $pdPayTotal += $pdPay;
 		$assignments = '';
 		foreach ($arr as $task) {
 			$assignments .= '
-				'.format_date($task['date_scheduled'],'M d, Y').' to '.format_date($task['date_scheduled_complete'],'M d, Y').'<br/>
+				'.format_date($task['date_scheduled'],'M j, Y').' to '.format_date($task['date_scheduled_complete'],'M j, Y').'<br/>
 			';
 		}
 
@@ -590,9 +590,9 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
     <section>
 			<!-- Nav tabs -->
 			<ul class="nav nav-tabs nav-tabs-ar">
-				<li class="active"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor</a></li>
-				<li><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials</a></li>
-				<li><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses</a></li>
+				<li class="active"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor &nbsp; <?php echo format_price($laborTotal,true,''); ?></a></li>
+				<li><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; <?php echo format_price($materialTotal,true,''); ?></a></li>
+				<li><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <?php echo format_price($expensesTotal,true,''); ?></a></li>
 			</ul>
  
 			<!-- Tab panes -->
