@@ -24,7 +24,10 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/locations.php';
+
 	//include_once $rootdir.'/inc/order-creation.php';
+
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = "Purchase";
@@ -169,20 +172,14 @@
 									</td>
 									<td>
 										<div class="row-fluid">
-											<div class="col-md-4" style="padding: 0 0 0 5px;">
-												<select class="form-control" style=" height: 31px;">
-													<option>Warehouse</option>
-												</select>
+											<div class="col-md-6" style="padding: 0 0 0 5px;">
+												<?=loc_dropdowns('warehouse')?>
 											</div>
-											<div class="col-md-4" style="padding: 0 0 0 5px;">
-												<select class="form-control" style=" height: 31px;">
-													<option>Aisle</option>
-												</select>
+											<div class="col-md-3" style="padding: 0 0 0 5px;">
+												<?=loc_dropdowns('aisle')?>
 											</div>
-											<div class="col-md-4" style="padding: 0 0 0 5px">
-												<select class="form-control" style=" height: 31px;">
-													<option>Shelf</option>
-												</select>
+											<div class="col-md-3" style="padding: 0 0 0 5px">
+												<?=loc_dropdowns('shelf')?>
 											</div>
 										</div>
 									</td>
