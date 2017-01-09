@@ -77,6 +77,33 @@
 		return $stockNumber;
 	}
 	
+	function getVendor($order_type,$partid = 0) {
+		$company;
+		
+		//Determine which order type to look for in this system
+		$order_table = $order_type == 'po' ? 'purchase_items' : 'sales_items';
+		$selector = $order_type == 'po' ? 'po_number' : 'so_number';
+		
+		//Order by the lastest order and limit the order # to 3 at a time
+		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." LIMIT 1;";
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$po = $result[$selector];
+		}
+		
+		$query = "SELECT * FROM purchase_orders WHERE po_number = '".res($po)."';";
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$company = $result['companyid'];
+		}
+		
+		return $company;
+	}
+	
 	//Get the past Purchase/Sales Order for each part in the inventory
 	function getOrder($order_type,$partid = 0) {
 		$order_array = array();
@@ -87,7 +114,7 @@
 		$selector = $order_type == 'po' ? 'po_number' : 'so_number';
 		
 		//Order by the lastest order and limit the order # to 3 at a time
-		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." ORDER BY ". res($selector) ." DESC LIMIT 3;";
+		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." ORDER BY ". res($selector) ." DESC LIMIT 5;";
 		$result = qdb($query) or die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
@@ -129,9 +156,6 @@
 	function getStock($stock = '', $partid = 0) {
 		$stockNumber;
 		
-		//echo $stock . $partid;
-		
-		
 		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND item_condition = '" . res($stock) . "';";
 		$result = qdb($query);
 		
@@ -144,7 +168,7 @@
 		// 	$stockNumber= $row['serial_no'];
 		// }
 		if(!$stockNumber) {
-			$stockNumber = 0;
+			$stockNumber = '0';
 		}
 
 		return $stockNumber;
@@ -154,6 +178,7 @@
 		//Pass in a HECIDB Result
 			$p = array();
 			$s = array();
+			$c = array();
 		
 		//Grab any filtered amounts
 			
@@ -169,11 +194,16 @@
 			$p['Manf'] = $info["Manf"];
 			$p['po_history'] = getOrder('po', $id);
 			$p['so_history'] = getOrder('so', $id);
+			$p['conditions'] = array();
+			
+			$p['conditions']['new'] = getStock('new', $id);
+			$p['conditions']['used'] = getStock('used', $id);
+			$p['conditions']['refurbished'] = getStock('refurbished', $id);
+			
+			$p['company'] = getOrder('so', $id);
+			
 			$p['in_stock'] = getStatusStock('instock',$id);
 			$p['pending'] = getStatusStock('pending', $id);
-			$p['new'] = getStock('new', $id);
-			$p['used'] = getStock('used',$id);
-			$p['refurb'] = getStock('refurbished', $id);
 			$p['price_avg'] = getAvgPrice($id);
 			$p['serials'] = array();
 			
@@ -186,6 +216,9 @@
 				$s['id'] = $serial['id'];
 				$s['serial_no'] = $serial['serial_no'];
 				$s['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+				
+				$p['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+				
 				$s['location'] = $serial['locationid'];
 				$s['qty'] = $serial['qty'];
 				$s['condition'] = $serial['item_condition'];

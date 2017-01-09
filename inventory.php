@@ -225,24 +225,6 @@
 		return $stockNumber;
 	}
 	
-	// function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
-	// 	$statusVals;
-		
-	//     $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	//     $result = qdb($query);
-	    
-	//     if (mysqli_num_rows($result)>0) {
-	// 		$result = mysqli_fetch_assoc($result);
-	// 		$statusVals = $result;
-	// 	}
-		
-	// 	preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
-		
-	// 	$enum = explode("','", $matches[1]);
-		
-	// 	return $enum;
-	// }
-	
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -424,12 +406,36 @@
 	
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
-<!----------------------------------------------------------------------------->
-	<div class="loading_element">
 	
+	<div class="loading_element_listing" style="display: none;">
+		<div class='col-sm-12' style='padding-top: 20px'>
+			<select class='revisions' multiple>
+				
+			</select>
+			<img class='img-responsive' src='http://placehold.it/125x75' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
+		</div>
+		<div class='col-sm-12'>
+			<div class='table-responsive'>
+				<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
+					<thead>
+						<tr>
+							<th>Vendor</th>
+							<th>Location</th>
+							<th>Qty</th>
+							<th>Condition</th>
+							<th>Puchase Order</th>
+							<th>Date Added</th>
+						</tr>
+					</thead>
+					<tbody class='parts'>
+						
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 
-
+	
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js"></script>
@@ -437,72 +443,80 @@
 <script>
 	(function($){
 		
-
-		
-		//Show more data for a specific product, Serial etc
-		$(document).on("click",".buttonAdd",function(){
-			$(this).closest('.part-container').children('.addItem').slideToggle('fast');
-			$(this).children('').toggleClass('fa-chevron-down fa-chevron-up');
-		});
-		
-		//Drop down a list of the history of the specific item
-		$(document).on("click",".show_history",function(e){
-			e.preventDefault();
-			$(this).next('.history_listing').slideToggle();
-		});
-		
-		
-		$(document).on("click",'.updateAll, .update',function(e) {
-			var serial, date, location, qty, condition, status, cost, id, partid;
-			//run through each of the rows that pertains to the class stated below and grab all the data
-			$(this).closest('.addItem').find('.product-rows-edited').each(function () {
-				//Declare Variables
-				var element = this;
-				
-				//Add value to each variable depending on the data in the row
-				id = $(this).data('id');
-				serial = $(this).find('.serial').val();
-				date = $(this).find('.date').val();
-				location = $(this).find('.location').val();
-				qty = $(this).find('.qty').val();
-				condition = $(this).find('.condition').val();
-				status = $(this).find('.status').val();
-				cost = $(this).find('.cost').val();
-				
-				//get the specific part id based on position of the element
-				partid = $(element).closest('.part-container').data('partid');
-
-				$.ajax({
-					type: 'POST',
-					url: '/json/inventory-edit.php',
-					data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
-					dataType: 'json',
-					success: function(data) {
-						if(data.result){
-							$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
-							
-							$(element).closest('.addItem').find('.product-rows-edited').find('.update').prop("disabled", true);
-							$(element).closest('.addItem').find('.product-rows-edited').removeClass('product-rows-edited');
-							
-							$('#item-updated').show();
-							setTimeout(function() { 
-								$('#item-updated').fadeOut(); 
-							}, 5000);
-
-						} else {
-							$('#item-failed').show();
-							setTimeout(function() { 
-								$('#item-failed').fadeOut(); 
-							}, 5000);
-						}
-					}
-				});
-				
-			});
+		$(document).on('change', '.revisions', function() {
+			$('.parts-list').hide();
 			
+			if($(this).val() == '') {
+				$('.parts-list').show();
+			} else {
+				$('.' + $(this).val()).show();
+			}
 		});
+		
+		// //Show more data for a specific product, Serial etc
+		// $(document).on("click",".buttonAdd",function(){
+		// 	$(this).closest('.part-container').children('.addItem').slideToggle('fast');
+		// 	$(this).children('').toggleClass('fa-chevron-down fa-chevron-up');
+		// });
+		
+		// //Drop down a list of the history of the specific item
+		// $(document).on("click",".show_history",function(e){
+		// 	e.preventDefault();
+		// 	$(this).next('.history_listing').slideToggle();
+		// });
+		
+		
+		// $(document).on("click",'.updateAll, .update',function(e) {
+		// 	var serial, date, location, qty, condition, status, cost, id, partid;
+		// 	//run through each of the rows that pertains to the class stated below and grab all the data
+		// 	$(this).closest('.addItem').find('.product-rows-edited').each(function () {
+		// 		//Declare Variables
+		// 		var element = this;
+				
+		// 		//Add value to each variable depending on the data in the row
+		// 		id = $(this).data('id');
+		// 		serial = $(this).find('.serial').val();
+		// 		date = $(this).find('.date').val();
+		// 		location = $(this).find('.location').val();
+		// 		qty = $(this).find('.qty').val();
+		// 		condition = $(this).find('.condition').val();
+		// 		status = $(this).find('.status').val();
+		// 		cost = $(this).find('.cost').val();
+				
+		// 		//get the specific part id based on position of the element
+		// 		partid = $(element).closest('.part-container').data('partid');
+
+		// 		$.ajax({
+		// 			type: 'POST',
+		// 			url: '/json/inventory-edit.php',
+		// 			data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
+		// 			dataType: 'json',
+		// 			success: function(data) {
+		// 				if(data.result){
+		// 					$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
+		// 					$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
+		// 					$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
+							
+		// 					$(element).closest('.addItem').find('.product-rows-edited').find('.update').prop("disabled", true);
+		// 					$(element).closest('.addItem').find('.product-rows-edited').removeClass('product-rows-edited');
+							
+		// 					$('#item-updated').show();
+		// 					setTimeout(function() { 
+		// 						$('#item-updated').fadeOut(); 
+		// 					}, 5000);
+
+		// 				} else {
+		// 					$('#item-failed').show();
+		// 					setTimeout(function() { 
+		// 						$('#item-failed').fadeOut(); 
+		// 					}, 5000);
+		// 				}
+		// 			}
+		// 		});
+				
+		// 	});
+			
+		// });
 		
 		$(document).on('change keyup paste','input, select', function() {
 			$(this).closest('.addItem').find('.updateAll').prop("disabled", false);
@@ -710,235 +724,127 @@
 					},
 				dataType: 'json',
 				success: function(part) {
+					$(".revisions").empty();
+					$(".parts").empty();
+					
 					$(".part-container").html("").remove();	
 					// var p = JSON.parse(part)
+					console.log(part);
+					var revisions, parts;
+					
+					var counter = 1;
+					
+					revisions = "<option value='' selected>All</option>";
 					part.forEach(function(item){
-						var output = '';
-					
-					//The description and image portion of the page
-					output += ("<div class='part-container' data-partid='"+item.id+"'>");
-					
-					output += ( "\
-								<div class='row partDescription' style='margin: 35px 0 0 0;'>\
-									<div class='col-md-2 col-sm-2'>\
-										<div class='row' style='margin: 0'>\
-											<div class='col-md-2 col-sm-2 col-xs-2'>\
-												<button class='btn btn-success buttonAdd' style='margin-top: 24px;'><i class='fa fa-chevron-down' aria-hidden='true'></i></button>\
-											</div>\
-											<div class='col-md-10 col-sm-10 col-xs-10'>\
-												<img class='img-responsive' src='http://placehold.it/350x150'>\
-											</div>\
-										</div>\
-									</div>\
-							");
-					//Outputting the information into the system name
-					output += ("\
-									<div class='col-md-3 col-sm-3'>\
-										<strong>"+item.system+" - "+item.part+"</strong>\
-										<hr>\
-										Description"+item.Manf+"<br><br>\
-										<i>Alias: </i>\
-									</div>\
-					");
-					
-					//Order History Portion
-					output += ( "\
-									<div class='col-md-2 col-sm-2'>\
-										<strong>Order History</strong>\
-										<hr>\
-										<span title='Purchase Order' style='text-decoration: underline;'>PO</span>:"+item.po_history+"<br>\
-										<span title='Sales Order' style='text-decoration: underline;'>SO</span>: "+item.so_history+"\
-									</div>\
-					");
-					
-					output += ( "\
-									<div class='col-md-1 col-sm-1'>\
-										<strong>Status</strong>\
-										<hr>\
-										<p>In Stock: <span style=;'color: #5cb85c;;'>"+item.in_stock+"</span></p>\
-										<p>Incoming: <span style=;'color: #f0ad4e;;'>"+item.pending+"</span></p>\
-									</div>\
-					");
-					
-					output += ( "\
-									<div class='col-md-2 col-sm-2'>\
-										<strong>Condition</strong>\
-										<hr>\
-										<button title='New' class='btn btn-success new_stock'>"+item.new+"</button>\
-										<button title='Used' class='btn btn-warning used_stock'>"+item.used+"</button>\
-										<button title='Refurbished' class='btn btn-danger refurb_stock'>"+item.refurb+"</button>\
-									</div>\
-					");
-					
-					output += ( "\
-									<div class='col-md-2 col-sm-2'>\
-										<strong>Cost Avg. (SO Based)</strong>\
-										<hr>"+item.price_avg+"\
-									</div>\
-					");
-					
-					output += ("</div>");
-					
-					output += ( "\
-							\
-								<div class='row addItem' style='margin-top: 60px; margin-left: 0; margin-right: 0; border: 1px solid #E7E7E7; padding: 20px; display: none;'>\
-									<div class='row'>\
-										<div class='col-md-12 col-sm-12'>\
-											<button class='btn btn-success buttonAddRows btn-sm add pull-right' style='margin-right: 5px;'><i class='fa fa-plus' aria-hidden='true'></i></button>\
-											<button class='btn btn-warning btn-sm add pull-right updateAll' style='margin-right: 5px;' disabled>Save Changes</button>\
-											<h3>"+item['system']+" - "+item['part']+"</h3>\
-											<p style=''>Description Manufacture <i>Alias: David, Aaron, Andrew</i></p>\
-										</div>\
-									</div>\
-					");
-					
-				
-					output += ( '\
-									<hr>\
-									<div class="addRows">\
-					');
-					item.serials.forEach(function(serial){
-		
 						
-					// $serials = getPartSerials($id); 
-					// $element = 0; $page_no = 1; 
-					// foreach($serials as $serial){
-					// 	(($element % 5) == 0 && $element != 0 ? $page_no++ : ''); 
-					// 	$element++; 
-					output += ( "\
-										<div class='product-rows serial-page page-1' style='padding-bottom: 10px;' data-id='"+serial['id']+"'>\
-											<div class='row'>");
-					output += ( "\
-												<div class='col-md-2 col-sm-2'>\
-													<label for='serial'>Serial/Lot Number</label>\
-													<input class='form-control serial' type='text' name='serial' placeholder='#123' value='"+serial['serial_no']+"'/>\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-2 col-sm-2'>\
-													<label for='date'>Date</label>\
-													<input class='form-control date' type='text' name='date' placeholder='00/00/0000' value='"+serial['date']+"'/>\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-2 col-sm-2'>\
-													<label for='date'>Location</label>\
-													<input class='form-control location' type='text' name='date' placeholder='Warehouse Location' value='"+serial['location']+"'/>\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-1 col-sm-1'>\
-													<label for='qty'>Qty</label>\
-													<input class='form-control qty' type='text' name='qty' placeholder='Quantity' value='"+serial['qty']+"'/>\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-2 col-sm-2'>\
-													"+"\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-1 col-sm-1'>\
-													<div class='form-group'>\
-														<label for='status'>status</label>\
-														<select class='form-control status' name='status'>");
-															// foreach(getEnumValue('inventory', 'status') as $status){\
-															// 	output += ( "<option ". ($status == $serial['status'] ? 'selected' : '').">$status</option>");\
-															// }\
-					output += (							"</select>\
-													</div>\
-													<div class='form-text'></div>\
-												</div>\
-					");
-					
-					output += ( "\
-												<div class='col-md-2 col-sm-2'>\
-													<div class='row'>\
-														<div class='col-md-7 col-sm-7'>\
-															<label for='price'>Cost</label>\
-															<input class='form-control cost' type='text' name='price' placeholder='$' value=''/>\
-															<div class='form-text'></div>\
-														</div>\
-														<div class='col-md-5 col-sm-5'>\
-															<label for='add-delete'>&nbsp;</label>\
-															<div class='btn-group' role='group' name='add-delete' style='display: block;'>\
-																<button class='btn btn-primary btn-sm update' disabled><i class='fa fa-check' aria-hidden='true'></i></button>\
-																<button class='btn btn-danger delete btn-sm' disabled><i class='fa fa-chevron-up' aria-hidden='true'></i></button>\
-															</div>\
-														</div>\
-													</div>\
-												</div>\
-					");
-					output += ( "		</div>");
-					output += ( "\
-												<div class='row'>\
-													<div class='col-sm-12'>\
-														<a href='#' class='show_history'>Show History +</a>\
-														\
-														<div class='row history_listing' style='display: none;'>\
-															<div class='col-md-12'>\
-																<div class='table-responsive'>\
-																	<table class='table table-striped'>\
-																		<thead>\
-																			<tr>\
-																				<th>Date</th>\
-																				<th>Rep</th>\
-																				<th>Field Changed</th>\
-																				<th>History</th>\
-																			</tr>\
-																		</thead>\
-																		<tbody>");
-																			
-																			serial.history.forEach(function(record){
-																				output += ( "\
-																					<tr>\
-																						<th>"+record.date+"</th>\
-																						<td>"+record.repid+"</td>\
-																						<td>"+record.field_changed+"</td>\
-																						<td>"+record.changed_from+"</td>\
-																					</tr>\
-																				");
-																			});
-																			// foreach(getItemHistory($serial['id']) as $history){\
-																			// }
-																			// <th>"+record.date"</th>\
-																			// 			<td>"+record.repid+"</td>\
-																			// 			<td>"+record.field_changed+"</td>\
-																			// 			<td>"+record.changed_from+"</td>\
-					output += ("\
-																		</tbody>\
-																	</table>\
-																</div>\
-															</div>\
-														</div>\
-													</div>\
-												</div>\
-											</div>\
-						");
-				});		
-					output += ("\
-								<div class='col-md-12 text-center'><a class='show-more' href='#'>Show More</a></div>\
-								</div>\
-							</div>");
+						revisions += "<option value='parts-"+counter+"'>"+item.part+"</option>";
+						
+						$.each(item.conditions, function(i, condition) {
+						//item.conditions.forEach(function(condition){
+							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
+									<td></td>\
+									<td>Multiple Locations</td>\
+									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+condition+"</span></td>\
+									<td>"+i+"</td>\
+									<td>"+item.po_history+"</td>\
+									<td ='date_added'>"+item.date+"</td>\
+								</tr>";
 							
-				
-				$(".loading_element").append(output);
-
-			 });
+							//Handler for all the serials per part
+							
+							parts += "<tr class='serial_listing_"+ i + '-' + item.id +"' style='display: none;'>\
+										<td colspan='12'>\
+											<div class='table-responsive'>\
+												<table class='shipping_update table table-hover table-condensed'>\
+													<thead>\
+														<tr>\
+															<th>Serial</th>\
+															<th>Location</th>\
+															<th>Qty</th>\
+															<th>Date Added</th>\
+														</tr>\
+													</thead>\
+													<tbody>";
+													
+													item.serials.forEach(function(serial){
+														if(serial.condition == i) {
+															parts += "\
+																	<tr>\
+																		<td>"+serial.serial_no+"</td>\
+																		<td>Location Goes Here</td>\
+																		<td>"+serial.qty+"</td>\
+																		<td ='date_added'>"+serial.date+"</td>\
+																	</tr>";
+														}
+													});
+													
+							parts +=				"</tbody>\
+												</table>\
+											</div>\
+										</td>\
+									</tr>";
+						});
+						
+						counter++;
+					});
+					
+					$('.revisions').append(revisions);
+					$('.parts').append(parts);
+					
+					// //Changing the outout to a table
+					// output = "\
+					// 	<div class='col-sm-12' style='padding-top: 20px'>\
+					// 		<strong class='part_name'>"+"</strong>\
+					// 		<select>";
+					// 		part.forEach(function(item){
+					// 			output += "<option>Test</option>";
+					// 		});
+					// output +=	"</select>\
+					// 		<br>\
+					// 		<img class='img-responsive' src='http://placehold.it/125x75' style='padding-right: 10px; float:left; padding-bottom: 10px'>\
+					// 	</div>\
+					// 	<div class='col-sm-12'>\
+					// 		<div class='table-responsive'>\
+					// 			<table class='shipping_update table table-hover table-striped table-condensed' style='margin-top: 15px;'>\
+					// 				<thead>\
+					// 					<tr>\
+					// 						<th>Vendor</th>\
+					// 						<th>Location</th>\
+					// 						<th>Qty</th>\
+					// 						<th>Condition</th>\
+					// 						<th>Puchase Order</th>\
+					// 						<th>Date Added</th>\
+					// 					</tr>\
+					// 				</thead>\
+					// 				<tbody>";
+					// //Function to parse through all the serials
+					// var lastSerial = '';
+					// item.serials.forEach(function(serial){				
+					// 	output +=			"<tr>\
+					// 							<td>Vendor</td>\
+					// 							<td>Location</td>\
+					// 							<td>"+serial.qty+"</td>\
+					// 							<td>"+serial.condition+"</td>\
+					// 							<td>"+item.po_history+"</td>\
+					// 							<td>"+serial.date+"</td>\
+					// 						</tr>";
+					// });	
+					// output +=		"</tbody>\
+					// 			</table>\
+					// 		</div>\
+					// 	</div>\
+					// ";
+					if(part != '') {
+						$(".loading_element_listing").show();
+					} else {
+						$(".loading_element_listing").hide();
+				   		alert("No Parts Found with those parameters");
+					}
 					
 				},
 				error: function(xhr, status, error) {
-				   	alert("No Parts Found with those parameters")
+					$(".loading_element_listing").hide();
+				   	alert("No Parts Found with those parameters");
 				},			
 			});
 		}
@@ -948,6 +854,16 @@
 			var search = $("#part_search").val();
 			inventory_history(search,"");
 		}
+	});
+	
+	//This function show all the serial if the user clicks on the qty link
+	$(document).on('click', '.check_serials', function(e) {
+		e.preventDefault
+		
+		var parent = $(this).closest('.parts-list').data('serial');
+		//alert($(this).text());
+		
+		$('.' + parent).toggle();
 	});
 	
 	$(document).on("click",".part_filter",function(){
