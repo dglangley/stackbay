@@ -257,11 +257,11 @@
 		<div class="col-md-4 text-center">
 			<h1>Shipping Dashboard</h1>			</div>
 		<div class="col-md-4">
-			<a href="/order_form.php?ps=Sales" class="btn btn-warning pull-right" style="margin-top: 10px;">
-				<i class="fa fa-plus"></i> Sales Order
+			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 10px;">
+				New Sales Order
 			</a>
-			<a href="/order_form.php?ps=Purchase" class="btn btn-success pull-right" style="margin-top: 10px; margin-right: 10px;">
-				<i class="fa fa-plus"></i> Purchase Order
+			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 10px; margin-right: 10px;">
+				New Purchase Order
 			</a>	
 		</div>
 	</div>

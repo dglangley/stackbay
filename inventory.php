@@ -419,11 +419,11 @@
 				<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
 					<thead>
 						<tr>
-							<th>Vendor</th>
 							<th>Location</th>
 							<th>Qty</th>
 							<th>Condition</th>
 							<th>Puchase Order</th>
+							<th>Vendor</th>	
 							<th>Date Added</th>
 						</tr>
 					</thead>
@@ -742,11 +742,11 @@
 						$.each(item.conditions, function(i, condition) {
 						//item.conditions.forEach(function(condition){
 							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
-									<td></td>\
 									<td>Multiple Locations</td>\
 									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+condition+"</span></td>\
 									<td>"+i+"</td>\
 									<td>"+item.po_history+"</td>\
+									<td>Vendor</td>\
 									<td ='date_added'>"+item.date+"</td>\
 								</tr>";
 							

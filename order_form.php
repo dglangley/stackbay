@@ -72,7 +72,7 @@
 				<?php
 				if($order_number != "New"){
 					$url = ($order_type == "Sales")?"shipping":"inventory_add";
-					echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';
+					echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';
 				}
 				?>
 				
@@ -91,7 +91,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat  <?=($order_number=="New")?'success':'default'?> pull-right" id = "save_button" style="margin-top:2%;margin-bottom:2%;">
+				<button class="btn-flat  <?=($order_number=="New")?'success':'success'?> pull-right" id = "save_button" style="margin-top:2%;margin-bottom:2%;">
 					<?=($order_number=="New") ? 'Create' :'Save'?>
 				</button>
 			</div>
