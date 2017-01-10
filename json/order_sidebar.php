@@ -6,11 +6,13 @@
 // The operations sidebar has two major functions: output the sidebar edit,   |
 // and the display mode. Each gets the mode the number and the type. It then  |
 // counts and outputs the row function.                                       | 
-//                                      
-// This is a rewrite to move away from ajax loading
+//                                                                            |
 //                                                                            | 
 // Last update: Aaron Morefield - November 29th, 2016                         |
 //=============================================================================
+
+//Prepare the page as a JSON type
+header('Content-Type: application/json');
 
 $rootdir = $_SERVER['ROOT_DIR'];
 	
@@ -108,7 +110,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<div class ='company'>
 							<label for='companyid'>Company:</label>
 							<select name='companyid' id='companyid' class='company-selector' style = 'width:100%;'>
-								<option value='$companyid'>$company_name</option>
+								<option value = $companyid>$company_name</option>
 							</select>
 						</div>
 					</div>
@@ -121,7 +123,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<div class ='contact'>
 							<label for='contactid'>Contact:</label>
 							<select name='contactid' id='contactid' class='contact-selector required' style = 'width:100%;'>
-								<option value='$contact'>".getContact($contact)."</option>
+								<option value = $contact>".getContact($contact)."</option>
 							</select>
 						</div>
 					</div>
@@ -151,7 +153,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='bill_to'>Bill to:
 						</label>
 	                    <select id='bill_to' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value='$b_add'>$b_name</option>
+							<option value = '$b_add'>$b_name</option>
 	                    </select>
 				    </div>
 			    </div>";
@@ -164,7 +166,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							<input id='mismo' type=checkbox></input> (Same as billing)
 						</label>
 	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
-							<option value='$s_add'>$s_name</option>
+							<option value = '$s_add' >$s_name</option>
 	                    </select>
 				    </div>
 			    </div>";
@@ -222,77 +224,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
     }
-	function display($order_number = '',$page = 'Purchase'){
-		//Opens the sidebar
-		// $file = basename(__FILE__);
-		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
-		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
-		$right.="
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>						
-						<div class ='order'>
-							<label for='order_selector'>Associated ";
-		$right .= ($page == "Purchase")? "PO" : "SO";
-		$right .= ":</label>
-							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
-		
-		if ($order_number) {
-			
-			$order = ($page == "Purchase") ? '`purchase_orders`' : '`sales_orders`';
-			$num_type = ($page == "Purchase") ? '`po_number`' : '`so_number`';
-			
-			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
-			$results = qdb($query);
-			
-			foreach ($results as $row){
-				$companyid = $row['companyid'];
-				$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
-				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
-				$b_name = getAddresses($b_add,'name');
-				$s_add = $row['ship_to_id'];
-				$s_name = getAddresses($s_add,'name');
-				$selected_carrier = $row['freight_carrier_id'];
-				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
-				$selected_service = $row['freight_services_id'];
-				$selected_account = $row['freight_account_id'];
-				$public = $row['public_notes'];
-				$private = $row['private_notes'];
-				$terms = $row['termsid'];
-			}
-			
-			if($order_number){ 
-					$right.="			<option value = $order_number>$order_number - $company_name</option>";
-			}
-		}	
 
-		$right.="			</select>
-						</div>
-					</div>
-				</div>";
-		if($results){
-			//Contact Output
-			$right .= "<b>Contact:</b> ".getContact($contact)."<br>";
-			
-			//Addresses
-			$right .= "<b>Billing Address:</b><br>";
-			$right .= address_out($b_add);
-			$right .= "<br>";
-			$right .= "<b>Shipping Address:</b><br>";
-			$right .= address_out($s_add);
-			$right .= "<br>";
-		}
-		//Closing Tag (Leave Outside of any if statment)
-	    $right .= "</div>
-		    <div class='arrow click_me'>   
-		    	<i class='icon-button fa fa-chevron-left' aria-hidden='true'></i>
-        	</div>
-
-        	<i class='fa fa-chevron-up shoot_me icon-button-mobile' aria-hidden='true' style='color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;'></i>
-		</div>";
-		
-			echo json_encode($right);
-	}
 	function address_out($address_id){
 		$address = '';
 		//Address Handling
@@ -314,11 +246,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $address;
 	}
 	
-	if ($mode == 'order'){
-		edit($number,$type);
-	}
-	else{
-		display($number,$type);
-	}
+	edit($number,$type);
 		
 ?>

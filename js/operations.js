@@ -1202,6 +1202,7 @@
 		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
 		    		var location = '';
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
+		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 		    		
 		    		$.ajax({
 						type: "POST",
@@ -1234,7 +1235,9 @@
 								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
 								if(qty == 0) {
 							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	alert('Part: ' + part + ' has been received.');

@@ -123,6 +123,11 @@
 			.table .order-complete td {
 				background-color: #efefef !important;
 			}
+			
+			.infiniteLocations select {
+				margin-bottom: 5px;
+    			height: 31px;
+			}
 		</style>
 	</head>
 	
@@ -190,7 +195,7 @@
 											echo $item['description']; 
 										?>
 									</td>
-									<td>
+									<td  class="infiniteLocations">
 										<div class="row-fluid">
 											<div class="col-md-6" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
