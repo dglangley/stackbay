@@ -24,13 +24,10 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/locations.php';
-
 	//include_once $rootdir.'/inc/order-creation.php';
-
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_type = "Purchase";
+	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 	
 	
 	//Get the ENUM values of the specified table and column (field)
@@ -59,7 +56,17 @@
 		
 		$listParts;
 		
-		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND receive_date IS NULL;";
+		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty != qty_received;";
+		$result = qdb($query);
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listParts[] = $row;
+			}
+		}
+		
+		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty = qty_received;";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -103,6 +110,18 @@
 				padding-top: 10px !important;
 				padding-bottom: 0px !important;
 			}
+			
+			.btn-secondary {
+				/*color: #373a3c;*/
+				background-color: transparent;
+				border: 0;
+				padding: 0;
+				line-height: 0;
+			}
+			
+			.table .order-complete td {
+				background-color: #efefef !important;
+			}
 		</style>
 	</head>
 	
@@ -111,12 +130,12 @@
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?php echo (($order_number != '') ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center">
 				<h1><?php echo ($order_number != '' ? 'Outstanding Items for PO #' . $order_number : 'Inventory Addition'); ?></h1>
 			</div>
 			<div class="col-sm-4">
-				<button class="btn-flat success pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
+				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
 					Complete
 				</button>
 			</div>
@@ -159,11 +178,11 @@
 							//Grab all the parts from the specified PO #
 							if($partsListing) {
 								foreach($partsListing as $part): 
+									$item = getPartName($part['partid']);
 						?>
-								<tr>
-									<td class="part_id" data-partid="<?php echo $part['partid']; ?>">
+								<tr class="<?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'order-complete' : ''); ?>">
+									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
 										<?php 
-											$item = getPartName($part['partid']);
 											echo $item['part'] . '&nbsp;&nbsp;';
 											echo $item['heci'] . '&nbsp;&nbsp;';
 											echo $item['heci'] . '&nbsp;';
@@ -172,53 +191,54 @@
 									</td>
 									<td>
 										<div class="row-fluid">
-											<div class="col-md-6" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('warehouse')?>
+											<div class="col-md-4" style="padding: 0 0 0 5px;">
+												<select class="form-control" style=" height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+													<option>Warehouse</option>
+												</select>
 											</div>
-											<div class="col-md-3" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('aisle')?>
+											<div class="col-md-4" style="padding: 0 0 0 5px;">
+												<select class="form-control" style=" height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+													<option>Aisle</option>
+												</select>
 											</div>
-											<div class="col-md-3" style="padding: 0 0 0 5px">
-												<?=loc_dropdowns('shelf')?>
+											<div class="col-md-4" style="padding: 0 0 0 5px">
+												<select class="form-control" style=" height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+													<option>Shelf</option>
+												</select>
 											</div>
 										</div>
 									</td>
 									<td class="infiniteCondition">
-										<select class="form-control condition_field condition" name="condition" style="margin-bottom: 5px; height: 31px;">
+										<select class="form-control condition_field condition" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
 											<?php foreach(getEnumValue() as $condition): ?>
 												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?>><?php echo $condition; ?></option>
 											<?php endforeach; ?>
 										</select>
 									</td>
 									<td class="infiniteSerials">
-										<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 10px;">
+										<div class="input-group" style="margin-bottom: 6px;">
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+										    <span class="input-group-addon">
+										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+										    </span>
+							            </div>
 									</td>
 									<td class="remaining_qty">
-										<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $part['qty'] - $part['qty_received']; ?>" readonly>
+										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo $part['qty'] - $part['qty_received']; ?>" readonly>
 									</td>
 									<td>
 										<div class="checkbox">
-											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox"></label>
+											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
 										</div>
 									</td>
 								</tr>
 							<?php endforeach; ?>
-						<?php }
-						// 
-							else{ ?>
-								<tr>
-									<td colspan="6" style="/*background-color:#eee;*/text-align:center;">
-										<b>All items have been received for this order!</b>
-									</td>
-								</tr>
-						<?php }
-					?>
+						<?php } ?>
 						</tbody>
 					</table>
 				</div>
 			</div>
 		</div> 
-
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
