@@ -1388,6 +1388,16 @@ a > .icon-ar.icon-ar-inverse:hover {
   border-left: solid 20px #f7f7f7;
 }
 
+#main-stats .stat {
+  padding:10px 0px 10px 0px;
+}
+#main-stats .stat .data {
+  font-weight:400;
+  font-size:12px;
+  padding-right:30px;
+}
+#main-stats .stat .data .number {
+}
 
 
 /* From Bootstrap 3.3.6 */
@@ -1399,13 +1409,15 @@ a.bg-success:focus,a.bg-success:hover{background-color:#c1e2b3}
 a.bg-info:focus,a.bg-info:hover{background-color:#afd9ee}
 .bg-warning{background-color:#fcf8e3}
 a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}
-.bg-danger{background-color:#f2dede}
+.bg-danger{background-color:#d9534f}
 a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 
-
-
 .bg-brown{color:#fff;background-color:#c37744;}
+.text-brown{color:#c37744 !important;}
+.text-black{color:#000000 !important;}
 .long-text { max-height:200px; overflow-y:auto; }
+.text-danger { color:#b94a48 !important; }
+.text-success { color:#468847 !important; }
 
 
 

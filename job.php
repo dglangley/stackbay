@@ -79,10 +79,10 @@
 		$hours -= ($days*24);
 
 		$str = '';
-		if ($days>0) { $str .= $days.' d, '; }
-		if ($hours>0 OR $str) { $str .= (int)$hours.' h, '; }
-		if ($mins>0 OR $str) { $str .= (int)$mins.' m, '; }
-		if ($secs>0 OR $str) { $str .= (int)$secs.' s'; }
+		if ($days>0) { $str .= $days.'d, '; }
+		if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
+		if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
+		if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
 
 		return ($str);
 	}
@@ -262,82 +262,7 @@
 			$po_ln .= '</a> &nbsp; <a href="#"><i class="fa fa-pencil"></i></a> &nbsp; <a href="#" class="text-danger"><i class="fa fa-close"></i></a><BR/>';
 		}
 	}
-?>
 
-<div class="container">
-    <section class="margin-bottom">
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="right-line">Job<?php echo $job_out; ?></h2>
-            </div>
-		</div>
-        <div class="row">
-            <div class="col-md-3 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-building-o"></i></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo $job['customer']; ?></h5>
-                        <p class="info"><small>Customer</small></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-hashtag"></i></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo $job['customer_job_no']; ?></h5>
-                        <p class="info"><small>Project ID</small></p>
-                    </div>
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-file-o"></i></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo $po_ln; ?></h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-user"></i></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo $username; ?></h5>
-                        <p class="info"><small>Created <?php echo format_date($job['date_entered'],'M d, Y'); ?></small></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_date_of_work'],'d'); ?></span></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo format_date($job['scheduled_date_of_work'],'D M j, Y'); ?></h5>
-                        <p class="info"><small>Scheduled Work</small></p>
-                    </div>
-                    <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_completion_date'],'d'); ?></span></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin"><?php echo format_date($job['scheduled_completion_date'],'D M j, Y'); ?></h5>
-                        <p class="info"><small>Scheduled Completion</small></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-<?php echo $job['status_color']; ?>"><i class="fa fa-<?php echo $job['status_flag']; ?>"></i></span>
-                    <div class="text-icon-content">
-                        <h5 class="no-margin text-<?php echo $job['status_color']; ?>"><?php echo $job['status']; ?></h5>
-                        <p class="info"><small>Status</small></p>
-                    </div>
-                </div>
-            </div>
-		</div>
-        <div class="row">
-            <div class="col-md-3 col-sm-6">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-brown"><i class="fa fa-map-marker"></i></span>
-                    <div class="text-icon-content">
-						<?php if ($contact) { echo '<h5 class="no-margin">'.$contact.'</h5><p class="info"><small>Contact</small></p>'; } else { echo '<br/><br/><br/>'; } ?>
-                        <h5 class="no-margin"><?php echo str_replace(chr(10),'<BR>',$job['site_access_info_address']); ?></h5>
-                    </div>
-                </div>
-            </div>
-<?php
 	// determine which column should be wider based on content: description or special instructions
 	$col1 = '4';//description
 	$col2 = '5';//special instructions
@@ -346,32 +271,10 @@
 	if ($job_strlen==0) { $col1 = '2'; $col2 = '7'; }
 	else if ($ins_strlen==0) { $col1 = '7'; $col2 = '2'; }
 	else if ($job_strlen>$ins_strlen) { $col1 = '5'; $col2 = '4'; }
-?>
-            <div class="col-md-<?php echo $col1; ?> col-sm-6 long-text">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-info-circle"></i></span>
-                    <div class="text-icon-content">
-                        <small><?php echo str_replace(chr(10),'<BR>',htmlcp1252($job['description'])); ?></small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-<?php echo $col2; ?> col-sm-6 long-text">
-                <div class="text-icon">
-                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-sticky-note-o"></i></span>
-                    <div class="text-icon-content">
-                        <small><?php echo $special_instructions; ?></small>
-                    </div>
-                </div>
-            </div>
-        </div> <!-- row -->
-    </section>
 
-	<hr>
-
-<?php
 	/***** MATERIALS DATA *****/
 	$material_rows = '';
-	$materialTotal = 0;
+	$materialsTotal = 0;
 	$query = "SELECT * FROM services_component c, services_jobbulkinventory jbi ";
 	$query .= "LEFT JOIN services_jobmaterialpo jpo ON jbi.po_id = jpo.id ";
 	$query .= "WHERE job_id = '".$job['id']."' AND component_id = c.id; ";
@@ -381,7 +284,7 @@
 		$cost = format_price($r['cost'],true,' ');
 		$addl_cost = format_price($r['addtl_cost'],true,' ');
 		$vendor = getVendor($r['vendor_id']);
-		$materialTotal += ($r['cost']+$r['addtl_cost']);
+		$materialsTotal += ($r['cost']);//+$r['addtl_cost']);
 		$material_rows .= '
                             <!-- row -->
                             <tr>
@@ -429,6 +332,8 @@
 	else { $WORKDAY_END = $WORKDAY_START-1; }
 	$WORKDAY_START = str_pad($WORKDAY_START,2,0,STR_PAD_LEFT);
 	$WORKDAY_END = str_pad($WORKDAY_END,2,0,STR_PAD_LEFT);
+
+	$jobTotal = 0;
 
 	$expenses = array();
 	$laborTotal = 0;
@@ -496,21 +401,40 @@ $pdPayTotal += $pdPay;
 					'amount'=>($r['mileage']*$job['mileage_rate']),
 					'file'=>'',
 					'vendor'=>'',
+					'type'=>'<i class="fa fa-car"></i>',
 				);
 			}
 		}
+
+		$completed = false;
+		$admin_completed = false;
 		$assignments = '';
 		foreach ($arr as $task) {
+			if ($task['employee_completed'] AND $completed===false) { $completed = true; }
+			else if (! $task['employee_completed']) { $completed = 0; }
+			if ($task['admin_completed'] AND $admin_completed===false) { $admin_completed = true; }
+			else if (! $task['admin_completed']) { $admin_completed = 0; }
+			$notes = '';
+			if ($task['notes']) { $notes = '<br/>&nbsp; <span class="info">'.$task['notes'].'</span>'; }
+
 			$assignments .= '
-				'.format_date($task['date_scheduled'],'M j, Y').' to '.format_date($task['date_scheduled_complete'],'M j, Y').'<br/>
+				'.format_date($task['date_scheduled'],'M j, Y').' to '.format_date($task['date_scheduled_complete'],'M j, Y').$notes.'<br/>
 			';
 		}
+
+		if ($cumLabor==0) { continue; }
 
 		$cumLabor = round($cumLabor,2);
 
 //date_scheduled, date_scheduled_complete, admin_completed, name, notes, employee_completed
 		$time_logged = toTime($cumSecs);
 		$laborTotal += $cumLabor;
+
+		if ($completed) { $completed = '<i class="fa fa-check text-success"></i>'; }
+		else { $completed = ''; }
+		if ($admin_completed) { $admin_completed = '<i class="fa fa-check text-success"></i>'; }
+		else { $admin_completed = ''; }
+
 		$labor_rows .= '
                             <!-- row -->
                             <tr class="valign-top">
@@ -524,7 +448,7 @@ $pdPayTotal += $pdPay;
 									'.$assignments.'
                                 </td>
                                 <td>
-									'.$time_logged.' &nbsp; ('.timeToStr($time_logged).')
+									'.$time_logged.'<br/> &nbsp; <span class="info">'.timeToStr($time_logged).'</span>
 <!--
 <BR>std '.toTime($secsStd).' = '.$stdPayTotal.'<BR>
 OT '.toTime($secsOt).' = '.$otPayTotal.'<BR>
@@ -534,9 +458,11 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <td class="text-right">
 									'.format_price($cumLabor,true,' ').'
                                 </td>
-                                <td>
+                                <td class="text-center">
+									'.$completed.'
                                 </td>
-                                <td>
+                                <td class="text-center">
+									'.$admin_completed.'
                                 </td>
                             </tr>
 		';
@@ -546,6 +472,8 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 	$query = "SELECT * FROM services_expense WHERE job_id = '".$job['id']."'; ";
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
+		if (strtolower(substr($r['label'],0,3))=='gas') { $r['type'] = '<i class="fa fa-car"></i>'; }
+		else { $r['type'] = '<i class="fa fa-money"></i>'; }
 		$expenses[] = $r;
 	}
 
@@ -580,19 +508,228 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <td class="text-right">
 									'.format_price($r['amount'],true,' ').'
                                 </td>
+                                <td class="text-right">
+									'.$r['type'].'
+                                </td>
 							</tr>
 		';
 	}
 
 	$expensesTotal = round($expensesTotal,2);
+
+	$outside_rows = '';
+	$outsideTotal = 0;
+	$query = "SELECT * FROM services_joboutsideservice WHERE job_id = '".$job['id']."'; ";
+	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$po_date = '';
+		$employee = '';
+		if ($r['po_id']) {
+			$query2 = "SELECT * FROM services_joboutsideservicepo WHERE id = '".$r['po_id']."'; ";
+			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$po_date = format_date($r2['po_date'],'n/j/y');
+				$employee = getProfile($r2['entered_by_id']);
+			}
+		}
+		$outsideTotal += $r['cost'];
+		$outside_rows .= '
+                            <!-- row -->
+                            <tr class="valign-top">
+                                <td>
+									'.$employee.'
+                                </td>
+                                <td>
+									'.getVendor($r['vendor_id']).'
+                                </td>
+                                <td>
+									'.$po_date.'
+                                </td>
+                                <td>
+									'.$r['scope'].'
+                                </td>
+                                <td class="text-right">
+									'.format_price($r['cost'],true,' ').'
+                                </td>
+							</tr>
+		';
+	}
+	$outsideTotal = round($outsideTotal,2);
+
+	$jobComm = 0;
+	$query = "SELECT SUM(amount) comm FROM services_commission WHERE job_id = '".$job['id']."'; ";
+	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+	if (mysqli_num_rows($result)>0) {
+		$r = mysqli_fetch_assoc($result);
+		$jobComm = $r['comm'];
+	}
+	$jobComm = round($jobComm,2);
+
+	$jobTotal = $laborTotal + $materialsTotal + $expensesTotal + $outsideTotal;
+	$jobProfit = $job['price_quote']-$jobTotal;
+	if ($jobProfit>0) { $themeProfit = 'text-success'; }
+	else if ($jobProfit<0) { $themeProfit = 'text-danger'; }
+	else { $themeProfit = 'text-info'; }
+
+	$laborProfit = ($job['quote_labor']-$laborTotal);
+	$jobPct = round((($laborProfit/$laborTotal)*100),2);
 ?>
+
+<div class="container">
+    <section class="margin-bottom">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="right-line">Job<?php echo $job_out; ?></h2>
+            </div>
+		</div>
+        <div class="row">
+            <div class="col-md-3 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-building-o"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo $job['customer']; ?></h5>
+                        <p class="info"><small>Customer</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-hashtag"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo $job['customer_job_no']; ?></h5>
+                        <p class="info"><small>Project ID</small></p>
+                    </div>
+				</div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-file-o"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo $po_ln; ?></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-user"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo $username; ?></h5>
+                        <p class="info"><small>Created <?php echo format_date($job['date_entered'],'M d, Y'); ?></small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_date_of_work'],'d'); ?></span></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo format_date($job['scheduled_date_of_work'],'D M j, Y'); ?></h5>
+                        <p class="info"><small>Scheduled Work</small></p>
+                    </div>
+                    <span class="icon-ar icon-ar-sm fa-stack bg-brown"><i class="fa fa-calendar-o fa-stack-2x fa-stack-md"></i><span class="fa-stack-xs calendar-text"><?php echo format_date($job['scheduled_completion_date'],'d'); ?></span></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo format_date($job['scheduled_completion_date'],'D M j, Y'); ?></h5>
+                        <p class="info"><small>Scheduled Completion</small></p>
+                    </div>
+                </div>
+            </div>
+		</div>
+        <div class="row">
+            <div class="col-md-3 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-brown"><i class="fa fa-map-marker"></i></span>
+                    <div class="text-icon-content">
+						<?php if ($contact) { echo '<h5 class="no-margin">'.$contact.'</h5><p class="info"><small>Contact</small></p>'; } else { echo '<br/><br/><br/>'; } ?>
+                        <h5 class="no-margin"><?php echo str_replace(chr(10),'<BR>',$job['site_access_info_address']); ?></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-<?php echo $col1; ?> col-sm-6 long-text">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-info-circle"></i></span>
+                    <div class="text-icon-content">
+                        <small><?php echo str_replace(chr(10),'<BR>',htmlcp1252($job['description'])); ?></small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-<?php echo $col2; ?> col-sm-6 long-text">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-sticky-note-o"></i></span>
+                    <div class="text-icon-content">
+                        <small><?php echo $special_instructions; ?></small>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- row -->
+    </section>
+
+	<hr>
+
+    </section>
+        <!-- upper main stats -->
+        <div id="main-stats">
+            <div class="row stats-row">
+                <div class="col-md-3 col-sm-3 stat">
+                    <div class="data">
+                        <span class="number text-brown"><?php echo format_price($job['price_quote'],true,''); ?></span>
+						<span class="info">Job Quote</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3 stat">
+                    <div class="data">
+                        <span class="number text-black"><?php echo format_price($jobTotal,true,''); ?></span>
+						<span class="info">Total Cost</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3 stat">
+                    <div class="data">
+                        <span class="number text-black"><?php echo format_price($jobComm,true,''); ?></span>
+						<span class="info">Commission</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3 stat last">
+                    <div class="data">
+                        <span class="number <?php echo $themeProfit; ?>"><?php echo format_price($jobProfit,true,''); ?></span>
+						<span class="info">Job Profit</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end upper main stats -->
+
+<!--
+            <div class="col-md-2 col-sm-6">
+                <div class="text-icon">
+                    <span class="icon-ar icon-ar-sm bg-info"><i class="fa fa-dollar"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo format_price($job['price_quote'],true,''); ?></h5>
+                        <p class="info"><small>Job Quote</small></p>
+                    </div>
+                    <span class="icon-ar icon-ar-sm <?php echo $themeProfit; ?>"><i class="fa fa-money"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin"><?php echo format_price($jobProfit,true,''); ?></h5>
+                        <p class="info"><small>Job Profit</small></p>
+                    </div>
+                    <span class="icon-ar icon-ar-sm bg-<?php echo $job['status_color']; ?>"><i class="fa fa-<?php echo $job['status_flag']; ?>"></i></span>
+                    <div class="text-icon-content">
+                        <h5 class="no-margin text-<?php echo $job['status_color']; ?>"><?php echo $job['status']; ?></h5>
+                        <p class="info"><small>Status</small></p>
+                    </div>
+                </div>
+            </div>
+-->
+	</section>
+
+	<hr>
 
     <section>
 			<!-- Nav tabs -->
 			<ul class="nav nav-tabs nav-tabs-ar">
 				<li class="active"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor &nbsp; <?php echo format_price($laborTotal,true,''); ?></a></li>
-				<li><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; <?php echo format_price($materialTotal,true,''); ?></a></li>
+				<li><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; <?php echo format_price($materialsTotal,true,''); ?></a></li>
 				<li><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <?php echo format_price($expensesTotal,true,''); ?></a></li>
+				<li><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; <?php echo format_price($outsideTotal,true,''); ?></a></li>
+				<li class="pull-right"><a href="#" data-toggle="tab"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <?php echo format_price($jobTotal,true,''); ?></strong></a></li>
 			</ul>
  
 			<!-- Tab panes -->
@@ -639,7 +776,7 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <td colspan="3">
                                 </td>
                                 <td class="text-right">
-                                    <strong><?php echo format_price($materialTotal,true,' '); ?></strong>
+                                    <strong><?php echo format_price($materialsTotal,true,' '); ?></strong>
                                 </td>
                                 <td colspan="6">
                                 </td>
@@ -659,20 +796,20 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <th class="col-md-1">
                                     Role
                                 </th>
-                                <th class="col-md-3">
+                                <th class="col-md-4">
                                     Assignments
                                 </th>
-                                <th class="col-md-3">
+                                <th class="col-md-2">
                                     Total Hours Logged
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-1 text-center">
                                     Cost
                                 </th>
-                                <th class="col-md-1">
-                                    Completed?
+                                <th class="col-md-1 text-center">
+									<div data-toggle="tooltip" data-placement="left" title="Tech Complete?"><i class="fa fa-id-badge"></i></div>
                                 </th>
-                                <th class="col-md-1">
-                                    Admin?
+                                <th class="col-md-1 text-center">
+									<div data-toggle="tooltip" data-placement="left" title="Admin Complete?"><i class="fa fa-briefcase"></i></div>
                                 </th>
                             </tr>
                         </thead>
@@ -680,7 +817,13 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 							<?php echo $labor_rows; ?>
                             <!-- row -->
                             <tr class="first">
-                                <td colspan="3">
+                                <td colspan="2">
+									<div class="progress progress-lg">
+										<div class="progress-bar" role="progressbar" aria-valuenow="<?php echo $jobPct; ?>" aria-valuemin="0" aria-valuemax="100" style="width: <?php echo $jobPct; ?>%"><?php echo $jobPct; ?>%</div>
+									</div>
+                                </td>
+                                <td>
+									<?php echo format_price($laborProfit,true,''); ?> Labor profit of <?php echo format_price($job['quote_labor'],true,''); ?> quoted Labor
                                 </td>
                                 <td>
 									<strong><?php echo $laborTotalTime.' &nbsp; '.timeToStr($laborTotalTime); ?></strong>
@@ -703,14 +846,17 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <th class="col-md-2">
                                     Employee
                                 </th>
-                                <th class="col-md-2">
+                                <th class="col-md-1">
                                     Date
                                 </th>
                                 <th class="col-md-6">
                                     Description
                                 </th>
-                                <th class="col-md-2">
+                                <th class="col-md-2 text-center">
                                     Amount
+                                </th>
+                                <th class="col-md-1 text-center">
+                                    Type
                                 </th>
                             </tr>
                         </thead>
@@ -723,12 +869,48 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                                 <td class="text-right">
                                     <strong><?php echo format_price($expensesTotal,true,' '); ?></strong>
                                 </td>
-                                <td colspan="6">
+                                <td>
                                 </td>
                             </tr>
 						</tbody>
 					</table>
 				</div><!-- Expenses pane -->
+
+				<!-- Outside Services pane -->
+				<div class="tab-pane" id="outside">
+                    <table class="table table-hover table-condensed">
+                        <thead class="no-border">
+                            <tr>
+                                <th class="col-md-1">
+                                    Employee
+                                </th>
+                                <th class="col-md-2">
+                                    Vendor
+                                </th>
+                                <th class="col-md-1">
+                                    Date
+                                </th>
+                                <th class="col-md-6">
+                                    Description
+                                </th>
+                                <th class="col-md-2 text-center">
+                                    Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+							<?php echo $outside_rows; ?>
+                            <!-- row -->
+                            <tr class="first">
+                                <td colspan="4">
+                                </td>
+                                <td class="text-right">
+                                    <strong><?php echo format_price($outsideTotal,true,' '); ?></strong>
+                                </td>
+                            </tr>
+						</tbody>
+					</table>
+				</div><!-- Outside Services pane -->
 
 			</div><!-- tab-content -->
     </section>
