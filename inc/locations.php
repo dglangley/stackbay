@@ -17,7 +17,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
     
     
-    function getLocation($instance_ids = '',$type=''){
+    function getLocation($instance_ids = '',$type='',$warehouse){
         $results = array();
         // Get location returns the location shortcodes paired with their instance
             $select = "SELECT w.name warehouse, w.addressid, warehouseid whid, l.name name, l.id locationid, lt.name type, lt.short_code short";
@@ -30,6 +30,10 @@
         if ($type){
             $type = prep($type);
             $select .= " AND lower(lt.name) LIKE $type ";
+        }
+        if ($warehouse){
+            $warehouse = prep($warehouse);
+            $select .= " AND warehouseid = $warehouse ";
         }
         $select .= ";";
         $locations = qdb($select);
@@ -129,9 +133,8 @@
             if ($limit){
                 $relations = get_relations($limit);
                 $children = implode(", ", $relations['children']);
-                
             }
-            $results = getLocation($children,$type);
+            $results = getLocation($children,$type,$warehouse);
             $output = "<div>";
                 // $output .= ($label)? "<label for='warehouse'>Warehouse:</label>" : '';
                 $output .= "<select class='form-control $type'>";
@@ -145,7 +148,6 @@
         			    </select>
         	        </div>";
         }
-        
         return $output;
     }
     

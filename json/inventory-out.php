@@ -17,6 +17,7 @@
 	include_once $rootdir.'/inc/getManf.php';
 	include_once $rootdir.'/inc/getSerials.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/locations.php';
 	
 	// Get Pages function determines how many pages the inventory should output.
 	function getPages($show_num = '5') {
@@ -77,7 +78,7 @@
 		return $stockNumber;
 	}
 	
-	function getVendor($order_type,$partid = 0) {
+	function getVendor($order_type,$order_number) {
 		$company;
 		
 		//Determine which order type to look for in this system
@@ -110,29 +111,27 @@
 		$order_message = "";
 		
 		//Determine which order type to look for in this system
-		$order_table = $order_type == 'po' ? 'purchase_items' : 'sales_items';
+		$item_table = $order_type == 'po' ? 'purchase_items' : 'sales_items';
+		$order_table = $order_type == 'po' ? 'purchase_orders' : 'sales_orders';
 		$selector = $order_type == 'po' ? 'po_number' : 'so_number';
 		
+		
+		
 		//Order by the lastest order and limit the order # to 3 at a time
-		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." ORDER BY ". res($selector) ." DESC LIMIT 5;";
+		$query = "SELECT DISTINCT $item_table.$selector, companyid FROM $item_table, $order_table WHERE partid = ". res($partid) ." AND $order_table.$selector = $item_table.$selector ORDER BY $selector;";
 		$result = qdb($query) or die(qe());
 		
-		while ($row = $result->fetch_assoc()) {
-			$order_array[] = $row;
+		$order_out = array();
+		if(mysqli_num_rows($result) > 0){
+			foreach ($result as $row) {
+				$order_out[] = array(
+					"number" => $row[$selector],
+					"vendor" => getCompany($row['companyid'])
+					);
+			}	
 		}
 		
-		if(!empty($order_array)){
-			//$order_message = strtoupper($order_type) . " Number Found";
-			foreach($order_array as $item) {
-				$order_message .= "<a href='order_form.php?on=$item[$selector]&ps=" . ($order_type == 'po' ? 'p' : 's') . "'>#" .$item[$selector] . "</a> ";
-			}
-		} else {
-			//Else there is no record order number matched to this inventory addition
-			//Assuming that in item was added manually
-			$order_message = "No " . strtoupper($order_type) . " Orders Found";
-		}
-		
-		return $order_message;
+		return $order_out;
 	}
 
 	function getAvgPrice($partid) {
@@ -194,13 +193,15 @@
 			$p['Manf'] = $info["Manf"];
 			$p['po_history'] = getOrder('po', $id);
 			$p['so_history'] = getOrder('so', $id);
+			
+			$p['company'] = getOrder('so', $id);
+			
 			$p['conditions'] = array();
 			
 			$p['conditions']['new'] = getStock('new', $id);
 			$p['conditions']['used'] = getStock('used', $id);
 			$p['conditions']['refurbished'] = getStock('refurbished', $id);
 			
-			$p['company'] = getOrder('so', $id);
 			
 			$p['in_stock'] = getStatusStock('instock',$id);
 			$p['pending'] = getStatusStock('pending', $id);
@@ -219,7 +220,7 @@
 				
 				$p['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
 				
-				$s['location'] = $serial['locationid'];
+				$s['location'] = display_location($serial['locationid']);
 				$s['qty'] = $serial['qty'];
 				$s['condition'] = $serial['item_condition'];
 				$s['status'] = $serial['status'];

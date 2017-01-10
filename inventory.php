@@ -419,10 +419,10 @@
 				<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
 					<thead>
 						<tr>
-							<th>Vendor</th>
 							<th>Location</th>
 							<th>Qty</th>
 							<th>Condition</th>
+							<th>Vendor</th>
 							<th>Puchase Order</th>
 							<th>Date Added</th>
 						</tr>
@@ -742,12 +742,22 @@
 						$.each(item.conditions, function(i, condition) {
 						//item.conditions.forEach(function(condition){
 							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
-									<td></td>\
 									<td>Multiple Locations</td>\
 									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+condition+"</span></td>\
-									<td>"+i+"</td>\
-									<td>"+item.po_history+"</td>\
-									<td ='date_added'>"+item.date+"</td>\
+									<td>"+i+"</td>";
+							parts += "<td>";
+									item.po_history.forEach(function(history){
+										parts += history.vendor+": "+history.number;
+									});
+							parts += "</td>";
+							parts += "<td>";
+							// i.po_history.forEach(function(item){
+							// 	alert(item);
+							// 	parts += "<td>"+"<a href='order_form.php?on="+$item[$selector]+"&ps=p>#" .$item[$selector] . "</a> ";
+							// })
+							parts += "</td>";
+									//item.po_history+"</td>\
+							parts += "<td ='date_added'>"+item.date+"</td>\
 								</tr>";
 							
 							//Handler for all the serials per part
@@ -771,7 +781,7 @@
 															parts += "\
 																	<tr>\
 																		<td>"+serial.serial_no+"</td>\
-																		<td>Location Goes Here</td>\
+																		<td>"+serial.location+"</td>\
 																		<td>"+serial.qty+"</td>\
 																		<td ='date_added'>"+serial.date+"</td>\
 																	</tr>";

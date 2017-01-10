@@ -1546,6 +1546,38 @@
 				}
 			});
 		});
+		
+		
+		function location_changer(type,limit,home,warehouse){
+			var finder = "."+type
+			$.ajax({
+					type: "POST",
+					url: '/json/loc_drop.php',
+					data: {
+						"type": type,
+						"selected" : "" ,
+						"limit" : limit ,
+						"warehouse" : warehouse,
+					},
+					dataType: 'json',
+					success: function(right) {
+						$(home).parent().parent().parent().find(finder).parent().html(right);
+					},
+			});
+		}
+		
+		$(document).on("change", ".warehouse",function() {
+			var home = this;
+			var limit = $(this).val();
+			location_changer('aisle','',home,limit);
+			location_changer('shelf','',home,limit);
+			
+		});
+		$(document).on("change", ".aisle",function() {
+			var home = this;
+			var limit = $(this).val();
+			location_changer('shelf',limit,home,'');
+		});
 	});
 //=========================== End Inventory Addition ===========================
 

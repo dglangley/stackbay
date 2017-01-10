@@ -172,16 +172,13 @@
 									</td>
 									<td>
 										<div class="row-fluid">
-											<div class="col-md-6" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('warehouse')?>
+												<div class="col-md-6" style="padding: 0 0 0 5px;">
+													<?=loc_dropdowns('aisle')?>
+												</div>
+												<div class="col-md-6" style="padding: 0 0 0 5px">
+													<?=loc_dropdowns('shelf')?>
+												</div>
 											</div>
-											<div class="col-md-3" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('aisle')?>
-											</div>
-											<div class="col-md-3" style="padding: 0 0 0 5px">
-												<?=loc_dropdowns('shelf')?>
-											</div>
-										</div>
 									</td>
 									<td class="infiniteCondition">
 										<select class="form-control condition_field condition" name="condition" style="margin-bottom: 5px; height: 31px;">
