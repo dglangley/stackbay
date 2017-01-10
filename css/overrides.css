@@ -394,6 +394,11 @@ input[type="text"].inline {
 	display:none;
 }
 
+.full_drop{
+	padding-left: 2px;
+	
+}
+
 .search-form .search-group {
 	width:320px;
 	margin:6px 36px;
@@ -732,12 +737,12 @@ textarea.freeform-text {
 a.fa {
 	text-decoration:none !important;
 }
-.fa-chevron-up {
-	color:#20cb27;
-}
-.fa-chevron-down {
-	color:#cb2027;
-}
+/*.fa-chevron-up {*/
+/*	color:#20cb27;*/
+/*}*/
+/*.fa-chevron-down {*/
+/*	color:#cb2027;*/
+/*}*/
 .fa-circle-o {
 	color:transparent;
 }

@@ -1,5 +1,4 @@
 <?php
-
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_date.php';
 	include_once '../inc/keywords.php';
@@ -7,36 +6,46 @@
 	include_once '../inc/getContacts.php';
 	include_once '../inc/form_handle.php';
 
+
+
+	$q = '';
+	   
+	
+	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
     $q = grab('q');
 
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
-    $companyid = prep(grab('limit'),"'%'"); 
+    $companyid = prep(grab('limit'));
     $output = array();
     
-    $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '%$q%' AND `companyid` LIKE $companyid;";
-    $results = qdb($query);
+    $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' AND `companyid` = $companyid;";
+    $primary = qdb($query);
     
-    if (isset($results)){
-        foreach($results as $row){
+    // $output[] = array(
+    //     'id' => 'co',
+    //     'text' => $companyid
+    //     );
+    
+    if (isset($primary)){
+        foreach($primary as $id => $row){
             $line = array(
                 'id' => $row['id'], 
-                'text' => $row['account_no']
+                'text' => $row['name']
             );
             $output[] = $line;
         }
-    }
-
-    
+        
+    }   
     $output[] = array(
-    'id' => 'NULL', 
-    'text' => "--------------------------------"
-    );
+        'id' => 'NULL', 
+        'text' => "--------------------------------"
+        );
     
     //Then append the rest of the contacts ordered by alphabetical
-    $secondary = " SELECT DISTINCT * FROM `freight_accounts`
-    WHERE (`companyid` <> $companyid OR `companyid` IS NULL) AND `account_no` LIKE '%$q%' 
-    ORDER BY `account_no`;";
+    $secondary = " SELECT DISTINCT * FROM `contacts`
+    WHERE `companyid` != $companyid AND `name` LIKE '%$q%' 
+    ORDER BY `name`;";
     $second = qdb($secondary);
 
     if (isset($second)){
@@ -49,11 +58,11 @@
         }
     }
     
-
     $output[] = array(
-        'id' => "Add: $q",
+        'id' => 'new',
         'text' => "Add New: $q"
-    );
+        );
+    
     
 //	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 /*    
