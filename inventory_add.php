@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/locations.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
@@ -192,10 +193,10 @@
 									<td>
 										<div class="row-fluid">
 											<div class="col-md-6" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('aisle')?>
+												<?=loc_dropdowns('place')?>
 											</div>
 											<div class="col-md-6" style="padding: 0 0 0 5px">
-												<?=loc_dropdowns('shelf')?>
+												<?=loc_dropdowns('instance')?>
 											</div>
 										</div>
 									</td>

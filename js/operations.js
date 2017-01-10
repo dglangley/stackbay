@@ -1383,6 +1383,7 @@
 				items.push(conditions);
 				items.push(lot);
 				items.push(qty);
+				
 			});
 			
 			//console.log(items);
@@ -1573,10 +1574,10 @@
 			location_changer('shelf','',home,limit);
 			
 		});
-		$(document).on("change", ".aisle",function() {
+		$(document).on("change", ".place",function() {
 			var home = this;
 			var limit = $(this).val();
-			location_changer('shelf',limit,home,'');
+			location_changer('instance',limit,home,'');
 		});
 	});
 //=========================== End Inventory Addition ===========================
