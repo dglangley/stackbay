@@ -71,7 +71,7 @@
 	/*
 		This determines where the user is sent when they subject the search field
 	*/
-	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php');
+	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php','/job.php');
 	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
 	$mode_index = array_search($mode,$modes);
 	$SEARCH_MODE = '/';//default
@@ -119,7 +119,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
 					</span>
-	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Keyword..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
+	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
                 	<span class="input-group-btn">
 	                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
 	                </span>

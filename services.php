@@ -1,12 +1,16 @@
 <?php
+	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		header('Location: job.php?s='.trim($_REQUEST['s']));
+		exit;
+	}
 	$rootdir = $_SERVER['ROOT_DIR'];
-	
+
 	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/svcs_pipe.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/svcs_pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 
 	//=========================================================================================
@@ -22,15 +26,12 @@
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
 	
-	$order = '';
-	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
-		$report_type = 'detail';
-		$order = $_REQUEST['order'];
-	} else if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
-		$report_type = 'detail';
-		$order = $_REQUEST['s'];
+	$job = '';
+	if (isset($_REQUEST['job']) AND $_REQUEST['job']){
+//		$report_type = 'detail';
+		$job = strtoupper(trim($_REQUEST['job']));
 	}
-	
+
 	$part = '';
 	$part_string = '';
 	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
@@ -141,8 +142,12 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #" disabled />
+			<div class="input-group">
+				<input type="text" name="job" class="form-control input-sm upper-case" value ='<?php echo $job?>' placeholder = "Job#" />
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
+			</div>
 		</td>
 		
 		<td class="col-md-2 text-center">
@@ -176,7 +181,7 @@
 		<div class="row filter-block">
 
 		<br>
-            <!-- orders table -->
+            <!-- jobs table -->
             <div class="table-wrapper">
 
 <!-- If there is a company id, output the text of that company id to the top of the screen -->
@@ -209,7 +214,9 @@
 	//Write the query for the gathering of Pipe data
 	$query = "SELECT s.*, u.fullname ";
 	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
-   	if ($startDate) {
+   	if ($job) {
+		$query .= "AND s.job_no = '".$job."' ";
+	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
    		//$dbStartDate = date("Y-j-m", strtotime($startDate));
@@ -310,7 +317,7 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Customer Job#
+                                    Project ID#
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>

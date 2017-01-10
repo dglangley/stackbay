@@ -441,7 +441,7 @@ input[type="text"].inline {
 	position:absolute;
 	text-align:center;
 }
-#s, .product-search, .descr-edit input {
+#s, .product-search, .upper-case, .descr-edit input {
 	text-transform:uppercase;
 }
 .product-search {

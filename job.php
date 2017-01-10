@@ -1,4 +1,25 @@
-<!DOCTYPE html>
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
+
+	$jobid = 0;
+	if (isset($_REQUEST['id']) AND is_numeric($_REQUEST['id']) AND $_REQUEST['id']>0) { $jobid = $_REQUEST['id']; }
+
+	if (! $jobid AND isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$query = "SELECT id FROM services_job WHERE job_no = '".res(trim($_REQUEST['s']))."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$jobid = $r['id'];
+		}
+		$_REQUEST['s'] = '';
+	}
+
+	if (! $jobid) {
+		header('Location: services.php');
+		exit;
+	}
+?><!DOCTYPE html>
 <html lang="en">
 <head>
 	<title>Job</title>
@@ -13,9 +34,7 @@
     <div id="pad-wrapper">
 
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/htmlcp1252.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 
@@ -210,9 +229,6 @@
 			return ($OT[$techid][$weekStart]['total']);
 		}
 	}
-
-	$jobid = 0;
-	if (isset($_REQUEST['id']) AND is_numeric($_REQUEST['id']) AND $_REQUEST['id']>0) { $jobid = $_REQUEST['id']; }
 
 	$db_path = 'https://db.ven-tel.com:10086/service/usermedia/';
 	$job_out = '';
