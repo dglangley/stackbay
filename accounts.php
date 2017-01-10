@@ -32,17 +32,25 @@
 		$order = $_REQUEST['order'];
 	}
 	
-	$part = '';
+	$keyword = '';
 	$part_string = '';
+/*
 	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
-    	$part = $_REQUEST['part'];
+    	$keyword = $_REQUEST['part'];
+	}
+*/
+	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$repot_type = 'detail';
+		$keyword = $_REQUEST['s'];
+	}
 
-    	$part_list = getPipeIds($part);
+	if ($keyword) {
+    	$part_list = getPipeIds($keyword);
     	foreach ($part_list as $id => $array) {
     	    $part_string .= $id.',';
     	}
     	$part_string = rtrim($part_string, ",");
-    }
+	}
 	
 	$startDate = '';
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
@@ -89,11 +97,11 @@
 		<td class = "col-md-2">
 
 		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
+		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
 		        <i class="fa fa-ticket"></i>	
 		        </button>
 				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
+		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
 		        	<i class="fa fa-list"></i>	
 	        	</button>
 				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
@@ -147,12 +155,12 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
 		</td>
-		
 		<td class="col-md-2 text-center">
+<!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+-->
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">

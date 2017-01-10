@@ -1,8 +1,10 @@
+/*** NAVBAR ***/
 .navbar {
 	position:fixed;
 	top:0px;
 	width:100%;
 	z-index:1003;
+	border:1px solid transparent;
 }
 .navbar .logo {
 	margin:4px 18px;
@@ -11,15 +13,41 @@
 .navbar .logo img {
 	height:36px;
 }
+.navbar-inverse {
+	border:0px;
+	min-height:46px;
+}
 .navbar-inverse input.search {
 	width:400px;
+}
+.navbar-nav {
+	z-index:1003;
+}
+.navbar-inverse .navbar-nav > .active > a {
+	font-weight:bold;
+	background-color:#ddd;
+	color:#222;
+	border-top:0px;
+	border-bottom:0px;
+	border-left:1px inset #080808;
+	border-right:1px inset #080808;
+	/* border-radius:10px 10px 0px 0px; */
+}
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus {
+	background-color:#eee;
+	color:#111;
+	border-top:0px;
+	border-bottom:0px;
+	border-left:1px inset #181818;
+	border-right:1px inset #181818;
 }
 
 .table-header {
 	z-index:1001;
 	background-color:#ddd;
 	position:fixed;
-	top:46px;
+	top:45px;
 	box-shadow: 2px 1px 2px #888888;
 }
 
@@ -932,9 +960,6 @@ h1 a, h2 a, h3 a {
 }
 
 
-.navbar-nav {
-	z-index:1003;
-}
 .fa-nav {
 	font-size:10px;
 	padding-left:10px;
@@ -994,7 +1019,7 @@ h1 a, h2 a, h3 a {
 	line-height:.8em;
 }
 
-@media (max-width: 1320px) {
+@media (max-width: 1490px) {
   .navbar-nav .hidden-xs.hidden-sm span {
 	display:none;
 /*

@@ -3,6 +3,7 @@
 	include_once 'format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
 	include_once 'notifications.php';
+	include_once 'displayTabs.php';
 
 	$s = '';
 	$s2 = '';
@@ -65,6 +66,17 @@
 			$invlistid = $_REQUEST['invlistid'];
 		}
 	}
+
+	/***** SEARCH MODE *****/
+	/*
+		This determines where the user is sent when they subject the search field
+	*/
+	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php');
+	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
+	$mode_index = array_search($mode,$modes);
+	$SEARCH_MODE = '/';//default
+	// if the current page is one of the allowable $modes, set it to the global variable so we use it as our submit page
+	if ($mode_index!==false) { $SEARCH_MODE = $modes[$mode_index]; }
 ?>
 	<!-- Please add this css into the overrides css when it is complete -->
 	<style type="text/css">
@@ -87,7 +99,7 @@
 		</div>
 	</div>
 
-	<form class="form-inline search-form" method="post" action="/" enctype="multipart/form-data" >
+	<form class="form-inline search-form" method="post" action="<?php echo $SEARCH_MODE; ?>" enctype="multipart/form-data" >
 
     <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
@@ -107,7 +119,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
 					</span>
-	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
+	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Keyword..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php') { echo 'autofocus'; } ?> />
                 	<span class="input-group-btn">
 	                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
 	                </span>
@@ -117,23 +129,10 @@
         </div>
 		<div class="collapse navbar-collapse text-center">
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
-            <li class="hidden-xs hidden-sm">
-				<a href="/profile.php"><i class="fa fa-book"></i><span> Companies</span></a>
-			</li>
-            <li class="hidden-xs hidden-sm">
-				<a href="services.php"><i class="fa fa-cogs"></i><span> Services</span></a>
-			</li>
-            <li class="hidden-xs hidden-sm">
-				<a href="#"><i class="fa fa-wrench"></i><span> Repairs</span></a>
-			</li>
-            <li class="hidden-xs hidden-sm">
-				<a href="/shipping_home.php"><i class="fa fa-truck"></i><span> Shipping</span></a>
-			</li>
+			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
-            <li class="hidden-xs hidden-sm">
-				<a href="/accounts.php"><i class="fa fa-building-o"></i><span> Accounts</span></a>
-			</li>
+			<?php echo displayTabs('right',$SEARCH_MODE); ?>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
                     <i class="fa fa-tasks"></i>
@@ -177,9 +176,9 @@
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
-                    <?php echo $U['name']; ?>
+					<i class="fa fa-user"></i><span> <?php echo $U['name']; ?></span>
                     <b class="caret"></b>
-                </a>
+				</a>
                 <ul class="dropdown-menu">
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->

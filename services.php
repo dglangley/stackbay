@@ -26,6 +26,9 @@
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$report_type = 'detail';
 		$order = $_REQUEST['order'];
+	} else if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$report_type = 'detail';
+		$order = $_REQUEST['s'];
 	}
 	
 	$part = '';
@@ -143,7 +146,9 @@
 		</td>
 		
 		<td class="col-md-2 text-center">
+<!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
+-->
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">

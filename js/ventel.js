@@ -676,6 +676,11 @@
 		$("#btn-range-options").hover(function() {
 			$("#date-ranges").toggleClass('hidden');
 		});
+		$(".mode-tab").click(function() {
+			var form = $(this).closest("form");
+			form.prop('action',$(this).data('action'));
+			form.submit();
+		});
 
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {
