@@ -237,6 +237,70 @@
 		return($p);
 		}
 
+	function ordered_inventory_arr_out($id,$info){
+		//Pass in a HECIDB Result
+			$p = array();
+			$s = array();
+			$c = array();
+		
+		//Grab any filtered amounts
+			
+			
+			$i++;
+			// Macro portion of the part container
+			$p['id'] = $id;
+			
+			//Eventually, there will need to be a photo-get Parameter passed here as well, but for now it will not be passed.
+			
+			$p['system'] = $info['Sys'];
+			$p['part'] = $info['part'];
+			$p['Manf'] = $info["Manf"];
+			$p['po_history'] = getOrder('po', $id);
+			$p['so_history'] = getOrder('so', $id);
+			
+			$p['company'] = getOrder('so', $id);
+			
+			$p['conditions'] = array();
+			
+			$p['conditions']['new'] = getStock('new', $id);
+			$p['conditions']['used'] = getStock('used', $id);
+			$p['conditions']['refurbished'] = getStock('refurbished', $id);
+			
+			
+			$p['in_stock'] = getStatusStock('instock',$id);
+			$p['pending'] = getStatusStock('pending', $id);
+			$p['price_avg'] = getAvgPrice($id);
+			$p['serials'] = array();
+			
+			$serials = getPartSerials($id);
+			$element = 0; $page_no = 1; 
+			foreach($serials as $serial){
+				(($element % 5) == 0 && $element != 0 ? $page_no++ : ''); 
+				$element++; 
+				$s['page'] = $page_no;
+				$s['id'] = $serial['id'];
+				$s['serial_no'] = $serial['serial_no'];
+				$s['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+				
+				$p['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+				
+				$s['location'] = display_location($serial['locationid']);
+				$s['qty'] = $serial['qty'];
+				$s['condition'] = $serial['item_condition'];
+				$s['status'] = $serial['status'];
+				$s['history'] = array();
+				foreach(getItemHistory($serial['id']) as $history){
+					$h['date'] = date_format(date_create($history['date_changed']), 'm/d/Y');
+					$h['repid'] = getRep($history['repid']);
+					$h['field_changed'] = $history['field_changed'];
+					$h['changed_from'] = $history['changed_from'];
+					$s['history'][] = $h;
+				}
+				$p['serials'][] = $s;
+			}
+		return($p);
+		}
+
 	
 	function search($search = '',$serial=''){
 		$return = array();
@@ -289,7 +353,7 @@
 
 		if(isset($parts)){
 			foreach($parts as $id => $info){
-				$return[] = inventory_arr_out($id, $info);
+				$return[] = ordered_inventory_arr_out($id, $info);
 			}
 		}
 		return ($return);
@@ -304,6 +368,6 @@ $serial = grab('serial');
 
 
 $return = (search($search,$serial));
-// print_r($return);
-echo json_encode($return);
+ print_r($return);
+// echo json_encode($return);
 ?>

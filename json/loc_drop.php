@@ -10,6 +10,6 @@
         $limit = grab('limit');
         $warehouse = grab('warehouse');
         
-        echo json_encode(loc_dropdowns($type, $selcted,$warehouse,$limit));
+        echo json_encode(loc_dropdowns($type, $selcted,$limit));
     
 ?>
