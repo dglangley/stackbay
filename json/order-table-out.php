@@ -70,7 +70,7 @@
 	//If the row is being updated, this information would be duplicated, so ignore it
 	   if ($mode != 'update'){
 		   $row_out .= "<tr class='lazy-entry' style='display:none;'>
-					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
+					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' data-value = '".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
 		            <td class='search_collumn'>
 		            	<div class = 'item-selected'>
 							<select class='item_search'>
@@ -80,7 +80,7 @@
 					</td>
 		            <td>				
 		            	<div class='input-group date datetime-picker-line'>
-				            <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
+				            <input type='text' name='ni_date' class='form-control input-sm' value='$date' data-value = '$date' style = 'min-width:50px;'/>
 				            <span class='input-group-addon'>
 				                <span class='fa fa-calendar'></span>
 				            </span>
@@ -88,13 +88,19 @@
 				    </td>
 		            <td>".dropdown('condition',$row['condition'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='".$row['uPrice']."'></td>
-		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."'></td>
+		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
+		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>
 					<td colspan='2' id = 'check_collumn'>
-						<a class='btn-flat success pull-right line_item_submit' >
-							<i class='fa fa-check fa-4' aria-hidden='true'></i>
-						</a>
+						<div class='btn-group'>
+							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 7px 10px;'>
+								<i class='fa fa-minus fa-4' aria-hidden='true'></i>
+							</a>
+							
+							<a class='btn-flat success pull-right line_item_submit' style='padding: 7px;'>
+								<i class='fa fa-check fa-4' aria-hidden='true'></i>
+							</a>
+						</div>
 					</td>
 				</tr>";
 		}
