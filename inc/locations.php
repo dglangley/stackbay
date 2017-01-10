@@ -17,7 +17,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
     
     
-    function getLocation($instance_ids = '',$type='',$warehouse){
+    function getLocation($instance_ids = '',$type='',$warehouse = ''){
         $results = array();
         // Get location returns the location shortcodes paired with their instance
             $select = "SELECT w.name warehouse, w.addressid, warehouseid whid, l.name name, l.id locationid, lt.name type, lt.short_code short";

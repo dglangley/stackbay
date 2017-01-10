@@ -853,6 +853,7 @@
 				},
 				error: function(xhr, status, error) {
 					$(".loading_element_listing").hide();
+					alert(error);
 				   	alert("No Parts Found with those parameters");
 				},			
 			});
