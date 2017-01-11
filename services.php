@@ -3,19 +3,19 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/svcs_pipe.php';
 
-	$job = '';
-	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['job']) AND $_REQUEST['job'])) {
-		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $job = $_REQUEST['s']; }
-		else if (isset($_REQUEST['job']) AND $_REQUEST['job']) { $job = $_REQUEST['job']; }
-		$job = trim($job);
+	$keyword = '';
+	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['keyword']) AND $_REQUEST['keyword'])) {
+		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $keyword = $_REQUEST['s']; }
+		else if (isset($_REQUEST['keyword']) AND $_REQUEST['keyword']) { $keyword = $_REQUEST['keyword']; }
+		$keyword = trim($keyword);
 
-		$query = "SELECT id FROM services_job WHERE job_no = '".res($job)."'; ";
+		$query = "SELECT id FROM services_job WHERE job_no = '".res($keyword)."'; ";
 		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
 		if (mysqli_num_rows($result)==1) {
-			header('Location: job.php?s='.$job);
+			header('Location: job.php?s='.$keyword);
 			exit;
 		}
-		$query = "SELECT id FROM services_job WHERE job_no RLIKE '".res($job)."'; ";
+		$query = "SELECT id FROM services_job WHERE (job_no RLIKE '".res($keyword)."' OR site_access_info_address RLIKE '".res($keyword)."'); ";
 		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
 		if (mysqli_num_rows($result)==1) {
 			$r = mysqli_fetch_assoc($result);
@@ -44,23 +44,9 @@
 	
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
-	
-	if (isset($_REQUEST['job']) AND $_REQUEST['job']){
-//		$report_type = 'detail';
-		$job = strtoupper(trim($_REQUEST['job']));
-	}
 
 	// if no start date passed in, or invalid, set to beginning of previous month
-	if (! $startDate) {
-/*
-		$year = date('Y');
-		$m = date('m');
-		$q = (ceil($m/3)*3)-2;
-		$q = str_pad($q,2,0,STR_PAD_LEFT);
-		$startDate = $q.'/01/'.$year;
-*/
-		$startDate = format_date($today,'m/01/Y',array('m'=>-1));
-	}
+	if (! $startDate) { $startDate = format_date($today,'m/01/Y',array('m'=>-1)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
@@ -157,7 +143,7 @@
 		
 		<td class="col-md-2 text-center">
 			<div class="input-group">
-				<input type="text" name="job" class="form-control input-sm upper-case auto-select" value ='<?php echo $job?>' placeholder = "Job#" autofocus />
+				<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value ='<?php echo $keyword?>' placeholder = "Search..." autofocus />
 				<span class="input-group-btn">
 					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 				</span>
@@ -215,8 +201,8 @@
 	//Write the query for the gathering of Pipe data
 	$query = "SELECT s.*, u.fullname ";
 	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
-   	if ($job) {
-		$query .= "AND s.job_no RLIKE '".$job."' ";
+   	if ($keyword) {
+		$query .= "AND (s.job_no RLIKE '".$keyword."' OR site_access_info_address RLIKE '".$keyword."') ";
 	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
