@@ -142,6 +142,14 @@
         return $results;
         
     }
+    
+    function display_location($location_id){
+        $results = getLocation($location_id);
+        $row = mysqli_fetch_assoc($results);
+        $display = $row['place'];
+        if($row['instance']){$display .= " - ".$row['instance'];}
+        return $display;
+    }
     // function getLocation($instance_ids = '',$type='',$warehouse = ''){
     //     $results = array();
     //     // Get location returns the location shortcodes paired with their instance

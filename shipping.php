@@ -23,6 +23,8 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/locations.php';
+	
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -93,33 +95,33 @@
 		return $inventory;
 	}
 	
-	function getLocation($locationid){
-		$location;
+	// function getLocation($locationid){
+	// 	$location;
 		
-		$query = "SELECT * FROM locations WHERE id = ". res($locationid) .";";
-		$result = qdb($query);
+	// 	$query = "SELECT * FROM locations WHERE id = ". res($locationid) .";";
+	// 	$result = qdb($query);
 		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$location = $result;
-		}
+	// 	if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$location = $result;
+	// 	}
 		
-		return $location;
-	}
+	// 	return $location;
+	// }
 	
-	function getWarehouse($warehouseid) {
-		$warehouse;
+	// function getWarehouse($warehouseid) {
+	// 	$warehouse;
 		
-		$query = "SELECT * FROM warehouses WHERE id = ". res($warehouseid) .";";
-		$result = qdb($query);
+	// 	$query = "SELECT * FROM warehouses WHERE id = ". res($warehouseid) .";";
+	// 	$result = qdb($query);
 		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$location = $result['name'];
-		}
+	// 	if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$location = $result['name'];
+	// 	}
 		
-		return $warehouse;
-	}
+	// 	return $warehouse;
+	// }
 
 ?>
 
@@ -159,7 +161,7 @@
 		<?php include 'inc/navbar.php'; ?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i></a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
@@ -172,7 +174,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn btn-success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
 			</div>
 		</div>
 		<div class="loading_element">

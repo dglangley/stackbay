@@ -424,7 +424,6 @@
 							<th>Condition</th>
 							<th>Vendor</th>
 							<th>Puchase Order</th>
-							<th>Vendor</th>	
 							<th>Date Added</th>
 						</tr>
 					</thead>
@@ -716,7 +715,7 @@
 
 	// }
 	var inventory_history = function (search, serial) {
-			$.ajax({
+		$.ajax({
 				type: "POST",
 				url: '/json/inventory-out.php',
 				data: {
@@ -736,67 +735,74 @@
 					var counter = 1;
 					
 					revisions = "<option value='' selected>All</option>";
-					part.forEach(function(item){
+					//Loop through each record of ID
+					part.forEach(function(item, info){
 						
 						revisions += "<option value='parts-"+counter+"'>"+item.part+"</option>";
 						
-						$.each(item.conditions, function(i, condition) {
-						//item.conditions.forEach(function(condition){
-							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
-									<td>Multiple Locations</td>\
-									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+condition+"</span></td>\
-									<td>"+i+"</td>";
-							//Append the item history
-							parts += "<td>";
-									item.po_history.forEach(function(history){
-										parts += history.vendor+": "+history.number;
-									});
-							parts += "</td>";
-							parts += "<td>";
+						//Begin the item level transverse
+							var locs = item.locations;
+							$.each(locs, function(loc,arr){
+								var i = 1;
+										parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
+												<td>"+arr.display+"</td>\
+												<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+arr.sumqty+"</span></td>\
+												<td>"+i+"</td>";
+										//Append the item history
+										parts += "<td>";
+												
+												$.each(item.po_history, function(history, info){
+													parts += info.vendor+": "+info.number+" &nbsp;";
+												});
+										parts += "</td>";
+										parts += "<td>";
+								// $.each(locs.serial)
+			
+										parts += "</td>";
+												//item.po_history+"</td>\
+										parts += "<td ='date_added'>"+item.date+"</td>\
+											</tr>";
 
-							parts += "</td>";
-									//item.po_history+"</td>\
-							parts += "<td ='date_added'>"+item.date+"</td>\
-								</tr>";
-							
-							//Handler for all the serials per part
-							
-							parts += "<tr class='serial_listing_"+ i + '-' + item.id +"' style='display: none;'>\
-										<td colspan='12'>\
-											<div class='table-responsive'>\
-												<table class='shipping_update table table-hover table-condensed'>\
-													<thead>\
-														<tr>\
-															<th>Serial</th>\
-															<th>Location</th>\
-															<th>Qty</th>\
-															<th>Date Added</th>\
-														</tr>\
-													</thead>\
-													<tbody>";
-													
-													item.serials.forEach(function(serial){
-														if(serial.condition == i) {
-															parts += "\
-																	<tr>\
-																		<td>"+serial.serial_no+"</td>\
-																		<td>"+serial.location+"</td>\
-																		<td>"+serial.qty+"</td>\
-																		<td ='date_added'>"+serial.date+"</td>\
-																	</tr>";
-														}
-													});
-													
-							parts +=				"</tbody>\
-												</table>\
-											</div>\
-										</td>\
-									</tr>";
-						});
-						
+								// $.each(traverse.loc, function(i){
+								// 	alert (i);
+								// });
+
+							// 	//Handler for all the serials per part
+								parts += "<tr class='serial_listing_"+ i + '-' + item.id +"' style='display: none;'>\
+											<td colspan='12'>\
+												<div class='table-responsive'>\
+													<table class='shipping_update table table-hover table-condensed'>\
+														<thead>\
+															<tr>\
+																<th>Serial</th>\
+																<th>Location</th>\
+																<th>Qty</th>\
+																<th>Date Added</th>\
+															</tr>\
+														</thead>\
+														<tbody>";
+														//For each related serial, output a row in the subtable
+														$.each(arr.serial, function(serial,s_info){
+															if(serial.condition == i) {
+																parts += "\
+																		<tr>\
+																			<td>"+serial.serial_no+"</td>\
+																			<td>"+serial.location+"</td>\
+																			<td>"+serial.qty+"</td>\
+																			<td ='date_added'>"+serial.date+"</td>\
+																		</tr>";
+															}
+														});
+														
+								parts +=				"</tbody>\
+													</table>\
+												</div>\
+											</td>\
+										</tr>";
 						counter++;
-					});
-					
+						
+						}); //END OF LOCATION LOOP
+					}); //END OF ITEM LOOP
 					$('.revisions').append(revisions);
 					$('.parts').append(parts);
 					
@@ -847,18 +853,16 @@
 						$(".loading_element_listing").show();
 					} else {
 						$(".loading_element_listing").hide();
-				   		alert("No Parts Found with those parameters");
+				  		alert("No Parts Found with those parameters");
 					}
-					
 				},
 				error: function(xhr, status, error) {
 					$(".loading_element_listing").hide();
 					alert(error);
 				   	alert("No Parts Found with those parameters");
 				},			
-			});
-		}
-	
+		});
+	}
 	$(document).ready(function() {
 		if($("#part_search").val()){
 			var search = $("#part_search").val();
@@ -905,6 +909,7 @@
 	});
 	 
 	 
+	
 	})(jQuery);
 
 </script>

@@ -39,6 +39,17 @@
 		}
 	}
 	
+	function getPartLocation($partid){
+		$partid = prep($partid);
+		$select = "SELECT DISTINCT locationid FROM inventory where partid = $partid";
+		$result = qdb($select);
+		$locations = array();
+		foreach ($result as $row){
+			$locations[$row['locationid']] = array();
+		}
+		
+		return $locations;
+	}
 
 	function getItemHistory($invid = 0) {
 		$partHistory_array = array(); 
@@ -242,23 +253,26 @@
 			$p = array();
 			$s = array();
 			$c = array();
-		
+			
+			// //For a later sanity when this craziness is done
+			// $pid = prep($id);
+			// $query = "SELECT *  ";
+			// $query .= "FROM inventory, locations, inventory_history ";
+			// $query .= "WHERE  `locationid` = locations.id AND invid = inventory.id AND `partid` = $id ";
+			// $query .= "GROUP BY locationid, last_purchase, ";
+
 		//Grab any filtered amounts
 			
 			
 			$i++;
 			// Macro portion of the part container
 			$p['id'] = $id;
-			
-			//Eventually, there will need to be a photo-get Parameter passed here as well, but for now it will not be passed.
-			
 			$p['system'] = $info['Sys'];
 			$p['part'] = $info['part'];
 			$p['Manf'] = $info["Manf"];
-			$p['po_history'] = getOrder('po', $id);
-			$p['so_history'] = getOrder('so', $id);
 			
-			$p['company'] = getOrder('so', $id);
+			$p['price_avg'] = getAvgPrice($id);
+			
 			
 			$p['conditions'] = array();
 			
@@ -266,41 +280,60 @@
 			$p['conditions']['used'] = getStock('used', $id);
 			$p['conditions']['refurbished'] = getStock('refurbished', $id);
 			
-			
 			$p['in_stock'] = getStatusStock('instock',$id);
 			$p['pending'] = getStatusStock('pending', $id);
-			$p['price_avg'] = getAvgPrice($id);
-			$p['serials'] = array();
+			$p['po_history'] = getOrder('po', $id);
+			$p['so_history'] = getOrder('so', $id);
 			
-			$serials = getPartSerials($id);
-			$element = 0; $page_no = 1; 
-			foreach($serials as $serial){
-				(($element % 5) == 0 && $element != 0 ? $page_no++ : ''); 
-				$element++; 
-				$s['page'] = $page_no;
-				$s['id'] = $serial['id'];
-				$s['serial_no'] = $serial['serial_no'];
-				$s['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
-				
-				$p['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
-				
-				$s['location'] = display_location($serial['locationid']);
-				$s['qty'] = $serial['qty'];
-				$s['condition'] = $serial['item_condition'];
-				$s['status'] = $serial['status'];
-				$s['history'] = array();
-				foreach(getItemHistory($serial['id']) as $history){
-					$h['date'] = date_format(date_create($history['date_changed']), 'm/d/Y');
-					$h['repid'] = getRep($history['repid']);
-					$h['field_changed'] = $history['field_changed'];
-					$h['changed_from'] = $history['changed_from'];
-					$s['history'][] = $h;
+
+			$p['locations'] = getPartLocation($id);
+			//PO history will be a SERIAL LEVEL call	
+			// $p['company'] = getOrder('so', $id);
+			
+			//BEFORE SERIALS GET LOCATIONS
+
+			foreach ($p['locations'] as $location => $item){
+				//Everything which needs to be macro at a location level comes here
+				$p['locations'][$location]['sumqty'] = 0;
+				$p['locations'][$location]['display'] = display_location($location);
+				//Search for the serials which are of this part in this location
+				$serials = getPartSerials($id,$location);
+				foreach($serials as $serial){
+					$s = array();
+					
+					//Might never bring pagination back, but there may be things which depend on it legacy
+						// (($element % 5) == 0 && $element != 0 ? $page_no++ : ''); 
+						// $element++;	
+						// $s['page'] = $page_no;
+					//
+					
+					$s['id'] = $serial['id'];
+					$s['serial_no'] = $serial['serial_no'];
+					$s['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+					
+					// $p['date'] = date_format(date_create($serial['date_created']), 'm/d/Y');
+					
+					// $s['location'] = display_location($serial['locationid']);
+					$s['qty'] = $serial['qty'];
+					$p['locations'][$location]['sumqty'] += $s['qty'];
+					$s['condition'] = $serial['item_condition'];
+					$s['status'] = $serial['status'];
+					$s['po'] = $serial['last_purchase'];
+					$s['history'] = array();
+					foreach(getItemHistory($serial['id']) as $history){
+						$h['date'] = date_format(date_create($history['date_changed']), 'm/d/Y');
+						$h['repid'] = getRep($history['repid']);
+						$h['field_changed'] = $history['field_changed'];
+						$h['changed_from'] = $history['changed_from'];
+						$s['history'][] = $h;
+					}
+					// $p['serials'][] = $s;
+					$p['locations'][$location]['serial'][] = $s;
 				}
-				$p['serials'][] = $s;
 			}
 		return($p);
 		}
-
+	
 	
 	function search($search = '',$serial=''){
 		$return = array();
@@ -368,6 +401,7 @@ $serial = grab('serial');
 
 
 $return = (search($search,$serial));
- print_r($return);
-// echo json_encode($return);
+
+// print_r($return);
+echo json_encode($return);
 ?>
