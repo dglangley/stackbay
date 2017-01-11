@@ -21,7 +21,7 @@
                 LEFT JOIN (freight_accounts) ON (freight_accounts.freight_co_id = freight_carriers.id);";
     		}
             else if($type == 'carrier'){
-                $select = "SELECT freight_carriers.id id, name FROM freight_carriers, companies where companies.id = companyid AND freight_carriers.id LIKE '%';";
+                $select = "SELECT freight_carriers.id id, name FROM freight_carriers, companies where companies.id = companyid AND freight_carriers.id LIKE $value;";
             }
             else if($type == 'services'){
                 $select = "SELECT * FROM freight_services WHERE `id` LIKE $id AND `carrierid` LIKE $value;";

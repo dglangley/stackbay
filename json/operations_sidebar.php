@@ -229,6 +229,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// $file = basename(__FILE__);
 		
 		$company_name;
+		$public;
+		$s_carrier_name;
 		
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
@@ -236,9 +238,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='order'>
-							<label for='order_selector'>Associated ";
-		$right .= ($page == "Purchase")? "PO" : "SO";
-		$right .= ":</label>
+							<label for='order_selector'> ";
+		$right .= ($page == "Purchase")? "<h5>PO NAVIGATION</h5>" : "<h5>SO NAVIGATION</h5>";
+		$right .= "</label>
 							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
 		
 		if ($order_number) {
@@ -258,7 +260,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$s_add = $row['ship_to_id'];
 				$s_name = getAddresses($s_add,'name');
 				$selected_carrier = $row['freight_carrier_id'];
-				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
+				//$s_carrier_name = getFreight('carrier',$row['freight_carrier_id'])['name'];
 				$selected_service = $row['freight_services_id'];
 				$selected_account = $row['freight_account_id'];
 				$public = $row['public_notes'];
@@ -277,14 +279,22 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				</div>";
 		if($results){
 			//Contact Output
-			$right .= "<b>Contact:</b> ".getContact($contact)."<br>";
+			$right .= "<h5>SHIPMENT INFORMATION</h5><br>";
+			$right .= "<b>COMPANY:</b> <br>".($company_name)."<br><br>";
+			$right .= "<b>COMPANY REPRESENTATIVE:</b> <br>".getContact($contact)."<br><br>";
 			
 			//Addresses
-			$right .= "<b>Billing Address:</b><br>";
+			$right .= "<b>BILLING ADDRESS:</b><br>";
 			$right .= address_out($b_add);
-			$right .= "<br>";
-			$right .= "<b>Shipping Address:</b><br>";
+			$right .= "<br><br>";
+			$right .= "<b>SHIPPING ADDRESS:</b><br>";
 			$right .= address_out($s_add);
+			$right .= "<br><br>";
+			$right .= "<b>CARRIER INFORMATION:</b><br>";
+			$right .= $selected_carrier;
+			$right .= "<br><br>";
+			$right .= "<b>NOTES (Optional):</b><br>";
+			$right .= $public;
 			$right .= "<br>";
 		}
 		//Closing Tag (Leave Outside of any if statment)

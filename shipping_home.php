@@ -255,12 +255,12 @@
 		<div class="col-md-4">
 		</div>
 		<div class="col-md-4 text-center">
-			<h1>Shipping Dashboard</h1>			</div>
+			<h2>SHIPPING DASHBOARD</h2>			</div>
 		<div class="col-md-4">
-			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 10px;">
+			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 5px;">
 				New Sales Order
 			</a>
-			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 10px; margin-right: 10px;">
+			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 5px; margin-right: 10px;">
 				New Purchase Order
 			</a>	
 		</div>
