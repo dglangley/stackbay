@@ -8,6 +8,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/calcQuarters.php';
 	
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -56,13 +57,16 @@
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	// if no start date passed in, or invalid, set to beginning of quarter by default
+	// if no start date passed in, or invalid, set to beginning of previous month
 	if (! $startDate) {
+/*
 		$year = date('Y');
 		$m = date('m');
 		$q = (ceil($m/3)*3)-2;
 		if (strlen($q)==1) { $q = '0'.$q; }
 		$startDate = $q.'/01/'.$year;
+*/
+		$startDate = format_date($today,'m/01/Y',array('m'=>-1));
 	}
 
 	$endDate = date('m/d/Y');
@@ -131,11 +135,14 @@
 							<button class="btn btn-default btn-sm">&gt;</button>
 							<div class="animated fadeIn hidden" id="date-ranges">
 						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
 <?php
+	$quarters = calcQuarters();
+	foreach ($quarters as $qnum => $q) {
+		echo '
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
+		';
+	}
+
 	for ($m=1; $m<=5; $m++) {
 		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
 		$mfields = explode(' ',$month);
@@ -155,9 +162,10 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+            <h2 class="minimal"><?php echo ('Accounts'); if($company_filter){ echo ': '; echo getCompany($company_filter); } ?></h2>
 		</td>
 		<td class="col-md-2 text-center">
+			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
 <!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 -->
@@ -191,21 +199,7 @@
             <!-- orders table -->
             <div class="table-wrapper">
 
-<!-- If there is a company id, output the text of that company id to the top of the screen -->
-                <div class="row head text-center">
-                    <div class="col-md-12">
-                        <h2>
-                        <?php echo ('Accounts');
-                        if($company_filter){ 
-                        	echo ': ';
-                        	echo getCompany($company_filter);
-                        	} 
-                        ?></h2>
-                    </div>
-                </div>
-
 			<!-- If the summary button is pressed, inform the page and depress the button -->
-
 
 <?php
 	// format col widths based on content (company column, items detail, etc)

@@ -432,7 +432,7 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</div><!-- advanced-search-options -->
 
 	</form>
 

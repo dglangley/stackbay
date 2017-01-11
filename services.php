@@ -1,17 +1,36 @@
 <?php
-	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
-		header('Location: job.php?s='.trim($_REQUEST['s']));
-		exit;
-	}
 	$rootdir = $_SERVER['ROOT_DIR'];
-
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/svcs_pipe.php';
+
+	$job = '';
+	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['job']) AND $_REQUEST['job'])) {
+		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $job = $_REQUEST['s']; }
+		else if (isset($_REQUEST['job']) AND $_REQUEST['job']) { $job = $_REQUEST['job']; }
+		$job = trim($job);
+
+		$query = "SELECT id FROM services_job WHERE job_no = '".res($job)."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)==1) {
+			header('Location: job.php?s='.$job);
+			exit;
+		}
+		$query = "SELECT id FROM services_job WHERE job_no RLIKE '".res($job)."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)==1) {
+			$r = mysqli_fetch_assoc($result);
+
+			header('Location: job.php?id='.$r['id']);
+			exit;
+		}
+	}
+
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/calcQuarters.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -26,35 +45,21 @@
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
 	
-	$job = '';
 	if (isset($_REQUEST['job']) AND $_REQUEST['job']){
 //		$report_type = 'detail';
 		$job = strtoupper(trim($_REQUEST['job']));
 	}
 
-	$part = '';
-	$part_string = '';
-	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
-    	$part = $_REQUEST['part'];
-
-    	$part_list = getPipeIds($part);
-    	foreach ($part_list as $id => $array) {
-    	    $part_string .= $id.',';
-    	}
-    	$part_string = rtrim($part_string, ",");
-    }
-	
-	$startDate = '';
-	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
-		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
-	}
-	// if no start date passed in, or invalid, set to beginning of quarter by default
+	// if no start date passed in, or invalid, set to beginning of previous month
 	if (! $startDate) {
+/*
 		$year = date('Y');
 		$m = date('m');
 		$q = (ceil($m/3)*3)-2;
-		if (strlen($q)==1) { $q = '0'.$q; }
+		$q = str_pad($q,2,0,STR_PAD_LEFT);
 		$startDate = $q.'/01/'.$year;
+*/
+		$startDate = format_date($today,'m/01/Y',array('m'=>-1));
 	}
 
 	$endDate = date('m/d/Y');
@@ -118,10 +123,14 @@
 							<button class="btn btn-default btn-sm">&gt;</button>
 							<div class="animated fadeIn hidden" id="date-ranges">
 						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
+<?php
+	$quarters = calcQuarters();
+	foreach ($quarters as $qnum => $q) {
+		echo '
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
+		';
+	}
+?>
 <?php
 	for ($m=1; $m<=5; $m++) {
 		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
@@ -139,8 +148,13 @@
 							</div><!-- animated fadeIn -->
 						</div><!-- btn-range-options -->
 					</div><!-- btn-group -->
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 			</div><!-- form-group -->
 		</td>
+		<td class="col-md-2 text-center">
+            <h2 class="minimal">Services Jobs</h2>
+		</td>
+		
 		<td class="col-md-2 text-center">
 			<div class="input-group">
 				<input type="text" name="job" class="form-control input-sm upper-case auto-select" value ='<?php echo $job?>' placeholder = "Job#" autofocus />
@@ -148,12 +162,6 @@
 					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 				</span>
 			</div>
-		</td>
-		
-		<td class="col-md-2 text-center">
-<!--
-			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
--->
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
@@ -184,13 +192,6 @@
             <!-- jobs table -->
             <div class="table-wrapper">
 
-<!-- If there is a company id, output the text of that company id to the top of the screen -->
-                <div class="row head text-center">
-                    <div class="col-md-12">
-                        <h2>Services Jobs</h2>
-                    </div>
-                </div>
-
 			<!-- If the summary button is pressed, inform the page and depress the button -->
 
 
@@ -215,7 +216,7 @@
 	$query = "SELECT s.*, u.fullname ";
 	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
    	if ($job) {
-		$query .= "AND s.job_no = '".$job."' ";
+		$query .= "AND s.job_no RLIKE '".$job."' ";
 	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
@@ -224,20 +225,6 @@
    		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY date_entered DESC; ";
-/*
-    $query .= "FROM services_job j, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-    $query .= "ORDER BY s.so_date DESC;";
-*/
 	
 ##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
 	//$query = "SELECT * FROM sales_orders ";
