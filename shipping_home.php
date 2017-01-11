@@ -157,9 +157,9 @@
 				echo'        <td><a href="#">'.$company.'</a></td>';
 				//Either go to inventory add or PO or shipping for SO
 				if($order == 'p')
-					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
 				else
-					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){

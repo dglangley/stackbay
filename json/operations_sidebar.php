@@ -227,6 +227,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	function display($order_number = '',$page = 'Purchase'){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
+		
+		$company_name;
+		
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
 		$right.="
@@ -240,15 +243,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		if ($order_number) {
 			
-			$order = ($page == "Purchase") ? '`purchase_orders`' : '`sales_orders`';
-			$num_type = ($page == "Purchase") ? '`po_number`' : '`so_number`';
+			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
+			$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
 			
 			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
 			$results = qdb($query);
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
-				$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
+				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
 				$b_add = $row['bill_to_id'];
 				$b_name = getAddresses($b_add,'name');
