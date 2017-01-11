@@ -26,10 +26,27 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$serial = grab('serial');
 	$savedSerial = grab('savedSerial');
 	$po_number = grab('po_number');
+	$place = grab('place');
+	$instance = grab('instance');
 	
 	//items = ['partid', 'serial', 'qty', 'location', 'status', 'condition'];
-	function savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial){
+	function savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial, $place, $instance){
 		$result = array();
+		$locationid;
+		$query;
+		
+		//Get the location ID based on the preset ones in the table
+		if($instance != '') {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
+		} else {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
+		}
+		$locationResult = qdb($query);
+		
+		if (mysqli_num_rows($locationResult)>0) {
+			$locationResult = mysqli_fetch_assoc($locationResult);
+			$locationid = $locationResult['id'];
+		}
 		
 		$result['query'] = true;
 		
@@ -38,25 +55,25 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$check = qdb($query);
 			
 			if($check->num_rows == 0) {
-				
+
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				qdb($query);
 				
 				//Insert the item into the inventory
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 				$result['query'] = qdb($query);
 			} else {
 				$result['query'] = false;
 			}
 		} else {
-			$query = "UPDATE inventory SET serial_no = '". res($serial) ."' AND item_condition = '". res($condition) . "' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
+			$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 			$result['query'] = qdb($query) or die(qe());
-			$result['saved'] = true;
+			$result['saved'] = $serial;
 		}
 		
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial);
+	$result = savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial, $place, $instance);
 	echo json_encode($result);
     exit;

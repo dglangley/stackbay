@@ -1200,15 +1200,16 @@
 			//alert(getPageName());
 			if(e.which == 13) {
 		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
-		    		var location = '';
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
 		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
+		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
+		    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
 		    		
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
 						data: {
-							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial
+							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial, 'place' : place, 'instance' : instance
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -1228,7 +1229,10 @@
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
 								
+								//Set Default Values here, remember clone doesn't save select values otherwise it will
 								$serialClone.find('input').val("");
+								$locationClone.find('select:first').val(place);
+								$locationClone.find('select:last').val(instance);
 								
 								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
 								$serialClone.find('button').attr('disabled', true);
@@ -1350,9 +1354,19 @@
 				var partid = $(this).find('.part_id').data('partid');
 				var serials = [];
 				var savedSerials = [];
+				var place = [];
+				var instance = [];
 				var conditions = [];
 				var lot = false;
 				var qty;
+				
+				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
+					place.push($(this).val());
+				});
+				
+				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
+					instance.push(($(this).val() != '' ? $(this).val() : ''));
+				});
 				
 				$(this).find('.infiniteCondition').children('select').each(function() {
 					conditions.push($(this).val());
@@ -1386,10 +1400,11 @@
 				items.push(conditions);
 				items.push(lot);
 				items.push(qty);
-				
+				items.push(place);
+				items.push(instance);
 			});
 			
-			//console.log(items);
+			console.log(items);
 			//console.log(po_number);
 			
 			$.ajax({
@@ -1408,7 +1423,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						window.location = "/shipping_home.php?po=true";
+						//window.location = "/shipping_home.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
