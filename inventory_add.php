@@ -28,7 +28,7 @@
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
+	$order_type = "Purchase";
 	
 	
 	//Get the ENUM values of the specified table and column (field)
