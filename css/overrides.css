@@ -936,29 +936,17 @@ h1 a, h2 a, h3 a {
 .margin-10 {
 	margin-top:10px;
 }
+.margin-bottom-220 {
+	margin-bottom:220px;
+}
 
 #image-modal img {
 	width:100%;
 }
 
-#btn-range-options {
-	width:36px;
-	position:relative;
-}
-#date-ranges {
-   width:480px;
-   height:30px;
-   padding:0px;
-   left:32px;
-   top:0px;
-   position:absolute;
-   text-align:left;
-   z-index:1001;
-}
-.date-options:hover {
-   /*background:#eee;*/
-}
 
+
+/*** FONT AWESOME CUSTOMIZATIONS ***/
 
 .fa-nav {
 	font-size:10px;
@@ -970,6 +958,33 @@ h1 a, h2 a, h3 a {
 	display:table-cell;
 	padding-right:25px;
 }
+.fa-stack-2x.fa-stack-lg {
+	font-size:1.6666666em;
+	height:1.33333333em;
+	line-height:1.33333333em;
+}
+.fa-stack-2x.fa-stack-md {
+	font-size:1.5em;
+	height:1em;
+	line-height:1.3333333em;
+}
+.fa-stack-sm, .fa-stack-xs {
+	display:block;
+	padding-top:15px;
+	font-size:0.75em;
+}
+.fa-stack-sm {
+	padding-left:2px;
+	line-height:1.6666666em;
+}
+.fa-stack-xs {
+	padding-left:0px;
+	line-height:.8em;
+}
+
+
+
+/*** BUTTONS ***/
 /* fixes a bootstrap bug I was experiencing when hovering over a button in a .btn-group */
 .btn-group .btn {
 	margin-left:-1px !important;
@@ -995,29 +1010,25 @@ h1 a, h2 a, h3 a {
 .btn-expdate .fa-stack-2x {
 	font-size:1.6666666em;
 }
-.fa-stack-2x.fa-stack-lg {
-	font-size:1.6666666em;
-	height:1.33333333em;
-	line-height:1.33333333em;
+#btn-range-options {
+	width:36px;
+	position:relative;
 }
-.fa-stack-2x.fa-stack-md {
-	font-size:1.5em;
-	height:1em;
-	line-height:1.3333333em;
+#date-ranges {
+   width:480px;
+   height:30px;
+   padding:0px;
+   left:32px;
+   top:0px;
+   position:absolute;
+   text-align:left;
+   z-index:1001;
 }
-.fa-stack-sm, .fa-stack-xs {
-	display:block;
-	padding-top:15px;
-	font-size:0.75em;
+.date-options:hover {
+   /*background:#eee;*/
 }
-.fa-stack-sm {
-	padding-left:2px;
-	line-height:1.6666666em;
-}
-.fa-stack-xs {
-	padding-left:0px;
-	line-height:.8em;
-}
+
+
 
 @media (max-width: 1490px) {
   .navbar-nav .hidden-xs.hidden-sm span {
@@ -1418,6 +1429,8 @@ a > .icon-ar.icon-ar-inverse:hover {
   border-left: solid 20px #f7f7f7;
 }
 
+
+/*** SERVICES / JOBS ***/
 #main-stats .stat {
   padding:10px 0px 10px 0px;
 }
@@ -1427,6 +1440,10 @@ a > .icon-ar.icon-ar-inverse:hover {
   padding-right:30px;
 }
 #main-stats .stat .data .number {
+}
+.progress {
+	margin-bottom:0px;
+	border:1px solid #888;
 }
 
 
@@ -1579,4 +1596,3 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .nav-tabs li a:hover {
   background-color: #f5f5f5;
 }
-

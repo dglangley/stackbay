@@ -143,7 +143,7 @@
 		</td>
 		<td class="col-md-2 text-center">
 			<div class="input-group">
-				<input type="text" name="job" class="form-control input-sm upper-case" value ='<?php echo $job?>' placeholder = "Job#" />
+				<input type="text" name="job" class="form-control input-sm upper-case auto-select" value ='<?php echo $job?>' placeholder = "Job#" autofocus />
 				<span class="input-group-btn">
 					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 				</span>

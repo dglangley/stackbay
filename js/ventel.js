@@ -1,6 +1,12 @@
     $(document).ready(function() {
 		$('#loader').hide();
-		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) { $("#s").select(); }
+		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) {
+			$("#s").select();
+		} else {
+			$(".auto-select").each(function() {
+				$(this).select();
+			});
+		}
 		//toggleLoader();
 
 		// adjust height dynamically to size of the rows within section

@@ -27,7 +27,7 @@
 		include_once 'inc/scripts.php';
 	?>
 </head>
-<body>
+<body class="margin-bottom-220">
 
 	<?php include_once 'inc/navbar.php'; ?>
 
@@ -589,7 +589,7 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 	else { $themeProfit = 'text-info'; }
 
 	$laborProfit = ($job['quote_labor']-$laborTotal);
-	$jobPct = round((($laborProfit/$laborTotal)*100),2);
+	$jobPct = round((($laborProfit/$job['quote_labor'])*100));
 ?>
 
 <div class="container">
@@ -839,7 +839,7 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 									</div>
                                 </td>
                                 <td>
-									<?php echo format_price($laborProfit,true,''); ?> Labor profit of <?php echo format_price($job['quote_labor'],true,''); ?> quoted Labor
+									<?php echo format_price($laborProfit,true,''); ?> profit of <?php echo format_price($job['quote_labor'],true,''); ?> quoted Labor
                                 </td>
                                 <td>
 									<strong><?php echo $laborTotalTime.' &nbsp; '.timeToStr($laborTotalTime); ?></strong>
