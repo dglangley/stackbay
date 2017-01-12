@@ -23,6 +23,8 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/locations.php';
+	
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -93,33 +95,33 @@
 		return $inventory;
 	}
 	
-	function getLocation($locationid){
-		$location;
+	// function getLocation($locationid){
+	// 	$location;
 		
-		$query = "SELECT * FROM locations WHERE id = ". res($locationid) .";";
-		$result = qdb($query);
+	// 	$query = "SELECT * FROM locations WHERE id = ". res($locationid) .";";
+	// 	$result = qdb($query);
 		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$location = $result;
-		}
+	// 	if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$location = $result;
+	// 	}
 		
-		return $location;
-	}
+	// 	return $location;
+	// }
 	
-	function getWarehouse($warehouseid) {
-		$warehouse;
+	// function getWarehouse($warehouseid) {
+	// 	$warehouse;
 		
-		$query = "SELECT * FROM warehouses WHERE id = ". res($warehouseid) .";";
-		$result = qdb($query);
+	// 	$query = "SELECT * FROM warehouses WHERE id = ". res($warehouseid) .";";
+	// 	$result = qdb($query);
 		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$location = $result['name'];
-		}
+	// 	if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$location = $result['name'];
+	// 	}
 		
-		return $warehouse;
-	}
+	// 	return $warehouse;
+	// }
 
 ?>
 
@@ -159,16 +161,16 @@
 		<?php include 'inc/navbar.php'; ?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i></a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
-			<div class="col-md-4 text-center">
+			<div class="col-md-4 text-center" style="padding-top: 5px;">
 				<?php
-				echo"<h1>";
-				echo " Shipping Order";
+				echo"<h2>";
+				echo " SHIPPING ORDER";
 				if ($order_number!='New'){
 					echo " #$order_number";
 				}
-				echo"</h1>"
+				echo"</h2>"
 				?>
 			</div>
 			<div class="col-md-4">
@@ -184,7 +186,7 @@
 			
 			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
 				
-				<h3>Items to be Shipped</h3>
+				<h3>ITEMS TO BE SHIPPED</h3>
 				<!--<hr style="margin-top : 10px;">-->
 			
 				<div class="table-responsive">
@@ -205,7 +207,7 @@
 							$items = getItems($sales_order);
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
-								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
+								//$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
 								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
@@ -249,13 +251,6 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-		
-		<script>
-			(function($){
-			    
-				
-			})(jQuery);
-		</script>
 
 	</body>
 </html>

@@ -224,90 +224,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
     }
-	function display($order_number = '',$page = 'Purchase'){
-		//Opens the sidebar
-		// $file = basename(__FILE__);
-		
-		$company_name;
-		$public;
-		$s_carrier_name;
-		
-		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
-		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
-		$right.="
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>						
-						<div class ='order'>
-							<label for='order_selector'> ";
-		$right .= ($page == "Purchase")? "<h5>PO NAVIGATION</h5>" : "<h5>SO NAVIGATION</h5>";
-		$right .= "</label>
-							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
-		
-		if ($order_number) {
-			
-			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
-			$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
-			
-			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
-			$results = qdb($query);
-			
-			foreach ($results as $row){
-				$companyid = $row['companyid'];
-				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
-				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
-				$b_name = getAddresses($b_add,'name');
-				$s_add = $row['ship_to_id'];
-				$s_name = getAddresses($s_add,'name');
-				$selected_carrier = $row['freight_carrier_id'];
-				//$s_carrier_name = getFreight('carrier',$row['freight_carrier_id'])['name'];
-				$selected_service = $row['freight_services_id'];
-				$selected_account = $row['freight_account_id'];
-				$public = $row['public_notes'];
-				$private = $row['private_notes'];
-				$terms = $row['termsid'];
-			}
-			
-			if($order_number){ 
-					$right.="			<option value = $order_number>$order_number - $company_name</option>";
-			}
-		}	
 
-		$right.="			</select>
-						</div>
-					</div>
-				</div>";
-		if($results){
-			//Contact Output
-			$right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-			$right .= "<b>COMPANY:</b> <br>".($company_name)."<br><br>";
-			$right .= "<b>COMPANY REPRESENTATIVE:</b> <br>".getContact($contact)."<br><br>";
-			
-			//Addresses
-			$right .= "<b>BILLING ADDRESS:</b><br>";
-			$right .= address_out($b_add);
-			$right .= "<br><br>";
-			$right .= "<b>SHIPPING ADDRESS:</b><br>";
-			$right .= address_out($s_add);
-			$right .= "<br><br>";
-			$right .= "<b>CARRIER INFORMATION:</b><br>";
-			$right .= $selected_carrier;
-			$right .= "<br><br>";
-			$right .= "<b>NOTES (Optional):</b><br>";
-			$right .= $public;
-			$right .= "<br>";
-		}
-		//Closing Tag (Leave Outside of any if statment)
-	    $right .= "</div>
-		    <div class='arrow click_me'>   
-		    	<i class='icon-button fa fa-chevron-left' aria-hidden='true'></i>
-        	</div>
-
-        	<i class='fa fa-chevron-up shoot_me icon-button-mobile' aria-hidden='true' style='color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;'></i>
-		</div>";
-		
-			echo json_encode($right);
-	}
 	function address_out($address_id){
 		$address = '';
 		//Address Handling
@@ -329,11 +246,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $address;
 	}
 	
-	if ($mode == 'order'){
-		edit($number,$type);
-	}
-	else{
-		display($number,$type);
-	}
+	edit($number,$type);
 		
 ?>

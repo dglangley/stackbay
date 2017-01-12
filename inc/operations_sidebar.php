@@ -108,7 +108,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<div class ='company'>
 							<label for='companyid'>Company:</label>
 							<select name='companyid' id='companyid' class='company-selector' style = 'width:100%;'>
-								<option value = $companyid>$company_name</option>
+								<option value='$companyid'>$company_name</option>
 							</select>
 						</div>
 					</div>
@@ -121,7 +121,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<div class ='contact'>
 							<label for='contactid'>Contact:</label>
 							<select name='contactid' id='contactid' class='contact-selector required' style = 'width:100%;'>
-								<option value = $contact>".getContact($contact)."</option>
+								<option value='$contact'>".getContact($contact)."</option>
 							</select>
 						</div>
 					</div>
@@ -151,7 +151,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='bill_to'>Bill to:
 						</label>
 	                    <select id='bill_to' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value = '$b_add'>$b_name</option>
+							<option value='$b_add'>$b_name</option>
 	                    </select>
 				    </div>
 			    </div>";
@@ -164,7 +164,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							<input id='mismo' type=checkbox></input> (Same as billing)
 						</label>
 	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
-							<option value = '$s_add' >$s_name</option>
+							<option value='$s_add'>$s_name</option>
 	                    </select>
 				    </div>
 			    </div>";

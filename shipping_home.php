@@ -108,9 +108,9 @@
 			$query .= "purchase_orders o, purchase_items i ";
 			$query .= "WHERE o.po_number = i.po_number ";
 			if($status == 'Active') {
-				$query .= "AND i.receive_date IS NULL ";
+				$query .= "AND i.qty - i.qty_received > 0 ";
 			} else {
-				$query .= "AND i.receive_date IS NOT NULL ";
+				$query .= "AND i.qty - i.qty_received = 0 ";
 			}
 			//$query .= "AND status = '" . res($status) . "' ";
 			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";
@@ -157,9 +157,9 @@
 				echo'        <td><a href="#">'.$company.'</a></td>';
 				//Either go to inventory add or PO or shipping for SO
 				if($order == 'p')
-					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
 				else
-					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
+					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
@@ -254,8 +254,8 @@
 	<div class="row-fluid table-header initial-header" id="order_header" style="width:100%;">
 		<div class="col-md-4">
 		</div>
-		<div class="col-md-4 text-center">
-			<h1>Shipping Dashboard</h1>			</div>
+		<div class="col-md-4 text-center" style="padding: 4px 0;">
+			<h2>SHIPPING DASHBOARD</h2>			</div>
 		<div class="col-md-4">
 			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 10px;">
 				New Sales Order

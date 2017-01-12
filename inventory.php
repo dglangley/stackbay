@@ -422,9 +422,8 @@
 							<th>Location</th>
 							<th>Qty</th>
 							<th>Condition</th>
+							<th>Purchase Order</th>
 							<th>Vendor</th>
-							<th>Puchase Order</th>
-							<th>Vendor</th>	
 							<th>Date Added</th>
 						</tr>
 					</thead>
@@ -716,7 +715,7 @@
 
 	// }
 	var inventory_history = function (search, serial) {
-			$.ajax({
+		$.ajax({
 				type: "POST",
 				url: '/json/inventory-out.php',
 				data: {
@@ -734,131 +733,61 @@
 					var revisions, parts;
 					
 					var counter = 1;
-					
 					revisions = "<option value='' selected>All</option>";
-					part.forEach(function(item){
-						
-						revisions += "<option value='parts-"+counter+"'>"+item.part+"</option>";
-						
-						$.each(item.conditions, function(i, condition) {
-						//item.conditions.forEach(function(condition){
-							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+i + "-" + item.id +"'>\
-									<td>Multiple Locations</td>\
-									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+condition+"</span></td>\
-									<td>"+i+"</td>";
-							//Append the item history
-							parts += "<td>";
-									item.po_history.forEach(function(history){
-										parts += history.vendor+": "+history.number;
-									});
-							parts += "</td>";
-							parts += "<td>";
-
-							parts += "</td>";
-									//item.po_history+"</td>\
-							parts += "<td ='date_added'>"+item.date+"</td>\
-								</tr>";
-							
-							//Handler for all the serials per part
-							
-							parts += "<tr class='serial_listing_"+ i + '-' + item.id +"' style='display: none;'>\
-										<td colspan='12'>\
-											<div class='table-responsive'>\
-												<table class='shipping_update table table-hover table-condensed'>\
-													<thead>\
-														<tr>\
-															<th>Serial</th>\
-															<th>Location</th>\
-															<th>Qty</th>\
-															<th>Date Added</th>\
-														</tr>\
-													</thead>\
-													<tbody>";
-													
-													item.serials.forEach(function(serial){
-														if(serial.condition == i) {
-															parts += "\
-																	<tr>\
-																		<td>"+serial.serial_no+"</td>\
-																		<td>"+serial.location+"</td>\
-																		<td>"+serial.qty+"</td>\
-																		<td ='date_added'>"+serial.date+"</td>\
-																	</tr>";
-														}
-													});
-													
-							parts +=				"</tbody>\
-												</table>\
-											</div>\
-										</td>\
-									</tr>";
-						});
-						
+					//If there are multiple parts being returned, loop through them all
+					$.each(part, function(i, info){
+						//Add each part to the revisions page
 						counter++;
+						revisions += "<option value='parts-"+counter+"'>"+i+"</option>";
+						$.each(info, function(label,row){
+							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+row.unique+"'>\
+								<td>"+row.location+"</td>\
+								<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+row.qty+"</span></td>\
+								<td>"+row.condition+"</td>\
+								<td>"+row.last_purchase+"</td>\
+								<td>"+row.vendor+"</td>\
+								<td>"+row.date_created+"</td>\
+								</tr>";
+							var s = row.serials;
+							//alert (s);
+							if(s){
+								$.each(s, function(serial,history){
+									
+										
+											parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+																					<td>"+serial+"</td>";
+																// $.each(history,function(record, details){
+																	
+																// });
+																parts += "</tr>";
+																
+															
+							parts +=				"<\
+											</tr>";
+								}); //Serials loop end
+							}
+								
+						});
+
 					});
-					
 					$('.revisions').append(revisions);
 					$('.parts').append(parts);
 					
-					// //Changing the outout to a table
-					// output = "\
-					// 	<div class='col-sm-12' style='padding-top: 20px'>\
-					// 		<strong class='part_name'>"+"</strong>\
-					// 		<select>";
-					// 		part.forEach(function(item){
-					// 			output += "<option>Test</option>";
-					// 		});
-					// output +=	"</select>\
-					// 		<br>\
-					// 		<img class='img-responsive' src='http://placehold.it/125x75' style='padding-right: 10px; float:left; padding-bottom: 10px'>\
-					// 	</div>\
-					// 	<div class='col-sm-12'>\
-					// 		<div class='table-responsive'>\
-					// 			<table class='shipping_update table table-hover table-striped table-condensed' style='margin-top: 15px;'>\
-					// 				<thead>\
-					// 					<tr>\
-					// 						<th>Vendor</th>\
-					// 						<th>Location</th>\
-					// 						<th>Qty</th>\
-					// 						<th>Condition</th>\
-					// 						<th>Puchase Order</th>\
-					// 						<th>Date Added</th>\
-					// 					</tr>\
-					// 				</thead>\
-					// 				<tbody>";
-					// //Function to parse through all the serials
-					// var lastSerial = '';
-					// item.serials.forEach(function(serial){				
-					// 	output +=			"<tr>\
-					// 							<td>Vendor</td>\
-					// 							<td>Location</td>\
-					// 							<td>"+serial.qty+"</td>\
-					// 							<td>"+serial.condition+"</td>\
-					// 							<td>"+item.po_history+"</td>\
-					// 							<td>"+serial.date+"</td>\
-					// 						</tr>";
-					// });	
-					// output +=		"</tbody>\
-					// 			</table>\
-					// 		</div>\
-					// 	</div>\
-					// ";
+
 					if(part != '') {
 						$(".loading_element_listing").show();
 					} else {
 						$(".loading_element_listing").hide();
-				   		alert("No Parts Found with those parameters");
+				  		alert("No Parts Found with those parameters");
 					}
-					
 				},
 				error: function(xhr, status, error) {
 					$(".loading_element_listing").hide();
 					alert(error);
 				   	alert("No Parts Found with those parameters");
 				},			
-			});
-		}
-	
+		});
+	}
 	$(document).ready(function() {
 		if($("#part_search").val()){
 			var search = $("#part_search").val();
@@ -905,6 +834,7 @@
 	});
 	 
 	 
+	
 	})(jQuery);
 
 </script>

@@ -854,6 +854,8 @@
 	
 					//Get General order information
 					var userid = $("#sales-rep option:selected").attr("data-rep-id");
+					
+					console.log(userid);
 					var company = $("#companyid").val();
 					if (!company){
 						alert("Must enter company before continuing");
@@ -1200,14 +1202,16 @@
 			//alert(getPageName());
 			if(e.which == 13) {
 		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
-		    		var location = '';
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
+		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
+		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
+		    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
 		    		
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
 						data: {
-							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial
+							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial, 'place' : place, 'instance' : instance
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -1226,15 +1230,21 @@
 								
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+								$serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select').attr("data-serial", serial);
 								
+								//Set Default Values here, remember clone doesn't save select values otherwise it will
 								$serialClone.find('input').val("");
+								$locationClone.find('select:first').val(place);
+								$locationClone.find('select:last').val(instance);
 								
 								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
 								$serialClone.find('button').attr('disabled', true);
 								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
 								if(qty == 0) {
 							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	alert('Part: ' + part + ' has been received.');
@@ -1347,9 +1357,19 @@
 				var partid = $(this).find('.part_id').data('partid');
 				var serials = [];
 				var savedSerials = [];
+				var place = [];
+				var instance = [];
 				var conditions = [];
 				var lot = false;
 				var qty;
+				
+				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
+					place.push($(this).find('select:first').val());
+				});
+				
+				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
+					instance.push(($(this).find('select:last').val() != '' ? $(this).find('select:last').val() : ''));
+				});
 				
 				$(this).find('.infiniteCondition').children('select').each(function() {
 					conditions.push($(this).val());
@@ -1383,10 +1403,11 @@
 				items.push(conditions);
 				items.push(lot);
 				items.push(qty);
-				
+				items.push(place);
+				items.push(instance);
 			});
 			
-			//console.log(items);
+			console.log(items);
 			//console.log(po_number);
 			
 			$.ajax({
@@ -1445,6 +1466,7 @@
 						if(page != 'shipping') {
 							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+							$row.closest('tr').find('.infiniteLocations').find('select[data-serial="'+ serial +'"]').remove();
 						} else {
 							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');

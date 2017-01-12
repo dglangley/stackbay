@@ -79,6 +79,9 @@
             $output = "<div>";
                 
                 $output .= "<select class='form-control $type'>";
+                //Add in a default value to the locations
+                $output .= "<option disabled selected value> -- Select a Location -- </option>";
+                 
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        if ($row['place'] == $selcted){$output .= ' selected ';}
@@ -141,6 +144,14 @@
         $results = qdb($select);
         return $results;
         
+    }
+    
+    function display_location($location_id){
+        $results = getLocation($location_id);
+        $row = mysqli_fetch_assoc($results);
+        $display = $row['place'];
+        if($row['instance']){$display .= " - ".$row['instance'];}
+        return $display;
     }
     // function getLocation($instance_ids = '',$type='',$warehouse = ''){
     //     $results = array();

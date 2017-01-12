@@ -33,14 +33,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $incomplete->num_rows;
 	}
 	
-	function checkNewItems($partid, $serial_no, $condition = '') {
+	function checkNewItems($partid, $serial_no, $condition = '', $locationid = '') {
 		//Check if the item already exists in the database
 		//Prevent duplicate entries or initiates a update on the item
 		
 		//Seperate Lot query from standard serialized queries
 		//Lot matches condition and determines if a new lot record needs to be created or not
 		if($serial_no == 'null' && $condition != '') {
-			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."';";
+			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."' AND locationid = '". res($locationid) ."';";
 		} else {
 			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) .";";
 		}
@@ -71,12 +71,33 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 	}
 	
-	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+	function getLocation($place, $instance) {
+		$locationid;
+		$query;
+		
+		//Get the location ID based on the preset ones in the table
+		if($instance != '') {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
+		} else {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
+		}
+		
+		$locationResult = qdb($query);
+		
+		if (mysqli_num_rows($locationResult)>0) {
+			$locationResult = mysqli_fetch_assoc($locationResult);
+			$locationid = $locationResult['id'];
+		}
+		
+		return $locationid;
+	}
+	
+	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty', 'part', 'instance']
 	function savetoDatabase($productid, $po_number){
 		$result = [];
 		
 		//This is splitting each product from mass of items
-		$item_split = array_chunk($productid, 6);
+		$item_split = array_chunk($productid, 8);
 		
 		foreach($item_split as $product) {
 			//If serial is an array then parse thru everything in the partid as an array of items
@@ -87,6 +108,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					if($product[2][$i] != '') {
 						//If there is an actual saved serial then initiate editing of the product
 						//Else insert the new item
+						$locationid = getLocation($product[6][$i], $product[7][$i]);
+						
 						if($product[1][$i]  == '') {
 							//Check if the item exists already in the inventory
 							$exists = checkNewItems(reset($product), $product[2][$i]);
@@ -103,14 +126,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								checkPOReceived($po_number, reset($product));
 								
 								//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-								$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', '" . res($product[2][$i]) . "', '1', '". res($product[3][$i]) ."', 'received', '', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+								$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', '" . res($product[2][$i]) . "', '1', '". res($product[3][$i]) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 								$result['query'] = qdb($query);	
 							} else {
 								$result['error'] = 'Warning: Serial# ' . reset($product[2]) . ' already exists, item will be ignored, all other items have been saved.';
 							}
 						//Else if the 2 do not match (Saved Serial and New Serial) and the new serial does not exists yet
 						} else if(!$exists) {
-							$query  = "UPDATE inventory SET item_condition = '" . res($product[3][$i]) . "', serial_no = '" . res($product[2][$i]) . "' WHERE serial_no = '" . res($product[1][$i]) . "' AND partid = ". res(reset($product)) .";";
+							$query  = "UPDATE inventory SET item_condition = '" . res($product[3][$i]) . "', serial_no = '" . res($product[2][$i]) . "', locationid = '". res($locationid) ."' WHERE serial_no = '" . res($product[1][$i]) . "' AND partid = ". res(reset($product)) .";";
 							$result['query'] = qdb($query);
 						}
 						//Else everything matches so check other fields for changes
@@ -122,6 +145,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$exists = checkNewItems(reset($product), reset($product[2]));
 				$incomplete = checkReceiveDate($po_number, reset($product));
+				$locationid = getLocation(reset($product[6]), reset($product[7]));
+				
+				$result['location'] = $locationid;
 				
 				//No items exists in the inventory so continue inserting of the item and there is still room to add more items
 				if($incomplete == 1 && !$exists) {
@@ -132,7 +158,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					checkPOReceived($po_number, reset($product));
 					
 					//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-			 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product[2])) ."', '1','". res(reset($product)) ."', '". res(reset($product[3])) ."', 'received', '', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+			 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product[2])) ."', '1','". res(reset($product)) ."', '". res(reset($product[3])) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 					$result['query'] = qdb($query);
 					
 					//Test echo of items
@@ -145,6 +171,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			//Handler if lot is checked
 			} else if($product[4] == 'true') {
 				$result['type'] = 'Lot Item Detected';
+				$locationid = getLocation(reset($product[6]), reset($product[7]));
 				
 				//Check and make sure the lot being made does not exceed the amount of actual items ordered
 				$curQty;
@@ -178,14 +205,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					checkPOReceived($po_number, reset($product));
 					
 					//Check if the item already exists in the inventory
-					$exists = checkNewItems(reset($product), 'null', reset($product[3]));
+					$exists = checkNewItems(reset($product), 'null', reset($product[3]), $locationid);
 					
 					//If exists then update the lot with no serial else insert
 					if($exists) {
-						$query  = "UPDATE inventory SET qty = qty +  ". res($product[5]) .", last_purchase = '". res($po_number) ."' WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res(reset($product[3])) ."';";
+						$query  = "UPDATE inventory SET qty = qty +  ". res($product[5]) .", last_purchase = '". res($po_number) ."', locationid = '". res($locationid) ."' WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res(reset($product[3])) ."';";
 						$result['query'] = qdb($query);
 					} else {
-						$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', NULL, '" . res($product[5]) . "', '". res(reset($product[3])) ."', 'received', '', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+						$query  = "INSERT INTO inventory (partid, serial_no, qty, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res(reset($product)) ."', NULL, '" . res($product[5]) . "', '". res(reset($product[3])) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 						$result['query'] = qdb($query);	
 					}
 				} else {
