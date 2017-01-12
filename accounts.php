@@ -59,13 +59,6 @@
 	}
 	// if no start date passed in, or invalid, set to beginning of previous month
 	if (! $startDate) {
-/*
-		$year = date('Y');
-		$m = date('m');
-		$q = (ceil($m/3)*3)-2;
-		if (strlen($q)==1) { $q = '0'.$q; }
-		$startDate = $q.'/01/'.$year;
-*/
 		$startDate = format_date($today,'m/01/Y',array('m'=>-1));
 	}
 
@@ -73,6 +66,9 @@
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
+
+	$orders_table = 'sales';
+	if (isset($_REQUEST['orders_table']) AND $_REQUEST['orders_table']=='purchases') { $orders_table = 'purchases'; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -92,6 +88,7 @@
 <body class="sub-nav accounts-body">
 	
 	<?php include 'inc/navbar.php'; ?>
+	<?php include_once 'inc/getRecords.php'; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
@@ -101,14 +98,20 @@
 		<td class = "col-md-2">
 
 		    <div class="btn-group">
-		        <button class="glow left large btn-report<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
+		        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
 		        <i class="fa fa-ticket"></i>	
 		        </button>
 				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
+		        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
 		        	<i class="fa fa-list"></i>	
 	        	</button>
 				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+		    </div>
+			<div class="btn-group">
+			        <button class="glow left large btn-radio <?php if ($orders_table=='sales') { echo ' active'; } ?>" type="submit" data-value="sales">Sales</button>
+					<input type="radio" name="orders_table" value="sales" class="hidden"<?php if ($orders_table=='sales') { echo ' checked'; } ?>>
+			        <button class="glow right large btn-radio<?php if ($orders_table=='purchases') { echo ' active'; } ?>" type="submit" data-value="purchases">Purchases</button>
+			        <input type="radio" name="orders_table" value="purchases" class="hidden"<?php if ($orders_table=='purchases') { echo ' checked'; } ?>>
 		    </div>
 		</td>
 
@@ -130,7 +133,8 @@
 			    </div>
 			</div>
 			<div class="form-group">
-			<div class="btn-group" id="dateRanges">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
 							<div class="animated fadeIn hidden" id="date-ranges">
@@ -243,9 +247,14 @@
 	$total_amt = 0;
 	
 	//Write the query for the gathering of Pipe data
+	$record_start = $startDate;
+	$record_end = $endDate;
+	$result = getRecords($part_string,'','',$orders_table);
+
+/*
 	$query = "SELECT ";
-    $query .= "s.so_date 'datetime', c.`id` 'companyid', c.name 'company_name', q.company_id 'company', ";
-    $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id 'id', q.price price ";
+    $query .= "s.so_date 'datetime', c.`id` 'cid', c.name, q.company_id 'company', ";
+    $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id, q.price price ";
     $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
     $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
    	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
@@ -269,15 +278,16 @@
 //Search for the results. Leave the second parameter null if the pipe is not being used
 
 	$result = qdb($query,'PIPE');
-	
+*/
+
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 	if($report_type == 'summary'){
-
 	    foreach ($result as $row){
-            $id = $row['id'];
+            $id = $row['quote_id'];
 
+			$r['price'] = format_price($r['price'],true,'',true);
 			$ext_amt = $row['price']*$row['qty'];
 			$total_pcs += $row['qty'];
 			$total_amt += $ext_amt;
@@ -293,7 +303,7 @@
 			$summary_rows[$id]['date'] = $row['datetime'];
             $summary_rows[$id]['items'] += $row['qty'];
             $summary_rows[$id]['summed'] += $ext_amt;
-            $summary_rows[$id]['company'] = $row['company_name'];
+            $summary_rows[$id]['company'] = $row['name'];
         }
         foreach ($summary_rows as $id => $info) {
 
@@ -308,49 +318,54 @@
                 </tr>
             ';
         }
-	}
+	} else if ($report_type=='detail') {
+		foreach ($result as $r){
+			$r['price'] = format_price($r['price'],true,'',true);
 
-if ($report_type=='detail') {
-	foreach ($result as $r){
-
-		//Set the amount to zero for the number of items and the total price
-		$amt = 0;
-		$num_items = 0;
+			//Set the amount to zero for the number of items and the total price
+			$amt = 0;
+			$num_items = 0;
 		
-		//Set the value of the company to the individual row if there is no company ID preset
-		if (! $company_filter) {
-			$company_col = '
+			//Set the value of the company to the individual row if there is no company ID preset
+			if (! $company_filter) {
+				$company_col = '
                                 <td>
-	                                    <a href="#">'.$r['company_name'].'</a>
+	                                    <a href="#">'.$r['name'].'</a>
                                 </td>
-			';
-		}
-		$this_amt = $r['qty']*$r['price'];
-		$amt += $this_amt;
-		$num_items += $r['qty'];
+				';
+			}
+			$this_amt = $r['qty']*$r['price'];
+			$amt += $this_amt;
+			$num_items += $r['qty'];
 
-		$total_pcs += $r['qty'];
-		$total_amt += $amt;
+			$total_pcs += $r['qty'];
+			$total_amt += $amt;
 
-		$qty_col = '
+			$qty_col = '
                             <td>
                                 '.$r['qty'].'
                             </td>
-		';
-		$price_col = '
+			';
+			$price_col = '
                             <td class="text-right">
                                 '.format_price($r['price']).'
                             </td>
-		';
+			';
 
-			$descr = $r['part'].' &nbsp; '.$r['heci'];
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+			if (isset($r['part_number']) AND isset($r['clei'])) {
+				$descr = $r['part_number'].' &nbsp; '.$r['clei'];
+			} else {
+				$descr = $r['part'].' &nbsp; '.$r['heci'];
+			}
+			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['quote_id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			$results[] = $row;
 		}
 
-
-	foreach ($results as $r) {
-		$rows .= '
+		foreach ($results as $r) {
+			$ln = '#';
+			if ($orders_table=='sales') { $ln = 'https://db.ven-tel.com:10086/ventel/company/view_so/'.$r['id']; }
+			else if ($orders_table=='purchases') { $ln = 'https://db.ven-tel.com:10086/ventel/company/view_po/'.$r['id']; }
+			$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
@@ -358,7 +373,7 @@ if ($report_type=='detail') {
                                 </td>
 								'.$r['company_col'].'
                                 <td>
-                                    <a href="https://db.ven-tel.com:10086/ventel/company/view_so/'.$r['id'].'" target="_new">'.$r['id'].'</a>
+                                    <a href="'.$ln.'" target="_new">'.$r['id'].'</a>
                                 </td>
                                 <td>
                                     '.$r['detail'].'
@@ -370,9 +385,9 @@ if ($report_type=='detail') {
                                 </td>
 
                             </tr>
-		';
-	}
-}
+			';
+		}
+	}/* end $report_type=='detail' */
 ?>
 
 
@@ -447,6 +462,7 @@ if ($report_type=='detail') {
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
+/*
 
         $(document).ready(function() {
 			$('.btn-report').click(function() {
@@ -456,6 +472,7 @@ if ($report_type=='detail') {
 				});
 			});
         });
+*/
     </script>
 
 </body>

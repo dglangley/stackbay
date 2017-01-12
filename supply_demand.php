@@ -118,21 +118,21 @@
 			<td class = "col-sm-2">
 	
 			    <div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
+			        <button class="glow left large btn-radio <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
 					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
+			        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
 			        	<i class="fa fa-history"></i>	
 			        </button>
 			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
 			    </div>
 				<div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($market_table=='supply') { echo ' active'; } ?>" type="submit" data-value="supply">
+			        <button class="glow left large btn-radio <?php if ($market_table=='supply') { echo ' active'; } ?>" type="submit" data-value="supply">
 			        	Supply	
 			        </button>
 					<input type="radio" name="market_table" value="supply" class="hidden"<?php if ($market_table=='supply') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($market_table=='demand') { echo ' active'; } ?>" type="submit" data-value="demand">
+			        <button class="glow right large btn-radio<?php if ($market_table=='demand') { echo ' active'; } ?>" type="submit" data-value="demand">
 			        	Demand
 			        </button>
 			        <input type="radio" name="market_table" value="demand" class="hidden"<?php if ($market_table=='demand') { echo ' checked'; } ?>>
@@ -478,6 +478,7 @@
 <?php include_once 'inc/footer.php'; ?>
 <script type="text/javascript">
 			
+/*
 	$(document).ready(function() {
 		//Change the value of the     	
 
@@ -488,6 +489,7 @@
 			});
 		});
 	});
+*/
 
 </script>
 </body>

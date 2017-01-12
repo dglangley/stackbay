@@ -419,6 +419,7 @@
 
     <script type="text/javascript">
 
+/*
         $(document).ready(function() {
 			$('.btn-report').click(function() {
 				var btnValue = $(this).data('value');
@@ -427,6 +428,7 @@
 				});
 			});
         });
+*/
     </script>
 
 </body>
