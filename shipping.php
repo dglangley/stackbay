@@ -163,14 +163,14 @@
 			<div class="col-md-4">
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
-			<div class="col-md-4 text-center">
+			<div class="col-md-4 text-center" style="padding-top: 5px;">
 				<?php
-				echo"<h1>";
-				echo " Shipping Order";
+				echo"<h2>";
+				echo " SHIPPING ORDER";
 				if ($order_number!='New'){
 					echo " #$order_number";
 				}
-				echo"</h1>"
+				echo"</h2>"
 				?>
 			</div>
 			<div class="col-md-4">
@@ -186,7 +186,7 @@
 			
 			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
 				
-				<h3>Items to be Shipped</h3>
+				<h3>ITEMS TO BE SHIPPED</h3>
 				<!--<hr style="margin-top : 10px;">-->
 			
 				<div class="table-responsive">
