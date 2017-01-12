@@ -1228,6 +1228,7 @@
 								
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+								$serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select').attr("data-serial", serial);
 								
 								//Set Default Values here, remember clone doesn't save select values otherwise it will
 								$serialClone.find('input').val("");
@@ -1360,12 +1361,12 @@
 				var lot = false;
 				var qty;
 				
-				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
-					place.push($(this).val());
+				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
+					place.push($(this).find('select:first').val());
 				});
 				
-				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
-					instance.push(($(this).val() != '' ? $(this).val() : ''));
+				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
+					instance.push(($(this).find('select:last').val() != '' ? $(this).find('select:last').val() : ''));
 				});
 				
 				$(this).find('.infiniteCondition').children('select').each(function() {
@@ -1463,6 +1464,7 @@
 						if(page != 'shipping') {
 							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+							$row.closest('tr').find('.infiniteLocations').find('select[data-serial="'+ serial +'"]').remove();
 						} else {
 							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');

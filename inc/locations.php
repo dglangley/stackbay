@@ -79,6 +79,9 @@
             $output = "<div>";
                 
                 $output .= "<select class='form-control $type'>";
+                //Add in a default value to the locations
+                $output .= "<option disabled selected value> -- Select a Location -- </option>";
+                 
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        if ($row['place'] == $selcted){$output .= ' selected ';}

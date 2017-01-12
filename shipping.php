@@ -161,7 +161,7 @@
 		<?php include 'inc/navbar.php'; ?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
 			<div class="col-md-4 text-center" style="padding-top: 5px;">
 				<?php
@@ -174,7 +174,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn btn-success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn-flat success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
 			</div>
 		</div>
 		<div class="loading_element">
@@ -207,7 +207,7 @@
 							$items = getItems($sales_order);
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
-								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
+								//$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
 								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
@@ -251,13 +251,6 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-		
-		<script>
-			(function($){
-			    
-				
-			})(jQuery);
-		</script>
 
 	</body>
 </html>

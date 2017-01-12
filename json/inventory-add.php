@@ -33,14 +33,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $incomplete->num_rows;
 	}
 	
-	function checkNewItems($partid, $serial_no, $condition = '') {
+	function checkNewItems($partid, $serial_no, $condition = '', $locationid = '') {
 		//Check if the item already exists in the database
 		//Prevent duplicate entries or initiates a update on the item
 		
 		//Seperate Lot query from standard serialized queries
 		//Lot matches condition and determines if a new lot record needs to be created or not
 		if($serial_no == 'null' && $condition != '') {
-			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."';";
+			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no IS NULL AND partid = ". res($partid) ." AND item_condition = '". res($condition) ."' AND locationid = '". res($locationid) ."';";
 		} else {
 			$query = "SELECT partid, serial_no FROM inventory WHERE serial_no = '". res($serial_no) ."' AND partid = ". res($partid) .";";
 		}
@@ -147,6 +147,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$incomplete = checkReceiveDate($po_number, reset($product));
 				$locationid = getLocation(reset($product[6]), reset($product[7]));
 				
+				$result['location'] = $locationid;
+				
 				//No items exists in the inventory so continue inserting of the item and there is still room to add more items
 				if($incomplete == 1 && !$exists) {
 					//Increase the qty received by 1 for each item received
@@ -169,7 +171,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			//Handler if lot is checked
 			} else if($product[4] == 'true') {
 				$result['type'] = 'Lot Item Detected';
-				$locationid = getLocation($product[6], $product[7]);
+				$locationid = getLocation(reset($product[6]), reset($product[7]));
 				
 				//Check and make sure the lot being made does not exceed the amount of actual items ordered
 				$curQty;
@@ -203,7 +205,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					checkPOReceived($po_number, reset($product));
 					
 					//Check if the item already exists in the inventory
-					$exists = checkNewItems(reset($product), 'null', reset($product[3]));
+					$exists = checkNewItems(reset($product), 'null', reset($product[3]), $locationid);
 					
 					//If exists then update the lot with no serial else insert
 					if($exists) {

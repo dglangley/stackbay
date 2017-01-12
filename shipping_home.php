@@ -108,9 +108,9 @@
 			$query .= "purchase_orders o, purchase_items i ";
 			$query .= "WHERE o.po_number = i.po_number ";
 			if($status == 'Active') {
-				$query .= "AND i.receive_date IS NULL ";
+				$query .= "AND i.qty - i.qty_received > 0 ";
 			} else {
-				$query .= "AND i.receive_date IS NOT NULL ";
+				$query .= "AND i.qty - i.qty_received = 0 ";
 			}
 			//$query .= "AND status = '" . res($status) . "' ";
 			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";
@@ -254,13 +254,13 @@
 	<div class="row-fluid table-header initial-header" id="order_header" style="width:100%;">
 		<div class="col-md-4">
 		</div>
-		<div class="col-md-4 text-center">
+		<div class="col-md-4 text-center" style="padding: 4px 0;">
 			<h2>SHIPPING DASHBOARD</h2>			</div>
 		<div class="col-md-4">
-			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 5px;">
+			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 10px;">
 				New Sales Order
 			</a>
-			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 5px; margin-right: 10px;">
+			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 10px; margin-right: 10px;">
 				New Purchase Order
 			</a>	
 		</div>
