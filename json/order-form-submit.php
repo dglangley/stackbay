@@ -49,7 +49,7 @@
     $private = (trim($_REQUEST['pri_notes']));
     $public = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
-    $rep = grab("sales-rep");
+    $rep = grab('sales-rep');
     $assoc_order = grab('assoc');
 
     //Process the contact, see if a new one was added

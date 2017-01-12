@@ -854,6 +854,8 @@
 	
 					//Get General order information
 					var userid = $("#sales-rep option:selected").attr("data-rep-id");
+					
+					console.log(userid);
 					var company = $("#companyid").val();
 					if (!company){
 						alert("Must enter company before continuing");
