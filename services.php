@@ -35,6 +35,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
+	include_once $rootdir.'/inc/strip_space.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -50,12 +51,19 @@
 	setcookie('report_type',$report_type);
 
 	// if no start date passed in, or invalid, set to beginning of previous month
+	$startDate = '';
+	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+	}
 	if (! $startDate) { $startDate = format_date($today,'m/01/Y',array('m'=>-1)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
+
+	if (! isset($_REQUEST['status']) OR ! $_REQUEST['status']) { $status = 'open'; }
+	else { $status = $_REQUEST['status']; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -87,7 +95,13 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-
+			<div class="btn-group medium">
+				<input type="hidden" name="status" id="status" value="<?php echo $status; ?>">
+				<button class="btn btn-warning btn-sm btn-status left<?php if (! $status OR $status=='open') { echo ' active'; } ?>" type="button" data-status="open"><i class="fa fa-folder-open"></i></button>
+				<button class="btn btn-primary btn-sm btn-status middle<?php if ($status=='complete') { echo ' active'; } ?>" type="button" data-status="complete"><i class="fa fa-folder"></i></button>
+				<button class="btn btn-success btn-sm btn-status middle<?php if ($status=='closed') { echo ' active'; } ?>" type="button" data-status="closed"><i class="fa fa-check-square"></i></button>
+				<button class="btn btn-info btn-sm btn-status right<?php if ($status=='all') { echo ' active'; } ?>" type="button" data-status="all"><i class="fa fa-square"></i></button>
+			</div>
 		</td>
 
 		<td class = "col-md-3">
@@ -108,6 +122,7 @@
 			    </div>
 			</div>
 			<div class="form-group">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
@@ -138,7 +153,6 @@
 							</div><!-- animated fadeIn -->
 						</div><!-- btn-range-options -->
 					</div><!-- btn-group -->
-					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
@@ -214,7 +228,7 @@
    		//$dbEndDate = date("Y-j-m", strtotime($endDate));
    		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
-	$query .= "ORDER BY date_entered DESC; ";
+	$query .= "ORDER BY date_entered DESC, job_no DESC; ";
 	
 ##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
 	//$query = "SELECT * FROM sales_orders ";
@@ -230,54 +244,112 @@
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 
-	foreach ($result as $r) {
-		$assigns = array();
-		$assignments = '';
-		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
-		$query2 .= "WHERE job_id = '".$r['id']."' AND assigned_to_id = up.id; ";
+	foreach ($result as $job) {
+		$po = '';
+		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$job['id']."'; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			if (! isset($assignments[$r2['assigned_to_id']])) {
-				$assigns[$r2['assigned_to_id']] = true;
-				$assignments .= $r2['fullname'].'<BR/>';
+			$po .= $r2['po_number'].'<BR>';
+		}
+
+		$assigns = array();
+		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
+		$query2 .= "WHERE job_id = '".$job['id']."' AND assigned_to_id = up.id; ";
+		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$assigns[$r2['assigned_to_id']] = array('name'=>$r2['fullname'],'status'=>'');
+		}
+
+		/*** STATUS ***/
+		// do this before assignments since we check the timesheet here
+		$row_status = '';
+		if ($job['on_hold']==1) {
+			if ($status<>'all') { continue; }
+
+			$row_status = '<span class="label label-danger">On Hold</span>';
+		} else if ($job['cancelled']==1) {
+			if ($status<>'all') { continue; }
+
+			$row_status = '<span class="label label-danger">Canceled</span>';
+		} else if ($job['customer_po_complete']==1 AND $job['timesheets_complete']==1 AND $job['materials_complete']
+		AND $job['outside_services_complete']==1 AND $job['expenses_complete']==1 AND $job['admin_complete']==1) {
+			if ($status<>'all' AND $status<>'closed') { continue; }
+
+			$row_status = '<span class="label label-success">Closed</span>';
+		} else {
+			$query2 = "SELECT * FROM services_techtimesheet WHERE job_id = '".$job['id']."'; ";
+			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				if ($status<>'all' AND $status<>'open') { continue; }
+
+				$row_status = '<span class="label label-warning">In Progress</span>';
 			}
+			$query2 = "SELECT * FROM services_closeoutdoc WHERE job_id = '".$job['id']."'; ";
+			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				if ($status<>'all' AND $status<>'complete') { continue; }
+
+				$row_status = '<span class="label label-info">Complete</span>';
+			}
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				if ($r2['datetime_in'] AND ! $r2['datetime_out']) {
+					$assigns[$r2['tech_id']]['status'] = format_date($r2['datetime_in'],'g:ia');
+				}
+			}
+
+			if (! $row_status) {
+				if ($status<>'all' AND $status<>'open') { continue; }
+				$row_status = '<span class="label label-default">Idle</span>';
+			}
+		}
+
+
+		/*** ASSIGNMENTS ***/
+		$assignments = '';
+		foreach ($assigns as $a) {
+			if ($a['status']) {
+				$assignments .= '<span class="label label-warning">'.$a['name'].' &nbsp; '.$a['status'].'</span>';
+			} else {
+				$assignments .= $a['name'];
+			}
+			$assignments .= '<BR/>';
 		}
 
 		$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($r['date_entered'],'M j, Y').'
+                                    '.format_date($job['date_entered'],'M j, Y').'
                                 </td>
                                 <td>
-                                    <a href="job.php?id='.$r['id'].'">'.$r['job_no'].'</a>
+                                    <a href="job.php?id='.$job['id'].'">'.$job['job_no'].'</a>
                                 </td>
                                 <td>
-	                                <a href="#">'.$r['customer'].'</a><br/>
-									<span class="info">'.str_replace(chr(10),'<br/>',trim($r['site_access_info_address'])).'</span>
+	                                <a href="#">'.$job['customer'].'</a><br/>
+									<span class="info">'.strip_space($job['site_access_info_address']).'</span>
+                                </td>
+                                <td class="word-wrap160">
+									'.$job['site_access_info_contact'].'
                                 </td>
                                 <td>
-									'.$r['site_access_info_contact'].'
+                                    '.$job['customer_job_no'].'
                                 </td>
                                 <td>
-                                    '.$r['customer_job_no'].'
+									'.$po.'
                                 </td>
                                 <td>
-                                    '.$r['purchase_order'].'
-                                </td>
-                                <td>
-                                    '.format_date($r['scheduled_date_of_work'],'D, M j, Y').'<br/>
+                                    '.format_date($job['scheduled_date_of_work'],'D, M j, Y').'<br/>
 									to<br/>
-                                    '.format_date($r['scheduled_completion_date'],'D, M j, Y').'
+                                    '.format_date($job['scheduled_completion_date'],'D, M j, Y').'
                                 </td>
                                 <td>
-                                    '.$r['fullname'].'
+                                    '.$job['fullname'].'
                                 </td>
                                 <td>
                                     '.$assignments.'
                                 </td>
                                 <td class="text-center">
-                                    <span class="label label-success">Status</span>
+									'.$row_status.'
                                 </td>
 
                             </tr>

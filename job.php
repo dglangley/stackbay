@@ -35,6 +35,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/htmlcp1252.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
 
 	$VENDORS = array();
 	function getVendor($id,$input='id',$output='name') {
@@ -752,7 +753,7 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                 <div class="text-icon">
 <?php
 	// strip range of non-printable characters at end of address string from copying and pasting (side-eyes Dave Oden)
-    $address = str_replace(chr(10),'<BR>',preg_replace('/([[:^print:]]*[\r\n]+[[:^print:]]*)+$/','',$job['site_access_info_address']));
+	$address = strip_space($job['site_access_info_address']);
 ?>
                     <span class="icon-ar icon-ar-sm bg-brown"><i class="fa fa-map-marker"></i></span>
                     <div class="text-icon-content">

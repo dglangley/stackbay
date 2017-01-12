@@ -339,6 +339,12 @@
 			});
 		});
 
+		$(".btn-status").click(function() {
+			var status = $(this).data('status');
+			$("#status").val(status);
+			$(this).closest("form").submit();
+		});
+
 		$(".price-control").change(function() {
 			var priceMaster = $(this);
 			// confirm padlock isn't unlocked, which would make this a unique price change

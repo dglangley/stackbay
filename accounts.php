@@ -358,7 +358,7 @@ if ($report_type=='detail') {
                                 </td>
 								'.$r['company_col'].'
                                 <td>
-                                    <a href="#">'.$r['id'].'</a>
+                                    <a href="https://db.ven-tel.com:10086/ventel/company/view_so/'.$r['id'].'" target="_new">'.$r['id'].'</a>
                                 </td>
                                 <td>
                                     '.$r['detail'].'

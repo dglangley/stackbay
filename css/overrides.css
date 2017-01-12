@@ -139,6 +139,10 @@
 	float:right;
 	font-style:italic;
 }
+.word-wrap160 {
+	max-width:160px;
+	word-wrap:break-word;
+}
 
 .tooltip-inner {
 	color:#000;
