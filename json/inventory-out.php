@@ -476,10 +476,15 @@
 			$q_serial .= "last_purchase = ".prep($row['last_purchase'])." AND  ";
 			$q_serial .= "item_condition = ".prep($row['item_condition'])." AND  ";
 			$q_serial .= "date_created = ".prep($row['date_created']).";";
+			$s = array();
 			$serials = qdb($q_serial);
 			foreach($serials as $serial){
-				$s[$serial['serial_no']][] = $serial;
-				
+				if($serial['serial_no']){
+					$s[$serial['serial_no']][] = $serial;
+				}
+				else{
+					$s['null'][] = $serial;
+				}
 			}
 			$r['serials'] = $s;
 			$o[] = $r;
