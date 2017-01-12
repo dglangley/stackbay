@@ -23,6 +23,10 @@
 			header('Location: job.php?id='.$r['id']);
 			exit;
 		}
+		// in order for user to be able to 'reset' view to default services home, we want to reset search string
+		// so that if they at first were switching between modes (say, sales to services) with a sales-related
+		// search string, the subsequent click would show all services instead of the bogus search string
+		$_REQUEST['s'] = '';
 	}
 
 	include_once $rootdir.'/inc/format_date.php';
@@ -227,6 +231,18 @@
 	$summary_rows = array();
 
 	foreach ($result as $r) {
+		$assigns = array();
+		$assignments = '';
+		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
+		$query2 .= "WHERE job_id = '".$r['id']."' AND assigned_to_id = up.id; ";
+		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if (! isset($assignments[$r2['assigned_to_id']])) {
+				$assigns[$r2['assigned_to_id']] = true;
+				$assignments .= $r2['fullname'].'<BR/>';
+			}
+		}
+
 		$rows .= '
                             <!-- row -->
                             <tr>
@@ -241,28 +257,27 @@
 									<span class="info">'.str_replace(chr(10),'<br/>',trim($r['site_access_info_address'])).'</span>
                                 </td>
                                 <td>
+									'.$r['site_access_info_contact'].'
+                                </td>
+                                <td>
                                     '.$r['customer_job_no'].'
                                 </td>
                                 <td>
                                     '.$r['purchase_order'].'
                                 </td>
                                 <td>
-                                    '.format_date($r['scheduled_date_of_work'],'D, M j, Y').'
-                                </td>
-                                <td>
+                                    '.format_date($r['scheduled_date_of_work'],'D, M j, Y').'<br/>
+									to<br/>
                                     '.format_date($r['scheduled_completion_date'],'D, M j, Y').'
                                 </td>
                                 <td>
                                     '.$r['fullname'].'
                                 </td>
-                                <td class="text-right">
-                                    '.format_price($r['price_quote'],true,' ').'
+                                <td>
+                                    '.$assignments.'
                                 </td>
-                                <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
-                                </td>
-                                <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
+                                <td class="text-center">
+                                    <span class="label label-success">Status</span>
                                 </td>
 
                             </tr>
@@ -277,7 +292,6 @@
                         <thead>
                             <tr>
                                 <th class="col-md-1">
-                                    <span class="line"></span>
                                     Date 
                                 </th>
                                 <th class="col-md-1">
@@ -290,6 +304,10 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
+                                    Contact
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
                                     Project ID#
                                 </th>
                                 <th class="col-md-1">
@@ -298,24 +316,19 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Start Date
+                                    Start / End
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    End Date
+									Manager
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-2">
                                     <span class="line"></span>
-									Project Manager
+                                    Assignments
                                 </th>
-                                <th class="col-md-1 text-right">
-                                    Quote
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Cost
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Profit
+                                <th class="col-md-1 text-center">
+                                    <span class="line"></span>
+                                    Status
                                 </th>
                             </tr>
                         </thead>
