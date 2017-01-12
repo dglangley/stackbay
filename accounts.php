@@ -352,11 +352,11 @@
                             </td>
 			';
 
-			if (isset($r['part_number']) AND isset($r['clei'])) {
-				$descr = $r['part_number'].' &nbsp; '.$r['clei'];
-			} else {
-				$descr = $r['part'].' &nbsp; '.$r['heci'];
-			}
+			// legacy (pipe) support
+			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
+			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
+
+			$descr = $r['part'].' &nbsp; '.$r['heci'];
 			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['quote_id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			$results[] = $row;
 		}
