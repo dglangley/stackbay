@@ -280,16 +280,13 @@
 		/*** STATUS ***/
 		// do this before assignments since we check the timesheet here
 		$row_status = '';
-		if ($job['on_hold']==1) {
-			if ($status<>'all') { continue; }
-
-			$row_status = '<span class="label label-danger">On Hold</span>';
-		} else if ($job['cancelled']==1) {
+		if ($job['cancelled']==1) {
 			if ($status<>'all') { continue; }
 
 			$row_status = '<span class="label label-danger">Canceled</span>';
-		} else if ($job['customer_po_complete']==1 AND $job['timesheets_complete']==1 AND $job['materials_complete']
-		AND $job['outside_services_complete']==1 AND $job['expenses_complete']==1 AND $job['admin_complete']==1) {
+//		} else if ($job['customer_po_complete']==1 AND $job['timesheets_complete']==1 AND $job['materials_complete']
+//		AND $job['outside_services_complete']==1 AND $job['expenses_complete']==1 AND $job['admin_complete']==1) {
+		} else if ($job['admin_complete']==1) {
 			if ($status<>'all' AND $status<>'closed') { continue; }
 
 			$row_status = '<span class="label label-success">Closed</span>';
@@ -301,6 +298,12 @@
 
 				$row_status = '<span class="label label-warning">In Progress</span>';
 			}
+			if ($job['on_hold']==1) {
+				if ($status<>'all' AND $status<>'open') { continue; }
+
+				$row_status = '<span class="label label-danger">On Hold</span>';
+			}
+/*
 			$query2 = "SELECT * FROM services_closeoutdoc WHERE job_id = '".$job['id']."'; ";
 			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
@@ -308,6 +311,7 @@
 
 				$row_status = '<span class="label label-info">Complete</span>';
 			}
+*/
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				if ($r2['datetime_in'] AND ! $r2['datetime_out']) {
 					$assigns[$r2['tech_id']]['status'] = format_date($r2['datetime_in'],'g:ia');
