@@ -259,6 +259,7 @@
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 
+	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
 		$po = '';
@@ -352,7 +353,8 @@
 			$assignments .= '<BR/>';
 		}
 
-		$financial_row = '';
+		/***** CALCULATE JOB FINANCIALS TOTALS *****/
+		$financial_col = '';
 		if ($financials) {
 			// don't sum expenses until now, after getting tech's timesheets for any mileage reimbursements
 			$expensesTotal = 0;
@@ -368,6 +370,13 @@
 
 			$jobTotal = $laborTotal + $materialsTotal + $expensesTotal + $outsideTotal;
 			$jobProfit = $job['price_quote']-$jobTotal;
+
+			// go back and add profits to each tech on the job
+			foreach ($assigns as $techid => $a) {
+				if (! isset($techProfits[$techid])) { $techProfits[$techid] = array(); }
+				$techProfits[$techid][] = $jobProfit/$job['price_quote'];
+			}
+
 			$finances = format_price(round($job['price_quote'],2),true,' ').' quote';
 			if ($jobTotal>0) {
 				$finances .= '<br/>- '.format_price(round($jobTotal,2),true,' ').' cost<br/>'.
@@ -380,7 +389,7 @@
 				$finances .= '</strong> profit';
 			}
 
-			$financial_row = '
+			$financial_col = '
                                 <td class="text-right">
 									'.$finances.'
                                 </td>
@@ -458,7 +467,14 @@
 				// append 's' to 'job' when plural
 				$s = '';
 				if ($n<>1) { $s = 's'; }
-				$jobs = '<span class="aux">'.$n.' job'.$s.'</span>';
+
+				$techProfit = '';
+				$pnum = count($techProfits[$techid]);
+				if ($pnum>0) {
+					$techProfit = ' at avg '.(round(array_sum($techProfits[$techid])/$pnum,2)*100).'% profit';
+				}
+
+				$jobs = '<span class="aux">'.$n.' job'.$s.$techProfit.'</span>';
 			}
 
 			$stats_rows .= '
