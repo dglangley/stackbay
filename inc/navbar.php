@@ -74,9 +74,13 @@
 	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php','/job.php');
 	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
 	$mode_index = array_search($mode,$modes);
-	$SEARCH_MODE = '/';//default
-	// if the current page is one of the allowable $modes, set it to the global variable so we use it as our submit page
-	if ($mode_index!==false) { $SEARCH_MODE = $modes[$mode_index]; }
+	if (isset($_COOKIE['SEARCH_MODE'])) {
+		$SEARCH_MODE = $_COOKIE['SEARCH_MODE'];
+	} else {
+		$SEARCH_MODE = '/';//default
+		// if the current page is one of the allowable $modes, set it to the global variable so we use it as our submit page
+		if ($mode_index!==false) { $SEARCH_MODE = $modes[$mode_index]; }
+	}
 ?>
 	<!-- Please add this css into the overrides css when it is complete -->
 	<style type="text/css">

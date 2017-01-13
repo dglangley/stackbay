@@ -690,6 +690,8 @@
 		});
 		$(".mode-tab").click(function() {
 			var form = $(this).closest("form");
+			// remember the user's selection for next time they open a page
+			$.cookie("SEARCH_MODE",$(this).data('action'));
 			form.prop('action',$(this).data('action'));
 			form.submit();
 		});

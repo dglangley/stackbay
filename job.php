@@ -19,215 +19,17 @@
 		header('Location: services.php');
 		exit;
 	}
-?><!DOCTYPE html>
-<html lang="en">
-<head>
-	<title>Job</title>
-	<?php
-		include_once 'inc/scripts.php';
-	?>
-</head>
-<body class="sub-nav margin-bottom-220">
 
-	<?php include_once 'inc/navbar.php'; ?>
-
-<?php
+	$WORKDAY_START = 19;//getTimesheet.php will automatically adjust workday end accordingly
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/htmlcp1252.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
-
-	$VENDORS = array();
-	function getVendor($id,$input='id',$output='name') {
-		global $VENDORS;
-
-		if (! $id) { return false; }
-
-		if (isset($VENDORS[$id][$input])) { return ($VENDORS[$id][$input][$output]); }
-
-		$VENDORS[$id][$input] = array($output=>false);
-		$query = "SELECT * FROM services_company WHERE id = '".$id."'; ";
-		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-		if (mysqli_num_rows($result)>0) {
-			$VENDORS[$id][$input] = mysqli_fetch_assoc($result);
-		}
-		return ($VENDORS[$id][$input][$output]);
-	}
-
-	$PROFILES = array();
-	function getProfile($id,$input='id',$output='fullname') {
-		global $PROFILES;
-
-		if (! $id) { return false; }
-
-		if (isset($PROFILES[$id][$input])) { return ($PROFILES[$id][$input][$output]); }
-
-		$PROFILES[$id][$input] = array($output=>false);
-		$query = "SELECT * FROM services_userprofile WHERE id = '".$id."'; ";
-		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-		if (mysqli_num_rows($result)>0) {
-			$PROFILES[$id][$input] = mysqli_fetch_assoc($result);
-		}
-		return ($PROFILES[$id][$input][$output]);
-	}
-
-	function toTime($secs) {
-		// given $secs seconds, what is the time g:i:s format?
-		$hours = floor($secs/3600);
-
-		// what are the remainder of seconds after taking out hours above?
-		$secs -= ($hours*3600);
-
-		$mins = floor($secs/60);
-
-		$secs -= ($mins*60);
-
-		return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
-	}
-
-	function timeToStr($time) {
-		$t = explode(':',$time);
-		$hours = $t[0];
-		$mins = $t[1];
-		if (! $mins) { $mins = 0; }
-		$secs = $t[2];
-		if (! $secs) { $secs = 0; }
-
-		$days = floor($hours/24);
-		$hours -= ($days*24);
-
-		$str = '';
-		if ($days>0) { $str .= $days.'d, '; }
-		if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
-		if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
-		if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
-
-		return ($str);
-	}
-
-	function calcTimeDiff($datetime_start,$datetime_end) {
-		$timeStart = new DateTime($datetime_start);
-		$timeEnd = new DateTime($datetime_end);
-		$diff = $timeStart->diff($timeEnd);
-
-		$hours = $diff->format("%H");
-		$mins = $diff->format("%I");
-		$secs = $diff->format("%S");
-		$diff_in_secs = ($hours*3600)+($mins*60)+$secs;
-
-		return ($diff_in_secs);
-	}
-
-	$WEEK_SECS = 60*60*40;
-	$DAY_SECS = 60*60*8;
-	$DT_SECS = 60*60*12;
-	$OT = array();
-	function calcOT($techid,$weekStart,$weekEnd,$shiftid=0) {
-		global $OT,$WEEK_SECS,$DAY_SECS,$DT_SECS,$WORKDAY_START,$WORKDAY_END;
-
-		if (! isset($OT[$techid])) { $OT[$techid] = array(); }
-		if (! isset($OT[$techid][$weekStart])) {
-			$OT[$techid][$weekStart] = array('shifts'=>array(),'total'=>0);
-
-			$cumDaySecs = array();//keeps cumulative day-keyed seconds worked
-			$cumReg = 0;//cumulative regular pay work seconds
-			$cumOT = 0;//cumulative OT pay work seconds, whether over 8hr in a day or over 40hr (40 non-OT hours) in a week
-			$cumDT = 0;//cumulative double-time pay work seconds (over 12hrs in a day)
-
-			$shifts = array();
-			// Query timesheet and get credited workdate based on the start time - currently, Brian is counting 7pm as the start time for the following work date.
-			// Aaron FTW on the CASE statement! 1/5/17
-			$query2 = "SELECT *, CASE WHEN SUBSTRING(datetime_in,12,2) >= '".$WORKDAY_START."' ";
-			$query2 .= "THEN DATE_SUB(LEFT(datetime_in,10), INTERVAL -1 DAY) ELSE LEFT(datetime_in,10) END workdate ";
-			$query2 .= "FROM services_techtimesheet WHERE tech_id = '".$techid."' ";
-			// get any shift that either started BEFORE this week's start and ended within this week (ie, sat night to sun morning),
-			// OR started within the week (and subsequently ended within the week)
-			$query2 .= "AND ( (datetime_in < CAST('".$weekStart."' AS DATETIME) AND datetime_out > CAST('".$weekStart."' AS DATETIME)) ";
-			$query2 .= "OR (datetime_in >= CAST('".$weekStart."' AS DATETIME) AND datetime_out <= CAST('".$weekEnd."' AS DATETIME)) ); ";
-			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				// if date start precedes week start, or date end runs over week end, set to those parameters
-				if ($r2['datetime_in']<$weekStart) { $r2['datetime_in'] = $weekStart; }
-				if ($r2['datetime_out']>$weekEnd) { $r2['datetime_out'] = $weekEnd; }
-
-				$workdate_end = format_date($r2['workdate'],'Y-m-d',array('d'=>1));
-				// if the shift ends after the 24-hour period beginning at the workdate, credit the shift
-				// to workdate until the end of that window, then split the remaining shift into the following date
-				if ($r2['datetime_out']>$workdate_end) {
-					$datetime_out = $r2['datetime_out'];//save for use on the split shift
-					$r2['datetime_out'] = $workdate_end.' '.$WORKDAY_END.':59:59';
-					$shifts[] = $r2;
-
-					// now prep for adding to $shifts[] below
-					$r2['workdate'] = $workdate_end;
-					$r2['datetime_in'] = $workdate_end.' '.$WORKDAY_START.':00:00';
-					$r2['datetime_out'] = $datetime_out;
-				}
-
-				$shifts[] = $r2;
-			}
-
-			foreach ($shifts as $r2) {
-				$datetime_in = $r2['datetime_in'];
-				$datetime_out = $r2['datetime_out'];
-				if (! isset($OT[$techid][$weekStart]['shifts'][$r2['id']])) { $OT[$techid][$weekStart]['shifts'][$r2['id']] = 0; }
-				if (! isset($cumDaySecs[$r2['workdate']])) { $cumDaySecs[$r2['workdate']] = 0; }
-//				echo $r2['datetime_in'].' to '.$r2['datetime_out'].' (workdate: '.$r2['workdate'].')<BR>';
-
-				$shiftSecs = calcTimeDiff($datetime_in,$datetime_out);
-
-				$regSecs = $shiftSecs;//by default, the entire shift is regular pay
-				$otSecs = 0;
-				$dtSecs = 0;
-
-				// accumulate time toward's 40hr/wk max, but only up to a standard 8hr day per day
-				if ($shiftSecs>$DAY_SECS) {
-					$regSecs = $DAY_SECS;//add up to the 8hrs as regular pay
-					if ($shiftSecs>$DT_SECS) {//if over 12hrs, start counting as double time
-						$otSecs = $DT_SECS-$DAY_SECS;
-						$dtSecs = $shiftSecs-$DT_SECS;
-					} else {
-						$otSecs = $shiftSecs-$DAY_SECS;//add the overage as OT time
-					}
-				}
-
-				// have we already surpassed a regular week's pay into overtime? if so, count the entire shift as OT
-				if (($regSecs+$cumReg)>$WEEK_SECS) {
-					$otSecs += ($regSecs+$cumReg)-$WEEK_SECS;
-					$regSecs = $WEEK_SECS-$cumReg;
-				}
-
-				if (($regSecs+$cumDaySecs[$r2['workdate']])>$DAY_SECS) {
-					$thisOT = ($regSecs+$cumDaySecs[$r2['workdate']])-$DAY_SECS;
-					$regSecs -= $thisOT;
-					$otSecs += $thisOT;
-					$cumDaySecs[$r2['workdate']] = $DAY_SECS;//if spilling over, set to max for a single day, then allot remaining balance as OT
-				} else {
-					$cumDaySecs[$r2['workdate']] += $regSecs;
-				}
-
-				$cumReg += $regSecs;
-				$cumOT += $otSecs;
-				$cumDT += $dtSecs;
-
-				// capture all OT data into array for easy-lookup and eliminating re-querying later
-				$OT[$techid][$weekStart]['shifts'][$r2['id']] += $otSecs;
-				$OT[$techid][$weekStart]['total'] += $otSecs;
-			}
-		}
-
-		if ($shiftid) {
-//			echo $weekStart.' to '.$weekEnd.': Work Secs '.toTime($regSecs).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]).')<BR>';
-			if (isset($OT[$techid][$weekStart]['shifts'][$shiftid])) {
-				return ($OT[$techid][$weekStart]['shifts'][$shiftid]);
-			} else {
-				return 0;
-			}
-		} else {
-//			echo $weekStart.' to '.$weekEnd.': Work Secs '.toTime($regSecs).' (Week OT: '.toTime($OT[$techid][$weekStart]['total']).')<BR>';
-			return ($OT[$techid][$weekStart]['total']);
-		}
-	}
+	include_once $_SERVER["ROOT_DIR"].'/inc/getProfile.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
 
 	$db_path = 'https://db.ven-tel.com:10086/service/usermedia/';
 	$job_out = '';
@@ -248,7 +50,7 @@
 		$special_instructions = preg_replace('/^N[\/]?A$/i','',str_replace(chr(10),'<BR>',trim($job['site_access_info_special'])));
 //		if ($special_instructions) { $special_instructions .= "<BR><BR>"; }
 
-		$job_out = ' #'.$job['job_no'];
+		$job_out = '# '.$job['job_no'];
 		$job['status'] = 'ACTIVE';
 		$job['status_color'] = 'success';
 		$job['status_flag'] = 'flag-checkered';
@@ -277,6 +79,35 @@
 			$po_ln .= '</a> &nbsp; <a href="#"><i class="fa fa-pencil"></i></a> &nbsp; <a href="#" class="text-danger"><i class="fa fa-close"></i></a><BR/>';
 		}
 	}
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Job# <?php echo $job['job_no']; ?></title>
+	<?php
+		include_once 'inc/scripts.php';
+	?>
+</head>
+<body class="sub-nav margin-bottom-220">
+
+	<?php include_once 'inc/navbar.php'; ?>
+
+<?php
+	$VENDORS = array();
+	function getVendor($id,$input='id',$output='name') {
+		global $VENDORS;
+
+		if (! $id) { return false; }
+
+		if (isset($VENDORS[$id][$input])) { return ($VENDORS[$id][$input][$output]); }
+
+		$VENDORS[$id][$input] = array($output=>false);
+		$query = "SELECT * FROM services_company WHERE id = '".$id."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)>0) {
+			$VENDORS[$id][$input] = mysqli_fetch_assoc($result);
+		}
+		return ($VENDORS[$id][$input][$output]);
+	}
 
 	// determine which column should be wider based on content: description or special instructions
 	$col1 = '4';//description
@@ -290,11 +121,8 @@
 	/***** MATERIALS DATA *****/
 	$material_rows = '';
 	$materialsTotal = 0;
-	$query = "SELECT * FROM services_component c, services_jobbulkinventory jbi ";
-	$query .= "LEFT JOIN services_jobmaterialpo jpo ON jbi.po_id = jpo.id ";
-	$query .= "WHERE job_id = '".$job['id']."' AND component_id = c.id; ";
-	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
+	$materials = getMaterials($job['id']);
+	foreach ($materials as $r) {
 		// truncate to 2-decimals if not more than 2 are used
 		$cost = format_price($r['cost'],true,' ');
 		$addl_cost = format_price($r['addtl_cost'],true,' ');
@@ -336,91 +164,38 @@
 
 	/***** LABOR DATA *****/
 	$labor = array();
+	// get assigned techs to the job so we know who to query from tech time sheets
 	$query = "SELECT * FROM services_jobtasks WHERE job_id = '".$job['id']."'; ";
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$labor[$r['assigned_to_id']][] = $r;
 	}
 
-	$WORKDAY_START = 19;
-	if ($WORKDAY_START==0) { $WORKDAY_END = 23; }
-	else { $WORKDAY_END = $WORKDAY_START-1; }
-	$WORKDAY_START = str_pad($WORKDAY_START,2,0,STR_PAD_LEFT);
-	$WORKDAY_END = str_pad($WORKDAY_END,2,0,STR_PAD_LEFT);
-
-	$jobTotal = 0;
-
-	$expenses = array();
+	// get expenses first so other expenses like mileage within labor results can be added to it
+	$expenses = getExpenses($job['id']);
 	$laborTotal = 0;
 	$laborTotalSecs = 0;
 	$labor_rows = '';
 	foreach ($labor as $techid => $arr) {
-//		if ($techid<>46) { continue; }
+		/*** debugging variables for output when needing a little addl detail ***/
+		$debugSecsReg = 0;
+		$debugSecsOT = 0;
+		$debugSecsPd = 0;
+		$debugRegPayTotal = 0;
+		$debugOTPayTotal = 0;
+		$debugPdPayTotal = 0;
+		/*** end debugging vars ***/
 
-		$cumLabor = 0;
-		$cumSecs = 0;
-$OTSecs = 0;
-$stdSecs = 0;
-$secsStd = 0;
-$secsOt = 0;
-$secsPd = 0;
-$stdPayTotal = 0;
-$otPayTotal = 0;
-$pdPayTotal = 0;
-		$query = "SELECT *, DATE_SUB(LEFT(datetime_in,10), INTERVAL DAYOFWEEK(datetime_in)-1 DAY) start_day, ";
-		//$query .= "DATE_SUB(LEFT(datetime_in,10), INTERVAL DAYOFWEEK(datetime_in)-7 DAY) end_day ";
-		$query .= "DATE_SUB(LEFT(datetime_in,10), INTERVAL DAYOFWEEK(datetime_in)-8 DAY) end_day ";
-		$query .= "FROM services_techtimesheet WHERE job_id = '".$job['id']."' AND tech_id = '".$techid."'; ";
-		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$weekStart = $r['start_day'].' '.$WORKDAY_START.':00:00';
-			$weekEnd = $r['end_day'].' '.$WORKDAY_END.':59:59';
-			$shiftid = $r['id'];
+		list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job);
+		$laborTotalSecs += $techSecsWorked;
 
-			$secsDiff = calcTimeDiff($r['datetime_in'],$r['datetime_out']);
+		if ($techLaborCost==0) { continue; }
+		// round for display purposes
+		$techLaborCost = round($techLaborCost,2);
+		$laborTotal += $techLaborCost;
+		$timeLogged = toTime($techSecsWorked);
 
-			// OT seconds of this shift within the scope of a week's work
-			$OTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id']);
-$secsStd += $secsDiff-$OTSecs;
-$secsOT += $OTSecs;
-
-			$cumSecs += $secsDiff;
-			$laborTotalSecs += $secsDiff;
-
-			$tech_rate = $r['tech_rate'];
-			$rate_in_secs = $tech_rate/3600;
-
-			$stdSecs = ($secsDiff-$OTSecs);
-			$stdPay = ($rate_in_secs*$stdSecs);
-$stdPayTotal += $stdPay;
-			$otPay = ($rate_in_secs*$OTSecs)*1.5;
-$otPayTotal += $otPay;
-			$cumLabor += ($stdPay+$otPay)*1.13;
-			if (! $r['no_perdiem']) {
-$secsPd += $stdSecs;
-				// no perdiem for overtime
-				$pdPay = (($r['tech_perdiem']/3600)*$stdSecs);
-$pdPayTotal += $pdPay;
-				$cumLabor += $pdPay;
-			}
-
-			// add mileage to expenses (Brian had it under Tasks, which I now called Labor)
-			if ($r['mileage']>0) {
-				$expenses[] = array(
-					'timestamp'=>$r['datetime_in'],
-					'entered_by_id'=>$techid,
-					'job_id'=>$job['id'],
-					'tech_id'=>$techid,
-					'label'=>'Mileage: '.$r['mileage'].'<BR/>'.$r['notes'],
-					'date'=>substr($r['datetime_in'],0,10),
-					'amount'=>($r['mileage']*$job['mileage_rate']),
-					'file'=>'',
-					'vendor'=>'',
-					'type'=>'<i class="fa fa-car"></i>',
-				);
-			}
-		}
-
+		// get all tasks (assignments) from our earlier query primarily for display purposes
 		$completed = false;
 		$admin_completed = false;
 		$assignments = '';
@@ -438,14 +213,6 @@ $pdPayTotal += $pdPay;
 
 			$assignments .= $assigned_dates.$notes.'<br/>';
 		}
-
-		if ($cumLabor==0) { continue; }
-
-		$cumLabor = round($cumLabor,2);
-
-//date_scheduled, date_scheduled_complete, admin_completed, name, notes, employee_completed
-		$time_logged = toTime($cumSecs);
-		$laborTotal += $cumLabor;
 
 		if ($completed) { $completed = '<i class="fa fa-check text-success"></i>'; }
 		else { $completed = ''; }
@@ -465,15 +232,15 @@ $pdPayTotal += $pdPay;
 									'.$assignments.'
                                 </td>
                                 <td>
-									'.$time_logged.'<br/> &nbsp; <span class="info">'.timeToStr($time_logged).'</span>
+									'.$timeLogged.'<br/> &nbsp; <span class="info">'.timeToStr($timeLogged).'</span>
 <!--
-<BR>std '.toTime($secsStd).' = '.$stdPayTotal.'<BR>
-OT '.toTime($secsOt).' = '.$otPayTotal.'<BR>
-PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
+<BR>std '.toTime($debugSecsReg).' = '.$debugRegPayTotal.'<BR>
+OT '.toTime($debugSecsOT).' = '.$debugOTPayTotal.'<BR>
+PD '.toTime($debugSecsPd).' = '.$debugPdPayTotal.'<BR>
 -->
                                 </td>
                                 <td class="text-right">
-									'.format_price($cumLabor,true,' ').'
+									'.format_price($techLaborCost,true,' ').'
                                 </td>
                                 <td class="text-center">
 									'.$completed.'
@@ -486,22 +253,7 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 	}
 	$laborTotalTime = toTime($laborTotalSecs);
 
-	$query = "SELECT * FROM services_expense WHERE job_id = '".$job['id']."'; ";
-	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		if (strtolower(substr($r['label'],0,3))=='gas') { $r['type'] = '<i class="fa fa-car"></i>'; }
-		else { $r['type'] = '<i class="fa fa-money"></i>'; }
-		$expenses[] = $r;
-	}
-
-	// sort by date
-	function cmp($a, $b) {
-		if ($a['timestamp'] == $b['timestamp']) {
-			return 0;
-		}
-		return ($a['timestamp'] > $b['timestamp']) ? 1 : -1;
-	}
-	uasort($expenses,'cmp');
+	uasort($expenses,'cmp_timestamp');
 
 	$expenses_rows = '';
 	$expensesTotal = 0;
@@ -536,9 +288,9 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 
 	$outside_rows = '';
 	$outsideTotal = 0;
-	$query = "SELECT * FROM services_joboutsideservice WHERE job_id = '".$job['id']."'; ";
-	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
+	$outsideServices = getOutsideServices($job['id']);
+
+	foreach ($outsideServices as $r) {
 		$po_date = '';
 		$employee = '';
 		if ($r['po_id']) {
