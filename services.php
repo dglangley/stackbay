@@ -75,7 +75,7 @@
 	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
 
 	$manager = '';
-	if (isset($_REQUEST['manager']) AND $_REQUEST['manager']) {
+	if (isset($_REQUEST['manager']) AND $_REQUEST['manager'] AND $_REQUEST['manager']<>'All') {
 		$manager = $_REQUEST['manager'];
 	} else if ($U['name']=='David Oden' OR $U['name']=='Robert Cumer') {
 		$manager = $U['name'];
@@ -191,9 +191,9 @@
 		</td>
 		<td class="col-md-1">
 			<select name="manager" size="1" class="form-control input-xs">
-				<option value="All">- All -</option>
-				<option value="Robert Cumer">Robert Cumer</option>
-				<option value="David Oden">David Oden</option>
+				<option value="All"<?php if (! $manager) { echo ' selected'; } ?>>- All -</option>
+				<option value="Robert Cumer"<?php if ($manager=='Robert Cumer') { echo ' selected'; } ?>>Robert Cumer</option>
+				<option value="David Oden"<?php if ($manager=='David Oden') { echo ' selected'; } ?>>David Oden</option>
 			</select>
 		</td>
 		<td class="col-md-2">
