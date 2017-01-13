@@ -142,7 +142,7 @@ $DEV_ENV = true;
 
 			$U = mysqli_fetch_assoc($result);
 
-			$U['email'] = '';
+			//$U['email'] = '';
 			$U['phone'] = '';
 			$U['username'] = '';
 			$U['email'] = $userid;

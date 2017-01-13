@@ -551,6 +551,7 @@ textarea.freeform-text {
 
 .company-selector {
 	width:280px;
+	max-width:70%;
 }
 .manf-selector {
 	width:180px;

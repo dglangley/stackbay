@@ -73,6 +73,13 @@
 
 	$financials = false;
 	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
+
+	$manager = '';
+	if (isset($_REQUEST['manager']) AND $_REQUEST['manager']) {
+		$manager = $_REQUEST['manager'];
+	} else if ($U['name']=='David Oden' OR $U['name']=='Robert Cumer') {
+		$manager = $U['name'];
+	}
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -182,7 +189,14 @@
 				</div>
 			</div>
 		</td>
-		<td class="col-md-3">
+		<td class="col-md-1">
+			<select name="manager" size="1" class="form-control input-xs">
+				<option value="All">- All -</option>
+				<option value="Robert Cumer">Robert Cumer</option>
+				<option value="David Oden">David Oden</option>
+			</select>
+		</td>
+		<td class="col-md-2">
 			<div class="pull-right form-group">
 			<select name="companyid" id="companyid" class="company-selector" disabled >
 					<option value="">- Select a Company -</option>
@@ -262,6 +276,8 @@
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
+		if ($manager AND $job['fullname']<>$manager) { continue; }
+
 		$po = '';
 		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$job['id']."'; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
