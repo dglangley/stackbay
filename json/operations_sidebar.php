@@ -109,7 +109,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='company'>
 							<label for='companyid'>Company:</label>
-							<select name='companyid' id='companyid' class='company-selector' style = 'width:100%;'>
+							<select name='companyid' id='companyid' class='company-selector required' style = 'width:100%;'>
 								<option value = $companyid>$company_name</option>
 							</select>
 						</div>
@@ -137,7 +137,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
 						<label for='assoc'>Customer Order:</label>
 						<div class = 'input-group'>
-							<input class='form-control required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+							<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 							<span class='input-group-btn'>
 						        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
 							        <i class='fa fa-paperclip' aria-hidden='true'></i>
@@ -152,7 +152,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='bill_to'>Bill to:
 						</label>
-	                    <select id='bill_to' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+	                    <select id='bill_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
 	                    </select>
 				    </div>
@@ -165,7 +165,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='ship_to' >Ship to:
 							<input id='mismo' type=checkbox></input> (Same as billing)
 						</label>
-	                    <select id='ship_to' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
+	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
 							<option value = '$s_add' >$s_name</option>
 	                    </select>
 				    </div>
@@ -203,7 +203,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class = 'row'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes:</label>
-						<textarea id='private_notes' class='form-control required' name='email' rows='4' style=''>$private</textarea>
+						<textarea id='private_notes' class='form-control' name='email' rows='4' style=''>$private</textarea>
 					</div>
 				</div>	
 				<div class = 'row'>

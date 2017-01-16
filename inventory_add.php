@@ -27,7 +27,7 @@
 	include_once $rootdir.'/inc/locations.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
-	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
+	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
 	$order_type = "Purchase";
 	
 	
@@ -138,7 +138,7 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php echo ($order_number != '' ? 'OUTSTANDING ITEMS FOR PO #' . $order_number : 'Inventory Addition'); ?></h2>
+				<h2><?php echo ($order_number != '' ? 'OUTSTANDING ITEMS FOR PO #' . $order_number : 'INVENTORY ADDITION'); ?></h2>
 			</div>
 			<div class="col-sm-4">
 				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
@@ -149,11 +149,17 @@
 		
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
-				<!-- Everything here is put out by the order creation ajax script -->
-			</div>
-
-			<div class="col-sm-10">
+			<?php if($order_number != '') { ?>
+				<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
+					<!-- Everything here is put out by the order creation ajax script -->
+				</div>
+				
+				<div class="col-sm-10">
+			<?php } else { ?>
+				<div class="col-sm-12">
+			<?php } ?>
+			
+			
 				<div class="table-responsive">
 					<table class="inventory_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 						<thead>
@@ -230,6 +236,8 @@
 									</td>
 								</tr>
 							<?php endforeach; ?>
+						<?php } else { ?>
+							
 						<?php } ?>
 						</tbody>
 					</table>

@@ -117,7 +117,7 @@ function unique(list) {
 	return result;
 }
 
-function ajax_callback($element, callback){  
+function ajax_callback($element, callback) {  
 	$.ajax({
 		type: "POST",
 		url: '/json/validation.php',
@@ -139,6 +139,7 @@ function stopAll(e) {
 //onClick of defined class Validation
 function nonFormCase($element, e) {
 	var classHolder = $element.data('validation');
+	
 	var $obj = $element.closest('body').find('.' + classHolder)
 	
 	//console.log(validation(e, $obj) + ' result');

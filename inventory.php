@@ -10,7 +10,7 @@
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
-
+	include_once $rootdir.'/inc/locations.php';
 
 
 	$parts_array = array();
@@ -435,7 +435,16 @@
 		</div>
 	</div>
 
-	
+	<div style='display: none;'>
+		<div class="locations row-fluid">
+			<div class="col-md-6">
+				<?=loc_dropdowns('place')?>
+			</div>
+			<div class="col-md-6">
+				<?=loc_dropdowns('instance')?>
+			</div>
+		</div>
+	</div>
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js"></script>
@@ -731,6 +740,7 @@
 					// var p = JSON.parse(part)
 					console.log(part);
 					var revisions, parts;
+					var locations = $('.locations').clone();
 					
 					var counter = 1;
 					revisions = "<option value='' selected>All</option>";
@@ -751,20 +761,41 @@
 							var s = row.serials;
 							//alert (s);
 							if(s){
+								parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+											<td colspan='12'>";
+											parts += "<table class='table table-hover table-condensed'>\
+														<thead>\
+															<tr>\
+															<th>Serial Number</th>\
+															<th>New Serial</th>\
+															<th>New Location</th>\
+															<th>New Condition</th>\
+															<th></th>\
+															</tr>\
+														</thead>\
+														<tbody>";
 								$.each(s, function(serial,history){
-									
-										
-											parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-																					<td>"+serial+"</td>";
-																// $.each(history,function(record, details){
-																	
-																// });
-																parts += "</tr>";
-																
-															
-							parts +=				"<\
-											</tr>";
+									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+													<td>"+serial+"</td>\
+													<td><input class='newSerial form-control' placeholder='New Serial' data-serial='"+serial+"'/></td>\
+													<td class='location_holder'></td>\
+													<td><select class='newCondition form-control'></select></td>";
+									$.each(history,function(record, details){
+										if(details.last_sale != null) {
+											parts += "<td>"+details.last_sale+"</td>";
+										} else {
+											parts += "<td></td>";
+										}
+										console.log(details);
+									});
+										parts += "<td>\
+											<i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i>\
+											<a class='btn-flat success pull-right multipart_sub'>\
+                    						<i class='fa fa-check fa-4' aria-hidden='true'></i></a></td>";
+									parts += "</tr>";
 								}); //Serials loop end
+								parts += "</tbody>\
+										</table>";
 							}
 								
 						});
@@ -773,6 +804,7 @@
 					$('.revisions').append(revisions);
 					$('.parts').append(parts);
 					
+					$('.location_holder').append(locations);
 
 					if(part != '') {
 						$(".loading_element_listing").show();
