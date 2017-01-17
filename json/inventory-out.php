@@ -270,11 +270,11 @@
 		return($p);
 		}
 			//For a later sanity when this craziness is done
-			$pid = prep($id);
-			$query = "SELECT *  ";
-			$query .= "FROM inventory, locations, inventory_history ";
-			$query .= "WHERE  `locationid` = locations.id AND invid = inventory.id AND `partid` = $id ";
-			$query .= "GROUP BY inventory.partid, locationid, last_purchase, item_condition, date_created";
+			// $pid = prep($id);
+			// $query = "SELECT *  ";
+			// $query .= "FROM inventory, locations, inventory_history ";
+			// $query .= "WHERE  `locationid` = locations.id AND invid = inventory.id AND `partid` = $id ";
+			// $query .= "GROUP BY inventory.partid, locationid, last_purchase, item_condition, date_created";
 
 	function ordered_inventory_arr_out($id,$info){
 		//Pass in a HECIDB Result
@@ -382,7 +382,7 @@
 			
 		}
 	}
-	function search($search = '',$serial=''){
+	function search($search = ''){
 		$return = array();
 		
 		if ($search){
@@ -404,24 +404,25 @@
 					$parts[$inv['partid']] = $initial[$inv['partid']];
 				}
 			}
-			
-			
-		}
-		else if($serial){
 			$parts = array();
-			$serial = prep("%".$serial."%");
-			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $serial";
+			$search = prep("%".$search."%");
+			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
 			$result = qdb($query);
 			foreach ($result as $part){
 		    	$p = hecidb($part['partid'],'id');
 		    	foreach($p as $id => $info){
-		        	$parts[$id] = $info;
+		    		if(!isset($parts[$id])){
+		        		$parts[$id] = $info;
+		    		}
 		    	}
 			}
+			
+			
 		}
+
 		else{
 		    $parts = array();
-			$query  = "SELECT DISTINCT partid FROM inventory;";
+			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0;";
 			$result = qdb($query);
 			foreach ($result as $part){
 		    	$p = hecidb($part['partid'],'id');
@@ -439,14 +440,56 @@
 		return ($return);
 	}
 	
-	function query_first($partid){
+	function sFilter($field, $value){
+		if ($value){
+			$value = prep($value);
+			$string = " AND `$field` = $value ";
+		}
+		else{
+			$string = '';
+		}
+		return $string;
+	}
+	
+	function dFilter($field, $start, $end = ''){
+		if ($start and $end){
+	   		$start = prep(format_date($start, 'Y-m-d'));
+	   		$end = prep(format_date($end, 'Y-m-d'));
+	   		$string = " AND $field between CAST($start AS DATE) and CAST($end AS DATE) ";
+		}
+		else if($start){
+			$string = " AND $field between CAST($start AS DATE) ";
+		}
+		else{
+			$string = '';
+		}
+		return $string;
+	}
+	
+	function query_first($partid, $filters = array()){
 		//Query to grab rows first
 		$r = array();
+		
+		
+		
+		//Filter Grabber
+		$location = $filters['filter_value'];
+		$condition = $filters['condition'];
+		$purchase_order = $filters['po'];
+		$earliest = $filters['earliest'];
+		$latest = $filters['latest'];
+		
+		
 		$partid = prep($partid);
 		$query = "SELECT `partid`, SUM(`qty`) sumqty, `locationid`, `item_condition`, `last_purchase`, `status`, `last_sale`, `date_created`, `id` invid ";
 		$query .= "FROM inventory ";
-		$query .= "WHERE `partid` = $partid AND qty > 0 ";
-		$query .= "GROUP BY partid, locationid, last_purchase, item_condition, date_created ";
+		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
+		$query .= sFilter('locationid', $location);
+		$query .= sFilter('item_condition',$condition);
+		$query .= sFilter('last_purchase',$purchase_order);
+		$query .= dFilter('date_created',$earliest, $latest);
+		$query .= "GROUP BY partid, locationid, last_purchase, item_condition, date_created;";
+		// $query .= "ORDER BY sumqty;";
 		
 		
 		$rows = qdb($query);
@@ -479,8 +522,8 @@
 			$s = array();
 			$serials = qdb($q_serial);
 			foreach($serials as $serial){
-				if($serial['serial_no']){
-					$s[$serial['serial_no']][] = $serial;
+				if($serial['invid']){
+					$s[$serial['invid']][] = $serial;
 				}
 				else{
 					$s['null'][] = $serial;
@@ -496,12 +539,10 @@
 
 $search = grab('search');
 $serial = grab('serial');
+$filters = grab('filters');
 
-
-$return = (search($search,$serial));
+$return = (search($search));
 
 // print_r($return);
 echo json_encode($return);
 ?>
-
-

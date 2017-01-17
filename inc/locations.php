@@ -48,7 +48,8 @@
         return $results;
     }
     
-    function loc_dropdowns($type = '', $selcted = '',$limit = ''){
+    //Expects: Warehouse, Place, or Instance
+    function loc_dropdowns($type = '', $selcted = '',$limit = '',$default = ''){
         // Populates the location dropdown with the accurate value/paired information
         $type = strtolower($type);
         
@@ -79,9 +80,10 @@
             $output = "<div>";
                 
                 $output .= "<select class='form-control $type'>";
-                //Add in a default value to the locations
-                $output .= "<option disabled selected value> -- Select a Location -- </option>";
-                 
+    	        if(!$selcted and !$default){
+                    $output .= "<option selected value = 'null'>Column</option>";
+    	        }
+
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        if ($row['place'] == $selcted){$output .= ' selected ';}
@@ -93,7 +95,6 @@
         }
         else if ($type == "instance") {
             
-            //Takes in the location ID and returns the 
             if ($selcted){
                 $locations = mysqli_fetch_assoc(getLocation($selected));
                 $selcted = $locations['instance'];
@@ -106,6 +107,10 @@
             $output = "<div>";
                 
             $output .= "<select class='form-control $type'>";
+            if(!$selcted and !$default){
+                    $output .= "<option selected value = 'null'>Shelf</option>";
+    	        }
+            //Takes in the location ID and returns the 
     	    if ($results){
         	    foreach($results as $row){
         	        $output .= "<option ";

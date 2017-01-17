@@ -81,6 +81,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
 				$associated_order = $row['assoc_order'];
+				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
 			}
 		}
 		
@@ -90,7 +91,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if ($account){
 			foreach ($account as $a){
 				if ($selected_account == $a['id']){
-					$acct_display .= "<option selected data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
+					$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
 				}
 			}
 		}
@@ -146,6 +147,17 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		    			</div>
 	    			</div>
 		    	</div>";
+		    	
+		//If this is a purchase order, allow a static associated tracking field to be entered.
+		if($order_type == "Purchase"){
+			$right .= "
+					<div class='row'>
+						<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
+							<label for='tracking'>Associated Tracking #:</label>
+							<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
+		    			</div>
+					</div>";
+		}
 		//Billing Address
 		$right .="
 				<div class='row'>
@@ -224,6 +236,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
     }
+    
+		function getPackages($order_number){
+			$order_number = prep($order_number);
+			$query = "Select * From packages WHERE order_number = $order_number;";
+			$result = qdb($query);
+			return $result;
+		}
+    
 	function display($order_number = '',$page = 'Purchase'){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
@@ -232,6 +252,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$public;
 		$s_carrier_name;
 		
+		//Navigaion changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
 		$right.="
@@ -279,24 +300,131 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				</div>";
 		if($results){
 			//Contact Output
-			$right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-			$right .= "<b>COMPANY:</b> <br>".($company_name)."<br><br>";
-			$right .= "<b>COMPANY REPRESENTATIVE:</b> <br>".getContact($contact)."<br><br>";
+			$right .= "<div>";
+				$right .= "<h5>SHIPMENT INFORMATION</h5><br>";
+				$right .= "<b>COMPANY: Representative</b> <br>".($company_name).": ".getContact($contact)."<br><br>";
+				
+				//Addresses
+				$right .= "<b>BILLING ADDRESS:</b><br>";
+				$right .= address_out($b_add);
+				$right .= "<br>";
+				$right .= "<b>SHIPPING ADDRESS:</b><br>";
+				$right .= address_out($s_add);
+				$right .= "<br><br>";
+				$right .= "<b>CARRIER INFORMATION:</b><br>";
+				$right .= $selected_carrier;
+				$right .= "<br><br>";
+				if($public){
+					$right .= "<b>PUBLIC NOTES:</b><br>";
+					$right .= $public;
+					$right .= "<br>";
+				}
+				if($private){
+					$right .= "<b>PRIVATE NOTES:</b><br>";
+					$right .= $public;
+					$right .= "<br>";
+				}
+				$right .= "<br>";
+			$right .= "</div>";
+					//PACKAGING SECTION: THIS IS GOING TO BE AN INTERESTING CHALLENGE.
+
+				$i = 1;
+				$packages = getPackages($order_number);
+				if (mysqli_num_rows($packages) > 0){
+					foreach($packages as $package){
+						$right .="
+							<div class = 'package_section' style = 'padding-bottom:10px;'>
+								<div class = 'row'>
+									<div class = 'col-sm-3' style = 'padding-right:0px;'>
+										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Pkg. #' title = 'Box Label' value = '".$package['package_no']."'>
+									</div>
+									<div class = 'col-sm-9'  style = 'padding-left:0px;' >
+										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Tracking #' title='Tracking #' value = '".$package['tracking_no']."'>
+									</div>
+								</div>
+								<div class = 'row-fluid'>
+										<div class = 'input-group'>
+											<input class='form-control' id = 'length-".$i."' name='length' title = 'Length' type='text' placeholder = 'Length' value='".$package['length']."'>
+											<span class='input-group-addon'>
+										        	<i class='fa fa-times' aria-hidden='true'></i>
+							    			</span>
+											<input class='form-control' id = 'width-".$i." name='width' title = 'Width' type='text' placeholder = 'Width' value='".$package['width']."'>
+											<span class='input-group-addon'>
+										        	<i class='fa fa-times' aria-hidden='true'></i>
+							    			</span>
+											<input class='form-control' id = 'height-".$i."' name='height' title = 'Height' type='text' placeholder = 'Height' value='".$package['height']."'>
+						    			</div>
+				    			</div>
+								<div class = 'row-fluid'>
+									<div class = 'input-group col-sm-5' style = 'padding-left:0px;padding-right:0px;'>
+										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Weight' title = 'Weight' value = '".$package['weight']."'>
+										<span class='input-group-addon'>
+										      lbs.
+							    		</span>
+									</div>
+									<div class = 'input-group col-sm-5' style = 'padding-right:0px;padding-left:0px;'>
+										<span class='input-group-addon'>$</span>
+										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Freight' title='Freight Cost' value = '".$package['freight_amount']."'>
+									</div>
+									<div class = 'input-group col-sm-2' style = 'padding-right:0px;padding-left:0px;'>
+										<button class ='btn-flat gray'><i class='fa fa-plus' aria-hidden='true'></i></button>
+									</div>
+								</div>
+							</div>
+						";
+							
+						$i++;
+					}	
+				}
+				else{
+						$right .="
+							<div class = 'package_section' style = 'padding-bottom:10px;'>
+								<div class = 'row'>
+									<div class = 'col-sm-3' style = 'padding-right:0px;'>
+										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Pkg. #' title = 'Box Label' value = ''>
+									</div>
+									<div class = 'col-sm-9'  style = 'padding-left:0px;' >
+										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Tracking #' title='Tracking #' value = ''>
+									</div>
+								</div>
+								<div class = 'row-fluid'>
+										<div class = 'input-group'>
+											<input class='form-control' id = 'length-".$i."' name='length' title = 'Length' type='text' placeholder = 'Length' value=''>
+											<span class='input-group-addon'>
+										        	<i class='fa fa-times' aria-hidden='true'></i>
+							    			</span>
+											<input class='form-control' id = 'width-".$i." name='width' title = 'Width' type='text' placeholder = 'Width' value=''>
+											<span class='input-group-addon'>
+										        	<i class='fa fa-times' aria-hidden='true'></i>
+							    			</span>
+											<input class='form-control' id = 'height-".$i."' name='height' title = 'Height' type='text' placeholder = 'Height' value=''>
+						    			</div>
+				    			</div>
+								<div class = 'row-fluid'>
+									<div class = 'input-group col-sm-5' style = 'padding-left:0px;padding-right:0px;'>
+										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Weight' title = 'Weight' value = ''>
+										<span class='input-group-addon'>
+										      lbs.
+							    		</span>
+									</div>
+									<div class = 'input-group col-sm-5' style = 'padding-right:0px;padding-left:0px;'>
+										<span class='input-group-addon'>$</span>
+										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Freight' title='Freight Cost' value = ''>
+									</div>
+									<div class = 'input-group col-sm-2' style = 'padding-right:0px;padding-left:0px;'>
+										<div class ='btn-flat gray'><i class='fa fa-plus' aria-hidden='true'></i></div>
+									</div>
+								</div>
+							</div>
+							
+						";
+											
+					
+				}
 			
-			//Addresses
-			$right .= "<b>BILLING ADDRESS:</b><br>";
-			$right .= address_out($b_add);
-			$right .= "<br><br>";
-			$right .= "<b>SHIPPING ADDRESS:</b><br>";
-			$right .= address_out($s_add);
-			$right .= "<br><br>";
-			$right .= "<b>CARRIER INFORMATION:</b><br>";
-			$right .= $selected_carrier;
-			$right .= "<br><br>";
-			$right .= "<b>NOTES (Optional):</b><br>";
-			$right .= $public;
-			$right .= "<br>";
 		}
+		
+		
 		//Closing Tag (Leave Outside of any if statment)
 	    $right .= "</div>
 		    <div class='arrow click_me'>   

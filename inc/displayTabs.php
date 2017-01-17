@@ -8,7 +8,7 @@
 				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i><span>','title'=>'Companies'),
 				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i><span>','title'=>'Services'),
 				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i><span>','title'=>'Repairs'),
-				array('action'=>'/shipping_home','image'=>'<i class="fa fa-truck"></i><span>','title'=>'Shipping'),
+				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i><span>','title'=>'Shipping'),
 				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i><span>','title'=>'Inventory'),
 			),
 		'right' =>
