@@ -605,48 +605,52 @@
 			});
 
 //New Multi-line insertion 			
-			$(document).on("click",".multipart_sub",function() {
-	   		    $(".search_lines").each(function() {
-				    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
-				    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
-		   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
-		   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
-	   		    	var partid = $(this).attr("data-line-id");
-	   		        var qty = $(this).find("input[name=ni_qty]").val();
-					var condition = $(".multipart_sub").closest("tr").find(".condition").val();
-					
+			$(document).on("click",".multipart_sub",function(e) {
+				var isValid = nonFormCase($(this), e);
 				
-   		        if(qty){
-       					$.ajax({
-							type: "POST",
-							url: '/json/order-table-out.php',
-							data: {
-				   		    	"line":lineNumber,
-				   		    	"search":partid,
-				   		    	"date":date,
-				   		    	"qty":qty,
-				   		    	"unitPrice":price,
-								"warranty":warranty,
-								"condition":condition,
-				   		    	"id": 'new',
-				   		    	"mode":'append'
-								}, // serializes the form's elements.
-							dataType: 'json',
-							success: function(row_out) {
-								$("#right_side_main").append(row_out);
-								$(".search_lines").html("").remove();
-								$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
- 							}
-						});
-	   		        }
-	   		    });
-	   		    
-				var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-				if (!lineNumber){lineNumber = 0;}
-				$("#go_find_me").val("");
-    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+				if(isValid) {
+		   		    $(".search_lines").each(function() {
+					    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
+					    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
+			   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
+			   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
+		   		    	var partid = $(this).attr("data-line-id");
+		   		        var qty = $(this).find("input[name=ni_qty]").val();
+						var condition = $(".multipart_sub").closest("tr").find(".condition").val();
+						
+					
+	   		        if(qty){
+	       					$.ajax({
+								type: "POST",
+								url: '/json/order-table-out.php',
+								data: {
+					   		    	"line":lineNumber,
+					   		    	"search":partid,
+					   		    	"date":date,
+					   		    	"qty":qty,
+					   		    	"unitPrice":price,
+									"warranty":warranty,
+									"condition":condition,
+					   		    	"id": 'new',
+					   		    	"mode":'append'
+									}, // serializes the form's elements.
+								dataType: 'json',
+								success: function(row_out) {
+									$("#right_side_main").append(row_out);
+									$(".search_lines").html("").remove();
+									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
+	 							}
+							});
+		   		        }
+		   		    });
+		   		    
+					var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+					if (!lineNumber){lineNumber = 0;}
+					$("#go_find_me").val("");
+	    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
+	       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+	       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+				}
 			});
 			
 //Delete Button
@@ -844,10 +848,11 @@
 	});
 //================================ PAGE SUBMIT ================================
 			
-			$('#save_button').click(function() {
+			$('#save_button').click(function(e) {
 				
-				//var isValid = nonFormCase($(this), e);
+				var isValid = nonFormCase($(this), e);
 				
+				if(isValid) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
@@ -953,6 +958,9 @@
 						   	alert(error);
 						},
 					});
+				} else {
+					$(window).scrollTop();
+				}
 			});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================

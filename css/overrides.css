@@ -76,8 +76,9 @@
   border:1px solid #ddd;
 }
 
-.sub-nav #pad-wrapper {
-	margin-top:120px;
+/*.sub-nav #pad-wrapper {*/
+#pad-wrapper {
+	margin-top:140px;
 }
 
 .input-primary {
@@ -134,15 +135,13 @@
 
 /***** END MODAL NOTES DIALOG BOX *****/
 
-#advanced-search-options .btn-submit {
-	position:absolute;
-	bottom:-1px;
-	right:-1px;
-}
-
 .source {
 	float:right;
 	font-style:italic;
+}
+.word-wrap160 {
+	max-width:160px;
+	word-wrap:break-word;
 }
 
 .tooltip-inner {
@@ -441,7 +440,7 @@ input[type="text"].inline {
 	position:absolute;
 	text-align:center;
 }
-#s, .product-search, .descr-edit input {
+#s, .product-search, .upper-case, .descr-edit input {
 	text-transform:uppercase;
 }
 .product-search {
@@ -451,8 +450,8 @@ input[type="text"].inline {
 
 /***** ADVANCED SEARCH OPTIONS *****/
 #advanced-search-options {
-	position:absolute;
-	top:-7px;
+	position:fixed;
+	top:46px;
 	width:100% !important;
 	margin-left:auto !important;
 	margin-right:auto !important;
@@ -461,9 +460,12 @@ input[type="text"].inline {
 	background-color:rgba(0, 0, 0, 0.8);
 	box-shadow: 2px 3px 2px #888;
 }
+/*
 .sub-nav #advanced-search-options {
+	position:absolute;
 	top:-72px;
 }
+*/
 #advanced-search-options.animated {
 	-webkit-animation-duration: .3s;
 	-o-linear-animation-duration: .3s;
@@ -503,6 +505,14 @@ input[type="text"].inline {
 	margin-top:4px;
 	margin-bottom:4px;
 }
+
+#advanced-search-options .btn-submit {
+	position:absolute;
+	bottom:-1px;
+	right:-1px;
+}
+
+
 .alert i.fa {
 	vertical-align:middle;
 }
@@ -907,6 +917,11 @@ h1 a, h2 a, h3 a {
 	text-decoration:none;
 	color:black;
 }
+h1.minimal, h2.minimal, h3.minimal {
+	line-height:1;
+	margin:0px;
+	padding:0px;
+}
 
 .loader {
 	display: none;
@@ -933,32 +948,20 @@ h1 a, h2 a, h3 a {
 .highlight-selected {
 	font-weight:bold;
 }
-.margin-10 {
-	margin-top:10px;
-}
+.margin-10 { margin-top:10px; }
+.margin-20 { margin-top:20px; }
+.margin-40 { margin-top:40px; }
+.margin-80 { margin-top:80px; }
+.margin-120 { margin-top:120px; }
+.margin-bottom-220 { margin-bottom:220px; }
 
 #image-modal img {
 	width:100%;
 }
 
-#btn-range-options {
-	width:36px;
-	position:relative;
-}
-#date-ranges {
-   width:480px;
-   height:30px;
-   padding:0px;
-   left:32px;
-   top:0px;
-   position:absolute;
-   text-align:left;
-   z-index:1001;
-}
-.date-options:hover {
-   /*background:#eee;*/
-}
 
+
+/*** FONT AWESOME CUSTOMIZATIONS ***/
 
 .fa-nav {
 	font-size:10px;
@@ -970,6 +973,33 @@ h1 a, h2 a, h3 a {
 	display:table-cell;
 	padding-right:25px;
 }
+.fa-stack-2x.fa-stack-lg {
+	font-size:1.6666666em;
+	height:1.33333333em;
+	line-height:1.33333333em;
+}
+.fa-stack-2x.fa-stack-md {
+	font-size:1.5em;
+	height:1em;
+	line-height:1.3333333em;
+}
+.fa-stack-sm, .fa-stack-xs {
+	display:block;
+	padding-top:15px;
+	font-size:0.75em;
+}
+.fa-stack-sm {
+	padding-left:2px;
+	line-height:1.6666666em;
+}
+.fa-stack-xs {
+	padding-left:0px;
+	line-height:.8em;
+}
+
+
+
+/*** BUTTONS ***/
 /* fixes a bootstrap bug I was experiencing when hovering over a button in a .btn-group */
 .btn-group .btn {
 	margin-left:-1px !important;
@@ -995,29 +1025,26 @@ h1 a, h2 a, h3 a {
 .btn-expdate .fa-stack-2x {
 	font-size:1.6666666em;
 }
-.fa-stack-2x.fa-stack-lg {
-	font-size:1.6666666em;
-	height:1.33333333em;
-	line-height:1.33333333em;
+#btn-range-options {
+	width:36px;
+	position:relative;
 }
-.fa-stack-2x.fa-stack-md {
-	font-size:1.5em;
-	height:1em;
-	line-height:1.3333333em;
+#date-ranges {
+   width:436px;
+   height:30px;
+   padding:0px;
+   left:32px;
+   top:0px;
+   position:absolute;
+   text-align:left;
+   z-index:1001;
+   background-color:#ccc;
 }
-.fa-stack-sm, .fa-stack-xs {
-	display:block;
-	padding-top:15px;
-	font-size:0.75em;
+.date-options:hover {
+   /*background:#eee;*/
 }
-.fa-stack-sm {
-	padding-left:2px;
-	line-height:1.6666666em;
-}
-.fa-stack-xs {
-	padding-left:0px;
-	line-height:.8em;
-}
+
+
 
 @media (max-width: 1490px) {
   .navbar-nav .hidden-xs.hidden-sm span {
@@ -1418,6 +1445,8 @@ a > .icon-ar.icon-ar-inverse:hover {
   border-left: solid 20px #f7f7f7;
 }
 
+
+/*** SERVICES / JOBS ***/
 #main-stats .stat {
   padding:10px 0px 10px 0px;
 }
@@ -1427,6 +1456,10 @@ a > .icon-ar.icon-ar-inverse:hover {
   padding-right:30px;
 }
 #main-stats .stat .data .number {
+}
+.progress {
+	margin-bottom:0px;
+	border:1px solid #888;
 }
 
 
@@ -1579,4 +1612,3 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .nav-tabs li a:hover {
   background-color: #f5f5f5;
 }
-

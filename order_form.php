@@ -91,7 +91,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat  <?=($order_number=="New")?'success':'success'?> pull-right" id = "save_button" style="margin-top:2%;margin-bottom:2%;">
+				<button class="btn-flat  <?=($order_number=="New")?'success':'success'?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 					<?=($order_number=="New") ? 'Create' :'Save'?>
 				</button>
 			</div>

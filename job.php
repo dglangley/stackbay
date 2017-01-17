@@ -1,4 +1,25 @@
-<!DOCTYPE html>
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
+
+	$jobid = 0;
+	if (isset($_REQUEST['id']) AND is_numeric($_REQUEST['id']) AND $_REQUEST['id']>0) { $jobid = $_REQUEST['id']; }
+
+	if (! $jobid AND isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$query = "SELECT id FROM services_job WHERE job_no = '".res(trim($_REQUEST['s']))."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$jobid = $r['id'];
+		}
+		$_REQUEST['s'] = '';
+	}
+
+	if (! $jobid) {
+		header('Location: services.php');
+		exit;
+	}
+?><!DOCTYPE html>
 <html lang="en">
 <head>
 	<title>Job</title>
@@ -6,18 +27,15 @@
 		include_once 'inc/scripts.php';
 	?>
 </head>
-<body>
+<body class="sub-nav margin-bottom-220">
 
 	<?php include_once 'inc/navbar.php'; ?>
 
-    <div id="pad-wrapper">
-
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/htmlcp1252.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
 
 	$VENDORS = array();
 	function getVendor($id,$input='id',$output='name') {
@@ -211,9 +229,6 @@
 		}
 	}
 
-	$jobid = 0;
-	if (isset($_REQUEST['id']) AND is_numeric($_REQUEST['id']) AND $_REQUEST['id']>0) { $jobid = $_REQUEST['id']; }
-
 	$db_path = 'https://db.ven-tel.com:10086/service/usermedia/';
 	$job_out = '';
 	$job = array();
@@ -396,7 +411,7 @@ $pdPayTotal += $pdPay;
 					'entered_by_id'=>$techid,
 					'job_id'=>$job['id'],
 					'tech_id'=>$techid,
-					'label'=>'Mileage: '.$r['notes'],
+					'label'=>'Mileage: '.$r['mileage'].'<BR/>'.$r['notes'],
 					'date'=>substr($r['datetime_in'],0,10),
 					'amount'=>($r['mileage']*$job['mileage_rate']),
 					'file'=>'',
@@ -416,10 +431,12 @@ $pdPayTotal += $pdPay;
 			else if (! $task['admin_completed']) { $admin_completed = 0; }
 			$notes = '';
 			if ($task['notes']) { $notes = '<br/>&nbsp; <span class="info">'.$task['notes'].'</span>'; }
+			$assigned_dates = '';
+			if ($task['date_scheduled'] AND $task['date_scheduled_complete']) {
+				$assigned_dates = format_date($task['date_scheduled'],'M j, Y').' to '.format_date($task['date_scheduled_complete'],'M j, Y');
+			}
 
-			$assignments .= '
-				'.format_date($task['date_scheduled'],'M j, Y').' to '.format_date($task['date_scheduled_complete'],'M j, Y').$notes.'<br/>
-			';
+			$assignments .= $assigned_dates.$notes.'<br/>';
 		}
 
 		if ($cumLabor==0) { continue; }
@@ -573,16 +590,113 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 	else { $themeProfit = 'text-info'; }
 
 	$laborProfit = ($job['quote_labor']-$laborTotal);
-	$jobPct = round((($laborProfit/$laborTotal)*100),2);
+
+	$progressCls = '';
+	$jobPct = round((($laborProfit/$job['quote_labor'])*100));
+	$jobPctOut = $jobPct;
+	if ($jobPct<0) {
+		$progressCls = ' progress-bar-danger';
+		$jobPct = -$jobPct;
+	}
+
+	// if no start date passed in, or invalid, set to beginning of previous month
+	if (! $startDate) { $startDate = format_date($today,'m/01/Y',array('m'=>-1)); }
 ?>
+
+	<form class="form-inline" action="services.php" method="get">
+
+    <table class="table table-header table-filter">
+		<tr>
+		<td class = "col-md-2">
+
+		</td>
+
+		<td class = "col-md-3">
+			<div class="form-group">
+				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+		        </div>
+			</div>
+			<div class="form-group">
+				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
+		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
+		            <span class="input-group-addon">
+		                <span class="fa fa-calendar"></span>
+		            </span>
+			    </div>
+			</div>
+			<div class="form-group">
+					<div class="btn-group" id="dateRanges">
+						<div id="btn-range-options">
+							<button class="btn btn-default btn-sm">&gt;</button>
+							<div class="animated fadeIn hidden" id="date-ranges">
+						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+
+	$quarters = calcQuarters();
+	foreach ($quarters as $qnum => $q) {
+		echo '
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
+		';
+	}
+?>
+<?php
+	for ($m=1; $m<=5; $m++) {
+		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
+		$mfields = explode(' ',$month);
+		$month_name = $mfields[0];
+		$mcomps = explode('/',$mfields[1]);
+		$MM = $mcomps[0];
+		$DD = $mcomps[1];
+		$YYYY = $mcomps[2];
+		echo '
+								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
+		';
+	}
+?>
+							</div><!-- animated fadeIn -->
+						</div><!-- btn-range-options -->
+					</div><!-- btn-group -->
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+			</div><!-- form-group -->
+		</td>
+		<td class="col-md-2 text-center">
+            <h2 class="minimal">Job<?php echo $job_out; ?></h2>
+		</td>
+		
+		<td class="col-md-2 text-center">
+			<div class="input-group">
+				<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value ='<?php echo $keyword?>' placeholder = "Search..." autofocus />
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
+			</div>
+		</td>
+		<td class="col-md-3">
+			<div class="pull-right form-group">
+			<select name="companyid" id="companyid" class="company-selector" disabled >
+					<option value="">- Select a Company -</option>
+				<?php 
+				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+				?>
+				</select>
+					<button class="btn btn-primary btn-sm" type="submit" >
+						<i class="fa fa-filter" aria-hidden="true"></i>
+					</button>
+			</div>
+			</td>
+		</tr>
+	</table>
+
+    <div id="pad-wrapper">
 
 <div class="container">
     <section class="margin-bottom">
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="right-line">Job<?php echo $job_out; ?></h2>
-            </div>
-		</div>
         <div class="row">
             <div class="col-md-3 col-sm-6">
                 <div class="text-icon">
@@ -637,10 +751,14 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
         <div class="row">
             <div class="col-md-3 col-sm-6">
                 <div class="text-icon">
+<?php
+	// strip range of non-printable characters at end of address string from copying and pasting (side-eyes Dave Oden)
+	$address = strip_space($job['site_access_info_address']);
+?>
                     <span class="icon-ar icon-ar-sm bg-brown"><i class="fa fa-map-marker"></i></span>
                     <div class="text-icon-content">
 						<?php if ($contact) { echo '<h5 class="no-margin">'.$contact.'</h5><p class="info"><small>Contact</small></p>'; } else { echo '<br/><br/><br/>'; } ?>
-                        <h5 class="no-margin"><?php echo str_replace(chr(10),'<BR>',$job['site_access_info_address']); ?></h5>
+                        <h5 class="no-margin"><?php echo $address; ?></h5>
                     </div>
                 </div>
             </div>
@@ -819,11 +937,11 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
                             <tr class="first">
                                 <td colspan="2">
 									<div class="progress progress-lg">
-										<div class="progress-bar" role="progressbar" aria-valuenow="<?php echo $jobPct; ?>" aria-valuemin="0" aria-valuemax="100" style="width: <?php echo $jobPct; ?>%"><?php echo $jobPct; ?>%</div>
+										<div class="progress-bar<?php echo $progressCls; ?>" role="progressbar" aria-valuenow="<?php echo $jobPct; ?>" aria-valuemin="0" aria-valuemax="100" style="width: <?php echo $jobPct; ?>%"><?php echo $jobPctOut; ?>%</div>
 									</div>
                                 </td>
                                 <td>
-									<?php echo format_price($laborProfit,true,''); ?> Labor profit of <?php echo format_price($job['quote_labor'],true,''); ?> quoted Labor
+									<?php echo format_price($laborProfit,true,''); ?> profit of <?php echo format_price($job['quote_labor'],true,''); ?> quoted Labor
                                 </td>
                                 <td>
 									<strong><?php echo $laborTotalTime.' &nbsp; '.timeToStr($laborTotalTime); ?></strong>
@@ -917,6 +1035,8 @@ PD '.toTime($secsPd).' = '.$pdPayTotal.'<BR>
 </div> <!-- container -->
 
 </div> <!-- pad-wrapper -->
+
+	</form>
 
 <?php include_once 'inc/footer.php'; ?>
 

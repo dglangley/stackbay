@@ -277,7 +277,7 @@ if (! $r['partid']) { return ($results); }
 		include_once 'inc/scripts.php';
 	?>
 </head>
-<body class="sub-nav">
+<body>
 
 	<?php include_once 'inc/keywords.php'; ?>
 	<?php include_once 'inc/dictionary.php'; ?>
@@ -343,7 +343,7 @@ if (! $r['partid']) { return ($results); }
 ?>
     <div id="pad-wrapper">
 
-    <table class="table">
+    <table class="table margin-120">
 		<tr>
 			<td class="col-md-12 text-center">
 				Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...

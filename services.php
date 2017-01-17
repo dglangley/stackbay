@@ -1,13 +1,41 @@
 <?php
 	$rootdir = $_SERVER['ROOT_DIR'];
-	
 	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/svcs_pipe.php';
+
+	$keyword = '';
+	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['keyword']) AND $_REQUEST['keyword'])) {
+		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $keyword = $_REQUEST['s']; }
+		else if (isset($_REQUEST['keyword']) AND $_REQUEST['keyword']) { $keyword = $_REQUEST['keyword']; }
+		$keyword = trim($keyword);
+
+		$query = "SELECT id FROM services_job WHERE job_no = '".res($keyword)."'; ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)==1) {
+			header('Location: job.php?s='.$keyword);
+			exit;
+		}
+		$query = "SELECT id FROM services_job WHERE (job_no RLIKE '".res($keyword)."' OR site_access_info_address RLIKE '".res($keyword)."'); ";
+		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+		if (mysqli_num_rows($result)==1) {
+			$r = mysqli_fetch_assoc($result);
+
+			header('Location: job.php?id='.$r['id']);
+			exit;
+		}
+		// in order for user to be able to 'reset' view to default services home, we want to reset search string
+		// so that if they at first were switching between modes (say, sales to services) with a sales-related
+		// search string, the subsequent click would show all services instead of the bogus search string
+		$_REQUEST['s'] = '';
+	}
+
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/svcs_pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/calcQuarters.php';
+	include_once $rootdir.'/inc/strip_space.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -21,45 +49,21 @@
 	
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
-	
-	$order = '';
-	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
-		$report_type = 'detail';
-		$order = $_REQUEST['order'];
-	} else if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
-		$report_type = 'detail';
-		$order = $_REQUEST['s'];
-	}
-	
-	$part = '';
-	$part_string = '';
-	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
-    	$part = $_REQUEST['part'];
 
-    	$part_list = getPipeIds($part);
-    	foreach ($part_list as $id => $array) {
-    	    $part_string .= $id.',';
-    	}
-    	$part_string = rtrim($part_string, ",");
-    }
-	
+	// if no start date passed in, or invalid, set to beginning of previous month
 	$startDate = '';
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	// if no start date passed in, or invalid, set to beginning of quarter by default
-	if (! $startDate) {
-		$year = date('Y');
-		$m = date('m');
-		$q = (ceil($m/3)*3)-2;
-		if (strlen($q)==1) { $q = '0'.$q; }
-		$startDate = $q.'/01/'.$year;
-	}
+	if (! $startDate) { $startDate = format_date($today,'m/01/Y',array('m'=>-1)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
+
+	if (! isset($_REQUEST['status']) OR ! $_REQUEST['status']) { $status = 'open'; }
+	else { $status = $_REQUEST['status']; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -91,7 +95,13 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-
+			<div class="btn-group medium">
+				<input type="hidden" name="status" id="status" value="<?php echo $status; ?>">
+				<button class="btn btn-warning btn-sm btn-status left<?php if (! $status OR $status=='open') { echo ' active'; } ?>" type="button" data-status="open"><i class="fa fa-folder-open"></i></button>
+				<button class="btn btn-primary btn-sm btn-status middle<?php if ($status=='complete') { echo ' active'; } ?>" type="button" data-status="complete"><i class="fa fa-folder"></i></button>
+				<button class="btn btn-success btn-sm btn-status middle<?php if ($status=='closed') { echo ' active'; } ?>" type="button" data-status="closed"><i class="fa fa-check-square"></i></button>
+				<button class="btn btn-info btn-sm btn-status right<?php if ($status=='all') { echo ' active'; } ?>" type="button" data-status="all"><i class="fa fa-square"></i></button>
+			</div>
 		</td>
 
 		<td class = "col-md-3">
@@ -112,15 +122,20 @@
 			    </div>
 			</div>
 			<div class="form-group">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
 							<div class="animated fadeIn hidden" id="date-ranges">
 						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
+<?php
+	$quarters = calcQuarters();
+	foreach ($quarters as $qnum => $q) {
+		echo '
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
+		';
+	}
+?>
 <?php
 	for ($m=1; $m<=5; $m++) {
 		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
@@ -141,14 +156,16 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #" disabled />
+            <h2 class="minimal">Services Jobs</h2>
 		</td>
 		
 		<td class="col-md-2 text-center">
-<!--
-			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
--->
+			<div class="input-group">
+				<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value ='<?php echo $keyword?>' placeholder = "Search..." autofocus />
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
+			</div>
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
@@ -176,15 +193,8 @@
 		<div class="row filter-block">
 
 		<br>
-            <!-- orders table -->
+            <!-- jobs table -->
             <div class="table-wrapper">
-
-<!-- If there is a company id, output the text of that company id to the top of the screen -->
-                <div class="row head text-center">
-                    <div class="col-md-12">
-                        <h2>Services Jobs</h2>
-                    </div>
-                </div>
 
 			<!-- If the summary button is pressed, inform the page and depress the button -->
 
@@ -209,28 +219,16 @@
 	//Write the query for the gathering of Pipe data
 	$query = "SELECT s.*, u.fullname ";
 	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
-   	if ($startDate) {
+   	if ($keyword) {
+		$query .= "AND (s.job_no RLIKE '".$keyword."' OR site_access_info_address RLIKE '".$keyword."') ";
+	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
    		//$dbStartDate = date("Y-j-m", strtotime($startDate));
    		//$dbEndDate = date("Y-j-m", strtotime($endDate));
    		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
-	$query .= "ORDER BY date_entered DESC; ";
-/*
-    $query .= "FROM services_job j, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-    $query .= "ORDER BY s.so_date DESC;";
-*/
+	$query .= "ORDER BY date_entered DESC, job_no DESC; ";
 	
 ##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
 	//$query = "SELECT * FROM sales_orders ";
@@ -246,43 +244,112 @@
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 
-	foreach ($result as $r) {
+	foreach ($result as $job) {
+		$po = '';
+		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$job['id']."'; ";
+		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$po .= $r2['po_number'].'<BR>';
+		}
+
+		$assigns = array();
+		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
+		$query2 .= "WHERE job_id = '".$job['id']."' AND assigned_to_id = up.id; ";
+		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$assigns[$r2['assigned_to_id']] = array('name'=>$r2['fullname'],'status'=>'');
+		}
+
+		/*** STATUS ***/
+		// do this before assignments since we check the timesheet here
+		$row_status = '';
+		if ($job['on_hold']==1) {
+			if ($status<>'all') { continue; }
+
+			$row_status = '<span class="label label-danger">On Hold</span>';
+		} else if ($job['cancelled']==1) {
+			if ($status<>'all') { continue; }
+
+			$row_status = '<span class="label label-danger">Canceled</span>';
+		} else if ($job['customer_po_complete']==1 AND $job['timesheets_complete']==1 AND $job['materials_complete']
+		AND $job['outside_services_complete']==1 AND $job['expenses_complete']==1 AND $job['admin_complete']==1) {
+			if ($status<>'all' AND $status<>'closed') { continue; }
+
+			$row_status = '<span class="label label-success">Closed</span>';
+		} else {
+			$query2 = "SELECT * FROM services_techtimesheet WHERE job_id = '".$job['id']."'; ";
+			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				if ($status<>'all' AND $status<>'open') { continue; }
+
+				$row_status = '<span class="label label-warning">In Progress</span>';
+			}
+			$query2 = "SELECT * FROM services_closeoutdoc WHERE job_id = '".$job['id']."'; ";
+			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				if ($status<>'all' AND $status<>'complete') { continue; }
+
+				$row_status = '<span class="label label-info">Complete</span>';
+			}
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				if ($r2['datetime_in'] AND ! $r2['datetime_out']) {
+					$assigns[$r2['tech_id']]['status'] = format_date($r2['datetime_in'],'g:ia');
+				}
+			}
+
+			if (! $row_status) {
+				if ($status<>'all' AND $status<>'open') { continue; }
+				$row_status = '<span class="label label-default">Idle</span>';
+			}
+		}
+
+
+		/*** ASSIGNMENTS ***/
+		$assignments = '';
+		foreach ($assigns as $a) {
+			if ($a['status']) {
+				$assignments .= '<span class="label label-warning">'.$a['name'].' &nbsp; '.$a['status'].'</span>';
+			} else {
+				$assignments .= $a['name'];
+			}
+			$assignments .= '<BR/>';
+		}
+
 		$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($r['date_entered'],'M j, Y').'
+                                    '.format_date($job['date_entered'],'M j, Y').'
                                 </td>
                                 <td>
-                                    <a href="job.php?id='.$r['id'].'">'.$r['job_no'].'</a>
+                                    <a href="job.php?id='.$job['id'].'">'.$job['job_no'].'</a>
                                 </td>
                                 <td>
-	                                <a href="#">'.$r['customer'].'</a><br/>
-									<span class="info">'.str_replace(chr(10),'<br/>',trim($r['site_access_info_address'])).'</span>
+	                                <a href="#">'.$job['customer'].'</a><br/>
+									<span class="info">'.strip_space($job['site_access_info_address']).'</span>
+                                </td>
+                                <td class="word-wrap160">
+									'.$job['site_access_info_contact'].'
                                 </td>
                                 <td>
-                                    '.$r['customer_job_no'].'
+                                    '.$job['customer_job_no'].'
                                 </td>
                                 <td>
-                                    '.$r['purchase_order'].'
+									'.$po.'
                                 </td>
                                 <td>
-                                    '.format_date($r['scheduled_date_of_work'],'D, M j, Y').'
+                                    '.format_date($job['scheduled_date_of_work'],'D, M j, Y').'<br/>
+									to<br/>
+                                    '.format_date($job['scheduled_completion_date'],'D, M j, Y').'
                                 </td>
                                 <td>
-                                    '.format_date($r['scheduled_completion_date'],'D, M j, Y').'
+                                    '.$job['fullname'].'
                                 </td>
                                 <td>
-                                    '.$r['fullname'].'
+                                    '.$assignments.'
                                 </td>
-                                <td class="text-right">
-                                    '.format_price($r['price_quote'],true,' ').'
-                                </td>
-                                <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
-                                </td>
-                                <td class="text-right">
-                                    '.format_price('0.00',true,' ').'
+                                <td class="text-center">
+									'.$row_status.'
                                 </td>
 
                             </tr>
@@ -297,7 +364,6 @@
                         <thead>
                             <tr>
                                 <th class="col-md-1">
-                                    <span class="line"></span>
                                     Date 
                                 </th>
                                 <th class="col-md-1">
@@ -310,7 +376,11 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Customer Job#
+                                    Contact
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>
+                                    Project ID#
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
@@ -318,24 +388,19 @@
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    Start Date
+                                    Start / End
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>
-                                    End Date
+									Manager
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-md-2">
                                     <span class="line"></span>
-									Project Manager
+                                    Assignments
                                 </th>
-                                <th class="col-md-1 text-right">
-                                    Quote
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Cost
-                                </th>
-                                <th class="col-md-1 text-right">
-                                    Profit
+                                <th class="col-md-1 text-center">
+                                    <span class="line"></span>
+                                    Status
                                 </th>
                             </tr>
                         </thead>
@@ -354,6 +419,7 @@
 
     <script type="text/javascript">
 
+/*
         $(document).ready(function() {
 			$('.btn-report').click(function() {
 				var btnValue = $(this).data('value');
@@ -362,6 +428,7 @@
 				});
 			});
         });
+*/
     </script>
 
 </body>

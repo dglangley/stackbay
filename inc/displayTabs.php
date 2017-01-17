@@ -5,16 +5,17 @@
 	$TABS = array(
 		'left' =>
 			array(
-				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i><span>','title'=>'Companies'),
-				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i><span>','title'=>'Services'),
-				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i><span>','title'=>'Repairs'),
-				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i><span>','title'=>'Shipping'),
-				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i><span>','title'=>'Inventory'),
+
+				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i><span>','title'=>'Companies','alias'=>''),
+				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i><span>','title'=>'Services','alias'=>'/job.php'),
+				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i><span>','title'=>'Repairs','alias'=>''),
+				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i><span>','title'=>'Shipping','alias'=>''),
+				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i><span>','title'=>'Inventory','alias'=>''),
 			),
 		'right' =>
 			array(
-				array('action'=>'/','image'=>'<i class="fa fa-cubes"></i><span>','title'=>'Sales'),
-				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i><span>','title'=>'Accounts'),
+				array('action'=>'/','image'=>'<i class="fa fa-cubes"></i><span>','title'=>'Sales','alias'=>''),
+				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i><span>','title'=>'Accounts','alias'=>''),
 			),
 	);
 
@@ -35,7 +36,7 @@
 		foreach ($tabs_arr as $tab) {
 			// set addl class to 'active' when tab is selected ($selected_tab)
 			$cls = '';
-			if ($tab['action']==$selected_tab) { $cls = ' active'; }
+			if ($tab['action']==$selected_tab OR $tab['alias']==$selected_tab) { $cls = ' active'; }
 
 			$tabs .= '
             <li class="hidden-xs hidden-sm'.$cls.'">

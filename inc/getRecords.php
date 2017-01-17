@@ -75,6 +75,7 @@
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
@@ -87,6 +88,7 @@
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
@@ -243,9 +245,10 @@
 		// add sales/purchaser rep id
 		if ($table_name=='outgoing_quote' OR $table_name=='incoming_quote') { $add_field .= ", creator_id repid "; } else { $add_field .= ", '' repid "; }
 
-		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
+//1/12/17
+//		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
 			if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
-		}
+//		}
 
 /*
 		if ($orig_table=='outgoing_quote' AND isset($SALE_QUOTES[$invid])) {
@@ -273,6 +276,8 @@
 				$r['partid'] = getPartId($r['part_number'],$r['clei']);
 				// translate old id to new
 				$r['cid'] = dbTranslate($r['cid']);
+				if ($company_filter AND $r['cid']<>$company_filter) { continue; }
+
 				$r['name'] = getCompany($r['cid']);
 				$db_results[] = $r;
 			}
