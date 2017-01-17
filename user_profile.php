@@ -219,7 +219,6 @@
     <?php include_once 'modal/notes.php'; ?>
     <?php include_once 'modal/remotes.php'; ?>
     <?php include_once 'modal/image.php'; ?>
-    <?php include_once 'inc/jquery-fileupload.php'; ?>
 
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript">

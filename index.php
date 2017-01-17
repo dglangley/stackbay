@@ -276,6 +276,7 @@ if (! $r['partid']) { return ($results); }
 	<?php
 		include_once 'inc/scripts.php';
 	?>
+<script src="js/dropzone.js"></script>
 </head>
 <body>
 
@@ -374,11 +375,12 @@ if (! $r['partid']) { return ($results); }
 			</td>
 			<td class="col-md-4">
 				<div class="pull-right form-group">
-					<input class="btn btn-success btn-sm" type="submit" name="save-demand" value="SALES REQUEST">
+					<input type="hidden" name="submit_type" value="" id="submit_type">
+					<button class="btn btn-success btn-sm" type="submit" data-type="demand">SALES REQUEST</button>
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 					</select>
-					<input class="btn btn-warning btn-sm" type="submit" name="save-availability" value="AVAILABILITY">
+					<button class="btn btn-warning btn-sm" type="submit" data-type="availability">AVAILABILITY</button>
 				</div>
 			</td>
 		</tr>
@@ -1005,7 +1007,6 @@ if (! $r['partid']) { return ($results); }
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
 <?php include_once 'modal/image.php'; ?>
-<?php include_once 'inc/jquery-fileupload.php'; ?>
 
 </body>
 </html>

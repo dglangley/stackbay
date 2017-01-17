@@ -142,7 +142,7 @@
 					modalBody.html(rowHtml);
                 },
                 error: function(xhr, desc, err) {
-                    console.log(xhr);
+//                    console.log(xhr);
                     console.log("Details: " + desc + "\nError:" + err);
                 }
             }); // end ajax call
@@ -156,6 +156,7 @@
 			$('#modal-submit').prop('disabled',true);
 
 			var modalForm = $(this);
+            console.log(window.location.origin+"/json/"+$(this).prop('action'));
 			$.ajax({
 				type: "POST",
 				url: $(this).prop("action"),
@@ -187,7 +188,7 @@
 					toggleLoader("Error sending RFQ! Details: " + desc + "<br/>Error:" + err);
 					modalForm.closest(".modal").modal("toggle");
 
-	                console.log(xhr);
+//	                console.log(xhr);
 	                console.log("Details: " + desc + "\nError:" + err);
 	            }
 			});
@@ -262,7 +263,7 @@
 					}
 				},
 				error: function(xhr, desc, err) {
-					console.log(xhr);
+//					console.log(xhr);
 					console.log("Details: " + desc + "\nError:" + err);
 				}
 			}); // end ajax call
@@ -482,7 +483,7 @@
 					}
                 },
                 error: function(xhr, desc, err) {
-                    console.log(xhr);
+//                    console.log(xhr);
                     console.log("Details: " + desc + "\nError:" + err);
                 }
             }); // end ajax call
@@ -767,7 +768,7 @@
 					}
 				},
                 error: function(xhr, desc, err) {
-                    console.log(xhr);
+//                    console.log(xhr);
                     console.log("Details: " + desc + "\nError:" + err);
                 }
             }); // end ajax call
@@ -792,16 +793,19 @@
 			document.location.href = '/?listid='+$("#upload-listid").val();
 		});
 	
-		$(".results-form").submit(function() {
+		$(".results-form *[type='submit']").on("click",function(e) {
 			var cid = $("#companyid").val();
 			if (! cid) {
-				$('#alert-continue').data('form',$(this));
+				// set submitting form on the alert button so we can capture it on user click, and continue to submit that form if they desire
+				$('#alert-continue').data('form',$(this).closest("form"));
 				modalAlertShow("Company Alert","Your data will not be saved without a company selected! Do you really want to proceed?",true);
+
+				return false;
 			} else {
-				$(this).data('form').submit();
+//				$(this).data('form').submit();
+				$("#submit_type").val($(this).data('type'));
+				return true;
 			}
-	
-			event.preventDefault();
 		});
 		$('#alert-continue').click(function() {
 			if ($(this).data('form')!='') { $(this).data('form').submit(); }
@@ -877,6 +881,7 @@
 			var remote_login = $("#remote-login").val();
 			var remote_password = $("#remote-password").val();
             console.log(window.location.origin+"/json/remotes.php?remote="+remote+"&remote_login="+remote_login+"&remote_password="+remote_password);
+return;
             $.ajax({
                 url: 'json/remotes.php',
                 type: 'get',
@@ -896,7 +901,7 @@
 					}
 				},
                 error: function(xhr, desc, err) {
-                    console.log(xhr);
+//                    console.log(xhr);
                     console.log("Details: " + desc + "\nError:" + err);
                 }
 			});
@@ -1118,7 +1123,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1254,7 +1259,7 @@
 					$("#upload-details").removeClass('hidden');
 				},
 				error: function(xhr, desc, err) {
-					console.log(xhr);
+//					console.log(xhr);
 					console.log("Details: " + desc + "\nError:" + err);
 				}
 			}); // end ajax call
@@ -1276,7 +1281,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1297,7 +1302,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1321,7 +1326,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1364,7 +1369,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1435,7 +1440,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
@@ -1487,7 +1492,7 @@
 				}
             },
             error: function(xhr, desc, err) {
-                console.log(xhr);
+//                console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call

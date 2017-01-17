@@ -273,6 +273,8 @@
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 
+	$totalProfit = 0;
+	$numJobs = 0;
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
@@ -390,11 +392,15 @@
 
 			$jobTotal = $laborTotal + $materialsTotal + $expensesTotal + $outsideTotal;
 			$jobProfit = $job['price_quote']-$jobTotal;
+			$jobProfitPct = ($jobProfit/$job['price_quote']);
+			$totalProfit += $jobProfit;
+			$totalProfitPct += $jobProfitPct;
+			$numJobs++;
 
 			// go back and add profits to each tech on the job
 			foreach ($assigns as $techid => $a) {
 				if (! isset($techProfits[$techid])) { $techProfits[$techid] = array(); }
-				$techProfits[$techid][] = $jobProfit/$job['price_quote'];
+				$techProfits[$techid][] = $jobProfitPct;//$jobProfit/$job['price_quote'];
 			}
 
 			$finances = format_price(round($job['price_quote'],2),true,' ').' quote';
@@ -574,6 +580,22 @@
                         </thead>
                         <tbody>
                         	<?php echo $rows; ?>
+<?php if ($financials) { ?>
+                            <!-- row -->
+                            <tr class="first">
+                                <td colspan="8">
+									<strong><?php echo $numJobs; ?></strong><br/>total jobs
+                                </td>
+                                <td class="text-right" style="vertical-align:bottom">
+									<strong><?php echo format_price(round($totalProfit,2),true,' '); ?></strong><br/>
+									total profit
+                                </td>
+                                <td class="text-center">
+									<strong><?php echo round(($totalProfitPct/$numJobs)*100,2); ?>%</strong><br/>
+									total pct
+                                </td>
+<?php } ?>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
