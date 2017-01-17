@@ -50,6 +50,11 @@
 		    z-index: 1;
 		}
 		
+		table.serial {
+			width: 95%;
+			margin: 0 auto;
+		}
+		
 		.serial-page {
 			display: none;
 		}
@@ -59,6 +64,10 @@
 		}
 		
 		.addRows label {
+			display: none;
+		}
+		
+		.edit {
 			display: none;
 		}
 		
@@ -215,12 +224,18 @@
 	</div>
 
 	<div style='display: none;'>
-		<div class="locations row-fluid">
-			<div class="col-md-6">
+		<div class="locations row">
+			<div class="col-md-6" style="padding-right: 5px;">
 				<?=loc_dropdowns('place')?>
 			</div>
-			<div class="col-md-6">
+			<div class="col-md-6" style="padding-left: 5px;">
 				<?=loc_dropdowns('instance')?>
+			</div>
+		</div>
+		
+		<div class="conditions row">
+			<div class="col-md-12">
+				<?=dropdown('condition')?>
 			</div>
 		</div>
 	</div>
@@ -407,6 +422,9 @@
 					var revisions, parts;
 					var locations = $('.locations').clone();
 					
+					$('.conditions').find('label').remove();
+					var conditions = $('.conditions').clone();
+					
 					var counter = 1;
 					revisions = "<option value='' selected>All</option>";
 					//If there are multiple parts being returned, loop through them all
@@ -428,34 +446,34 @@
 							if(s){
 								parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
 											<td colspan='12'>";
-											parts += "<table class='table table-hover table-condensed'>\
+											parts += "<table class='table serial table-hover table-condensed'>\
 														<thead>\
 															<tr>\
 															<th>Serial Number</th>\
-															<th>New Serial</th>\
-															<th>New Location</th>\
-															<th>New Condition</th>\
+															<th class='edit'>New Serial</th>\
+															<th class='edit'>New Location</th>\
+															<th class='edit'>New Condition</th>\
 															<th></th>\
 															</tr>\
 														</thead>\
 														<tbody>";
 								$.each(s, function(serial,history){
+									//console.log(history);
 									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-													<td>"+serial+"</td>\
-													<td><input class='newSerial form-control' placeholder='New Serial' data-serial='"+serial+"'/></td>\
-													<td class='location_holder'></td>\
-													<td><select class='newCondition form-control'></select></td>";
+												<td>"+serial+"</td>\
+												<td class='edit'><input class='newSerial form-control' placeholder='New Serial' data-serial='"+serial+"'/></td>\
+												<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
+												<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
 									$.each(history,function(record, details){
-										if(details.last_sale != null) {
-											parts += "<td>"+details.last_sale+"</td>";
-										} else {
-											parts += "<td></td>";
-										}
-										console.log(details);
+										// if(details.last_sale != null) {
+										// 	parts += "<td class='last_sale'>"+details.last_sale+"</td>";
+										// } else {
+										// 	parts += "<td class='last_sale'></td>";
+										// }
 									});
-										parts += "<td>\
-											<i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i>\
-											<a class='btn-flat success pull-right multipart_sub'>\
+										parts += "<td style='text-align: right;'>\
+											<i style='margin-right: 5px;' class='fa fa-pencil edit_button' aria-hidden='true'></i>\
+											<a class='edit save_button btn-flat success pull-right multipart_sub'>\
                     						<i class='fa fa-check fa-4' aria-hidden='true'></i></a></td>";
 									parts += "</tr>";
 								}); //Serials loop end
@@ -471,6 +489,24 @@
 					$('.parts').append(parts);
 					
 					$('.location_holder').append(locations);
+					$('.condition_holder').append(conditions);
+					
+					//GO through each of the conditions and locations and set each one to the respective value
+					// $('.location_holder').each(function() {
+					// 	var actualPlace = $(this).data('place');
+					// 	var actualInstance = $(this).data('instance');
+						
+					// 	$(this).find('select').val(actualPlace);
+					// 	$(this).find('select:last').val(actualInstance);
+						
+					// 	//alert(actualPlace);
+					// });
+					
+					$('.condition_holder').each(function() {
+						var actualCondition = $(this).data('condition');
+						
+						$(this).find('select').val(actualCondition);
+					});
 
 					if(part != '') {
 						$(".loading_element_listing").show();
@@ -487,12 +523,30 @@
 		});
 	}
 	
+	$(document).on('click', '.edit_button', function(e) {
+		e.preventDefault();
+		
+		$(this).closest('tr').find('.edit').show();
+		$(this).closest('table').find('th.edit').show();
+		
+		$(this).hide();
+	});
+	
+	$(document).on('click', '.save_button', function(e) {
+		e.preventDefault();
+		
+		$(this).closest('tr').find('.edit').hide();
+		$(this).closest('table').find('th.edit').hide();
+		
+		$(this).hide();
+	});
+	
 	//finish adding the filters
 	var filter_grab = function (){
 		//Set an array up with the filter fields from the filter bar
-		var output = {
-			location : 
-		}
+		// var output = {
+		// 	location : 
+		// }
 	}
 	
 	$(document).ready(function() {
