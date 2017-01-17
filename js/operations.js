@@ -605,48 +605,52 @@
 			});
 
 //New Multi-line insertion 			
-			$(document).on("click",".multipart_sub",function() {
-	   		    $(".search_lines").each(function() {
-				    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
-				    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
-		   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
-		   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
-	   		    	var partid = $(this).attr("data-line-id");
-	   		        var qty = $(this).find("input[name=ni_qty]").val();
-					var condition = $(".multipart_sub").closest("tr").find(".condition").val();
-					
+			$(document).on("click",".multipart_sub",function(e) {
+				var isValid = nonFormCase($(this), e);
 				
-   		        if(qty){
-       					$.ajax({
-							type: "POST",
-							url: '/json/order-table-out.php',
-							data: {
-				   		    	"line":lineNumber,
-				   		    	"search":partid,
-				   		    	"date":date,
-				   		    	"qty":qty,
-				   		    	"unitPrice":price,
-								"warranty":warranty,
-								"condition":condition,
-				   		    	"id": 'new',
-				   		    	"mode":'append'
-								}, // serializes the form's elements.
-							dataType: 'json',
-							success: function(row_out) {
-								$("#right_side_main").append(row_out);
-								$(".search_lines").html("").remove();
-								$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
- 							}
-						});
-	   		        }
-	   		    });
-	   		    
-				var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-				if (!lineNumber){lineNumber = 0;}
-				$("#go_find_me").val("");
-    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+				if(isValid) {
+		   		    $(".search_lines").each(function() {
+					    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
+					    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
+			   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
+			   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
+		   		    	var partid = $(this).attr("data-line-id");
+		   		        var qty = $(this).find("input[name=ni_qty]").val();
+						var condition = $(".multipart_sub").closest("tr").find(".condition").val();
+						
+					
+	   		        if(qty){
+	       					$.ajax({
+								type: "POST",
+								url: '/json/order-table-out.php',
+								data: {
+					   		    	"line":lineNumber,
+					   		    	"search":partid,
+					   		    	"date":date,
+					   		    	"qty":qty,
+					   		    	"unitPrice":price,
+									"warranty":warranty,
+									"condition":condition,
+					   		    	"id": 'new',
+					   		    	"mode":'append'
+									}, // serializes the form's elements.
+								dataType: 'json',
+								success: function(row_out) {
+									$("#right_side_main").append(row_out);
+									$(".search_lines").html("").remove();
+									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
+	 							}
+							});
+		   		        }
+		   		    });
+		   		    
+					var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+					if (!lineNumber){lineNumber = 0;}
+					$("#go_find_me").val("");
+	    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
+	       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+	       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+				}
 			});
 			
 //Delete Button
@@ -844,18 +848,17 @@
 	});
 //================================ PAGE SUBMIT ================================
 			
-			$('#save_button').click(function() {
+			$('#save_button').click(function(e) {
 				
-				//var isValid = nonFormCase($(this), e);
+				var isValid = nonFormCase($(this), e);
 				
+				if(isValid) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
 	
 					//Get General order information
 					var userid = $("#sales-rep option:selected").attr("data-rep-id");
-					
-					console.log(userid);
 					var company = $("#companyid").val();
 					if (!company){
 						alert("Must enter company before continuing");
@@ -868,13 +871,18 @@
 						contact = contact.slice(9);
 					}
 					var assoc = $("#assoc_order").val();
+					
+					if (order_type == 'Purchase'){
+						var tracking = $('#tracking').val();
+						// alert(tracking);
+					}
 					var terms = $("#terms").val();
 					var ship_to = $('#ship_to').last('option').val();
 					var bill_to = $('#bill_to').last('option').val();
 					var carrier = $('#carrier').val();
 					var freight = $('#terms').val();
-					var service = $('#services').val();
-					var account = $('#account_select').val();
+					var service = $('#service').val();
+					var account = $('#account_select').last('option').val();
 					var pri_notes = $('#private_notes').val();
 					var pub_notes = $('#public_notes').val();
 					//var warranty = $('.warranty').val();
@@ -922,6 +930,7 @@
 			   		    	"order_number":order_number,
 							"contact": contact,
 							"assoc": assoc,
+							"tracking": tracking,
 							"ship_to": ship_to,
 							"bill_to": bill_to,
 							"carrier": carrier,
@@ -940,13 +949,18 @@
 							// alert(form['insert']);
 							// alert(form["error"]);
 							// alert(form["update"]);
-
+							// alert(form["update"]);
+							// alert(form['trek']);
+							// console.log(form['update']);
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);
 						},
 					});
+				} else {
+					$(window).scrollTop();
+				}
 			});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================
@@ -1230,7 +1244,6 @@
 								
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
-								$serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select').attr("data-serial", serial);
 								
 								//Set Default Values here, remember clone doesn't save select values otherwise it will
 								$serialClone.find('input').val("");
@@ -1363,12 +1376,12 @@
 				var lot = false;
 				var qty;
 				
-				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
-					place.push($(this).find('select:first').val());
+				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
+					place.push($(this).val());
 				});
 				
-				$(this).find('.infiniteLocations').children('.row-fluid').each(function() {
-					instance.push(($(this).find('select:last').val() != '' ? $(this).find('select:last').val() : ''));
+				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
+					instance.push(($(this).val() != '' ? $(this).val() : ''));
 				});
 				
 				$(this).find('.infiniteCondition').children('select').each(function() {
@@ -1426,7 +1439,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						window.location = "/shipping_home.php?po=true";
+						//window.location = "/shipping_home.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
@@ -1466,7 +1479,6 @@
 						if(page != 'shipping') {
 							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
-							$row.closest('tr').find('.infiniteLocations').find('select[data-serial="'+ serial +'"]').remove();
 						} else {
 							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');

@@ -92,11 +92,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			}
 		}
-		
-		// foreach($account as $f){
-		// 	$f[''];
-		// }
-		
+
 		//THis will be split into distinct elements at some point in the next few weeks.
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
@@ -172,8 +168,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .="
 				<div class='row' style='padding-bottom: 10px;'>
 					".dropdown('terms',$terms,$companyid)."
+					<div class='col-sm-6' id='tracking_div' style='padding-bottom: 10px;'>
+						<label for='tracking'>Tracking #:</label>
+						<input class='form-control required' id = 'trackingr' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
+	    			</div>
 			    </div>";
-		
+				
 			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		
 		//Carrier and service
@@ -210,6 +210,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
 					</div>
 				</div>";
+
+				
+				
+				
+				
+				
 		//Closing Tag (Leave Outside of any if statment)
 	    	$right .= "</div>
 		    <div class='arrow click_me'>   

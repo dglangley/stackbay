@@ -7,7 +7,7 @@
 	
 	    include_once $rootdir.'/inc/dbconnect.php';	
 	    
-		function getFreight($type = 'max',$value = "",$id = ""){
+		function getFreight($type = 'max',$value = "",$id = "",$field = ""){
             
             $value = prep($value,"'%'");
             $id = prep($id,"'%'");
@@ -31,7 +31,13 @@
             }
             $results = qdb($select);
             
+            if (!$field){
+                return $results;
+            }
+            else{
+                $result = mysqli_fetch_row($results);
+                return $result[$field];
+            }
             
-            return $results;
 	}
 ?>

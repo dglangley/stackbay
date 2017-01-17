@@ -5,6 +5,7 @@
 	$TABS = array(
 		'left' =>
 			array(
+
 				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i><span>','title'=>'Companies','alias'=>''),
 				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i><span>','title'=>'Services','alias'=>'/job.php'),
 				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i><span>','title'=>'Repairs','alias'=>''),

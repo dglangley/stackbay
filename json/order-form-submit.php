@@ -46,6 +46,7 @@
     $carrier = grab('carrier');
     $service = grab('service');
     $account = grab('account');
+    $tracking = grab('tracking');
     $private = (trim($_REQUEST['pri_notes']));
     $public = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
@@ -86,13 +87,15 @@
         $service = prep($service);
         $account = prep($account);
         $assoc_order = prep($assoc_order);
-        
+        $tracking = prep($tracking);
         
         $insert = "INSERT INTO ";
         $insert .= ($order_type=="Purchase") ? "`purchase_orders`" : "`sales_orders`";
-        $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`, `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`,
+        $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,";
+        if ($order_type=="Purchase"){ $insert .= " `tracking_no`, ";}
+        $insert .= " `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`,
         `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-        ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+        ($rep, $cid, $rep, $contact, $assoc_order, $tracking, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         
 
     //Run the update
@@ -112,6 +115,9 @@
         $macro .= updateNull('contactid',$contact);
         $macro .= updateNull('termsid',$terms);
         $macro .= updateNull('assoc_order',$assoc_order);
+        if ($order_type == "Purchase"){
+            $macro .= updateNull('tracking_no',$tracking);
+        }
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
@@ -189,7 +195,8 @@
         'insert' => $line_insert,
         'error' => qe(),
         'stupid' => $stupid,
-        'update' => $update,
+        'update' => $macro,
+        'trek' => $tracking,
     );
     
     echo json_encode($form);

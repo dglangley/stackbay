@@ -131,7 +131,6 @@
                         }
                     }
                 }
-                
                 //Pull anything /explicitly allowed/ from the company terms table
                 $company_specific = "SELECT `termsid` From company_terms WHERE `companyid` LIKE $companyid;";
                 $c_terms = qdb($company_specific);

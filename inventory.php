@@ -10,221 +10,9 @@
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/locations.php';
 
 
-
-	$parts_array = array();
-	
-	$page = grab('page');
-	
-	($page == '' ? $page = 1: '');
-
-	$offset = ($page - 1) * 5;
-	
-	$query  = "SELECT * FROM parts where id IN (SELECT partid FROM inventory) LIMIT " . res($offset) . ", 5;";
-	$result = qdb($query);
-	
-	while ($row = $result->fetch_assoc()) {
-		$parts_array[] = $row;
-	}
-	
-	// Get Pages function determines how many pages the inventory should output.
-	function getPages($show_num = '5',$results='') {
-		//Find out what page number we are on.
-		global $page;
-		
-		//Set a null counter for the number of rows
-		$rows = 0;
-		if (!$results){
-		//Static query which gets all the parts from the inventory screen
-		$query  = "SELECT COUNT(*) as rows FROM (SELECT DISTINCT  `partid` FROM  `inventory`) AS t1;";
-		$result = mysqli_fetch_assoc(qdb($query));
-		$results = $result['rows'];
-	}
-		$pages = ceil($results / $show_num);
-		
-		for($i = 1; $i <= $pages; $i++) {
-			//echo $page;
-			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
-		}
-	}
-	
-	//this function works to gather a general manufacturer by ID
-	function getManufacture($manfid = 0) {
-		$manf;
-		
-		$query  = "SELECT * FROM manfs where id = " . res($manfid) . ";";
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$manf = $result['name'];
-		}
-		
-		return $manf;
-	}
-	
-	function getSystemName($systemid = 0) {
-		$system;
-		
-		if($system != 0) {
-			$query  = "SELECT * FROM systems where id = " . res($systemid) . ";";
-			$result = qdb($query);
-			
-			if (mysqli_num_rows($result)>0) {
-				$result = mysqli_fetch_assoc($result);
-				$system = $result['system'];
-			}
-		}
-		
-		return $systemid;
-	}
-	
-	function getPartSerials($partid = 0) {
-		$partSerial_array = array();
-		
-		$query  = "SELECT * FROM inventory where partid = " . res($partid) . " ORDER BY
-				  CASE item_condition
-				    WHEN 'new' THEN 1
-				    WHEN 'used' THEN 2
-				    ELSE 3
-				  END, qty DESC;";
-		$result = qdb($query);
-		
-		while ($row = $result->fetch_assoc()) {
-			$partSerial_array[] = $row;
-		}
-		
-		return $partSerial_array;
-	}
-	
-	function getItemHistory($invid = 0) {
-		$partHistory_array = array(); 
-		
-		$query  = "SELECT * FROM inventory_history WHERE invid =" . res($invid) . ";";
-		$result = qdb($query);
-		
-		while ($row = $result->fetch_assoc()) {
-			$partHistory_array[] = $row;
-		}
-		
-		return $partHistory_array;
-	}
-	
-	function getRepName($repid = 0) {
-		$name;
-		
-		$query  = "SELECT name FROM contacts WHERE id =" . res($repid) .";";
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$name = $result['name'];
-		}
-		
-		return $name;
-	}
-	
-	function getStatusStock($stock = '', $partid = 0) {
-		$stockNumber;
-		
-		if($stock == 'pending') {
-			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'ordered');";
-		} else if($stock == 'instock') {
-			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'received' OR status = 'shelved');";
-		}
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$stockNumber = $result['SUM(qty)'];
-		}
-		
-		// while ($row = $result->fetch_assoc()) {
-		// 	$stockNumber= $row['serial_no'];
-		// }
-		if(!$stockNumber) {
-			$stockNumber = 0;
-		}
-		
-		return $stockNumber;
-	}
-	
-	//Get the past Purchase/Sales Order for each part in the inventory
-	function getOrder($order_type,$partid = 0) {
-		$order_array = array();
-		$order_message = "";
-		
-		//Determine which order type to look for in this system
-		$order_table = $order_type == 'po' ? 'purchase_items' : 'sales_items';
-		$selector = $order_type == 'po' ? 'po_number' : 'so_number';
-		
-		//Order by the lastest order and limit the order # to 3 at a time
-		$query = "SELECT ". res($selector) ." FROM " . res($order_table) . " WHERE partid = ". res($partid) ." ORDER BY ". res($selector) ." DESC LIMIT 3;";
-		$result = qdb($query) or die(qe());
-		
-		while ($row = $result->fetch_assoc()) {
-			$order_array[] = $row;
-		}
-		
-		if(!empty($order_array)){
-			//$order_message = strtoupper($order_type) . " Number Found";
-			foreach($order_array as $item) {
-				$order_message .= "<a href='order_form.php?on=$item[$selector]&ps=" . ($order_type == 'po' ? 'p' : 's') . "'>#" .$item[$selector] . "</a> ";
-			}
-		} else {
-			//Else there is no record order number matched to this inventory addition
-			//Assuming that in item was added manually
-			$order_message = "No " . strtoupper($order_type) . " Orders Found";
-		}
-		
-		return $order_message;
-	}
-	
-	function getAvgPrice($partid) {
-		$order_array = array();
-		$avg = 0;
-		$counter = 0;
-		
-		$query = "SELECT price FROM sales_items WHERE partid = ". res($partid) .";";
-		$result = qdb($query) or die(qe());
-		
-		while ($row = $result->fetch_assoc()) {
-			$order_array[] = $row;
-		}
-		
-		foreach($order_array as $price){
-			$avg += $price['price'];
-			$counter++;
-		}
-		
-		return $avg;
-	}
-	
-	function getStock($stock = '', $partid = 0) {
-		$stockNumber;
-		
-		//echo $stock . $partid;
-		
-		
-		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND item_condition = '" . res($stock) . "';";
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$stockNumber = $result['SUM(qty)'];
-		}
-		
-		// while ($row = $result->fetch_assoc()) {
-		// 	$stockNumber= $row['serial_no'];
-		// }
-		if(!$stockNumber) {
-			$stockNumber = 0;
-		}
-
-		return $stockNumber;
-	}
-	
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -300,44 +88,28 @@
 <!-------------------------- Header/Filter Bar/Title -------------------------->
 <!----------------------------------------------------------------------------->
 	<div class="table-header" style="width: 100%; min-height: 60px;">
-		<div class="row" style="padding-top: 15px; margin: 0 10px;">
+		<div class="row" style="padding-top: 15px; margin: 0 10px;" id = "filterBar">
 			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
 				<div class="input-group">
-	              <input type="text" class="form-control" id="part_search" placeholder="Filter By Part..." value=<?=grab("search")?>>
+	              <input type="text" class="form-control" id="part_search" placeholder="Filter By Part/Serial" value=<?=grab("search")?>>
               		<span class="input-group-btn">
 	                	<button class="btn btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
 	            </div>
 			</div>
-			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
-				<div class="input-group">
-	              <input type="text" class="form-control" id="serial_filter" placeholder="Search By Serial...">
-              		<span class="input-group-btn">
-	                	<button class="btn btn-primary serial_filter"><i class="fa fa-filter"></i></button>              
-	            	</span>
-	            </div>
+
+			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
+				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
+				<?= loc_dropdowns('place')?>
 			</div>
 			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
-				<input class="form-control" type="text" name="" placeholder="Location"/>
-			</div>
-			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
-				<?php
-					$status_selected = grab('status','shelved');
-					echo dropdown('status',$status_selected,'','',false);
-				?>
+				<?= loc_dropdowns('instance')?>
 			</div>
 			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
 				<?php
 					$condition_selected = grab('condition','');
-					echo dropdown('condition',$condition_selected,'','',false);
+					echo dropdown('condition',$condition_selected,'','',false,"condition_global");
 				?>
-			</div>
-			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
-
-				<div class="btn-group" role="group">
-					<button class="btn btn-default active">In Stock</button>
-					<button class="btn btn-default">Out Of Stock</button>
-				</div>
 			</div>
 			<div class = "col-md-3">
 				<div class="form-group col-md-4">
@@ -384,6 +156,13 @@
 							</div><!-- btn-range-options -->
 						</div><!-- btn-group -->
 			</div><!-- form-group -->
+			</div>
+			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
+               	<button class="btn btn-primary inventory_filter pull-right"><i class="fa fa-filter"></i></button>              
+			<!--	<div class="btn-group" role="group">-->
+			<!--		<button class="btn btn-default active">In Stock</button>-->
+			<!--		<button class="btn btn-default">Out Of Stock</button>-->
+			<!--	</div>-->
 			</div>
 		</div>
 	</div>
@@ -435,7 +214,16 @@
 		</div>
 	</div>
 
-	
+	<div style='display: none;'>
+		<div class="locations row-fluid">
+			<div class="col-md-6">
+				<?=loc_dropdowns('place')?>
+			</div>
+			<div class="col-md-6">
+				<?=loc_dropdowns('instance')?>
+			</div>
+		</div>
+	</div>
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js"></script>
@@ -453,101 +241,15 @@
 			}
 		});
 		
-		// //Show more data for a specific product, Serial etc
-		// $(document).on("click",".buttonAdd",function(){
-		// 	$(this).closest('.part-container').children('.addItem').slideToggle('fast');
-		// 	$(this).children('').toggleClass('fa-chevron-down fa-chevron-up');
-		// });
-		
-		// //Drop down a list of the history of the specific item
-		// $(document).on("click",".show_history",function(e){
-		// 	e.preventDefault();
-		// 	$(this).next('.history_listing').slideToggle();
-		// });
-		
-		
-		// $(document).on("click",'.updateAll, .update',function(e) {
-		// 	var serial, date, location, qty, condition, status, cost, id, partid;
-		// 	//run through each of the rows that pertains to the class stated below and grab all the data
-		// 	$(this).closest('.addItem').find('.product-rows-edited').each(function () {
-		// 		//Declare Variables
-		// 		var element = this;
-				
-		// 		//Add value to each variable depending on the data in the row
-		// 		id = $(this).data('id');
-		// 		serial = $(this).find('.serial').val();
-		// 		date = $(this).find('.date').val();
-		// 		location = $(this).find('.location').val();
-		// 		qty = $(this).find('.qty').val();
-		// 		condition = $(this).find('.condition').val();
-		// 		status = $(this).find('.status').val();
-		// 		cost = $(this).find('.cost').val();
-				
-		// 		//get the specific part id based on position of the element
-		// 		partid = $(element).closest('.part-container').data('partid');
 
-		// 		$.ajax({
-		// 			type: 'POST',
-		// 			url: '/json/inventory-edit.php',
-		// 			data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
-		// 			dataType: 'json',
-		// 			success: function(data) {
-		// 				if(data.result){
-		// 					$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
-		// 					$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
-		// 					$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
-							
-		// 					$(element).closest('.addItem').find('.product-rows-edited').find('.update').prop("disabled", true);
-		// 					$(element).closest('.addItem').find('.product-rows-edited').removeClass('product-rows-edited');
-							
-		// 					$('#item-updated').show();
-		// 					setTimeout(function() { 
-		// 						$('#item-updated').fadeOut(); 
-		// 					}, 5000);
-
-		// 				} else {
-		// 					$('#item-failed').show();
-		// 					setTimeout(function() { 
-		// 						$('#item-failed').fadeOut(); 
-		// 					}, 5000);
-		// 				}
-		// 			}
-		// 		});
-				
-		// 	});
-			
-		// });
 		
 		$(document).on('change keyup paste','input, select', function() {
 			$(this).closest('.addItem').find('.updateAll').prop("disabled", false);
 			$(this).closest('.product-rows').addClass('product-rows-edited');
 			$(this).closest('.product-rows').find('.update').prop("disabled", false);
 		});
-		
-		//$('.update').click(function () {
-			// $($(this).closest('.product-rows').find('.serial').next('.form-text')).html($(this).closest('.product-rows').find('.serial').val());
-			// $(this).closest('.product-rows').find('.serial').hide();
-			
-			// $($(this).closest('.product-rows').find('.date').next('.form-text')).html($(this).closest('.product-rows').find('.date').val());
-			// $(this).closest('.product-rows').find('.date').hide();
-			
-			// $($(this).closest('.product-rows').find('.location').next('.form-text')).html($(this).closest('.product-rows').find('.location').val());
-			// $(this).closest('.product-rows').find('.location').hide();
-			
-			// $($(this).closest('.product-rows').find('.qty').next('.form-text')).html($(this).closest('.product-rows').find('.qty').val());
-			// $(this).closest('.product-rows').find('.qty').hide();
-			
-			// $($(this).closest('.product-rows').find('.condition').next('.form-text')).html($(this).closest('.product-rows').find('.condition').val());
-			// $(this).closest('.product-rows').find('.condition').hide();
-			
-			// $($(this).closest('.product-rows').find('.status').next('.form-text')).html($(this).closest('.product-rows').find('.status').val());
-			// $(this).closest('.product-rows').find('.status').hide();
-			
-			// $($(this).closest('.product-rows').find('.cost').next('.form-text')).html($(this).closest('.product-rows').find('.cost').val());
-			// $(this).closest('.product-rows').find('.cost').hide();
-			// alert($(this).closest('.product-rows').find('.serial').val());
-		//});
-		
+
+
 		//Append new row of data
 		var element = '<div class="product-rows row new-row appended" style="padding-bottom: 10px; display: none;">\
 				<div class="col-md-2 col-sm-2">\
@@ -684,34 +386,6 @@
 				
 		// 	});
 		// });
-//===============================================================================
-	// var serial_history = function(){
-	// 	$.ajax({
-	// 		type: "POST",
-	// 		url: '/json/item_history.php',
-	// 		data: {
-	// 			"inventory": 1,
-	// 			},
-	// 		dataType: 'json',
-	// 		success: function(part) {
-	// 			var output = "";
-	// 			alert('sub');
-	// 			 part.forEach(function(item){
-	// 				 output += "\
-	// 					<tr>\
-	// 						<td>"+item["Date"]+"</td>\
-	// 						<td>"+item["Rep"]+"</td>\
-	// 						<td>"+item["Field"]+"</td>\
-	// 						<td>"+item["History"]+"</td>\
-	// 					</tr>\
-	// 				";
-	// 			});
-
-	// 		},
-	// 		error: function(xhr, status, error) {
-	// 			   	alert(error+" | "+status+" | "+xhr);
-	// 		},			
-	// 	});
 
 	// }
 	var inventory_history = function (search, serial) {
@@ -720,7 +394,7 @@
 				url: '/json/inventory-out.php',
 				data: {
 					"search": search,
-					"serial": serial
+					
 					},
 				dataType: 'json',
 				success: function(part) {
@@ -731,6 +405,7 @@
 					// var p = JSON.parse(part)
 					console.log(part);
 					var revisions, parts;
+					var locations = $('.locations').clone();
 					
 					var counter = 1;
 					revisions = "<option value='' selected>All</option>";
@@ -751,20 +426,42 @@
 							var s = row.serials;
 							//alert (s);
 							if(s){
+								parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+											<td colspan='12'>";
+											parts += "<table class='table table-hover table-condensed'>\
+														<thead>\
+															<tr>\
+															<th>Serial Number</th>\
+															<th>New Serial</th>\
+															<th>New Location</th>\
+															<th>New Condition</th>\
+															<th></th>\
+															</tr>\
+														</thead>\
+														<tbody>";
 								$.each(s, function(serial,history){
-									
-										
-											parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-																					<td>"+serial+"</td>";
-																// $.each(history,function(record, details){
-																	
-																// });
-																parts += "</tr>";
-																
-															
-							parts +=				"<\
-											</tr>";
+									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+													<td>"+serial+"</td>\
+													<td><input class='newSerial form-control' placeholder='New Serial' data-serial='"+serial+"'/></td>\
+													<td class='location_holder'></td>\
+													<td><select class='newCondition form-control'></select></td>";
+									$.each(history,function(record, details){
+										if(details.last_sale != null) {
+											parts += "<td>"+details.last_sale+"</td>";
+										} else {
+											parts += "<td></td>";
+										}
+										console.log(details);
+									});
+										parts += "<td>\
+											<i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i>\
+											<a class='btn-flat success pull-right multipart_sub'>\
+                    						<i class='fa fa-check fa-4' aria-hidden='true'></i></a></td>";
+									parts += "</tr>";
 								}); //Serials loop end
+								parts += "</tbody>\
+										</table>";
+
 							}
 								
 						});
@@ -773,6 +470,7 @@
 					$('.revisions').append(revisions);
 					$('.parts').append(parts);
 					
+					$('.location_holder').append(locations);
 
 					if(part != '') {
 						$(".loading_element_listing").show();
@@ -788,6 +486,15 @@
 				},			
 		});
 	}
+	
+	//finish adding the filters
+	var filter_grab = function (){
+		//Set an array up with the filter fields from the filter bar
+		var output = {
+			location : 
+		}
+	}
+	
 	$(document).ready(function() {
 		if($("#part_search").val()){
 			var search = $("#part_search").val();
