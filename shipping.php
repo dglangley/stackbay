@@ -158,7 +158,9 @@
 	
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
-		<?php include 'inc/navbar.php'; ?>
+		<?php include 'inc/navbar.php'; 
+		include_once $rootdir.'/modal/package.php';
+		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
@@ -185,9 +187,41 @@
 			<!--======================= End Left half ======================-->
 			
 			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
-				<div>
-					<h3>Items to be Shipped</h3>
-					<!--<hr style="margin-top : 10px;">-->
+				<div class = 'row-fluid'>
+					<div class = 'col-sm-3'>
+						<h3>Items to be Shipped</h3>
+					</div>
+					<div class="col-sm-9">
+						<div class="btn-group" style = "padding-bottom:16px;">
+							<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
+								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
+							</button>
+							<?php
+								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+								$results = qdb($select);
+								if (mysqli_num_rows($results) > 0){
+									foreach($results as $b){
+										$button = "<button type='button' class='btn btn-grey box_selector'";
+										$button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
+										$button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
+										$button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking']."' ";
+										$button .= " data-row-freight = '".$b['freight-amount']."'";
+										$button .= ">".$b['package_no']."</button>";
+										echo($button);
+									}
+								}
+								else{
+									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
+									qdb($insert);
+									echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
+								}
+								
+							?>
+							<button type="button" class="btn btn-primary box_addition" title = "">
+						  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+					  		</button>
+						</div>		
+					</div>
 				</div>
 			
 				<div class="table-responsive">

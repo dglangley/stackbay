@@ -205,7 +205,7 @@
 
 		return $stockNumber;
 	}
-		
+
 	//This function flattens the ordered array into a single outputtable collumn
 	function iteratable($ordered){
 		$output = array();

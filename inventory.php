@@ -571,12 +571,12 @@
 	});
 	
 	//finish adding the filters
-	var filter_grab = function (){
-		//Set an array up with the filter fields from the filter bar
-		// var output = {
-		// 	location : 
-		// }
-	}
+	// var filter_grab = function (){
+	// 	//Set an array up with the filter fields from the filter bar
+	// 	var output = {
+	// 		location : 
+	// 	}
+	// }
 	
 	$(document).ready(function() {
 		if($("#part_search").val()){
