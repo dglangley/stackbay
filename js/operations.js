@@ -354,7 +354,7 @@
 			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -400,6 +400,7 @@
 			$("#right_side_main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
+				console.log("Order-number: "+order_number+" | Order-type: "+order_type);
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -411,7 +412,11 @@
 					dataType: 'json',
 					success: function(result) {
 						$('#right_side_main').append(result);
+					},
+					error: function(xhr, status, error) {
+						   	alert(error+" | "+status+" | "+xhr);
 					}
+					
 				});
 				$.ajax({
 					type: "POST",
@@ -1187,6 +1192,9 @@
 	           return "0"+partTime;
 	        return partTime;
 	    }
+//==============================================================================
+//================================ SHIPIPNG PAGE ===============================
+//==============================================================================
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		     if( $( this ).val() != '' )
@@ -1205,6 +1213,7 @@
 			var partid = $serial.closest('tr').find('.part_id').data('partid');
 			var condition = $serial.closest('tr').find('.condition_field').val();
 			var part = $serial.closest('tr').find('.part_id').data('part');
+			
 			
 			if(condition == '') {
 				condition = $serial.closest('tr').find('.condition_field').data('condition');
@@ -1349,7 +1358,7 @@
 				$(this).closest('tr').find('.remaining_qty').children('input').val(qty);
 			}
 		});
-				
+		
 		$(document).on('click',"#save_button_inventory",function() {
 			//Save to reactivate button if needed
 			$click = $(this);
@@ -1497,9 +1506,6 @@
 			}
 		});
 
-//==============================================================================
-//================================ SHIPIPNG PAGE ===============================
-//==============================================================================
 
 		//Shipping update button, mainly used for lot and serial redirection
 		$('#btn_update').click(function(){
@@ -1695,6 +1701,7 @@
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id)
 					.addClass("active");
+					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
 				},
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
@@ -1704,6 +1711,7 @@
 			
 			
 		});
+		
 		//Change Selected Box
 		$(document).on("click",".box_selector",function() {
 			$(this).siblings(".box_selector").removeClass("active");

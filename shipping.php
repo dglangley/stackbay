@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/form_handle.php';
 	
 	//include_once $rootdir.'/inc/order-creation.php';
 	
@@ -39,7 +40,7 @@
 	$sales_order;
 	
 	//get the information based on the order number selected
-	$query = "SELECT * FROM sales_orders WHERE so_number = ". res($order_number) .";";
+	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
 	$result = qdb($query) OR die(qe());
 	
 	if (mysqli_num_rows($result)>0) {
@@ -83,8 +84,8 @@
 	
 	function getInventory($partid) {
 		$inventory;
-		
-		$query = "SELECT * FROM inventory WHERE partid = ". res($partid) .";";
+		$partid = prep($partid);
+		$query = "SELECT * FROM inventory WHERE partid = $partid AND `qty` > 1;";
 		$result = qdb($query) OR die(qe());
 	
 		if (mysqli_num_rows($result)>0) {
@@ -95,35 +96,9 @@
 		return $inventory;
 	}
 	
-	// function getLocation($locationid){
-	// 	$location;
-		
-	// 	$query = "SELECT * FROM locations WHERE id = ". res($locationid) .";";
-	// 	$result = qdb($query);
-		
-	// 	if (mysqli_num_rows($result)>0) {
-	// 		$result = mysqli_fetch_assoc($result);
-	// 		$location = $result;
-	// 	}
-		
-	// 	return $location;
-	// }
-	
-	// function getWarehouse($warehouseid) {
-	// 	$warehouse;
-		
-	// 	$query = "SELECT * FROM warehouses WHERE id = ". res($warehouseid) .";";
-	// 	$result = qdb($query);
-		
-	// 	if (mysqli_num_rows($result)>0) {
-	// 		$result = mysqli_fetch_assoc($result);
-	// 		$location = $result['name'];
-	// 	}
-		
-	// 	return $warehouse;
-	// }
 
 ?>
+	
 
 <!DOCTYPE html>
 <html>
@@ -199,15 +174,20 @@
 							<?php
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 								$results = qdb($select);
+								
+									$box_drop = "<div>
+			            				<select class='form-control box_drop'>";
 								if (mysqli_num_rows($results) > 0){
 									foreach($results as $b){
-										$button = "<button type='button' class='btn btn-grey box_selector'";
-										$button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
-										$button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
-										$button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking']."' ";
-										$button .= " data-row-freight = '".$b['freight-amount']."'";
-										$button .= ">".$b['package_no']."</button>";
-										echo($button);
+										$box_button = "<button type='button' class='btn btn-grey box_selector'";
+										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
+										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
+										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking']."' ";
+										$box_button .= " data-row-freight = '".$b['freight-amount']."'";
+										$box_button .= ">".$b['package_no']."</button>";
+										echo($box_button);
+			                        	
+			                        	$box_drop .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
 									}
 								}
 								else{
@@ -215,6 +195,10 @@
 									qdb($insert);
 									echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
 								}
+								$box_drop .= 
+			    			    		"</select>
+			    	        		</div>";
+								
 								
 							?>
 							<button type="button" class="btn btn-primary box_addition" title = "">
@@ -235,14 +219,16 @@
 								<th>Item Condition</th>
 								<th>Ship by</th>
 								<th>Ship Date</th>
+								<th>Box #</th>
 								<th>Lot Shipment</th>
 							</tr>
 						</thead>
 						<?php 
 							$items = getItems($sales_order);
 							foreach($items as $item): 
-								$inventory = getInventory($item['partid']);
-								$location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
+								// $inventory = getInventory($item['partid']);
+								// print_r($inventory);
+								// $location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
 								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
@@ -260,9 +246,6 @@
 								<td class="remaining_qty">
 									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
 								</td>
-								<!--<td>-->
-								<!--	<?php echo (!empty($location) ? getWarehouse($location['warehouseid']) . ' ' . $location['aisle'] . ': ' . $location['shelf'] : '') ?>-->
-								<!--</td>-->
 								<td style="padding-top: 15px !important;">
 									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
 								</td>
@@ -271,6 +254,9 @@
 								</td>
 								<td class="ship-date" style="padding-top: 15px !important;">
 									<?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?>
+								</td>
+								<td>
+									<?=$box_drop?>
 								</td>
 								<td>
 									<div class="checkbox">
@@ -283,16 +269,11 @@
 				</div>
 			</div>
 		</div>
+		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
 		
-		<script>
-			(function($){
-			    
-				
-			})(jQuery);
-		</script>
 
 	</body>
 </html>

@@ -326,101 +326,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				$right .= "<br>";
 			$right .= "</div>";
-					//PACKAGING SECTION: THIS IS GOING TO BE AN INTERESTING CHALLENGE.
-
-				$i = 1;
-				$packages = getPackages($order_number);
-				if (mysqli_num_rows($packages) > 0){
-					foreach($packages as $package){
-						$right .="
-							<div class = 'package_section' style = 'padding-bottom:10px;'>
-								<div class = 'row'>
-									<div class = 'col-sm-3' style = 'padding-right:0px;'>
-										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Pkg. #' title = 'Box Label' value = '".$package['package_no']."'>
-									</div>
-									<div class = 'col-sm-9'  style = 'padding-left:0px;' >
-										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Tracking #' title='Tracking #' value = '".$package['tracking_no']."'>
-									</div>
-								</div>
-								<div class = 'row-fluid'>
-										<div class = 'input-group'>
-											<input class='form-control' id = 'length-".$i."' name='length' title = 'Length' type='text' placeholder = 'Length' value='".$package['length']."'>
-											<span class='input-group-addon'>
-										        	<i class='fa fa-times' aria-hidden='true'></i>
-							    			</span>
-											<input class='form-control' id = 'width-".$i." name='width' title = 'Width' type='text' placeholder = 'Width' value='".$package['width']."'>
-											<span class='input-group-addon'>
-										        	<i class='fa fa-times' aria-hidden='true'></i>
-							    			</span>
-											<input class='form-control' id = 'height-".$i."' name='height' title = 'Height' type='text' placeholder = 'Height' value='".$package['height']."'>
-						    			</div>
-				    			</div>
-								<div class = 'row-fluid'>
-									<div class = 'input-group col-sm-5' style = 'padding-left:0px;padding-right:0px;'>
-										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Weight' title = 'Weight' value = '".$package['weight']."'>
-										<span class='input-group-addon'>
-										      lbs.
-							    		</span>
-									</div>
-									<div class = 'input-group col-sm-5' style = 'padding-right:0px;padding-left:0px;'>
-										<span class='input-group-addon'>$</span>
-										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Freight' title='Freight Cost' value = '".$package['freight_amount']."'>
-									</div>
-									<div class = 'input-group col-sm-2' style = 'padding-right:0px;padding-left:0px;'>
-										<button class ='btn-flat gray'><i class='fa fa-plus' aria-hidden='true'></i></button>
-									</div>
-								</div>
-							</div>
-						";
-							
-						$i++;
-					}	
-				}
-				else{
-						$right .="
-							<div class = 'package_section' style = 'padding-bottom:10px;'>
-								<div class = 'row'>
-									<div class = 'col-sm-3' style = 'padding-right:0px;'>
-										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Pkg. #' title = 'Box Label' value = ''>
-									</div>
-									<div class = 'col-sm-9'  style = 'padding-left:0px;' >
-										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Tracking #' title='Tracking #' value = ''>
-									</div>
-								</div>
-								<div class = 'row-fluid'>
-										<div class = 'input-group'>
-											<input class='form-control' id = 'length-".$i."' name='length' title = 'Length' type='text' placeholder = 'Length' value=''>
-											<span class='input-group-addon'>
-										        	<i class='fa fa-times' aria-hidden='true'></i>
-							    			</span>
-											<input class='form-control' id = 'width-".$i." name='width' title = 'Width' type='text' placeholder = 'Width' value=''>
-											<span class='input-group-addon'>
-										        	<i class='fa fa-times' aria-hidden='true'></i>
-							    			</span>
-											<input class='form-control' id = 'height-".$i."' name='height' title = 'Height' type='text' placeholder = 'Height' value=''>
-						    			</div>
-				    			</div>
-								<div class = 'row-fluid'>
-									<div class = 'input-group col-sm-5' style = 'padding-left:0px;padding-right:0px;'>
-										<input class = 'form-control' style='padding-left:3px;padding-right:3px;'placeholder = 'Weight' title = 'Weight' value = ''>
-										<span class='input-group-addon'>
-										      lbs.
-							    		</span>
-									</div>
-									<div class = 'input-group col-sm-5' style = 'padding-right:0px;padding-left:0px;'>
-										<span class='input-group-addon'>$</span>
-										<input class = 'form-control' style = 'padding-left:3px;padding-right:3px;' placeholder = 'Freight' title='Freight Cost' value = ''>
-									</div>
-									<div class = 'input-group col-sm-2' style = 'padding-right:0px;padding-left:0px;'>
-										<div class ='btn-flat gray'><i class='fa fa-plus' aria-hidden='true'></i></div>
-									</div>
-								</div>
-							</div>
-							
-						";
-											
-					
-				}
+			
+			//Old way of doing packages in the sidebar used to be here, if I am searching for a history,
+			//Go to line 330 from the version on the Morning of the 18th
 			
 		}
 		
@@ -436,7 +344,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 			echo json_encode($right);
 	}
+	
+	
 	function address_out($address_id){
+		//General function for handling the standard display of addresses
 		$address = '';
 		//Address Handling
 		$row = getAddresses($address_id);
