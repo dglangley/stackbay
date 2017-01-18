@@ -55,6 +55,10 @@
 			margin: 0 auto;
 		}
 		
+		.pointer {
+			cursor: pointer;
+		}
+		
 		.serial-page {
 			display: none;
 		}
@@ -435,7 +439,7 @@
 						$.each(info, function(label,row){
 							parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+row.unique+"'>\
 								<td>"+row.location+"</td>\
-								<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+row.qty+"</span></td>\
+									<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+row.qty+"</span></td>\
 								<td>"+row.condition+"</td>\
 								<td>"+row.last_purchase+"</td>\
 								<td>"+row.vendor+"</td>\
@@ -450,9 +454,11 @@
 														<thead>\
 															<tr>\
 															<th>Serial Number</th>\
-															<th class='edit'>New Serial</th>\
-															<th class='edit'>New Location</th>\
-															<th class='edit'>New Condition</th>\
+															<th>qty</th>\
+															<th>Status</th>\
+															<th class='edit'>Location</th>\
+															<th class='edit'>Condition</th>\
+															<th class='edit'>qty</th>\
 															<th></th>\
 															</tr>\
 														</thead>\
@@ -460,25 +466,43 @@
 								$.each(s, function(serial,history){
 									//console.log(history);
 									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-												<td>"+serial+"</td>\
-												<td class='edit'><input class='newSerial form-control' placeholder='New Serial' data-serial='"+serial+"'/></td>\
-												<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
-												<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
+												<td class='data pointer'>"+serial+"</td>\
+												<td class='edit'><input class='newSerial form-control' placeholder='"+serial+"' data-serial='"+serial+"'/></td>";
+									var init = true;			
 									$.each(history,function(record, details){
+										if(init) {
+											parts += "<td class='data'>"+details.qty+"</td>";
+											parts += "<td class='data'>"+details.status+"</td>";
+											
+											parts += "<td class='edit'><input class='newQty form-control' placeholder='"+details.qty+"'></td>\
+														<td class='edit'><input class='newStatus form-control' placeholder='"+details.status+"'></td>";
+											init = false;
+										}
 										// if(details.last_sale != null) {
 										// 	parts += "<td class='last_sale'>"+details.last_sale+"</td>";
 										// } else {
 										// 	parts += "<td class='last_sale'></td>";
 										// }
 									});
-										parts += "<td style='text-align: right;'>\
-											<i style='margin-right: 5px;' class='fa fa-pencil edit_button' aria-hidden='true'></i>\
-											<a class='edit save_button btn-flat success pull-right multipart_sub'>\
-                    						<i class='fa fa-check fa-4' aria-hidden='true'></i></a></td>";
+									parts += "<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
+												<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
+												
+									parts += "<td style='text-align: right;'>\
+										<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
+										<a class='edit save_button btn-flat success pull-right multipart_sub'>\
+                						<i class='fa fa-check fa-4' aria-hidden='true'></i></a>\
+                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
 									parts += "</tr>";
 								}); //Serials loop end
 								parts += "</tbody>\
-										</table>";
+										</table>\
+									</td>\
+								</tr>";
+								
+								parts += "<tr>\
+								<td colspan='12'>\
+								</td>\
+								</tr>"
 
 							}
 								
@@ -527,8 +551,10 @@
 		e.preventDefault();
 		
 		$(this).closest('tr').find('.edit').show();
+		$(this).closest('tr').find('.data').hide();
 		$(this).closest('table').find('th.edit').show();
 		
+		$(this).siblings('.delete_button').hide();
 		$(this).hide();
 	});
 	
@@ -536,7 +562,10 @@
 		e.preventDefault();
 		
 		$(this).closest('tr').find('.edit').hide();
+		$(this).closest('tr').find('.data').show();
 		$(this).closest('table').find('th.edit').hide();
+		$(this).closest('tr').find('.edit_button').show();
+		$(this).closest('tr').find('.delete_button').show();
 		
 		$(this).hide();
 	});

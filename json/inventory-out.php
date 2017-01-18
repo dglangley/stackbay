@@ -330,7 +330,6 @@
 		$query .= "GROUP BY partid, locationid, last_purchase, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
 		
-		
 		$rows = qdb($query);
 		foreach ($rows as $row){
 			 $r['partid'] = $row['partid'];
@@ -358,7 +357,7 @@
 			$q_serial .= "locationid = ".prep($row['locationid'])." AND  ";
 			$q_serial .= "last_purchase = ".prep($row['last_purchase'])." AND  ";
 			$q_serial .= "item_condition = ".prep($row['item_condition'])." AND  ";
-			$q_serial .= "date_created = ".prep($row['date_created']).";";
+			$q_serial .= "date_created = ".prep($row['date_created'])." ORDER BY date_changed DESC;";
 			$s = array();
 			$serials = qdb($q_serial);
 			foreach($serials as $serial){
