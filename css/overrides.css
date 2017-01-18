@@ -85,7 +85,7 @@
 	border-color:#357ebd;
 }
 
-.item-notes {
+.item-notes, label {
 	cursor:pointer;
 }
 
@@ -551,6 +551,7 @@ textarea.freeform-text {
 
 .company-selector {
 	width:280px;
+	max-width:70%;
 }
 .manf-selector {
 	width:180px;
@@ -803,7 +804,6 @@ tr.info:hover td, td.info:hover {
 	background-color:#e9fbff !important;
 }
 
-
 /***** NOTIFICATIONS *****/
 .navbar-inverse .notification-dropdown .count {
 	background:#b94a48;
@@ -921,6 +921,9 @@ h1.minimal, h2.minimal, h3.minimal {
 	line-height:1;
 	margin:0px;
 	padding:0px;
+}
+hr.no-margin {
+	margin:0px;
 }
 
 .loader {
@@ -1448,7 +1451,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 
 /*** SERVICES / JOBS ***/
 #main-stats .stat {
-  padding:10px 0px 10px 0px;
+  padding:8px 0px 12px 0px;
 }
 #main-stats .stat .data {
   font-weight:400;
@@ -1457,6 +1460,17 @@ a > .icon-ar.icon-ar-inverse:hover {
 }
 #main-stats .stat .data .number {
 }
+#main-stats .stat .aux {
+  color: #b4b8bb;
+  font-weight: lighter;
+  font-family: 'Lato', 'Open Sans';
+  font-style: italic;
+  font-size: 13px;
+  position: absolute;
+  right: 30px;
+  margin-top:-8px;
+}
+
 .progress {
 	margin-bottom:0px;
 	border:1px solid #888;

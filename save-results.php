@@ -8,7 +8,8 @@
 
 //	print "<pre>".print_r($_REQUEST,true)."</pre>";
 	$submit_type = 'demand';
-	if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
+	if (isset($_REQUEST['submit_type']) AND ($_REQUEST['submit_type']=='availability' OR $_REQUEST['submit_type']=='demand')) { $submit_type = $_REQUEST['submit_type']; }
+//	if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
 
 	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	$searchlistid = 0;

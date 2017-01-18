@@ -205,8 +205,7 @@
 
 		return $stockNumber;
 	}
-	
-		
+
 	//This function flattens the ordered array into a single outputtable collumn
 	function iteratable($ordered){
 		$output = array();
@@ -338,6 +337,8 @@
 			 $r['qty' ] = $row['sumqty'];
 			 $r['locationid'] = $row['locationid'];
 			 $r['location'] = display_location($row['locationid']);
+			 $r['place'] = display_location($row['locationid'], 'place');
+			 $r['instance'] = display_location($row['locationid'], 'instance');
 			 $r['condition'] = $row['item_condition'];
 			 $r['last_purchase'] = $row['last_purchase'];
 			 $r['status'] = $row['status'];
@@ -346,7 +347,6 @@
 			 $r['vendorid'] = getVendor($row['last_purchase']);
 			 $r['vendor'] = getCompany($r['vendorid']);
 			 $r['unique'] = $row['invid'];
-			 
 			 //$r['id'] = $row['id'];
 			 
 			
@@ -362,8 +362,8 @@
 			$s = array();
 			$serials = qdb($q_serial);
 			foreach($serials as $serial){
-				if($serial['invid']){
-					$s[$serial['invid']][] = $serial;
+				if($serial['serial_no']){
+					$s[$serial['serial_no']][] = $serial;
 				}
 				else{
 					$s['null'][] = $serial;
