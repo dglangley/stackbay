@@ -242,6 +242,12 @@
 				<?=dropdown('condition')?>
 			</div>
 		</div>
+		
+		<div class="status_select row">
+			<div class="col-md-12">
+				<?=dropdown('status')?>
+			</div>
+		</div>
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
@@ -429,6 +435,9 @@
 					$('.conditions').find('label').remove();
 					var conditions = $('.conditions').clone();
 					
+					$('.status_select').find('label').remove();
+					var status = $('.status_select').clone();
+					
 					var counter = 1;
 					revisions = "<option value='' selected>All</option>";
 					//If there are multiple parts being returned, loop through them all
@@ -456,9 +465,9 @@
 															<th>Serial Number</th>\
 															<th>qty</th>\
 															<th>Status</th>\
+															<th>Last Sales</th>\
 															<th class='edit'>Location</th>\
 															<th class='edit'>Condition</th>\
-															<th class='edit'>qty</th>\
 															<th></th>\
 															</tr>\
 														</thead>\
@@ -467,23 +476,28 @@
 									//console.log(history);
 									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
 												<td class='data pointer'>"+serial+"</td>\
-												<td class='edit'><input class='newSerial form-control' placeholder='"+serial+"' data-serial='"+serial+"'/></td>";
+												<td class='edit'><input class='newSerial form-control' value='"+serial+"' data-serial='"+serial+"'/></td>";
 									var init = true;			
 									$.each(history,function(record, details){
 										if(init) {
 											parts += "<td class='data'>"+details.qty+"</td>";
 											parts += "<td class='data'>"+details.status+"</td>";
 											
-											parts += "<td class='edit'><input class='newQty form-control' placeholder='"+details.qty+"'></td>\
-														<td class='edit'><input class='newStatus form-control' placeholder='"+details.status+"'></td>";
+											parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"'></td>\
+														<td class='edit status_holder' data-status='"+details.status+"'></td>";
+														
+											if(details.last_sale != null) {
+												parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
+												parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
+											} else {
+												parts += "<td class='last_sale data'></td>";
+												parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
+											}
+											
 											init = false;
 										}
-										// if(details.last_sale != null) {
-										// 	parts += "<td class='last_sale'>"+details.last_sale+"</td>";
-										// } else {
-										// 	parts += "<td class='last_sale'></td>";
-										// }
 									});
+									parts += "<td class='data'></td><td class='data'></td>";
 									parts += "<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
 												<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
 												
@@ -514,6 +528,7 @@
 					
 					$('.location_holder').append(locations);
 					$('.condition_holder').append(conditions);
+					$('.status_holder').append(status);
 					
 					//GO through each of the conditions and locations and set each one to the respective value
 					// $('.location_holder').each(function() {
@@ -528,8 +543,12 @@
 					
 					$('.condition_holder').each(function() {
 						var actualCondition = $(this).data('condition');
-						
 						$(this).find('select').val(actualCondition);
+					});
+					
+					$('.status_holder').each(function() {
+						var actualStatus = $(this).data('status');
+						$(this).find('select').val(actualStatus);
 					});
 
 					if(part != '') {
@@ -554,12 +573,20 @@
 		$(this).closest('tr').find('.data').hide();
 		$(this).closest('table').find('th.edit').show();
 		
-		$(this).siblings('.delete_button').hide();
+		$(this).closest('tr').find('.delete_button').hide();
 		$(this).hide();
 	});
 	
 	$(document).on('click', '.save_button', function(e) {
 		e.preventDefault();
+		var serial = $(this).closest('tr').find('.newSerial').data('serial');
+		var newSerial = $(this).closest('tr').find('.newSerial').val();
+		var newQty = $(this).closest('tr').find('.newQty').val();
+		var newStatus = $(this).closest('tr').find('.status').find('select').val();
+		var newSales = $(this).closest('tr').find('.newSO');
+		var newPlace;
+		var newInstance;
+		var newCondition;
 		
 		$(this).closest('tr').find('.edit').hide();
 		$(this).closest('tr').find('.data').show();

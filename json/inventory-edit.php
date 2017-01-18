@@ -45,9 +45,6 @@
 	function getStock($stock = '', $partid = 0) {
 		$stockNumber = 0;
 		
-		//echo $stock . $partid;
-		
-		
 		$query  = "SELECT SUM(qty) FROM inventory WHERE partid = ". res($partid) ." AND item_condition = '". res($stock) ."';";
 		$result = qdb($query);
 		
