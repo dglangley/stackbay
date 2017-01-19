@@ -276,7 +276,6 @@ if (! $r['partid']) { return ($results); }
 	<?php
 		include_once 'inc/scripts.php';
 	?>
-<script src="js/dropzone.js"></script>
 </head>
 <body>
 
@@ -1002,11 +1001,11 @@ if (! $r['partid']) { return ($results); }
 
 	</form>
 
-<?php include_once 'inc/footer.php'; ?>
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
 <?php include_once 'modal/image.php'; ?>
+<?php include_once 'inc/footer.php'; ?>
 
 </body>
 </html>

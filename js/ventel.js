@@ -1,3 +1,4 @@
+	var imageSlider;
     $(document).ready(function() {
 		$('#loader').hide();
 		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) {
@@ -538,7 +539,30 @@
 	    // select2 plugin for select elements
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
-		
+
+		imageSlider = $('.bxslider').bxSlider({
+			adaptiveHeight: true,
+			mode: 'fade',
+			pagerCustom: '#imagePager',
+		});
+
+/*
+		$('#image-modal').on('show.bs.modal', function (e) {
+			var modal = $(this);
+			modal.find(".bxslider").find("li").each(function() {
+				$(this).remove();
+			});
+			modal.append('<li><img src="/images/730_200/trees.jpg"></li>');
+		});
+*/
+
+		// reload bxslider after opening modal because of modal/bxslider conflicts
+		$('#image-modal').on('shown.bs.modal', function (e) {
+			imageSlider.reloadSlider();
+		});
+
+
+
 		$(document).on(".company-selector")
 	/**** Invoke all select2() modules *****/
 	if (!!$.prototype.select2) {
@@ -838,8 +862,12 @@
 		});
 
 		$(".product-img img").click(function() {
-			$("#modal-prod-img").attr('src',$(this).attr('src'));
-			$("#prod-image-title").text($(this).data('part'));
+			//$("#modal-prod-img").attr('src',$(this).attr('src'));
+			var part = $(this).data('part');
+			updateSliderImages(part);
+			$("#prod-image-title").text(part);
+			// set dropzone data 'id' to the value of this string to match uploads against each part result
+			$("#imageDropzone").data('id',part);
 			$("#image-modal").modal('toggle');
 		});
 
@@ -881,7 +909,6 @@
 			var remote_login = $("#remote-login").val();
 			var remote_password = $("#remote-password").val();
             console.log(window.location.origin+"/json/remotes.php?remote="+remote+"&remote_login="+remote_login+"&remote_password="+remote_password);
-return;
             $.ajax({
                 url: 'json/remotes.php',
                 type: 'get',
@@ -1143,6 +1170,43 @@ return;
 			$("#loading-bar").show();
 			setTimeout("toggleLoader()",1000);
 		}
+	}
+	function updateSliderImages(search) {
+       	console.log(window.location.origin+"/json/images.php?search="+search);
+        $.ajax({
+			url: 'json/images.php',
+			type: 'get',
+			data: {'search': search},
+			dataType: 'json',
+			success: function(json, status) {
+				var slider;
+				var pager = $("#imagePager");
+				var modal = $("#image-modal");
+				modal.find(".bxslider").each(function() {
+					slider = $(this);
+					// remove each slider image to clear the slider for new images below
+					slider.find("li").each(function() {
+						$(this).remove();
+					});
+					// remove pager images (should correspond to each of the slider images)
+					pager.find("a").each(function() {
+						$(this).remove();
+					});
+					// add each new image pulled for this part / search string
+					$.each(json.images, function(i, imgSrc) {
+						// add image list item to slider
+						slider.append('<li><img src="'+imgSrc+'"></li>');
+						// add image to corresponding pager
+						pager.append('<a data-slide-index="'+i+'" href="javascript:void(0);"><img src="'+imgSrc+'" /></a>');
+					});
+					imageSlider.reloadSlider();
+				});
+			},
+			error: function(xhr, desc, err) {
+//				console.log(xhr);
+				console.log("Details: " + desc + "\nError:" + err);
+			}
+		}); // end ajax call
 	}
 	function setSlider(e) {
 		var buttonText = '';
@@ -1497,3 +1561,32 @@ return;
             }
         }); // end ajax call
 	}
+
+	Dropzone.autoDiscover = false;
+	// dropzone class:
+	var imageDropzone = new Dropzone ("div#imageDropzone",{
+		url: "json/image-upload.php",
+		paramName: "file", // The name that will be used to transfer the file
+		maxFilesize: 2, // MB
+		uploadMultiple: true,
+		clickable: true,
+		addRemoveLinks: false,
+		dictRemoveFile: "Remove",
+		acceptedFiles: ".png, .jpg, .jpeg, .gif",
+		dictDefaultMessage: "<h4>Drop File(s) Here or Click to Upload</h4>",
+		accept: function(file, done) {//gets the file and does something before sending to url for upload
+			if (file.name == "justinbieber.jpg") {
+				done("Naha, you don't.");
+			} else {
+				done();//submit to url
+			}
+		},
+		success: function(file, response) {// sent data to url, got the response back
+			if (response!="") { alert(response); }
+		},
+	});
+	//add part string to form request on each image send
+	imageDropzone.on("sending", function(file, xhr, formData) {
+		var id = $("#imageDropzone").data('id');
+		formData.append("search", id);
+	});

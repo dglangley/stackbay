@@ -890,16 +890,6 @@ tr.info:hover td, td.info:hover {
 
 
 
-
-.file-upload {
-	width: 0.1px;
-	height: 0.1px;
-	overflow: hidden;
-	opacity: 0;
-	z-index: -1;
-	position: absolute;
-}
-
  
 
 
@@ -958,8 +948,57 @@ hr.no-margin {
 .margin-120 { margin-top:120px; }
 .margin-bottom-220 { margin-bottom:220px; }
 
-#image-modal img {
+
+/*** FILE UPLOADER / DROPZONE ***/
+
+.dropzone {
+	min-height:200px;
+	border:2px dashed #357ebd;
+}
+.file-upload {
+	width: 0.1px;
+	height: 0.1px;
+	overflow: hidden;
+	opacity: 0;
+	z-index: -1;
+	position: absolute;
+}
+
+/*** BXSLIDER/MODAL IMAGE HANDLING ***/
+.imageSlider {
+	text-align:center;
+	height:576px;
+}
+.imageSliderBody {
+	height:500px;
+	max-height:500px;
+	overflow:auto;
+	margin-bottom:10px;
+}
+#image-modal .modal-dialog {
+	width:800px;
+}
+.bx-wrapper {
+	width:590px;
+	max-width:590px;
+}
+.bx-wrapper .bx-viewport .bxslider {
+	padding:0px;
+}
+.bx-wrapper .bx-viewport .bxslider li img {
+	text-align:center;
 	width:100%;
+}
+#imagePager {
+	height:66px;
+}
+#imagePager a {
+	border:1px solid gray;
+    display: inline-block;
+    padding: 3px;
+}
+#imagePager a img {
+	height:60px;
 }
 
 

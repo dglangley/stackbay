@@ -15,6 +15,12 @@
     <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
 
     <script src="js/select2.min.js"></script>
+
+	<script src="js/dropzone.js"></script>
+
+	<!-- bxSlider Javascript file -->
+	<script src="js/jquery.bxslider.min.js"></script>
+
     <script src="js/ventel.js?id=<?php echo $V; ?>"></script>
 
 <?php
