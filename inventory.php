@@ -255,153 +255,6 @@
 
 <script>
 	(function($){
-		
-		$(document).on('change', '.revisions', function() {
-			$('.parts-list').hide();
-			
-			if($(this).val() == '') {
-				$('.parts-list').show();
-			} else {
-				$('.' + $(this).val()).show();
-			}
-		});
-		
-
-		
-		$(document).on('change keyup paste','input, select', function() {
-			$(this).closest('.addItem').find('.updateAll').prop("disabled", false);
-			$(this).closest('.product-rows').addClass('product-rows-edited');
-			$(this).closest('.product-rows').find('.update').prop("disabled", false);
-		});
-
-
-		//Append new row of data
-		var element = '<div class="product-rows row new-row appended" style="padding-bottom: 10px; display: none;">\
-				<div class="col-md-2 col-sm-2">\
-					<label for="serial">Serial/Lot Number</label>\
-					<input class="form-control serial" type="text" name="serial" placeholder="#123" value=""/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<label for="date">Date</label>\
-					<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date("n/j/Y");  ?>"/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<label for="date">Location</label>\
-					<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value=""/>\
-				</div>\
-				<div class="col-md-1 col-sm-1">\
-					<label for="qty">Qty</label>\
-					<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value=""/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<div class="form-group">\
-						<label for="condition">Condition</label>\
-						<select class="form-control condition" name="condition">\
-							<?php foreach(getEnumValue() as $condition): ?>
-								<option><?php echo $condition; ?></option>\
-							<?php endforeach; ?>
-						</select>\
-					</div>\
-					<div class="form-text"></div>\
-				</div>\
-				<div class="col-md-1 col-sm-1">\
-					<div class="form-group">\
-						<label for="status">status</label>\
-						<select class="form-control status" name="status">\
-							<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-								<option><?php echo $status; ?></option>\
-							<?php endforeach; ?>
-						</select>\
-					</div>\
-					<div class="form-text"></div>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<div class="col-md-7 col-sm-7">\
-						<div class="row">\
-							<label for="price">Cost</label>\
-							<input class="form-control cost" type="text" name="price" placeholder="$$$" value=""/>\
-						</div>\
-					</div>\
-					<div class="col-md-5 col-sm-5">\
-						<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">\
-							<button class="btn btn-primary btn-sm inserted-row"><i class="fa fa-check" aria-hidden="true"></i></button>\
-							<button class="btn btn-danger delete btn-sm"><i class="fa fa-chevron-up" aria-hidden="true"></i></button>\
-						</div>\
-					</div>\
-				</div>\
-			</div>';
-		
-		//Once button is clicked the new row will be appended
-		$(document).on("click",".buttonAddRows",function(){
-			$(this).closest('.part-container').find('.product-rows:last').after(element);
-			$(this).closest('.part-container').find('.appended').slideDown().removeClass('appended');
-			
-			$('.delete').click(function(){
-				$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
-			});
-			
-			$('.inserted-row').click(function(){
-				var serial, date, location, qty, condition, status, cost, partid;
-				var element = $(this).closest('.product-rows');
-				
-				id = "";
-				serial = $(element).find('.serial').val();
-				date = $(element).find('.date').val();
-				location = $(element).find('.location').val();
-				qty = $(element).find('.qty').val();
-				condition = $(element).find('.condition').val();
-				status = $(element).find('.status').val();
-				cost = $(element).find('.cost').val();
-				
-				partid = $(element).closest('.part-container').data('partid');
-
-				$.ajax({
-					type: 'POST',
-					url: '/json/inventory-edit.php',
-					data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
-					dataType: 'json',
-					success: function(data) {
-						if(data.result){
-							$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
-							
-							$(element).closest('.product-rows').find('.inserted-row').prop("disabled", true);
-							$(element).closest('.product-rows').find('.delete').prop("disabled", true);
-							
-							$('#item-updated').show();
-							setTimeout(function() { 
-								$('#item-updated').fadeOut(); 
-							}, 5000);
-
-						} else {
-							$('#item-failed').show();
-							setTimeout(function() { 
-								$('#item-failed').fadeOut(); 
-							}, 5000);
-						}
-					}
-				});
-			});
-		});
-		
-		
-		//Remove rows
-		$(document).on("click",".delete",function(){
-			$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
-		});
-		
-		//Show hide serial products
-		$(document).on("click",".show-more",function(e){
-	
-			e.preventDefault();
-			$(this).closest('.addItem').find('.page-2').slideToggle();
-			
-			$(this).closest('.addItem').find('.page-2').toggleClass('show-less');
-			
-		});
-		
-
 		//Update all query
 		// $('.updateAll').click(function() {
 		// 	//Get how many rows created + initial row
@@ -483,7 +336,7 @@
 											parts += "<td class='data'>"+details.qty+"</td>";
 											parts += "<td class='data'>"+details.status+"</td>";
 											
-											parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"'></td>\
+											parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"' data-id='"+details.invid+"'></td>\
 														<td class='edit status_holder' data-status='"+details.status+"'></td>";
 														
 											if(details.last_sale != null) {
@@ -579,22 +432,48 @@
 	
 	$(document).on('click', '.save_button', function(e) {
 		e.preventDefault();
-		var serial = $(this).closest('tr').find('.newSerial').data('serial');
-		var newSerial = $(this).closest('tr').find('.newSerial').val();
-		var newQty = $(this).closest('tr').find('.newQty').val();
-		var newStatus = $(this).closest('tr').find('.status').find('select').val();
-		var newSales = $(this).closest('tr').find('.newSO');
-		var newPlace;
-		var newInstance;
-		var newCondition;
+		var $save =$(this);
 		
-		$(this).closest('tr').find('.edit').hide();
-		$(this).closest('tr').find('.data').show();
-		$(this).closest('table').find('th.edit').hide();
-		$(this).closest('tr').find('.edit_button').show();
-		$(this).closest('tr').find('.delete_button').show();
+		var id = $save.closest('tr').find('.newQty').data('id');
+		var newSerial = $save.closest('tr').find('.newSerial').val();
+		var newQty = $save.closest('tr').find('.newQty').val();
+		var newStatus = $save.closest('tr').find('#status').val();
+		var newSales = $save.closest('tr').find('.newSO').val();
+		var newPlace = $save.closest('tr').find('.place').val();
+		var newInstance = $save.closest('tr').find('.instance').val();
+		var newCondition = $save.closest('tr').find('#condition').val();
 		
-		$(this).hide();
+		//alert("INVID: " + id + " New Serial: " + newSerial + " Qty: " + newQty + " Status: " + newStatus + " New SO: " + newSales + " New Place: " + newPlace + " New Instance: " + newInstance + " New Condition: " + newCondition);
+		
+		$.ajax({
+				type: "POST",
+				url: '/json/inventory-edit.php',
+				data: {
+					"id": id,
+					"serial_no": newSerial,
+					"qty": newQty,
+					"status": newStatus,
+					"so": newSales,
+					"place": newPlace,
+					"instance": newInstance,
+					"condition": newCondition
+				},
+				dataType: 'json',
+				success: function(result) {
+					//alert(result);
+					if(result) {
+						$save.closest('tr').find('.edit').hide();
+						$save.closest('tr').find('.data').show();
+						$save.closest('table').find('th.edit').hide();
+						$save.closest('tr').find('.edit_button').show();
+						$save.closest('tr').find('.delete_button').show();
+						
+						$save.hide();
+						$('.alert-success').show();
+						$('.alert-success').delay(3000).fadeOut('fast');
+					}
+				}
+		});
 	});
 	
 	//finish adding the filters
