@@ -471,6 +471,8 @@
 					$('.alert-success').delay(6000).fadeOut('fast');
 					
 					$save.closest('tr').find('.serial_original').html(newSerial);
+					$save.closest('tr').find('.qty_original').html(newQty);
+					$save.closest('tr').find('.status_original').html(newStatus);
 				}
 			}
 		});
