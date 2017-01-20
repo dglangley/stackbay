@@ -186,7 +186,7 @@
 
 	<div id="item-updated" class="alert alert-success fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-	    <strong>Success!</strong> Changes have been updated.
+	    <strong>Success!</strong> Changes have been updated. Refresh required to re-organize data.
 	</div>
 	
 	<div id="item-failed" class="alert alert-danger fade in text-center" style="display: none;">
@@ -276,6 +276,14 @@
 					},
 				dataType: 'json',
 				success: function(part) {
+					
+					//Add feature to auto update the URL without a refresh
+					if(search == '') {
+						window.history.replaceState(null, null, "/inventory.php");
+					} else {
+						window.history.replaceState(null, null, "/inventory.php?search=" + search);	
+					}
+
 					$(".revisions").empty();
 					$(".parts").empty();
 					
@@ -328,13 +336,13 @@
 								$.each(s, function(serial,history){
 									//console.log(history);
 									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-												<td class='data pointer'>"+serial+"</td>\
+												<td class='data pointer serial_original'>"+serial+"</td>\
 												<td class='edit'><input class='newSerial form-control' value='"+serial+"' data-serial='"+serial+"'/></td>";
 									var init = true;			
 									$.each(history,function(record, details){
 										if(init) {
-											parts += "<td class='data'>"+details.qty+"</td>";
-											parts += "<td class='data'>"+details.status+"</td>";
+											parts += "<td class='data qty_original'>"+details.qty+"</td>";
+											parts += "<td class='data status_original'>"+details.status+"</td>";
 											
 											parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"' data-id='"+details.invid+"'></td>\
 														<td class='edit status_holder' data-status='"+details.status+"'></td>";
@@ -470,7 +478,9 @@
 						
 						$save.hide();
 						$('.alert-success').show();
-						$('.alert-success').delay(3000).fadeOut('fast');
+						$('.alert-success').delay(6000).fadeOut('fast');
+						
+						$save.closest('tr').find('.serial_original').html(newSerial);
 					}
 				}
 		});
@@ -529,7 +539,15 @@
 		}
 	});
 	 
-	 
+	$(document).on('click', '.revisions', function() {
+		var element = $(this).val();
+		if(element != '') {
+			$('.parts-list').hide();
+			$('.' + element).show();
+		} else {
+			$('.parts-list').show();
+		}
+	});
 	
 	})(jQuery);
 
