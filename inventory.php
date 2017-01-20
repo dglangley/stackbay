@@ -186,7 +186,7 @@
 
 	<div id="item-updated" class="alert alert-success fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-	    <strong>Success!</strong> Changes have been updated.
+	    <strong>Success!</strong> Changes have been updated. Refresh required to re-organize data.
 	</div>
 	
 	<div id="item-failed" class="alert alert-danger fade in text-center" style="display: none;">
@@ -242,6 +242,12 @@
 				<?=dropdown('condition')?>
 			</div>
 		</div>
+		
+		<div class="status_select row">
+			<div class="col-md-12">
+				<?=dropdown('status')?>
+			</div>
+		</div>
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
@@ -249,164 +255,7 @@
 
 <script>
 	(function($){
-		
-		$(document).on('change', '.revisions', function() {
-			$('.parts-list').hide();
-			
-			if($(this).val() == '') {
-				$('.parts-list').show();
-			} else {
-				$('.' + $(this).val()).show();
-			}
-		});
-		
 
-		
-		$(document).on('change keyup paste','input, select', function() {
-			$(this).closest('.addItem').find('.updateAll').prop("disabled", false);
-			$(this).closest('.product-rows').addClass('product-rows-edited');
-			$(this).closest('.product-rows').find('.update').prop("disabled", false);
-		});
-
-
-		//Append new row of data
-		var element = '<div class="product-rows row new-row appended" style="padding-bottom: 10px; display: none;">\
-				<div class="col-md-2 col-sm-2">\
-					<label for="serial">Serial/Lot Number</label>\
-					<input class="form-control serial" type="text" name="serial" placeholder="#123" value=""/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<label for="date">Date</label>\
-					<input class="form-control date" type="text" name="date" placeholder="00/00/0000" value="<?php echo date("n/j/Y");  ?>"/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<label for="date">Location</label>\
-					<input class="form-control location" type="text" name="date" placeholder="Warehouse Location" value=""/>\
-				</div>\
-				<div class="col-md-1 col-sm-1">\
-					<label for="qty">Qty</label>\
-					<input class="form-control qty" type="text" name="qty" placeholder="Quantity" value=""/>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<div class="form-group">\
-						<label for="condition">Condition</label>\
-						<select class="form-control condition" name="condition">\
-							<?php foreach(getEnumValue() as $condition): ?>
-								<option><?php echo $condition; ?></option>\
-							<?php endforeach; ?>
-						</select>\
-					</div>\
-					<div class="form-text"></div>\
-				</div>\
-				<div class="col-md-1 col-sm-1">\
-					<div class="form-group">\
-						<label for="status">status</label>\
-						<select class="form-control status" name="status">\
-							<?php foreach(getEnumValue('inventory', 'status') as $status): ?>
-								<option><?php echo $status; ?></option>\
-							<?php endforeach; ?>
-						</select>\
-					</div>\
-					<div class="form-text"></div>\
-				</div>\
-				<div class="col-md-2 col-sm-2">\
-					<div class="col-md-7 col-sm-7">\
-						<div class="row">\
-							<label for="price">Cost</label>\
-							<input class="form-control cost" type="text" name="price" placeholder="$$$" value=""/>\
-						</div>\
-					</div>\
-					<div class="col-md-5 col-sm-5">\
-						<div class="btn-group" role="group" style="margin: 23px auto 0; display: block;">\
-							<button class="btn btn-primary btn-sm inserted-row"><i class="fa fa-check" aria-hidden="true"></i></button>\
-							<button class="btn btn-danger delete btn-sm"><i class="fa fa-chevron-up" aria-hidden="true"></i></button>\
-						</div>\
-					</div>\
-				</div>\
-			</div>';
-		
-		//Once button is clicked the new row will be appended
-		$(document).on("click",".buttonAddRows",function(){
-			$(this).closest('.part-container').find('.product-rows:last').after(element);
-			$(this).closest('.part-container').find('.appended').slideDown().removeClass('appended');
-			
-			$('.delete').click(function(){
-				$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
-			});
-			
-			$('.inserted-row').click(function(){
-				var serial, date, location, qty, condition, status, cost, partid;
-				var element = $(this).closest('.product-rows');
-				
-				id = "";
-				serial = $(element).find('.serial').val();
-				date = $(element).find('.date').val();
-				location = $(element).find('.location').val();
-				qty = $(element).find('.qty').val();
-				condition = $(element).find('.condition').val();
-				status = $(element).find('.status').val();
-				cost = $(element).find('.cost').val();
-				
-				partid = $(element).closest('.part-container').data('partid');
-
-				$.ajax({
-					type: 'POST',
-					url: '/json/inventory-edit.php',
-					data: ({id : id, serial_no : serial, date_created: date, locationid: location, qty : qty, condition : condition, status : status, cost : cost, partid : partid}),
-					dataType: 'json',
-					success: function(data) {
-						if(data.result){
-							$(element).closest('.part-container').find('.partDescription').find('.new_stock').html(data.new_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.used_stock').html(data.used_stock);
-							$(element).closest('.part-container').find('.partDescription').find('.refurb_stock').html(data.refurb_stock);
-							
-							$(element).closest('.product-rows').find('.inserted-row').prop("disabled", true);
-							$(element).closest('.product-rows').find('.delete').prop("disabled", true);
-							
-							$('#item-updated').show();
-							setTimeout(function() { 
-								$('#item-updated').fadeOut(); 
-							}, 5000);
-
-						} else {
-							$('#item-failed').show();
-							setTimeout(function() { 
-								$('#item-failed').fadeOut(); 
-							}, 5000);
-						}
-					}
-				});
-			});
-		});
-		
-		
-		//Remove rows
-		$(document).on("click",".delete",function(){
-			$($(this).closest('.new-row')).slideUp("normal", function() { $(this).remove(); });
-		});
-		
-		//Show hide serial products
-		$(document).on("click",".show-more",function(e){
-	
-			e.preventDefault();
-			$(this).closest('.addItem').find('.page-2').slideToggle();
-			
-			$(this).closest('.addItem').find('.page-2').toggleClass('show-less');
-			
-		});
-		
-
-		//Update all query
-		// $('.updateAll').click(function() {
-		// 	//Get how many rows created + initial row
-		// 	var totalRows = $('.product-rows').length;
-		// 	var results = new Array();
-		// 	$('.product-rows').each(function() {
-				
-		// 	});
-		// });
-
-	// }
 	var inventory_history = function (search, serial) {
 		$.ajax({
 				type: "POST",
@@ -417,6 +266,14 @@
 					},
 				dataType: 'json',
 				success: function(part) {
+					
+					//Add feature to auto update the URL without a refresh
+					if(search == '') {
+						window.history.replaceState(null, null, "/inventory.php");
+					} else {
+						window.history.replaceState(null, null, "/inventory.php?search=" + search);	
+					}
+
 					$(".revisions").empty();
 					$(".parts").empty();
 					
@@ -428,6 +285,9 @@
 					
 					$('.conditions').find('label').remove();
 					var conditions = $('.conditions').clone();
+					
+					$('.status_select').find('label').remove();
+					var status = $('.status_select').clone();
 					
 					var counter = 1;
 					revisions = "<option value='' selected>All</option>";
@@ -456,9 +316,9 @@
 															<th>Serial Number</th>\
 															<th>qty</th>\
 															<th>Status</th>\
+															<th>Last Sales</th>\
 															<th class='edit'>Location</th>\
 															<th class='edit'>Condition</th>\
-															<th class='edit'>qty</th>\
 															<th></th>\
 															</tr>\
 														</thead>\
@@ -466,24 +326,29 @@
 								$.each(s, function(serial,history){
 									//console.log(history);
 									parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-												<td class='data pointer'>"+serial+"</td>\
-												<td class='edit'><input class='newSerial form-control' placeholder='"+serial+"' data-serial='"+serial+"'/></td>";
+												<td class='data pointer serial_original'>"+serial+"</td>\
+												<td class='edit'><input class='newSerial form-control' value='"+serial+"' data-serial='"+serial+"'/></td>";
 									var init = true;			
 									$.each(history,function(record, details){
 										if(init) {
-											parts += "<td class='data'>"+details.qty+"</td>";
-											parts += "<td class='data'>"+details.status+"</td>";
+											parts += "<td class='data qty_original'>"+details.qty+"</td>";
+											parts += "<td class='data status_original'>"+details.status+"</td>";
 											
-											parts += "<td class='edit'><input class='newQty form-control' placeholder='"+details.qty+"'></td>\
-														<td class='edit'><input class='newStatus form-control' placeholder='"+details.status+"'></td>";
+											parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"' data-id='"+details.invid+"'></td>\
+														<td class='edit status_holder' data-status='"+details.status+"'></td>";
+														
+											if(details.last_sale != null) {
+												parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
+												parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
+											} else {
+												parts += "<td class='last_sale data'></td>";
+												parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
+											}
+											
 											init = false;
 										}
-										// if(details.last_sale != null) {
-										// 	parts += "<td class='last_sale'>"+details.last_sale+"</td>";
-										// } else {
-										// 	parts += "<td class='last_sale'></td>";
-										// }
 									});
+									parts += "<td class='data'></td><td class='data'></td>";
 									parts += "<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
 												<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
 												
@@ -514,6 +379,7 @@
 					
 					$('.location_holder').append(locations);
 					$('.condition_holder').append(conditions);
+					$('.status_holder').append(status);
 					
 					//GO through each of the conditions and locations and set each one to the respective value
 					// $('.location_holder').each(function() {
@@ -528,8 +394,12 @@
 					
 					$('.condition_holder').each(function() {
 						var actualCondition = $(this).data('condition');
-						
 						$(this).find('select').val(actualCondition);
+					});
+					
+					$('.status_holder').each(function() {
+						var actualStatus = $(this).data('status');
+						$(this).find('select').val(actualStatus);
 					});
 
 					if(part != '') {
@@ -554,20 +424,58 @@
 		$(this).closest('tr').find('.data').hide();
 		$(this).closest('table').find('th.edit').show();
 		
-		$(this).siblings('.delete_button').hide();
+		$(this).closest('tr').find('.delete_button').hide();
 		$(this).hide();
 	});
 	
 	$(document).on('click', '.save_button', function(e) {
 		e.preventDefault();
+		var $save =$(this);
 		
-		$(this).closest('tr').find('.edit').hide();
-		$(this).closest('tr').find('.data').show();
-		$(this).closest('table').find('th.edit').hide();
-		$(this).closest('tr').find('.edit_button').show();
-		$(this).closest('tr').find('.delete_button').show();
+		var id = $save.closest('tr').find('.newQty').data('id');
+		var newSerial = $save.closest('tr').find('.newSerial').val();
+		var newQty = $save.closest('tr').find('.newQty').val();
+		var newStatus = $save.closest('tr').find('#status').val();
+		var newSales = $save.closest('tr').find('.newSO').val();
+		var newPlace = $save.closest('tr').find('.place').val();
+		var newInstance = $save.closest('tr').find('.instance').val();
+		var newCondition = $save.closest('tr').find('#condition').val();
 		
-		$(this).hide();
+		//alert("INVID: " + id + " New Serial: " + newSerial + " Qty: " + newQty + " Status: " + newStatus + " New SO: " + newSales + " New Place: " + newPlace + " New Instance: " + newInstance + " New Condition: " + newCondition);
+		
+		$.ajax({
+			type: "POST",
+			url: '/json/inventory-edit.php',
+			data: {
+				"id": id,
+				"serial_no": newSerial,
+				"qty": newQty,
+				"status": newStatus,
+				"so": newSales,
+				"place": newPlace,
+				"instance": newInstance,
+				"condition": newCondition
+			},
+			dataType: 'json',
+			success: function(result) {
+				//alert(result);
+				if(result) {
+					$save.closest('tr').find('.edit').hide();
+					$save.closest('tr').find('.data').show();
+					$save.closest('table').find('th.edit').hide();
+					$save.closest('tr').find('.edit_button').show();
+					$save.closest('tr').find('.delete_button').show();
+					
+					$save.hide();
+					$('.alert-success').show();
+					$('.alert-success').delay(6000).fadeOut('fast');
+					
+					$save.closest('tr').find('.serial_original').html(newSerial);
+					$save.closest('tr').find('.qty_original').html(newQty);
+					$save.closest('tr').find('.status_original').html(newStatus);
+				}
+			}
+		});
 	});
 	
 	//finish adding the filters
@@ -583,6 +491,29 @@
 			var search = $("#part_search").val();
 			inventory_history(search,"");
 		}
+	});
+	
+	$(document).on('click', '.delete_button', function() {
+		var $delete = $(this);
+		if (window.confirm("Are you sure you want to delete this serial?")) {
+			var id = $delete.closest('tr').find('.newQty').data('id');
+			
+            $.ajax({
+				type: "POST",
+				url: '/json/inventory-edit.php',
+				data: {
+					"id": id,
+					"delete": true
+				},
+				dataType: 'json',
+				success: function(result) {
+					//alert(result);
+					if(result) {
+						$delete.closest('tr').remove();
+					}
+				}
+			});
+        }
 	});
 	
 	//This function show all the serial if the user clicks on the qty link
@@ -623,7 +554,15 @@
 		}
 	});
 	 
-	 
+	$(document).on('click', '.revisions', function() {
+		var element = $(this).val();
+		if(element != '') {
+			$('.parts-list').hide();
+			$('.' + element).show();
+		} else {
+			$('.parts-list').show();
+		}
+	});
 	
 	})(jQuery);
 

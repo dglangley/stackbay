@@ -7,10 +7,24 @@
         <h4 class="modal-title" id="prod-image-title"></h4>
       </div>
       <div class="modal-body">
-		<img id="modal-prod-img">
-      </div>
-      <div class="modal-footer" id="modal-image-uploader">
+		<div class="imageSlider">
+			<div class="imageSliderBody">
+				<ul class="bxslider">
+				</ul>
+			</div>
 
+			<div id="imagePager">
+			</div>
+		</div><!-- .imageSlider -->
+      </div>
+
+      <div class="modal-footer">
+		<div id="imageDropzone" class="dropzone" data-id="">
+			<div class="fallback">
+				<input name="file" type="file" multiple />
+				<input type="submit" value="Upload" />
+			</div>
+		</div>
 	  </div><!-- /.modal-footer -->
 
     </div><!-- /.modal-content -->

@@ -198,7 +198,6 @@
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 								$results = qdb($select);
 
-			            			
 								if (mysqli_num_rows($results) > 0){
 									foreach($results as $b){
 										$box_button = "<button type='button' class='btn btn-grey box_selector'";
@@ -311,7 +310,5 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-		
-
 	</body>
 </html>

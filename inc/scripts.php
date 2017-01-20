@@ -33,6 +33,12 @@
     <!-- Padding and Margin Library -->
     <link rel="stylesheet" type="text/css" href="css/padding.css" />
 
+	<!-- dropzone file uploader -->
+	<link rel="stylesheet" href="css/dropzone.css">
+
+	<!-- bxSlider CSS file -->
+	<link href="css/jquery.bxslider.css" rel="stylesheet" />
+
 	<!-- development overrides -->
     <link rel="stylesheet" type="text/css" href="css/overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" />
 

@@ -27,7 +27,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$page = grab('page');
 	
 	//items = ['partid', 'serial', 'qty', 'location', 'status', 'condition'];
-	function deletefromDatabase($partid, $serial, $po_number, $page) {
+	function deletefromDatabase($partid, $serial, $po_number = '', $page) {
 		$result = array();
 		
 		$result['query'] = true;
@@ -46,7 +46,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$result['query'] = qdb($query);
 	
 				//If the item is deleted from the inventory then increment the purchase items back to original state, before the serial was scanned
-				if($result['query']) {
+				//Or the PO Number does not exists, in which case most likely the inventory edit page is using this script to delete
+				if($result['query'] && $po_number != '') {
 					$query = "UPDATE purchase_items SET qty_received = qty_received - 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 					qdb($query);
 				}

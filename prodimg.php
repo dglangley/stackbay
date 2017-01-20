@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/img_exists.php';
 
 	$uri = strtolower(trim(preg_replace('/([\/]img[\/]parts[\/])([^.]+)([.])(png|jpg|gif)/i','$2',$_SERVER["REQUEST_URI"])));
 //	if (substr($uri,0,8)=='/prodimg') { exit; }
@@ -12,7 +13,21 @@
 //	header('Content-Type:image/jpeg');
 //	readfile('img/data-center.jpg');
 
-	$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
+	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+		if (strstr($_SERVER["REQUEST_URI"],'devimgs')) {
+			$dir = sys_get_temp_dir();
+			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
+
+			header('Content-Type:image/jpeg');
+			echo readfile($dir.str_replace('/devimgs/','',$uri));
+			exit;
+		} else {
+			$dir = sys_get_temp_dir();
+			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
+		}
+	} else {
+		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
+	}
 	$img = $dir.'spacer.jpg';
 
 	$query = "SELECT image FROM picture_maps, parts_index, keywords ";
@@ -40,6 +55,10 @@
 
 //	if ($i==0) { $img = 'img/noimage.png'; }
 
+	// check that the file actually exists, and if it doesn't with the appended "-vttn",
+	// try removing it because some of brian's pictures don't have it for some reason
+	if (! img_exists($img)) { $img = str_ireplace('-vttn','',$img); }
+
 	header('Content-Type:image/jpeg');
-	readfile($img);
+	echo readfile($img);
 ?>
