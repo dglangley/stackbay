@@ -13,7 +13,7 @@
     $carrier = grab('carrier');
     
     $line = array();
-	if($companyid){
+	if($companyid && $carrier){
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    //$companyid = prep($companyid,"'25'");
 	    
@@ -36,6 +36,6 @@
 		}
 	}
 
-	echo json_encode($line);//array('results'=>$companies,'more'=>false));
+	echo json_encode($line);
 	exit;
 ?>

@@ -147,6 +147,7 @@ function nonFormCase($element, e) {
 	return validation(e, $obj);
 }
 	
+/* //dgl 1-20-17 because this was interrupting ALL forms globally
 (function($){
 	//Based on all inputs with the "required" class
 	//Any form submit, stop it first
@@ -155,3 +156,4 @@ function nonFormCase($element, e) {
 		validation(e, $(this));
 	});
 })(jQuery);
+*/

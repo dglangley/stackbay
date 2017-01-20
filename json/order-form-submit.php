@@ -92,10 +92,10 @@
         $insert = "INSERT INTO ";
         $insert .= ($order_type=="Purchase") ? "`purchase_orders`" : "`sales_orders`";
         $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,";
-        if ($order_type=="Purchase"){ $insert .= " `tracking_no`, ";}
+        // if ($order_type=="Purchase"){ $insert .= " `tracking_no`, ";}
         $insert .= " `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`,
         `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-        ($rep, $cid, $rep, $contact, $assoc_order, $tracking, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+        ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         
 
     //Run the update

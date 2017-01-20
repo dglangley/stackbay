@@ -1,47 +1,74 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
-    include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
-    include_once $_SERVER["ROOT_DIR"].'/inc/processUpload.php';
-    include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
+	$search = '';
+	if (isset($_REQUEST['search'])) { $search = trim($_REQUEST['search']); }
+
+	$temp_dir = sys_get_temp_dir();
+	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
+//	echo $temp_dir;
+
     // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
-/*
-	if (! $DEV_ENV) {
+	$s3 = false;
+	$bucket = '';
+//	if (! $DEV_ENV) {
+	if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
 		$s3 = Aws\S3\S3Client::factory();
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
 	}
-*/
 
-	$upload_listid = 0;
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['upload_file']['tmp_name'])) {
+	// get array of uploaded images from user input
+	$uploads = array();
+	if (isset($_FILES['file']) AND is_array($_FILES['file'])) {
+		$uploads = $_FILES['file'];
+	}
+
+	// use the 'name' array of uploaded files, and then reference each of the image attributes by that key
+	$names = $uploads['name'];
+	foreach ($names as $k => $filename) {
+		$type = $uploads['type'][$k];//ie, "image/jpeg"
+		$tmp_file = $uploads['tmp_name'][$k];//ie, "/var/tmp/blahblahblah"
+		$err = $uploads['error'][$k];
+		$size = $uploads['size'][$k];
+
         try {
-            // key the filename on aws using today's date, companyid and the filename
-            $filename = 'inv'.date("Ymd").'_'.$cid.'_'.$_FILES['upload_file']['name'];
-die('test mode');
-
             // check for file existing already
 			$keyExists = false;
-			if (! $DEV_ENV) {
+//			if ($DEV_ENV) {
+			if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+				// at least for debugging purposes, save to temp dir because otherwise the file is immediately
+				// lost after this script is complete
+				if (move_uploaded_file($tmp_file, $temp_dir.$filename)) {
+//					echo $tmp_file." is valid, and was successfully uploaded as ".$temp_dir.$filename."\n";
+				} else {
+					die($temp_dir.$filename.' file did not save from '.$tmp_file);
+				}
+			} else {
 	            $s3->registerStreamWrapper();
 				$keyExists = file_exists("s3://".$bucket."/".$filename);
 			}
 
             if ($keyExists) {//file has already been uploaded
-                $ALERT = array('code'=>14,'message'=>$E[14]['message']);
+				die($filename.' image name is already uploaded');
             } else {
-				// default
-				$expDate = format_date(date("m-d-Y 17:00"),"n/j/Y g:i A",array('d'=>7));
-				if (isset($_REQUEST['expDate']) AND format_date($_REQUEST['expDate'])) {
-					$expDate = date("Y-m-d H:i:s",strtotime($_REQUEST['expDate']));
+//				if (! $DEV_ENV) {
+				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+	                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
 				}
-				$upload_type = 'availability';
-				if (isset($_REQUEST['upload_type']) AND $_REQUEST['upload_type']=='Req') { $upload_type = 'demand'; }
+
+				// get every partid associated with the search string and match in db with each partid
+				$results = hecidb($search);
+				foreach ($results as $partid => $P) {
+	                $query = "INSERT INTO picture_maps (partid, image) VALUES ('".$partid."','".$filename."'); ";
+					//htmlspecialchars($upload->get('ObjectURL'));
+					$result = qdb($query) OR die(qe().' '.$query);
+				}
 			}
         } catch(Exception $e) {
-//            $ALERT = array('code'=>18,'message'=>$E[18]['message']);
-die('died');
+			die('Unable to upload image:\n '.$e);
         }
 	}
+	exit;//success is without a message
 ?>

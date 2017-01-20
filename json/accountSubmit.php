@@ -27,7 +27,7 @@
             
             
             $insert = "INSERT INTO `freight_accounts`(`account_no`, 
-            `freight_co_id`, `companyid`, `id`) VALUES 
+            `carrierid`, `companyid`, `id`) VALUES 
             ($account,$carrier,$company,NULL)";
             
 	        

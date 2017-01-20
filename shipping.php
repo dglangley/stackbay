@@ -56,9 +56,10 @@
 		$query = "UPDATE sales_items SET ship_date = NULL WHERE so_number = ". res($so_number) ." AND qty_shipped < qty;";
 		qdb($query);
 		
+		//Get all the items, including old items from the sales order.
 		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
 		$result = qdb($query) OR die(qe());
-		
+				
 		while ($row = $result->fetch_assoc()) {
 			$sales_items[] = $row;
 		}
@@ -172,22 +173,42 @@
 								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 							</button>
 							<?php
+								function box_drop($order_number, $associated = '', $first = '',$selected = ''){
+									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+									$results = qdb($select);
+									if ($first){
+										$drop = "<div>
+			            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated'>";	
+									}
+									else{
+										$drop = "<div>
+			            					<select class='form-control box_drop input-sm'  data-associated = '$associated'>";
+									}
+									foreach ($results as $item) {
+											$drop .= "<option value='".$item['id']."'";
+											if ($selected == $item['id']){$drop .= " selected";}
+											$drop .= ">Box ".$item['package_no']."</option>";
+										}
+									$drop .= "</select>";
+									$drop .= "</div>";
+								
+									return $drop;
+								}
+								
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 								$results = qdb($select);
-								
-									$box_drop = "<div>\
-			            				<select class='form-control box_drop'>";
+
 								if (mysqli_num_rows($results) > 0){
 									foreach($results as $b){
 										$box_button = "<button type='button' class='btn btn-grey box_selector'";
 										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
-										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking']."' ";
-										$box_button .= " data-row-freight = '".$b['freight-amount']."'";
+										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
+										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
 										$box_button .= ">".$b['package_no']."</button>";
 										echo($box_button);
 			                        	
-			                        	$box_drop .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
 									}
 								}
 								else{
@@ -195,9 +216,7 @@
 									qdb($insert);
 									echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
 								}
-								$box_drop .= 
-			    			    		"</select>
-			    	        		</div>";
+
 								
 								
 							?>
@@ -214,34 +233,55 @@
 							<tr>
 								<th>Item</th>
 								<th>SERIAL	(*SCAN OR PRESS ENTER ON INPUT FOR MORE)</th>
+								<th>Box #</th>
 								<th>Qty to be Shipped</th>
 								<!--<th>Location</th>-->
 								<th>Item Condition</th>
 								<th>Ship by</th>
 								<th>Ship Date</th>
-								<th>Box #</th>
 								<th>Lot Shipment</th>
 							</tr>
 						</thead>
-						<?php 
+						<?php
+							//Grab a list of items from an associated sales order.
 							$items = getItems($sales_order);
 							foreach($items as $item): 
-								// $inventory = getInventory($item['partid']);
+								$inventory = getInventory($item['partid']);
 								// print_r($inventory);
-								// $location = ($inventory['locationid'] ? getLocation($inventory['locationid']) : '');
 						?>
-							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>">
+							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
 								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
 									<strong><?php echo getPartName($item['partid']); ?></strong>
 								</td>
+							
+							<!-- Grab the old serial values from the database and display them-->
 								<td class="infiniteSerials">
-									<div class="input-group" style="margin-bottom: 6px;">
+									<div class="input-group">
 									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
 									    <span class="input-group-addon">
 									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 									    </span>
 						            </div>
-									<!--<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" style="margin-bottom: 5px;" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>>-->
+									
+								
+									<?php
+										$select = "SELECT `serial_no`, `id`, `packageid` FROM `inventory`, `package_contents` where id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid']).";";
+										$serials = qdb($select);
+										foreach ($serials as $serial):
+									?>
+									<div class="input-group">
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" inv_id =<?=$serial['id']?> value='<?=$serial['serial_no']?>' disabled>
+									    <span class="input-group-addon">
+									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+									    </span>
+						            </div>
+									<?php endforeach; ?>
+								</td>
+								<td>
+									<?=box_drop($order_number, '', true)?>
+									<?foreach ($serials as $serial):?>
+										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
+									<?php endforeach; ?>
 								</td>
 								<td class="remaining_qty">
 									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
@@ -254,9 +294,6 @@
 								</td>
 								<td class="ship-date" style="padding-top: 15px !important;">
 									<?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?>
-								</td>
-								<td>
-									<?=$box_drop?>
 								</td>
 								<td>
 									<div class="checkbox">

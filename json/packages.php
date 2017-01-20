@@ -55,9 +55,19 @@ function packages(){
         $update .= "id = $row_id;";
         
         qdb($update);
-        
-        
         return $update;
+    }
+        
+    elseif($action == "change"){
+        $assoc = grab('assoc');
+        $new = prep(grab('package'));
+        $update = "Not Updated";
+        if($assoc && $new){
+            $update = "UPDATE package_contents SET packageid = $new WHERE serialid = $assoc";
+            qdb($update);
+        }
+        return $update;
+        
     }
     else{
         return "Nothing.";
