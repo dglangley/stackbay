@@ -251,10 +251,10 @@
 <!----------------------------------------------------------------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-	<div class="row-fluid table-header initial-header" id="order_header" style="width:100%;">
+	<div class="row-fluid table-header table-filter initial-header" id="order_header" style="width:100%;">
 		<div class="col-md-4">
 		</div>
-		<div class="col-md-4 text-center" style="padding: 4px 0;">
+		<div class="col-md-4 text-center">
 			<h2 class="minimal">Shipping Dashboard</h2>			</div>
 	</div>
 		

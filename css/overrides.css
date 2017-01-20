@@ -54,6 +54,12 @@
 .table-filter {
 	padding-right:12px;
 }
+.table-filter {
+	height:48px;
+}
+div.table-filter div {
+	margin-top:8px;
+}
 
 .input-xs {
   height: 24px;
