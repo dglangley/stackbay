@@ -194,6 +194,7 @@
 	            }
 			});
 			e.preventDefault();
+			return false;
 		});
 
 		/* toggle notes on input focus and blur */
