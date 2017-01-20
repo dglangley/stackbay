@@ -104,9 +104,9 @@
 		<div class="row" style="padding-top: 15px; margin: 0 10px;" id = "filterBar">
 			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
 				<div class="input-group">
-	              <input type="text" class="form-control" id="part_search" placeholder="Filter By Part/Serial" value=<?=grab("search")?>>
+	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value=<?=grab("search")?>>
               		<span class="input-group-btn">
-	                	<button class="btn btn-primary part_filter"><i class="fa fa-filter"></i></button>              
+	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
 	            </div>
 			</div>
@@ -170,13 +170,13 @@
 						</div><!-- btn-group -->
 			</div><!-- form-group -->
 			</div>
-			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
-               	<button class="btn btn-primary inventory_filter pull-right"><i class="fa fa-filter"></i></button>              
+			<!--<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">-->
+   <!--            	<button class="btn btn-primary inventory_filter pull-right"><i class="fa fa-filter"></i></button>              -->
 			<!--	<div class="btn-group" role="group">-->
 			<!--		<button class="btn btn-default active">In Stock</button>-->
 			<!--		<button class="btn btn-default">Out Of Stock</button>-->
 			<!--	</div>-->
-			</div>
+			<!--</div>-->
 		</div>
 	</div>
 

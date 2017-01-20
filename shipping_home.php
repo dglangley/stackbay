@@ -255,15 +255,7 @@
 		<div class="col-md-4">
 		</div>
 		<div class="col-md-4 text-center" style="padding: 4px 0;">
-			<h2>SHIPPING DASHBOARD</h2>			</div>
-		<div class="col-md-4">
-			<a href="/order_form.php?ps=Sales" class="btn btn-flat pull-right" style="margin-top: 10px;">
-				New Sales Order
-			</a>
-			<a href="/order_form.php?ps=Purchase" class="btn btn-flat pull-right" style="margin-top: 10px; margin-right: 10px;">
-				New Purchase Order
-			</a>	
-		</div>
+			<h2 class="minimal">Shipping Dashboard</h2>			</div>
 	</div>
 		
 	<div class="table-header" style="width: 100%; min-height: 60px; display: none;">

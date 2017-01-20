@@ -73,7 +73,7 @@
 					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' data-value = '".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
 		            <td class='search_collumn'>
 		            	<div class = 'item-selected'>
-							<select class='item_search'>
+							<select class='item_search input-xs'>
 								<option data-search = '$partid'>".$display."</option>
 							</select>
 						</div>

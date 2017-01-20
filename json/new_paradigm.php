@@ -75,9 +75,9 @@ function search_row(){
         $line .= "
         <td id = 'search'>
             <div class='input-group'>
-              <input type='text' class='form-control' id = 'go_find_me' placeholder='Search for...'>
+              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
               <span class='input-group-btn'>
-                <button class='btn btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
             </span>
             </div>
         </td>";
@@ -126,7 +126,7 @@ function search_row(){
         //Submission button
         $line .= "
                 <td colspan='2' id = 'check_collumn'> 
-                    <a class='btn-flat success pull-right multipart_sub' >
+                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
                     <i class='fa fa-check fa-4' aria-hidden='true'></i></a>
                 </td>";
 

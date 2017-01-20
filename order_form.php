@@ -53,6 +53,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<title><?=($order_number != 'New' ? '' : 'New')?> <?=($order_type == 'Sales' ? 'SO' : 'PO')?><?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 
 	</head>
 	<!---->
@@ -79,7 +80,7 @@
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
-				echo"<h1>";
+				echo"<h2 class='minimal' style='margin-top: 10px;'>";
 				if ($order_number=='New'){
 					echo $order_number;
 				}
@@ -87,7 +88,7 @@
 				if ($order_number!='New'){
 					echo " #$order_number";
 				}
-				echo"</h1>"
+				echo"</h2>"
 				?>
 			</div>
 			<div class="col-md-4">

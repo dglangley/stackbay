@@ -63,7 +63,7 @@
             //Output the final dropdown menu
             $output = "<div class='$size'>	            	
         			    <label for='$id'>Carrier:</label>
-        			    <select id = '$id' class='form-control'>
+        			    <select id = '$id' class='form-control input-xs'>
         				    $carrier_options
         			    </select>
         	        </div>";
@@ -84,7 +84,7 @@
             $id = ($custom_id) ? $custom_id : "service";
             $output = "<div class='$size' id = '".$id."_div'>	            	
     			    <label for='services'>Service:</label>
-    			    <select id = '$id' class='form-control'>
+    			    <select id = '$id' class='form-control input-xs'>
     				    $service_options
     			    </select>
     	        </div>";
@@ -104,7 +104,7 @@
         $id = ($custom_id) ? $custom_id : "warranty";
         $output = "<div class='$size'>";          	
         $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
-        $output .= "<select id = '$id' class='form-control warranty $limit'>";
+        $output .= "<select id = '$id' class='form-control input-xs warranty $limit'>";
     	if($id == 'warranty_global'){
     	    $output .= "<option selected value='no'>Warranty</option>";
     	}
@@ -167,7 +167,7 @@
         $id = ($custom_id) ? $custom_id : "terms";
         $output = "<div class='$size' id = '".$id."_div'>";          	
         $output .= ($label)? "<label for='$id'>Terms:</label>" : '';
-        $output .= "<select id = '$id' class='form-control'>";
+        $output .= "<select id = '$id' class='form-control input-xs'>";
     	$output .= "	    $terms_options
     			    </select>
     	        </div>";
@@ -191,7 +191,7 @@
    	        $id = ($custom_id) ? $custom_id : "condition";
             $output = "<div class=''>";
             $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
-            $output .= "<select id = '$id' class='form-control condition'>";
+            $output .= "<select id = '$id' class='form-control input-xs condition'>";
                 	if($id == 'condition_global'){
                         $output .= "<option selected value='no'>Condition</option>";
                 	}
@@ -220,7 +220,7 @@
    	        $id = ($custom_id) ? $custom_id : "status";
             $output = "<div class=''>";
             $output .= ($label)? "<label for='status'>Status:</label>" : '';
-            $output .= "<select id = '$id' class='form-control status'>";
+            $output .= "<select id = '$id' class='form-control input-xs status'>";
                 	if($id == 'status_global'){
                         $output .= "<option selected value='no'>Status</option>";
                 	}

@@ -58,7 +58,7 @@
             $result = getWarehouse();
             $output = "<div>";
             // $output .= ($label)? "<label for='warehouse'>Warehouse:</label>" : '';
-            $output .= "<select class='form-control warehouse'>";
+            $output .= "<select class='form-control input-xs warehouse'>";
             $output .= "<option value = 'none'>Warehouse</option>";
     	    foreach($result as $row){
     	        $output .= "<option ";
@@ -79,7 +79,7 @@
             $results = getplaces();
             $output = "<div>";
                 
-                $output .= "<select class='form-control $type'>";
+                $output .= "<select class='form-control input-xs $type'>";
     	        if(!$selcted and !$default){
                     $output .= "<option selected value = 'null'>Column</option>";
     	        }
@@ -106,7 +106,7 @@
             
             $output = "<div>";
                 
-            $output .= "<select class='form-control $type'>";
+            $output .= "<select class='form-control input-xs $type'>";
             if(!$selcted and !$default){
                     $output .= "<option selected value = 'null'>Shelf</option>";
     	        }
