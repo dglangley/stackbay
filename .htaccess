@@ -24,4 +24,8 @@ RewriteRule ^(.*)uploads/(.*)$ uploads/reader.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)img/parts/(.*)$ prodimg.php [L]
 
+# dev image handler
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)devimgs/(.*)$ prodimg.php [L]
+
 </IfModule>

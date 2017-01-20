@@ -546,15 +546,6 @@
 			pagerCustom: '#imagePager',
 		});
 
-/*
-		$('#image-modal').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			modal.find(".bxslider").find("li").each(function() {
-				$(this).remove();
-			});
-			modal.append('<li><img src="/images/730_200/trees.jpg"></li>');
-		});
-*/
 
 		// reload bxslider after opening modal because of modal/bxslider conflicts
 		$('#image-modal').on('shown.bs.modal', function (e) {
@@ -1192,6 +1183,7 @@
 					pager.find("a").each(function() {
 						$(this).remove();
 					});
+
 					// add each new image pulled for this part / search string
 					$.each(json.images, function(i, imgSrc) {
 						// add image list item to slider
@@ -1583,6 +1575,7 @@
 		},
 		success: function(file, response) {// sent data to url, got the response back
 			if (response!="") { alert(response); }
+			updateSliderImages($("#prod-image-title").text());
 		},
 	});
 	//add part string to form request on each image send

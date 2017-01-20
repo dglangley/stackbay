@@ -14,9 +14,10 @@
 	$s3 = false;
 	$bucket = '';
 //	if (! $DEV_ENV) {
+	if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
 		$s3 = Aws\S3\S3Client::factory();
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
-//	}
+	}
 
 	// get array of uploaded images from user input
 	$uploads = array();
@@ -35,8 +36,8 @@
         try {
             // check for file existing already
 			$keyExists = false;
-/*
-			if ($DEV_ENV) {
+//			if ($DEV_ENV) {
+			if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
 				// at least for debugging purposes, save to temp dir because otherwise the file is immediately
 				// lost after this script is complete
 				if (move_uploaded_file($tmp_file, $temp_dir.$filename)) {
@@ -45,15 +46,17 @@
 					die($temp_dir.$filename.' file did not save from '.$tmp_file);
 				}
 			} else {
-*/
 	            $s3->registerStreamWrapper();
 				$keyExists = file_exists("s3://".$bucket."/".$filename);
-//			}
+			}
 
             if ($keyExists) {//file has already been uploaded
 				die($filename.' image name is already uploaded');
             } else {
-                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
+//				if (! $DEV_ENV) {
+				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+	                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
+				}
 
 				// get every partid associated with the search string and match in db with each partid
 				$results = hecidb($search);
@@ -64,7 +67,7 @@
 				}
 			}
         } catch(Exception $e) {
-			die('Unable to upload image for unknown reason');
+			die('Unable to upload image:\n '.$e);
         }
 	}
 	exit;//success is without a message
