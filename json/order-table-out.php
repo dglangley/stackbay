@@ -150,41 +150,41 @@
 
 	    //If this is not a new order, load the already existing information from the table.
 	    if ($order_number != 'New'){
-	    	
-			$q_form = "SELECT * FROM ";
-			$q_form .= ($order_type == 'Purchase') ? 'purchase_items' : 'sales_items';
-			$q_form .= " WHERE ";
-			$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
-			$q_form .= " = '$order_number';";
-			
-			$old = qdb($q_form);
-			
-			foreach ($old as $r){
+		    	
+				$q_form = "SELECT * FROM ";
+				$q_form .= ($order_type == 'Purchase') ? 'purchase_items' : 'sales_items';
+				$q_form .= " WHERE ";
+				$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
+				$q_form .= " = '$order_number';";
 				
-				$new_row = array(
-				'id' => $r['id'],
-				'line' => $r['line_number'],
-				'search' => $r['partid'],
-				'date' => $r['delivery_date'].$r['receive_date'], //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
-				'qty' => $r['qty'],
-				'uPrice' => $r['price'],
-				'warranty' => $r['warranty'],
-				'condition' => $r['cond']
-				);
-				$table .= build_row($new_row);			
+				$old = qdb($q_form);
 				
-			}
-	    	
-			echo json_encode($table); 
-			exit;
-			
-		// 	$old = qdb($q_line);
-			
-
-	 //   }
-		// echo json_encode($table);
-		// exit;
-	}
+				foreach ($old as $r){
+					
+					$new_row = array(
+					'id' => $r['id'],
+					'line' => $r['line_number'],
+					'search' => $r['partid'],
+					'date' => $r['delivery_date'].$r['receive_date'], //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+					'qty' => $r['qty'],
+					'uPrice' => $r['price'],
+					'warranty' => $r['warranty'],
+					'condition' => $r['cond']
+					);
+					$table .= build_row($new_row);			
+					
+				}
+		}
+		echo json_encode($table); 
+		exit;
+		    	
+				
+			// 	$old = qdb($q_line);
+				
+	
+		 //   }
+			// echo json_encode($table);
+			// exit;
 	}
 //------------------------------------------------------------------------------
 //------------------------------------ Main ------------------------------------ 
