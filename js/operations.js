@@ -205,7 +205,7 @@
 							}
 
 							//Initialize each of the select2 fields when the left side loads.
-							$("#companyid").initSelect2("/json/companies.php");
+							$("#companyid").initSelect2("/json/companies.php", "Company");
 							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 							$("#bill_to").initSelect2("/json/address-picker.php","Bill to", limit);
 							$("#ship_to").initSelect2("/json/address-picker.php","Ship to", limit);
