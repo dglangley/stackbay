@@ -46,6 +46,13 @@
 		return $result;
 	}
 	
+	function deleteToDatabase($id) {
+		$query = "DELETE FROM inventory WHERE id = '".res($id)."';";
+		$result = qdb($query);
+		
+		return $result;
+	}
+	
 	function getLocationID($place, $instance) {
 		$location;
 		
@@ -68,7 +75,15 @@
 	$condition = $_REQUEST['condition'];
 	$status = $_REQUEST['status'];
 	
-	$result = updateToDatabase($serial, getLocationID($place, $instance), $qty, $condition, $status, $id);
+	$delete = $_REQUEST['delete'];
+	
+	$result;
+	
+	if($delete == '') {
+		$result = updateToDatabase($serial, getLocationID($place, $instance), $qty, $condition, $status, $id);
+	} else {
+		$result = deleteToDatabase($id);
+	}
 	
     echo json_encode($result);
     exit;

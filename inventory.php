@@ -494,34 +494,20 @@
 	$(document).on('click', '.delete_button', function() {
 		var $delete = $(this);
 		if (window.confirm("Are you sure you want to delete this serial?")) {
+			var id = $delete.closest('tr').find('.newQty').data('id');
+			
             $.ajax({
 				type: "POST",
 				url: '/json/inventory-edit.php',
 				data: {
 					"id": id,
-					"serial_no": newSerial,
-					"qty": newQty,
-					"status": newStatus,
-					"so": newSales,
-					"place": newPlace,
-					"instance": newInstance,
-					"condition": newCondition
+					"delete": true
 				},
 				dataType: 'json',
 				success: function(result) {
 					//alert(result);
 					if(result) {
-						$save.closest('tr').find('.edit').hide();
-						$save.closest('tr').find('.data').show();
-						$save.closest('table').find('th.edit').hide();
-						$save.closest('tr').find('.edit_button').show();
-						$save.closest('tr').find('.delete_button').show();
-						
-						$save.hide();
-						$('.alert-success').show();
-						$('.alert-success').delay(6000).fadeOut('fast');
-						
-						$save.closest('tr').find('.serial_original').html(newSerial);
+						$delete.closest('tr').remove();
 					}
 				}
 			});
