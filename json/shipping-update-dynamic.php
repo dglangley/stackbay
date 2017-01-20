@@ -60,7 +60,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						$match = mysqli_fetch_assoc($match);
 						$result['qty_match'] = $match['is_matching'];
 					}
-		
+					
 					//If the qty matches then the order is compelete. Mark it as received with the date received
 					if($result['qty_match'] == 1) {
 						$query = "UPDATE sales_items SET ship_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE so_number = ". res($so_number) ." AND partid = ". res($partid) .";";

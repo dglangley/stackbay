@@ -87,7 +87,7 @@
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        if ($row['place'] == $selcted){$output .= ' selected ';}
-        	        $output .= "value = '".$row['place']."'> ".$row['place']."</option>";
+        	        $output .= "value = '".strtoupper($row['place'])."'> ".strtoupper($row['place'])."</option>";
         	    }
         	    $output .= "
         			    </select>
@@ -115,7 +115,7 @@
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        if ($row['instance'] == $selcted){$output .= ' selected ';}
-        	        $output .= "value = '".$row['instance']."'> ".$row['instance']."</option>";
+        	        $output .= "value = '".strtoupper($row['instance'])."'> ".strtoupper($row['instance'])."</option>";
         	    }
     	    }
     	    $output .= "
@@ -151,11 +151,20 @@
         
     }
     
-    function display_location($location_id){
+    function display_location($location_id, $type =''){
+        $display;
+        
         $results = getLocation($location_id);
         $row = mysqli_fetch_assoc($results);
-        $display = $row['place'];
-        if($row['instance']){$display .= " - ".$row['instance'];}
+        
+        if($type == '') {
+            $display = $row['place'];
+            if($row['instance']){$display .= " - ".$row['instance'];}
+        } else if($type == 'place') {
+            $display = $row['place'];
+        } else {
+            $display = $row['instance'];
+        }
         return $display;
     }
     // function getLocation($instance_ids = '',$type='',$warehouse = ''){

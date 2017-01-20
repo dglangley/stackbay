@@ -108,9 +108,9 @@
 			$query .= "purchase_orders o, purchase_items i ";
 			$query .= "WHERE o.po_number = i.po_number ";
 			if($status == 'Active') {
-				$query .= "AND i.qty - i.qty_received > 0 ";
+				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
 			} else {
-				$query .= "AND i.qty - i.qty_received = 0 ";
+				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
 			}
 			//$query .= "AND status = '" . res($status) . "' ";
 			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";

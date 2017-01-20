@@ -354,7 +354,7 @@
 			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -400,6 +400,7 @@
 			$("#right_side_main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
+				console.log("Order-number: "+order_number+" | Order-type: "+order_type);
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -411,7 +412,11 @@
 					dataType: 'json',
 					success: function(result) {
 						$('#right_side_main').append(result);
+					},
+					error: function(xhr, status, error) {
+						   	alert(error+" | "+status+" | "+xhr);
 					}
+					
 				});
 				$.ajax({
 					type: "POST",
@@ -1152,7 +1157,7 @@
 					}
 				}	
 			});
-//=========== END OF FUNCTION FOR THE SHIPPING HOME PAGE =======================
+//=========== END OF FUNCTION FOR THE SHIPPING DASHBOARD =======================
 
 
 //============================= Inventory Addition =============================
@@ -1187,6 +1192,9 @@
 	           return "0"+partTime;
 	        return partTime;
 	    }
+//==============================================================================
+//================================ SHIPPING PAGE ===============================
+//==============================================================================
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		     if( $( this ).val() != '' )
@@ -1205,6 +1213,7 @@
 			var partid = $serial.closest('tr').find('.part_id').data('partid');
 			var condition = $serial.closest('tr').find('.condition_field').val();
 			var part = $serial.closest('tr').find('.part_id').data('part');
+			
 			
 			if(condition == '') {
 				condition = $serial.closest('tr').find('.condition_field').data('condition');
@@ -1349,7 +1358,7 @@
 				$(this).closest('tr').find('.remaining_qty').children('input').val(qty);
 			}
 		});
-				
+		
 		$(document).on('click',"#save_button_inventory",function() {
 			//Save to reactivate button if needed
 			$click = $(this);
@@ -1496,7 +1505,8 @@
 				});
 			}
 		});
-		
+
+
 		//Shipping update button, mainly used for lot and serial redirection
 		$('#btn_update').click(function(){
 			//Save to reactivate button if needed
@@ -1581,8 +1591,137 @@
 				}
 			});
 		});
+
+
+//================================== PACKAGES ================================== 
+
+		//Open Modal
+			$(document).on("click",".box_edit", function(){
+				var package_number = $(".box_selector.active").text();
+				if (package_number){
+					$("#package_title").text("Editing Box #"+package_number);
+					$("#modal-width").val($(".box_selector.active").attr("data-width"));
+					$("#modal-height").val($(".box_selector.active").attr("data-h"));
+					$("#modal-length").val($(".box_selector.active").attr("data-l"));
+					$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
+					$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
+					$("#modal-freight").val($(".box_selector.active").attr("data-freight"));
+					$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
+					
+					//After the edit modal has been set with the proper data, show it
+					$("#modal-package").modal("show");
+				}
+				else{
+					alert('Please select a box before editing');
+				}
+			});
+		//Submit Modal
+			$(document).on("click","#package-continue", function(){
+					
+					//Set redundant-ish variables for easier access
+					var width = $("#modal-width").val();
+					var height = $("#modal-height").val();
+					var length = $("#modal-length").val();
+					var weight = $("#modal-weight").val();
+					var tracking = $("#modal-tracking").val();
+					var freight = $("#modal-freight").val();
+					var id = $("#package-modal-body").attr("data-modal-id");
+					
+					//Update the Data tags on the page
+					$(".box_selector.active").attr("data-width",width);
+					$(".box_selector.active").attr("data-h",height);
+					$(".box_selector.active").attr("data-l",length);
+					$(".box_selector.active").attr("data-weight",weight);
+					$(".box_selector.active").attr("data-tracking",tracking);
+					$(".box_selector.active").attr("data-freight",freight);
+
+					
+					$.ajax({
+						type: "POST",
+						url: '/json/packages.php',
+						data: {
+							"action": "update",
+							"width": width,
+							"height": height,
+							"length": length,
+							"weight": weight,
+							"tracking": tracking,
+							"freight": freight,
+							"id": id,
+						},
+						dataType: 'json',
+						success: function(update) {
+							console.log(update);
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+						},				
+						
+					});
+			
+			});
+			
+		//Add New Box
+		$(document).on("click",".box_addition", function(){
+			//Automatically build the name for the button
+				var final = $(this).siblings(".box_selector").last();
+				var autoinc = parseInt(final.text());
+				// while(isNaN(autoinc)){
+				// 	var test = final[0];
+				// 	if (test){
+				// 		var final = final.prev();
+				// 		autoinc = parseInt(final.text().slice(-2));
+				// 	}
+				// 	else{
+				// 		var final = $(this).siblings(".box_selector").last();
+				// 		autoinc = 0;
+				// 	}
+				// }
+				autoinc++;
+				// var updatedtext = final.text();
+				// updatedtext = updatedtext.slice(0,-2)+" "+autoinc;
+				var order_number = $("body").attr("data-order-number");
+				console.log("Order Number: "+ order_number);
+				// console.log("Updated Text: "+ updatedtext);
+
+			//Submit this new name as a record in the database
+			$.ajax({
+				type: "POST",
+				url: '/json/packages.php',
+				data: {
+					action: "addition",
+					order: order_number,
+					name: autoinc,
+				},
+				dataType: 'json',
+				success: function(id) {
+					$(".box_selector").removeClass("active");
+				//Finally, output the button
+					// alert(final);
+					final.clone().text(autoinc).insertAfter(final)
+					.attr("data-row-id",id)
+					.addClass("active");
+					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+				},				
+				
+			});
+			
+			
+		});
+		
+		//Change Selected Box
+		$(document).on("click",".box_selector",function() {
+			$(this).siblings(".box_selector").removeClass("active");
+			$(this).addClass("active");
+		});
 		
 		
+//==============================================================================		
+//================================= LOCATIONS ==================================
+//==============================================================================
 		function location_changer(type,limit,home,warehouse){
 			var finder = "."+type
 			$.ajax({
@@ -1600,7 +1739,6 @@
 					},
 			});
 		}
-		
 		$(document).on("change", ".warehouse",function() {
 			var home = this;
 			var limit = $(this).val();
@@ -1613,6 +1751,7 @@
 			var limit = $(this).val();
 			location_changer('instance',limit,home,'');
 		});
+		
 	});
 //=========================== End Inventory Addition ===========================
 
