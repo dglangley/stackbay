@@ -132,14 +132,24 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						<label for='assoc'>Customer Order:</label>
 						<div class = 'input-group'>
 							<input class='form-control required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-							<span class='input-group-btn'>
-						        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
-							        <i class='fa fa-paperclip' aria-hidden='true'></i>
-						        </button>
-			    			</span>
 		    			</div>
 	    			</div>
 		    	</div>";
+		    	
+		// $right .= "
+		// 		<div class='row'>
+		// 			<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
+		// 				<label for='assoc'>Customer Order:</label>
+		// 				<div class = 'input-group'>
+		// 					<input class='form-control required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+		// 					<span class='input-group-btn'>
+		// 				        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
+		// 					        <i class='fa fa-paperclip' aria-hidden='true'></i>
+		// 				        </button>
+		// 	    			</span>
+		//     			</div>
+	 //   			</div>
+		//     	</div>";
 		//Billing Address
 		$right .="
 				<div class='row'>

@@ -137,27 +137,36 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
 						<label for='assoc'>Customer Order:</label>
-						<div class = 'input-group'>
-							<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-							<span class='input-group-btn'>
-						        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
-							        <i class='fa fa-paperclip' aria-hidden='true'></i>
-						        </button>
-			    			</span>
-		    			</div>
+						<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 	    			</div>
 		    	</div>";
+		 
+		 //This feature will be added later ***Upload  	
+		 //$right .= "
+			// 	<div class='row'>
+			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
+			// 			<label for='assoc'>Customer Order:</label>
+			// 			<div class = 'input-group'>
+			// 				<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			// 				<span class='input-group-btn'>
+			// 			        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
+			// 				        <i class='fa fa-paperclip' aria-hidden='true'></i>
+			// 			        </button>
+			//     			</span>
+		 //   			</div>
+	  //  			</div>
+		 //   	</div>";
 		    	
 		//If this is a purchase order, allow a static associated tracking field to be entered.
-		if($order_type == "Purchase"){
-			$right .= "
-					<div class='row'>
-						<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
-							<label for='tracking'>Associated Tracking #:</label>
-							<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
-		    			</div>
-					</div>";
-		}
+		// if($order_type == "Purchase"){
+		// 	$right .= "
+		// 			<div class='row'>
+		// 				<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
+		// 					<label for='tracking'>Associated Tracking #:</label>
+		// 					<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
+		//     			</div>
+		// 			</div>";
+		// }
 		//Billing Address
 		$right .="
 				<div class='row'>

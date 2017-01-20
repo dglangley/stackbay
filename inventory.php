@@ -255,17 +255,7 @@
 
 <script>
 	(function($){
-		//Update all query
-		// $('.updateAll').click(function() {
-		// 	//Get how many rows created + initial row
-		// 	var totalRows = $('.product-rows').length;
-		// 	var results = new Array();
-		// 	$('.product-rows').each(function() {
-				
-		// 	});
-		// });
 
-	// }
 	var inventory_history = function (search, serial) {
 		$.ajax({
 				type: "POST",
@@ -454,6 +444,57 @@
 		//alert("INVID: " + id + " New Serial: " + newSerial + " Qty: " + newQty + " Status: " + newStatus + " New SO: " + newSales + " New Place: " + newPlace + " New Instance: " + newInstance + " New Condition: " + newCondition);
 		
 		$.ajax({
+			type: "POST",
+			url: '/json/inventory-edit.php',
+			data: {
+				"id": id,
+				"serial_no": newSerial,
+				"qty": newQty,
+				"status": newStatus,
+				"so": newSales,
+				"place": newPlace,
+				"instance": newInstance,
+				"condition": newCondition
+			},
+			dataType: 'json',
+			success: function(result) {
+				//alert(result);
+				if(result) {
+					$save.closest('tr').find('.edit').hide();
+					$save.closest('tr').find('.data').show();
+					$save.closest('table').find('th.edit').hide();
+					$save.closest('tr').find('.edit_button').show();
+					$save.closest('tr').find('.delete_button').show();
+					
+					$save.hide();
+					$('.alert-success').show();
+					$('.alert-success').delay(6000).fadeOut('fast');
+					
+					$save.closest('tr').find('.serial_original').html(newSerial);
+				}
+			}
+		});
+	});
+	
+	//finish adding the filters
+	// var filter_grab = function (){
+	// 	//Set an array up with the filter fields from the filter bar
+	// 	var output = {
+	// 		location : 
+	// 	}
+	// }
+	
+	$(document).ready(function() {
+		if($("#part_search").val()){
+			var search = $("#part_search").val();
+			inventory_history(search,"");
+		}
+	});
+	
+	$(document).on('click', '.delete_button', function() {
+		var $delete = $(this);
+		if (window.confirm("Are you sure you want to delete this serial?")) {
+            $.ajax({
 				type: "POST",
 				url: '/json/inventory-edit.php',
 				data: {
@@ -483,22 +524,8 @@
 						$save.closest('tr').find('.serial_original').html(newSerial);
 					}
 				}
-		});
-	});
-	
-	//finish adding the filters
-	// var filter_grab = function (){
-	// 	//Set an array up with the filter fields from the filter bar
-	// 	var output = {
-	// 		location : 
-	// 	}
-	// }
-	
-	$(document).ready(function() {
-		if($("#part_search").val()){
-			var search = $("#part_search").val();
-			inventory_history(search,"");
-		}
+			});
+        }
 	});
 	
 	//This function show all the serial if the user clicks on the qty link
