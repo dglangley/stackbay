@@ -28,10 +28,10 @@
     }
 
     
-    $output[] = array(
-    'id' => 'NULL', 
-    'text' => "--------------------------------"
-    );
+    // $output[] = array(
+    // 'id' => 'NULL', 
+    // 'text' => "--------------------------------"
+    // );
     
     //Then append the rest of the contacts ordered by alphabetical
     $secondary = " SELECT DISTINCT * FROM `freight_accounts`
@@ -52,7 +52,7 @@
 
     $output[] = array(
         'id' => "Add: $q",
-        'text' => "Add New: $q"
+        'text' => "Add: $q"
     );
     
 //	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));

@@ -111,14 +111,14 @@
 	            </div>
 			</div>
 
-			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
+			<div class="col-md-1 col-sm-1 disabled_input" style="padding-bottom: 15px;">
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
 				<?= loc_dropdowns('place')?>
 			</div>
-			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
+			<div class="col-md-1 col-sm-1 disabled_input" style="padding-bottom: 15px;">
 				<?= loc_dropdowns('instance')?>
 			</div>
-			<div class="col-md-1 col-sm-1" style="padding-bottom: 15px;">
+			<div class="col-md-1 col-sm-1 disabled_input" style="padding-bottom: 15px;">
 				<?php
 					$condition_selected = grab('condition','');
 					echo dropdown('condition',$condition_selected,'','',false,"condition_global");
@@ -127,7 +127,7 @@
 			<div class = "col-md-3">
 				<div class="form-group col-md-4">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" disabled>
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -135,7 +135,7 @@
 				</div>
 				<div class="form-group col-md-4">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" disabled>
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -170,13 +170,20 @@
 						</div><!-- btn-group -->
 			</div><!-- form-group -->
 			</div>
-			<!--<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">-->
-   <!--            	<button class="btn btn-primary inventory_filter pull-right"><i class="fa fa-filter"></i></button>              -->
+			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
+				<div class ='company'>
+					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' style = 'width:100%;' disabled>
+						<option value=''>Select a Company</option>
+					</select>
+				</div>
+			</div>
+			<div class="col-md-2 col-sm-2" style="padding-bottom: 15px;">
+               	<button class="btn btn-sm btn-primary inventory_filter pull-right"><i class="fa fa-filter"></i></button>              
 			<!--	<div class="btn-group" role="group">-->
 			<!--		<button class="btn btn-default active">In Stock</button>-->
 			<!--		<button class="btn btn-default">Out Of Stock</button>-->
 			<!--	</div>-->
-			<!--</div>-->
+			</div>
 		</div>
 	</div>
 
@@ -255,6 +262,8 @@
 
 <script>
 	(function($){
+		
+		$('.disabled_input').find('select').prop('disabled', true)
 
 	var inventory_history = function (search, serial) {
 		$.ajax({

@@ -26,7 +26,6 @@
 	    	$select .= "AND carrier = '$carrier'";
 	    }
 	    $select .= ";";
-	    echo $select;
 	    
 	    $result = qdb($select);
 		if ($result){

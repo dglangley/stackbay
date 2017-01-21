@@ -113,7 +113,7 @@ function search_row(){
             <td>
                 <div class='input-group'>
                     <span class='input-group-addon'>$</span>
-                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='UNIT PRICE' value='$price'>
+                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='$price'>
                 </div>
             </td>";
         
@@ -121,7 +121,7 @@ function search_row(){
         $line .="<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
         
         //EXT PRICE
-        $line .= "<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='ExtPrice'></td>";
+        $line .= "<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>";
         
         //Submission button
         $line .= "

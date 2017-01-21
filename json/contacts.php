@@ -37,10 +37,10 @@
         }
         
     }   
-    $output[] = array(
-        'id' => 'NULL', 
-        'text' => "--------------------------------"
-        );
+    // $output[] = array(
+    //     'id' => 'NULL', 
+    //     'text' => "--------------------------------"
+    //     );
     
     //Then append the rest of the contacts ordered by alphabetical
     $secondary = " SELECT DISTINCT * FROM `contacts`
@@ -60,7 +60,7 @@
     
     $output[] = array(
         'id' => 'new',
-        'text' => "Add New: $q"
+        'text' => "Add $q"
         );
     
     

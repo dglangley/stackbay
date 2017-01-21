@@ -192,11 +192,12 @@
     $form = array(
         'type' => $order_type,
         'order' => $order_number,
-        'insert' => $line_insert,
+        'line_insert' => $line_insert,
         'error' => qe(),
         'stupid' => $stupid,
         'update' => $macro,
         'trek' => $tracking,
+        'input' => $insert
     );
     
     echo json_encode($form);
