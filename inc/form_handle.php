@@ -8,7 +8,7 @@
     }
     
     function prep($var, $default = "NULL"){
-        $output = ($var) ? "'".res($var)."'" : $default;
+        $output = ($var && $var != 'undefined') ? "'".res($var)."'" : $default;
     	return $output;
     }
     

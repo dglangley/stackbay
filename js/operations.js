@@ -923,7 +923,12 @@
 					var carrier = $('#carrier').val();
 					var freight = $('#terms').val();
 					var service = $('#service').val();
-					var account = $('#account_select').last('option').val();
+					if (($('#account_select').last('option').val())){
+						var account = $('#account_select').last('option').val();
+					}
+					else{
+						var account = '';
+					}
 					var pri_notes = $('#private_notes').val();
 					var pub_notes = $('#public_notes').val();
 					//var warranty = $('.warranty').val();
@@ -961,6 +966,7 @@
 					});
 	
 					//Submit all rows and meta data for unpacking later
+					alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -993,7 +999,8 @@
 							console.log(form["update"]);
 							console.log(form['trek']);
 							console.log(form['update']);
-							// window.location = "/order_form.php?ps="+ps+"&on="+on;
+							console.log(form['input']);
+							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);
