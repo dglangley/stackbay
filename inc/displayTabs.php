@@ -6,16 +6,16 @@
 		'left' =>
 			array(
 
-				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i><span>','title'=>'Companies','alias'=>''),
-				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i><span>','title'=>'Services','alias'=>'/job.php'),
-				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i><span>','title'=>'Repairs','alias'=>''),
-				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i><span>','title'=>'Shipping','alias'=>''),
-				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i><span>','title'=>'Inventory','alias'=>''),
+				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','alias'=>''),
+				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','alias'=>'/job.php'),
+				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i>','title'=>'Repairs','alias'=>''),
+				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i>','title'=>'Shipping','alias'=>''),
+				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory','alias'=>''),
 			),
 		'right' =>
 			array(
-				array('action'=>'/','image'=>'<i class="fa fa-cubes"></i><span>','title'=>'Sales','alias'=>''),
-				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i><span>','title'=>'Accounts','alias'=>''),
+				/*array('action'=>'/','image'=>'<i class="fa fa-cubes"></i>','title'=>'Sales','alias'=>''),*/
+				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i>','title'=>'Accounts','alias'=>''),
 			),
 	);
 
