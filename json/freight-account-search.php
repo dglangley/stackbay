@@ -49,11 +49,12 @@
         }
     }
     
-
-    $output[] = array(
-        'id' => "Add: $q",
-        'text' => "Add: $q"
-    );
+    if (strlen($q) > 1){
+        $output[] = array(
+            'id' => "Add: $q",
+            'text' => "Add: $q"
+        );
+    }
     
 //	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 /*    
