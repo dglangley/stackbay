@@ -69,7 +69,7 @@
 
 	/***** SEARCH MODE *****/
 	/*
-		This determines where the user is sent when they subject the search field
+		This determines where the user is sent when they submit the search field
 	*/
 	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php','/job.php');
 	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
@@ -106,7 +106,7 @@
 	<form class="form-inline search-form" method="post" action="<?php echo $SEARCH_MODE; ?>" enctype="multipart/form-data" >
 
     <!-- navbar -->
-    <header class="navbar navbar-inverse" role="banner">
+    <header class="navbar navbar-inverse yamm" role="banner">
         <div class="navbar-header">
             <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse"><!-- id="menu-toggler">-->
                 <span class="sr-only">Toggle navigation</span>
@@ -136,9 +136,41 @@
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
+			<li class="dropdown">
+				<a href="javascript:void(0);" data-action="/" class="mode-tab dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false"><i class="fa fa-cubes"></i> <span>Sales</span> <b class="caret"></b></a>
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+					<li>
+					  <div class="yamm-content">
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+                                <div class="megamenu-block">
+                                    <h4 class="megamenu-block-title"><i class="fa fa-money"></i> Sales</h4>
+                                    <ul>
+                                        <li><a href="/order_form.php?ps=Sale"><i class="fa fa-plus"></i> New...</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+                                <div class="megamenu-block">
+                                    <h4 class="megamenu-block-title"><i class="fa fa-shopping-cart"></i> Purchases</h4>
+                                    <ul>
+                                        <li><a href="/order_form.php?ps=Purchase"><i class="fa fa-plus"></i> New...</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+						</div>
+					  </div>
+					</li>
+<!--
+                    <li><a href="/order_form.php?ps=Sale"><i class="fa fa-money"></i> New SO</a></li>
+                    <li><a href="/order_form.php?ps=Purchase"><i class="fa fa-line-chart"></i> New PO</a></li>
+                    <li><a href="/"><i class="fa fa-cubes"></i> Sales</a></li>
+-->
+				</ul>
+			</li>
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
+                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
                     <i class="fa fa-tasks"></i>
                     <span>Reports</span>
                     <b class="caret"></b>
