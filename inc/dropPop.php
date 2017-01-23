@@ -61,11 +61,14 @@
             $id = ($custom_id) ? $custom_id : "carrier";
             
             //Output the final dropdown menu
+
             $output = "<div class='$size'>";
             if($label) {
         	    $output .=  "<label for='$id'>Carrier:</label>";
             }
-        	$output .=	"<select id = '$id' class='form-control input-sm'>
+            $output .="
+        			    <select id = '$id' class='form-control input-sm'>
+        			        <option value = 'NULL'> </option>
         				    $carrier_options
         			    </select>
         	        </div>";
@@ -73,7 +76,7 @@
         else if (strtolower($field) == 'services'){
         //Services outputs service values based off a passed in carrier limit.
             $service = getFreight('services',$limit);
-    		if ($service){
+    		if ($service && $limit){
     			foreach ($service as $s){
     				if($s['id'] == $selected){
     					$service_options .=	"<option selected value=".$s['id']." data-days=".$s['days'].">".$s['method']."</option>";
@@ -87,6 +90,7 @@
             $output = "<div class='$size' id = '".$id."_div'>	            	
     			    <label for='services'>Service:</label>
     			    <select id = '$id' class='form-control input-sm'>
+    			        <option value = 'NULL'> </option>
     				    $service_options
     			    </select>
     	        </div>";

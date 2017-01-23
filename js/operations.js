@@ -398,9 +398,21 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
+						var initial_result = $("#service").val();
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
+						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
+						if (new_div_val){
+							$("#service").val(new_div_val);
+						}
+						console.log("== CARRIER CHANGE VALUES ==");
+						console.log("Initial ID: "+initial_result);
+						console.log("Initial Days: "+initial_days);
+						console.log("New ID: "+new_div_val);
 						var days = parseInt($("#service :selected").attr("data-days"));
-						$("input[name=ni_date]").val(freight_date(days));
+						if(!isNaN(days)){
+							$("input[name=ni_date]").val(freight_date(days));
+						}
 						console.log("JSON Services limited dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -411,8 +423,9 @@
 			});
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
-				$("input[name=ni_date]").val(freight_date(days));
-				
+				if (!isNaN(days)){
+					$("input[name=ni_date]").val(freight_date(days));
+				}
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				// $.ajax({
  
@@ -981,7 +994,7 @@
 					});
 	
 					//Submit all rows and meta data for unpacking later
-					alert(account);
+					// alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
