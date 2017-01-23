@@ -7,22 +7,23 @@
 	    </div>
       <div class="modal-body" id="account-modal-body">
         <div class="row-fluid">
-          <div class="row-fluid">
-            <div class="col-md-12">
-              <input class="form-control" name="na_account" placeholder="Account Number" type="text">
+          <div class="row">
+            <div class="col-md-6">
+              <input class="form-control" name="na_account" placeholder="Account #" type="text">
             </div>
-          </div>
-          <div class="row-fluid">
             <?php 
               $rootdir = $_SERVER['ROOT_DIR'];
               include_once $rootdir.'/inc/dropPop.php';
-              echo "<div class='row-fluid'>";
-              echo dropdown('carrier','','','col-md-12','Carrier:',"modal_carrier");
+              echo dropdown('carrier','','','col-md-6',false,"modal_carrier");
               //echo dropdown('services','','','col-md-6','Service:',"modal_service");
-              echo "</div>";
             ?>
-            <label for="associate">Associate with company?</label>
-            <input type="checkbox" name="associate"/>
+          </div>
+          <br>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="associate">Save to Company Profile (i.e., not a 3rd-party account)</label>
+              <input type="checkbox" name="associate"/>
+            </div>
           </div>
         </div>
       </div>

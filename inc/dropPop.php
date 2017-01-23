@@ -61,9 +61,11 @@
             $id = ($custom_id) ? $custom_id : "carrier";
             
             //Output the final dropdown menu
-            $output = "<div class='$size'>	            	
-        			    <label for='$id'>Carrier:</label>
-        			    <select id = '$id' class='form-control input-sm'>
+            $output = "<div class='$size'>";
+            if($label) {
+        	    $output .=  "<label for='$id'>Carrier:</label>";
+            }
+        	$output .=	"<select id = '$id' class='form-control input-sm'>
         				    $carrier_options
         			    </select>
         	        </div>";
