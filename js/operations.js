@@ -773,6 +773,7 @@
 					}
 				}
 			});
+			
 			$(document).on("click", "#address-continue", function(e) {
 			
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
