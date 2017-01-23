@@ -171,7 +171,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='bill_to'>Bill to:
+						<label for='bill_to'>Bill to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
@@ -183,8 +183,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to' >Ship to:
-							<input id='mismo form-control input-sm' type=checkbox></input> (Same as billing)
+						<label for='ship_to' >Ship to:  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+							<input id='mismo' type=checkbox></input> (Same as billing)
 						</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
 							<option value = '$s_add' >$s_name</option>

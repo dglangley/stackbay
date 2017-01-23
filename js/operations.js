@@ -733,10 +733,15 @@
 			});
 
 //Address Suite of functions
+			
+			//Runs the general purpose setting of the different address select2's
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
+					console.log("UpdateShipTo Selected");
 					var display = $("#select2-bill_to-container").html()
 					var value = $("#bill_to").val();
+					console.log("Output: "+display);
+		    		console.log("HTML: "+display);
 		    		$("#select2-ship_to-container").html(display)
 		    		$("#ship_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
@@ -808,9 +813,29 @@
 				    });
 				}
 			});
-			
+			$(document).on("click", "#address-cancel", function(e) {
+
+				    field = $("#address-modal-body").attr("data-origin");
+			    	
+			    	if (field == "ship_to"){
+				    		$("#select2-ship_to-container").html('');
+				    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
+				    	}
+				    	else{
+				    		$("#select2-bill_to-container").html('');
+				    		$("#bill_to").append("<option selected value='"+null+"'>"+''+"</option>");
+				    	}
+				    	
+				    	$('.modal').modal('hide');
+			});
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
+			});
+			$(document).on("click",".address_edit",function() {
+				var drop = $(this).parent().find('select');
+				var origin = drop.attr('id');
+				var add_id = drop.last('option').val();
+				alert(add_id);
 			});
 			
 //Account Modal Popup Instigation

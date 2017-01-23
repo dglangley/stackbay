@@ -96,7 +96,7 @@
         
       </div>
       <div class="modal-footer text-center">
-     		<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
+     		<button type="button" class="btn btn-default btn-sm btn-dismiss" id="address-cancel" data-dismiss="modal">Cancel</button>
      		<button type="button" class="btn btn-primary btn-sm" id="address-continue" data-validation="address-modal">Save</button>
   	  </div>
 	</div>
