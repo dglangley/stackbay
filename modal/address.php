@@ -5,29 +5,32 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
         <h4 class="modal-title" id="modalAlertTitle">Add New Address</h4>
 	  </div>
-      <div class="modal-body" id="address-modal-body" data-origin = "ship_to">
+      <div class="modal-body address-modal" id="address-modal-body" data-origin = "ship_to">
           <div class="row-fluid">
-            <div class="row-fluid">
+            <div class="row">
               <div class="col-md-12">
-                <input class="form-control" name="na_name" placeholder="Address Name" type="text">
+                <input class="form-control required" name="na_name" placeholder="Address Name" type="text">
               </div>
             </div>
-            <div class="row-fluid">
+            <br>
+            <div class="row">
               <div class="col-md-12">
-                <input class="form-control" name="na_line_1" placeholder="Line 1" type="text">
+                <input class="form-control required" name="na_line_1" placeholder="Line 1" type="text">
               </div>
             </div>
-            <div class="row-fluid">
+            <br>
+            <div class="row">
               <div class="col-md-12">
               <input class="form-control" name="na_line2" placeholder="Line 2" type="text">
               </div>
             </div>
-            <div class="row-fluid">
+            <br>
+            <div class="row">
               <div class="col-md-6">
-              <input class="form-control" name="na_city" placeholder="City" type="text">
+              <input class="form-control required" name="na_city" placeholder="City" type="text">
               </div>
               <div class="col-md-2">
-                <input class="form-control" name="state" placeholder="State" type="text">
+                <input class="form-control required" name="state" placeholder="State" type="text">
                 <!--<div class="ui-select" style = "width:60px;">-->
                 <!--  <select style = "width:60px;">-->
                 <!--  	<option value="AL">AL</option>-->
@@ -85,7 +88,7 @@
                 <!--</div>-->
               </div>
               <div class="col-md-4">
-                <input class="form-control" name="na" placeholder="Zip" type="text">
+                <input class="form-control required" name="na" placeholder="Zip" type="text">
               </div>
             </div>
           </div>
@@ -94,7 +97,7 @@
       </div>
       <div class="modal-footer text-center">
      		<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
-     		<button type="button" class="btn btn-primary btn-sm" id="address-continue" data-dismiss="modal" data-form="" data-callback="" data-element="">Save</button>
+     		<button type="button" class="btn btn-primary btn-sm" id="address-continue" data-validation="address-modal">Save</button>
   	  </div>
 	</div>
   </div>

@@ -1,4 +1,4 @@
-function validation(e, formCase) {
+function validation(e, formCase, type) {
 	var validation, $element;
 	
 	//Store all error messages here
@@ -61,7 +61,13 @@ function validation(e, formCase) {
 		    <strong>Error!</strong> Missing Fields.\
 		    \
 		</div>';
-		$element.closest('body').find('.table-header').after(message);
+		if(type != 'modal') {
+			$element.closest('body').find('.table-header').after(message);
+		} else {
+			$element.closest('.modal').find('.modal-header').after(message).delay(5000).queue(function(){
+			    //$('.general-form-error').remove(); 
+			});;
+		}
 				
         return false;
     }
@@ -137,14 +143,14 @@ function stopAll(e) {
 
 //Special case for non-form elements
 //onClick of defined class Validation
-function nonFormCase($element, e) {
+function nonFormCase($element, e, type = '') {
 	var classHolder = $element.data('validation');
 	
 	var $obj = $element.closest('body').find('.' + classHolder)
 	
 	//console.log(validation(e, $obj) + ' result');
 	
-	return validation(e, $obj);
+	return validation(e, $obj, type);
 }
 	
 /* //dgl 1-20-17 because this was interrupting ALL forms globally
