@@ -1,3 +1,9 @@
+<style>
+  .account .select2 {
+    text-transform: uppercase;
+  }
+</style>
+
 <div class="modal modal-alert fade" id="modal-account" tabindex="-1" role="dialog" aria-labelledby="modalAlertTitle">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -9,7 +15,7 @@
         <div class="row-fluid">
           <div class="row">
             <div class="col-md-6">
-              <input class="form-control" name="na_account" placeholder="Account #" type="text">
+              <input class="form-control" name="na_account" placeholder="Account #" type="text" style="text-transform:uppercase">
             </div>
             <?php 
               $rootdir = $_SERVER['ROOT_DIR'];

@@ -25,7 +25,7 @@
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/dropPop.php';
-		
+
 
 //------------------------------------------------------------------------------
 //---------------------------- Function Declarations ---------------------------
@@ -86,13 +86,16 @@ function search_row(){
         // $start_date = date('Y-m-d');
         // $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
         // $counter = 7;
-
-        // // $date = date("m/d/Y");
         // while($counter > NETWORKDAYS($start_date,$stop_date)){
         //     $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
         // };
+        
+        //Default is ground aka 4 days
+        $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
+        //$date = date("m/d/Y");
+        
         $line .= "
-        <td>				
+        <td>			
 		    <div class='input-group date datetime-picker-line'>
 			    <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
 			    <span class='input-group-addon'>
