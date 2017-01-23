@@ -82,7 +82,7 @@
     					$service_options .=	"<option selected value=".$s['id']." data-days=".$s['days'].">".$s['method']."</option>";
     				}
     				else{
-    					$service_options .= "<option value = ".$s['id']." data-days=".$s['days'].">".$s['method']."</option>";
+    					$service_options .= "<option value = ".$s['id']." data-test='".$selected."' data-days=".$s['days'].">".$s['method']."</option>";
     				}
     			}
     	   	}
@@ -96,10 +96,17 @@
     	        </div>";
         }
         else if ($field == 'warranty'){
+            $id = ($custom_id) ? $custom_id : "warranty";
+            
             $warranty = getWarranty();
     		if ($warranty){
+    		    $init = false;
     			foreach ($warranty as $w){
-    				if($w['id'] == $selected){
+    			    if($id == 'warranty_global') {
+    			        $init = true;
+    			    }
+    			    
+    				if($w['id'] == $selected || ($selected == '' && $w['warranty'] == '30 Days' && !$init)){
     					$warranty_options .= "<option selected value=".$w['id'].">".$w['warranty']."</option>";
     				}
     				else{
@@ -107,7 +114,6 @@
     				}
     			}
     	   	}
-        $id = ($custom_id) ? $custom_id : "warranty";
         $output = "<div class='$size'>";          	
         $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm warranty $limit'>";
