@@ -179,8 +179,13 @@
 		    
 		    //If the condition value returns any results
 		    if ($condition){
+		        $init = false;
     			foreach ($condition as $c){
-    				if($c == $selected){
+    			    if($c == 'no') {
+    			        $init = true;
+    			    }
+    			    
+    				if($c == $selected || ($selected == '' && $c == 'used' && !$init)){
     					$cond .= "<option selected value=$c>".ucwords($c)."</option>";
     				}
     				else{
