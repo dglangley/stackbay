@@ -131,7 +131,7 @@
         
         //Query the database
 
-        qdb($macro);
+        qdb($macro) OR die(qe());
     }
     
 

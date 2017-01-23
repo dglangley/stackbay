@@ -833,7 +833,7 @@
 				updateShipTo();
 			});
 			$(document).on("click",".address_edit",function() {
-				var drop = $(this).parent().find('select');
+				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
 				var add_id = drop.last('option').val();
 				alert(add_id);
@@ -1053,7 +1053,7 @@
 							console.log(form['trek']);
 							console.log(form['update']);
 							console.log(form['input']);
-							window.location = "/order_form.php?ps="+ps+"&on="+on;
+							// window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);

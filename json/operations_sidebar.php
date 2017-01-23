@@ -203,7 +203,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 				    ".dropdown('carrier',$selected_carrier)."
-			    	".dropdown('services',$services,$selected_carrier)."
+			    	".dropdown('services',$selected_service,$selected_carrier)."
 			    </div>";
 		
 		//Shipping Account Section
