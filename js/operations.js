@@ -729,14 +729,10 @@
 				if($(this).val().indexOf("Add") > -1){
 					//Gather the address from the select2 field
 					var addy = ($(this).val().slice(4));
-					if (isNaN(addy.slice(0,1))){
-						//If the first number is the address, assume the user is searching by an address name
-						$("#address-modal-body").find("input[name='na_name']").val(addy);
-					}
-					else{
-						//Otherwise, if it is a number, assume they were searching by the address itself
-						$("#address-modal-body").find("input[name='na_line_1']").val(addy);
-					}
+					//Otherwise, if it is a number, assume they were searching by the address itself
+					$("#address-modal-body").find("input[name='na_line_1']").val(addy);
+					var company = ($("#select2-companyid-container").attr("title"));
+					$("#address-modal-body").find("input[name='na_name']").val(company);
 					$("#address-modal-body").attr('data-origin',origin);
 					$("#modal-address").modal('show');
 				}
