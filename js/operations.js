@@ -755,37 +755,47 @@
 					}
 				}
 			});
-			$(document).on("click", "#address-continue", function() {
-			    var address = [];
-			    var text = '';
-			    var field = '';
-			    field = $("#address-modal-body").attr("data-origin");
-			    
-			    $("#address-modal-body").find('input').each(function(){
-			    	if($(this).val()){
-			    		address.push($(this).val());
-			    		text = text+($(this).val())+"<br>";
-			    		$(this).val('');
-			    	}
-			    	else{
-			    		address.push('');
-			    	}
-			    });
-			    $.post("/json/addressSubmit.php", {'test[]' : address},function(data){
-			    	if (field == "ship_to"){
-			    		$("#select2-ship_to-container").html(text);
-			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
-			    		updateShipTo();
-			    		//$("#ship_display").html();	
-			    	}
-			    	else{
-			    		$("#select2-bill_to-container").html(text);
-			    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
-						//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
-						$("#mismo").prop("checked",false);
-			    	}
-			    });
+			$(document).on("click", "#address-continue", function(e) {
+			
+				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
+				//('object initiating the validation', the event, 'type of item being validated aka modal')
+				var isValid = nonFormCase($(this), e, 'modal');
+				
+				if(isValid) {
+				    var address = [];
+				    var text = '';
+				    var field = '';
+				    field = $("#address-modal-body").attr("data-origin");
+				    
+				    $("#address-modal-body").find('input').each(function(){
+				    	if($(this).val()){
+				    		address.push($(this).val());
+				    		text = text+($(this).val())+"<br>";
+				    		$(this).val('');
+				    	}
+				    	else{
+				    		address.push('');
+				    	}
+				    });
+				    $.post("/json/addressSubmit.php", {'test[]' : address},function(data){
+				    	if (field == "ship_to"){
+				    		$("#select2-ship_to-container").html(text);
+				    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
+				    		updateShipTo();
+				    		//$("#ship_display").html();	
+				    	}
+				    	else{
+				    		$("#select2-bill_to-container").html(text);
+				    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
+							//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
+							$("#mismo").prop("checked",false);
+				    	}
+				    	
+				    	$('.modal').modal('hide');
+				    });
+				}
 			});
+			
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
