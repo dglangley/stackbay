@@ -1671,3 +1671,82 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .nav-tabs li a:hover {
   background-color: #f5f5f5;
 }
+.yamm .nav,
+.yamm .collapse,
+.yamm .dropup,
+.yamm .dropdown {
+  position: static;
+}
+.yamm .container {
+  position: relative;
+}
+.yamm .dropdown-menu {
+  left: auto !important;
+  right: auto !important;
+}
+.yamm .dropdown-submenu > .dropdown-menu {
+  top: -1px;
+  left: 100%;
+  margin-top: -5px;
+  margin-left: 0px;
+}
+.yamm .yamm-content {
+  padding: 0;
+  width: 400px;
+}
+.yamm .dropdown.yamm-fw .dropdown-menu {
+  left: 0;
+  right: 0;
+}
+.col-megamenu {
+  border-right: solid 1px #ddd;
+  padding: 0;
+}
+.col-megamenu::last-child {
+  border: 0;
+}
+.yamm-content .row {
+  margin: 0;
+}
+.megamenu-block .megamenu-block-title {
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  color: #222;
+  font-size: 16px;
+  padding: 15px 20px 10px 20px;
+  text-transform: uppercase;
+}
+.megamenu-block .megamenu-block-title i {
+  margin-right: 5px;
+}
+.megamenu-block ul {
+  margin: 0;
+  padding: 0;
+}
+.megamenu-block ul li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  list-style-position: outside;
+}
+.megamenu-block ul li a {
+  padding: 2px 20px;
+  font-size: 13px;
+  display: block;
+  color: #333;
+}
+.megamenu-block ul li a i {
+  margin-right: 5px;
+}
+.megamenu-block ul li a:hover {
+  text-decoration: none;
+}
+.navbar-dark .megamenu-block-title,
+.navbar-inverse .megamenu-block-title {
+  color: #222;
+}
+.navbar-dark .col-megamenu,
+.navbar-inverse .col-megamenu {
+  border-right: solid 1px #555;
+}

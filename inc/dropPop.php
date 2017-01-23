@@ -176,11 +176,17 @@
             
             // Grab all the variations of the enum into an iterable array
             $condition = getEnumValue();
+            $id = ($custom_id) ? $custom_id : "condition";
 		    
 		    //If the condition value returns any results
 		    if ($condition){
+		        $init = false;
     			foreach ($condition as $c){
-    				if($c == $selected){
+    			    if($id == 'condition_global') {
+    			        $init = true;
+    			    }
+    			    
+    				if($c == $selected || ($selected == '' && $c == 'used' && !$init)){
     					$cond .= "<option selected value=$c>".ucwords($c)."</option>";
     				}
     				else{
@@ -188,7 +194,7 @@
     				}
     			}
     	   	}
-   	        $id = ($custom_id) ? $custom_id : "condition";
+    	   	
             $output = "<div class=''>";
             $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
             $output .= "<select id = '$id' class='form-control input-sm condition'>";

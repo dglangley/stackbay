@@ -236,6 +236,14 @@
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 				});
 			});
+			
+			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
+			$(document).on('change', '#companyid', function() {
+				var id = $(this).val();
+				
+				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
+			});
+			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){

@@ -363,7 +363,7 @@
 												
 									parts += "<td style='text-align: right;'>\
 										<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
-										<a class='edit save_button btn-flat success pull-right multipart_sub'>\
+										<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
                 						<i class='fa fa-check fa-4' aria-hidden='true'></i></a>\
                 						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
 									parts += "</tr>";

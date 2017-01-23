@@ -14,6 +14,7 @@
     <script src="js/theme.js"></script>
     <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
 
+	<script src="js/DropdownHover.js"></script>
     <script src="js/select2.min.js"></script>
 
 	<script src="js/dropzone.js"></script>

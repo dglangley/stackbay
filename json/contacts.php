@@ -22,11 +22,6 @@
     $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' AND `companyid` = $companyid;";
     $primary = qdb($query);
     
-    // $output[] = array(
-    //     'id' => 'co',
-    //     'text' => $companyid
-    //     );
-    
     if (isset($primary)){
         foreach($primary as $id => $row){
             $line = array(
