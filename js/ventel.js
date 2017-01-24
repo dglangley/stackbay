@@ -1557,30 +1557,32 @@
 
 	Dropzone.autoDiscover = false;
 	// dropzone class:
-	var imageDropzone = new Dropzone ("div#imageDropzone",{
-		url: "json/image-upload.php",
-		paramName: "file", // The name that will be used to transfer the file
-		maxFilesize: 2, // MB
-		uploadMultiple: true,
-		clickable: true,
-		addRemoveLinks: false,
-		dictRemoveFile: "Remove",
-		acceptedFiles: ".png, .jpg, .jpeg, .gif",
-		dictDefaultMessage: "<h4>Drop File(s) Here or Click to Upload</h4>",
-		accept: function(file, done) {//gets the file and does something before sending to url for upload
-			if (file.name == "justinbieber.jpg") {
-				done("Naha, you don't.");
-			} else {
-				done();//submit to url
-			}
-		},
-		success: function(file, response) {// sent data to url, got the response back
-			if (response!="") { alert(response); }
-			updateSliderImages($("#prod-image-title").text());
-		},
-	});
-	//add part string to form request on each image send
-	imageDropzone.on("sending", function(file, xhr, formData) {
-		var id = $("#imageDropzone").data('id');
-		formData.append("search", id);
-	});
+	if ($('#imageDropzone').length > 0) {
+		var imageDropzone = new Dropzone ("div#imageDropzone",{
+			url: "json/image-upload.php",
+			paramName: "file", // The name that will be used to transfer the file
+			maxFilesize: 2, // MB
+			uploadMultiple: true,
+			clickable: true,
+			addRemoveLinks: false,
+			dictRemoveFile: "Remove",
+			acceptedFiles: ".png, .jpg, .jpeg, .gif",
+			dictDefaultMessage: "<h4>Drop File(s) Here or Click to Upload</h4>",
+			accept: function(file, done) {//gets the file and does something before sending to url for upload
+				if (file.name == "justinbieber.jpg") {
+					done("Naha, you don't.");
+				} else {
+					done();//submit to url
+				}
+			},
+			success: function(file, response) {// sent data to url, got the response back
+				if (response!="") { alert(response); }
+				updateSliderImages($("#prod-image-title").text());
+			},
+		});
+		//add part string to form request on each image send
+		imageDropzone.on("sending", function(file, xhr, formData) {
+			var id = $("#imageDropzone").data('id');
+			formData.append("search", id);
+		});
+	}
