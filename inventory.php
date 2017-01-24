@@ -317,7 +317,7 @@
 							var s = row.serials;
 							//alert (s);
 							if(s){
-								parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
+								parts += "<tr class='serial_listing serial_listing_"+row.unique+"' style='display: none;'>\
 											<td colspan='12'>";
 											parts += "<table class='table serial table-hover table-condensed'>\
 														<thead>\
@@ -372,10 +372,10 @@
 									</td>\
 								</tr>";
 								
-								parts += "<tr>\
-								<td colspan='12'>\
-								</td>\
-								</tr>"
+								// parts += "<tr>\
+								// <td colspan='12'>\
+								// </td>\
+								// </tr>"
 
 							}
 								
@@ -563,6 +563,8 @@
 	});
 	 
 	$(document).on('click', '.revisions', function() {
+		$('.serial_listing').hide();
+		
 		var element = $(this).val();
 		if(element != '') {
 			$('.parts-list').hide();
