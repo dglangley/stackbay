@@ -768,7 +768,7 @@
 					}
 				}
 			});
-			
+
 			$(document).on("click", "#address-continue", function(e) {
 			
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
@@ -841,7 +841,7 @@
 				    	$('.modal').modal('hide');
 				    });
 				}
-			});
+		});
 			
 			$(document).on("click", "#address-cancel", function(e) {
 	
@@ -900,39 +900,8 @@
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
-				$(document).on("click",".address_edit",function() {
- 			var drop = $(this).closest("div").find('select');
- 			var origin = drop.attr('id');
- 			var add_id = drop.last('option').val();
- 			console.log(add_id);
- 				$.ajax({
- 					type: "POST",
- 					url: '/json/address-pull.php',
- 					data: {
- 						'address' : add_id,
- 					},
- 					dataType: 'json',
- 					success: function(address) {
- 						console.log(address);
- 						$("#address-modal-body").attr("data-oldid",add_id);
- 						$("#add_name").val('').val(address.name);
- 						$('#add_line_1').val('').val(address.street);
- 						$('#add_line2').val('').val(address.city);
- 						$('#add_city').val('').val(address.state);
- 						$('#add_state').val('').val(address.postal_code);
- 						$('#add_zip').val('').val(address.country);
- 						
- 						$("#modal-address").modal('show');
- 						
- 						
- 						console.log("Address Grab - address-grab.php: Success");
- 					},
- 					error: function(xhr, status, error) {
- 					   	alert(error);
- 					   	console.log("Order-form-submission: Error");
- 					},
- 				});
- 			});
+				
+
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
 				if($(this).val().indexOf("Add") > -1){
