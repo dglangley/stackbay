@@ -12,7 +12,7 @@
 
     // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 	if (! $DEV_ENV) {
-		$s3 = Aws\S3\S3Client::factory();
+		$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
 	}
 

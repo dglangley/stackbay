@@ -236,14 +236,6 @@
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 				});
 			});
-			
-			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-			$(document).on('change', '#companyid', function() {
-				var id = $(this).val();
-				
-				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
-			});
-			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
@@ -398,21 +390,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						var initial_result = $("#service").val();
-						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
-						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
-						if (new_div_val){
-							$("#service").val(new_div_val);
-						}
-						console.log("== CARRIER CHANGE VALUES ==");
-						console.log("Initial ID: "+initial_result);
-						console.log("Initial Days: "+initial_days);
-						console.log("New ID: "+new_div_val);
 						var days = parseInt($("#service :selected").attr("data-days"));
-						if(!isNaN(days)){
-							$("input[name=ni_date]").val(freight_date(days));
-						}
+						$("input[name=ni_date]").val(freight_date(days));
 						console.log("JSON Services limited dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -423,9 +403,8 @@
 			});
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
-				if (!isNaN(days)){
-					$("input[name=ni_date]").val(freight_date(days));
-				}
+				$("input[name=ni_date]").val(freight_date(days));
+				
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				// $.ajax({
  
@@ -733,15 +712,10 @@
 			});
 
 //Address Suite of functions
-			
-			//Runs the general purpose setting of the different address select2's
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					console.log("UpdateShipTo Selected");
 					var display = $("#select2-bill_to-container").html()
 					var value = $("#bill_to").val();
-					console.log("Output: "+display);
-		    		console.log("HTML: "+display);
 		    		$("#select2-ship_to-container").html(display)
 		    		$("#ship_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
@@ -773,7 +747,7 @@
 					}
 				}
 			});
-			
+
 			$(document).on("click", "#address-continue", function(e) {
 			
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
@@ -1086,7 +1060,7 @@
 					});
 	
 					//Submit all rows and meta data for unpacking later
-					// alert(account);
+					alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -1120,7 +1094,7 @@
 							console.log(form['trek']);
 							console.log(form['update']);
 							console.log(form['input']);
-							window.location = "/order_form.php?ps="+ps+"&on="+on; 
+							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);
