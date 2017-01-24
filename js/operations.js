@@ -847,6 +847,7 @@
 				    });
 				}
 			});
+			
 			$(document).on("click", "#address-cancel", function(e) {
 
 				    var field = $("#address-modal-body").attr("data-origin");
@@ -866,9 +867,11 @@
 					    	$('.modal').modal('hide');
 				    	}
 			});
+			
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
+			
 			$(document).on("click",".address_edit",function() {
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
