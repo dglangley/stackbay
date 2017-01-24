@@ -325,9 +325,8 @@
 															<th>Serial Number</th>\
 															<th>qty</th>\
 															<th>Status</th>\
-															<th>Last Sales</th>\
-															<th class='edit'>Location</th>\
-															<th class='edit'>Condition</th>\
+															<th><span class='edit'>Location</span></th>\
+															<th><span class='edit'>Condition</span></th>\
 															<th></th>\
 															</tr>\
 														</thead>\
@@ -347,11 +346,11 @@
 														<td class='edit status_holder' data-status='"+details.status+"'></td>";
 														
 											if(details.last_sale != null) {
-												parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
-												parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
+												//parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
+												//parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
 											} else {
-												parts += "<td class='last_sale data'></td>";
-												parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
+												//parts += "<td class='last_sale data'></td>";
+												//parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
 											}
 											
 											init = false;
@@ -431,7 +430,7 @@
 		
 		$(this).closest('tr').find('.edit').show();
 		$(this).closest('tr').find('.data').hide();
-		$(this).closest('table').find('th.edit').show();
+		$(this).closest('table').find('th span.edit').show();
 		
 		$(this).closest('tr').find('.delete_button').hide();
 		$(this).hide();
@@ -471,7 +470,7 @@
 				if(result) {
 					$save.closest('tr').find('.edit').hide();
 					$save.closest('tr').find('.data').show();
-					$save.closest('table').find('th.edit').hide();
+					$save.closest('table').find('th span.edit').hide();
 					$save.closest('tr').find('.edit_button').show();
 					$save.closest('tr').find('.delete_button').show();
 					
