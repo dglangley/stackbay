@@ -15,7 +15,8 @@
 	$bucket = '';
 //	if (! $DEV_ENV) {
 	if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
-		$s3 = Aws\S3\S3Client::factory();
+		$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
+
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
 	}
 
