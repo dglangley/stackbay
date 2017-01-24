@@ -236,6 +236,14 @@
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 				});
 			});
+			
+			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
+			$(document).on('change', '#companyid', function() {
+				var id = $(this).val();
+				
+				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
+			});
+			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
@@ -390,9 +398,21 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
+						var initial_result = $("#service").val();
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
+						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
+						if (new_div_val){
+							$("#service").val(new_div_val);
+						}
+						console.log("== CARRIER CHANGE VALUES ==");
+						console.log("Initial ID: "+initial_result);
+						console.log("Initial Days: "+initial_days);
+						console.log("New ID: "+new_div_val);
 						var days = parseInt($("#service :selected").attr("data-days"));
-						$("input[name=ni_date]").val(freight_date(days));
+						if(!isNaN(days)){
+							$("input[name=ni_date]").val(freight_date(days));
+						}
 						console.log("JSON Services limited dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -403,8 +423,9 @@
 			});
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
-				$("input[name=ni_date]").val(freight_date(days));
-				
+				if (!isNaN(days)){
+					$("input[name=ni_date]").val(freight_date(days));
+				}
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				// $.ajax({
  
@@ -820,15 +841,15 @@
 				    	$('.modal').modal('hide');
 				    });
 				}
-			});
+		});
 			
 			$(document).on("click", "#address-cancel", function(e) {
-
+	
 				    var field = $("#address-modal-body").attr("data-origin");
-			    	
-			    	
-			    	//verify that the field is adding if you cancel the value
-			    	if($("#"+field).val().indexOf("Add") > -1){
+			   	
+			   	
+				   	//verify that the field is adding if you cancel the value
+				   	if($("#"+field).val().indexOf("Add") > -1){
 				    	if (field == "ship_to"){
 					    		$("#select2-ship_to-container").html('');
 					    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
@@ -840,10 +861,6 @@
 					    	
 					    	$('.modal').modal('hide');
 				    	}
-			});
-			
-			$(document).on("click","#mismo",function() {
-				updateShipTo();
 			});
 			
 			$(document).on("click",".address_edit",function() {
@@ -880,6 +897,11 @@
 					});
 				});
 			
+			$(document).on("click","#mismo",function() {
+				updateShipTo();
+			});
+				
+
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
 				if($(this).val().indexOf("Add") > -1){
