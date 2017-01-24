@@ -11,7 +11,9 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
-
+	
+	$searched = (grab("search") != '' ? grab("search") : grab("s"));
+	$_REQUEST['s'] = '';
 
 ?>
 
@@ -176,7 +178,7 @@
 			<!--This Handles the Search Bar-->
 			<div class="col-md-2 col-sm-2">
 				<div class="input-group">
-	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value=<?=grab("search")?>>
+	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
               		<span class="input-group-btn">
 	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
