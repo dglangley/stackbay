@@ -5,32 +5,32 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
         <h4 class="modal-title" id="modalAlertTitle">Add New Address</h4>
 	  </div>
-      <div class="modal-body address-modal" id="address-modal-body" data-origin = "ship_to">
+      <div class="modal-body address-modal" id="address-modal-body" data-origin = "ship_to" data-oldid = "false">
           <div class="row-fluid">
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required" name="na_name" placeholder="Address Name" type="text">
+                <input class="form-control required" name="na_name" id ="add_name" placeholder="Address Name" type="text">
               </div>
             </div>
             <br>
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required" name="na_line_1" placeholder="Line 1" type="text">
+                <input class="form-control required" name="na_line_1" id ="add_line_1" placeholder="Line 1" type="text">
               </div>
             </div>
             <br>
             <div class="row">
               <div class="col-md-12">
-              <input class="form-control" name="na_line2" placeholder="Line 2" type="text">
+              <input class="form-control" name="na_line2" id ="add_line2" placeholder="Line 2" type="text">
               </div>
             </div>
             <br>
             <div class="row">
               <div class="col-md-6">
-              <input class="form-control required" name="na_city" placeholder="City" type="text">
+              <input class="form-control required" name="na_city" id ="add_city" placeholder="City" type="text">
               </div>
               <div class="col-md-2">
-                <input class="form-control required" name="state" placeholder="State" type="text">
+                <input class="form-control required" name="state" id ="add_state" placeholder="State" type="text">
                 <!--<div class="ui-select" style = "width:60px;">-->
                 <!--  <select style = "width:60px;">-->
                 <!--  	<option value="AL">AL</option>-->
@@ -88,7 +88,7 @@
                 <!--</div>-->
               </div>
               <div class="col-md-4">
-                <input class="form-control required" name="na" placeholder="Zip" type="text">
+                <input class="form-control required" name="na" id ="add_zip" placeholder="Zip" type="text">
               </div>
             </div>
           </div>

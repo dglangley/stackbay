@@ -16,6 +16,7 @@
 		include_once $rootdir.'/inc/dbconnect.php';
 		include_once $rootdir.'/inc/format_date.php';
 		include_once $rootdir.'/inc/format_price.php';
+	    include_once $rootdir.'/inc/dictionary.php';
 		include_once $rootdir.'/inc/getCompany.php';
 		include_once $rootdir.'/inc/getWarranty.php';
 		include_once $rootdir.'/inc/getPart.php';
@@ -53,8 +54,8 @@ function head_out(){
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
     $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
-    $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Price</th>";
+    $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
     $head .= "<th></th>";
     $head .= "</thead>";
@@ -111,6 +112,9 @@ function search_row(){
         $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
 
         
+        //Qty | Each of the qty inputs had supplimental inventory information
+        $line .="<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
+        
         //Price
         $line .= "
             <td>
@@ -120,11 +124,8 @@ function search_row(){
                 </div>
             </td>";
         
-        //Qty | Each of the qty inputs had supplimental inventory information
-        $line .="<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
-        
         //EXT PRICE
-        $line .= "<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>";
+        $line .= "<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>";
         
         //Submission button
         $line .= "
@@ -146,7 +147,11 @@ function search_row(){
 }
 
 function format($parts){
-    $name = $parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr'];
+// 	$name = '<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>';
+//     $name .= '<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>';
+
+    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
+    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
     return $name;
 }
 
@@ -238,7 +243,10 @@ function sub_rows($search = ''){
                 $rows .= "
                 <tr class = 'search_lines' data-line-id = $id>
                     <td></td>
-                    <td>".format($info)."</td>
+                    <td>";
+    
+                $rows .=(format($info));
+                $rows .= "</td>
                     <td></td>
                     <td></td>
                     <td></td>
