@@ -288,6 +288,13 @@ div.table-filter div {
 	font-size: 11px !important;
 	line-height: 1.1;
 }
+.desc_second_line { 
+	font-size:10px;
+	color:#aaa;
+}
+.search_lines:nth-child(odd){
+    background-color:#eff0f6;
+}
 .table-products .table .product-descr .description, .table-products .table .product-descr .description .descr-edit input {
 	font-size:10px;
 	color:#aaa;

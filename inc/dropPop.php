@@ -89,7 +89,7 @@
             $id = ($custom_id) ? $custom_id : "service";
             $output = "<div class='$size' id = '".$id."_div'>	            	
     			    <label for='services'>Service:</label>
-    			    <select id = '$id' class='form-control input-sm'>
+    			    <select id = '$id' class='required form-control input-sm'>
     			        <option value = 'NULL'> </option>
     				    $service_options
     			    </select>
