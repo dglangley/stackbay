@@ -236,14 +236,6 @@
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 				});
 			});
-			
-			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-			$(document).on('change', '#companyid', function() {
-				var id = $(this).val();
-				
-				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
-			});
-			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
@@ -398,21 +390,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						var initial_result = $("#service").val();
-						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
-						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
-						if (new_div_val){
-							$("#service").val(new_div_val);
-						}
-						console.log("== CARRIER CHANGE VALUES ==");
-						console.log("Initial ID: "+initial_result);
-						console.log("Initial Days: "+initial_days);
-						console.log("New ID: "+new_div_val);
 						var days = parseInt($("#service :selected").attr("data-days"));
-						if(!isNaN(days)){
-							$("input[name=ni_date]").val(freight_date(days));
-						}
+						$("input[name=ni_date]").val(freight_date(days));
 						console.log("JSON Services limited dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -423,9 +403,8 @@
 			});
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
-				if (!isNaN(days)){
-					$("input[name=ni_date]").val(freight_date(days));
-				}
+				$("input[name=ni_date]").val(freight_date(days));
+				
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				// $.ajax({
  
@@ -733,15 +712,10 @@
 			});
 
 //Address Suite of functions
-			
-			//Runs the general purpose setting of the different address select2's
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					console.log("UpdateShipTo Selected");
 					var display = $("#select2-bill_to-container").html()
 					var value = $("#bill_to").val();
-					console.log("Output: "+display);
-		    		console.log("HTML: "+display);
 		    		$("#select2-ship_to-container").html(display)
 		    		$("#ship_to").append("<option selected value='"+value+"'>"+display+"</option>");
 				}
@@ -773,135 +747,40 @@
 					}
 				}
 			});
-			
-			$(document).on("click", "#address-continue", function(e) {
-			
-				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
-				//('object initiating the validation', the event, 'type of item being validated aka modal')
-				var isValid = nonFormCase($(this), e, 'modal');
-				
-				if(isValid) {
-
-				    var field = '';
-				    field = $("#address-modal-body").attr("data-origin");
-				    
-				    var name = $("#add_name").val();
-					var line_1 = $('#add_line_1').val();
-					var line2 = $('#add_line2').val();
-					var city = $('#add_city').val();
-					var state = $('#add_state').val();
-					var zip = $('#add_zip').val();
-					var id = $("#address-modal-body").attr("data-oldid");
-					// alert(ad['id']);
-					var text = name;
-					
-					$("#address-modal-body").attr("data-oldid",'');
-					
-					console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
-				    $.post("/json/addressSubmit.php", {
-				    	"name" : name,
-						"line_1" : line_1,
-						"line2" : line2,
-						"city" : city,
-						"state" : state,
-						"zip" : zip,
-						"id" : id
-				    },function(data){
-				    	
-				    	console.log("Return from Address Submission: "+data);
-				    	
-				    	if (!id){
-				    		//If it didn't have an update, it is a new field
-					    	if (field == "ship_to"){
-					    		$("#select2-ship_to-container").html(name);
-					    		$("#ship_to").append("<option selected value='"+data+"'>"+name+"</option>");
-					    		updateShipTo();
-					    		//$("#ship_display").html();	
-					    	}
-					    	else{
-					    		// $("#select2-bill_to-container").html(text);
-					    		$("#bill_to").append("<option selected value='"+data+"'>"+name+"</option>");
-								//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
-								$("#mismo").prop("checked",false);
-					    	}
-				    	}
-				    	else{
-				    		//Otherwise, this is an old field
-				    		if (field == "ship_to"){
-				    			$("#select2-ship_to-container").text(name);
-				    			if ($("#mismo").prop("checked")){
-				    				$("#select2-bill_to-container").text(name);
-				    			}
-				    		}
-				    		else{
-				    			$("#select2-bill_to-container").text(name);
-			    				if ($("#mismo").prop("checked")){
-				    				$("#select2-ship_to-container").text(name);
-				    			}
-				    		}
-
-				    	}
-				    	
-				    	
-				    	$('.modal').modal('hide');
-				    });
-				}
-			});
-			$(document).on("click", "#address-cancel", function(e) {
-
-				    var field = $("#address-modal-body").attr("data-origin");
-			    	
-			    	
-			    	//verify that the field is adding if you cancel the value
-			    	if($("#"+field).val().indexOf("Add") > -1){
-				    	if (field == "ship_to"){
-					    		$("#select2-ship_to-container").html('');
-					    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
-					    	}
-					    	else{
-					    		$("#select2-bill_to-container").html('');
-					    		$("#bill_to").append("<option selected value='"+null+"'>"+''+"</option>");
-					    	}
-					    	
-					    	$('.modal').modal('hide');
-				    	}
+			$(document).on("click", "#address-continue", function() {
+			    var address = [];
+			    var text = '';
+			    var field = '';
+			    field = $("#address-modal-body").attr("data-origin");
+			    
+			    $("#address-modal-body").find('input').each(function(){
+			    	if($(this).val()){
+			    		address.push($(this).val());
+			    		text = text+($(this).val())+"<br>";
+			    		$(this).val('');
+			    	}
+			    	else{
+			    		address.push('');
+			    	}
+			    });
+			    $.post("/json/addressSubmit.php", {'test[]' : address},function(data){
+			    	if (field == "ship_to"){
+			    		$("#select2-ship_to-container").html(text);
+			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
+			    		updateShipTo();
+			    		//$("#ship_display").html();	
+			    	}
+			    	else{
+			    		$("#select2-bill_to-container").html(text);
+			    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
+						//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
+						$("#mismo").prop("checked",false);
+			    	}
+			    });
 			});
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
-			$(document).on("click",".address_edit",function() {
-				var drop = $(this).closest("div").find('select');
-				var origin = drop.attr('id');
-				var add_id = drop.last('option').val();
-				console.log(add_id);
-					$.ajax({
-						type: "POST",
-						url: '/json/address-pull.php',
-						data: {
-							'address' : add_id,
-						},
-						dataType: 'json',
-						success: function(address) {
-							console.log(address);
-							$("#address-modal-body").attr("data-oldid",add_id);
-							$("#add_name").val('').val(address.name);
-							$('#add_line_1').val('').val(address.street);
-							$('#add_line2').val('').val(address.city);
-							$('#add_city').val('').val(address.state);
-							$('#add_state').val('').val(address.postal_code);
-							$('#add_zip').val('').val(address.country);
-							
-							$("#modal-address").modal('show');
-							
-							
-							console.log("Address Grab - address-grab.php: Success");
-						},
-						error: function(xhr, status, error) {
-						   	alert(error);
-						   	console.log("Order-form-submission: Error");
-						},
-					});
-				});
 			
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
@@ -1083,7 +962,7 @@
 					});
 	
 					//Submit all rows and meta data for unpacking later
-					// alert(account);
+					alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -1117,7 +996,7 @@
 							console.log(form['trek']);
 							console.log(form['update']);
 							console.log(form['input']);
-							window.location = "/order_form.php?ps="+ps+"&on="+on; 
+							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);
