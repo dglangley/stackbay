@@ -54,8 +54,8 @@ function head_out(){
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
     $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
-    $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Price</th>";
+    $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
     $head .= "<th></th>";
     $head .= "</thead>";
@@ -112,6 +112,9 @@ function search_row(){
         $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
 
         
+        //Qty | Each of the qty inputs had supplimental inventory information
+        $line .="<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
+        
         //Price
         $line .= "
             <td>
@@ -121,11 +124,8 @@ function search_row(){
                 </div>
             </td>";
         
-        //Qty | Each of the qty inputs had supplimental inventory information
-        $line .="<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
-        
         //EXT PRICE
-        $line .= "<td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>";
+        $line .= "<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>";
         
         //Submission button
         $line .= "
