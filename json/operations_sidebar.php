@@ -258,13 +258,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//Navigaion changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
-		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
+		$right .= "		<div class='sidebar-container'>";
 		$right.="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='order'>
 							<label for='order_selector'> ";
-		$right .= ($page == "Purchase")? "<h5>PO NAVIGATION</h5>" : "<h5>SO NAVIGATION</h5>";
+		// $right .= ($page == "Purchase")? "<h5>PO NAVIGATION</h5>" : "<h5>SO NAVIGATION</h5>";
 		$right .= "</label>
 							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
 		
@@ -305,27 +305,27 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($results){
 			//Contact Output
 			$right .= "<div>";
-				$right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-				$right .= "<b>COMPANY: Representative</b> <br>".($company_name).": ".getContact($contact)."<br><br>";
+				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
+				$right .= "<h4 style='color: #526273; text-transform: uppercase;'>".($company_name)."</h4>".getContact($contact)."<br><br>";
 				
 				//Addresses
-				$right .= "<b>BILLING ADDRESS:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
 				$right .= address_out($b_add);
-				$right .= "<br>";
-				$right .= "<b>SHIPPING ADDRESS:</b><br>";
+				$right .= "<br><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= address_out($s_add);
 				$right .= "<br><br>";
-				$right .= "<b>CARRIER INFORMATION:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>CARRIER INFORMATION:</b><br>";
 				$right .= $selected_carrier;
 				$right .= "<br><br>";
 				if($public){
-					$right .= "<b>PUBLIC NOTES:</b><br>";
+					$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES:</b><br>";
 					$right .= $public;
 					$right .= "<br>";
 				}
 				if($private){
-					$right .= "<b>PRIVATE NOTES:</b><br>";
-					$right .= $public;
+					$right .= "<b style='color: #526273;font-size: 14px;'>PRIVATE NOTES:</b><br>";
+					$right .= $private;
 					$right .= "<br>";
 				}
 				$right .= "<br>";
