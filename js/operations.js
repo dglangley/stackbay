@@ -372,15 +372,27 @@
 				}
 				return result;
 			}
+			
 			function freight_date(days){
 				var today = new Date();
-				today.setDate(today.getDate() + days);
+				var dayOfTheWeek = today.getDay();
+				var calendarDays = days;
+				var deliveryDay = dayOfTheWeek + days;
+				if (deliveryDay >= 6) {
+					//deduct this-week days
+					days -= 6 - dayOfTheWeek;
+					//count this coming weekend
+					calendarDays += 2;
+					//how many whole weeks?
+					var deliveryWeeks = Math.floor(days / 5);
+					//two days per weekend per week
+					calendarDays += deliveryWeeks * 2;
+				}
 				
-				var formatted = ('0' + (today.getMonth()+1)).slice(-2) + '/' 
-            		+ ('0' + today.getDate()).slice(-2) + '/'
-            		+ today.getFullYear();
+				today.setTime(today.getTime() + calendarDays * 24 * 60 * 60 * 1000);
 				
-				return formatted;
+				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
+				return today;
 			}
 			
 			$(document).on("change","#carrier",function() {
