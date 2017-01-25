@@ -70,10 +70,10 @@
             echo'		Order#';
             echo'	</th>';
         if($status=="Active"){
-            echo'   <th class="col-md-5">';
+            echo'   <th class="col-md-4">';
         }
         else {
-        	echo'   <th class="col-md-3">';
+        	echo'   <th class="col-md-4">';
         }
             echo'   	<span class="line"></span>';
             echo'       Item';
@@ -83,13 +83,13 @@
             echo'   	Qty';
             echo'  	</th>';
 		if($status=="Complete"){
-            echo'  	<th class="col-md-1">';
-            echo'  		Status';
+            echo'  	<th class="col-md-2">';
+            echo'  		&nbsp;';
             echo'  	</th>';
             echo'</tr>';
             echo'</thead>';
 		} else {
-			echo'  	<th class="col-md-1">';
+			echo'  	<th class="col-md-2">';
             echo'  		&nbsp;';
             echo'  	</th>';
             echo'</tr>';
@@ -163,9 +163,17 @@
 				echo'        <td>'.$item.'</td>';
 				echo'    	<td>'.$qty.'</td>';
 			if($status=="Complete"){
-				echo'    	<td class="status">'.'Completed'.'</td>';
+				$arr = explode(' ',trim($item));
+				echo'    	<td class="status">
+								<a href="/inventory.php?search='.$arr[0].'"><i style="margin-right: 5px;" class="fa fa-qrcode" aria-hidden="true"></i></a>
+								<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
+								<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
+							</td>';
 			} else {
-				echo'    	<td class="status">'.'<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>'.'</td>'; 
+				echo'    	<td class="status">
+								<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
+								<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
+							</td>'; 
 			}
 			echo'	</tr>';
 		}
