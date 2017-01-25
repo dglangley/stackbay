@@ -1377,7 +1377,6 @@
 		
 		//This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
-			
 			if(e.which == 13) {
 				//Grab each of the parameters from the top line
 				var $serial = $(this);
@@ -1431,7 +1430,10 @@
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								} else if(qty <= 0) {
-							    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+									if(localStorage.getItem(result['partid']) != 'shown'){
+								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+								    	localStorage.setItem(result['partid'],'shown')	
+									}
 							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
 							    }
 								
