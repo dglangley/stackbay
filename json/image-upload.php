@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/stampImage.php';
 	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
 	$search = '';
@@ -57,6 +58,11 @@
 //				if (! $DEV_ENV) {
 				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
 	                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
+
+					// create stamped image, and upload as well
+					$stamped_filename = stampImage($tmp_file);
+					$filename_parts = explode('/',$stamped_filename);
+	                $upload = $s3->upload($bucket, $filename_parts[(count($filename_parts)-1)], fopen($stamped_filename, 'rb'), 'public-read');
 				}
 
 				// get every partid associated with the search string and match in db with each partid
