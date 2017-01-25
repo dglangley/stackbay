@@ -892,7 +892,7 @@
 						},
 						error: function(xhr, status, error) {
 						   	alert(error);
-						   	console.log("Order-form-submission: Error");
+						   	console.log("Address grab: Error");
 						},
 					});
 				});
@@ -1025,7 +1025,8 @@
 					var contact = $("#contactid").val();
 					if (contact == "new"){
 						contact = $("#select2-contactid-container").text();
-						contact = contact.slice(9);
+						//Get rid of the 'Add' portion of the text
+						contact = contact.slice(4);
 					}
 					var assoc = $("#assoc_order").val();
 					
@@ -1076,13 +1077,13 @@
 							// alert("price "+row["price"]);
 							// alert("qty "+row["qty"]);
 							
-							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty
+							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty;
 
 						submit.push(row);
 					});
 	
 					//Submit all rows and meta data for unpacking later
-					alert(account);
+					// alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -1119,8 +1120,10 @@
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
-						   	alert(error);
-						   	console.log("Order-form-submission: Error");
+						   	console.log("Order-form-submission Error:");
+						   	console.log(error);
+						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
+							
 						},
 					});
 				} else {

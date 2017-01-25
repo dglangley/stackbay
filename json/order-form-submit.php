@@ -110,19 +110,22 @@
         $macro = "UPDATE ";
         $macro .= ($order_type == "Purchase")? "`purchase_orders`" :"`sales_orders`";
         $macro .= " SET ";
-        $macro .= updateNull('companyid',$companyid);
         $macro .= updateNull('sales_rep_id',$rep);
+        $macro .= updateNull('companyid',$companyid);
         $macro .= updateNull('contactid',$contact);
-        $macro .= updateNull('termsid',$terms);
-        $macro .= updateNull('assoc_order',$assoc_order);
         if ($order_type == "Purchase"){
-            $macro .= updateNull('tracking_no',$tracking);
+            $macro .= updateNull('assoc_order',$assoc_order);
         }
-        $macro .= updateNull('freight_carrier_id',$carrier);
+        else{
+            $macro .= updateNull('cust_ref',$assoc_order);
+            $macro .= updateNull('ref_ln','Null');
+        }
         $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
+        $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('freight_services_id',$service);
         $macro .= updateNull('freight_account_id',$account);
+        $macro .= updateNull('termsid',$terms);
         $macro .= updateNull('public_notes',$public);
         $macro .= rtrim(updateNull('private_notes',$private),',');
         $macro .= " WHERE ";
