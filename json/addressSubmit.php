@@ -50,7 +50,7 @@
             
             
 
-		if($id != 'false'){
+		if($id != 'false' && $id){
 			$update = "UPDATE `addresses` SET
 						`name` = $name,
 						`street` = $street,

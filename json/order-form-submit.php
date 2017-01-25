@@ -89,15 +89,16 @@
         $assoc_order = prep($assoc_order);
         $tracking = prep($tracking);
         
-        $insert = "INSERT INTO ";
-        $insert .= ($order_type=="Purchase") ? "`purchase_orders`" : "`sales_orders`";
-        $insert .= " (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,";
-        // if ($order_type=="Purchase"){ $insert .= " `tracking_no`, ";}
-        $insert .= " `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`,
-        `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-        ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
-        
-
+        if($order_type=="Purchase"){
+            $insert = "INSERT INTO `purchase_orders` (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
+            `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+            ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+        }
+        else{
+            $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
+            `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+            ($rep, $rep, $cid, $contact, $assoc_order, NULL, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
+        }
     //Run the update
         qdb($insert);
         
