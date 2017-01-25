@@ -1545,6 +1545,12 @@
 			}
 		});
 		
+		$(document).on('click', '.serial-expand', function() {
+			var data = $(this).data('serial');
+			
+			$('.' + data).toggle();
+		});
+		
 		//If the lot inventory is checked then update the look and feel of the form
 		$(document).on('change', '.lot_inventory', function() {
 			var qty;

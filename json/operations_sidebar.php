@@ -339,11 +339,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//Closing Tag (Leave Outside of any if statment)
 	    $right .= "</div>
-		    <div class='arrow click_me'>   
-		    	<i class='icon-button fa fa-chevron-left' aria-hidden='true'></i>
-        	</div>
-
-        	<i class='fa fa-chevron-up shoot_me icon-button-mobile' aria-hidden='true' style='color: #000; position: absolute; bottom: -15px; left: 49%; z-index: 1;'></i>
+		   
 		</div>";
 		
 			echo json_encode($right);
