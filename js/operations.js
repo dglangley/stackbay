@@ -880,10 +880,9 @@
 							$("#address-modal-body").attr("data-oldid",add_id);
 							$("#add_name").val('').val(address.name);
 							$('#add_line_1').val('').val(address.street);
-							$('#add_line2').val('').val(address.city);
-							$('#add_city').val('').val(address.state);
-							$('#add_state').val('').val(address.postal_code);
-							$('#add_zip').val('').val(address.country);
+							$('#add_city').val('').val(address.city);
+							$('#add_state').val('').val(address.state);
+							$('#add_zip').val('').val(address.postal_code);
 							
 							$("#modal-address").modal('show');
 							
