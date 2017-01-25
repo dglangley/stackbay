@@ -1639,7 +1639,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						//window.location = "/shipping_home.php?po=true";
+						window.location = "/shipping_home.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
