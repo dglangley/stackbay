@@ -97,6 +97,23 @@
 		return $inventory;
 	}
 	
+	function getHistory($partid) {
+		global $order_number;
+		$listSerials;
+		
+		$query = "SELECT * FROM inventory WHERE last_sale = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$result = qdb($query);
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listSerials[] = $row;
+			}
+		}
+		
+		return $listSerials;
+	}
+	
 
 ?>
 	
@@ -127,6 +144,10 @@
 			
 			.table .order-complete td {
 				background-color: #efefef !important;
+			}
+			
+			.infiniteSerials .input-group, .infiniteBox select {
+				margin-bottom: 10px;
 			}
 		</style>
 
@@ -277,9 +298,9 @@
 						            </div>
 									<?php endforeach; ?>
 								</td>
-								<td>
+								<td class="infiniteBox">
 									<?=box_drop($order_number, '', true)?>
-									<?foreach ($serials as $serial):?>
+									<?php foreach ($serials as $serial):?>
 										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
 									<?php endforeach; ?>
 								</td>
@@ -299,8 +320,11 @@
 									<div class="checkbox">
 										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
 									</div>
+									
+									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 								</td>
 							</tr>
+							
 						<?php endforeach; ?>
 					</table>
 				</div>

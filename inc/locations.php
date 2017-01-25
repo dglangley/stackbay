@@ -79,7 +79,7 @@
             $results = getplaces();
             $output = "<div>";
                 
-                $output .= "<select class='form-control input-xs $type'>";
+                $output .= "<select class='form-control input-sm $type'>";
     	        if(!$selcted and !$default){
                     $output .= "<option selected value = 'null'>Column</option>";
     	        }
@@ -106,7 +106,7 @@
             
             $output = "<div>";
                 
-            $output .= "<select class='form-control input-xs $type'>";
+            $output .= "<select class='form-control input-sm $type'>";
             if(!$selcted and !$default){
                     $output .= "<option selected value = 'null'>Shelf</option>";
     	        }

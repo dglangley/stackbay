@@ -54,8 +54,8 @@ function head_out(){
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
     $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
-    $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Qty</th>";
+    $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
     $head .= "<th></th>";
     $head .= "</thead>";
@@ -92,7 +92,7 @@ function search_row(){
         // };
         
         //Default is ground aka 4 days
-        $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
+        //$date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
         //$date = date("m/d/Y");
         
         $line .= "

@@ -50,7 +50,7 @@
             
             
 
-		if($id){
+		if($id != 'false' && $id){
 			$update = "UPDATE `addresses` SET
 						`name` = $name,
 						`street` = $street,
@@ -69,10 +69,9 @@
 	        VALUES ($name,$street,$city,$state,$zip,'US')";
 	        
 
-	        
 	        qdb($insert);
             
-            echo json_encode($address);
+            echo json_encode(qid());
             exit;
 		}
 ?>

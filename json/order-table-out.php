@@ -60,8 +60,8 @@
             <td class = 'line_date' data-date = '$date'>".$date."</td>
             <td class = 'line_cond'  data-cond = ".$row['condition'].">".ucwords($row['condition'])."</td>
             <td class = 'line_war'  data-war = ".$row['warranty'].">".getWarranty($row['warranty'],'name')."</td>
-            <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
+            <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
@@ -88,8 +88,8 @@
 				    </td>
 		            <td>".dropdown('condition',$row['condition'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
 		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
+		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
 		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<div class='btn-group'>

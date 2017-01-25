@@ -95,6 +95,23 @@
 		return $part[0];
 	}
 	
+	function getHistory($partid) {
+		global $order_number;
+		$listSerials;
+		
+		$query = "SELECT * FROM inventory WHERE last_purchase = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$result = qdb($query);
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listSerials[] = $row;
+			}
+		}
+		
+		return $listSerials;
+	}
+	
 	$partsListing = getPOParts();
 ?>
 
@@ -138,7 +155,7 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php echo ($order_number != '' ? 'OUTSTANDING ITEMS FOR PO #' . $order_number : 'INVENTORY ADDITION'); ?></h2>
+				<h2><?php echo ($order_number != '' ? 'Outstanding Items for PO #' . $order_number : 'Inventory Addition'); ?></h2>
 			</div>
 			<div class="col-sm-4">
 				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
@@ -168,7 +185,7 @@
 					            	PART	
 					            </th>
 					            <th class="col-sm-3">
-									Location (*Auto Conditional Populating)	
+									Location
 								</th>
 			                    <th class="col-sm-1">
 									Condition
@@ -192,7 +209,7 @@
 								foreach($partsListing as $part): 
 									$item = getPartName($part['partid']);
 						?>
-								<tr class="<?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'order-complete' : ''); ?>">
+								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
 										<?php 
 											echo $item['part'] . '&nbsp;&nbsp;';
@@ -220,19 +237,50 @@
 									</td>
 									<td class="infiniteSerials">
 										<div class="input-group" style="margin-bottom: 6px;">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
 							            </div>
 									</td>
 									<td class="remaining_qty">
-										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo $part['qty'] - $part['qty_received']; ?>" readonly>
+										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
 									</td>
 									<td>
-										<div class="checkbox">
-											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
-										</div>
+										<!--<div class="input-group" style="margin-bottom: 6px;">-->
+											<div class="checkbox">
+												<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
+											</div>
+											<!--<span class="input-group-addon">-->
+												<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>
+											<!--</span>-->
+										<!--</div>-->
+									</td>
+								</tr>
+								<tr class='serial-<?=$part['id'] ?>' style='display:none;'>
+									<td colspan='12'>
+										<table class='table serial table-hover table-condensed'>
+											<thead>
+												<tr>
+													<th>Serial Number</th>
+													<th>qty</th>
+													<th>Status</th>
+													<th><span class='edit'>Location</span></th>
+													<th><span class='edit'>Condition</span></th>
+												</tr>
+											</thead>
+											<tbody>
+											<?php foreach(getHistory($part['partid']) as $serial): ?>
+												<tr>
+													<td><?= $serial['serial_no']; ?></td>
+													<td><?= $serial['qty']; ?></td>
+													<td><?= $serial['status']; ?></td>
+													<td><?= display_location($serial['locationid']); ?></td>
+													<td><?= $serial['item_condition']; ?></td>
+												</tr>
+											<?php endforeach; ?>
+											</tbody>
+										</table>
 									</td>
 								</tr>
 							<?php endforeach; ?>

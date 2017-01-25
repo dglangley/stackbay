@@ -236,6 +236,14 @@
 					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
 				});
 			});
+			
+			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
+			$(document).on('change', '#companyid', function() {
+				var id = $(this).val();
+				
+				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
+			});
+			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
@@ -364,15 +372,27 @@
 				}
 				return result;
 			}
+			
 			function freight_date(days){
 				var today = new Date();
-				today.setDate(today.getDate() + days);
+				var dayOfTheWeek = today.getDay();
+				var calendarDays = days;
+				var deliveryDay = dayOfTheWeek + days;
+				if (deliveryDay >= 6) {
+					//deduct this-week days
+					days -= 6 - dayOfTheWeek;
+					//count this coming weekend
+					calendarDays += 2;
+					//how many whole weeks?
+					var deliveryWeeks = Math.floor(days / 5);
+					//two days per weekend per week
+					calendarDays += deliveryWeeks * 2;
+				}
 				
-				var formatted = ('0' + (today.getMonth()+1)).slice(-2) + '/' 
-            		+ ('0' + today.getDate()).slice(-2) + '/'
-            		+ today.getFullYear();
+				today.setTime(today.getTime() + calendarDays * 24 * 60 * 60 * 1000);
 				
-				return formatted;
+				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
+				return today;
 			}
 			
 			$(document).on("change","#carrier",function() {
@@ -390,9 +410,21 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
+						var initial_result = $("#service").val();
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
+						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
+						if (new_div_val){
+							$("#service").val(new_div_val);
+						}
+						console.log("== CARRIER CHANGE VALUES ==");
+						console.log("Initial ID: "+initial_result);
+						console.log("Initial Days: "+initial_days);
+						console.log("New ID: "+new_div_val);
 						var days = parseInt($("#service :selected").attr("data-days"));
-						$("input[name=ni_date]").val(freight_date(days));
+						if(!isNaN(days)){
+							$("input[name=ni_date]").val(freight_date(days));
+						}
 						console.log("JSON Services limited dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -403,8 +435,9 @@
 			});
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
-				$("input[name=ni_date]").val(freight_date(days));
-				
+				if (!isNaN(days)){
+					$("input[name=ni_date]").val(freight_date(days));
+				}
             	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
 				// $.ajax({
  
@@ -747,41 +780,139 @@
 					}
 				}
 			});
-			$(document).on("click", "#address-continue", function() {
-			    var address = [];
-			    var text = '';
-			    var field = '';
-			    field = $("#address-modal-body").attr("data-origin");
-			    
-			    $("#address-modal-body").find('input').each(function(){
-			    	if($(this).val()){
-			    		address.push($(this).val());
-			    		text = text+($(this).val())+"<br>";
-			    		$(this).val('');
-			    	}
-			    	else{
-			    		address.push('');
-			    	}
-			    });
-			    $.post("/json/addressSubmit.php", {'test[]' : address},function(data){
-			    	if (field == "ship_to"){
-			    		$("#select2-ship_to-container").html(text);
-			    		$("#ship_to").append("<option selected value='"+data+"'>"+text+"</option>");
-			    		updateShipTo();
-			    		//$("#ship_display").html();	
-			    	}
-			    	else{
-			    		$("#select2-bill_to-container").html(text);
-			    		$("#bill_to").append("<option selected value='"+data+"'>"+text+"</option>");
-						//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
-						$("#mismo").prop("checked",false);
-			    	}
-			    });
+
+			$(document).on("click", "#address-continue", function(e) {
+			
+				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
+				//('object initiating the validation', the event, 'type of item being validated aka modal')
+				var isValid = nonFormCase($(this), e, 'modal');
+				
+				if(isValid) {
+
+				    var field = '';
+				    field = $("#address-modal-body").attr("data-origin");
+				    
+				    var name = $("#add_name").val();
+					var line_1 = $('#add_line_1').val();
+					var line2 = $('#add_line2').val();
+					var city = $('#add_city').val();
+					var state = $('#add_state').val();
+					var zip = $('#add_zip').val();
+					var id = $("#address-modal-body").attr("data-oldid");
+					// alert(ad['id']);
+					var text = name;
+					
+					$("#address-modal-body").attr("data-oldid",'');
+					
+					console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
+				    $.post("/json/addressSubmit.php", {
+				    	"name" : name,
+						"line_1" : line_1,
+						"line2" : line2,
+						"city" : city,
+						"state" : state,
+						"zip" : zip,
+						"id" : id
+				    },function(data){
+				    	
+				    	console.log("Return from Address Submission: "+data);
+				    	
+				    	if (!id){
+				    		//If it didn't have an update, it is a new field
+					    	if (field == "ship_to"){
+					    		$("#select2-ship_to-container").html(name);
+					    		$("#ship_to").append("<option selected value='"+data+"'>"+name+"</option>");
+					    		updateShipTo();
+					    		//$("#ship_display").html();	
+					    	}
+					    	else{
+					    		// $("#select2-bill_to-container").html(text);
+					    		$("#bill_to").append("<option selected value='"+data+"'>"+name+"</option>");
+								//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
+								$("#mismo").prop("checked",false);
+					    	}
+				    	}
+				    	else{
+				    		//Otherwise, this is an old field
+				    		if (field == "ship_to"){
+				    			$("#select2-ship_to-container").text(name);
+				    			if ($("#mismo").prop("checked")){
+				    				$("#select2-bill_to-container").text(name);
+				    			}
+				    		}
+				    		else{
+				    			$("#select2-bill_to-container").text(name);
+			    				if ($("#mismo").prop("checked")){
+				    				$("#select2-ship_to-container").text(name);
+				    			}
+				    		}
+
+				    	}
+				    	
+				    	
+				    	$('.modal').modal('hide');
+				    });
+				}
+		});
+			
+			$(document).on("click", "#address-cancel", function(e) {
+	
+				    var field = $("#address-modal-body").attr("data-origin");
+			   	
+			   	
+				   	//verify that the field is adding if you cancel the value
+				   	if($("#"+field).val().indexOf("Add") > -1){
+				    	if (field == "ship_to"){
+					    		$("#select2-ship_to-container").html('');
+					    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
+					    	}
+					    	else{
+					    		$("#select2-bill_to-container").html('');
+					    		$("#bill_to").append("<option selected value='"+null+"'>"+''+"</option>");
+					    	}
+					    	
+					    	$('.modal').modal('hide');
+				    	}
 			});
+			
+			$(document).on("click",".address_edit",function() {
+				var drop = $(this).closest("div").find('select');
+				var origin = drop.attr('id');
+				var add_id = drop.last('option').val();
+				console.log(add_id);
+					$.ajax({
+						type: "POST",
+						url: '/json/address-pull.php',
+						data: {
+							'address' : add_id,
+						},
+						dataType: 'json',
+						success: function(address) {
+							console.log(address);
+							$("#address-modal-body").attr("data-oldid",add_id);
+							$("#add_name").val('').val(address.name);
+							$('#add_line_1').val('').val(address.street);
+							$('#add_city').val('').val(address.city);
+							$('#add_state').val('').val(address.state);
+							$('#add_zip').val('').val(address.postal_code);
+							
+							$("#modal-address").modal('show');
+							
+							
+							console.log("Address Grab - address-grab.php: Success");
+						},
+						error: function(xhr, status, error) {
+						   	alert(error);
+						   	console.log("Address grab: Error");
+						},
+					});
+				});
+			
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
-			
+				
+
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
 				if($(this).val().indexOf("Add") > -1){
@@ -905,7 +1036,8 @@
 					var contact = $("#contactid").val();
 					if (contact == "new"){
 						contact = $("#select2-contactid-container").text();
-						contact = contact.slice(9);
+						//Get rid of the 'Add' portion of the text
+						contact = contact.slice(4);
 					}
 					var assoc = $("#assoc_order").val();
 					
@@ -956,13 +1088,13 @@
 							// alert("price "+row["price"]);
 							// alert("qty "+row["qty"]);
 							
-							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty
+							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty;
 
 						submit.push(row);
 					});
 	
 					//Submit all rows and meta data for unpacking later
-					alert(account);
+					// alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -999,8 +1131,10 @@
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {
-						   	alert(error);
-						   	console.log("Order-form-submission: Error");
+						   	console.log("Order-form-submission Error:");
+						   	console.log(error);
+						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
+							
 						},
 					});
 				} else {
@@ -1243,7 +1377,6 @@
 		
 		//This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
-			
 			if(e.which == 13) {
 				//Grab each of the parameters from the top line
 				var $serial = $(this);
@@ -1271,7 +1404,7 @@
 				//alert(getPageName());
 			
 				//Only if there is some quantity and there is some serial on the inventory addition page
-		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
+		    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
 		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
@@ -1296,7 +1429,13 @@
 								//Update the value of the qty left avoiding if it hits below 0
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
-								}
+								} else if(qty <= 0) {
+									if(localStorage.getItem(result['partid']) != 'shown'){
+								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+								    	localStorage.setItem(result['partid'],'shown')	
+									}
+							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
 								
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
@@ -1315,7 +1454,7 @@
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
 								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	alert('Part: ' + part + ' has been received.');
 							    }
 							    
@@ -1402,11 +1541,14 @@
 					});
 			    } else if(serial == '') {
 			    	alert('Serial Missing');
-			    } else if(qty <= 0) {
-			    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order in Order to Continue');
-			    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
-			    }
+			    } 
 			}
+		});
+		
+		$(document).on('click', '.serial-expand', function() {
+			var data = $(this).data('serial');
+			
+			$('.' + data).toggle();
 		});
 		
 		//If the lot inventory is checked then update the look and feel of the form
@@ -1517,7 +1659,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						//window.location = "/shipping_home.php?po=true";
+						window.location = "/shipping_home.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
