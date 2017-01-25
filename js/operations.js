@@ -1393,7 +1393,7 @@
 				//alert(getPageName());
 			
 				//Only if there is some quantity and there is some serial on the inventory addition page
-		    	if(((qty > 0 && serial != '') || savedSerial != '') && page != 'shipping') {
+		    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
 		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
 		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
@@ -1418,7 +1418,10 @@
 								//Update the value of the qty left avoiding if it hits below 0
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
-								}
+								} else if(qty <= 0) {
+							    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
 								
 								//Set matching condition field to the serial saved
 								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
@@ -1437,7 +1440,7 @@
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
 								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	alert('Part: ' + part + ' has been received.');
 							    }
 							    
@@ -1524,10 +1527,7 @@
 					});
 			    } else if(serial == '') {
 			    	alert('Serial Missing');
-			    } else if(qty <= 0) {
-			    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order in Order to Continue');
-			    	$serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
-			    }
+			    } 
 			}
 		});
 		
