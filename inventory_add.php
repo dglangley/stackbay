@@ -168,7 +168,7 @@
 					            	PART	
 					            </th>
 					            <th class="col-sm-3">
-									Location (*Auto Conditional Populating)	
+									Location
 								</th>
 			                    <th class="col-sm-1">
 									Condition
@@ -192,7 +192,7 @@
 								foreach($partsListing as $part): 
 									$item = getPartName($part['partid']);
 						?>
-								<tr class="<?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'order-complete' : ''); ?>">
+								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
 										<?php 
 											echo $item['part'] . '&nbsp;&nbsp;';
@@ -220,14 +220,14 @@
 									</td>
 									<td class="infiniteSerials">
 										<div class="input-group" style="margin-bottom: 6px;">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
 							            </div>
 									</td>
 									<td class="remaining_qty">
-										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo $part['qty'] - $part['qty_received']; ?>" readonly>
+										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
 									</td>
 									<td>
 										<div class="checkbox">
