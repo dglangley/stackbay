@@ -145,8 +145,8 @@
 	    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
 	    					?>
     					</th>
+    					<th class='col-md-1'>Qty</th>
 	    				<th class='col-md-1'>Price</th>
-	    				<th class='col-md-1'>Qty</th>
 	    				<th class='col-md-1'>Ext. Price</th>
 	    				<th style='min-width:30px;'></th>
 						<th style='min-width:30px;'></th>

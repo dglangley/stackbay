@@ -54,8 +54,8 @@ function head_out(){
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
     $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
-    $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Qty</th>";
+    $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
     $head .= "<th></th>";
     $head .= "</thead>";

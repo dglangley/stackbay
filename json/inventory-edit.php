@@ -56,7 +56,11 @@
 	function getLocationID($place, $instance) {
 		$location;
 		
-		$query = "SELECT id FROM locations WHERE place ='".res($place)."' AND instance ='".res($instance)."';";
+		if($instance != '') {
+			$query = "SELECT id FROM locations WHERE place ='".res($place)."' AND instance ='".res($instance)."';";
+		} else {
+			$query = "SELECT id FROM locations WHERE place ='".res($place)."' AND instance is NULL";
+		}
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
