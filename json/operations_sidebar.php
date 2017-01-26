@@ -85,7 +85,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$public = $row['public_notes'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
-				$associated_order = $row['assoc_order'];
+				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
 			}
 		}
@@ -296,6 +296,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
+				$orderNumber = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
 				$b_add = $row['bill_to_id'];
@@ -323,20 +324,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($results){
 			//Contact Output
 			$right .= "<div>";
-				$right .= '<button type="button" class="btn-flat btn-sm box_edit pull-right" title="Edit Selected Box">
-								<i class="fa fa-file fa-4" aria-hidden="true"></i>
-							</button>';
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
 				
 				//Order Number
-	
+				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				
 				//Addresses
 				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= address_out($b_add);
+				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
-				$right .= address_out($s_add);
+				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>CARRIER INFORMATION:</b><br>";
 				if($selected_carrier){

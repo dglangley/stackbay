@@ -154,7 +154,7 @@
 				echo'	<tr class="show_more" style="display:none;">';
 			}
 				echo'        <td>'.$date.'</td>';
-				echo'        <td><a href="#">'.$company.'</a></td>';
+				echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 				//Either go to inventory add or PO or shipping for SO
 				if($order == 'p')
 					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
