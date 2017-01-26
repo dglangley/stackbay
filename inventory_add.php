@@ -303,14 +303,14 @@
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
 		<script type="text/javascript">
-			function updateBillTo(){
-				if ( $("#mismo").prop( "checked" )){
-					var display = $("#select2-ship_to-container").html()
-					var value = $("#ship_to").val();
-		    		$("#select2-bill_to-container").html(display)
-		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
-				}
-			}
+			// function updateBillTo(){
+			// 	if ( $("#mismo").prop( "checked" )){
+			// 		var display = $("#select2-ship_to-container").html()
+			// 		var value = $("#ship_to").val();
+		 //   		$("#select2-bill_to-container").html(display)
+		 //   		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
+			// 	}
+			// }
 		</script>
 
 	</body>

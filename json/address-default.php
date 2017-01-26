@@ -17,17 +17,17 @@
 	    
 	    
 	    
-	    $d_bill = "Select count(`bill_to_id`) mode, max(`created`) recent, `bill_to_id`, a.`name`, a.`street`, a.`city`, a.`state`,a.`postal_code`
+	    $d_bill = "Select count(`remit_to_id`) mode, max(`created`) recent, `remit_to_id`, a.`name`, a.`street`, a.`city`, a.`state`,a.`postal_code`
     	    FROM purchase_orders po, addresses a
-    	    WHERE po.`bill_to_id` = a.`id` AND `companyid` = $companyid
+    	    WHERE po.`remit_to_id` = a.`id` AND `companyid` = $companyid
     	    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
-    	    GROUP BY `bill_to_id` 
+    	    GROUP BY `remit_to_id` 
     	    ORDER BY mode,recent 
     	    LIMIT 15;";
 	    $bill = qdb($d_bill);
 		if ($bill){
 			$row = mysqli_fetch_array($bill);
-            $line['b_value'] = $row['bill_to_id'];
+            $line['b_value'] = $row['remit_to_id'];
             $line['b_display'] = $row['name'].' <br> '.$row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'];
 		}
 	

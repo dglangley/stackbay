@@ -96,7 +96,7 @@
         
         if($order_type=="Purchase"){
             $insert = "INSERT INTO `purchase_orders` (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
-            `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+            `remit_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
             ($created_by, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
         else{
@@ -121,12 +121,13 @@
         $macro .= updateNull('contactid',$contact);
         if ($order_type == "Purchase"){
             $macro .= updateNull('assoc_order',$assoc_order);
+            $macro .= updateNull('remit_to_id',$bill);
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
             $macro .= updateNull('ref_ln','Null');
+            $macro .= updateNull('bill_to_id',$bill);
         }
-        $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('freight_services_id',$service);
