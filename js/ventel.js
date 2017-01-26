@@ -808,6 +808,11 @@
 		$(document).on("click",".btn-search",function() {
 			document.location.href = '/?listid='+$("#upload-listid").val();
 		});
+
+		$(document).on("click",".imageTools span.a",function() {
+			var search = $("#imageDropzone").data('id');
+			alert($(this).data('tool')+':'+$(this).data('image')+':'+search);
+		});
 	
 		$(".results-form *[type='submit']").on("click",function(e) {
 			var cid = $("#companyid").val();
@@ -1171,7 +1176,8 @@
 			data: {'search': search},
 			dataType: 'json',
 			success: function(json, status) {
-				var slider;
+				var slider,del,prime,ln;
+				var primary_image = 0;
 				var pager = $("#imagePager");
 				var modal = $("#image-modal");
 				modal.find(".bxslider").each(function() {
@@ -1185,14 +1191,23 @@
 						$(this).remove();
 					});
 
+					if (json.primary && json.primary!='') { primary_image = json.primary; }
+
 					// add each new image pulled for this part / search string
 					$.each(json.images, function(i, imgSrc) {
 						// add image list item to slider
 						slider.append('<li><img src="'+imgSrc+'"></li>');
 						// add image to corresponding pager
-						pager.append('<a data-slide-index="'+i+'" href="javascript:void(0);"><img src="'+imgSrc+'" /></a>');
+						del = '<span class="a" data-tool="delete" data-image="'+i+'"><i class="fa fa-close fa-2x text-danger"></i></span>';
+						if (i==primary_image) {
+							prime = '<i class="fa fa-check-circle fa-2x text-primary"></i>';
+						} else {
+							prime = '<span class="a" data-tool="selector" data-image="'+i+'"><i class="fa fa-circle-thin fa-2x text-primary"></i></span>';
+						}
+						ln = '<p>'+prime+' '+del+'</p>';
+						pager.append('<div class="imageTools"><a data-slide-index="'+i+'" href="javascript:void(0);"><img src="'+imgSrc+'" /></a><br/>'+ln+'</div>');
 					});
-					imageSlider.reloadSlider();
+					imageSlider.reloadSlider({startSlide:primary_image});
 				});
 			},
 			error: function(xhr, desc, err) {
@@ -1584,5 +1599,7 @@
 		imageDropzone.on("sending", function(file, xhr, formData) {
 			var id = $("#imageDropzone").data('id');
 			formData.append("search", id);
+			var watermark = $("#watermark").prop('checked');
+			formData.append("watermark", watermark);
 		});
 	}

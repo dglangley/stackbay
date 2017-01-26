@@ -415,15 +415,27 @@
 				}
 				return result;
 			}
+			
 			function freight_date(days){
 				var today = new Date();
-				today.setDate(today.getDate() + days);
+				var dayOfTheWeek = today.getDay();
+				var calendarDays = days;
+				var deliveryDay = dayOfTheWeek + days;
+				if (deliveryDay >= 6) {
+					//deduct this-week days
+					days -= 6 - dayOfTheWeek;
+					//count this coming weekend
+					calendarDays += 2;
+					//how many whole weeks?
+					var deliveryWeeks = Math.floor(days / 5);
+					//two days per weekend per week
+					calendarDays += deliveryWeeks * 2;
+				}
 				
-				var formatted = ('0' + (today.getMonth()+1)).slice(-2) + '/' 
-            		+ ('0' + today.getDate()).slice(-2) + '/'
-            		+ today.getFullYear();
+				today.setTime(today.getTime() + calendarDays * 24 * 60 * 60 * 1000);
 				
-				return formatted;
+				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
+				return today;
 			}
 			
 			$(document).on("change","#carrier",function() {
@@ -1437,7 +1449,6 @@
 		
 		//This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
-			
 			if(e.which == 13) {
 				//Grab each of the parameters from the top line
 				var $serial = $(this);
@@ -1498,7 +1509,10 @@
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								} else if(qty <= 0) {
-							    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+									if(localStorage.getItem(result['partid']) != 'shown'){
+								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+								    	localStorage.setItem(result['partid'],'shown')	
+									}
 							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
 							    }
 								
@@ -1608,6 +1622,12 @@
 			    	alert('Serial Missing');
 			    } 
 			}
+		});
+		
+		$(document).on('click', '.serial-expand', function() {
+			var data = $(this).data('serial');
+			
+			$('.' + data).toggle();
 		});
 		
 		//If the lot inventory is checked then update the look and feel of the form

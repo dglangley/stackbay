@@ -92,7 +92,7 @@ function search_row(){
         // };
         
         //Default is ground aka 4 days
-        $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
+        //$date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
         //$date = date("m/d/Y");
         
         $line .= "

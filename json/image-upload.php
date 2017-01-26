@@ -1,10 +1,13 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/stampImage.php';
 	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
 	$search = '';
 	if (isset($_REQUEST['search'])) { $search = trim($_REQUEST['search']); }
+	$watermark = 0;
+	if (isset($_REQUEST['watermark']) AND $_REQUEST['watermark']) { $watermark = 1; }
 
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
@@ -57,6 +60,13 @@
 //				if (! $DEV_ENV) {
 				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
 	                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
+
+					// create stamped image, and upload as well
+					if ($watermark) {
+						$stamped_image = stampImage($tmp_file);
+						$new_filename = preg_replace('/([.](jpg|jpeg))/i','-vttn$1',$filename);
+						$upload = $s3->upload($bucket, $new_filename, fopen($stamped_image, 'rb'), 'public-read');
+					}
 				}
 
 				// get every partid associated with the search string and match in db with each partid

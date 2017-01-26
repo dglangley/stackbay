@@ -19,7 +19,7 @@
 			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
 
 			header('Content-Type:image/jpeg');
-			echo readfile($dir.str_replace('/devimgs/','',$uri));
+			echo readfile($dir.str_replace('-vttn','',str_replace('/devimgs/','',$uri)));
 			exit;
 		} else {
 			$dir = sys_get_temp_dir();

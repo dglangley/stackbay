@@ -1003,7 +1003,7 @@ hr.no-margin {
 	width:100%;
 }
 #imagePager {
-	height:66px;
+	height:86px;
 }
 #imagePager a {
 	border:1px solid gray;
@@ -1012,6 +1012,20 @@ hr.no-margin {
 }
 #imagePager a img {
 	height:60px;
+}
+.imageTools {
+	display:inline-block;
+}
+.imageTools p {
+	height:20px;
+	padding:0 !important;
+	text-align:center;
+	margin:0 !important;
+}
+.imageTools p a,
+.imageTools p span.a {
+	border:0 !important;
+	cursor:pointer;
 }
 
 

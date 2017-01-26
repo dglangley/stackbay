@@ -34,6 +34,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$result = array();
 		$locationid;
 		$query;
+		$result['partid'] = $partid;
 		
 		//Get the location ID based on the preset ones in the table
 		if($instance != '') {
