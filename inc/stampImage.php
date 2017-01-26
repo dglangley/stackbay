@@ -1,12 +1,12 @@
 <?php
-	$opacity = .4;
+	$opacity = .5;
 	$transparency = 1 - $opacity;
 	// Load the stamp and the photo to apply the watermark to
-	$STAMP = imagecreatefrompng('img/logo.png');
+	$STAMP = imagecreatefrompng($_SERVER["ROOT_DIR"].'/img/logo.png');
 	imagealphablending($STAMP, false); // imagesavealpha can only be used by doing this for some reason
 	imagesavealpha($STAMP, true); // this one helps you keep the alpha. 
 	imagefilter($STAMP, IMG_FILTER_COLORIZE, 0,0,0,127*$transparency); // the fourth parameter is alpha
-	$STAMP_LG = imagecreatefrompng('img/ventel-watermark-logo.png');
+	$STAMP_LG = imagecreatefrompng($_SERVER["ROOT_DIR"].'/img/ventel-watermark-logo.png');
 	imagealphablending($STAMP_LG, false); // imagesavealpha can only be used by doing this for some reason
 	imagesavealpha($STAMP_LG, true); // this one helps you keep the alpha. 
 	imagefilter($STAMP_LG, IMG_FILTER_COLORIZE, 0,0,0,127*$transparency); // the fourth parameter is alpha
@@ -70,7 +70,7 @@
 */
 		//remove leading dir paths
 		$filename_parts = explode('/',$image_filename);
-		$new_filename = preg_replace('/([.](png|jpg|jpeg))/i','-vttn$1',$filename_parts[(count($filename_parts)-1)]);
+		$new_filename = preg_replace('/([.](png|jpg|jpeg))?$/i','-vttn$1',$filename_parts[(count($filename_parts)-1)]);
 		$stamped_filename = $IMAGE_TMP.$new_filename;
 		//$stamped_filename = '/devimgs/'.$new_filename;
 		imagejpeg($dst_im,$stamped_filename);

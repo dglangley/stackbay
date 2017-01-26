@@ -4,6 +4,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<p class="pull-right">
+			<input type="checkbox" name="watermark" id="watermark" value="1" checked><label for="watermark"> Watermark uploaded image(s)</label> &nbsp; &nbsp;
+		</p>
         <h4 class="modal-title" id="prod-image-title"></h4>
       </div>
       <div class="modal-body">
