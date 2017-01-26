@@ -29,6 +29,9 @@
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
+	$order_short = ($order_type == 'Purchase')? 'po' : 'so';
+	$db_table = strtolower($order_type)."_orders";
+	$db_order = ($order_type == 'Purchase')? 'po_number' : 'so_number';
 	
 
 	function getStock($condition = 'new', $partid) {
@@ -53,7 +56,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
-		<title><?=($order_number != 'New' ? '' : 'New')?> <?=($order_type == 'Sales' ? 'SO' : 'PO')?><?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title><?=($order_number != 'New' ? '' : 'New')?> <?=strtoupper($order_short)?><?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 
 	</head>
 	<!---->
@@ -116,10 +119,41 @@
 				<div class="forms_section">
 					<div style="float:right;padding-top:15px;">
 						<div class="ui-select" style="width:125px; 'margin-bottom:0;">
-		                    <select id="sales-rep">
-		                        <option selected data-rep-id='<?php echo $U['contactid']; ?>'><?php echo $U['name']; ?></option>
-		                        <option data-rep-id='2'><?=getRep(2)?></option>
-								<option data-rep-id='3'><?=getRep(3)?></option>
+		                    <select id="sales-rep" data-creator = <?=$U['contactid']?>>
+
+		                        <?php
+		                        	//REP OUTPUT
+									$get_reps = "SELECT users.id userid, contacts.name name, contacts.id contactid FROM users, contacts ";
+									$get_reps .= "WHERE users.contactid = contacts.id; ";
+									if ($order_number != 'New'){
+		                        		$old_rep = "Select `sales_rep_id` from $db_table WHERE `$db_order` = $order_number";
+		                        		$set_rep = qdb($old_rep);
+		                        		$set_rep = mysqli_fetch_assoc($set_rep);
+		                        		$set_rep = $set_rep['sales_rep_id'];
+		                        		// echo("<option>$old_rep</option>");
+		                        	}
+		                        	$all_reps = qdb($get_reps);
+		                        	foreach ($all_reps as $rep) {
+		                        		//If it is a new order, set the default to the current user
+		                        		if($order_number == 'New'){
+		                        			if($rep['contactid'] == $U['contactid']){
+		                        				echo("<option selected data-rep-id='".$rep['contactid']."'>".$rep['name']."</option>");
+		                        			}
+		                        			else{
+		                        				echo("<option data-rep-id='".$rep['contactid']."'>".$rep['name']."</option>");
+		                        			}
+		                        		}
+		                        		else{
+			                        		if($rep['contactid'] == $set_rep){
+			                        			echo("<option selected data-rep-id='".$rep['contactid']."'>".$rep['name']."</option>");
+			                        		}
+			                        		else{
+												echo("<option data-rep-id='".$rep['contactid']."'>".$rep['name']."</option>");
+			                        		}
+		                        		}
+		                        	}
+		                       
+		                        ?>
 		                    </select>
 		                </div>
 					</div>

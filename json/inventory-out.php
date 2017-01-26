@@ -221,64 +221,6 @@
 			
 		}
 	}
-	function search($search = ''){
-		$return = array();
-		
-		if ($search){
-			$in = '(';
-			//Get all the parts from the search
-			$initial = hecidb($search);
-			foreach($initial as $id =>$info){
-				$in .= "'$id', ";
-			}
-			$in = trim($in, ", ");
-			$in .= ")";
-			$query  = "SELECT DISTINCT partid FROM inventory";
-			$query .= " WHERE partid IN $in;";
-			$result = qdb($query);
-			
-			if(mysqli_num_rows($result)>0){
-				//Loop through the results
-				foreach($result as $inv){
-					$parts[$inv['partid']] = $initial[$inv['partid']];
-				}
-			}
-			$parts = array();
-			$search = prep("%".$search."%");
-			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
-			$result = qdb($query);
-			foreach ($result as $part){
-		    	$p = hecidb($part['partid'],'id');
-		    	foreach($p as $id => $info){
-		    		if(!isset($parts[$id])){
-		        		$parts[$id] = $info;
-		    		}
-		    	}
-			}
-			
-			
-		}
-
-		else{
-		    $parts = array();
-			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0;";
-			$result = qdb($query);
-			foreach ($result as $part){
-		    	$p = hecidb($part['partid'],'id');
-		    	foreach($p as $id => $info){
-		        	$parts[$id] = $info;
-		    	}
-			}
-		}
-
-		if(isset($parts)){
-			foreach($parts as $id => $info){
-				$return[$info['part']] = query_first($id);
-			}
-		}
-		return ($return);
-	}
-	
 	function sFilter($field, $value){
 		if ($value){
 			$value = prep($value);
@@ -305,6 +247,63 @@
 		return $string;
 	}
 	
+	function search($search = ''){
+		$return = array();
+		
+		if ($search){
+			$in = '(';
+			//Get all the parts from the search
+			$initial = hecidb($search);
+			foreach($initial as $id =>$info){
+				$in .= "'$id', ";
+			}
+			$in = trim($in, ", ");
+			$in .= ")";
+			$query  = "SELECT DISTINCT partid FROM inventory";
+			$query .= " WHERE partid IN $in;";
+			$result = qdb($query);
+			
+			if(mysqli_num_rows($result)>0){
+				//Loop through the results
+				foreach($result as $inv){
+					$parts[$inv['partid']] = $initial[$inv['partid']];
+				}
+			}
+			$search = prep($search);
+			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
+			$result = qdb($query);
+			foreach ($result as $part){
+		    	$p = hecidb($part['partid'],'id');
+		    	foreach($p as $id => $info){
+		    		if(!isset($parts[$id])){
+		        		$parts[$id] = $info;
+		    		}
+		    	}
+			}
+			
+			
+		}
+		else{
+		    $parts = array();
+			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0;";
+			$result = qdb($query);
+			foreach ($result as $part){
+		    	$p = hecidb($part['partid'],'id');
+		    	foreach($p as $id => $info){
+		        	$parts[$id] = $info;
+		    	}
+			}
+		}
+
+		if(isset($parts)){
+			foreach($parts as $id => $info){
+				$return[$id] = query_first($id);
+			}
+
+		}
+		return ($return);
+	}
+	
 	function query_first($partid, $filters = array()){
 		//Query to grab rows first
 		$r = array();
@@ -312,26 +311,29 @@
 		
 		
 		//Filter Grabber
-		$location = $filters['filter_value'];
-		$condition = $filters['condition'];
-		$purchase_order = $filters['po'];
-		$earliest = $filters['earliest'];
-		$latest = $filters['latest'];
-		
-		
+		if (isset($filters)){
+			$location = $filters['filter_value'];
+			$condition = $filters['condition'];
+			$purchase_order = $filters['po'];
+			$earliest = $filters['earliest'];
+			$latest = $filters['latest'];
+		}
 		$partid = prep($partid);
 		$query = "SELECT `partid`, SUM(`qty`) sumqty, `locationid`, `item_condition`, `last_purchase`, `status`, `last_sale`, `date_created`, `id` invid ";
 		$query .= "FROM inventory ";
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
-		$query .= sFilter('locationid', $location);
-		$query .= sFilter('item_condition',$condition);
-		$query .= sFilter('last_purchase',$purchase_order);
-		$query .= dFilter('date_created',$earliest, $latest);
+		// $query .= sFilter('locationid', $location);
+		// $query .= sFilter('item_condition',$condition);
+		// $query .= sFilter('last_purchase',$purchase_order);
+		// $query .= dFilter('date_created',$earliest, $latest);
 		$query .= "GROUP BY partid, locationid, last_purchase, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
+		// echo $query."   "; return;
 		
 		$rows = qdb($query);
+
 		foreach ($rows as $row){
+			// print_r($row);
 			 $r['partid'] = $row['partid'];
 			 $r['qty' ] = $row['sumqty'];
 			 $r['locationid'] = $row['locationid'];
@@ -358,6 +360,7 @@
 			$q_serial .= "last_purchase = ".prep($row['last_purchase'])." AND  ";
 			$q_serial .= "item_condition = ".prep($row['item_condition'])." AND  ";
 			$q_serial .= "date_created = ".prep($row['date_created'])." ORDER BY date_changed DESC;";
+			// echo $q_serial;
 			$s = array();
 			$serials = qdb($q_serial);
 			foreach($serials as $serial){
@@ -377,11 +380,10 @@
 
 
 $search = grab('search');
-$serial = grab('serial');
 $filters = grab('filters');
 
 $return = (search($search));
-
+// echo '<pre>' . print_r(get_defined_vars(), true) . '</pre>';
 // print_r($return);
 echo json_encode($return);
 ?>

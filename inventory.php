@@ -281,8 +281,7 @@
 	(function($){
 		
 		$('.disabled_input').find('select').prop('disabled', true)
-
-		var inventory_history = function (search, serial) {
+		var inventory_history = function (search) {
 			$.ajax({
 					type: "POST",
 					url: '/json/inventory-out.php',
@@ -291,14 +290,14 @@
 						},
 					dataType: 'json',
 					success: function(part) {
-						
-						//Add feature to auto update the URL without a refresh
+						console.log('Successfully called: /json/inventory-out.php?search='+search);
+						// Add feature to auto update the URL without a refresh
 						if(search == '') {
 							window.history.replaceState(null, null, "/inventory.php");
 						} else {
 							window.history.replaceState(null, null, "/inventory.php?search=" + search);	
 						}
-	
+						
 						$(".revisions").empty();
 						$(".parts").empty();
 						
@@ -435,6 +434,7 @@
 					},
 					error: function(xhr, status, error) {
 						$(".loading_element_listing").hide();
+						console.log('/json/inventory-out.php?search='+search);
 						alert(error);
 					   	alert("No Parts Found with those parameters");
 					},			
@@ -517,9 +517,9 @@
 				var search = $("#part_search").val();
 				if(search == '') {
 					search = phpStuff;
-					$("#part_search").val(phpStuff)
+					$("#part_search").val(phpStuff);
 				}
-				inventory_history(search,"");
+				inventory_history(search);
 			}
 		});
 		
@@ -559,31 +559,18 @@
 		$(document).on("click",".part_filter",function(){
 			var search = $("#part_search").val();
 			if (search){
-				inventory_history(search,"");
+				inventory_history(search);
 			}
 		});
-		$(document).on("click",".serial_filter",function(){
-			var serial = $("#serial_filter").val();
-			alert(serial)
-			if (serial){
-				inventory_history("",serial);
-			}
-		});
-		
+
 		
 		$("#part_search").on("keyup",function(e){
 			if (e.keyCode == 13) {
 				var search = $("#part_search").val();
-				inventory_history(search,"");
+				inventory_history(search);
 			}
 		});
-		$("#serial_filter").on("keyup",function(e){
-			if (e.keyCode == 13) {
-				var serial = $("#serial_filter").val();
-				inventory_history("",serial);
-			}
-		});
-		 
+
 		$(document).on('click', '.revisions', function() {
 			$('.serial_listing').hide();
 			

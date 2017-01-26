@@ -13,7 +13,7 @@
     $carrier = grab('carrier');
     
     $line = array();
-	if($companyid && $carrier){
+	if($companyid){
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    //$companyid = prep($companyid,"'25'");
 	    
@@ -22,16 +22,20 @@
 	    $select .= "WHERE ";
 	    $select .= "companyid = '$companyid' ";
 	    
-	    if ($carrier){
+	    if ($carrier && $carrier != 'NULL'){
 	    	$select .= "AND carrier = '$carrier'";
 	    }
 	    $select .= ";";
-	    
 	    $result = qdb($select);
 		if ($result){
 			$row = mysqli_fetch_array($result);
             $line['value'] = $row['id'];
             $line['display'] = $row['account_no'];
+            $line['carrier'] = $row['carrierid'];
+		}
+		else{
+	        $line['value'] = 'NULL';
+	        $line['display'] = '';
 		}
 	}
 

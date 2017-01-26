@@ -28,16 +28,16 @@
     }
 
     
-    // $output[] = array(
-    // 'id' => 'NULL', 
-    // 'text' => "--------------------------------"
-    // );
     
     //Then append the rest of the contacts ordered by alphabetical
     $secondary = " SELECT DISTINCT * FROM `freight_accounts`
-    WHERE (`companyid` <> $companyid OR `companyid` IS NULL) AND `account_no` LIKE '%$q%' 
+    WHERE `account_no` LIKE '%$q%' 
     ORDER BY `account_no`;";
     $second = qdb($secondary);
+    // $output[] = array(
+    //     'id' => 'NULL', 
+    //     'text' => $secondary
+    // );
 
     if (isset($second)){
         foreach($second as $id => $row){

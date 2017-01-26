@@ -202,8 +202,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//Carrier and service
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
-				    ".dropdown('carrier',$selected_carrier)."
-			    	".dropdown('services',$selected_service,$selected_carrier)."
+				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-5')."
+			    	".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
 			    </div>";
 		
 		//Shipping Account Section
@@ -316,7 +316,17 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= address_out($s_add);
 				$right .= "<br><br>";
 				$right .= "<b>CARRIER INFORMATION:</b><br>";
-				$right .= $selected_carrier;
+				if($selected_carrier){
+					$right .= getFreight('carrier',$selected_carrier,'','name');
+				}
+				else{
+					$right .= "None";
+				}
+				
+				if ($selected_service){
+					$right .= " ".getFreight('services','',$selected_service,'method');
+				}
+
 				$right .= "<br><br>";
 				if($public){
 					$right .= "<b>PUBLIC NOTES:</b><br>";
@@ -325,7 +335,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				if($private){
 					$right .= "<b>PRIVATE NOTES:</b><br>";
-					$right .= $public;
+					$right .= $private;
 					$right .= "<br>";
 				}
 				$right .= "<br>";
