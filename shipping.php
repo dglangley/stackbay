@@ -17,6 +17,7 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
+	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
@@ -114,6 +115,27 @@
 		return $listSerials;
 	}
 	
+	function getWarranty($id) {
+		$warranty;
+		$id = prep($id);
+		$query = "SELECT * FROM warranties WHERE id = $id";
+		$result = qdb($query) OR die(qe());
+	
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$warranty = $result['warranty'];
+		}
+		
+		return $warranty;
+	}
+	
+	function format($partid){
+		$parts = reset(hecidb($partid, 'id'));
+	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
+	    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+
+	    return $name;
+	}
 
 ?>
 	
@@ -148,6 +170,20 @@
 			
 			.infiniteSerials .input-group, .infiniteBox select {
 				margin-bottom: 10px;
+			}
+			
+			table {
+			    counter-reset: rowNumber;
+			}
+			
+			table tr > td:first-child {
+			    counter-increment: rowNumber;
+			}
+			
+			table tr td:first-child::before {
+			    content: counter(rowNumber);
+			    min-width: 1em;
+			    margin-right: 0.5em;
 			}
 		</style>
 
@@ -253,13 +289,13 @@
 						<thead>
 							<tr>
 								<th>Item</th>
-								<th>SERIAL	(*SCAN OR PRESS ENTER ON INPUT FOR MORE)</th>
+								<th>SERIAL</th>
 								<th>Box #</th>
-								<th>Qty to be Shipped</th>
-								<!--<th>Location</th>-->
+								<th>QTY Ordered</th>
+								<th>Outstanding</th>
 								<th>Item Condition</th>
-								<th>Ship by</th>
-								<th>Ship Date</th>
+								<th>Warranty</th>
+								<th>Delivery Date</th>
 								<th>Lot Shipment</th>
 							</tr>
 						</thead>
@@ -272,7 +308,7 @@
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
 								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
-									<strong><?php echo getPartName($item['partid']); ?></strong>
+									<?= format($item['partid']); ?>
 								</td>
 							
 							<!-- Grab the old serial values from the database and display them-->
@@ -304,6 +340,9 @@
 										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
 									<?php endforeach; ?>
 								</td>
+								<td style="padding-top: 15px !important;">
+									<span class="qty_field"><?php echo $item['qty'] ?></span>
+								</td>
 								<td class="remaining_qty">
 									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
 								</td>
@@ -311,10 +350,10 @@
 									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
 								</td>
 								<td style="padding-top: 15px !important;">
-									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
+									<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty']); ?></span>
 								</td>
-								<td class="ship-date" style="padding-top: 15px !important;">
-									<?php echo (!empty($item['ship_date']) ? date_format(date_create($item['ship_date']), "m/d/Y") : ''); ?>
+								<td style="padding-top: 15px !important;">
+									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
 								</td>
 								<td>
 									<div class="checkbox">

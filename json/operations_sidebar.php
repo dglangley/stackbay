@@ -305,9 +305,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($results){
 			//Contact Output
 			$right .= "<div>";
+				$right .= '<button type="button" class="btn-flat btn-sm box_edit pull-right" title="Edit Selected Box">
+								<i class="fa fa-file fa-4" aria-hidden="true"></i>
+							</button>';
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-				$right .= "<h4 style='color: #526273; text-transform: uppercase;'>".($company_name)."</h4>".getContact($contact)."<br><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
 				
+				//Order Number
+	
 				//Addresses
 				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
 				$right .= address_out($b_add);
