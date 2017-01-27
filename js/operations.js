@@ -273,12 +273,12 @@
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
 				var limit = '';
-				if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
-					limit = "25";
-				}
-				else{
+				// if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
+				// 	limit = "25";
+				// }
+				// else{
 					limit = company;
-				}
+				// }
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
 				//Default selector for the addresses
@@ -317,9 +317,11 @@
 						},
 					dataType: 'json',
 					success: function(right) {
+						// alert(limit);
 						var value = right['value'];
 						var display = right['display'];
 						var set_carrier = right['carrier'];
+						// alert(value);
 						$("#account_select").attr("data-carrier",set_carrier);
 			    		$("#select2-account_select-container").html(display);
 			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
@@ -332,12 +334,11 @@
 						console.log("JSON account-default.php: Error");
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					}
-				});
-				
-				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
-				var new_account = $("#account_select").attr("data-carrier");
-				alert(new_account);
-				if (new_account){
+				}).done(function(right) {
+				    // you may safely use results here
+				    // alert("Account: "+$("#account_select").attr("data-carrier"));
+				    var new_account = ($("#account_select").attr("data-carrier"));
+					if (new_account){
 					$.ajax({
 						type: "POST",
 						url: '/json/dropPop.php',
@@ -373,6 +374,10 @@
 							}
 						});
 				}
+				});
+				
+				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
+				// alert(new_account);
 				
 				//Reload the Addresses
 				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
@@ -1105,7 +1110,7 @@
 					}
 					
 					var contact = $("#contactid").val();
-					if (contact == "new"){
+					if (contact.includes("new")){
 						contact = $("#select2-contactid-container").text();
 						//Get rid of the 'Add' portion of the text
 						contact = contact.slice(4);
