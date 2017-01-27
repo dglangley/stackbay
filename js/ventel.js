@@ -809,9 +809,16 @@
 			document.location.href = '/?listid='+$("#upload-listid").val();
 		});
 
-		$(document).on("click",".imageTools span.a",function() {
-			var search = $("#imageDropzone").data('id');
-			alert($(this).data('tool')+':'+$(this).data('image')+':'+search);
+		$(document).on("click",".imageTools .imageDelete",function() {
+			var msg = 'This will delete this picture for ALL matching parts, not just for the currently-selected part. Are you sure?';
+			var user_conf = confirm(msg);
+			if (user_conf===true) {
+				updateSliderImages($("#imageDropzone").data("id"),$(this).data("image"),'delete');
+			}
+		});
+
+		$(document).on("click",".imageTools .imagePrime",function() {
+			updateSliderImages($("#imageDropzone").data("id"),$(this).data("image"),'prime');
 		});
 	
 		$(".results-form *[type='submit']").on("click",function(e) {
@@ -1168,16 +1175,21 @@
 			setTimeout("toggleLoader()",1000);
 		}
 	}
-	function updateSliderImages(search) {
-       	console.log(window.location.origin+"/json/images.php?search="+search);
+	function updateSliderImages(search,img,imgAction) {
+		if (! img) { var img = ''; }
+		if (! imgAction) { var imgAction = ''; }
+
+       	console.log(window.location.origin+"/json/images.php?search="+search+"&img="+escape(img)+"&imgAction="+imgAction);
         $.ajax({
 			url: 'json/images.php',
 			type: 'get',
-			data: {'search': search},
+			data: {'search': search, 'img': escape(img), 'imgAction': imgAction },
 			dataType: 'json',
 			success: function(json, status) {
-				var slider,del,prime,ln;
-				var primary_image = 0;
+				if (json.message!='') { alert(json.message); }
+
+				var slider,del,prime,ln,imgSrc,imgPath;
+				var prime_image = 0;
 				var pager = $("#imagePager");
 				var modal = $("#image-modal");
 				modal.find(".bxslider").each(function() {
@@ -1187,27 +1199,31 @@
 						$(this).remove();
 					});
 					// remove pager images (should correspond to each of the slider images)
-					pager.find("a").each(function() {
+					pager.find(".imageTools").each(function() {
 						$(this).remove();
 					});
 
-					if (json.primary && json.primary!='') { primary_image = json.primary; }
+					// get 'prime' (showcase) pic, if preset
+					if (json.prime && json.prime!='') { prime_image = json.prime; }
 
 					// add each new image pulled for this part / search string
-					$.each(json.images, function(i, imgSrc) {
+					$.each(json.images, function(i, img) {
+						imgSrc = img.path;
+						imgName = img.filename;
+
 						// add image list item to slider
 						slider.append('<li><img src="'+imgSrc+'"></li>');
 						// add image to corresponding pager
-						del = '<span class="a" data-tool="delete" data-image="'+i+'"><i class="fa fa-close fa-2x text-danger"></i></span>';
-						if (i==primary_image) {
+						del = '<span class="a imageDelete" data-image="'+imgName+'"><i class="fa fa-close fa-2x text-danger"></i></span>';
+						if (i==prime_image) {
 							prime = '<i class="fa fa-check-circle fa-2x text-primary"></i>';
 						} else {
-							prime = '<span class="a" data-tool="selector" data-image="'+i+'"><i class="fa fa-circle-thin fa-2x text-primary"></i></span>';
+							prime = '<span class="a imagePrime" data-image="'+imgName+'"><i class="fa fa-circle-thin fa-2x text-primary"></i></span>';
 						}
 						ln = '<p>'+prime+' '+del+'</p>';
 						pager.append('<div class="imageTools"><a data-slide-index="'+i+'" href="javascript:void(0);"><img src="'+imgSrc+'" /></a><br/>'+ln+'</div>');
 					});
-					imageSlider.reloadSlider({startSlide:primary_image});
+					imageSlider.reloadSlider({startSlide:prime_image});
 				});
 			},
 			error: function(xhr, desc, err) {
@@ -1599,7 +1615,8 @@
 		imageDropzone.on("sending", function(file, xhr, formData) {
 			var id = $("#imageDropzone").data('id');
 			formData.append("search", id);
-			var watermark = $("#watermark").prop('checked');
+			var watermark = 0;
+			if ($("#watermark").prop('checked')) { watermark = 1; }
 			formData.append("watermark", watermark);
 		});
 	}

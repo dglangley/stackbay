@@ -18,8 +18,18 @@
 			$dir = sys_get_temp_dir();
 			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
 
+			$img = $dir.str_replace('/devimgs/','',$uri);
+			if (! strstr($img,'vttn')) {
+				$img = preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$img);
+			}
+
+			// now img will have 'vttn' in the filename, but if doesn't exist, remove it
+			if (! file_exists($img)) {
+				$img = str_ireplace('-vttn','',$img);
+			}
+
 			header('Content-Type:image/jpeg');
-			echo readfile($dir.str_replace('-vttn','',str_replace('/devimgs/','',$uri)));
+			echo readfile($img);
 			exit;
 		} else {
 			$dir = sys_get_temp_dir();
@@ -30,24 +40,28 @@
 	}
 	$img = $dir.'spacer.jpg';
 
-	$query = "SELECT image FROM picture_maps, parts_index, keywords ";
+	$query = "SELECT image, prime FROM picture_maps, parts_index, keywords ";
 	$query .= "WHERE keyword = '".$basePart."' AND keywords.id = parts_index.keywordid AND picture_maps.partid = parts_index.partid ";
-	$query .= "GROUP BY image ORDER BY picture_maps.id ASC; ";
+	$query .= "GROUP BY image ORDER BY IF(prime='1',0,1), picture_maps.id ASC; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	$n = mysqli_num_rows($result);
 	$i = 0;//iteration counter
 	while ($r = mysqli_fetch_assoc($result)) {
-		// skip the first two pics, assuming they're label pictures and as long as there are at least 3 pics
-		if ($n>2) {
-			if ($i<=1) { $i++; continue; }
-			else if ($i<>$sequence) { $i++; continue; }
+		if (! $r['prime']) {
+			// skip the first two pics, assuming they're label pictures and as long as there are at least 3 pics
+			if ($n>2) {
+				if ($i<=1) { $i++; continue; }
+				else if ($i<>$sequence) { $i++; continue; }
+				$i++;
+			} else if ($n==2 AND $i==0) {//if 2 pics, skip the first pic (we're assuming it's a label pic)
+				$i++;
+				continue;
+			}
 			$i++;
-		} else if ($n==2 AND $i==0) {//if 2 pics, skip the first pic (we're assuming it's a label pic)
-			$i++;
-			continue;
 		}
 
-		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
+//		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
+		$img = $dir.preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$r['image']);
 		break;
 	}
 //echo $img;exit;
@@ -56,8 +70,14 @@
 //	if ($i==0) { $img = 'img/noimage.png'; }
 
 	// check that the file actually exists, and if it doesn't with the appended "-vttn",
-	// try removing it because some of brian's pictures don't have it for some reason
-	if (! img_exists($img)) { $img = str_ireplace('-vttn','',$img); }
+	// try removing it because some of brian's pictures don't have it for some reason;
+	// distinction for local vs remote because img_exists() is for remote, file_exists() for local
+	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+		$img_exists = file_exists($img);
+	} else {
+		$img_exists = img_exists($img);
+	}
+	if (! $img_exists) { $img = str_ireplace('-vttn','',$img); }
 
 	header('Content-Type:image/jpeg');
 	echo readfile($img);
