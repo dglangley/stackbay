@@ -1902,6 +1902,7 @@
 		//Open Modal
 			$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
+				var order_number = $(".box_selector.active").data('order-number');
 				if (package_number){
 					$("#package_title").text("Editing Box #"+package_number);
 					$("#modal-width").val($(".box_selector.active").attr("data-width"));
@@ -1914,6 +1915,19 @@
 					
 					//After the edit modal has been set with the proper data, show it
 					$("#modal-package").modal("show");
+					
+					$.ajax({
+						type: "POST",
+						url: '/json/package_contents.php',
+						data: {
+							"order_number": order_number,
+							"package_number": package_number
+						},
+						dataType: 'json',
+						success: function(data) {
+							console.log(data);
+						}
+					});
 				}
 				else{
 					alert('Please select a box before editing');

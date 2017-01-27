@@ -129,6 +129,11 @@
 		return $warranty;
 	}
 	
+	//This gets the order number related packages
+	function getPackage($order_number) {
+		
+	}
+	
 	function format($partid){
 		$parts = reset(hecidb($partid, 'id'));
 	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
@@ -137,6 +142,7 @@
 	    return $name;
 	}
 
+	$items = getItems($sales_order);
 ?>
 	
 
@@ -185,14 +191,22 @@
 			    min-width: 1em;
 			    margin-right: 0.5em;
 			}
+			
+			.btn:active, .btn.active {
+				outline: 0;
+				background-image: none;
+				-webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.25);
+				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
+			}
 		</style>
 
 	</head>
 	
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
-		<?php include 'inc/navbar.php'; 
-		include_once $rootdir.'/modal/package.php';
+		<?php 
+			include 'inc/navbar.php'; 
+			include_once $rootdir.'/modal/package.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
@@ -200,12 +214,12 @@
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
-				echo"<h1>";
-				echo " Shipping Order";
-				if ($order_number!='New'){
-					echo " #$order_number";
-				}
-				echo"</h1>"
+					echo"<h2 class='minimal' style='padding-top: 10px;'>";
+					echo " Shipping Order";
+					if ($order_number!='New'){
+						echo " #$order_number";
+					}
+					echo"</h2>";
 				?>
 			</div>
 			<div class="col-md-4">
@@ -256,16 +270,19 @@
 								$results = qdb($select);
 
 								if (mysqli_num_rows($results) > 0){
+									$init = true;
 									foreach($results as $b){
-										$box_button = "<button type='button' class='btn btn-grey box_selector'";
+										$box_button = "<button type='button' class='btn btn-grey ". ($init ? 'active' : '') ." box_selector'";
 										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
+										$box_button .= " data-order-number='" . $order_number . "'";
 										$box_button .= ">".$b['package_no']."</button>";
 										echo($box_button);
 			                        	
 			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+			                        	$init = false;
 									}
 								}
 								else{
@@ -301,7 +318,6 @@
 						</thead>
 						<?php
 							//Grab a list of items from an associated sales order.
-							$items = getItems($sales_order);
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
 								// print_r($inventory);

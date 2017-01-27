@@ -6,7 +6,7 @@
         <h4 class="modal-title" id="package_title">Package Edit</h4>
 	    </div>
       <div class="modal-body" id="package-modal-body" data-modal-id = ''>
-
+					<?php echo $order_number; ?>
 								<div class = 'row'>
 											<div class="col-md-3"><b>Weight:</b></div>
                       <div class="col-md-3"><b>Length:</b></div>
@@ -48,6 +48,23 @@
 									</div>
 									<div class = 'col-sm-9'  >
 										<input class = 'form-control' id = 'modal-tracking' style = 'padding-left:3px' placeholder = 'Tracking #' title='Tracking #' value = ''>
+									</div>
+								</div>
+								
+								<div class="row" style = 'padding-top:15px;'>
+									<div class="col-md-12">
+										<table class='table serial-modal-listing table-hover table-condensed'>
+											<thead>
+												<tr>
+													<th>Part</th>
+													<th>Serial Number</th>
+													<th>qty</th>
+												</tr>
+											</thead>
+											<tbody>
+											
+											</tbody>
+										</table>
 									</div>
 								</div>
       </div>
