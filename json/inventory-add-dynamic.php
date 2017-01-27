@@ -43,7 +43,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
 		}
 		$locationResult = qdb($query);
-		
 		if (mysqli_num_rows($locationResult)>0) {
 			$locationResult = mysqli_fetch_assoc($locationResult);
 			$locationid = $locationResult['id'];
@@ -54,14 +53,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($savedSerial == '') {
 			$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
 			$check = qdb($query);
-			
-			if($check->num_rows == 0) {
 
+			if($check->num_rows == 0) {
+				
+				//DEPRECATED To find this later on
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				qdb($query);
 				
+				
 				//Insert the item into the inventory
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES 
+		 		('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", ".$GLOBALS['now']." , NULL);";
+				
 				$result['query'] = qdb($query);
 			} else {
 				$result['query'] = false;

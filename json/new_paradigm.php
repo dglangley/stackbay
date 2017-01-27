@@ -194,77 +194,88 @@ function sub_rows($search = ''){
                         $inc[$i['partid']] = $i['total'];
                     }
                 }
-                $rows = "
-                <tr class = 'search_lines' data-line-id = $id>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <div class='row-fluid'>
-                            <div class='col-md-6' style='padding:0%;'>Stock</div>
-                            <div class='col-md-6' style='padding:0%;'>Order</div>
-                        </div>
-                    </td>
-                    <td></td>
-                </tr>";
-
-            foreach ($items as $id => $info){
-                $sellable = false;
-                
-                $text = "<div class='row-fluid'>";
-                $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding:0%;'><b>";
-                if(array_key_exists($id, $stock)){
-                    $sellable = true;
-                    $text .= $stock[$id];
+                if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's')){
+                    $rows = "
+                        <tr class = 'search_lines' data-line-id = $id>
+                            <td></td>
+                            <td colspan='6' style=''>No parts in stock</td>
+                            <td style=''></td>
+                        </tr>
+                    ";
                 }
                 else{
-                    $text .= "&nbsp;";
-                }
-                $text .= "</b></div>";
-                
-                $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
-                if(array_key_exists($id, $inc)){
-                    $sellable = true;
-                    $text .= $inc[$id];
-                }
-                else{
-                    $text .= "&nbsp;";
-                }
-                $text .= "</div>";
-                $text .= "</div>";
-                if (($page == 'Sales' || $page == 's') && !$sellable){
-                    $text = '';
-                    continue;
-                }
-                $rows .= "
-                <tr class = 'search_lines' data-line-id = $id>
-                    <td></td>
-                    <td>";
-    
-                $rows .=(format($info));
-                $rows .= "</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-                    <td>$text</td>
-                    <td></td>
-                </tr>
-                ";
-            //Ask David about the line-level control with each of these.
-            //Delivery Date
+                        $rows = "
+                        <tr class = 'search_lines' data-line-id = $id>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>
+                                <div class='row-fluid'>
+                                    <div class='col-md-6' style='padding:0%;'>Stock</div>
+                                    <div class='col-md-6' style='padding:0%;'>Order</div>
+                                </div>
+                            </td>
+                            <td></td>
+                        </tr>";
+        
+                    foreach ($items as $id => $info){
+                        $sellable = false;
+                        
+                        $text = "<div class='row-fluid'>";
+                        $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding:0%;'><b>";
+                        if(array_key_exists($id, $stock)){
+                            $sellable = true;
+                            $text .= $stock[$id];
+                        }
+                        else{
+                            $text .= "&nbsp;";
+                        }
+                        $text .= "</b></div>";
+                        
+                        $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
+                        if(array_key_exists($id, $inc)){
+                            $sellable = true;
+                            $text .= $inc[$id];
+                        }
+                        else{
+                            $text .= "&nbsp;";
+                        }
+                        $text .= "</div>";
+                        $text .= "</div>";
+                        if (($page == 'Sales' || $page == 's') && !$sellable){
+                            $text = '';
+                            continue;
+                        }
+                        $rows .= "
+                        <tr class = 'search_lines' data-line-id = $id>
+                            <td></td>
+                            <td>";
             
-            //Condition | condition can be set per each part. Will play around with the tactile
-            //Warranty    
-            //Qty | Each of the qty inputs had supplimental inventory information
-            //Price 
-            //EXT price
-            }
+                        $rows .=(format($info));
+                        $rows .= "</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+                            <td>$text</td>
+                            <td></td>
+                        </tr>
+                        ";
+                    //Ask David about the line-level control with each of these.
+                    //Delivery Date
+                    
+                    //Condition | condition can be set per each part. Will play around with the tactile
+                    //Warranty    
+                    //Qty | Each of the qty inputs had supplimental inventory information
+                    //Price 
+                    //EXT price
+                    }
+                }
         }
             else{
                 $rows .= "

@@ -69,10 +69,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$companyid = $row['companyid'];
 				$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
-				(getAddresses($b_add,'name'))? $b_name = getAddresses($b_add,'name') : $b_name = getAddresses($b_add,'street');
+				if($order_type == 'Purchase'){
+					$b_add = $row['remit_to_id'];
+				}
+				else{
+					$b_add = $row['bill_to_id'];
+				}
+				(getAddresses($b_add,'name'))? $b_name = getAddresses($b_add,'street') : $b_name = getAddresses($b_add,'street');
 				$s_add = $row['ship_to_id'];
-				(getAddresses($s_add,'name'))? $s_name = getAddresses($s_add,'name') : $s_name = getAddresses($s_add,'street');
+				(getAddresses($s_add,'name'))? $s_name = getAddresses($s_add,'street') : $s_name = getAddresses($s_add,'street');
 				$selected_carrier = $row['freight_carrier_id'];
 				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
 				$selected_service = $row['freight_services_id'];
@@ -80,7 +85,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$public = $row['public_notes'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
-				$associated_order = $row['assoc_order'];
+				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
 			}
 		}
@@ -167,8 +172,21 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//     			</div>
 		// 			</div>";
 		// }
+		if ($order_type == "Purchase"){
+			$right .="
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>
+						<label for='bill_to'>Remit to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						</label>
+		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+							<option value = '$b_add'>$b_name</option>
+		                </select>
+				    </div>
+			    </div>";
+		}
+		else{
 		//Billing Address
-		$right .="
+			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='bill_to'>Bill to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
@@ -178,7 +196,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	                    </select>
 				    </div>
 			    </div>";
-
+		}
 		//Shipping Address 	
 		$right .= "
 				<div class='row'>
@@ -202,8 +220,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//Carrier and service
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
-				    ".dropdown('carrier',$selected_carrier)."
-			    	".dropdown('services',$selected_service,$selected_carrier)."
+				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-5')."
+			    	".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
 			    </div>";
 		
 		//Shipping Account Section
@@ -278,6 +296,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
+				$orderNumber = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
 				$b_add = $row['bill_to_id'];
@@ -306,17 +325,30 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			//Contact Output
 			$right .= "<div>";
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-				$right .= "<h4 style='color: #526273; text-transform: uppercase;'>".($company_name)."</h4>".getContact($contact)."<br><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
+				
+				//Order Number
+				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
 				
 				//Addresses
 				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= address_out($b_add);
+				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
-				$right .= address_out($s_add);
+				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>CARRIER INFORMATION:</b><br>";
-				$right .= $selected_carrier;
+				if($selected_carrier){
+					$right .= getFreight('carrier',$selected_carrier,'','name');
+				}
+				else{
+					$right .= "None";
+				}
+				
+				if ($selected_service){
+					$right .= " ".getFreight('services','',$selected_service,'method');
+				}
+
 				$right .= "<br><br>";
 				if($public){
 					$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES:</b><br>";

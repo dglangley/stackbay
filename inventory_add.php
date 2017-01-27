@@ -17,6 +17,7 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
+	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
@@ -111,6 +112,15 @@
 		
 		return $listSerials;
 	}
+	
+	function format($partid){
+		$parts = reset(hecidb($partid, 'id'));
+	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
+	    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+
+	    return $name;
+	}
+	
 	
 	$partsListing = getPOParts();
 ?>
@@ -212,10 +222,7 @@
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
 										<?php 
-											echo $item['part'] . '&nbsp;&nbsp;';
-											echo $item['heci'] . '&nbsp;&nbsp;';
-											echo $item['heci'] . '&nbsp;';
-											echo $item['description']; 
+											echo format($part['partid']);
 										?>
 									</td>
 									<td  class="infiniteLocations">
@@ -270,7 +277,7 @@
 												</tr>
 											</thead>
 											<tbody>
-											<?php foreach(getHistory($part['partid']) as $serial): ?>
+											<?php $histoty = getHistory($part['partid']); if($history != '') { foreach($history as $serial): ?>
 												<tr>
 													<td><?= $serial['serial_no']; ?></td>
 													<td><?= $serial['qty']; ?></td>
@@ -278,7 +285,7 @@
 													<td><?= display_location($serial['locationid']); ?></td>
 													<td><?= $serial['item_condition']; ?></td>
 												</tr>
-											<?php endforeach; ?>
+											<?php endforeach; } ?>
 											</tbody>
 										</table>
 									</td>
@@ -296,14 +303,14 @@
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
 		<script type="text/javascript">
-			function updateBillTo(){
-				if ( $("#mismo").prop( "checked" )){
-					var display = $("#select2-ship_to-container").html()
-					var value = $("#ship_to").val();
-		    		$("#select2-bill_to-container").html(display)
-		    		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
-				}
-			}
+			// function updateBillTo(){
+			// 	if ( $("#mismo").prop( "checked" )){
+			// 		var display = $("#select2-ship_to-container").html()
+			// 		var value = $("#ship_to").val();
+		 //   		$("#select2-bill_to-container").html(display)
+		 //   		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
+			// 	}
+			// }
 		</script>
 
 	</body>

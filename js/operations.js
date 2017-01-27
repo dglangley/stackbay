@@ -34,7 +34,7 @@
 		                return {
 		                    q: params.term,//search term
 							page: params.page,
-							limit: limiter
+							limit: params.limiter
 		                };
 		            },
 			        processResults: function (data, params) { // parse the results into the format expected by Select2.
@@ -206,8 +206,8 @@
 
 							//Initialize each of the select2 fields when the left side loads.
 							$("#companyid").initSelect2("/json/companies.php", "Company");
-							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 							$("#bill_to").initSelect2("/json/address-picker.php","Bill to", limit);
+							$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 							$("#ship_to").initSelect2("/json/address-picker.php","Ship to", limit);
 							// alert(order_type+", "+company);
 							if($("#ship_to").val() == $("#bill_to").val()){
@@ -273,7 +273,6 @@
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
 				var limit = '';
-				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",company);
 				if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
 					limit = "25";
 				}
@@ -281,6 +280,7 @@
 					limit = company;
 				}
 				var carrier = $("#carrier").val();
+				// alert("Limit: "+company+" | Carrier: "+carrier);
 				//Default selector for the addresses
 				$.ajax({
 					type: "POST",
@@ -319,17 +319,60 @@
 					success: function(right) {
 						var value = right['value'];
 						var display = right['display'];
-			    		$("#select2-account_select-container").html(display)
+						var set_carrier = right['carrier'];
+						$("#account_select").attr("data-carrier",set_carrier);
+			    		$("#select2-account_select-container").html(display);
 			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
+			    		$("#carrier").val(set_carrier);
 						console.log("JSON account-default.php: Success");
-						},					
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("JSON account-default.php: Error");
-							console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
-						}
-						
+						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
+					},					
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON account-default.php: Error");
+						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
+					}
 				});
+				
+				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
+				var new_account = $("#account_select").attr("data-carrier");
+				alert(new_account);
+				if (new_account){
+					$.ajax({
+						type: "POST",
+						url: '/json/dropPop.php',
+						data: {
+							"field":"services",
+							"limit": new_account,
+							"size": "col-sm-7",
+							"label": "Service:",
+							"id" : "service"
+							}, // serializes the form's elements.
+						dataType: 'json',
+						success: function(result) {
+							var initial_result = $("#service").val();
+							var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
+							$('#service_div').replaceWith(result);
+							var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
+							if (new_div_val){
+								$("#service").val(new_div_val);
+							}
+							console.log("== CARRIER CHANGE VALUES ==");
+							console.log("Initial ID: "+initial_result);
+							console.log("Initial Days: "+initial_days);
+							console.log("New ID: "+new_div_val);
+							var days = parseInt($("#service :selected").attr("data-days"));
+							if(!isNaN(days)){
+								$("input[name=ni_date]").val(freight_date(days));
+							}
+							console.log("JSON Services limited dropPop.php: Success");
+							},					
+							error: function(xhr, status, error) {
+								alert(error+" | "+status+" | "+xhr);
+								console.log("JSON Services limited dropPop.php: Error");
+							}
+						});
+				}
 				
 				//Reload the Addresses
 				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
@@ -398,13 +441,39 @@
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
             	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+				//Account default picker on update of the company
+				var company = $("#companyid").val();
+				$.ajax({
+					type: "POST",
+					url: '/json/account-default.php',
+					data: {
+						"company": $("#companyid").val(),
+						"carrier": limit,
+						},
+					dataType: 'json',
+					success: function(right) {
+						var value = right['value'];
+						var display = right['display'];
+			    		$("#select2-account_select-container").html(display);
+			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
+						console.log("JSON account-default.php: Success");
+						console.log("/json/account-default.php?"+"company="+company+"&carrier="+limit);
+					},					
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON account-default.php: Error");
+						console.log("/json/account-default.php?"+"company="+company+"&carrier="+limit);
+					}
+				});
+				
+				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
 					data: {
 						"field":"services",
 						"limit":limit,
-						"size": "col-sm-6",
+						"size": "col-sm-7",
 						"label": "Service:",
 						"id" : "service"
 						}, // serializes the form's elements.
@@ -944,8 +1013,8 @@
 			    	$("#account-modal-body").find('#modal_carrier').val('');
 			    	$("#account-modal-body").find("input[name='na_account']").val('');
 			    	$("#account-modal-body").find('input[name="associate"]').prop("checked",false);
-			    	
 			    });
+				$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
 			});
 
 //Global Warranty function
@@ -1026,7 +1095,9 @@
 					var order_number = $(this).closest("body").attr("data-order-number");
 	
 					//Get General order information
-					var userid = $("#sales-rep option:selected").attr("data-rep-id");
+					var created_by = $("#sales-rep").attr('data-creator');
+					var repid = $("#sales-rep option:selected").attr("data-rep-id");
+
 					var company = $("#companyid").val();
 					if (!company){
 						alert("Must enter company before continuing");
@@ -1099,7 +1170,8 @@
 						type: "POST",
 						url: '/json/order-form-submit.php',
 						data: {
-							"sales-rep":userid,
+							"sales-rep": repid,
+							"created_by": created_by,
 							"companyid":company,
 							"order_type":order_type,
 			   		    	"order_number":order_number,
@@ -1390,7 +1462,8 @@
 				var partid = $serial.closest('tr').find('.part_id').data('partid');
 				var condition = $serial.closest('tr').find('.condition_field').val();
 				var part = $serial.closest('tr').find('.part_id').data('part');
-				
+				// var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.place').val();
+				// var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.instance').val();
 				//Package number will be only used on the shipping order page
 				var package_no = $("#active_box_selector").val();
 				
@@ -1409,12 +1482,18 @@
 		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 		    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
-		    		
+		    		// alert(place+"-"+instance);
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
 						data: {
-							 'partid' : partid, 'condition' : condition, 'serial' : serial, 'po_number' : po_number, 'savedSerial' : savedSerial, 'place' : place, 'instance' : instance
+							 'partid' : partid,
+							 'condition' : condition,
+							 'serial' : serial,
+							 'po_number' : po_number,
+							 'savedSerial' : savedSerial,
+							 'place' : place,
+							 'instance' : instance
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -1672,7 +1751,7 @@
 				},
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
-					console.log("inventory-add-dynamic.php: ERROR");
+					console.log("inventory-add-complete.php: ERROR");
 				},	
 			});
 		});

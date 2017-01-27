@@ -35,7 +35,7 @@
                 return $results;
             }
             else{
-                $result = mysqli_fetch_row($results);
+                $result = mysqli_fetch_assoc($results);
                 return $result[$field];
             }
             

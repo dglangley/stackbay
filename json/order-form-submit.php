@@ -51,6 +51,9 @@
     $public = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
     $rep = grab('sales-rep');
+    $created_by = grab('created_by');
+    
+    //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
 
     //Process the contact, see if a new one was added
@@ -77,6 +80,7 @@
         //new-fangled ID from the mega-sketch qid function
         $cid = prep($companyid);
         $rep = prep($rep);
+        $created_by = prep($created_by);
         $contact = prep($contact);
         $carrier = prep($carrier);
         $terms = prep($terms);
@@ -89,15 +93,16 @@
         $assoc_order = prep($assoc_order);
         $tracking = prep($tracking);
         
+        
         if($order_type=="Purchase"){
             $insert = "INSERT INTO `purchase_orders` (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
-            `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($rep, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+            `remit_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+            ($created_by, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
         else{
             $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
             `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($rep, $rep, $cid, $contact, $assoc_order, NULL, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
+            ($created_by, $rep, $cid, $contact, $assoc_order, NULL, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
         }
     //Run the update
         qdb($insert);
@@ -116,12 +121,13 @@
         $macro .= updateNull('contactid',$contact);
         if ($order_type == "Purchase"){
             $macro .= updateNull('assoc_order',$assoc_order);
+            $macro .= updateNull('remit_to_id',$bill);
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
             $macro .= updateNull('ref_ln','Null');
+            $macro .= updateNull('bill_to_id',$bill);
         }
-        $macro .= updateNull('bill_to_id',$bill);
         $macro .= updateNull('ship_to_id',$ship);
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('freight_services_id',$service);
