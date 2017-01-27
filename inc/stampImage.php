@@ -70,7 +70,8 @@
 */
 		//remove leading dir paths
 		$filename_parts = explode('/',$image_filename);
-		$new_filename = preg_replace('/([.](png|jpg|jpeg))?$/i','-vttn$1',$filename_parts[(count($filename_parts)-1)]);
+//		$new_filename = preg_replace('/([.](png|jpg|jpeg))?$/i','-vttn$1',$filename_parts[(count($filename_parts)-1)]);
+		$new_filename = preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$filename_parts[(count($filename_parts)-1)]);
 		$stamped_filename = $IMAGE_TMP.$new_filename;
 		//$stamped_filename = '/devimgs/'.$new_filename;
 		imagejpeg($dst_im,$stamped_filename);

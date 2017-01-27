@@ -7,7 +7,7 @@
 	$search = '';
 	if (isset($_REQUEST['search'])) { $search = trim($_REQUEST['search']); }
 	$watermark = 0;
-	if (isset($_REQUEST['watermark']) AND $_REQUEST['watermark']) { $watermark = 1; }
+	if (isset($_REQUEST['watermark']) AND $_REQUEST['watermark']==1) { $watermark = 1; }
 
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
@@ -46,6 +46,13 @@
 				// lost after this script is complete
 				if (move_uploaded_file($tmp_file, $temp_dir.$filename)) {
 //					echo $tmp_file." is valid, and was successfully uploaded as ".$temp_dir.$filename."\n";
+
+					// create stamped image, and upload as well
+					if ($watermark) {
+						$stamped_image = stampImage($temp_dir.$filename);
+						$new_filename = preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$filename);
+						copy($stamped_image, $temp_dir.$new_filename);
+					}
 				} else {
 					die($temp_dir.$filename.' file did not save from '.$tmp_file);
 				}
@@ -64,7 +71,8 @@
 					// create stamped image, and upload as well
 					if ($watermark) {
 						$stamped_image = stampImage($tmp_file);
-						$new_filename = preg_replace('/([.](jpg|jpeg))/i','-vttn$1',$filename);
+//						$new_filename = preg_replace('/([.](png|jpg|jpeg))?$/i','-vttn$1',$filename);
+						$new_filename = preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$filename);
 						$upload = $s3->upload($bucket, $new_filename, fopen($stamped_image, 'rb'), 'public-read');
 					}
 				}

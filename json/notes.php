@@ -84,7 +84,7 @@
 	// if any new notes to add, add them first
 	$add_notes = '';
 	if (isset($_REQUEST['add_notes'])) {
-		$add_notes = urldecode(trim($_REQUEST['add_notes']));
+		$add_notes = iconv('UTF-8','ASCII//TRANSLIT',urldecode(trim($_REQUEST['add_notes'])));
 
 		if (! $userid) {
 			reportError('Sorry, you must be logged in before entering notes. If you are already logged in, your session may be invalid. Please notify Admin immediately!');
