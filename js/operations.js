@@ -1926,6 +1926,14 @@
 						dataType: 'json',
 						success: function(data) {
 							console.log(data);
+							$('.modal-packing').empty();
+							$.each( data, function( i, val ) {
+								var element = "<tr>\
+											<td>"+ i +"</td>\
+											<td>"+ val +"</td>\
+										</tr>";
+								$('.modal-packing').append( element );
+							});
 						}
 					});
 				}

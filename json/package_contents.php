@@ -43,7 +43,18 @@
 			$content_id[] = $result['serialid'];
 		}
 		
-        return $content_id;
+		foreach($content_id as $id) {
+		    $query = "SELECT * FROM inventory AS i, parts AS p WHERE i.id = '". res($id) ."' AND i.partid = p.id;";
+            $result = qdb($query);
+            
+            if (mysqli_num_rows($result)>0) {
+    			$result = mysqli_fetch_assoc($result);
+    			
+    			$contents[$result['part']] = $result['serial_no'];
+    		}
+		}
+		
+        return $contents;
     
     }
 

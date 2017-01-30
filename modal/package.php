@@ -6,7 +6,6 @@
         <h4 class="modal-title" id="package_title">Package Edit</h4>
 	    </div>
       <div class="modal-body" id="package-modal-body" data-modal-id = ''>
-					<?php echo $order_number; ?>
 								<div class = 'row'>
 											<div class="col-md-3"><b>Weight:</b></div>
                       <div class="col-md-3"><b>Length:</b></div>
@@ -58,10 +57,10 @@
 												<tr>
 													<th>Part</th>
 													<th>Serial Number</th>
-													<th>qty</th>
+													<!--<th>qty</th>-->
 												</tr>
 											</thead>
-											<tbody>
+											<tbody class='modal-packing'>
 											
 											</tbody>
 										</table>
