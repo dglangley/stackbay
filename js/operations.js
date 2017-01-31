@@ -1462,8 +1462,6 @@
 				var partid = $serial.closest('tr').find('.part_id').data('partid');
 				var condition = $serial.closest('tr').find('.condition_field').val();
 				var part = $serial.closest('tr').find('.part_id').data('part');
-				// var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.place').val();
-				// var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.instance').val();
 				//Package number will be only used on the shipping order page
 				var package_no = $("#active_box_selector").val();
 				
@@ -1555,7 +1553,7 @@
 						
 					});
 			    } else if(serial != '' && page == 'shipping') {
-					console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
+					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
 					//Submit the data from the live scanned boxes
 			    	$.ajax({
 						type: "POST",
@@ -1567,7 +1565,6 @@
 						success: function(result) {
 							
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							//$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 							// console.log(result);
 							if(result['query']) {
 								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
@@ -1583,7 +1580,7 @@
 								
 								
 								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
 								}
 								$serialClone.find('input').val("");
 								
@@ -1593,6 +1590,11 @@
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								var element = "<input class='form-control input-sm iso_comment' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='' placeholder='Comments'>";
+								
+								$serial.closest('tr').find('.infiniteComments').prepend(element);
+								
 								if(qty == 0) {
 							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	var date = new Date();
@@ -1655,7 +1657,6 @@
 			//Prevent Button Spamming
 			$click.removeAttr('id');
 			
-			//$(this).css('background-color','#eeeeee');
 			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			//Include location in the near future
 			var items = [];
@@ -1863,7 +1864,9 @@
 				}
 			});
 			
-			console.log(items);
+			//Testing purposes
+			//console.log(items);
+			
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
@@ -1896,6 +1899,36 @@
 			});
 		});
 
+//================================== ISO Quality ================================== 
+
+	//Configure the modal and also work on the printable page
+	$(document).on("click","#iso_report", function() {
+		//alert('Place ISO Form here');
+		var isoCheck = [];
+		var init = true;
+		
+		$('.shipping_update').children('tbody').children('tr').each(function() {
+			$(this).find('.iso_comment').each(function() {
+				//isoCheck.push($(this).data('serial'));
+				if($(this).val() != '') {
+					if(init) {
+						$('.iso_broken_parts').empty();
+						init = false;
+					}
+					//($(this).data('serial'));
+					var element = "<tr>\
+									<td>"+$(this).data('part')+"</td>\
+									<td>"+$(this).data('serial')+"</td>\
+									<td>"+$(this).val()+"</td>\
+								</tr>";
+					$('.iso_broken_parts').append(element);
+				}
+			});
+		});
+		
+		$("#modal-iso").modal("show");
+		
+	});
 
 //================================== PACKAGES ================================== 
 

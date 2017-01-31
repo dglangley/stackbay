@@ -158,8 +158,8 @@
 		<style type="text/css">
 			.table td {
 				vertical-align: top !important;
-				padding-top: 10px !important;
-				padding-bottom: 0px !important;
+				/*padding-top: 10px !important;*/
+				/*padding-bottom: 0px !important;*/
 			}
 			
 			.btn-secondary {
@@ -192,6 +192,11 @@
 			    margin-right: 0.5em;
 			}
 			
+			.infiniteISO .checkbox {
+				margin-top: 5px;
+				margin-bottom: 20px;
+			}
+			
 			.btn:active, .btn.active {
 				outline: 0;
 				background-image: none;
@@ -207,10 +212,11 @@
 		<?php 
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
+			include_once $rootdir.'/modal/iso.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
@@ -223,7 +229,8 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn btn-success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn-flat success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn-flat primary pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Generate ISO Report</button>
 			</div>
 		</div>
 		<div class="loading_element">
@@ -308,12 +315,12 @@
 								<th>Item</th>
 								<th>SERIAL</th>
 								<th>Box #</th>
-								<th>QTY Ordered</th>
+								<th>Components</th>
+								<th>Ordered</th>
 								<th>Outstanding</th>
-								<th>Item Condition</th>
+								<th>Condition</th>
 								<th>Warranty</th>
-								<th>Delivery Date</th>
-								<th>Lot Shipment</th>
+								<th>Delivery</th>
 							</tr>
 						</thead>
 						<?php
@@ -323,7 +330,7 @@
 								// print_r($inventory);
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
-								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
+								<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
 									<?= format($item['partid']); ?>
 								</td>
 							
@@ -356,11 +363,27 @@
 										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
 									<?php endforeach; ?>
 								</td>
+								<td>
+									<div class="checkbox">
+										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
+									</div>
+									
+									<div class='infiniteComments'>
+									<?php
+										$select = "SELECT `serial_no`, `id`, `packageid` FROM `inventory`, `package_contents` where id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid']).";";
+										$serials = qdb($select);
+										foreach ($serials as $serial):
+									?>
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
+									<?php endforeach; ?>
+									</div>
+									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+								</td>
 								<td style="padding-top: 15px !important;">
 									<span class="qty_field"><?php echo $item['qty'] ?></span>
 								</td>
-								<td class="remaining_qty">
-									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
+								<td class="remaining_qty" style="padding-top: 15px !important;">
+									<?php echo $item['qty'] - $item['qty_shipped']; ?>
 								</td>
 								<td style="padding-top: 15px !important;">
 									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
@@ -370,13 +393,6 @@
 								</td>
 								<td style="padding-top: 15px !important;">
 									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
-								</td>
-								<td>
-									<div class="checkbox">
-										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
-									</div>
-									
-									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 								</td>
 							</tr>
 							
