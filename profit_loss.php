@@ -88,7 +88,20 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-
+<?php
+	$cost_basis = 'average';//can toggle between average and fifo
+	if (isset($_REQUEST['cost_basis']) AND $_REQUEST['cost_basis']=='fifo') { $cost_basis = 'fifo'; }
+?>
+		    <div class="btn-group">
+		        <button class="glow left large btn-radio <?php if ($cost_basis=='average') { echo ' active'; } ?>" type="submit" data-value="average" data-toggle="tooltip" data-placement="bottom" title="average cost">
+		        	<i class="fa fa-random"></i>	
+		        </button>
+				<input type="radio" name="cost_basis" value="average" class="hidden"<?php if ($cost_basis=='average') { echo ' checked'; } ?>>
+		        <button class="glow right large btn-radio<?php if ($cost_basis=='fifo') { echo ' active'; } ?>" type="submit" data-value="fifo" data-toggle="tooltip" data-placement="bottom" title="fifo cost">
+		        	<i class="fa fa-exchange"></i>	
+		        </button>
+		        <input type="radio" name="cost_basis" value="fifo" class="hidden"<?php if ($cost_basis=='fifo') { echo ' checked'; } ?>>
+		    </div>
 		</td>
 
 		<td class = "col-md-3">
@@ -138,12 +151,14 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #" disabled />
+            <h2 class="minimal">Profit & Loss</h2>
 		</td>
 		
 		<td class="col-md-2 text-center">
+			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #" disabled />
+<!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
+-->
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
@@ -170,16 +185,8 @@
     <div id="pad-wrapper">
 		<div class="row filter-block">
 
-		<br>
             <!-- orders table -->
             <div class="table-wrapper">
-
-<!-- If there is a company id, output the text of that company id to the top of the screen -->
-                <div class="row head text-center">
-                    <div class="col-md-12">
-                        <h2>Profit and Loss Report</h2>
-                    </div>
-                </div>
 
 			<!-- If the summary button is pressed, inform the page and depress the button -->
 
@@ -236,11 +243,18 @@
 		}
 		$results[$key]['qty']++;
 		// Brian uses a COGS basis that floats between avg cost and actual cost: when avg is 0, use actual
+if ($cost_basis=='average') {
+			$results[$key]['cogs'] += $r['avg_cost'];
+} else if ($cost_basis=='fifo') {
+			$results[$key]['cogs'] += $r['actual_cost'];
+}
+/*
 		if ($r['avg_cost']>0) {
 			$results[$key]['cogs'] += $r['avg_cost'];
 		} else {
 			$results[$key]['cogs'] += $r['actual_cost'];
 		}
+*/
 		$results[$key]['income'] += $r['price'];
 	}
 
@@ -248,6 +262,7 @@
 	$query .= "li.desc, li.quantity qty, li.amount, c.name, si.cost actual_cost, si.avg_cost ";
 	$query .= "FROM inventory_creditmemo cm, inventory_creditmemoli li, inventory_rmaticket r, inventory_solditem si, inventory_company c ";
 	$query .= "WHERE li.cm_id = cm.id AND customer_id = c.id AND cm.voided = 0 AND cm.rma_id = r.id AND r.item_id = si.id ";
+$query .= "AND 1 = 2 ";
    	if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
