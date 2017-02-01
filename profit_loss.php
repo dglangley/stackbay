@@ -227,7 +227,7 @@
 	
 	if ($cost_basis=='qb') {
 		$query = "SELECT i.id so_id, je.id oq_id, i.memo part_number, je.memo clei, i.date so_date, i.amount price, ";
-		$query .= "je.amount actual_cost, je.amount avg_cost, c.name, i.id po_number ";
+		$query .= "je.amount actual_cost, je.amount avg_cost, c.name, i.id po_number, i.pushed, i.push_success ";
 		$query .= "FROM inventory_invoice i, inventory_company c, inventory_journalentry je ";
 		$query .= "WHERE i.customer_id = c.id AND i.id = je.invoice_id AND je.debit_acct = 'Inventory Sale COGS' ";
    		if ($startDate) {
@@ -242,7 +242,7 @@
 		}
 
 		$query = "SELECT '' so_id, je.id oq_id, je.debit_acct part_number, je.memo clei, je.date so_date, '0.00' price, ";
-		$query .= "je.amount actual_cost, je.amount avg_cost, '' name, je.id po_number ";
+		$query .= "je.amount actual_cost, je.amount avg_cost, '' name, je.id po_number, je.pushed, je.push_success ";
 		$query .= "FROM inventory_journalentry je, inventory_qbgroup qbg ";
 		$query .= "WHERE invoice_id IS NULL AND qbg.cogs = je.debit_acct AND je.debit_acct = 'Inventory Sale COGS' ";
    		if ($startDate) {
@@ -256,7 +256,8 @@
 			$entries[] = $r;
 
 			$query2 = "SELECT '' so_id, je_id oq_id, jeli.debit_acct part_number, jeli.memo clei, '".$r['so_date']."' so_date, ";
-			$query2 .= "'0.00' price, jeli.amount actual_cost, jeli.amount avg_cost, ''name, je_id po_number ";
+			$query2 .= "'0.00' price, jeli.amount actual_cost, jeli.amount avg_cost, ''name, je_id po_number, ";
+			$query2 .= "'".$r['pushed']."' pushed, '".$r['push_success']."' push_success ";
 			$query2 .= "FROM inventory_journalentryli jeli, inventory_qbgroup qbg ";
 			$query2 .= "WHERE je_id = '".$r['oq_id']."' AND qbg.cogs = jeli.debit_acct; ";
 			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
@@ -266,7 +267,8 @@
 		}
 	} else {
 		$query = "SELECT si.serial, si.cost actual_cost, i.id, si.so_id, si.price, si.rep_id, si.freight_cost, si.po, si.avg_cost, ";
-		$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.heci, i.clei, c.name, so.so_date, oq_id ";
+		$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.heci, i.clei, c.name, so.so_date, oq_id, ";
+		$query .= "'1' pushed, '1' push_success ";
 		$query .= "FROM inventory_solditem si, inventory_salesorder so, inventory_inventory i, inventory_outgoing_quote oq, inventory_company c ";
 		$query .= "WHERE so.quote_ptr_id = si.so_id AND si.inventory_id = i.id AND oq_id = oq.id AND c.id = company_id ";
    		if ($startDate) {
@@ -289,6 +291,8 @@
 				'qty'=>0,
 				'cogs'=>0,
 				'income'=>0,
+				'pushed'=>$r['pushed'],
+				'push_success'=>$r['push_success'],
 				'order'=>$r['so_id'],
 				'description'=>$r['part_number'].' '.$r['clei'],
 				'price'=>$r['price'],
@@ -329,6 +333,8 @@
 				'qty'=>0,
 				'cogs'=>0,
 				'income'=>0,
+				'pushed'=>1,
+				'push_success'=>1,
 				'order'=>$r['cm_id'],
 				'description'=>$r['desc'],
 				'price'=>-$r['amount'],
@@ -378,9 +384,12 @@
 			$sum_profit += $profit;
 		}
 
+		$cls = '';
+		if (! $r['pushed'] OR ! $r['push_success']) { $cls = ' class="strikeout"'; }
+
 		$rows .= '
                             <!-- row -->
-                            <tr>
+                            <tr'.$cls.'>
                                 <td>
                                     '.$type.' '.format_date($r['date'],'M j, Y').'
                                 </td>
