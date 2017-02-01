@@ -1916,15 +1916,26 @@
 						init = false;
 					}
 					//($(this).data('serial'));
-					var element = "<tr>\
+					var element = "<tr class='damaged'>\
 									<td>"+$(this).data('part')+"</td>\
 									<td>"+$(this).data('serial')+"</td>\
-									<td>"+$(this).val()+"</td>\
+									<td class='comment-data' data-invid='"+$(this).data('inv_id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
 								</tr>";
 					$('.iso_broken_parts').append(element);
 				}
 			});
 		});
+		
+		if(init) {
+			$('.iso_broken_parts').empty();
+			
+			var element = "<tr>\
+							<td><b>No Defects/Damage in Order</b></td>\
+							<td></td>\
+							<td></td>\
+						</tr>";
+			$('.iso_broken_parts').append(element);
+		}
 		
 		$("#modal-iso").modal("show");
 		
@@ -1932,12 +1943,92 @@
 	
 	$(document).on('click','.btn_iso_parts', function(e) {
 		e.preventDefault();
-		$('.nav-tabs a[href="#iso_match"]').tab('show');
+		var damage = false;
+		var so_number, partName;
+		var issueMessage = '';
+		var items = [];
+		var serialid = [];
+		var serialComments = [];
+		
+		so_number = $('.shipping_header').data('so');
+		
+		if($('.iso_broken_parts').find('.damaged').length) {
+			damage = true;
+		}
+	
+		if(damage) {
+			$('.iso_broken_parts').children('tr.damaged').each(function() {
+				
+				//Check if the part is already queued for an error
+				if(partName != '' && partName != $(this).find('.comment-data').data('part')) {
+					partName = $(this).find('.comment-data').data('part');
+					issueMessage += "<b>" + partName + "</b><br>";
+				}
+				
+				var invid = $(this).find('.comment-data').data('invid');
+				var serial = $(this).find('.comment-data').data('serial');
+				var issue = $(this).find('.comment-data').data('comment');
+				
+				serialid.push(invid);
+				serialComments.push(issue);
+				
+				issueMessage += "Serial: " + serial + "<br>";
+				issueMessage += "Comment: " + issue + "<br><br>";
+			});
+		}
+		
+		items.push(serialid);
+		items.push(serialComments);
+		
+		console.log(items);
+		
+		$.ajax({
+			type: 'POST',
+			url: '/json/iso.php',
+			data: {
+				'part_no' : 'yes', 
+				'heci' : 'yes',
+				'damage' : damage, 
+				'so_number' : so_number, 
+				'productItems' : items, 
+				'type' : 'part',
+			},
+			dataType: 'json',
+			success: function(data) {
+				console.log(data + ' test');
+				$('.nav-tabs a[href="#iso_match"]').tab('show');
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON iso.php: ERROR");
+			},
+		});
 	});
 	
 	$(document).on('click','.btn_iso_shipping', function(e) {
 		e.preventDefault();
-		$('.nav-tabs a[href="#packing_list"]').tab('show');
+		var so_number;
+		
+		so_number = $('.shipping_header').data('so');
+		
+		var special_req = $("input:radio[name='special_req']:checked").val();
+		var contact_info = $("input:radio[name='contact_info']:checked").val();
+		var transit_time = $("input:radio[name='transit_time']:checked").val();
+
+		$.ajax({
+			type: 'POST',
+			url: '/json/iso.php',
+			data: {'special_req' : special_req, 'contact_info' : contact_info, 'transit_time' : transit_time, 'so_number': so_number, 'type' : 'special'},
+			dataType: 'json',
+			success: function(data) {
+				console.log(data + ' test');
+				$('.nav-tabs a[href="#packing_list"]').tab('show');
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON iso.php: ERROR");
+			},
+		});
 	});
 
 //================================== PACKAGES ================================== 

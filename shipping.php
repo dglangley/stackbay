@@ -222,7 +222,7 @@
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
-					echo"<h2 class='minimal' style='padding-top: 10px;'>";
+					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 					echo " Shipping Order";
 					if ($order_number!='New'){
 						echo " #$order_number";

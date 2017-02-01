@@ -57,8 +57,8 @@
 										All the customer PO Special Requirements met?
 									</td>
 									<td>
-										<label class="radio-inline"><input type="radio" name="optradio">Yes</label>
-										<label class="radio-inline"><input type="radio" name="optradio" checked>No</label>
+										<label class="radio-inline"><input type="radio" name="special_req" value='yes'>Yes</label>
+										<label class="radio-inline"><input type="radio" name="special_req" value='no' checked>No</label>
 									</td>
 								</tr>
 								<tr>
@@ -66,8 +66,8 @@
 										Is all ship to / contact info correct?
 									</td>
 									<td>
-										<label class="radio-inline"><input type="radio" name="optradio2">Yes</label>
-										<label class="radio-inline"><input type="radio" name="optradio2" checked>No</label>
+										<label class="radio-inline"><input type="radio" name="contact_info" value='yes'>Yes</label>
+										<label class="radio-inline"><input type="radio" name="contact_info" value='no' checked>No</label>
 									</td>
 								</tr>
 								<tr>
@@ -75,8 +75,8 @@
 										Appropiate transit time service level requirements met?
 									</td>
 									<td>
-										<label class="radio-inline"><input type="radio" name="optradio5">Yes</label>
-										<label class="radio-inline"><input type="radio" name="optradio5" checked>No</label>
+										<label class="radio-inline"><input type="radio" name="transit_time" value='yes'>Yes</label>
+										<label class="radio-inline"><input type="radio" name="transit_time" value='no' checked>No</label>
 									</td>
 								</tr>
 							</tbody>
