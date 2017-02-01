@@ -39,6 +39,7 @@
 	}
 	
 	$sales_order;
+	$notes;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -47,6 +48,7 @@
 	if (mysqli_num_rows($result)>0) {
 		$result = mysqli_fetch_assoc($result);
 		$sales_order = $result['so_number'];
+		$notes = $result['public_notes'];
 	}
 	
 	function getItems($so_number = 0) {

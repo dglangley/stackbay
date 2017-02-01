@@ -1929,6 +1929,16 @@
 		$("#modal-iso").modal("show");
 		
 	});
+	
+	$(document).on('click','.btn_iso_parts', function(e) {
+		e.preventDefault();
+		$('.nav-tabs a[href="#iso_match"]').tab('show');
+	});
+	
+	$(document).on('click','.btn_iso_shipping', function(e) {
+		e.preventDefault();
+		$('.nav-tabs a[href="#packing_list"]').tab('show');
+	});
 
 //================================== PACKAGES ================================== 
 
