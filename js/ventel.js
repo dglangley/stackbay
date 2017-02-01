@@ -550,7 +550,7 @@
 
 		// reload bxslider after opening modal because of modal/bxslider conflicts
 		$('#image-modal').on('shown.bs.modal', function (e) {
-			setTimeout("imageSlider.reloadSlider()",50);
+			setTimeout("imageSlider.reloadSlider()",100);
 		});
 
 

@@ -20,7 +20,7 @@
 	}
 	
 	//This is saved as a cookie in order to cache the results of the button function within the same window
-	setcookie('report_type',$report_type);
+//	setcookie('report_type',$report_type);
 	
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
@@ -227,7 +227,8 @@
 	
 	if ($cost_basis=='qb') {
 		$query = "SELECT i.id so_id, je.id oq_id, i.memo part_number, je.memo clei, i.date so_date, i.amount price, ";
-		$query .= "je.amount actual_cost, je.amount avg_cost, c.name, i.id po_number, i.pushed, i.push_success ";
+		$query .= "je.amount actual_cost, je.amount avg_cost, c.name, i.id po_number, i.pushed, i.push_success, ";
+		$query .= "je.pushed je_pushed, je.push_success je_push_success ";
 		$query .= "FROM inventory_invoice i, inventory_company c, inventory_journalentry je ";
 		$query .= "WHERE i.customer_id = c.id AND i.id = je.invoice_id AND je.debit_acct = 'Inventory Sale COGS' ";
    		if ($startDate) {
@@ -238,6 +239,9 @@
 		$query .= "ORDER BY i.id ASC, i.date ASC; ";
 		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			// if the journal entry failed even if the invoice succeeded, mark the error as priority
+			if (! $r['je_pushed'] AND $r['pushed']) { $r['pushed'] = $r['je_pushed']; }
+			if (! $r['je_push_success'] AND $r['je_push_success']) { $r['push_success'] = $r['je_push_success']; }
 			$entries[] = $r;
 		}
 
@@ -256,7 +260,7 @@
 			$entries[] = $r;
 
 			$query2 = "SELECT '' so_id, je_id oq_id, jeli.debit_acct part_number, jeli.memo clei, '".$r['so_date']."' so_date, ";
-			$query2 .= "'0.00' price, jeli.amount actual_cost, jeli.amount avg_cost, ''name, je_id po_number, ";
+			$query2 .= "'0.00' price, jeli.amount actual_cost, jeli.amount avg_cost, '' name, je_id po_number, ";
 			$query2 .= "'".$r['pushed']."' pushed, '".$r['push_success']."' push_success ";
 			$query2 .= "FROM inventory_journalentryli jeli, inventory_qbgroup qbg ";
 			$query2 .= "WHERE je_id = '".$r['oq_id']."' AND qbg.cogs = jeli.debit_acct; ";
@@ -359,6 +363,7 @@
 	$sum_qty = 0;
 	$sum_ext_price = 0;
 	$sum_cogs = 0;
+	$sum_pending_cogs = 0;
 	$sum_profit = 0;
 	$sum_credits = 0;
 	foreach ($results as $r) {
@@ -385,7 +390,10 @@
 		}
 
 		$cls = '';
-		if (! $r['pushed'] OR ! $r['push_success']) { $cls = ' class="strikeout"'; }
+		if (! $r['pushed'] OR ! $r['push_success']) {
+			$cls = ' class="grayout"';
+			$sum_pending_cogs += $r['cogs'];
+		}
 
 		$rows .= '
                             <!-- row -->
@@ -478,7 +486,13 @@
                                     <strong><?php echo format_price($sum_ext_price,true,' '); ?></strong><br/>
 									<?php if ($cost_basis=='qb') { echo ' Invoiced'; } ?>
                                 </td>
-								<td colspan="2"> </td>
+								<td> </td>
+								<td class="text-right">
+<?php if ($cost_basis=='qb' AND $sum_pending_cogs>0) { ?>
+									<strong><?php echo format_price($sum_pending_cogs,true,' '); ?>*</strong><br/>
+									Pending COGS
+<?php } ?>
+								</td>
                                 <td class="text-right">
                                     <strong><?php echo format_price($sum_cogs,true,' '); ?></strong><br/>
 									COGS
@@ -493,6 +507,10 @@
                 </div>
             </div>
             <!-- end orders table -->
+
+<?php if ($cost_basis=='qb' AND $sum_pending_cogs>0) { ?>
+* Pending COGS indicates unsynchronized record(s) between the DB and QB
+<?php } ?>
 
 
 	</div>

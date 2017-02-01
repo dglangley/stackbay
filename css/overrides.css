@@ -1124,6 +1124,10 @@ tr.strikeout td:before {
     border-top: 1px solid #111;
     width: 100%;
 }
+tr.grayout td,
+tr.grayout td a {
+	color:#ccc;
+}
 
 
 

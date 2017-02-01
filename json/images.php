@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/img_exists.php';
+	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
 	function reportError($err) {
 		echo json_encode(array('message'=>$err));
