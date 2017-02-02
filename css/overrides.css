@@ -1116,12 +1116,16 @@ tr.strikeout td {
     position: relative;
     padding: 5px 10px;
 }
+tr.strikeout td,
+tr.strikeout td a {
+	color:#ccc;
+}
 tr.strikeout td:before {
     content: " ";
     position: absolute;
     top: 50%;
     left: 0;
-    border-top: 1px solid #111;
+    border-top: 1px solid #ccc;
     width: 100%;
 }
 tr.grayout td,
