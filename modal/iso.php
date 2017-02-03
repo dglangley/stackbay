@@ -8,8 +8,10 @@
 	    <div class="modal-body" id="ISO-modal-body" data-modal-id = '' style='padding: 0px;'>
 		    <ul class="nav nav-tabs nav-tabs-ar">
 				<li class="active"><a href="#iso_quality" data-toggle="tab"><i class="fa fa-qrcode"></i> Parts Statement</a></li>
+				<?php if($notes != ''): ?>
+					<li class=""><a href="#iso_req"><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
+				<?php endif; ?>
 				<li class=""><a href="#iso_match"><i class="fa fa-truck"></i> Shipping Confirmation</a></li>
-				<li class=""><a href="#packing_list"><i class="fa fa-list"></i> Packing List</a></li>
 			</ul><!-- nav-tabs -->
 			
 			<div class="tab-content">
@@ -33,9 +35,25 @@
 						
 						<div class='row'>
 							<div class="col-md-12">
-								The list above accurately reflects the part number, HECI, cosmetic condition and component condition for <b>defective</b> parts for this shipment.<br><br>
+								The list above accurately reflects the part number, HECI, cosmetic condition and component condition for this shipment.<br><br>
 								<span class='pull-right'><b>Approved by</b>: <?= $U['name']; ?></span><br><br>
-								<button class="btn btn-primary btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Submit</button>
+								<button class="btn-flat primary btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Confirm</button>
+							</div>
+						</div>
+					</form>
+				</div>
+				
+				<div class="tab-pane" id="iso_req">
+				    <form action="#" method="post" style="padding: 7px;">
+				    	<b>Notes</b><br>
+						<?= $notes; ?> 
+						
+						<br><br>
+						
+						<div class='row'>
+							<div class="col-md-12">
+								<span class='pull-right'>The conditions above have been met.</span><br><br>
+								<button class="btn-flat primary btn-sm pull-right btn_iso_req" data-form="" data-callback="" data-element="">Confirm</button>
 							</div>
 						</div>
 					</form>
@@ -43,51 +61,20 @@
 				
 				<!-- Materials pane -->
 				<div class="tab-pane" id="iso_match">
-					<form action='#' method='post' style="padding: 7px;">
-						<table class="table table-hover table-striped table-condensed">
-							<thead>
-								<tr>
-									<th>Checkpoint</th>
-									<th></th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>
-										All the customer PO Special Requirements met?
-									</td>
-									<td>
-										<label class="radio-inline"><input type="radio" name="special_req" value='yes'>Yes</label>
-										<label class="radio-inline"><input type="radio" name="special_req" value='no' checked>No</label>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Is all ship to / contact info correct?
-									</td>
-									<td>
-										<label class="radio-inline"><input type="radio" name="contact_info" value='yes'>Yes</label>
-										<label class="radio-inline"><input type="radio" name="contact_info" value='no' checked>No</label>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Appropiate transit time service level requirements met?
-									</td>
-									<td>
-										<label class="radio-inline"><input type="radio" name="transit_time" value='yes'>Yes</label>
-										<label class="radio-inline"><input type="radio" name="transit_time" value='no' checked>No</label>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-						<br>	
-						<button class="btn btn-primary btn-sm pull-right btn_iso_shipping" data-form="" data-callback="" data-element="">Submit</button>
+					<form action="#" method="post" style="padding: 7px;">
+						<b>Shipping Address:</b><br>
+						<?= address_out($shipid); ?><br><br>
+						
+						<b >CARRIER INFORMATION:</b><br>
+						<?= getFreight('carrier',$selected_carrier,'','name'); ?>
+						
+						<div class='row'>
+							<div class="col-md-12">
+								<button class="btn-flat primary btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Save & Print</button>
+								<button class="btn-flat success btn-sm pull-right btn_update" id='btn_update' data-form="" data-callback="" data-element="" style='margin-right: 10px;'>Save</button>
+							</div>
+						</div>
 					</form>
-				</div>
-				
-				<div class="tab-pane" id="packing_list">
-				    <b>Packing List goes here</b>
 				</div>
 			</div>
 		</div>

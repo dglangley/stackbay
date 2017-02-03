@@ -25,7 +25,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$heci = grab('heci');
 	$damage = grab('damage');
 	
-	$invid = $_REQUEST['productItems'];
+	$invid = $_REQUEST['invid'];
+	$comments = $_REQUEST['comments'];
 	
 	$special_req = grab('special_req');
 	$contact_info = grab('contact_info');
@@ -37,23 +38,26 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	function savePart($part_no, $heci, $damage, $so_number, $invid, $comments) {
 		$damaged = ($damage == 'true' ? 'yes' : 'no');
 		
+		$query = "DELETE FROM iso_comments WHERE so_number = '".res($so_number)."';";
+		qdb($query);
+			
 		//Using for loop to parse through matching elements of 2 arrays instead of foreach
-		//for($i = 0; $i < $invid.sizeof(); $i++) {
-			//$query = "REPLACE INTO iso_comments (invid, comment) VALUES ('".res($invid[0])."', '".res($comments[0])."');";
-			//qdb($query);
-		//}
+		for($i = 0; $i < count($invid); $i++) {
+			$query = "REPLACE INTO iso_comments (invid, comment, so_number) VALUES ('".res($invid[$i])."', '".res($comments[$i])."', '".res($so_number)."');";
+			qdb($query);
+		}
 		
-		//$query = "REPLACE INTO iso (part_no, heci, cosmetic, component, so_number) VALUES ('".res($part_no)."', '".res($heci)."', '".res($damaged)."', '".res($damaged)."', '".res($so_number)."');";
-		//$result = qdb($query);
+		$query = "REPLACE INTO iso (part_no, heci, cosmetic, component, so_number) VALUES ('".res($part_no)."', '".res($heci)."', '".res($damaged)."', '".res($damaged)."', '".res($so_number)."');";
+		$result = qdb($query);
 		
-		return $query;
+		return $result;
 	}
 	
 	function saveReq($special_req, $contact_info, $transit_time, $so_number) {
 		$query = "UPDATE iso SET special_req = '".res($special_req)."', contact_info = '".res($contact_info)."', transit_time = '".res($transit_time)."' WHERE so_number = ".res($so_number).";";
 		$result = qdb($query);
 		
-		return $query;
+		return $result;
 	}
 	
 	$result;

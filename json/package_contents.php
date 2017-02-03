@@ -34,25 +34,33 @@
     function package_contents($id) {
         $content_id = array();
         $contents = array();
+        $part;
+        $parts = array();
 		
         $query = "SELECT * FROM package_contents WHERE packageid = '". res($id) ."';";
         $result = qdb($query);
         
-        if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$content_id[] = $result['serialid'];
+        while ($row = $result->fetch_assoc()) {
+			$content_id[] = $row['serialid'];
 		}
 		
-		foreach($content_id as $id) {
-		    $query = "SELECT * FROM inventory AS i, parts AS p WHERE i.id = '". res($id) ."' AND i.partid = p.id;";
+		foreach($content_id as $sid) {
+		    $query = "SELECT * FROM inventory AS i, parts AS p WHERE i.id = '". res($sid) ."' AND i.partid = p.id;";
             $result = qdb($query);
             
             if (mysqli_num_rows($result)>0) {
     			$result = mysqli_fetch_assoc($result);
-    			
-    			$contents[$result['part']] = $result['serial_no'];
+     			if($part == '' || $part == $result['part']) {
+     			    $part = $result['part'];
+    			    $parts[] = $result['serial_no'];
+    			} else {
+    			    $contents[$part] = $parts;
+    			    $parts = array();
+    			}
     		}
 		}
+		
+		$contents[$part] = $parts;
 		
         return $contents;
     

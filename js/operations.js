@@ -1746,8 +1746,9 @@
 						$click.attr('id','save_button_inventory');
 					//Nothing was change
 					} else {
-						alert('No changes have been made.');
+						//alert('No changes have been made.');
 						$click.attr('id','save_button_inventory');
+						window.location = "/shipping_home.php?po=true";
 					}
 				},
 				error: function(xhr, status, error) {
@@ -1762,7 +1763,7 @@
 		$(document).on('click', '.deleteSerialRow', function() {
 			var page = getPageName();
 			var po_number = getUrlParameter('on');
-			$row = $(this).closest('.input-group');
+			var $row = $(this).closest('.input-group');
 			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
@@ -1808,7 +1809,8 @@
 
 
 		//Shipping update button, mainly used for lot and serial redirection
-		$('#btn_update').click(function(){
+		$('#btn_update').click(function(e){
+			e.preventDefault();
 			//Save to reactivate button if needed
 			$click = $(this);
 			//Prevent Button Spamming
@@ -1816,6 +1818,17 @@
 			
 			var so_number = getUrlParameter('on');
 			var items = [];
+			
+			$.ajax({
+				type: 'POST',
+				url: '/json/iso.php',
+				data: {'special_req' : 'yes', 'contact_info' : 'yes', 'transit_time' : 'yes', 'so_number': so_number, 'type' : 'special'},
+				dataType: 'json',
+				success: function(data) {
+					console.log(data + ' iso_match');
+					$('.nav-tabs a[href="#iso_match"]').tab('show');
+				},
+			});
 			
 			var checkChanges = false;
 			
@@ -1887,14 +1900,15 @@
 						$click.attr('id','btn_update');
 					//Nothing was change
 					} else {
-						alert('No changes have been made.');
+						//alert('No changes have been made.');
 						$click.attr('id','btn_update');
+						window.location = "/shipping_home.php?so=true";
 					}
 					console.log("JSON shipping-update.php: ERROR");
+					window.location = "/shipping_home.php?so=true";
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
-					console.log("JSON shipping-update.php: ERROR");
+					console.log("JSON shipping-update.php: ERROR " + error);
 				},	
 			});
 		});
@@ -1939,6 +1953,8 @@
 		
 		$("#modal-iso").modal("show");
 		
+		$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		
 	});
 	
 	$(document).on('click','.btn_iso_parts', function(e) {
@@ -1946,7 +1962,6 @@
 		var damage = false;
 		var so_number, partName;
 		var issueMessage = '';
-		var items = [];
 		var serialid = [];
 		var serialComments = [];
 		
@@ -1977,10 +1992,7 @@
 			});
 		}
 		
-		items.push(serialid);
-		items.push(serialComments);
-		
-		console.log(items);
+		console.log(serialid + serialComments);
 		
 		$.ajax({
 			type: 'POST',
@@ -1990,12 +2002,39 @@
 				'heci' : 'yes',
 				'damage' : damage, 
 				'so_number' : so_number, 
-				'productItems' : items, 
+				'invid' : serialid, 
+				'comments' : serialComments,
 				'type' : 'part',
 			},
 			dataType: 'json',
 			success: function(data) {
 				console.log(data + ' test');
+				if($('.nav-tabs a[href="#iso_match"]').length > 0) {
+					$('.nav-tabs a[href="#iso_req"]').tab('show');	
+				} else {
+					$('.nav-tabs a[href="#iso_match"]').tab('show');
+				}
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON iso.php: ERROR");
+			},
+		});
+	});
+	
+	$(document).on('click','.btn_iso_req', function(e) {
+		e.preventDefault();
+		var so_number;
+		
+		so_number = $('.shipping_header').data('so');
+
+		$.ajax({
+			type: 'POST',
+			url: '/json/iso.php',
+			data: {'special_req' : 'yes', 'contact_info' : 'n/a', 'transit_time' : 'n/a', 'so_number': so_number, 'type' : 'special'},
+			dataType: 'json',
+			success: function(data) {
+				console.log(data + ' iso_match');
 				$('.nav-tabs a[href="#iso_match"]').tab('show');
 			},
 			error: function(xhr, status, error) {
@@ -2005,31 +2044,31 @@
 		});
 	});
 	
-	$(document).on('click','.btn_iso_shipping', function(e) {
-		e.preventDefault();
-		var so_number;
+	// $(document).on('click','.btn_iso_shipping', function(e) {
+	// 	e.preventDefault();
+	// 	var so_number;
 		
-		so_number = $('.shipping_header').data('so');
+	// 	so_number = $('.shipping_header').data('so');
 		
-		var special_req = $("input:radio[name='special_req']:checked").val();
-		var contact_info = $("input:radio[name='contact_info']:checked").val();
-		var transit_time = $("input:radio[name='transit_time']:checked").val();
+	// 	var special_req = $("input:radio[name='special_req']:checked").val();
+	// 	var contact_info = $("input:radio[name='contact_info']:checked").val();
+	// 	var transit_time = $("input:radio[name='transit_time']:checked").val();
 
-		$.ajax({
-			type: 'POST',
-			url: '/json/iso.php',
-			data: {'special_req' : special_req, 'contact_info' : contact_info, 'transit_time' : transit_time, 'so_number': so_number, 'type' : 'special'},
-			dataType: 'json',
-			success: function(data) {
-				console.log(data + ' test');
-				$('.nav-tabs a[href="#packing_list"]').tab('show');
-			},
-			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
-				console.log("JSON iso.php: ERROR");
-			},
-		});
-	});
+	// 	$.ajax({
+	// 		type: 'POST',
+	// 		url: '/json/iso.php',
+	// 		data: {'special_req' : special_req, 'contact_info' : contact_info, 'transit_time' : transit_time, 'so_number': so_number, 'type' : 'special'},
+	// 		dataType: 'json',
+	// 		success: function(data) {
+	// 			console.log(data + ' test');
+	// 			$('.nav-tabs a[href="#packing_list"]').tab('show');
+	// 		},
+	// 		error: function(xhr, status, error) {
+	// 			alert(error+" | "+status+" | "+xhr);
+	// 			console.log("JSON iso.php: ERROR");
+	// 		},
+	// 	});
+	// });
 
 //================================== PACKAGES ================================== 
 
@@ -2062,11 +2101,13 @@
 							console.log(data);
 							$('.modal-packing').empty();
 							$.each( data, function( i, val ) {
-								var element = "<tr>\
+								for(k = 0; k < val.length; k++) {
+									var element = "<tr>\
 											<td>"+ i +"</td>\
-											<td>"+ val +"</td>\
+											<td>"+ val[k] +"</td>\
 										</tr>";
-								$('.modal-packing').append( element );
+									$('.modal-packing').append( element );
+								}
 							});
 						}
 					});

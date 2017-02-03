@@ -25,6 +25,8 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	
 	//include_once $rootdir.'/inc/order-creation.php';
@@ -38,8 +40,32 @@
 		die();
 	}
 	
+	function address_out($address_id){
+		//General function for handling the standard display of addresses
+		$address = '';
+		//Address Handling
+		$row = getAddresses($address_id);
+		$name = $row['name'];
+		$street = $row['street'];
+		$city = $row['city'];
+		$state = $row['state'];
+		$zip = $row['postal_code'];
+		$country = $row['country'];
+		
+		//Address Output
+		if($name){$address .= $name."<br>";}
+		if($street){$address .= $street."<br>";}
+		if($city && $state){$address .= $city.", ".$state;}
+		else if ($city || $state){ ($address .= $city.$state);}
+		if($zip){$address .= "  $zip";}
+		
+		return $address;
+	}
+	
 	$sales_order;
 	$notes;
+	$shipid;
+	$selected_carrier;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -49,6 +75,8 @@
 		$result = mysqli_fetch_assoc($result);
 		$sales_order = $result['so_number'];
 		$notes = $result['public_notes'];
+		$shipid = $result['ship_to_id'];
+		$selected_carrier = $result['freight_carrier_id'];
 	}
 	
 	function getItems($so_number = 0) {
@@ -115,6 +143,21 @@
 		}
 		
 		return $listSerials;
+	}
+	
+	function getComments($invid) {
+		global $order_number;
+		$comment;
+		
+		$query = "SELECT * FROM iso_comments WHERE invid = ". res($invid) ." AND so_number = '". res($order_number) ."';";
+		$result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$comment = $result['comment'];
+		}
+		
+		return $comment;
 	}
 	
 	function getWarranty($id) {
@@ -231,8 +274,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
-				<button class="btn-flat primary pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Generate ISO Report</button>
+				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Update Order</button>
 			</div>
 		</div>
 		<div class="loading_element">
@@ -376,7 +418,7 @@
 										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
-									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
 									<?php endforeach; ?>
 									</div>
 									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
