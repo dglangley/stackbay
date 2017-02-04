@@ -75,9 +75,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				else{
 					$b_add = $row['bill_to_id'];
 				}
-				(getAddresses($b_add,'name'))? $b_name = getAddresses($b_add,'street') : $b_name = getAddresses($b_add,'street');
+				$b_name = getAddresses($b_add,'street');
 				$s_add = $row['ship_to_id'];
-				(getAddresses($s_add,'name'))? $s_name = getAddresses($s_add,'street') : $s_name = getAddresses($s_add,'street');
+				$s_name = getAddresses($s_add,'street');
 				$selected_carrier = $row['freight_carrier_id'];
 				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
 				$selected_service = $row['freight_services_id'];

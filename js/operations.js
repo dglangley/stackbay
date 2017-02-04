@@ -1468,8 +1468,6 @@
 				var partid = $serial.closest('tr').find('.part_id').data('partid');
 				var condition = $serial.closest('tr').find('.condition_field').val();
 				var part = $serial.closest('tr').find('.part_id').data('part');
-				// var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.place').val();
-				// var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('.instance').val();
 				//Package number will be only used on the shipping order page
 				var package_no = $("#active_box_selector").val();
 				
@@ -1561,7 +1559,7 @@
 						
 					});
 			    } else if(serial != '' && page == 'shipping') {
-					console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
+					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
 					//Submit the data from the live scanned boxes
 			    	$.ajax({
 						type: "POST",
@@ -1573,7 +1571,6 @@
 						success: function(result) {
 							
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							//$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 							// console.log(result);
 							if(result['query']) {
 								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
@@ -1589,7 +1586,7 @@
 								
 								
 								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
 								}
 								$serialClone.find('input').val("");
 								
@@ -1599,6 +1596,11 @@
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								var element = "<input class='form-control input-sm iso_comment' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='' placeholder='Comments'>";
+								
+								$serial.closest('tr').find('.infiniteComments').prepend(element);
+								
 								if(qty == 0) {
 							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
 							    	var date = new Date();
@@ -1661,7 +1663,6 @@
 			//Prevent Button Spamming
 			$click.removeAttr('id');
 			
-			//$(this).css('background-color','#eeeeee');
 			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			//Include location in the near future
 			var items = [];
@@ -1751,8 +1752,9 @@
 						$click.attr('id','save_button_inventory');
 					//Nothing was change
 					} else {
-						alert('No changes have been made.');
+						//alert('No changes have been made.');
 						$click.attr('id','save_button_inventory');
+						window.location = "/shipping_home.php?po=true";
 					}
 				},
 				error: function(xhr, status, error) {
@@ -1767,7 +1769,7 @@
 		$(document).on('click', '.deleteSerialRow', function() {
 			var page = getPageName();
 			var po_number = getUrlParameter('on');
-			$row = $(this).closest('.input-group');
+			var $row = $(this).closest('.input-group');
 			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
@@ -1813,7 +1815,8 @@
 
 
 		//Shipping update button, mainly used for lot and serial redirection
-		$('#btn_update').click(function(){
+		$('#btn_update').click(function(e){
+			e.preventDefault();
 			//Save to reactivate button if needed
 			$click = $(this);
 			//Prevent Button Spamming
@@ -1821,6 +1824,17 @@
 			
 			var so_number = getUrlParameter('on');
 			var items = [];
+			
+			$.ajax({
+				type: 'POST',
+				url: '/json/iso.php',
+				data: {'special_req' : 'yes', 'contact_info' : 'yes', 'transit_time' : 'yes', 'so_number': so_number, 'type' : 'special'},
+				dataType: 'json',
+				success: function(data) {
+					console.log(data + ' iso_match');
+					$('.nav-tabs a[href="#iso_match"]').tab('show');
+				},
+			});
 			
 			var checkChanges = false;
 			
@@ -1869,7 +1883,9 @@
 				}
 			});
 			
-			console.log(items);
+			//Testing purposes
+			//console.log(items);
+			
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
@@ -1890,25 +1906,182 @@
 						$click.attr('id','btn_update');
 					//Nothing was change
 					} else {
-						alert('No changes have been made.');
+						//alert('No changes have been made.');
 						$click.attr('id','btn_update');
+						window.location = "/shipping_home.php?so=true";
 					}
 					console.log("JSON shipping-update.php: ERROR");
+					window.location = "/shipping_home.php?so=true";
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
-					console.log("JSON shipping-update.php: ERROR");
+					console.log("JSON shipping-update.php: ERROR " + error);
 				},	
 			});
 		});
 
 //==============================================================================
-//================================== PACKAGES ==================================
+//================================== ISO Quality ===============================
 //==============================================================================
+
+	//Configure the modal and also work on the printable page
+	$(document).on("click","#iso_report", function() {
+		//alert('Place ISO Form here');
+		var isoCheck = [];
+		var init = true;
+		
+		$('.shipping_update').children('tbody').children('tr').each(function() {
+			$(this).find('.iso_comment').each(function() {
+				//isoCheck.push($(this).data('serial'));
+				if($(this).val() != '') {
+					if(init) {
+						$('.iso_broken_parts').empty();
+						init = false;
+					}
+					//($(this).data('serial'));
+					var element = "<tr class='damaged'>\
+									<td>"+$(this).data('part')+"</td>\
+									<td>"+$(this).data('serial')+"</td>\
+									<td class='comment-data' data-invid='"+$(this).data('inv_id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+								</tr>";
+					$('.iso_broken_parts').append(element);
+				}
+			});
+		});
+		
+		if(init) {
+			$('.iso_broken_parts').empty();
+			
+			var element = "<tr>\
+							<td><b>No Defects/Damage in Order</b></td>\
+							<td></td>\
+							<td></td>\
+						</tr>";
+			$('.iso_broken_parts').append(element);
+		}
+		
+		$("#modal-iso").modal("show");
+		
+		$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		
+	});
+	
+	$(document).on('click','.btn_iso_parts', function(e) {
+		e.preventDefault();
+		var damage = false;
+		var so_number, partName;
+		var issueMessage = '';
+		var serialid = [];
+		var serialComments = [];
+		
+		so_number = $('.shipping_header').data('so');
+		
+		if($('.iso_broken_parts').find('.damaged').length) {
+			damage = true;
+		}
+	
+		if(damage) {
+			$('.iso_broken_parts').children('tr.damaged').each(function() {
+				
+				//Check if the part is already queued for an error
+				if(partName != '' && partName != $(this).find('.comment-data').data('part')) {
+					partName = $(this).find('.comment-data').data('part');
+					issueMessage += "<b>" + partName + "</b><br>";
+				}
+				
+				var invid = $(this).find('.comment-data').data('invid');
+				var serial = $(this).find('.comment-data').data('serial');
+				var issue = $(this).find('.comment-data').data('comment');
+				
+				serialid.push(invid);
+				serialComments.push(issue);
+				
+				issueMessage += "Serial: " + serial + "<br>";
+				issueMessage += "Comment: " + issue + "<br><br>";
+			});
+		}
+		
+		console.log(serialid + serialComments);
+		
+		$.ajax({
+			type: 'POST',
+			url: '/json/iso.php',
+			data: {
+				'part_no' : 'yes', 
+				'heci' : 'yes',
+				'damage' : damage, 
+				'so_number' : so_number, 
+				'invid' : serialid, 
+				'comments' : serialComments,
+				'type' : 'part',
+			},
+			dataType: 'json',
+			success: function(data) {
+				console.log(data + ' test');
+				if($('.nav-tabs a[href="#iso_match"]').length > 0) {
+					$('.nav-tabs a[href="#iso_req"]').tab('show');	
+				} else {
+					$('.nav-tabs a[href="#iso_match"]').tab('show');
+				}
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON iso.php: ERROR");
+			},
+		});
+	});
+	
+	$(document).on('click','.btn_iso_req', function(e) {
+		e.preventDefault();
+		var so_number;
+		
+		so_number = $('.shipping_header').data('so');
+
+		$.ajax({
+			type: 'POST',
+			url: '/json/iso.php',
+			data: {'special_req' : 'yes', 'contact_info' : 'n/a', 'transit_time' : 'n/a', 'so_number': so_number, 'type' : 'special'},
+			dataType: 'json',
+			success: function(data) {
+				console.log(data + ' iso_match');
+				$('.nav-tabs a[href="#iso_match"]').tab('show');
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON iso.php: ERROR");
+			},
+		});
+	});
+	
+	// $(document).on('click','.btn_iso_shipping', function(e) {
+	// 	e.preventDefault();
+	// 	var so_number;
+		
+	// 	so_number = $('.shipping_header').data('so');
+		
+	// 	var special_req = $("input:radio[name='special_req']:checked").val();
+	// 	var contact_info = $("input:radio[name='contact_info']:checked").val();
+	// 	var transit_time = $("input:radio[name='transit_time']:checked").val();
+
+	// 	$.ajax({
+	// 		type: 'POST',
+	// 		url: '/json/iso.php',
+	// 		data: {'special_req' : special_req, 'contact_info' : contact_info, 'transit_time' : transit_time, 'so_number': so_number, 'type' : 'special'},
+	// 		dataType: 'json',
+	// 		success: function(data) {
+	// 			console.log(data + ' test');
+	// 			$('.nav-tabs a[href="#packing_list"]').tab('show');
+	// 		},
+	// 		error: function(xhr, status, error) {
+	// 			alert(error+" | "+status+" | "+xhr);
+	// 			console.log("JSON iso.php: ERROR");
+	// 		},
+	// 	});
+	// });
 
 //Open Modal
 		$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
+				var order_number = $(".box_selector.active").data('order-number');
 				if (package_number){
 					$("#package_title").text("Editing Box #"+package_number);
 					$("#modal-width").val($(".box_selector.active").attr("data-width"));
@@ -1921,6 +2094,29 @@
 					
 					//After the edit modal has been set with the proper data, show it
 					$("#modal-package").modal("show");
+					
+					$.ajax({
+						type: "POST",
+						url: '/json/package_contents.php',
+						data: {
+							"order_number": order_number,
+							"package_number": package_number
+						},
+						dataType: 'json',
+						success: function(data) {
+							console.log(data);
+							$('.modal-packing').empty();
+							$.each( data, function( i, val ) {
+								for(k = 0; k < val.length; k++) {
+									var element = "<tr>\
+											<td>"+ i +"</td>\
+											<td>"+ val[k] +"</td>\
+										</tr>";
+									$('.modal-packing').append( element );
+								}
+							});
+						}
+					});
 				}
 				else{
 					alert('Please select a box before editing');

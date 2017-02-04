@@ -25,6 +25,8 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	
 	//include_once $rootdir.'/inc/order-creation.php';
@@ -38,7 +40,32 @@
 		die();
 	}
 	
+	function address_out($address_id){
+		//General function for handling the standard display of addresses
+		$address = '';
+		//Address Handling
+		$row = getAddresses($address_id);
+		$name = $row['name'];
+		$street = $row['street'];
+		$city = $row['city'];
+		$state = $row['state'];
+		$zip = $row['postal_code'];
+		$country = $row['country'];
+		
+		//Address Output
+		if($name){$address .= $name."<br>";}
+		if($street){$address .= $street."<br>";}
+		if($city && $state){$address .= $city.", ".$state;}
+		else if ($city || $state){ ($address .= $city.$state);}
+		if($zip){$address .= "  $zip";}
+		
+		return $address;
+	}
+	
 	$sales_order;
+	$notes;
+	$shipid;
+	$selected_carrier;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -47,6 +74,9 @@
 	if (mysqli_num_rows($result)>0) {
 		$result = mysqli_fetch_assoc($result);
 		$sales_order = $result['so_number'];
+		$notes = $result['public_notes'];
+		$shipid = $result['ship_to_id'];
+		$selected_carrier = $result['freight_carrier_id'];
 	}
 	
 	function getItems($so_number = 0) {
@@ -115,6 +145,21 @@
 		return $listSerials;
 	}
 	
+	function getComments($invid) {
+		global $order_number;
+		$comment;
+		
+		$query = "SELECT * FROM iso_comments WHERE invid = ". res($invid) ." AND so_number = '". res($order_number) ."';";
+		$result = qdb($query);
+	    
+	    if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$comment = $result['comment'];
+		}
+		
+		return $comment;
+	}
+	
 	function getWarranty($id) {
 		$warranty;
 		$id = prep($id);
@@ -129,6 +174,11 @@
 		return $warranty;
 	}
 	
+	//This gets the order number related packages
+	function getPackage($order_number) {
+		
+	}
+	
 	function format($partid){
 		$parts = reset(hecidb($partid, 'id'));
 	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
@@ -137,6 +187,7 @@
 	    return $name;
 	}
 
+	$items = getItems($sales_order);
 ?>
 	
 
@@ -152,8 +203,8 @@
 		<style type="text/css">
 			.table td {
 				vertical-align: top !important;
-				padding-top: 10px !important;
-				padding-bottom: 0px !important;
+				/*padding-top: 10px !important;*/
+				/*padding-bottom: 0px !important;*/
 			}
 			
 			.btn-secondary {
@@ -185,31 +236,45 @@
 			    min-width: 1em;
 			    margin-right: 0.5em;
 			}
+			
+			.infiniteISO .checkbox {
+				margin-top: 5px;
+				margin-bottom: 20px;
+			}
+			
+			.btn:active, .btn.active {
+				outline: 0;
+				background-image: none;
+				-webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.25);
+				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
+			}
 		</style>
 
 	</head>
 	
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
-		<?php include 'inc/navbar.php'; 
-		include_once $rootdir.'/modal/package.php';
+		<?php 
+			include 'inc/navbar.php'; 
+			include_once $rootdir.'/modal/package.php';
+			include_once $rootdir.'/modal/iso.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
-				echo"<h1>";
-				echo " Shipping Order";
-				if ($order_number!='New'){
-					echo " #$order_number";
-				}
-				echo"</h1>"
+					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
+					echo " Shipping Order";
+					if ($order_number!='New'){
+						echo " #$order_number";
+					}
+					echo"</h2>";
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn btn-success pull-right btn-update" id="btn_update" style="margin-top: 10px;">Update Order</button>
+				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Update Order</button>
 			</div>
 		</div>
 		<div class="loading_element">
@@ -256,16 +321,19 @@
 								$results = qdb($select);
 
 								if (mysqli_num_rows($results) > 0){
+									$init = true;
 									foreach($results as $b){
-										$box_button = "<button type='button' class='btn btn-grey box_selector'";
+										$box_button = "<button type='button' class='btn btn-grey ". ($init ? 'active' : '') ." box_selector'";
 										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
+										$box_button .= " data-order-number='" . $order_number . "'";
 										$box_button .= ">".$b['package_no']."</button>";
 										echo($box_button);
 			                        	
 			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+			                        	$init = false;
 									}
 								}
 								else{
@@ -291,23 +359,22 @@
 								<th>Item</th>
 								<th>SERIAL</th>
 								<th>Box #</th>
-								<th>QTY Ordered</th>
+								<th>Components</th>
+								<th>Ordered</th>
 								<th>Outstanding</th>
-								<th>Item Condition</th>
+								<th>Condition</th>
 								<th>Warranty</th>
-								<th>Delivery Date</th>
-								<th>Lot Shipment</th>
+								<th>Delivery</th>
 							</tr>
 						</thead>
 						<?php
 							//Grab a list of items from an associated sales order.
-							$items = getItems($sales_order);
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
 								// print_r($inventory);
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
-								<td class="part_id" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
+								<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
 									<?= format($item['partid']); ?>
 								</td>
 							
@@ -340,11 +407,27 @@
 										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
 									<?php endforeach; ?>
 								</td>
+								<td>
+									<div class="checkbox">
+										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
+									</div>
+									
+									<div class='infiniteComments'>
+									<?php
+										$select = "SELECT `serial_no`, `id`, `packageid` FROM `inventory`, `package_contents` where id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid']).";";
+										$serials = qdb($select);
+										foreach ($serials as $serial):
+									?>
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
+									<?php endforeach; ?>
+									</div>
+									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+								</td>
 								<td style="padding-top: 15px !important;">
 									<span class="qty_field"><?php echo $item['qty'] ?></span>
 								</td>
-								<td class="remaining_qty">
-									<input class="form-control input-sm" data-qty="" name="qty" value="<?php echo $item['qty'] - $item['qty_shipped']; ?>" readonly>
+								<td class="remaining_qty" style="padding-top: 15px !important;">
+									<?php echo $item['qty'] - $item['qty_shipped']; ?>
 								</td>
 								<td style="padding-top: 15px !important;">
 									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
@@ -354,13 +437,6 @@
 								</td>
 								<td style="padding-top: 15px !important;">
 									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
-								</td>
-								<td>
-									<div class="checkbox">
-										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
-									</div>
-									
-									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 								</td>
 							</tr>
 							
