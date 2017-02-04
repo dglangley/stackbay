@@ -24,21 +24,30 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/locations.php';
+
 	
 	//, qty = $qty, item_condition = $condition, status = $status
 	function updateToDatabase($serial, $locationid, $qty, $condition, $status, $id) {
 		$query;
+		$serial = prep($serial);
+		$locationid = prep($locationid);
+		$qty = prep($qty);
+		$condition = prep($condition);
+		$status = prep($status);
+		$id = prep($id);
 		
 	    if($id && $id != "" && $locationid != null) {
-		    $query  = "UPDATE inventory SET serial_no = '". res($serial) ."', locationid = '". res($locationid) ."', qty = '". res($qty) ."', item_condition = '". res($condition) ."', status = '". res($status) ."' WHERE id = ". res($id) .";";
+		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, qty = $qty, item_condition = $condition, status = $status WHERE id = $id;";
 	    } else if($id && $id != "" && $locationid == null) {	  
-	    	$query  = "UPDATE inventory SET serial_no = '". res($serial) ."', qty = '". res($qty) ."', item_condition = '". res($condition) ."', status = '". res($status) ."' WHERE id = ". res($id) .";";
+	    	$query  = "UPDATE inventory SET serial_no = $serial, qty = $qty, item_condition = $condition, status = $status WHERE id = $id;";
 	    } else {
 	    	return 'Failed to Update';
 	    }
-	    
+	    // echo($query);exit;
 	    // else {
-	    //     $query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES ('". res($serial) ."', '". res($qty) ."', '". res($partid) ."', '". res($condition) ."', '". res($status) ."', '". res($locationid) ."', NULL, NULL, NULL, '1', '". res($date) ."', NULL);";
+	    //     $query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES ('". res($serial) ."', '". res($qty) ."', '". res($partid) ."', '". res($condition) ."', '". res($status) ."', '". res($locationid) ."', NULL, NULL, NULL, '1', '". res($date) ."', NULL);";
 	    // }
 	    
 		$result = qdb($query);
@@ -47,7 +56,8 @@
 	}
 	
 	function deleteToDatabase($id) {
-		$query = "DELETE FROM inventory WHERE id = '".res($id)."';";
+		$id = prep($id);
+		$query = "DELETE FROM inventory WHERE id = $id;";
 		$result = qdb($query);
 		
 		return $result;
@@ -79,12 +89,14 @@
 	$condition = $_REQUEST['condition'];
 	$status = $_REQUEST['status'];
 	
+	// echo("id: $id | serial: $serial | place: $place | instance: $instance | qty: $qty | condition: $condition | status: $status");
+	// exit;
 	$delete = $_REQUEST['delete'];
 	
 	$result;
 	
 	if($delete == '') {
-		$result = updateToDatabase($serial, getLocationID($place, $instance), $qty, $condition, $status, $id);
+		$result = updateToDatabase($serial, dropdown_processor($place, $instance), $qty, $condition, $status, $id);
 	} else {
 		$result = deleteToDatabase($id);
 	}
