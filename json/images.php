@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/img_exists.php';
+	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
 	function reportError($err) {
 		echo json_encode(array('message'=>$err));
@@ -14,13 +15,14 @@
 	if (isset($_REQUEST['imgAction']) AND $_REQUEST['imgAction']) { $imgAction = $_REQUEST['imgAction']; }
 
 	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
-		$dir = '/devimgs/';
+//		$dir = '/devimgs/';
 
 		$prefix = sys_get_temp_dir();
 		if (substr($prefix,strlen($prefix)-1,1)<>'/') { $prefix .= '/'; }
+		$dir = $prefix;
 	} else {
-		$dir = '/img/parts/';
-//		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
+//		$dir = '/img/parts/';
+		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
 
 		// when handling images, needs to be on S3
 		if ($imgAction=='delete') {
@@ -96,7 +98,7 @@
 	}
 	if ($prime!==false) { $i = $prime; }
 
-	if (count($images)==0) { $images[] = '/img/noimage.png'; }
+	if (count($images)==0) { $images[] = array('path'=>'/img/noimage.png','filename'=>'noimage.png'); }
 
 	echo json_encode(array('images'=>$images,'prime'=>$i,'message'=>''));
 	exit;

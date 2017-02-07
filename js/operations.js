@@ -1588,6 +1588,8 @@
 			    } else if(serial != '' && page == 'shipping') {
 					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
 					//Submit the data from the live scanned boxes
+					qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
+					
 			    	$.ajax({
 						type: "POST",
 						url: '/json/shipping-update-dynamic.php',
@@ -1923,7 +1925,7 @@
 				data: {'so_number' : so_number, 'items' : items},
 				dataType: 'json',
 				success: function(data) {
-					console.log('Save Data ' + data);
+					console.log('Save Data ' + data['test']);
 					
 					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
@@ -1955,6 +1957,9 @@
 		var isoCheck = [];
 		var init = true;
 		
+		// if($('.nested_table')) {
+		// 	alert('exists');
+		// }
 		$('.shipping_update').children('tbody').children('tr').each(function() {
 			$(this).find('.iso_comment').each(function() {
 				//isoCheck.push($(this).data('serial'));
@@ -2084,6 +2089,7 @@
 				var order_number = $(".box_selector.active").data('order-number');
 				if (package_number){
 					$("#package_title").text("Editing Box #"+package_number);
+					$("#alert_title").text("Box #"+package_number);
 					$("#modal-width").val($(".box_selector.active").attr("data-width"));
 					$("#modal-height").val($(".box_selector.active").attr("data-h"));
 					$("#modal-length").val($(".box_selector.active").attr("data-l"));
@@ -2091,6 +2097,14 @@
 					$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
 					$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
 					$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
+					
+					var status = $(".box_selector.active").data('box-shipped');
+					
+					if(status == 'completed') {
+						$("#alert_message").show();
+					} else {
+						$("#alert_message").hide();
+					}
 					
 					//After the edit modal has been set with the proper data, show it
 					$("#modal-package").modal("show");
@@ -2197,7 +2211,7 @@
 				//Finally, output the button
 					// alert(final);
 					final.clone().text(autoinc).insertAfter(final)
-					.attr("data-row-id",id)
+					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active");
 					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
 					$("#active_box_selector").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");

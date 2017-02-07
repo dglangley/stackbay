@@ -231,9 +231,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			//Else do not touch the item
 			
 			//This query updates and saves the box as closed only if there are no errors in the order
-			if($result['error']) {
-				$query = "UPDATE packages SET ship_date ='".res($date)."' WHERE id = '".res($product[6])."';";
-				qdb($query);
+			if($result['error'] == '') {
+				foreach($product[6] as $box) {
+					$query = "UPDATE packages SET ship_date ='".res($date)."' WHERE id = '".res($box)."';";
+					qdb($query);
+				}
 			}
 		}
 		

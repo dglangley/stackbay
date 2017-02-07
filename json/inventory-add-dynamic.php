@@ -60,10 +60,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				qdb($query);
 				
-				
 				//Insert the item into the inventory
 		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
 				
+				$result['test'] = $query;
 				$result['query'] = qdb($query);
 				$result['query'] = $query;
 			} else {

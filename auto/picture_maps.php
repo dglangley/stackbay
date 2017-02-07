@@ -5,8 +5,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 exit;
 
-	$query = "DELETE FROM picture_maps; ";
-	$result = qdb($query) OR die(qe().' '.$query);
+//	$query = "DELETE FROM picture_maps; ";
+//	$result = qdb($query) OR die(qe().' '.$query);
 
 	$query = "SELECT part_numbers, hecis, id FROM inventory_looseinventoryimagegroup; ";
 	$result = qdb($query,'PIPE');
@@ -32,7 +32,8 @@ exit;
 //print "<pre>".print_r($imgs,true)."</pre>";
 		foreach ($results as $row => $partid) {
 			foreach ($imgs as $img) {
-				$query3 = "INSERT INTO picture_maps (partid, image) VALUES ('".$partid."','".$img."'); ";
+				//$query3 = "INSERT INTO picture_maps (partid, image) VALUES ('".$partid."','".$img."'); ";
+				$query3 = "REPLACE picture_maps (partid, prime, image) VALUES ('".$partid."','0','".$img."'); ";
 				$result3 = qdb($query3) OR die(qe().' '.$query3);
 //echo $query3.'<BR>';
 			}

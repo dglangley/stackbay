@@ -100,7 +100,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query = ";";
 			} else {
 				$result['query'] = false;
-				$result['error'] = "Lot Item does not exist or is out of stock.";
+				$result['error'] = "Component Item does not exist or is out of stock.";
 			}
 		}
 		
