@@ -249,6 +249,7 @@
 				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
 			}
 		</style>
+		<link rel="stylesheet" media="print" href="packing-slip.css">
 
 	</head>
 	
