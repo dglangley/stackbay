@@ -307,22 +307,23 @@
 								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 							</button>
 							<?php
-								function box_drop($order_number, $associated = '', $first = '',$selected = ''){
+								function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
 									if ($first){
 										$drop = "<div>
-			            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated'>";	
+			            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";	
 									}
 									else{
 										$drop = "<div>
-			            					<select class='form-control box_drop input-sm'  data-associated = '$associated'>";
+			            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial'>";
 									}
 									foreach ($results as $item) {
 											$drop .= "<option value='".$item['id']."'";
 											if ($selected == $item['id']){
 												$drop .= ' selected';
 											}
+											$drop .= ($item['datetime'] != '' ? ' disabled': '');
 											$drop .= ">Box ".$item['package_no']."</option>";
 										}
 									$drop .= "</select>";
@@ -419,7 +420,7 @@
 								<td class="infiniteBox" style="padding-top: 10px !important;">
 									<?=box_drop($order_number, '', true)?>
 									<?php foreach ($serials as $serial):?>
-										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'])?>
+										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'], $serial['serial_no'])?>
 									<?php endforeach; ?>
 								</td>
 								<td style="padding-top: 10px !important;">
@@ -453,7 +454,9 @@
 								<td style="padding-top: 15px !important;">
 									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
 								</td>
-								<td><button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button></td>
+								<td>
+									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+								</td>
 							</tr>
 							<?php $history = getHistory($item['partid']); if($history != '') { ?>
 								<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>
