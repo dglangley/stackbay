@@ -1594,7 +1594,11 @@
 						type: "POST",
 						url: '/json/shipping-update-dynamic.php',
 						data: {
-							 'partid' : partid, 'serial' : serial, 'so_number' : po_number, 'condition' : condition, 'package_no' : package_no
+							 'partid' : partid,
+							 'serial' : serial,
+							 'so_number' : po_number,
+							 'condition' : condition,
+							 'package_no' : package_no
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -1605,8 +1609,7 @@
 								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 								//Decrement the qty by 1 after success and no errors detected
 								qty--;
-								
-								
+
 								//Area to duplicate the box field
 								$("#active_box_selector").clone().insertAfter("#active_box_selector")
 								.removeAttr("id")
