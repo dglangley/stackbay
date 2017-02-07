@@ -37,13 +37,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	function savePart($part_no, $heci, $damage, $so_number, $invid, $comments) {
 		$damaged = ($damage == 'true' ? 'yes' : 'no');
-		
-		$query = "DELETE FROM iso_comments WHERE so_number = '".res($so_number)."';";
-		qdb($query);
 			
 		//Using for loop to parse through matching elements of 2 arrays instead of foreach
 		for($i = 0; $i < count($invid); $i++) {
-			$query = "REPLACE INTO iso_comments (invid, comment, so_number) VALUES ('".res($invid[$i])."', '".res($comments[$i])."', '".res($so_number)."');";
+			$query = "UPDATE inventory (notes) VALUES (''".res($comments[$i])."') WHERE id = '".res($invid)."';";
 			qdb($query);
 		}
 		

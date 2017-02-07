@@ -192,6 +192,10 @@ input:-moz-placeholder { text-transform: uppercase; }
 	bottom: 0;
 }
 
+.left-side-main {
+	height: 100%;
+}
+
 .arrow:after, .arrow:before {
 	left: 100%;
 	top: 50%;

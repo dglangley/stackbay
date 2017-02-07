@@ -6,6 +6,10 @@
         <h4 class="modal-title" id="package_title">Package Edit</h4>
 	    </div>
       <div class="modal-body" id="package-modal-body" data-modal-id = ''>
+      	<div id="alert_message" class="alert alert-warning fade in text-center" style="display: none; width: 100%; z-index: 9999; top: 95px;">
+				    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+				    <strong id="alert_title">Box #</strong> has been shipped.
+				</div>
 								<div class = 'row'>
 											<div class="col-md-3"><b>Weight:</b></div>
                       <div class="col-md-3"><b>Length:</b></div>

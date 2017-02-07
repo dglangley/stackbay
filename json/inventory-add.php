@@ -95,7 +95,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty', 'part', 'instance']
 	function savetoDatabase($productid, $po_number){
 		$result = [];
-		
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productid, 8);
 		
@@ -156,7 +155,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					qdb($query);
 					
 					checkPOReceived($po_number, reset($product));
-					
+
 					//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
 			 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES ('". res(reset($product[2])) ."', '1','". res(reset($product)) ."', '". res(reset($product[3])) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 					$result['query'] = qdb($query);

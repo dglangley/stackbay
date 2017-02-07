@@ -277,7 +277,7 @@
 												</tr>
 											</thead>
 											<tbody>
-											<?php $histoty = getHistory($part['partid']); if($history != '') { foreach($history as $serial): ?>
+											<?php $history = getHistory($part['partid']); if($history != '') { foreach($history as $serial): ?>
 												<tr>
 													<td><?= $serial['serial_no']; ?></td>
 													<td><?= $serial['qty']; ?></td>
