@@ -76,6 +76,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						$query = "UPDATE sales_items SET ship_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
 						qdb($query);
 					}
+					
+					$result['invid'] = $check['id'];
 				} else {
 					$result['query'] = false;
 					$result['error'] = "Item Scanned Condition is: '". $check['item_condition'] ."' does not match with the specified sales order condition: '$condition'.";

@@ -1602,6 +1602,7 @@
 						},
 						dataType: 'json',
 						success: function(result) {
+							console.log(result);
 							
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
 							// console.log(result);
@@ -1629,7 +1630,7 @@
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
-								var element = "<input class='form-control input-sm iso_comment' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='' placeholder='Comments'>";
+								var element = "<input class='form-control input-sm iso_comment' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
 								
 								$serial.closest('tr').find('.infiniteComments').prepend(element);
 								
@@ -1825,6 +1826,9 @@
 						} else {
 							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');
+							
+							$row.closest('tr').find('.infiniteBox').find('select[data-serial="'+ serial +'"]').remove();
+							$row.closest('tr').find('.infiniteComments').find('input[data-serial="'+ serial +'"]').remove();
 						}
 						$row.closest('.infiniteSerials').children('.input-group:first').find('input').attr('readonly', false);
 						
@@ -1975,7 +1979,7 @@
 					var element = "<tr class='damaged'>\
 									<td>"+$(this).data('part')+"</td>\
 									<td>"+$(this).data('serial')+"</td>\
-									<td class='comment-data' data-invid='"+$(this).data('inv_id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+									<td class='comment-data' data-invid='"+$(this).data('invid')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
 								</tr>";
 					$('.iso_broken_parts').append(element);
 				}
@@ -2003,7 +2007,6 @@
 		e.preventDefault();
 		var damage = false;
 		var so_number, partName;
-		var issueMessage = '';
 		var serialid = [];
 		var serialComments = [];
 		
@@ -2016,25 +2019,17 @@
 		if(damage) {
 			$('.iso_broken_parts').children('tr.damaged').each(function() {
 				
-				//Check if the part is already queued for an error
-				if(partName != '' && partName != $(this).find('.comment-data').data('part')) {
-					partName = $(this).find('.comment-data').data('part');
-					issueMessage += "<b>" + partName + "</b><br>";
-				}
-				
 				var invid = $(this).find('.comment-data').data('invid');
 				var serial = $(this).find('.comment-data').data('serial');
 				var issue = $(this).find('.comment-data').data('comment');
 				
 				serialid.push(invid);
 				serialComments.push(issue);
-				
-				issueMessage += "Serial: " + serial + "<br>";
-				issueMessage += "Comment: " + issue + "<br><br>";
+			
 			});
 		}
 		
-		console.log(serialid + serialComments);
+		console.log(serialid + ' ' + serialComments + ' ' + so_number + ' ' + damage);
 		
 		$.ajax({
 			type: 'POST',

@@ -37,14 +37,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	function savePart($part_no, $heci, $damage, $so_number, $invid, $comments) {
 		$damaged = ($damage == 'true' ? 'yes' : 'no');
+		
 			
 		//Using for loop to parse through matching elements of 2 arrays instead of foreach
 		for($i = 0; $i < count($invid); $i++) {
-			$query = "UPDATE inventory (notes) VALUES (''".res($comments[$i])."') WHERE id = '".res($invid)."';";
+			$query = "UPDATE inventory SET notes = '".res($comments[$i])."' WHERE id = '".res($invid[$i])."';";
 			qdb($query);
 		}
 		
-		$query = "REPLACE INTO iso (part_no, heci, cosmetic, component, so_number) VALUES ('".res($part_no)."', '".res($heci)."', '".res($damaged)."', '".res($damaged)."', '".res($so_number)."');";
+		$query = "REPLACE INTO iso (part, heci, cosmetic, component, so_number) VALUES ('".res($part_no)."', '".res($heci)."', '".res($damaged)."', '".res($damaged)."', '".res($so_number)."');";
 		$result = qdb($query);
 		
 		return $result;
@@ -57,7 +58,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result;
 	
 	if($type == 'part')
 		$result = savePart($part_no, $heci, $damage, $so_number, $invid, $comments);
