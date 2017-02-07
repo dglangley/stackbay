@@ -195,7 +195,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
-		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		
 		<style type="text/css">
 			.table td {
@@ -410,7 +410,7 @@
 										foreach ($serials as $serial):
 									?>
 									<div class="input-group">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" inv_id =<?=$serial['id']?> value='<?=$serial['serial_no']?>' disabled>
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-inv-id =<?=$serial['id']?> value='<?=$serial['serial_no']?>' disabled>
 									    <span class="input-group-addon">
 									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 									    </span>
@@ -434,7 +434,7 @@
 										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
-									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
 									<?php endforeach; ?>
 									</div>
 									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
@@ -491,7 +491,7 @@
 		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
-		<script src="js/operations.js"></script>
+		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		<script>
 			(function($){
 				$('#item-updated-timer').delay(3000).fadeOut('fast');
