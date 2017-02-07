@@ -2105,9 +2105,6 @@
 						$("#alert_message").hide();
 					}
 					
-					//After the edit modal has been set with the proper data, show it
-					$("#modal-package").modal("show");
-					
 					$.ajax({
 						type: "POST",
 						url: '/json/package_contents.php',
@@ -2128,6 +2125,9 @@
 									$('.modal-packing').append( element );
 								}
 							});
+							
+							//After the edit modal has been set with the proper data, show it
+							$("#modal-package").modal("show");
 						}
 					});
 				}
