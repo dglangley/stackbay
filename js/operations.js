@@ -1612,12 +1612,13 @@
 								qty--;
 
 								//Area to duplicate the box field
-								$("#active_box_selector").clone().insertAfter("#active_box_selector")
+								$serial.closest('tr').find("#active_box_selector").clone()
+								.insertAfter($serial.closest('tr').find("#active_box_selector"))
 								.removeAttr("id")
 								.addClass("drop_box")
-								.val($("#active_box_selector").val());
-								
-								
+								.val($serial.closest('tr').find("#active_box_selector").val())
+								.attr("data-associated",serial);
+
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
 								}
