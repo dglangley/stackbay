@@ -76,7 +76,8 @@
 				<?php
 				if($order_number != "New"){
 					$url = ($order_type == "Sales")?"shipping":"inventory_add";
-					echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-truck" aria-hidden="true"></i></a>';
+					echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+					echo '<a href="/docs/'.$order_type[0].'O'.$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 				}
 				?>
 				

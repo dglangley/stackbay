@@ -239,6 +239,15 @@ input:-moz-placeholder { text-transform: uppercase; }
 	display: none;
 }
 
+/* David additions */
+
+#order_header .btn-flat {
+	margin:10px;
+}
+
+/* End David additions */
+
+
 @media only screen and (max-width: 767px) {
 	.company_meta:after, .company_meta:before {
 		top: 100%;

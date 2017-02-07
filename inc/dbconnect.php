@@ -275,7 +275,7 @@ $DEV_ENV = true;
 
 	//Check if logged in
 	$is_loggedin = is_loggedin();
-	
+
 	//Check if signin is required or check if the user status is alive
 	if((!$is_loggedin AND ! strstr($_SERVER["PHP_SELF"],'auto/')) || (isset($U['status']) && $U['status'] == 'Inactive')) {
 		checkPagePermissions();
