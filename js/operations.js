@@ -1826,7 +1826,10 @@
 							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
 						} else {
-							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').find('input').val(qty);
+							qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').text());
+							qty++; 
+							
+							$row.closest('tr').find('.infiniteSerials').siblings('.remaining_qty').text(qty);
 							$row.closest('tr').find('.infiniteSerials').siblings('.ship-date').text('');
 							
 							$row.closest('tr').find('.infiniteBox').find('select[data-serial="'+ serial +'"]').remove();

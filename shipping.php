@@ -297,7 +297,7 @@
 			<!--======================= End Left half ======================-->
 			
 			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
-				<div class = 'row-fluid'>
+				<div class = 'row'>
 					<div class = 'col-sm-3'>
 						<h3>Items to be Shipped</h3>
 					</div>
@@ -410,9 +410,9 @@
 										foreach ($serials as $serial):
 									?>
 									<div class="input-group">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-inv-id =<?=$serial['id']?> value='<?=$serial['serial_no']?>' disabled>
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>'>
 									    <span class="input-group-addon">
-									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+									        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>"><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 									    </span>
 						            </div>
 									<?php endforeach; ?>
@@ -430,11 +430,15 @@
 									
 									<div class='infiniteComments'>
 									<?php
-										$select = "SELECT DISTINCT `serial_no`, `id`, `packageid` FROM `inventory`, `package_contents` where id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid']).";";
+										$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
 										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
+<<<<<<< HEAD
 									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>">
+=======
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? '' : 'disabled');?>>
+>>>>>>> 5cf0b817bf2abd399f46bc324faace11af02a150
 									<?php endforeach; ?>
 									</div>
 									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->

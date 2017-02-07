@@ -37,7 +37,7 @@
         $part;
         $parts = array();
 		
-        $query = "SELECT DISTINCT * FROM package_contents WHERE packageid = '". res($id) ."';";
+        $query = "SELECT DISTINCT serialid FROM package_contents WHERE packageid = '". res($id) ."';";
         $result = qdb($query);
         
         while ($row = $result->fetch_assoc()) {
