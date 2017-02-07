@@ -34,6 +34,8 @@
 	$order_number = $_REQUEST['on'];
 	$order_type = "Sales";
 	
+	$so_updated = $_REQUEST['success'];
+	
 	//If no order is selected then return to shipping home
 	if(empty($order_number)) {
 		header("Location: /shipping_home.php");
@@ -277,9 +279,17 @@
 				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Update Order</button>
 			</div>
 		</div>
+		
+		<?php if($so_updated == 'true'): ?>
+			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
+			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+			    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
+			</div>
+		<?php endif; ?>
+
 		<div class="loading_element">
 			<!--================== Begin Left Half ===================-->
-			<div class="left-side-main col-sm-2" style="height: 100%;">
+			<div class="left-side-main col-sm-2">
 				<!-- Everything here is put out by the order creation ajax script -->
 			</div>
 			<!--======================= End Left half ======================-->
@@ -290,7 +300,7 @@
 						<h3>Items to be Shipped</h3>
 					</div>
 					<div class="col-sm-9">
-						<div class="btn-group" style = "padding-bottom:16px;">
+						<div class="btn-group box_group" style = "padding-bottom:16px;">
 							<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
 								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 							</button>
@@ -426,7 +436,7 @@
 								<td style="padding-top: 15px !important;">
 									<span class="qty_field"><?php echo $item['qty'] ?></span>
 								</td>
-								<td class="remaining_qty" style="padding-top: 15px !important;">
+								<td class="remaining_qty" style="padding-top: 15px !important;" data-qty="<?php echo $item['qty'] - $item['qty_shipped']; ?>">
 									<?php echo $item['qty'] - $item['qty_shipped']; ?>
 								</td>
 								<td style="padding-top: 15px !important;">
@@ -449,5 +459,10 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
+		<script>
+			(function($){
+				$('#item-updated-timer').delay(3000).fadeOut('fast');
+			})(jQuery);
+		</script>
 	</body>
 </html>
