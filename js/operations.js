@@ -1807,7 +1807,8 @@
 			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
-			
+			var invid = $row.find('input').attr('data-inv-id');
+			alert($($row).index(this));
 			//Grab all the required data to be passed into the delete ajax
 			var partid = $row.closest('tr').find('.part_id').attr('data-partid');
 			
@@ -1850,6 +1851,7 @@
 						console.log("inventory-delete.php: ERROR");
 					},	
 				});
+				// package_delete(invid);
 			}
 		});
 
@@ -2085,6 +2087,11 @@
 		});
 	});
 
+
+//==============================================================================
+//================================== PACKAGES ==================================
+//==============================================================================
+
 //Open Modal
 		$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
@@ -2259,7 +2266,26 @@
 					}
 				});
 		});
-		
+
+function package_delete(pack, serialid){
+	$.ajax({
+		type: "POST",
+		url: '/json/packages.php',
+		data: {
+			"action" : "change",
+			"assoc" : serialid,
+			"package" : pack
+		},
+		dataType: 'json',
+		success: function(id) {
+			console.log("JSON Package Delete | packages.php: Success");
+		},
+		error: function(xhr, status, error) {
+			alert(error+" | "+status+" | "+xhr);
+			console.log("JSON Package Delete | packages.php: Error");
+		}
+	});
+}
 		
 //==============================================================================		
 //================================= LOCATIONS ==================================

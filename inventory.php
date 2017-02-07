@@ -29,7 +29,7 @@
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
 	?>
-	<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+	<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 	<style>
 		hr {
 			margin-top: 0;
@@ -264,7 +264,7 @@ s
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
-<script src="js/operations.js"></script>
+<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 
 <script>
 	(function($){

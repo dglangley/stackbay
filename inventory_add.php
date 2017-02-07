@@ -131,7 +131,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
-		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.table td {
 				vertical-align: top !important;
@@ -301,7 +301,7 @@
 		</div> 
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
-		<script src="js/operations.js"></script>
+		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		<script type="text/javascript">
 			// function updateBillTo(){
 			// 	if ( $("#mismo").prop( "checked" )){

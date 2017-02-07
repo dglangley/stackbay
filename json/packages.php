@@ -57,13 +57,23 @@ function packages(){
         qdb($update);
         return $update;
     }
-        
     elseif($action == "change"){
         $assoc = grab('assoc');
         $new = prep(grab('package'));
         $update = "Not Updated";
         if($assoc && $new){
             $update = "UPDATE package_contents SET packageid = $new WHERE serialid = $assoc";
+            qdb($update);
+        }
+        return $update;
+        
+    }
+    elseif($action == "delete"){
+        $assoc = grab('assoc');
+        $new = prep(grab('package'));
+        $update = "Not Deleted";
+        if($assoc && $new){
+            $update = "DELETE FROM package_contents WHERE packageid = $new AND serialid = $assoc";
             qdb($update);
         }
         return $update;

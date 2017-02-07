@@ -195,7 +195,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
-		<link rel="stylesheet" href="../css/operations-overrides.css" type="text/css" />
+		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		
 		<style type="text/css">
 			.table td {
@@ -414,7 +414,7 @@
 										foreach ($serials as $serial):
 									?>
 									<div class="input-group">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 									    <span class="input-group-addon">
 									        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 									    </span>
@@ -438,7 +438,13 @@
 										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
+<<<<<<< HEAD
 									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+=======
+
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? '' : 'disabled');?>>
+
+>>>>>>> 9eaacff96ab0df3a70aaab0c91463c2707b88839
 									<?php endforeach; ?>
 									</div>
 									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
@@ -495,7 +501,7 @@
 		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
-		<script src="js/operations.js"></script>
+		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		<script>
 			(function($){
 				$('#item-updated-timer').delay(3000).fadeOut('fast');
