@@ -2053,7 +2053,7 @@
 			dataType: 'json',
 			success: function(data) {
 				console.log(data + ' test');
-				if($('.nav-tabs a[href="#iso_match"]').length > 0) {
+				if($('.nav-tabs a[href="#iso_req"]').length > 0) {
 					$('.nav-tabs a[href="#iso_req"]').tab('show');	
 				} else {
 					$('.nav-tabs a[href="#iso_match"]').tab('show');

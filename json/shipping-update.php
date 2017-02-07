@@ -233,8 +233,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			//This query updates and saves the box as closed only if there are no errors in the order
 			if($result['error'] == '') {
 				foreach($product[6] as $box) {
-					$query = "UPDATE packages SET ship_date ='".res($date)."' WHERE id = '".res($box)."';";
-					qdb($query);
+					//Check and only ship boxes that have something placed into them
+					$query = "SELECT * FROM package_contents WHERE packageid = '".res($box)."';";
+					$data = qdb($query);
+					
+					if (mysqli_num_rows($data)>0) {
+						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."';";
+						qdb($query);
+					}
 				}
 			}
 		}
