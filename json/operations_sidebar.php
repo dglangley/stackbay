@@ -373,11 +373,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					//$right .= $row['datetime'];
 				}
 				
-				$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-				
+				$init = true;
 				foreach($lists as $num) {
-					if($num != '')
+					if($num != '') {
+						if($init) {
+							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+							$init = false;
+						}
 						$right .= '<a href="#"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+					}
 				}
 				
 				$right .= "<br>";

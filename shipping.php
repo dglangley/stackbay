@@ -410,7 +410,7 @@
 										foreach ($serials as $serial):
 									?>
 									<div class="input-group">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-saved="<?=$serial['serial_no']?>" inv_id ='<?=$serial['id']?>' value='<?=$serial['serial_no']?>'>
+									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>'>
 									    <span class="input-group-addon">
 									        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>"><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 									    </span>
