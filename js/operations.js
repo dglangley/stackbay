@@ -1845,12 +1845,17 @@
 					var partid = $(this).find('.part_id').data('partid');
 					var serials = [];
 					var savedSerials = [];
+					var boxes = [];
 					var condition;
 					var lot = false;
 					var qty;
 
 					//Grab the conidtion value set by the sales order
 					condition = $(this).find('.condition_field').data('condition');
+					
+					$('.box_group').find('.box_selector').each(function() {
+						boxes.push($(this).data('row-id'));
+					});
 					
 					$(this).find('.infiniteSerials').find('input').each(function() {
 						serials.push($(this).val());
@@ -1861,9 +1866,6 @@
 							checkChanges = true;
 						}
 						
-						//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
-						//if($(this).attr('data-saved') == '')
-						//$(this).attr("data-saved", $(this).val());
 					});
 					
 					//Check if the lot is checked or not
@@ -1872,7 +1874,8 @@
 					} else {
 						lot = false
 					}
-					qty = $(this).find('.remaining_qty').children('input').val();
+					
+					qty = $(this).find('.remaining_qty').data('qty');
 					
 					items.push(partid);
 					items.push(savedSerials);
@@ -1880,11 +1883,12 @@
 					items.push(condition);
 					items.push(lot);
 					items.push(qty);
+					items.push(boxes);
 				}
 			});
 			
 			//Testing purposes
-			//console.log(items);
+			console.log(items);
 			
 			$.ajax({
 				type: 'POST',
@@ -1892,26 +1896,21 @@
 				data: {'so_number' : so_number, 'items' : items},
 				dataType: 'json',
 				success: function(data) {
-					console.log(data);
+					console.log('Save Data ' + data);
 					
-					if(data['query'] || checkChanges) {
+					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
-						if(data['error'] != undefined)
-							alert(data['error']);
 						window.onbeforeunload = null;
-						window.location = "/shipping_home.php?so=true";
+						//window.location.href = window.location.href + "?success=true";
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
 						alert(data['error']);
 						$click.attr('id','btn_update');
 					//Nothing was change
 					} else {
-						//alert('No changes have been made.');
 						$click.attr('id','btn_update');
-						window.location = "/shipping_home.php?so=true";
+						//window.location.href = window.location.href + "&success=true";
 					}
-					console.log("JSON shipping-update.php: ERROR");
-					window.location = "/shipping_home.php?so=true";
 				},
 				error: function(xhr, status, error) {
 					console.log("JSON shipping-update.php: ERROR " + error);
@@ -2051,32 +2050,6 @@
 			},
 		});
 	});
-	
-	// $(document).on('click','.btn_iso_shipping', function(e) {
-	// 	e.preventDefault();
-	// 	var so_number;
-		
-	// 	so_number = $('.shipping_header').data('so');
-		
-	// 	var special_req = $("input:radio[name='special_req']:checked").val();
-	// 	var contact_info = $("input:radio[name='contact_info']:checked").val();
-	// 	var transit_time = $("input:radio[name='transit_time']:checked").val();
-
-	// 	$.ajax({
-	// 		type: 'POST',
-	// 		url: '/json/iso.php',
-	// 		data: {'special_req' : special_req, 'contact_info' : contact_info, 'transit_time' : transit_time, 'so_number': so_number, 'type' : 'special'},
-	// 		dataType: 'json',
-	// 		success: function(data) {
-	// 			console.log(data + ' test');
-	// 			$('.nav-tabs a[href="#packing_list"]').tab('show');
-	// 		},
-	// 		error: function(xhr, status, error) {
-	// 			alert(error+" | "+status+" | "+xhr);
-	// 			console.log("JSON iso.php: ERROR");
-	// 		},
-	// 	});
-	// });
 
 //Open Modal
 		$(document).on("click",".box_edit", function(){
