@@ -35,7 +35,7 @@
 		}
 		else{
 	        $line['value'] = 'NULL';
-	        $line['display'] = '';
+	        $line['display'] = 'Prepaid';
 		}
 	}
 

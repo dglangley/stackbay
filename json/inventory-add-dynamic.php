@@ -65,6 +65,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$result['test'] = $query;
 				$result['query'] = qdb($query);
+				$result['query'] = $query;
 			} else {
 				$result['query'] = false;
 			}

@@ -281,6 +281,7 @@
 				// }
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
+				
 				//Default selector for the addresses
 				$.ajax({
 					type: "POST",
@@ -375,6 +376,32 @@
 						});
 				}
 				});
+				
+				//Default Global Warranty
+				// $.ajax({
+				// 	type: "POST",
+				// 	url: '/json/warranty-default.php',
+				// 	data: {
+				// 		"company": limit,
+				// 		},
+				// 	dataType: 'json',
+				// 	success: function(right) {
+				// 		var bvalue = right['b_value'];
+				// 		var bdisplay = right['b_display'];
+			 //   		$("#select2-bill_to-container").html(bdisplay)
+			 //   		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
+						
+				// 		var svalue = right['s_value'];
+				// 		var sdisplay = right['s_display'];
+			 //   		$("#select2-ship_to-container").html(sdisplay)
+			 //   		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
+			 //   		console.log("JSON address-default.php: Success");
+				// 	},					
+				// 	error: function(xhr, status, error) {
+				// 		alert(error+" | "+status+" | "+xhr);
+				// 		console.log("JSON address-default.php: Error");
+				// 	}
+				// });
 				
 				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
 				// alert(new_account);
@@ -1567,7 +1594,11 @@
 						type: "POST",
 						url: '/json/shipping-update-dynamic.php',
 						data: {
-							 'partid' : partid, 'serial' : serial, 'so_number' : po_number, 'condition' : condition, 'package_no' : package_no
+							 'partid' : partid,
+							 'serial' : serial,
+							 'so_number' : po_number,
+							 'condition' : condition,
+							 'package_no' : package_no
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -1579,8 +1610,7 @@
 								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 								//Decrement the qty by 1 after success and no errors detected
 								qty--;
-								
-								
+
 								//Area to duplicate the box field
 								$("#active_box_selector").clone().insertAfter("#active_box_selector")
 								.removeAttr("id")
