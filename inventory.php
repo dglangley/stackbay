@@ -97,6 +97,10 @@
 				display: block;
 			}
 		}
+		#modalHistoryBody div:nth-child(even){
+			background-color:#f7f7f7;
+		}
+s
 	</style>
 
 </head>
@@ -108,7 +112,7 @@
 <!----------------------------------------------------------------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-	
+	<?php include_once 'modal/history.php'?>
 	
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -116,18 +120,22 @@
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
 
-			<div class="col-md-2 col-sm-2 disabled_input">
+			<div class="col-md-2 col-sm-2">
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
 				<div class="row">
-					<div class='col-md-6'><?= loc_dropdowns('place')?></div>
-					<div class='col-md-6 nopadding'><?= loc_dropdowns('instance')?></div>
+					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
+					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
+					<div class="col-md-3" style  = 'padding-right:0px;padding-left:5px;'>
+						<div class="input-group">
+			              <input type="text" class="form-control input-sm" id="po_filter" placeholder="PO">
+			            </div>
+					</div>
 				</div>
 			</div>
-
 			<div class = "col-md-3">
 				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" disabled>
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -135,7 +143,7 @@
 				</div>
 				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" disabled>
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -145,32 +153,17 @@
 					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges">
+							<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>
 						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
 				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
 								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>		
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>	
-								<?php
-									for ($m=1; $m<=5; $m++) {
-										$month = format_date($today,'M m/t/Y',array('m'=>-$m));
-										$mfields = explode(' ',$month);
-										$month_name = $mfields[0];
-										$mcomps = explode('/',$mfields[1]);
-										$MM = $mcomps[0];
-										$DD = $mcomps[1];
-										$YYYY = $mcomps[2];
-										echo '
-																<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
-										';
-									}
-								?>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>
 							</div><!-- animated fadeIn -->
 						</div><!-- btn-range-options -->
 					</div><!-- btn-group -->
 				</div><!-- form-group -->
 			</div>
-			
 			<div class="col-md-2 col-sm-2 text-center">
             	<h2 class="minimal">Inventory</h2>
 			</div>
@@ -186,7 +179,7 @@
 			</div>
 			
 			<!--Condition Drop down Handler-->
-			<div class="col-md-1 col-sm-1 disabled_input">
+			<div class="col-md-1 col-sm-1">
 				<?php
 					$condition_selected = grab('condition','');
 					echo dropdown('condition',$condition_selected,'','',false,"condition_global");
@@ -195,7 +188,7 @@
 			
 			<div class="col-md-2 col-sm-2">
 				<div class="company input-group">
-					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' disabled>
+					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
 						<option value=''>Select a Company</option>
 					</select>
 					<span class="input-group-btn">
@@ -210,11 +203,13 @@
 <!------------------------------ Alerts Section ------------------------------>
 <!---------------------------------------------------------------------------->
 
+	<div id="inventory_loading" class="alert alert-warning fade in text-center" style="display: none;">
+	    <strong>Loading...</strong>
+	</div>
 	<div id="item-updated" class="alert alert-success fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 	    <strong>Success!</strong> Changes have been updated. Refresh required to re-organize data.
 	</div>
-	
 	<div id="item-failed" class="alert alert-danger fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 	    <strong>Uh Oh!</strong> Something went wrong with the update, please look into a fix for this error.
@@ -222,7 +217,8 @@
 	
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
-	
+<!----------------------------------------------------------------------------->
+
 	<div class="loading_element_listing" style="display: none;">
 		<div class='col-sm-12' style='padding-top: 20px'>
 			<select class='revisions' multiple>
@@ -233,18 +229,11 @@
 		<div class='col-sm-12'>
 			<div class='table-responsive'>
 				<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
-					<thead>
-						<tr>
-							<th>Location</th>
-							<th>Qty</th>
-							<th>Condition</th>
-							<th>Purchase Order</th>
-							<th>Vendor</th>
-							<th>Date Added</th>
-						</tr>
+					<thead class = 'headers'>
+						
 					</thead>
 					<tbody class='parts'>
-						
+
 					</tbody>
 				</table>
 			</div>
@@ -279,26 +268,77 @@
 
 <script>
 	(function($){
-		
-		$('.disabled_input').find('select').prop('disabled', true)
+		// $('.disabled_input').find('select').prop('disabled', true)
+		var filter_grab = function (){
+
+			//Set an array up with the filter fields from the filter bar
+			var output = {
+				place : $("#filterBar").find(".place").val(),
+				location : $("#filterBar").find(".instance").val(),
+				start : $("#filterBar").find("input[name='START_DATE']").val(),
+				end : $("#filterBar").find("input[name='END_DATE']").val(),
+				condition : $("#filterBar").find("#condition_global").val(),
+				vendor : $("#filterBar").find("#companyid").val()
+			};
+			console.log(output);
+			return output;
+		};
 		var inventory_history = function (search) {
+
+			var place = $("#filterBar").find(".place").val();
+			var location = $("#filterBar").find(".instance").val();
+			var start = $("#filterBar").find("input[name='START_DATE']").val();
+			var end = $("#filterBar").find("input[name='END_DATE']").val();
+			var condition = $("#filterBar").find("#condition_global").val();
+			var vendor = $("#filterBar").find("#companyid").val();
+			var order = $("#filterBar").find("#po_filter").val();
+
 			$.ajax({
 					type: "POST",
 					url: '/json/inventory-out.php',
 					data: {
 						"search": search,
-						},
+						"place" : place,
+						"location" : location,
+						"start" : start,
+						"end" : end,
+						"condition" : condition,
+						"vendor" : vendor,
+						"order" : order
+					},
 					dataType: 'json',
 					success: function(part) {
-						console.log('Successfully called: /json/inventory-out.php?search='+search);
+						console.log('Successfully called: /json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&condition="+condition+"&vendor="+vendor);
 						// Add feature to auto update the URL without a refresh
 						if(search == '') {
 							window.history.replaceState(null, null, "/inventory.php");
 						} else {
 							window.history.replaceState(null, null, "/inventory.php?search=" + search);	
 						}
+						var headers = '<tr>';
+						if (!search){
+							headers +=	"<th>Items</th>";
+						}
+						if (place == 'null'){
+							headers +=	"<th>Location</th>";
+						}
+						headers +=	"<th>Qty</th>";
+						
+						if (condition != 'no'){
+							headers +=	"<th>Condition</th>";
+						}
+						
+						if(!order){
+							headers +=	"<th>Purchase Order</th>";
+						}
+						if(!vendor){
+							headers +=	"<th>Vendor</th>";
+						}
+						headers +=	"<th>Date Added</th>";
+						headers += "</tr>";
 						
 						$(".revisions").empty();
+						$(".headers").empty();
 						$(".parts").empty();
 						
 						$(".part-container").html("").remove();	
@@ -316,64 +356,81 @@
 						var counter = 1;
 						revisions = "<option value='' selected>All</option>";
 						//If there are multiple parts being returned, loop through them all
-						$.each(part, function(i, info){
+						$.each(part, function(partid, macro){
 							//Add each part to the revisions page
 							counter++;
-							revisions += "<option value='parts-"+counter+"'>"+i+"</option>";
-							$.each(info, function(label,row){
-								parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+row.unique+"'>\
-									<td>"+row.location+"</td>\
-										<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+row.qty+"</span></td>\
-									<td>"+row.condition+"</td>\
-									<td>"+row.last_purchase+"</td>\
-									<td>"+row.vendor+"</td>\
-									<td>"+row.date_created+"</td>\
-									</tr>";
-								var s = row.serials;
-								//alert (s);
-								if(s){
-									parts += "<tr class='serial_listing serial_listing_"+row.unique+"' style='display: none;'>\
+							$.each(macro, function(key,info){
+								revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+								var key = key.split("+");
+								console.log(key);
+								parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
+								if (!search){
+									parts += 	"<td>"+info.part_name+"</td>";
+								}
+								if (place == 'null'){
+									parts += 	"<td>"+info.location+"</td>";
+								}
+									parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+info.qty+"</span></td>";
+								
+								if (condition != 'no'){
+									parts += 	"<td>"+key[2]+"</td>";
+								}
+								if(!order){
+									parts += 	"<td>"+key[1]+"</td>";
+								}
+								if(!vendor){
+									parts += 	"<td>"+info.vendor+"</td>";
+								}
+									parts += 	"<td>"+key[3]+"</td>";
+									parts += "</tr>";
+
+									parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
 												<td colspan='12'>";
 												parts += "<table class='table serial table-hover table-condensed'>\
 															<thead>\
-																<tr>\
-																<th>Serial Number</th>\
-																<th>qty</th>\
-																<th>Status</th>\
-																<th><span class='edit'>Location</span></th>\
-																<th><span class='edit'>Condition</span></th>\
-																<th></th>\
-																</tr>\
+																<tr>";
+												parts += "			<th>Serial Number</th>";
+												parts += "			<th>qty</th>";
+												parts += "			<th>Status</th>";
+												parts += "			<th>Location</th>";
+												parts += "			<th>Condition</th>";
+												parts += "			<th></th>";
+												parts += "		</tr>\
 															</thead>\
 															<tbody>";
-									$.each(s, function(serial,history){
+									$.each(info.serials, function(i,s_string){
+										var serial = s_string.split(", ");
 										//console.log(history);
-										parts += "<tr class='serial_listing_"+row.unique+"' style='display: none;'>\
-													<td class='data pointer serial_original'>"+serial+"</td>\
-													<td class='edit'><input class='newSerial form-control' value='"+serial+"' data-serial='"+serial+"'/></td>";
-										var init = true;			
-										$.each(history,function(record, details){
-											if(init) {
-												parts += "<td class='data qty_original'>"+details.qty+"</td>";
-												parts += "<td class='data status_original'>"+details.status+"</td>";
+										parts += "<tr class='serial_listing_"+info.unique+"' style='display: none;'>\
+													<td class='data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>\
+													<td class='edit'><input class='newSerial form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
+										parts += "	<td class='data qty_original'>"+serial[2]+"</td>";
+										parts += "	<td class='data status_original'>"+serial[3]+"</td>";
+										parts += "	<td class='data '>"+info.location+"</td>";
+										parts += "	<td class='data '>"+key[2]+"</td>";
+										parts += "<td class='edit'><input class='newQty form-control' value='"+serial[2]+"' data-id='"+serial[0]+"'></td>\
+												<td class='edit status_holder' data-status='"+serial[3]+"'></td>";
+										// console.log(history);
+										// var init = true;			
+										// $.each(history.history,function(record, details){
+										// 	console.log(details);
+										// 	if(init) {
 												
-												parts += "<td class='edit'><input class='newQty form-control' value='"+details.qty+"' data-id='"+details.invid+"'></td>\
-															<td class='edit status_holder' data-status='"+details.status+"'></td>";
 															
-												if(details.last_sale != null) {
-													//parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
-													//parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
-												} else {
-													//parts += "<td class='last_sale data'></td>";
-													//parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
-												}
+										// 		if(details.last_sale != null) {
+										// 			//parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
+										// 			//parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
+										// 		} else {
+										// 			//parts += "<td class='last_sale data'></td>";
+										// 			//parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
+										// 		}
 												
-												init = false;
-											}
-										});
+										// 		init = false;
+										// 	}
+										// });
 										parts += "<td class='data'></td><td class='data'></td>";
-										parts += "<td class='edit location_holder' data-place='"+row.place+"' data-instance='"+row.instance+"'></td>\
-													<td class='edit condition_holder' data-condition='"+row.condition+"'></td>";
+										parts += "<td class='edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>\
+													<td class='edit condition_holder' data-condition='"+key[3]+"'></td>";
 													
 										parts += "<td style='text-align: right;'>\
 											<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
@@ -387,18 +444,18 @@
 										</td>\
 									</tr>";
 									
-									// parts += "<tr>\
-									// <td colspan='12'>\
-									// </td>\
-									// </tr>"
-	
-								}
+							// 		// parts += "<tr>\
+							// 		// <td colspan='12'>\
+							// 		// </td>\
+							// 		// </tr>"
 									
 							});
+							$('.parts').append(parts);
+							parts = "";
 	
 						});
 						$('.revisions').append(revisions);
-						$('.parts').append(parts);
+						$('.headers').append(headers);
 						
 						$('.location_holder').append(locations);
 						$('.condition_holder').append(conditions);
@@ -424,7 +481,14 @@
 							var actualStatus = $(this).data('status');
 							$(this).find('select').val(actualStatus);
 						});
-	
+						$(".location_holder").each(function() {
+							var place = $(this).data('place');
+							var instance = $(this).data('instance');
+							$(this).find(".place").val(place);
+							$(this).find(".instance option[data-place!='"+place+"']").hide();
+							$(this).find(".instance").val(instance);
+						});
+						
 						if(part != '') {
 							$(".loading_element_listing").show();
 						} else {
@@ -434,7 +498,7 @@
 					},
 					error: function(xhr, status, error) {
 						$(".loading_element_listing").hide();
-						console.log('/json/inventory-out.php?search='+search);
+						console.log('Failed call: /json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&condition="+condition+"&vendor="+vendor);
 						alert(error);
 					   	alert("No Parts Found with those parameters");
 					},			
@@ -458,6 +522,7 @@
 			
 			var id = $save.closest('tr').find('.newQty').data('id');
 			var newSerial = $save.closest('tr').find('.newSerial').val();
+			// alert(newSerial);
 			var newQty = $save.closest('tr').find('.newQty').val();
 			var newStatus = $save.closest('tr').find('#status').val();
 			var newSales = $save.closest('tr').find('.newSO').val();
@@ -482,7 +547,7 @@
 				},
 				dataType: 'json',
 				success: function(result) {
-					//alert(result);
+					console.log('Success call: /json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&condition='+newCondition);
 					if(result) {
 						$save.closest('tr').find('.edit').hide();
 						$save.closest('tr').find('.data').show();
@@ -498,17 +563,17 @@
 						$save.closest('tr').find('.qty_original').html(newQty);
 						$save.closest('tr').find('.status_original').html(newStatus);
 					}
-				}
+				},
+				error: function(xhr, status, error) {
+					// $(".loading_element_listing").hide();
+					console.log('Failed call: /json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&condition='+newCondition);
+					alert(error);
+				   	alert("No Parts Found with those parameters");
+				},
 			});
 		});
 		
 		//finish adding the filters
-		// var filter_grab = function (){
-		// 	//Set an array up with the filter fields from the filter bar
-		// 	var output = {
-		// 		location : 
-		// 	}
-		// }
 		
 		$(document).ready(function() {
 			//Triggering Aaron 2017
@@ -519,6 +584,7 @@
 					search = phpStuff;
 					$("#part_search").val(phpStuff);
 				}
+				
 				inventory_history(search);
 			}
 		});
@@ -558,9 +624,7 @@
 		
 		$(document).on("click",".part_filter",function(){
 			var search = $("#part_search").val();
-			if (search){
-				inventory_history(search);
-			}
+			inventory_history(search);
 		});
 
 		
@@ -573,12 +637,21 @@
 
 		$(document).on('click', '.revisions', function() {
 			$('.serial_listing').hide();
-			
+			$('.parts-list').hide();
 			var element = $(this).val();
 			if(element != '') {
-				$('.parts-list').hide();
-				$('.' + element).show();
-			} else {
+				$('.revisions :selected').each(function(i, selected){
+					var part = selected.value;
+					if (part != ''){
+						$('.' + part).show();
+					}
+					else{
+						$('.parts-list').show();
+						return false;
+					}
+				});
+			}
+			else {
 				$('.parts-list').show();
 			}
 		});

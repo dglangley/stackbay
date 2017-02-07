@@ -75,9 +75,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				else{
 					$b_add = $row['bill_to_id'];
 				}
-				(getAddresses($b_add,'name'))? $b_name = getAddresses($b_add,'street') : $b_name = getAddresses($b_add,'street');
+				$b_name = getAddresses($b_add,'street');
 				$s_add = $row['ship_to_id'];
-				(getAddresses($s_add,'name'))? $s_name = getAddresses($s_add,'street') : $s_name = getAddresses($s_add,'street');
+				$s_name = getAddresses($s_add,'street');
 				$selected_carrier = $row['freight_carrier_id'];
 				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
 				$selected_service = $row['freight_services_id'];
@@ -323,7 +323,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				</div>";
 		if($results){
 			//Contact Output
-			$right .= "<div>";
+			$right .= "<div class='row'>";
+			$right .= "<div class='col-md-12'>";
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
 				
@@ -361,6 +362,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$right .= "<br>";
 				}
 				$right .= "<br>";
+				if($public){
+					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+					$right .= '<i class="fa fa-file" aria-hidden="true"></i> #123';
+					$right .= "<br>";
+				}
+				$right .= "</div>";
 			$right .= "</div>";
 			
 			//Old way of doing packages in the sidebar used to be here, if I am searching for a history,

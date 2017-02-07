@@ -24,6 +24,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
 	
+	$date = date("Y-m-d h:i:sa");
+	
 	function checkShipDate($so_number, $partid, $condition) {
 		//Query to check the SO and make sure that the user can still add more items that still reflect the actual PO items
 		//If 1 open slot and 2 users adding to that one slot, first come first serve.
@@ -73,11 +75,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	}
 	
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-	function savetoDatabase($productItems, $so_number){
+	function savetoDatabase($productItems, $so_number, $date){
 		$result = [];
 		
 		//This is splitting each product from mass of items
-		$item_split = array_chunk($productItems, 6);
+		$item_split = array_chunk($productItems, 7);
 		
 		foreach($item_split as $product) {
 			//If serial is an array then parse thru everything in the partid as an array of items
@@ -118,7 +120,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							
 							//Error check and if the new item fails then default back to the original
 							if(!$result['query']) {
-								
+								$result['error'] = 'Incomplete item detected in table.';
 							}
 						}
 						//Else everything matches so check other fields for changes
@@ -206,7 +208,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) ."  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
 							$result['lot_split'] = qdb($query);
 
-							$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+							$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 							$result['lot_split_add'] = qdb($query);
 							$result['query'] = true;
 							
@@ -227,12 +229,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			}
 			//Else do not touch the item
+			
+			//This query updates and saves the box as closed only if there are no errors in the order
+			if($result['error']) {
+				$query = "UPDATE packages SET ship_date ='".res($date)."' WHERE id = '".res($product[6])."';";
+				qdb($query);
+			}
 		}
 		
 		return $result;
 	}
 	
-	$result = savetoDatabase($productItems, $so_number);
+	$result = savetoDatabase($productItems, $so_number, $date);
 	
 	echo json_encode($result);
     exit;
