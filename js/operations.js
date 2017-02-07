@@ -273,12 +273,12 @@
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
 				var limit = '';
-				if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
-					limit = "25";
-				}
-				else{
+				// if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
+				// 	limit = "25";
+				// }
+				// else{
 					limit = company;
-				}
+				// }
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
 				//Default selector for the addresses
@@ -317,9 +317,11 @@
 						},
 					dataType: 'json',
 					success: function(right) {
+						// alert(limit);
 						var value = right['value'];
 						var display = right['display'];
 						var set_carrier = right['carrier'];
+						// alert(value);
 						$("#account_select").attr("data-carrier",set_carrier);
 			    		$("#select2-account_select-container").html(display);
 			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
@@ -332,12 +334,11 @@
 						console.log("JSON account-default.php: Error");
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					}
-				});
-				
-				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
-				var new_account = $("#account_select").attr("data-carrier");
-				alert(new_account);
-				if (new_account){
+				}).done(function(right) {
+				    // you may safely use results here
+				    // alert("Account: "+$("#account_select").attr("data-carrier"));
+				    var new_account = ($("#account_select").attr("data-carrier"));
+					if (new_account){
 					$.ajax({
 						type: "POST",
 						url: '/json/dropPop.php',
@@ -373,6 +374,10 @@
 							}
 						});
 				}
+				});
+				
+				$("#account_select").initSelect2("/json/freight-account-search.php","Please Choose a company",limit);
+				// alert(new_account);
 				
 				//Reload the Addresses
 				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
@@ -1079,10 +1084,10 @@
 				}
 			});
 			
-	$(document).on("click","#associate_clip",function() {
-		// var assoc = $("#assoc_order").val();
-		// alert(assoc);
-	});
+			$(document).on("click","#associate_clip",function() {
+				// var assoc = $("#assoc_order").val();
+				// alert(assoc);
+			});
 //================================ PAGE SUBMIT ================================
 			
 			$('#save_button').click(function(e) {
@@ -1105,7 +1110,7 @@
 					}
 					
 					var contact = $("#contactid").val();
-					if (contact == "new"){
+					if (contact.includes("new")){
 						contact = $("#select2-contactid-container").text();
 						//Get rid of the 'Add' portion of the text
 						contact = contact.slice(4);
@@ -1447,7 +1452,8 @@
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 		
-		//This function also handles the functionality for the shipping page
+
+//This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			if(e.which == 13) {
 				//Grab each of the parameters from the top line
@@ -1632,7 +1638,7 @@
 			$('.' + data).toggle();
 		});
 		
-		//If the lot inventory is checked then update the look and feel of the form
+//If the lot inventory is checked then update the look and feel of the form
 		$(document).on('change', '.lot_inventory', function() {
 			var qty;
 			if(this.checked) {
@@ -1759,7 +1765,7 @@
 		});
 		
 		
-		//Handle if the user deletes a serial from inventory add or shipping
+//Handle if the user deletes a serial from inventory add or shipping (Undoes a line item)
 		$(document).on('click', '.deleteSerialRow', function() {
 			var page = getPageName();
 			var po_number = getUrlParameter('on');
@@ -1912,7 +1918,9 @@
 			});
 		});
 
-//================================== ISO Quality ================================== 
+//==============================================================================
+//================================== ISO Quality ===============================
+//==============================================================================
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
@@ -2043,10 +2051,8 @@
 		});
 	});
 
-//================================== PACKAGES ================================== 
-
-		//Open Modal
-			$(document).on("click",".box_edit", function(){
+//Open Modal
+		$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
 				var order_number = $(".box_selector.active").data('order-number');
 				if (package_number){
@@ -2089,8 +2095,8 @@
 					alert('Please select a box before editing');
 				}
 			});
-		//Submit Modal
-			$(document).on("click","#package-continue", function(){
+//Submit Modal
+		$(document).on("click","#package-continue", function(){
 					
 					//Set redundant-ish variables for easier access
 					var width = $("#modal-width").val();
@@ -2137,7 +2143,7 @@
 			
 			});
 			
-		//Add New Box
+//Add New Box
 		$(document).on("click",".box_addition", function(){
 			//Automatically build the name for the button
 				var final = $(this).siblings(".box_selector").last();
@@ -2180,14 +2186,14 @@
 			
 		});
 		
-		//Change Selected Box
+//Change Selected Box
 		$(document).on("click",".box_selector",function() {
 			$(this).siblings(".box_selector").removeClass("active");
 			$(this).addClass("active");
 			$("#active_box_selector").val($(this).attr("data-row-id"));
 		});
 		
-		//Change of a dropdown
+//Change of a dropdown
 		$(document).on("change",".box_drop",function() {
 		    var assoc = $(this).attr("data-associated");
 		    var pack = $(this).val();
@@ -2245,13 +2251,50 @@
 			
 		});
 		$(document).on("change", ".place",function() {
-			var home = this;
-			var limit = $(this).val();
-			location_changer('instance',limit,home,'');
+			var place = $(this).val();
+			$(this).closest(".row").find(".instance option[data-place!='"+place+"']").hide();
+			$(this).closest(".row").find(".instance option[data-place='"+place+"']").show();
+			$(this).closest(".row").find(".instance").val("");
 		});
 		
-	});
+}); //END OF THE GENERAL DOCUMENT READY TAG
 //=========================== End Inventory Addition ===========================
+
+//==============================================================================
+//=================================== HISTORY ================================== 
+//==============================================================================
+
+		$(document).on("click",".serial_original",function() {
+			
+			var invid = $(this).data('id');
+			//Call the AJAX
+			$.ajax({
+					type: "POST",
+					url: '/json/item_history.php',
+					data: {
+						'inventory' : invid,
+						'mode' : 'display'
+					},
+					dataType: 'json',
+					success: function(lines) {
+						//Clear the modal
+						$(".history_line").remove();
+						console.log(lines);
+						//Populate the modal
+						$.each(lines, function(i, phrase){
+							$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
+						});
+						//Show the modal
+						$("#modal-history").modal("show");
+						
+						console.log("JSON history_modal | Success | /json/item_history.php?inventory="+invid+"&mode=display");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON history_modal | Failure | /json/item_history.php?inventory="+invid+"&mode=display");
+					}
+			});
+		});
 
 //=============================== Inventory Edit ===============================
 	// $(document).ready(function() {

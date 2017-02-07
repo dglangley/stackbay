@@ -55,7 +55,7 @@
     
     if (strlen($q) > 0){
         $output[] = array(
-            'id' => 'new',
+            'id' => "new $q",
             'text' => "Add $q"
             );
     }

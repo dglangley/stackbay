@@ -89,7 +89,6 @@
 		return $stockNumber;
 	}
 	
-	
 	function getVendor($order_number) {
 		$company;
 		
@@ -232,14 +231,19 @@
 		return $string;
 	}
 	
-	function dFilter($field, $start, $end = ''){
+	function dFilter($field, $start = '', $end = ''){
 		if ($start and $end){
 	   		$start = prep(format_date($start, 'Y-m-d'));
 	   		$end = prep(format_date($end, 'Y-m-d'));
 	   		$string = " AND $field between CAST($start AS DATE) and CAST($end AS DATE) ";
 		}
 		else if($start){
-			$string = " AND $field between CAST($start AS DATE) ";
+			$start = prep(format_date($start, 'Y-m-d'));
+			$string = " AND $field > CAST($start AS DATE) ";
+		}
+		else if($end){
+			$end = prep(format_date($end, 'Y-m-d'));
+			$string = " AND $field < CAST($end AS DATE) ";
 		}
 		else{
 			$string = '';
@@ -250,6 +254,18 @@
 	function search($search = ''){
 		$return = array();
 		
+		$place = grab("place");
+		$location = grab("location");
+		$locationid = ($place)? dropdown_processor($place,$location) : '';
+		
+		$start = grab("start");
+		$end = grab("end");
+		$condition = grab("condition");
+		if ($condition == "no"){
+			$condition = '';
+		}
+		$vendor = grab("vendor");
+		$order = grab("order");
 		if ($search){
 			$in = '(';
 			//Get all the parts from the search
@@ -260,7 +276,12 @@
 			$in = trim($in, ", ");
 			$in .= ")";
 			$query  = "SELECT DISTINCT partid FROM inventory";
-			$query .= " WHERE partid IN $in;";
+			$query .= " WHERE partid IN $in";
+			$query .= sFilter('locationid', $locationid);
+			$query .= sFilter('item_condition',$condition);
+			$query .= sFilter('last_purchase',$order);
+			$query .= dFilter('date_created',$start, $end);
+			$query .= ";";
 			$result = qdb($query);
 			
 			if(mysqli_num_rows($result)>0){
@@ -269,9 +290,17 @@
 					$parts[$inv['partid']] = $initial[$inv['partid']];
 				}
 			}
+			
+			//This portion searches by serial number and appends the values of all the partids by serial
 			$search = prep($search);
 			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
+			$query .= sFilter('locationid', $locationid);
+			$query .= sFilter('item_condition',$condition);
+			$query .= sFilter('last_purchase',$order);
+			$query .= dFilter('date_created',$start, $end);
+			$query .= ";";
 			$result = qdb($query);
+			
 			foreach ($result as $part){
 		    	$p = hecidb($part['partid'],'id');
 		    	foreach($p as $id => $info){
@@ -285,7 +314,12 @@
 		}
 		else{
 		    $parts = array();
-			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0;";
+			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0";
+			$query .= sFilter('locationid', $locationid);
+			$query .= sFilter('item_condition',$condition);
+			$query .= sFilter('last_purchase',$order);
+			$query .= dFilter('date_created',$start, $end);
+			$query .= ";";
 			$result = qdb($query);
 			foreach ($result as $part){
 		    	$p = hecidb($part['partid'],'id');
@@ -297,84 +331,59 @@
 
 		if(isset($parts)){
 			foreach($parts as $id => $info){
-				$return[$id] = query_first($id);
+				$return[$id] = query_first($id,$info);
+				
 			}
-
 		}
 		return ($return);
 	}
 	
-	function query_first($partid, $filters = array()){
+	function query_first($partid,$info){
 		//Query to grab rows first
 		$r = array();
 		
-		
-		
+
 		//Filter Grabber
-		if (isset($filters)){
-			$location = $filters['filter_value'];
-			$condition = $filters['condition'];
-			$purchase_order = $filters['po'];
-			$earliest = $filters['earliest'];
-			$latest = $filters['latest'];
-		}
+		
 		$partid = prep($partid);
-		$query = "SELECT `partid`, SUM(`qty`) sumqty, `locationid`, `item_condition`, `last_purchase`, `status`, `last_sale`, `date_created`, `id` invid ";
+		$query = "SELECT `serial_no`,`partid`, `qty`, `locationid`, `item_condition`, `last_purchase`, `status`, `last_sale`, `date_created`, `id` invid ";
 		$query .= "FROM inventory ";
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
-		// $query .= sFilter('locationid', $location);
-		// $query .= sFilter('item_condition',$condition);
-		// $query .= sFilter('last_purchase',$purchase_order);
-		// $query .= dFilter('date_created',$earliest, $latest);
-		$query .= "GROUP BY partid, locationid, last_purchase, item_condition, date_created;";
+		$query .= " ORDER BY locationid, last_purchase, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
-		// echo $query."   "; return;
-		
+
 		$rows = qdb($query);
 
 		foreach ($rows as $row){
 			// print_r($row);
-			 $r['partid'] = $row['partid'];
-			 $r['qty' ] = $row['sumqty'];
-			 $r['locationid'] = $row['locationid'];
-			 $r['location'] = display_location($row['locationid']);
-			 $r['place'] = display_location($row['locationid'], 'place');
-			 $r['instance'] = display_location($row['locationid'], 'instance');
-			 $r['condition'] = $row['item_condition'];
-			 $r['last_purchase'] = $row['last_purchase'];
-			 $r['status'] = $row['status'];
-			 $r['last_sale'] = $row['last_sale'];
-			 $r['date_created'] =  format_date($row['date_created'],"m/d/Y");
-			 $r['vendorid'] = getVendor($row['last_purchase']);
-			 $r['vendor'] = getCompany($r['vendorid']);
-			 $r['unique'] = $row['invid'];
-			 //$r['id'] = $row['id'];
-			 
+			$date = format_date($row['date_created'],"m/d/Y");
+			 $key = $row['locationid'].'+'.$row['last_purchase'].'+'.$row['item_condition'].'+'.$date;
 			
-			//Query to grab serials second
-			$q_serial = "Select * FROM inventory, inventory_history ";
-			$q_serial .= " WHERE ";
-			$q_serial .= " inventory.id = inventory_history.invid AND ";
-			$q_serial .= "partid = ".prep($row['partid'])." AND  ";
-			$q_serial .= "locationid = ".prep($row['locationid'])." AND  ";
-			$q_serial .= "last_purchase = ".prep($row['last_purchase'])." AND  ";
-			$q_serial .= "item_condition = ".prep($row['item_condition'])." AND  ";
-			$q_serial .= "date_created = ".prep($row['date_created'])." ORDER BY date_changed DESC;";
-			// echo $q_serial;
-			$s = array();
-			$serials = qdb($q_serial);
-			foreach($serials as $serial){
-				if($serial['serial_no']){
-					$s[$serial['serial_no']][] = $serial;
-				}
-				else{
-					$s['null'][] = $serial;
-				}
+			//Macro Level information on the key
+			 if (!isset($r[$key])) {
+				 $r[$key]['serials'] = array();
+				 $r[$key]['part_name'] =  $info['part']." ".$info['heci']; 
+				 $r[$key]['qty'] += $row['qty'];
+				 $r[$key]['locationid'] = $row['locationid'];
+				 $r[$key]['location'] = display_location($row['locationid']);
+				 $r[$key]['place'] = display_location($row['locationid'], 'place');
+				 $r[$key]['instance'] = display_location($row['locationid'], 'instance');
+				 $r[$key]['vendorid'] = getVendor($row['last_purchase']);
+				 $r[$key]['vendor'] = getCompany($r['vendorid']);
+				 $r[$key]['unique'] = $row['invid'];
+			 }
+			 //Null Serial handler and serial grouping/append
+			 $serial = 'null';
+			 
+			if ($row['serial_no']){
+				$r[$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'];
 			}
-			$r['serials'] = $s;
-			$o[] = $r;
+			else{
+				$r[$key]['null'][] = $serial;
+			}
+			 	
 		}
-		return $o;
+		return $r;
 	}
 	// $parts_arr = array();
 
@@ -385,5 +394,6 @@ $filters = grab('filters');
 $return = (search($search));
 // echo '<pre>' . print_r(get_defined_vars(), true) . '</pre>';
 // print_r($return);
+// exit;
 echo json_encode($return);
 ?>

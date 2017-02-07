@@ -208,7 +208,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) ."  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
 							$result['lot_split'] = qdb($query);
 
-							$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, repid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+							$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
 							$result['lot_split_add'] = qdb($query);
 							$result['query'] = true;
 							
