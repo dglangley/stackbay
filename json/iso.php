@@ -52,7 +52,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	}
 	
 	function saveReq($special_req, $contact_info, $transit_time, $so_number) {
-		$query = "UPDATE iso SET special_req = '".res($special_req)."', contact_info = '".res($contact_info)."', transit_time = '".res($transit_time)."' WHERE so_number = ".res($so_number).";";
+		$query = "UPDATE iso SET special_req = '".res($special_req)."', shipping_info = '".res($contact_info)."', transit_time = '".res($transit_time)."' WHERE so_number = ".res($so_number).";";
 		$result = qdb($query);
 		
 		return $result;

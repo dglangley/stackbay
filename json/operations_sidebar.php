@@ -362,11 +362,25 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$right .= "<br>";
 				}
 				$right .= "<br>";
-				if($public){
-					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-					$right .= '<i class="fa fa-file" aria-hidden="true"></i> #123';
-					$right .= "<br>";
+				
+				$lists = array();
+				
+				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
+				$result = qdb($query);
+				
+				while ($row = $result->fetch_assoc()) {
+					$lists[] = $row['datetime'];
+					//$right .= $row['datetime'];
 				}
+				
+				$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+				
+				foreach($lists as $num) {
+					if($num != '')
+						$right .= '<a href="#"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+				}
+				
+				$right .= "<br>";
 				$right .= "</div>";
 			$right .= "</div>";
 			
