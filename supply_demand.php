@@ -22,7 +22,7 @@
 		$company_filter = $_REQUEST['companyid']; 
 	}
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
-	$report_type = 'summary';
+	$report_type = 'detail';
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
 	
@@ -187,10 +187,13 @@
 					</div>
 				</div>
 			</td>
-			<td class = "col-sm-2">
-				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+			<td class = "col-sm-2 text-center">
+            	<h2 class="minimal"><?php echo ucfirst($market_table); if($company_filter){ echo ': '; echo getCompany($company_filter); } ?></h2>
 			</td>
-			<td class = "col-sm-2">
+			<td class = "col-sm-2 text-center">
+<!--
+				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+-->
 				<div class="input-group">
 					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
 					<span class="input-group-addon">-</span>
@@ -225,23 +228,8 @@
     <div id="pad-wrapper">
 		<div class="row filter-block">
 
-		<br>
             <!-- orders table -->
             <div class="table-wrapper">
-
-<!-- If there is a company id, output the text of that company id to the top of the screen -->
-                <div class="row head text-center">
-                    <div class="col-sm-12">
-                        <h2>
-                        <?php echo ("Supply and Demand");
-                        if($company_filter){ 
-                        	echo ': ';
-                        	echo getCompany($company_filter);
-                        	} 
-                        ?></h2>
-                    </div>
-                </div>
-
 
 <?php
 	// format col widths based on content (company column, items detail, etc)

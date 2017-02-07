@@ -20,7 +20,7 @@
 		$company_filter = $_REQUEST['companyid']; 
 	}
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
-	$report_type = 'summary';
+	$report_type = 'detail';
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
 	

@@ -84,7 +84,7 @@ div.table-filter div {
 
 /*.sub-nav #pad-wrapper {*/
 #pad-wrapper {
-	margin-top:140px;
+	margin-top:120px;
 }
 
 .input-primary {
@@ -761,17 +761,27 @@ textarea.freeform-text {
 .modal-striped .row {
   line-height:24px;
 }
-.modal-striped .row:nth-child(even) div{
+.modal-striped .row:nth-child(even) div {
   background-color: #ffffff;
 }
-.modal-striped.modal-hover .row:hover:nth-child(even) div{
+.modal-striped.modal-hover .row:hover:nth-child(even) div {
   background-color: #fcfcfc;
 }
-.modal-striped .row:nth-child(odd) div{
+.modal-striped .row:nth-child(odd) div {
   background-color: #f5f5f5;
 }
-.modal-striped.modal-hover .row:hover:nth-child(odd) div{
+.modal-striped.modal-hover .row:hover:nth-child(odd) div {
   background-color: #f3f3f3;
+}
+.table-striped tr:nth-child(even) th.primary,
+.table-striped tr:nth-child(odd) th.primary,
+.table-striped tr:nth-child(even) td.primary,
+.table-striped tr:nth-child(odd) td.primary {
+  background-color: #f3f3f3;
+}
+.table-striped tr:hover:nth-child(even) td.primary,
+.table-striped tr:hover:nth-child(odd) td.primary {
+  background-color: #f6f6f6;
 }
 
 
@@ -1111,6 +1121,32 @@ hr.no-margin {
 }
 .date-options:hover {
    /*background:#eee;*/
+}
+tr.strikeout td {
+    position: relative;
+    padding: 5px 10px;
+}
+tr.strikeout td,
+tr.strikeout td a {
+	color:#ccc;
+}
+tr.strikeout td:before {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    border-top: 1px solid #ccc;
+    width: 100%;
+}
+tr.grayout td,
+tr.grayout td a {
+	color:#ccc;
+}
+.table-condensed thead > tr > th {
+	padding-bottom:5px !important;
+}
+.table-condensed thead > tr > th.text-right {
+	padding-right:15px !important;
 }
 
 

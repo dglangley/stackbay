@@ -20,24 +20,24 @@
 	include_once $rootdir.'/inc/locations.php';
 	
 	// Get Pages function determines how many pages the inventory should output.
-	function getPages($show_num = '5') {
-		//Find out what page number we are on.
-		global $page;
+	// function getPages($show_num = '5') {
+	// 	//Find out what page number we are on.
+	// 	global $page;
 		
-		//Set a null counter for the number of rows
-		$rows = 0;
+	// 	//Set a null counter for the number of rows
+	// 	$rows = 0;
 		
-		//Static query which gets all the parts from the inventory screen
-		$query  = "SELECT COUNT(*) as rows FROM (SELECT DISTINCT  `partid` FROM  `inventory`) AS t1;";
-		$result = mysqli_fetch_assoc(qdb($query));
-		$rows = $result['rows'];
-		$pages = ceil($rows / $show_num);
+	// 	//Static query which gets all the parts from the inventory screen
+	// 	$query  = "SELECT COUNT(*) as rows FROM (SELECT DISTINCT  `partid` FROM  `inventory`) AS t1;";
+	// 	$result = mysqli_fetch_assoc(qdb($query));
+	// 	$rows = $result['rows'];
+	// 	$pages = ceil($rows / $show_num);
 		
-		for($i = 1; $i <= $pages; $i++) {
-			//echo $page;
-			echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
-		}
-	}
+	// 	for($i = 1; $i <= $pages; $i++) {
+	// 		//echo $page;
+	// 		echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
+	// 	}
+	// }
 	
 	function getPartLocation($partid){
 		$partid = prep($partid);
@@ -312,7 +312,8 @@
 			
 			
 		}
-		else{
+		else if($locationid || $condition || $order || ($start && $end)){
+
 		    $parts = array();
 			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0";
 			$query .= sFilter('locationid', $locationid);
@@ -328,7 +329,9 @@
 		    	}
 			}
 		}
-
+		else{
+			$return = "Please enter a search parameter";
+		}
 		if(isset($parts)){
 			foreach($parts as $id => $info){
 				$return[$id] = query_first($id,$info);
