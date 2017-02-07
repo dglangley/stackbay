@@ -1808,7 +1808,8 @@
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
 			var invid = $row.find('input').attr('data-inv-id');
-			alert($($row).index(this));
+			var pack = $row.find('input').attr('data-package');
+			
 			//Grab all the required data to be passed into the delete ajax
 			var partid = $row.closest('tr').find('.part_id').attr('data-partid');
 			
@@ -1851,7 +1852,7 @@
 						console.log("inventory-delete.php: ERROR");
 					},	
 				});
-				// package_delete(invid);
+				package_delete(pack,invid);
 			}
 		});
 
@@ -2272,7 +2273,7 @@ function package_delete(pack, serialid){
 		type: "POST",
 		url: '/json/packages.php',
 		data: {
-			"action" : "change",
+			"action" : "delete",
 			"assoc" : serialid,
 			"package" : pack
 		},
