@@ -55,7 +55,7 @@
     $order_number = prep(grab('on'));
 
     $order = "SELECT * FROM sales_orders WHERE so_number = $order_number;";
-    $items = "SELECT serial_no, qty, last_sale,inventory.id invid, partid, package_no, packages.date date 
+    $items = "SELECT serial_no, qty, last_sale,inventory.id invid, partid, package_no, packages.datetime date 
     FROM inventory, packages, package_contents WHERE last_sale = $order_number AND serialid = inventory.id and packageid = packages.id;";
     
 	$order_result = qdb($order);
