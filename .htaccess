@@ -28,4 +28,8 @@ RewriteRule ^(.*)img/parts/(.*)$ prodimg.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)devimgs/(.*)$ prodimg.php [L]
 
+# docs handler
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)docs/([^.]+.pdf|PDF)$ docs.php [L]
+
 </IfModule>
