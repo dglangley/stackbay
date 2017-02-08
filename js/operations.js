@@ -1808,7 +1808,6 @@
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
 			var invid = $row.find('input').attr('data-inv-id');
-			alert($($row).index(this));
 			//Grab all the required data to be passed into the delete ajax
 			var partid = $row.closest('tr').find('.part_id').attr('data-partid');
 			
