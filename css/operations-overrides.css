@@ -244,6 +244,14 @@ input:-moz-placeholder { text-transform: uppercase; }
 #order_header .btn-flat {
 	margin:10px;
 }
+.order-upload {
+	width: 0.1px;
+	height: 0.1px;
+	overflow: hidden;
+	opacity: 0;
+	z-index: -1;
+	position: absolute;
+}
 
 /* End David additions */
 
