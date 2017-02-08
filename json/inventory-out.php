@@ -239,11 +239,11 @@
 		}
 		else if($start){
 			$start = prep(format_date($start, 'Y-m-d'));
-			$string = " AND $field > CAST($start AS DATE) ";
+			$string = " AND CAST($field AS DATE) >= CAST($start AS DATE) ";
 		}
 		else if($end){
 			$end = prep(format_date($end, 'Y-m-d'));
-			$string = " AND $field < CAST($end AS DATE) ";
+			$string = " AND CAST($field AS DATE) <= CAST($end AS DATE) ";
 		}
 		else{
 			$string = '';
@@ -253,6 +253,7 @@
 	
 	function search($search = ''){
 		$return = array();
+		
 		
 		$place = grab("place");
 		$location = grab("location");
@@ -282,6 +283,7 @@
 			$query .= sFilter('last_purchase',$order);
 			$query .= dFilter('date_created',$start, $end);
 			$query .= ";";
+			echo $query;exit;
 			$result = qdb($query);
 			
 			if(mysqli_num_rows($result)>0){
@@ -354,7 +356,8 @@
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
 		$query .= " ORDER BY locationid, last_purchase, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
-
+		
+		
 		$rows = qdb($query);
 
 		foreach ($rows as $row){
