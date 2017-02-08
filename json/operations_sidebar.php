@@ -348,8 +348,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
 				
 				//Addresses
-				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				if($page != 'Purchase') {
+					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				} else {
+					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
+					//address function needs to be edited to take in remit to column insead of bill to
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				}
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
