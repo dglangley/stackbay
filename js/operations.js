@@ -1809,7 +1809,8 @@
 					}
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
+					//alert(error+" | "+status+" | "+xhr);
+					window.location = "/shipping_home.php?po=true";
 					console.log("inventory-add-complete.php: ERROR");
 				},	
 			});
