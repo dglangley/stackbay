@@ -1825,6 +1825,7 @@
 			//Grab the serial being deleted for futher usage to delete the item from the system
 			var serial = $row.find('input').attr('data-saved');
 			var invid = $row.find('input').attr('data-inv-id');
+
 			var pack = $row.find('input').attr('data-package');
 			
 			//Grab all the required data to be passed into the delete ajax

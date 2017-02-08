@@ -310,19 +310,11 @@
 								function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
-									$init = true;
+									
+									$drop = '';
 									foreach ($results as $item) {
-										if ($first && $init){
-											$drop = "<div>
-				            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
-										}
-										
-										else if($init){
-											$drop = "<div>
-				            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial' ".($item['datetime'] != '' ? ' disabled': '').">";
-										}
-										$init = false;
-										
+										//print_r($item);
+										$it[$item['id']] = $item['datetime'];	
 										$drop .= "<option value='".$item['id']."'";
 										if ($selected == $item['id']){
 											$drop .= ' selected';
@@ -332,8 +324,16 @@
 									}
 									$drop .= "</select>";
 									$drop .= "</div>";
-								
-									return $drop;
+									if ($first){
+											$f = "<div>
+				            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
+										}
+										else{
+											$f = "<div>
+				            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
+										}
+										$f .= $drop;
+									return $f;
 								}
 								
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
@@ -438,13 +438,9 @@
 										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
-<<<<<<< HEAD
-									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv_id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
-=======
 
-									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? '' : 'disabled');?>>
+								    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 
->>>>>>> 9eaacff96ab0df3a70aaab0c91463c2707b88839
 									<?php endforeach; ?>
 									</div>
 									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->

@@ -238,7 +238,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$data = qdb($query);
 					
 					if (mysqli_num_rows($data)>0) {
-						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."';";
+						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
 						qdb($query);
 					}
 				}
