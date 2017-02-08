@@ -312,10 +312,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
-				$orderNumber = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
+				$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
+				if($page == 'Purchase'){
+					$b_add = $row['remit_to_id'];
+				}
+				else{
+					$b_add = $row['bill_to_id'];
+				}
 				$b_name = getAddresses($b_add,'name');
 				$s_add = $row['ship_to_id'];
 				$s_name = getAddresses($s_add,'name');
@@ -348,8 +353,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
 				
 				//Addresses
-				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				if($page != 'Purchase') {
+					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				} else {
+					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
+					//address function needs to be edited to take in remit to column insead of bill to
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				}
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
@@ -383,20 +394,21 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 				$result = qdb($query);
-				
-				while ($row = $result->fetch_assoc()) {
-					$lists[] = $row['datetime'];
-					//$right .= $row['datetime'];
-				}
-				
-				$init = true;
-				foreach($lists as $num) {
-					if($num != '') {
-						if($init) {
-							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-							$init = false;
+				if($page != 'Purchase') {
+					while ($row = $result->fetch_assoc()) {
+						$lists[] = $row['datetime'];
+						//$right .= $row['datetime'];
+					}
+					
+					$init = true;
+					foreach($lists as $num) {
+						if($num != '') {
+							if($init) {
+								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+								$init = false;
+							}
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 						}
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 					}
 				}
 				
