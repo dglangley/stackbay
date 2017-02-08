@@ -383,20 +383,21 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 				$result = qdb($query);
-				
-				while ($row = $result->fetch_assoc()) {
-					$lists[] = $row['datetime'];
-					//$right .= $row['datetime'];
-				}
-				
-				$init = true;
-				foreach($lists as $num) {
-					if($num != '') {
-						if($init) {
-							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-							$init = false;
+				if($page != 'Purchase') {
+					while ($row = $result->fetch_assoc()) {
+						$lists[] = $row['datetime'];
+						//$right .= $row['datetime'];
+					}
+					
+					$init = true;
+					foreach($lists as $num) {
+						if($num != '') {
+							if($init) {
+								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+								$init = false;
+							}
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 						}
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 					}
 				}
 				
