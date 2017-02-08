@@ -1629,11 +1629,11 @@
 								qty--;
 
 								//Area to duplicate the box field
-								$serial.closest('tr').find(".active_box_selector").clone()
-								.insertAfter($serial.closest('tr').find(".active_box_selector"))
+								$serial.closest('tr').find(".active_box_selector").first().clone()
+								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
 								.removeClass("active_box_selector")
 								.addClass("drop_box")
-								.val($serial.closest('tr').find(".active_box_selector").val())
+								.val($serial.closest('tr').find(".active_box_selector").first().val())
 								.attr("data-associated",serial);
 
 								if(qty >= 0) {
@@ -2296,7 +2296,7 @@
 				});
 		});
 
-function package_delete(pack, serialid){
+		function package_delete(pack, serialid){
 	$.ajax({
 		type: "POST",
 		url: '/json/packages.php',
