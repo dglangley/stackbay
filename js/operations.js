@@ -1945,7 +1945,7 @@
 					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
-						//window.location.href = window.location.href + "?success=true";
+						window.location.href = window.location.href + "&success=true";
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
 						alert(data['error']);

@@ -278,7 +278,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Update Order</button>
+				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Complete Order</button>
 			</div>
 		</div>
 		
