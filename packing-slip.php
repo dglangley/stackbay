@@ -61,7 +61,6 @@
 	$order_result = qdb($order);
 	$items_results = qdb($items);
 
-	
 	$order_info = array();
 	if (mysqli_num_rows($order_result) > 0){
 	    $order_info = mysqli_fetch_assoc($order_result);
@@ -70,7 +69,7 @@
 	$items_info = array();
 	$tracking = array();
 	if (mysqli_num_rows($items_results) > 0){
-    	    foreach ($items_results as $i){
+	    foreach ($items_results as $i){
 	        $part = $i['partid'];
 	        $serial = $i['serial_no'];
 	        $qty = $i['qty'];
@@ -78,11 +77,13 @@
 	        $tracking = $i['tracking'];
 	        //Nesting goes $meta[$box][$part]
 	        $items_info["$box,$tracking"][$part] = current(hecidb($part,'id'));
-	        $items_info["$box,$tracking"][$part]['qty'] += $qty;
+	        $items_info["$box,$tracking"][$part][]['qty'] += 1;
 	        $items_info["$box,$tracking"][$part]['serials'][] = $serial;
 	    }
 	}
-
+	echo("<pre>");
+	print_r($items_info);
+	echo("</pre>");
 ?>
 
 <!DOCTYPE html>
@@ -171,7 +172,7 @@
                     <?=getContact($order_info['sales_rep_id'],'id','email')?>
                 </td>
                 
-                <td><?=getFreight('carrier',$order_info['freight_carrier_id'],'','name')?>-<?=strtoupper(getFreight('services','',$order_info['freight_services_id'],'method'))?></td>
+                <td><?=getFreight('carrier',$order_info['freight_carrier_id'],'','name')?> <?=strtoupper(getFreight('services','',$order_info['freight_services_id'],'method'))?></td>
                 <td><?=$order_info['cust_ref']?></td>
 
             </tr>
