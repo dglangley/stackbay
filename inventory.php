@@ -324,10 +324,8 @@ s
 						}
 						headers +=	"<th>Qty</th>";
 						
-						if (condition != 'no'){
-							headers +=	"<th>Condition</th>";
-						}
-						
+						headers +=	"<th>Condition</th>";
+
 						if(!order){
 							headers +=	"<th>Purchase Order</th>";
 						}
@@ -372,9 +370,7 @@ s
 								}
 									parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+info.qty+"</span></td>";
 								
-								if (condition != 'no'){
 									parts += 	"<td>"+key[2]+"</td>";
-								}
 								if(!order){
 									parts += 	"<td>"+key[1]+"</td>";
 								}

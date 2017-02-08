@@ -294,22 +294,24 @@
 			}
 			
 			//This portion searches by serial number and appends the values of all the partids by serial
-			$search = prep($search);
+			$search = prep('%'.$search.'%');
 			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
 			$query .= sFilter('locationid', $locationid);
 			$query .= sFilter('item_condition',$condition);
 			$query .= sFilter('last_purchase',$order);
 			$query .= dFilter('date_created',$start, $end);
 			$query .= ";";
-			$result = qdb($query);
 			
-			foreach ($result as $part){
-		    	$p = hecidb($part['partid'],'id');
-		    	foreach($p as $id => $info){
-		    		if(!isset($parts[$id])){
-		        		$parts[$id] = $info;
-		    		}
-		    	}
+			$result = qdb($query);
+			if (mysqli_num_rows($result) > 0){
+				foreach ($result as $part){
+			    	$p = hecidb($part['partid'],'id');
+			    	foreach($p as $id => $info){
+			    		if(!isset($parts[$id])){
+			        		$parts[$id] = $info;
+			    		}
+			    	}
+				}
 			}
 			
 			
