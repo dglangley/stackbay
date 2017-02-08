@@ -283,7 +283,7 @@
 			$query .= sFilter('last_purchase',$order);
 			$query .= dFilter('date_created',$start, $end);
 			$query .= ";";
-			echo $query;exit;
+
 			$result = qdb($query);
 			
 			if(mysqli_num_rows($result)>0){
