@@ -396,7 +396,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 							$init = false;
 						}
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 					}
 				}
 				
@@ -405,7 +405,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .= "</div>";
 			
 			//Old way of doing packages in the sidebar used to be here, if I am searching for a history,
-			//Go to line 330 from the version on the Morning of the 18th
+			//Go to line 330 from the version on the Morning of the  18th of December. I probably will not need this
 			
 		}
 		

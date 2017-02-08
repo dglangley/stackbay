@@ -17,7 +17,9 @@
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	
+	
 	function getLN($order_number,$partid){
+	    //Grabs the line number
 	    $select = "SELECT line_number FROM sales_items WHERE so_number = $order_number AND partid = $partid;";
 	    $results = qdb($select);
 	    
@@ -53,11 +55,12 @@
 
     // Grab the order number
     $order_number = prep(grab('on'));
-
+    $datetime = grab('date');
+    
     $order = "SELECT * FROM sales_orders WHERE so_number = $order_number;";
     $items = "SELECT serial_no, qty, last_sale,inventory.id invid, partid, package_no, packages.datetime date 
-    FROM inventory, packages, package_contents WHERE last_sale = $order_number AND serialid = inventory.id and packageid = packages.id;";
-    
+    FROM inventory, packages, package_contents WHERE last_sale = $order_number AND serialid = inventory.id and packageid = packages.id AND datetime = '$datetime';";
+
 	$order_result = qdb($order);
 	$items_results = qdb($items);
 
@@ -76,14 +79,12 @@
 	        $box = $i['package_no'];
 	        $tracking = $i['tracking'];
 	        //Nesting goes $meta[$box][$part]
-	        $items_info["$box,$tracking"][$part] = current(hecidb($part,'id'));
-	        $items_info["$box,$tracking"][$part][]['qty'] += 1;
+	        $items_info["$box,$tracking"][$part]['info'] = current(hecidb($part,'id'));
+	        $items_info["$box,$tracking"][$part]['qty'] += 1;
 	        $items_info["$box,$tracking"][$part]['serials'][] = $serial;
 	    }
 	}
-	echo("<pre>");
-	print_r($items_info);
-	echo("</pre>");
+;
 ?>
 
 <!DOCTYPE html>
@@ -204,9 +205,9 @@
                 echo"
                 <tr>
                     <td>".getLN($order_number,$pid)."</td>
-                    <td>".$info['part']."</td>
-                    <td>".$info['heci']."</td>
-                    <td>".$info['Descr']."</td>
+                    <td>".$info['info']['part']."</td>
+                    <td>".$info['info']['heci']."</td>
+                    <td>".$info['info']['Descr']."</td>
                     <td>  </td>
                     <td>".$info['qty']."</td>
                     <td>";

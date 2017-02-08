@@ -340,7 +340,7 @@
 									$drop .= "</div>";
 									if ($first){
 											$f = "<div>
-				            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
+				            				<select class='form-control input-sm active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
 										}
 										else{
 											$f = "<div>

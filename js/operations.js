@@ -1513,7 +1513,7 @@
 				var condition = $serial.closest('tr').find('.condition_field').val();
 				var part = $serial.closest('tr').find('.part_id').data('part');
 				//Package number will be only used on the shipping order page
-				var package_no = $("#active_box_selector").val();
+				var package_no = $serial.closest('tr').find(".active_box_selector").val();
 				
 				if(condition == '') {
 					condition = $serial.closest('tr').find('.condition_field').data('condition');
@@ -1629,11 +1629,11 @@
 								qty--;
 
 								//Area to duplicate the box field
-								$serial.closest('tr').find("#active_box_selector").clone()
-								.insertAfter($serial.closest('tr').find("#active_box_selector"))
-								.removeAttr("id")
+								$serial.closest('tr').find(".active_box_selector").clone()
+								.insertAfter($serial.closest('tr').find(".active_box_selector"))
+								.removeClass("active_box_selector")
 								.addClass("drop_box")
-								.val($serial.closest('tr').find("#active_box_selector").val())
+								.val($serial.closest('tr').find(".active_box_selector").val())
 								.attr("data-associated",serial);
 
 								if(qty >= 0) {
@@ -2245,8 +2245,10 @@
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active");
 					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
-					$("#active_box_selector").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
-					$("#active_box_selector").val(id);
+					$(".active_box_selector").each(function(){
+						$(this).children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");		
+					});
+					$(".active_box_selector").val(id);
 					
 					console.log("JSON package addition packages.php: Success");
 				},
@@ -2262,7 +2264,10 @@
 		$(document).on("click",".box_selector",function() {
 			$(this).siblings(".box_selector").removeClass("active");
 			$(this).addClass("active");
-			$("#active_box_selector").val($(this).attr("data-row-id"));
+			var num = $(this).attr("data-row-id");
+			if ($(".active_box_selector").find("option[value="+num+"]").is(':enabled')){
+				$(".active_box_selector").val(num);
+			}
 		});
 		
 //Change of a dropdown
