@@ -2136,7 +2136,7 @@
 					} else {
 						$("#alert_message").hide();
 					}
-					
+					alert("ON: "+order_number+" | Package #: "+package_number);
 					$.ajax({
 						type: "POST",
 						url: '/json/package_contents.php',
@@ -2146,17 +2146,19 @@
 						},
 						dataType: 'json',
 						success: function(data) {
+							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 							console.log(data);
 							$('.modal-packing').empty();
 							$.each( data, function( i, val ) {
-								for(k = 0; k < val.length; k++) {
-									var element = "<tr>\
-											<td>"+ i +"</td>\
-											<td>"+ val[k] +"</td>\
-										</tr>";
-									$('.modal-packing').append( element );
-								}
-							});
+								$.each(val, function(it,serial){
+										var element = "<tr>\
+												<td>"+ i +"</td>\
+												<td>"+ serial +"</td>\
+											</tr>";
+										$('.modal-packing').append( element );
+									});
+								});
+								// for(var k = 0; k < val.length; k++) {
 							
 							//After the edit modal has been set with the proper data, show it
 							$("#modal-package").modal("show");
