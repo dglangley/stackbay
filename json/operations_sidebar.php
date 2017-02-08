@@ -142,7 +142,23 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
 						<label for='assoc'>Customer Order:</label>
+		";
+		if ($order_type == "Sales") {
+			$right .= "
+							<div class='input-group'>
+								<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+								<span class='input-group-btn'>
+									<button class='btn btn-default btn-sm btn-order-upload' type='button'><i class='fa fa-paperclip'></i></button>
+								</span>
+							</div><!-- /input-group -->
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload' />
+			";
+		} else {
+			$right .= "
 						<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
+		}
+		$right .= "
 	    			</div>
 		    	</div>";
 		 

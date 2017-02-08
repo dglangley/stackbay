@@ -267,6 +267,11 @@
 				window.location = "/shipping.php?on="+change;
 			}
 		});	
+
+		/* David, Flame Broiler is at stake */
+		$(document).on("click",".btn-order-upload",function() {
+			$("#order-upload").click();
+		});
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
@@ -1119,6 +1124,7 @@
 			
 			$('#save_button').click(function(e) {
 				
+
 				var isValid = nonFormCase($(this), e);
 				
 				if(isValid) {
@@ -1163,6 +1169,17 @@
 					var pri_notes = $('#private_notes').val();
 					var pub_notes = $('#public_notes').val();
 					//var warranty = $('.warranty').val();
+
+					/* David's file uploader (incomplete as of 2/7/17) */
+					if ($('#order-upload').length) {
+						var uploader = $('#order-upload');
+						var upload_file = uploader.val();
+						if (! upload_file) {
+							alert("You forgot to upload the Customer's PO!");
+							return;
+						}
+						console.log(uploader[0].files[0]);
+					}
 	
 	
 					//-------------------------- Right hand side --------------------------
