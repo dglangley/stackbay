@@ -1985,13 +1985,11 @@
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
-		//alert('Place ISO Form here');
 		var isoCheck = [];
 		var init = true;
 		
-		// if($('.nested_table')) {
-		// 	alert('exists');
-		// }
+		var completed = $(this).data('datestamp');
+	
 		$('.shipping_update').children('tbody').children('tr').each(function() {
 			$(this).find('.iso_comment').each(function() {
 				//isoCheck.push($(this).data('serial'));
@@ -2024,7 +2022,11 @@
 		
 		$("#modal-iso").modal("show");
 		
-		$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		if(completed == '') {
+			$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		} else {
+			$('.nav-tabs a[href="#iso_match"]').tab('show');
+		}
 		
 	});
 	

@@ -176,6 +176,20 @@
 		return $warranty;
 	}
 	
+	function getDateStamp($order_number) {
+		$datestamp = '';
+		
+		$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+		$results = qdb($select);
+		
+		if (mysqli_num_rows($results)>0) {
+			$results = mysqli_fetch_assoc($results);
+			$datestamp = $results['datetime'];
+		}
+		
+		return $datestamp;
+	}
+	
 	function format($partid){
 		$parts = reset(hecidb($partid, 'id'));
 	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
@@ -278,7 +292,7 @@
 				?>
 			</div>
 			<div class="col-md-4">
-				<button class="btn-flat success pull-right btn-update" id="iso_report" style="margin-top: 10px; margin-right: 10px;">Complete Order</button>
+				<button class="btn-flat success pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Complete Order</button>
 			</div>
 		</div>
 		
