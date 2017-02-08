@@ -312,10 +312,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
-				$orderNumber = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
+				$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
+				if($page == 'Purchase'){
+					$b_add = $row['remit_to_id'];
+				}
+				else{
+					$b_add = $row['bill_to_id'];
+				}
 				$b_name = getAddresses($b_add,'name');
 				$s_add = $row['ship_to_id'];
 				$s_name = getAddresses($s_add,'name');
