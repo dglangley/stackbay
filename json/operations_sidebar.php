@@ -396,7 +396,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 							$init = false;
 						}
-						$right .= '<a href="#"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 					}
 				}
 				

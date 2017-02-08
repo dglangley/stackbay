@@ -1809,7 +1809,8 @@
 					}
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
+					//alert(error+" | "+status+" | "+xhr);
+					window.location = "/shipping_home.php?po=true";
 					console.log("inventory-add-complete.php: ERROR");
 				},	
 			});
@@ -1962,7 +1963,7 @@
 					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
-						//window.location.href = window.location.href + "?success=true";
+						window.location.href = window.location.href + "&success=true";
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
 						alert(data['error']);
@@ -1985,13 +1986,11 @@
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
-		//alert('Place ISO Form here');
 		var isoCheck = [];
 		var init = true;
 		
-		// if($('.nested_table')) {
-		// 	alert('exists');
-		// }
+		var completed = $(this).data('datestamp');
+	
 		$('.shipping_update').children('tbody').children('tr').each(function() {
 			$(this).find('.iso_comment').each(function() {
 				//isoCheck.push($(this).data('serial'));
@@ -2024,7 +2023,11 @@
 		
 		$("#modal-iso").modal("show");
 		
-		$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		if(completed == '') {
+			$('.nav-tabs a[href="#iso_quality"]').tab('show');
+		} else {
+			$('.nav-tabs a[href="#iso_match"]').tab('show');
+		}
 		
 	});
 	
