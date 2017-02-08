@@ -333,8 +333,6 @@
 		$query .= "ORDER BY rt.received_date ASC, si.id ASC; ";
 		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$credits[$r['id']] = true;
-
 			$r['type'] = 'Return';
 
 			// if repaired, calc repair cost
@@ -346,6 +344,8 @@
 					if ($r['shipped_date']) {
 						$r['type'] = 'Repair';
 					} else {
+						//now that I have the below returns categorized differently, I don't want to exclude credit memos below
+						unset($credits[$r['id']]);
 						$r['type'] = 'Pending';
 					}
 
@@ -381,7 +381,12 @@
 			$r['po_number'] = '';
 			$r['complete'] = '';
 
-			$returns[] = $r;
+			$query2 = "SELECT * FROM inventory_creditmemo WHERE rma_id = '".$r['ref']."'; ";
+			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
+			if (mysqli_num_rows($result2)==0) {
+				$credits[$r['id']] = true;
+				$returns[] = $r;
+			}
 
 			// if replaced, get from solditem table and calc associated cost
 /*
