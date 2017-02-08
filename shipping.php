@@ -219,6 +219,12 @@
 			}
 			
 			.btn-secondary {
+			    color: #292b2c;
+			    background-color: #fff;
+			    border-color: #ccc;
+			}
+
+			.infiniteSerials .btn-secondary {
 				/*color: #373a3c;*/
 				background-color: transparent;
 				border: 0;
@@ -266,7 +272,6 @@
 				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
 			}
 		</style>
-		<link rel="stylesheet" media="print" href="packing-slip.css">
 
 	</head>
 	
@@ -340,7 +345,7 @@
 									$drop .= "</div>";
 									if ($first){
 											$f = "<div>
-				            				<select class='form-control input-sm active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
+				            				<select class='form-control input-sm' id = 'active_box_selector'  data-associated = '$associated' data-serial = '$serial'>";
 										}
 										else{
 											$f = "<div>
@@ -356,7 +361,7 @@
 								if (mysqli_num_rows($results) > 0){
 									$init = true;
 									foreach($results as $b){
-										$box_button = "<button type='button' class='btn btn-grey ". ($init ? 'active' : '') ." box_selector'";
+										$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary active')." box_selector'";
 										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
