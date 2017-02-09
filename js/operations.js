@@ -1569,6 +1569,7 @@
 								
 								//Set Default Values here, remember clone doesn't save select values otherwise it will
 								$serialClone.find('input').val("");
+								
 								$locationClone.find('select:first').val(place);
 								$locationClone.find('select:last').val(instance);
 								
@@ -1577,6 +1578,9 @@
 								
 								$serial.closest('.infiniteSerials').prepend($serialClone);
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').val(condition);
+								
 								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
