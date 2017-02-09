@@ -164,9 +164,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			";
 		}
 		if ($order_type == "Sales") {
-			$right .= "
-							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			";
+			
 			if ($order_number == 'New') {
 				$right .= "
 							<div class='input-group'>
@@ -177,6 +175,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							</div><!-- /input-group -->
 							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
 				";
+			} else {
+				$right .= "
+							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
 			}
 			$right .= "
 			";
