@@ -109,7 +109,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//THis will be split into distinct elements at some point in the next few weeks.
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 10px;'>";
-		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
+		$right .= "		<div class='sidebar-container' style='padding-top: 10px'>";
 
 		//Company						
 		$right .="
