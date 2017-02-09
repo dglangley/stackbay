@@ -10,6 +10,7 @@
 	
 	$q = '';
     $companyid = grab('company');
+    $order_type = grab('order');
     $line = array();
 	function address_out($address_id){
 		//General function for handling the standard display of addresses
@@ -37,8 +38,6 @@
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    //$companyid = prep($companyid,"'25'");
 	    
-	    
-	    
 	    $d_bill = "Select count(`remit_to_id`) mode, max(`created`) recent, `remit_to_id`, a.`name`, a.`street`, a.`city`, a.`state`,a.`postal_code`
     	    FROM purchase_orders po, addresses a
     	    WHERE po.`remit_to_id` = a.`id` AND `companyid` = $companyid
@@ -47,7 +46,7 @@
     	    ORDER BY mode,recent 
     	    LIMIT 15;";
 	    $bill = qdb($d_bill);
-		if ($bill){
+		if (mysqli_num_rows($bill) > 0){
 			$row = mysqli_fetch_array($bill);
             $line['b_value'] = $row['remit_to_id'];
             $line['b_display'] = $row['name'].' <br> '.$row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'];
@@ -62,11 +61,10 @@
 	    LIMIT 15;";
 	
 	$ship = qdb($d_ship);
-		if ($ship){
+		if (mysqli_num_rows($ship) > 0){
 			$row = mysqli_fetch_array($ship);
 	        $line['s_value'] = $row['ship_to_id'];
 	        $line['s_display'] = $row['name'].' <br> '.$row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'];
-	        
 		}
 	}
 	
