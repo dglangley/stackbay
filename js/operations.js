@@ -214,6 +214,7 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
+							alert(company);
 						}
 						else{
 							// alert(order_type);
@@ -229,6 +230,7 @@
 				});
 				
 				toggleSidebar();
+
 				$(document).on("change load","#freight-carrier",function() {
 					var carrier = ($("#freight-carrier :selected").attr('data-carrier-id'));
 					$("#freight-services").val("Freight Services");
@@ -237,10 +239,10 @@
 				});
 			});
 			
-			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
+			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 			$(document).on('change', '#companyid', function() {
 				var id = $(this).val();
-				
+				alert(id);
 				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
 			});
 			
@@ -277,13 +279,8 @@
 			$(document).on("change","#companyid",function() {
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
-				var limit = '';
-				// if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
-				// 	limit = "25";
-				// }
-				// else{
-					limit = company;
-				// }
+				var limit = company;
+
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
 				
@@ -331,7 +328,9 @@
 						$("#account_select").attr("data-carrier",set_carrier);
 			    		$("#select2-account_select-container").html(display);
 			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
-			    		$("#carrier").val(set_carrier);
+			    		if (set_carrier){
+			    			$("#carrier").val(set_carrier);
+			    		}
 						console.log("JSON account-default.php: Success");
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					},					
@@ -341,8 +340,6 @@
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					}
 				}).done(function(right) {
-				    // you may safely use results here
-				    // alert("Account: "+$("#account_select").attr("data-carrier"));
 				    var new_account = ($("#account_select").attr("data-carrier"));
 					if (new_account){
 					$.ajax({
@@ -416,9 +413,9 @@
 				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				
 				//Reload the contact
-				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
-				
-				//Populate the terms with the company preferences
+				// $("#contactid").initSelect2("/json/contacts.php","Select a contact",25)
+				// alert(limit);
+				// //Populate the terms with the company preferences
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',

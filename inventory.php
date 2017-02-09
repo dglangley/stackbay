@@ -352,13 +352,17 @@ s
 						var status = $('.status_select').clone();
 						
 						var counter = 1;
+						var rev_arr = [];
 						revisions = "<option value='' selected>All</option>";
 						//If there are multiple parts being returned, loop through them all
 						$.each(part, function(partid, macro){
 							//Add each part to the revisions page
 							counter++;
 							$.each(macro, function(key,info){
-								revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+								if (!(info.part_name in rev_arr)){
+									revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+									rev_arr[info.part_name] = false;
+								}
 								var key = key.split("+");
 								console.log(key);
 								parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
@@ -610,12 +614,12 @@ s
 		
 		//This function show all the serial if the user clicks on the qty link
 		$(document).on('click', '.check_serials', function(e) {
-			e.preventDefault
+			e.preventDefault;
 			
 			var parent = $(this).closest('.parts-list').data('serial');
-			//alert($(this).text());
-			
 			$('.' + parent).toggle();
+			
+			
 		});
 		
 		$(document).on("click",".part_filter",function(){
@@ -643,12 +647,15 @@ s
 					}
 					else{
 						$('.parts-list').show();
+						$('.serial_listing').show();
 						return false;
 					}
 				});
 			}
 			else {
+				// alert('here');
 				$('.parts-list').show();
+				$('.serial_listing').hide();
 			}
 		});
 	

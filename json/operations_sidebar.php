@@ -234,10 +234,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		
 		//Carrier and service
+		
+		//Sets UPS to default
+		$selected_carrier = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
+		$selected_service = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-5')."
-			    	".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
+				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
 			    </div>";
 		
 		//Shipping Account Section

@@ -271,30 +271,31 @@
 			$in = '(';
 			//Get all the parts from the search
 			$initial = hecidb($search);
-			foreach($initial as $id =>$info){
-				$in .= "'$id', ";
-			}
-			$in = trim($in, ", ");
-			$in .= ")";
-			$query  = "SELECT DISTINCT partid FROM inventory";
-			$query .= " WHERE partid IN $in";
-			$query .= sFilter('locationid', $locationid);
-			$query .= sFilter('item_condition',$condition);
-			$query .= sFilter('last_purchase',$order);
-			$query .= dFilter('date_created',$start, $end);
-			$query .= ";";
-
-			$result = qdb($query);
+			if ($initial){
+				foreach($initial as $id =>$info){
+					$in .= "'$id', ";
+				}
+				$in = trim($in, ", ");
+				$in .= ")";
+				$query  = "SELECT DISTINCT partid FROM inventory";
+				$query .= " WHERE partid IN $in";
+				$query .= sFilter('locationid', $locationid);
+				$query .= sFilter('item_condition',$condition);
+				$query .= sFilter('last_purchase',$order);
+				$query .= dFilter('date_created',$start, $end);
+				$query .= ";";
+				$result = qdb($query);
 			
-			if(mysqli_num_rows($result)>0){
-				//Loop through the results
-				foreach($result as $inv){
-					$parts[$inv['partid']] = $initial[$inv['partid']];
+				if(mysqli_num_rows($result)>0){
+					//Loop through the results
+					foreach($result as $inv){
+						$parts[$inv['partid']] = $initial[$inv['partid']];
+					}
 				}
 			}
 			
 			//This portion searches by serial number and appends the values of all the partids by serial
-			$search = prep('%'.$search.'%');
+			$search = prep($search);
 			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
 			$query .= sFilter('locationid', $locationid);
 			$query .= sFilter('item_condition',$condition);
