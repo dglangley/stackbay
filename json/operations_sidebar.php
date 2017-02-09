@@ -123,23 +123,36 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						</div>
 					</div>
 				</div>";
-		
-		//Contact
-		$right .= "
+		if ($order_type == "Purchase"){
+			$right .="
 				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>						
-						<div class ='contact'>
-							<label for='contactid'>Contact</label>
-							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
-								<option value = $contact>".getContact($contact)."</option>
-							</select>
-						</div>
-					</div>
-				</div>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>
+						<label for='bill_to'>Remit to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						</label>
+		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+							<option value = '$b_add'>$b_name</option>
+		                </select>
+				    </div>
+			    </div>";
+		}
+		else{
+		//Billing Address
+			$right .="
 				<div class='row'>
-					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-		";
+					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
+						<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						</label>
+	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+							<option value = '$b_add'>$b_name</option>
+	                    </select>
+				    </div>
+			    </div>";
+		}
 		
+		//Payment Terms and warranty
+		$right .= "<div class='row'>
+					<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
+		    	
 		//Associated order module
 		if ($order_number != 'New'){
 			$right .= "
@@ -174,7 +187,21 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		$right .= "
 	    			</div>
+						".dropdown('terms',$terms,$companyid, 'col-sm-5')."
 		    	</div>";
+		//Contact
+		$right .= "
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>						
+						<div class ='contact'>
+							<label for='contactid'>Contact</label>
+							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
+								<option value = $contact>".getContact($contact)."</option>
+							</select>
+						</div>
+					</div>
+				</div>
+		";
 		 
 		 //This feature will be added later ***Upload  	
 		 //$right .= "
@@ -202,36 +229,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//     			</div>
 		// 			</div>";
 		// }
-		if ($order_type == "Purchase"){
-			$right .="
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>
-						<label for='bill_to'>Remit to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-						</label>
-		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value = '$b_add'>$b_name</option>
-		                </select>
-				    </div>
-			    </div>";
-		}
-		else{
-		//Billing Address
-			$right .="
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-						</label>
-	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value = '$b_add'>$b_name</option>
-	                    </select>
-				    </div>
-			    </div>";
-		}
-		//Payment Terms and warranty
-		$right .="
-				<div class='row' style='padding-bottom: 10px;'>
-					".dropdown('terms',$terms,$companyid)."
-			    </div>";
+		
 		
 			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		//Shipping Address 	
