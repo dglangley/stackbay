@@ -28,6 +28,64 @@
 		include_once $rootdir.'/inc/form_handle.php';
 
 //=============================== Inputs section ==============================
+
+	// added by David 2/9/17 for file uploads; this takes a file upload when passed in its own, separate
+	// ajax (synchronous) request, we upload the file(s) to its storage location, then pass back the
+	// uploaded file name(s) as an indicator of success. the ensuing form post to this script uses
+	// those file names but does not upload the files themselves, so this sub-script gets handled only once
+	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
+		require($rootdir.'/vendor/autoload.php');
+
+		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
+		if (! $DEV_ENV) {
+			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
+			$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
+		}
+
+		$files = '';
+		try {
+			foreach ($_FILES as $file) {
+				$filename = date("Ymd").'_'.preg_replace('/[^[:alnum:].]+/','-',$file['name']);
+
+				// check for file existing already
+				$keyExists = false;
+				if (! $DEV_ENV) {
+					$s3->registerStreamWrapper();
+					$keyExists = file_exists("s3://".$bucket."/".$filename);
+				}
+
+				if ($keyExists) {//file has already been uploaded
+					echo json_encode(array('filename'=>'','message'=>'File has already been uploaded!'));
+					exit;
+				}
+
+				if ($DEV_ENV) {
+					$temp_dir = sys_get_temp_dir();
+					if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
+					$temp_file = $temp_dir.$filename;
+					$files = $temp_file;
+
+					// store uploaded file in temp dir so we can use it later
+					if (move_uploaded_file($file['tmp_name'], $temp_file)) {
+//						echo "File is valid, and was successfully uploaded.\n";
+					} else {
+						echo json_encode(array('filename'=>'','message'=>'File "'.$file['tmp_name'].'" did not save to "'.$temp_file.'"!'));
+						exit;
+					}
+				} else {
+	                $upload = $s3->upload($bucket, $filename, fopen($file['tmp_name'], 'rb'), 'public-read');
+					$files = "s3://".$bucket."/".$filename;
+				}
+			}
+       	} catch(Exception $e) {
+			echo json_encode(array('filename'=>'','message'=>'Error! '.$e));
+			exit;
+		}
+		echo json_encode(array('filename'=>$files,'message'=>''));
+		exit;
+	}
+
+
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
@@ -100,10 +158,14 @@
             ($created_by, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
         else{
+    		$filename = grab('filename');
+    		$filename = prep($filename);
+
             $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
             `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $rep, $cid, $contact, $assoc_order, NULL, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
+            ($created_by, $rep, $cid, $contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
         }
+
     //Run the update
         qdb($insert);
         

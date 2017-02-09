@@ -64,7 +64,7 @@
 
             $output = "<div class='$size'>";
             if($label) {
-        	    $output .=  "<label for='$id'>Carrier:</label>";
+        	    $output .=  "<label for='$id'>Carrier</label>";
             }
             $output .="
         			    <select id = '$id' class='form-control input-sm'>
@@ -88,7 +88,7 @@
     	   	}
             $id = ($custom_id) ? $custom_id : "service";
             $output = "<div class='$size' id = '".$id."_div'>	            	
-    			    <label for='services'>Service:</label>
+    			    <label for='services'>Service</label>
     			    <select id = '$id' class='required form-control input-sm'>
     			        <option value = 'NULL'> </option>
     				    $service_options
@@ -178,7 +178,7 @@
         	   	}
         $id = ($custom_id) ? $custom_id : "terms";
         $output = "<div class='$size' id = '".$id."_div'>";          	
-        $output .= ($label)? "<label for='$id'>Terms:</label>" : '';
+        $output .= ($label)? "<label for='$id'>Terms</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm'>";
     	$output .= "	    $terms_options
     			    </select>

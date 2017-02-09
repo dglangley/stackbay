@@ -252,6 +252,9 @@ input:-moz-placeholder { text-transform: uppercase; }
 	z-index: -1;
 	position: absolute;
 }
+.textarea-info {
+	background-color:#ddd;
+}
 
 /* End David additions */
 

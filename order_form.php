@@ -69,7 +69,7 @@
 		include_once $rootdir.'/modal/alert.php'
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
-		<?= ($order_type == "Sales")?"#faefdd":"#f7fff1";?> 
+		<?= ($order_type == "Sales")?"#f7fff0":"#f5dfba";?> 
 		;">
 			
 			<div class="col-md-4">

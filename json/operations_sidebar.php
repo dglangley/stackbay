@@ -48,6 +48,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$f_service = '';
 		$f_account = '';
 		$carrier_options = '';
+		$ref_ln = '';
 
 		
 		
@@ -87,6 +88,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$terms = $row['termsid'];
 				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
+				else { $ref_ln = $row['ref_ln']; }
 			}
 		}
 		
@@ -114,7 +116,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='company'>
-							<label for='companyid'>Company:</label>
+							<label for='companyid'>Company</label>
 							<select name='companyid' id='companyid' class='form-control input-xs company-selector required' style = 'width:100%;'>
 								<option value = $companyid>$company_name</option>
 							</select>
@@ -127,31 +129,43 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='contact'>
-							<label for='contactid'>Contact:</label>
+							<label for='contactid'>Contact</label>
 							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
 								<option value = $contact>".getContact($contact)."</option>
 							</select>
 						</div>
 					</div>
-				</div>";
-		
-		
-		
-		//Associated order module
-		$right .= "
+				</div>
 				<div class='row'>
 					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-						<label for='assoc'>Customer Order:</label>
 		";
+		
+		//Associated order module
+		if ($order_number != 'New'){
+			$right .= "
+						<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
+			";
+		} else {
+			$right .= "
+						<label for='assoc'>Customer Order</label>
+			";
+		}
 		if ($order_type == "Sales") {
 			$right .= "
+							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
+			if ($order_number == 'New') {
+				$right .= "
 							<div class='input-group'>
-								<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 								<span class='input-group-btn'>
-									<button class='btn btn-default btn-sm btn-order-upload' type='button'><i class='fa fa-paperclip'></i></button>
+									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
 								</span>
 							</div><!-- /input-group -->
-							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload' />
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
+				";
+			}
+			$right .= "
 			";
 		} else {
 			$right .= "
@@ -166,7 +180,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		 //$right .= "
 			// 	<div class='row'>
 			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-			// 			<label for='assoc'>Customer Order:</label>
+			// 			<label for='assoc'>Customer Order</label>
 			// 			<div class = 'input-group'>
 			// 				<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 			// 				<span class='input-group-btn'>
@@ -183,7 +197,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// 	$right .= "
 		// 			<div class='row'>
 		// 				<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
-		// 					<label for='tracking'>Associated Tracking #:</label>
+		// 					<label for='tracking'>Associated Tracking #</label>
 		// 					<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
 		//     			</div>
 		// 			</div>";
@@ -205,7 +219,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='bill_to'>Bill to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
@@ -213,18 +227,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				    </div>
 			    </div>";
 		}
-		//Shipping Address 	
-		$right .= "
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to' >Ship to:  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-							<input id='mismo' type=checkbox></input> (Same as billing)
-						</label>
-	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
-							<option value = '$s_add' >$s_name</option>
-	                    </select>
-				    </div>
-			    </div>";
 		//Payment Terms and warranty
 		$right .="
 				<div class='row' style='padding-bottom: 10px;'>
@@ -232,6 +234,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			    </div>";
 		
 			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
+		//Shipping Address 	
+		$right .= "
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
+						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+							<input id='mismo' type=checkbox></input> (Same as billing)
+						</label>
+	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
+							<option value = '$s_add' >$s_name</option>
+	                    </select>
+				    </div>
+			    </div>";
 		
 		//Carrier and service
 		
@@ -249,7 +263,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12'>
 						<div class = 'account forms_section'>
-							<label for='account'>Account:</label>
+							<label for='account'>Account</label>
 							<select id='account_select' class='form-control input-xs'>
 								$acct_display
 							</select>
@@ -259,15 +273,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//NOTES SECTION (Band together)
 		$right .= "
-				<div class = 'row'>
+				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
-						<label for='private_notes'>Private Notes:</label>
-						<textarea id='private_notes' class='form-control' name='email' rows='4' style=''>$private</textarea>
+						<label for='private_notes'>Private Notes</label>
+						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='4' style=''>$private</textarea>
 					</div>
 				</div>	
-				<div class = 'row'>
+				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
-						<label for='public_notes'>Public Notes:</label>
+						<label for='public_notes'>Public Notes / Customer Requirements</label>
 						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
 					</div>
 				</div>";

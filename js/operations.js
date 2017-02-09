@@ -214,7 +214,6 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
-							alert(company);
 						}
 						else{
 							// alert(order_type);
@@ -242,7 +241,6 @@
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 			$(document).on('change', '#companyid', function() {
 				var id = $(this).val();
-				alert(id);
 				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
 			});
 			
@@ -274,7 +272,10 @@
 		$(document).on("click",".btn-order-upload",function() {
 			$("#order-upload").click();
 		});
-		$(document).on("change","input#order-upload",function() {
+		var orderUploadFiles;
+		$(document).on("change","input#order-upload",function(e) {
+			orderUploadFiles = e.target.files;
+
 			// get new upload file name
 			var upload_file = $(this).val().replace("C:\\fakepath\\","");
 
@@ -286,11 +287,6 @@
 			// change icon on upload button as additional indicator of successful selection
 			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
 		});
-/*
-                                    <button class='btn btn-info btn-sm btn-order-upload' type='button'><i class='fa fa-paperclip'></i></button>
-
-                            <input name='assoc_order_upload' type='file' id='order-upload' class='order-upload' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' /> */
-	
 	
 		
 		//If the company information changes, run
@@ -300,7 +296,7 @@
 				var limit = company;
 
 				var carrier = $("#carrier").val();
-				// alert("Limit: "+company+" | Carrier: "+carrier);
+				// alert("Limit: "+company+" | Carrier "+carrier);
 				
 				//Default selector for the addresses
 				$.ajax({
@@ -367,7 +363,7 @@
 							"field":"services",
 							"limit": new_account,
 							"size": "col-sm-7",
-							"label": "Service:",
+							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
 						dataType: 'json',
@@ -441,7 +437,7 @@
 						"field":"terms",
 						"limit":company,
 						"size": "col-sm-6",
-						"label": "Terms:"
+						"label": "Terms"
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -492,7 +488,7 @@
 			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
-            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
 				//Account default picker on update of the company
 				var company = $("#companyid").val();
 				$.ajax({
@@ -526,7 +522,7 @@
 						"field":"services",
 						"limit":limit,
 						"size": "col-sm-7",
-						"label": "Service:",
+						"label": "Service",
 						"id" : "service"
 						}, // serializes the form's elements.
 					dataType: 'json',
@@ -559,7 +555,7 @@
 				if (!isNaN(days)){
 					$("input[name=ni_date]").val(freight_date(days));
 				}
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
 				// $.ajax({
  
 				// });
@@ -1074,7 +1070,7 @@
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
 				
-				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
 				if (value != "no"){
 					$(".line_war").text(text)
 					.attr("data-war",value);
@@ -1105,7 +1101,7 @@
 				var value = $(this).val();
 				var text = $("#condition_global option:selected").text();
 				
-				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
 				if (value != "no"){
 					$(".line_cond").text(text)
 					.attr("data-cond",value);
@@ -1152,10 +1148,6 @@
 					var repid = $("#sales-rep option:selected").attr("data-rep-id");
 
 					var company = $("#companyid").val();
-					if (!company){
-						alert("Must enter company before continuing");
-						return;
-					}
 					
 					var contact = $("#contactid").val();
 					if (contact.includes("new")){
@@ -1185,16 +1177,37 @@
 					var pub_notes = $('#public_notes').val();
 					//var warranty = $('.warranty').val();
 
-					/* David's file uploader (incomplete as of 2/7/17) */
+					var filename;
+					/* David's file uploader */
 					if ($('#order-upload').length) {
-						var uploader = $('#order-upload');
-						var upload_file = uploader.val();
-						if (! upload_file) {
-							alert("You forgot to upload the Customer's PO!");
-							return;
-						}
-						console.log(uploader[0].files[0]);
-return;
+						var files = new FormData();
+						$.each(orderUploadFiles, function(key, value) {
+							files.append(key, value);
+						});
+
+						// need to process the uploaded file in a separate ajax request first, thank you to this guy for the help:
+						// https://abandon.ie/notebook/simple-file-uploads-using-jquery-ajax
+						$.ajax({
+							url: '/json/order-form-submit.php',
+							type: 'POST',
+							cache: false,
+							dataType: 'json',
+							processData: false, //Don't process the files
+							contentType: false, //Set content type to false as jQuery will tell the server its a query string request
+							async: false, //We want to force the upload first before continuing to complete form post below
+							data: files,
+							success: function(data, textStatus, jqXHR) {
+								if (typeof data.error==='undefined') {
+									if (data.filename!='') {
+										filename = data.filename;
+									} else if (data.message) {
+										console.log(data.message);
+									}
+								}
+							},
+							error: function(data, textStatus, errorThrown) {
+							},
+						});
 					}
 	
 	
@@ -1252,6 +1265,7 @@ return;
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
 							"table_rows":submit,
+							"filename":filename,
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
@@ -1270,7 +1284,7 @@ return;
 						error: function(xhr, status, error) {
 						   	console.log("Order-form-submission Error:");
 						   	console.log(error);
-						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
+//						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
 							
 						},
 					});
