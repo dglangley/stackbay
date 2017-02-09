@@ -214,7 +214,7 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
-							// alert(company);
+
 						}
 						else{
 							// alert(order_type);
@@ -240,12 +240,7 @@
 			});
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-			// $(document).on('change', '#companyid', function() {
-			// 	var id = $(this).val();
-			// 	// alert(id);
-			// 	$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
-			// });
-			
+
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
@@ -274,6 +269,22 @@
 		$(document).on("click",".btn-order-upload",function() {
 			$("#order-upload").click();
 		});
+		var orderUploadFiles;
+		$(document).on("change","input#order-upload",function(e) {
+			orderUploadFiles = e.target.files;
+
+			// get new upload file name
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+
+			// change "Customer Order:" label with name of upload file, and color with primary text
+			var order_label = $("#customer_order").find("label[for='assoc']");
+			order_label.html(upload_file);
+			order_label.prop('class','text-info');
+
+			// change icon on upload button as additional indicator of successful selection
+			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
+		});
+	
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
@@ -282,7 +293,7 @@
 				var limit = company;
 
 				var carrier = $("#carrier").val();
-				// alert("Limit: "+company+" | Carrier: "+carrier);
+				// alert("Limit: "+company+" | Carrier "+carrier);
 				
 				// alert(id);
 				$("#contactid").initSelect2("/json/contacts.php","",company);
@@ -365,7 +376,7 @@
 							"field":"services",
 							"limit": new_account,
 							"size": "col-sm-7",
-							"label": "Service:",
+							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
 						dataType: 'json',
@@ -437,7 +448,7 @@
 						"field":"terms",
 						"limit":company,
 						"size": "col-sm-6",
-						"label": "Terms:"
+						"label": "Terms"
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -488,7 +499,7 @@
 			
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
-            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
 				//Account default picker on update of the company
 				var company = $("#companyid").val();
 				$.ajax({
@@ -522,7 +533,7 @@
 						"field":"services",
 						"limit":limit,
 						"size": "col-sm-7",
-						"label": "Service:",
+						"label": "Service",
 						"id" : "service"
 						}, // serializes the form's elements.
 					dataType: 'json',
@@ -555,7 +566,7 @@
 				if (!isNaN(days)){
 					$("input[name=ni_date]").val(freight_date(days));
 				}
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service:&id=service&size=col-sm-6");
+            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
 				// $.ajax({
  
 				// });
@@ -880,6 +891,7 @@
 					//Gather the address from the select2 field
 					var addy = ($(this).val().slice(4));
 					//Otherwise, if it is a number, assume they were searching by the address itself
+					$("#address-modal-body").find("input").val('');
 					$("#address-modal-body").find("input[name='na_line_1']").val(addy);
 					var company = ($("#select2-companyid-container").attr("title"));
 					$("#address-modal-body").find("input[name='na_name']").val(company);
@@ -1070,7 +1082,7 @@
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
 				
-				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
 				if (value != "no"){
 					$(".line_war").text(text)
 					.attr("data-war",value);
@@ -1101,7 +1113,7 @@
 				var value = $(this).val();
 				var text = $("#condition_global option:selected").text();
 				
-				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service:&id=service&size=col-sm-6");
+				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
 				if (value != "no"){
 					$(".line_cond").text(text)
 					.attr("data-cond",value);
@@ -1148,10 +1160,6 @@
 					var repid = $("#sales-rep option:selected").attr("data-rep-id");
 
 					var company = $("#companyid").val();
-					if (!company){
-						alert("Must enter company before continuing");
-						return;
-					}
 					
 					var contact = $("#contactid").val();
 					if (contact.includes("new")){
@@ -1181,15 +1189,37 @@
 					var pub_notes = $('#public_notes').val();
 					//var warranty = $('.warranty').val();
 
-					/* David's file uploader (incomplete as of 2/7/17) */
+					var filename;
+					/* David's file uploader */
 					if ($('#order-upload').length) {
-						var uploader = $('#order-upload');
-						var upload_file = uploader.val();
-						if (! upload_file) {
-							alert("You forgot to upload the Customer's PO!");
-							return;
-						}
-						console.log(uploader[0].files[0]);
+						var files = new FormData();
+						$.each(orderUploadFiles, function(key, value) {
+							files.append(key, value);
+						});
+
+						// need to process the uploaded file in a separate ajax request first, thank you to this guy for the help:
+						// https://abandon.ie/notebook/simple-file-uploads-using-jquery-ajax
+						$.ajax({
+							url: '/json/order-form-submit.php',
+							type: 'POST',
+							cache: false,
+							dataType: 'json',
+							processData: false, //Don't process the files
+							contentType: false, //Set content type to false as jQuery will tell the server its a query string request
+							async: false, //We want to force the upload first before continuing to complete form post below
+							data: files,
+							success: function(data, textStatus, jqXHR) {
+								if (typeof data.error==='undefined') {
+									if (data.filename!='') {
+										filename = data.filename;
+									} else if (data.message) {
+										console.log(data.message);
+									}
+								}
+							},
+							error: function(data, textStatus, errorThrown) {
+							},
+						});
 					}
 	
 	
@@ -1247,6 +1277,7 @@
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
 							"table_rows":submit,
+							"filename":filename,
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
@@ -1265,7 +1296,7 @@
 						error: function(xhr, status, error) {
 						   	console.log("Order-form-submission Error:");
 						   	console.log(error);
-						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
+//						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
 							
 						},
 					});
@@ -1625,77 +1656,81 @@
 					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
 					//Submit the data from the live scanned boxes
 					qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
-					
-			    	$.ajax({
-						type: "POST",
-						url: '/json/shipping-update-dynamic.php',
-						data: {
-							 'partid' : partid,
-							 'serial' : serial,
-							 'so_number' : po_number,
-							 'condition' : condition,
-							 'package_no' : package_no
-						},
-						dataType: 'json',
-						success: function(result) {
-							console.log(result);
-							
-							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							// console.log(result);
-							if(result['query']) {
-								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-								//Decrement the qty by 1 after success and no errors detected
-								qty--;
-
-								//Area to duplicate the box field
-								$serial.closest('tr').find(".active_box_selector").first().clone()
-								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
-								.removeClass("active_box_selector")
-								.addClass("drop_box")
-								.val($serial.closest('tr').find(".active_box_selector").first().val())
-								.attr("data-associated",serial);
-
-								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
+	
+					if(package_no != null) {
+				    	$.ajax({
+							type: "POST",
+							url: '/json/shipping-update-dynamic.php',
+							data: {
+								 'partid' : partid,
+								 'serial' : serial,
+								 'so_number' : po_number,
+								 'condition' : condition,
+								 'package_no' : package_no
+							},
+							dataType: 'json',
+							success: function(result) {
+								console.log(result);
+								
+								//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+								// console.log(result);
+								if(result['query']) {
+									$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+									//Decrement the qty by 1 after success and no errors detected
+									qty--;
+	
+									//Area to duplicate the box field
+									$serial.closest('tr').find(".active_box_selector").first().clone()
+									.insertAfter($serial.closest('tr').find(".active_box_selector").first())
+									.removeClass("active_box_selector")
+									.addClass("drop_box")
+									.val($serial.closest('tr').find(".active_box_selector").first().val())
+									.attr("data-associated",serial);
+	
+									if(qty >= 0) {
+										$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
+									}
+									$serialClone.find('input').val("");
+									
+									$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+									$serialClone.find('button').attr('disabled', true);
+									
+									$serial.closest('.infiniteSerials').prepend($serialClone);
+									$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+									$serial.closest('.infiniteSerials').find('input:first').focus();
+									
+									var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
+									
+									$serial.closest('tr').find('.infiniteComments').prepend(element);
+									
+									if(qty == 0) {
+								    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+								    	var date = new Date();
+								    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
+								    	
+								    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
+								    	alert('Part: ' + part + ' has been shipped.');
+								    }
+								    
+								    $serial.attr("data-saved", serial);
+								} else {
+									alert(result['error']);
 								}
-								$serialClone.find('input').val("");
-								
-								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
-								$serialClone.find('button').attr('disabled', true);
-								
-								$serial.closest('.infiniteSerials').prepend($serialClone);
-								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-								$serial.closest('.infiniteSerials').find('input:first').focus();
-								
-								var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
-								
-								$serial.closest('tr').find('.infiniteComments').prepend(element);
-								
-								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-							    	var date = new Date();
-							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
-							    	
-							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
-							    	alert('Part: ' + part + ' has been shipped.');
-							    }
-							    
-							    $serial.attr("data-saved", serial);
-							} else {
-								alert(result['error']);
-							}
-							window.onbeforeunload = null;
-						
-							console.log("Shipping-add-dynamic.php: Success");
-						
+								window.onbeforeunload = null;
 							
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("Shipping-add-dynamic.php: ERROR");
-							console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition);
-							},	
-					});
+								console.log("Shipping-add-dynamic.php: Success");
+							
+								
+							},
+							error: function(xhr, status, error) {
+								alert(error+" | "+status+" | "+xhr);
+								console.log("Shipping-add-dynamic.php: ERROR");
+								console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition);
+								},	
+						});
+					} else {
+						alert('A Box required.');
+					}
 			    } else if(serial == '') {
 			    	alert('Serial Missing');
 			    } 

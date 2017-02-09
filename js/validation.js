@@ -20,7 +20,8 @@ function validation(e, formCase, type) {
 	}
 	
 	$element.find('.required').each(function(){
-		var selected;
+		var selected,forTag;
+
 		//Make sure the required field is tied to some form input field
 		if($(this).is('select')) {
 			selected = $('option:selected', this).text();
@@ -42,10 +43,15 @@ function validation(e, formCase, type) {
 		} else {
 			$(this).css('border-color', '');
 			$(this).siblings('.select2').find('.select2-selection--single').css('border-color', '');
+			if ($("[for='"+$(this).prop('name')+"']").length) {
+				forTag = $("[for='"+$(this).prop('name')+"']");
+				if (forTag.prop('tagName')!='LABEL') { forTag.css('border-color',''); }
+			}
 		}
 	});
   
 	if (validation) {
+		var forTag;
         
         $element.find('.required').first().focus();
         
@@ -53,12 +59,17 @@ function validation(e, formCase, type) {
         for(var i = 0; i < $error.length; i++) {
         	$error[i].css('border-color', '#d9534f');
         	$error[i].siblings('.select2').find('.select2-selection--single').css('border-color', '#d9534f');
+			if ($("[for='"+$error[i].prop('name')+"']").length) {
+				forTag = $("[for='"+$error[i].prop('name')+"']");
+				if (forTag.prop('tagName')=='LABEL') { continue; }
+				forTag.css('border-color','#d9534f');
+			}
         }
         
         //Pop some sort of alert here...
         var message = '<div id="row" class="general-form-error alert alert-danger fade in text-center" style="margin-bottom: 0;">\
 		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>\
-		    <strong>Error!</strong> Missing Fields.\
+		    <strong>Error!</strong> Missing Fields\
 		    \
 		</div>';
 		if(type != 'modal') {

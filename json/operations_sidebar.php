@@ -48,6 +48,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$f_service = '';
 		$f_account = '';
 		$carrier_options = '';
+		$ref_ln = '';
 
 		
 		
@@ -87,6 +88,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$terms = $row['termsid'];
 				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
+				else { $ref_ln = $row['ref_ln']; }
 			}
 		}
 		
@@ -114,80 +116,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='company'>
-							<label for='companyid'>Company:</label>
+							<label for='companyid'>Company</label>
 							<select name='companyid' id='companyid' class='form-control input-xs company-selector required' style = 'width:100%;'>
 								<option value = $companyid>$company_name</option>
 							</select>
 						</div>
 					</div>
 				</div>";
-		
-		//Contact
-		$right .= "
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>						
-						<div class ='contact'>
-							<label for='contactid'>Contact:</label>
-							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
-								<option value = $contact>".getContact($contact)."</option>
-							</select>
-						</div>
-					</div>
-				</div>";
-		
-		
-		
-		//Associated order module
-		$right .= "
-				<div class='row'>
-					<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-						<label for='assoc'>Customer Order:</label>
-		";
-		if ($order_type == "Sales") {
-			$right .= "
-							<div class='input-group'>
-								<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-								<span class='input-group-btn'>
-									<button class='btn btn-default btn-sm btn-order-upload' type='button'><i class='fa fa-paperclip'></i></button>
-								</span>
-							</div><!-- /input-group -->
-							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload' />
-			";
-		} else {
-			$right .= "
-						<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			";
-		}
-		$right .= "
-	    			</div>
-		    	</div>";
-		 
-		 //This feature will be added later ***Upload  	
-		 //$right .= "
-			// 	<div class='row'>
-			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-			// 			<label for='assoc'>Customer Order:</label>
-			// 			<div class = 'input-group'>
-			// 				<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			// 				<span class='input-group-btn'>
-			// 			        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
-			// 				        <i class='fa fa-paperclip' aria-hidden='true'></i>
-			// 			        </button>
-			//     			</span>
-		 //   			</div>
-	  //  			</div>
-		 //   	</div>";
-		    	
-		//If this is a purchase order, allow a static associated tracking field to be entered.
-		// if($order_type == "Purchase"){
-		// 	$right .= "
-		// 			<div class='row'>
-		// 				<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
-		// 					<label for='tracking'>Associated Tracking #:</label>
-		// 					<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
-		//     			</div>
-		// 			</div>";
-		// }
 		if ($order_type == "Purchase"){
 			$right .="
 				<div class='row'>
@@ -205,7 +140,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='bill_to'>Bill to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
@@ -213,11 +148,95 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				    </div>
 			    </div>";
 		}
+		
+		//Payment Terms and warranty
+		$right .= "<div class='row'>
+					<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
+		    	
+		//Associated order module
+		if ($order_number != 'New'){
+			$right .= "
+						<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
+			";
+		} else {
+			$right .= "
+						<label for='assoc'>Customer Order</label>
+			";
+		}
+		if ($order_type == "Sales") {
+			$right .= "
+							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
+			if ($order_number == 'New') {
+				$right .= "
+							<div class='input-group'>
+								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+								<span class='input-group-btn'>
+									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
+								</span>
+							</div><!-- /input-group -->
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
+				";
+			}
+			$right .= "
+			";
+		} else {
+			$right .= "
+						<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
+		}
+		$right .= "
+	    			</div>
+						".dropdown('terms',$terms,$companyid, 'col-sm-5')."
+		    	</div>";
+		//Contact
+		$right .= "
+				<div class='row'>
+					<div class='col-sm-12' style='padding-bottom: 10px;'>						
+						<div class ='contact'>
+							<label for='contactid'>Contact</label>
+							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
+								<option value = $contact>".getContact($contact)."</option>
+							</select>
+						</div>
+					</div>
+				</div>
+		";
+		 
+		 //This feature will be added later ***Upload  	
+		 //$right .= "
+			// 	<div class='row'>
+			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
+			// 			<label for='assoc'>Customer Order</label>
+			// 			<div class = 'input-group'>
+			// 				<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			// 				<span class='input-group-btn'>
+			// 			        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
+			// 				        <i class='fa fa-paperclip' aria-hidden='true'></i>
+			// 			        </button>
+			//     			</span>
+		 //   			</div>
+	  //  			</div>
+		 //   	</div>";
+		    	
+		//If this is a purchase order, allow a static associated tracking field to be entered.
+		// if($order_type == "Purchase"){
+		// 	$right .= "
+		// 			<div class='row'>
+		// 				<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
+		// 					<label for='tracking'>Associated Tracking #</label>
+		// 					<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
+		//     			</div>
+		// 			</div>";
+		// }
+		
+		
+			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		//Shipping Address 	
 		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to' >Ship to:  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 							<input id='mismo' type=checkbox></input> (Same as billing)
 						</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
@@ -225,13 +244,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	                    </select>
 				    </div>
 			    </div>";
-		//Payment Terms and warranty
-		$right .="
-				<div class='row' style='padding-bottom: 10px;'>
-					".dropdown('terms',$terms,$companyid)."
-			    </div>";
-		
-			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		
 		//Carrier and service
 		
@@ -239,35 +251,30 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$selected_carrier = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$selected_service = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$right .= "
-				<div class='row' style='padding-bottom: 10px;'>
-				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-5')."
-				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
-			    </div>";
-		
-		//Shipping Account Section
-		$right .="
 				<div class='row'>
-					<div class='col-sm-12'>
+				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-3')."
+				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-5')."
+				    <div class='col-sm-4' style='padding-left: 0;'>
 						<div class = 'account forms_section'>
-							<label for='account'>Account:</label>
+							<label for='account'>Account</label>
 							<select id='account_select' class='form-control input-xs'>
 								$acct_display
 							</select>
 						</div>
 					</div>
-				</div>";
+			    </div>";
 		
 		//NOTES SECTION (Band together)
 		$right .= "
-				<div class = 'row'>
+				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
-						<label for='private_notes'>Private Notes:</label>
-						<textarea id='private_notes' class='form-control' name='email' rows='4' style=''>$private</textarea>
+						<label for='private_notes'>Private Notes</label>
+						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='4' style=''>$private</textarea>
 					</div>
 				</div>	
-				<div class = 'row'>
+				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
-						<label for='public_notes'>Public Notes:</label>
+						<label for='public_notes'>Public Notes / Customer Requirements</label>
 						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
 					</div>
 				</div>";
@@ -324,6 +331,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				else{
 					$b_add = $row['bill_to_id'];
+					$ref_ln = $row['ref_ln'];
 				}
 				$b_name = getAddresses($b_add,'name');
 				$s_add = $row['ship_to_id'];
@@ -354,7 +362,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
 				
 				//Order Number
-				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				if($ref_ln != '') {
+					$right .= "<a href='/".$ref_ln."'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				} else {
+					$right .=  $orderNumber . "<br><br>";
+				}
 				
 				//Addresses
 				if($page != 'Purchase') {
