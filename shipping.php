@@ -373,8 +373,7 @@
 			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
 			                        	$init = false;
 									}
-								}
-								else{
+								} else {
 									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
 									qdb($insert);
 									echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");

@@ -338,6 +338,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				else{
 					$b_add = $row['bill_to_id'];
+					$ref_ln = $row['ref_ln'];
 				}
 				$b_name = getAddresses($b_add,'name');
 				$s_add = $row['ship_to_id'];
@@ -368,7 +369,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
 				
 				//Order Number
-				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				if($ref_ln != '') {
+					$right .= "<a href='/".$ref_ln."'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				} else {
+					$right .=  $orderNumber . "<br><br>";
+				}
 				
 				//Addresses
 				if($page != 'Purchase') {
