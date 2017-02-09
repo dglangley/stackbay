@@ -36,6 +36,7 @@
 
 			$entries[] = $r;
 
+/* this really shouldn't be included for outgoing freight
 			if ($r['freight_charge']>0) {
 				$r['descr'] = 'Freight Charge';
 				$r['price'] = $r['freight_charge'];
@@ -45,6 +46,7 @@
 
 				$entries[$r['id'].'.freight'] = $r;
 			}
+*/
 		}
 
 		return ($entries);
@@ -335,6 +337,9 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['type'] = 'Return';
 
+			$r['po_number'] = '';
+			$r['complete'] = '';
+
 			// if repaired, calc repair cost
 			if ($r['repair_id']) {
 				$repair_cost = calcRepairCost($r);
@@ -343,16 +348,22 @@
 				if (! $r['new_item_id']) {
 					if ($r['shipped_date']) {
 						$r['type'] = 'Repair';
+
+						$r['descr'] = trim($r['part_number'].' '.$r['clei']);
+						$r['price'] = 0;//$repair_cost;
+						$r['actual_cost'] = $repair_cost;
+						$r['avg_cost'] = $repair_cost;
 					} else {
 						//now that I have the below returns categorized differently, I don't want to exclude credit memos below
 						unset($credits[$r['id']]);
 						$r['type'] = 'Pending';
+
+						$r['price'] = $repair_cost;
+						$r['actual_cost'] = $repair_cost;
+						$r['avg_cost'] = $repair_cost;
 					}
 
 					$r['ref'] = $r['repair_id'];
-					$r['price'] = $repair_cost;
-					$r['actual_cost'] = $repair_cost;
-					$r['avg_cost'] = $repair_cost;//$replacement['actual_cost'];
 				}
 			} else if ($r['new_item_id']) {
 				$r['type'] = 'Replace';
@@ -361,53 +372,19 @@
 				$r['actual_cost'] = 0;
 				$r['avg_cost'] = 0;
 			}
-/*
-			// I don't care what Brian or his system says, a credit is when we receive a unit back
-			// and don't return/replace/repair, it's a credit (we don't need his 'action_id' to tell us that!)
-			if (! $r['repair_id'] AND ! $r['new_item_id']) {
-				$query2 = "SELECT * FROM inventory_creditmemo cm, inventory_creditmemoli cmli ";
-				$query2 .= "WHERE cm.rma_id = '".$r['ref']."' AND cm.id = cmli.cm_id; ";
-				$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
-				if (mysqli_num_rows($result2)>0) {
-					$r['type'] = 'Credit';
-
-					$r2 = mysqli_fetch_assoc($result2);
-					$r['date'] = $r2['date'];//assign the date of the credit memo to the rma
-					if ($r['date']>$dbEndDate OR $r['date']<$dbStartDate) { continue; }
-				}
-			}
-*/
-
-			$r['po_number'] = '';
-			$r['complete'] = '';
 
 			$query2 = "SELECT * FROM inventory_creditmemo WHERE rma_id = '".$r['ref']."'; ";
 			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
+			// only if this rma is NOT also accounted for in credit memos do we include it in $returns[]
 			if (mysqli_num_rows($result2)==0) {
 				$credits[$r['id']] = true;
-				$returns[] = $r;
-			}
 
-			// if replaced, get from solditem table and calc associated cost
-/*
-			while ($r['new_item_id']) {
-				$replacement = getSalesRecords($r['new_item_id']);
-				foreach ($replacement as $repl) {
-					$query2 = "SELECT * FROM inventory_rmaticket WHERE item_id = '".$r['new_item_id']."'; ";
-					$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
-					$r['new_item_id'] = '';
-					if (mysqli_num_rows($result2)>0) {
-						$r2 = mysqli_fetch_assoc($result2);
-						$r['new_item_id'] = $r2['new_item_id'];
-						$repl['ref'] = $r2['id'];
-						$repl['date'] = $r['date'];
-						$repl['type'] = 'Repl';
-						$repl['name'] = $r['name'];
-						$returns[] = $repl;
-					}
+				if ($r['type']=='Repair') {
+					$entries[] = $r;
+				} else {
+					$returns[] = $r;
 				}
 			}
-*/
 		}
 	}
 
@@ -463,7 +440,7 @@
 		$query = "SELECT rt.id item_id, si.id si_item_id, si.so_id order_id, cm.date date, cm.ref_no, cm.po_number, cm.rma_id ref, ";
 		//$query .= "li.desc part_number, '' clei, li.quantity qty, li.amount price, c.name, si.cost actual_cost, si.avg_cost ";
 		//$query .= "li.desc descr, li.quantity qty, li.amount price, c.name, '0.00' actual_cost, '0.00' avg_cost, cm.voided ";
-		$query .= "i.part_number, i.clei, li.quantity qty, li.amount price, c.name, '0.00' actual_cost, '0.00' avg_cost ";
+		$query .= "i.part_number, i.clei, li.quantity qty, li.amount price, c.name, si.cost actual_cost, si.avg_cost ";
 		$query .= "FROM inventory_creditmemo cm, inventory_creditmemoli li, inventory_rmaticket rt, inventory_solditem si, inventory_company c, inventory_inventory i ";
 		$query .= "WHERE li.cm_id = cm.id AND customer_id = c.id AND cm.voided = 0 AND cm.rma_id = rt.id AND rt.item_id = si.id AND si.inventory_id = i.id ";
    		if ($startDate) {
@@ -609,7 +586,7 @@
 		if ($r['voided']) {
 			$cls = ' class="strikeout"';
 		} else {
-			if ($r['type']=='Sale') {
+			if ($r['type']=='Sale' OR $r['type']=='Repair') {
 				$ext_debit = format_price(round($ext_price,2),true,' ');
 				$profit = ($r['sale_amount']-$r['cogs']);
 				$sum_profit += $profit;

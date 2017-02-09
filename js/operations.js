@@ -272,6 +272,24 @@
 		$(document).on("click",".btn-order-upload",function() {
 			$("#order-upload").click();
 		});
+		$(document).on("change","input#order-upload",function() {
+			// get new upload file name
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+
+			// change "Customer Order:" label with name of upload file, and color with primary text
+			var order_label = $("#customer_order").find("label[for='assoc']");
+			order_label.html(upload_file);
+			order_label.prop('class','text-info');
+
+			// change icon on upload button as additional indicator of successful selection
+			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
+		});
+/*
+                                    <button class='btn btn-info btn-sm btn-order-upload' type='button'><i class='fa fa-paperclip'></i></button>
+
+                            <input name='assoc_order_upload' type='file' id='order-upload' class='order-upload' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' /> */
+	
+	
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
@@ -1179,6 +1197,7 @@
 							return;
 						}
 						console.log(uploader[0].files[0]);
+return;
 					}
 	
 	
