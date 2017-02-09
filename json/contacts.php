@@ -9,12 +9,12 @@
 
 
 	$q = grab('q');
-    $companyid = grab('limit');
+    $companyid = prep(grab('limit'));
     
-    //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
     $output = array();
     
-        $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' ";
+    //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
+        $query = "SELECT DISTINCT * FROM `contacts` WHERE `name` LIKE '%$q%' ";
         if ($companyid){
             $query .= "AND `companyid` = $companyid";
         }
@@ -26,16 +26,16 @@
             foreach($primary as $id => $row){
                 $line = array(
                     'id' => $row['id'], 
-                    'text' => $row['name']." | $companyid | "
+                    'text' => $row['name']
                 );
                 $output[] = $line;
             }
             
         }   
-    $output[] = array(
-        'id' => 'NULL', 
-        'text' => "$companyid--------------------------------"
-        );
+    // $output[] = array(
+    //     'id' => 'NULL', 
+    //     'text' => "$companyid--------------------------------"
+    //     );
     
     if ($companyid && strlen($q) > 0){
         //Then append the rest of the contacts ordered by alphabetical
@@ -48,7 +48,7 @@
             foreach($second as $id => $row){
                 $line = array(
                     'id' => $row['id'], 
-                    'text' => $row['name']." | $companyid | "
+                    'text' => $row['name']
                 );
                 $output[] = $line;
             }

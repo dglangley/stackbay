@@ -34,7 +34,7 @@
 		                return {
 		                    q: params.term,//search term
 							page: params.page,
-							limit: params.limiter
+							limit: limiter
 		                };
 		            },
 			        processResults: function (data, params) { // parse the results into the format expected by Select2.
@@ -214,7 +214,7 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
-							alert(company);
+							// alert(company);
 						}
 						else{
 							// alert(order_type);
@@ -240,11 +240,11 @@
 			});
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-			$(document).on('change', '#companyid', function() {
-				var id = $(this).val();
-				alert(id);
-				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
-			});
+			// $(document).on('change', '#companyid', function() {
+			// 	var id = $(this).val();
+			// 	// alert(id);
+			// 	$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
+			// });
 			
 			$(document).on("keyup","#search_input > tr > td > input",function() {
 				var qty = 0;
@@ -284,30 +284,46 @@
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
 				
+				// alert(id);
+				$("#contactid").initSelect2("/json/contacts.php","",company);
+				
+				
 				//Default selector for the addresses
 				$.ajax({
 					type: "POST",
 					url: '/json/address-default.php',
 					data: {
 						"company": limit,
+						"order" : order_type
 						},
 					dataType: 'json',
 					success: function(right) {
 						var bvalue = right['b_value'];
 						var bdisplay = right['b_display'];
-			    		$("#select2-bill_to-container").html(bdisplay)
-			    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
+						if(bdisplay && bvalue != $("bill_to").val()){
+							$("#select2-bill_to-container").html("");
+				    		$("#select2-bill_to-container").html(bdisplay);
+				    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
+						}
+			    		console.log("bdisplay: "+bdisplay);
 						
 						var svalue = right['s_value'];
 						var sdisplay = right['s_display'];
-			    		$("#select2-ship_to-container").html(sdisplay)
-			    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
+						$("#select2-ship_to-container").html("");
+						if(sdisplay && svalue != $("bill_to").val()){
+				    		$("#select2-ship_to-container").html(sdisplay);
+				    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
+						}
+						console.log("sdisplay: "+sdisplay);
 			    		console.log("JSON address-default.php: Success");
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON address-default.php: Error");
 					}
+				}).done(function(right){
+					$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
+					$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				});
 				
 				//Account default picker on update of the company
@@ -409,8 +425,6 @@
 				// alert(new_account);
 				
 				//Reload the Addresses
-				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
-				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				
 				//Reload the contact
 				// $("#contactid").initSelect2("/json/contacts.php","Select a contact",25)
