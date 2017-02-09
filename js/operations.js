@@ -532,7 +532,7 @@
 					data: {
 						"field":"services",
 						"limit":limit,
-						"size": "col-sm-7",
+						"size": "col-sm-5",
 						"label": "Service",
 						"id" : "service"
 						}, // serializes the form's elements.
