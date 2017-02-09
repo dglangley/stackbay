@@ -18,8 +18,9 @@
 
     function package_id($order_number, $package_number) {
         $package_items;
+		$order_number = prep($order_number);
 		
-        $query = "SELECT * FROM packages WHERE package_no = '". res($package_number) ."' AND order_number = '". res($order_number) ."';";
+        $query = "SELECT * FROM packages WHERE package_no = '". res($package_number) ."' AND order_number = $order_number;";
         $result = qdb($query);
         
         if (mysqli_num_rows($result)>0) {
@@ -40,28 +41,19 @@
         $query = "SELECT DISTINCT serialid FROM package_contents WHERE packageid = '". res($id) ."';";
         $result = qdb($query);
         
-        while ($row = $result->fetch_assoc()) {
+        foreach($result as $row){
 			$content_id[] = $row['serialid'];
 		}
-		
-		foreach($content_id as $sid) {
-		    $query = "SELECT * FROM inventory AS i, parts AS p WHERE i.id = '". res($sid) ."' AND i.partid = p.id;";
-            $result = qdb($query);
-            
-            if (mysqli_num_rows($result)>0) {
-    			$result = mysqli_fetch_assoc($result);
-     			if($part == '' || $part == $result['part']) {
-     			    $part = $result['part'];
-    			    $parts[] = $result['serial_no'];
-    			} else {
-    			    $contents[$part] = $parts;
-    			    $parts = array();
-    			}
+		$content = implode(",",$content_id);
+		$query = "SELECT part, serial_no FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+        $result = qdb($query);
+        
+        if (mysqli_num_rows($result) > 0) {
+		    foreach($result as $row) {
+                $contents[$row['part']][] = $row['serial_no'];
     		}
 		}
-		
-		$contents[$part] = $parts;
-		
+
         return $contents;
     
     }

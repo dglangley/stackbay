@@ -8,51 +8,52 @@
 
 
 
-	$q = '';
-	   
-	
-	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-    $q = grab('q');
-
+	$q = grab('q');
+    $companyid = grab('limit');
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
-    $companyid = prep(grab('limit'));
     $output = array();
     
-    $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' AND `companyid` = $companyid;";
-    $primary = qdb($query);
-    
-    if (isset($primary)){
-        foreach($primary as $id => $row){
-            $line = array(
-                'id' => $row['id'], 
-                'text' => $row['name']
-            );
-            $output[] = $line;
+        $query = "SELECT * FROM `contacts` WHERE `name` LIKE '%$q%' ";
+        if ($companyid){
+            $query .= "AND `companyid` = $companyid";
         }
+        $query .= ";";
+    
+        $primary = qdb($query);
         
-    }   
-    // $output[] = array(
-    //     'id' => 'NULL', 
-    //     'text' => "--------------------------------"
-    //     );
+        if (isset($primary)){
+            foreach($primary as $id => $row){
+                $line = array(
+                    'id' => $row['id'], 
+                    'text' => $row['name']." | $companyid | "
+                );
+                $output[] = $line;
+            }
+            
+        }   
+    $output[] = array(
+        'id' => 'NULL', 
+        'text' => "$companyid--------------------------------"
+        );
     
-    //Then append the rest of the contacts ordered by alphabetical
-    $secondary = " SELECT DISTINCT * FROM `contacts`
-    WHERE `companyid` != $companyid AND `name` LIKE '%$q%' 
-    ORDER BY `name`;";
-    $second = qdb($secondary);
-
-    if (isset($second)){
-        foreach($second as $id => $row){
-            $line = array(
-                'id' => $row['id'], 
-                'text' => $row['name']
-            );
-            $output[] = $line;
+    if ($companyid && strlen($q) > 0){
+        //Then append the rest of the contacts ordered by alphabetical
+        $secondary = " SELECT DISTINCT * FROM `contacts`
+        WHERE `companyid` != $companyid AND `name` LIKE '%$q%' 
+        ORDER BY `name`;";
+        $second = qdb($secondary);
+    
+        if (isset($second)){
+            foreach($second as $id => $row){
+                $line = array(
+                    'id' => $row['id'], 
+                    'text' => $row['name']." | $companyid | "
+                );
+                $output[] = $line;
+            }
         }
-    }
-    
+    }    
     if (strlen($q) > 0){
         $output[] = array(
             'id' => "new $q",

@@ -234,10 +234,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		
 		//Carrier and service
+		
+		//Sets UPS to default
+		$selected_carrier = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
+		$selected_service = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-5')."
-			    	".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
+				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-7')."
 			    </div>";
 		
 		//Shipping Account Section
@@ -312,10 +316,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
-				$orderNumber = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
+				$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 				$contact = $row['contactid'];
-				$b_add = $row['bill_to_id'];
+				if($page == 'Purchase'){
+					$b_add = $row['remit_to_id'];
+				}
+				else{
+					$b_add = $row['bill_to_id'];
+				}
 				$b_name = getAddresses($b_add,'name');
 				$s_add = $row['ship_to_id'];
 				$s_name = getAddresses($s_add,'name');
@@ -348,8 +357,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<a href='#'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
 				
 				//Addresses
-				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				if($page != 'Purchase') {
+					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				} else {
+					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
+					//address function needs to be edited to take in remit to column insead of bill to
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				}
 				$right .= "<br><br>";
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
@@ -383,20 +398,21 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 				$result = qdb($query);
-				
-				while ($row = $result->fetch_assoc()) {
-					$lists[] = $row['datetime'];
-					//$right .= $row['datetime'];
-				}
-				
-				$init = true;
-				foreach($lists as $num) {
-					if($num != '') {
-						if($init) {
-							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-							$init = false;
+				if($page != 'Purchase') {
+					while ($row = $result->fetch_assoc()) {
+						$lists[] = $row['datetime'];
+						//$right .= $row['datetime'];
+					}
+					
+					$init = true;
+					foreach($lists as $num) {
+						if($num != '') {
+							if($init) {
+								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+								$init = false;
+							}
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 						}
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
 					}
 				}
 				
@@ -405,7 +421,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .= "</div>";
 			
 			//Old way of doing packages in the sidebar used to be here, if I am searching for a history,
-			//Go to line 330 from the version on the Morning of the 18th
+			//Go to line 330 from the version on the Morning of the  18th of December. I probably will not need this
 			
 		}
 		

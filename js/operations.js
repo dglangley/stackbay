@@ -214,6 +214,7 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
+							alert(company);
 						}
 						else{
 							// alert(order_type);
@@ -229,6 +230,7 @@
 				});
 				
 				toggleSidebar();
+
 				$(document).on("change load","#freight-carrier",function() {
 					var carrier = ($("#freight-carrier :selected").attr('data-carrier-id'));
 					$("#freight-services").val("Freight Services");
@@ -237,10 +239,10 @@
 				});
 			});
 			
-			//This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
+			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 			$(document).on('change', '#companyid', function() {
 				var id = $(this).val();
-				
+				alert(id);
 				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
 			});
 			
@@ -295,13 +297,8 @@
 			$(document).on("change","#companyid",function() {
 				var company = $(this).val();
 				var	order_type = $("body").attr("data-order-type");
-				var limit = '';
-				// if(order_type == "Purchase" || order_type == "P" || order_type == "Purchases" ){
-				// 	limit = "25";
-				// }
-				// else{
-					limit = company;
-				// }
+				var limit = company;
+
 				var carrier = $("#carrier").val();
 				// alert("Limit: "+company+" | Carrier: "+carrier);
 				
@@ -349,7 +346,9 @@
 						$("#account_select").attr("data-carrier",set_carrier);
 			    		$("#select2-account_select-container").html(display);
 			    		$("#account_select").append("<option selected value='"+value+"'>"+display+"</option>");
-			    		$("#carrier").val(set_carrier);
+			    		if (set_carrier){
+			    			$("#carrier").val(set_carrier);
+			    		}
 						console.log("JSON account-default.php: Success");
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					},					
@@ -359,8 +358,6 @@
 						console.log("/json/account-default.php?"+"company="+limit+"&carrier="+carrier);
 					}
 				}).done(function(right) {
-				    // you may safely use results here
-				    // alert("Account: "+$("#account_select").attr("data-carrier"));
 				    var new_account = ($("#account_select").attr("data-carrier"));
 					if (new_account){
 					$.ajax({
@@ -434,9 +431,9 @@
 				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				
 				//Reload the contact
-				$("#contactid").initSelect2("/json/contacts.php","Select a contact",company)
-				
-				//Populate the terms with the company preferences
+				// $("#contactid").initSelect2("/json/contacts.php","Select a contact",25)
+				// alert(limit);
+				// //Populate the terms with the company preferences
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -1532,7 +1529,7 @@ return;
 				var condition = $serial.closest('tr').find('.condition_field').val();
 				var part = $serial.closest('tr').find('.part_id').data('part');
 				//Package number will be only used on the shipping order page
-				var package_no = $("#active_box_selector").val();
+				var package_no = $serial.closest('tr').find(".active_box_selector").val();
 				
 				if(condition == '') {
 					condition = $serial.closest('tr').find('.condition_field').data('condition');
@@ -1550,77 +1547,85 @@ return;
 		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 		    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
 		    		// alert(place+"-"+instance);
-		    		$.ajax({
-						type: "POST",
-						url: '/json/inventory-add-dynamic.php',
-						data: {
-							 'partid' : partid,
-							 'condition' : condition,
-							 'serial' : serial,
-							 'po_number' : po_number,
-							 'savedSerial' : savedSerial,
-							 'place' : place,
-							 'instance' : instance
-						},
-						dataType: 'json',
-						success: function(result) {
-							console.log(result);
-							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-
-							if(result['query'] && !result['saved']) {
-								//Decrement the qty by 1 after success and no errors detected
-								qty--;
+		    		if(place != 'null' && instance != 'null'){
+			    		$.ajax({
+							type: "POST",
+							url: '/json/inventory-add-dynamic.php',
+							data: {
+								 'partid' : partid,
+								 'condition' : condition,
+								 'serial' : serial,
+								 'po_number' : po_number,
+								 'savedSerial' : savedSerial,
+								 'place' : place,
+								 'instance' : instance
+							},
+							dataType: 'json',
+							success: function(result) {
+								console.log(result);
+								//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+	
+								if(result['query'] && !result['saved']) {
+									//Decrement the qty by 1 after success and no errors detected
+									qty--;
+									
+									//Update the value of the qty left avoiding if it hits below 0
+									if(qty >= 0) {
+										$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+									} else if(qty <= 0) {
+										if(localStorage.getItem(result['partid']) != 'shown'){
+									    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+									    	localStorage.setItem(result['partid'],'shown')	
+										}
+								    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+								    }
+									
+									//Set matching condition field to the serial saved
+									$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+									
+									//Set Default Values here, remember clone doesn't save select values otherwise it will
+									$serialClone.find('input').val("");
+									
+									$locationClone.find('select:first').val(place);
+									$locationClone.find('select:last').val(instance);
+									
+									$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+									$serialClone.find('button').attr('disabled', true);
+									
+									$serial.closest('.infiniteSerials').prepend($serialClone);
+									$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+									
+									$serial.closest('tr').find('.infiniteCondition').children('select:first').val(condition);
+									
+									$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
+									$serial.closest('.infiniteSerials').find('input:first').focus();
+									
+									if(qty == 0) {
+								    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+								    	alert('Part: ' + part + ' has been received.');
+								    }
+								    
+								    $serial.attr("data-saved", serial);
+	
+								} else if(result['saved']) {
+									$serial.attr("data-saved", serial);
+									alert('Item has been updated.');
+								} else {
+									alert('Serial already exists for this item.');
+								}
+								window.onbeforeunload = null;
 								
-								//Update the value of the qty left avoiding if it hits below 0
-								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
-								} else if(qty <= 0) {
-									if(localStorage.getItem(result['partid']) != 'shown'){
-								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
-								    	localStorage.setItem(result['partid'],'shown')	
-									}
-							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
-							    }
-								
-								//Set matching condition field to the serial saved
-								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
-								
-								//Set Default Values here, remember clone doesn't save select values otherwise it will
-								$serialClone.find('input').val("");
-								$locationClone.find('select:first').val(place);
-								$locationClone.find('select:last').val(instance);
-								
-								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
-								$serialClone.find('button').attr('disabled', true);
-								
-								$serial.closest('.infiniteSerials').prepend($serialClone);
-								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
-								$serial.closest('.infiniteSerials').find('input:first').focus();
-								
-								if(qty == 0) {
-							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-							    	alert('Part: ' + part + ' has been received.');
-							    }
-							    
-							    $serial.attr("data-saved", serial);
-
-							} else if(result['saved']) {
-								$serial.attr("data-saved", serial);
-								alert('Item has been updated.');
-							} else {
-								alert('Serial already exists for this item.');
-							}
-							window.onbeforeunload = null;
+							},
+							error: function(xhr, status, error) {
+								alert(error+" | "+status+" | "+xhr);
+								console.log("Inventory-add-dynamic.php: ERROR");
+							},				
 							
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("Inventory-add-dynamic.php: ERROR");
-						},				
-						
-					});
+						});
+		    		} else {
+		    			alert("Location can not be empty.");
+		    		}
 			    } else if(serial != '' && page == 'shipping') {
 					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
 					//Submit the data from the live scanned boxes
@@ -1648,11 +1653,11 @@ return;
 								qty--;
 
 								//Area to duplicate the box field
-								$serial.closest('tr').find("#active_box_selector").clone()
-								.insertAfter($serial.closest('tr').find("#active_box_selector"))
-								.removeAttr("id")
+								$serial.closest('tr').find(".active_box_selector").first().clone()
+								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
+								.removeClass("active_box_selector")
 								.addClass("drop_box")
-								.val($serial.closest('tr').find("#active_box_selector").val())
+								.val($serial.closest('tr').find(".active_box_selector").first().val())
 								.attr("data-associated",serial);
 
 								if(qty >= 0) {
@@ -1667,7 +1672,7 @@ return;
 								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
-								var element = "<input class='form-control input-sm iso_comment' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
+								var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
 								
 								$serial.closest('tr').find('.infiniteComments').prepend(element);
 								
@@ -1905,11 +1910,32 @@ return;
 			
 			var so_number = getUrlParameter('on');
 			var items = [];
+			var damage = false;
+			var serialid = [];
+			var serialComments = [];
 			
+			$('.shipping_update').children('tbody').children('tr').each(function() {
+				$(this).find('.iso_comment').each(function() {
+					//isoCheck.push($(this).data('serial'));
+					if($(this).val() != '') {
+						serialid.push($(this).data('invid'));
+						serialComments.push($(this).val());
+					}
+				});
+			});
+		
 			$.ajax({
 				type: 'POST',
 				url: '/json/iso.php',
-				data: {'special_req' : 'yes', 'contact_info' : 'yes', 'transit_time' : 'yes', 'so_number': so_number, 'type' : 'special'},
+				data: {
+					'special_req' : 'yes', 
+					'contact_info' : 'yes', 
+					'transit_time' : 'yes', 
+					'so_number': so_number, 
+					'type' : 'special',
+					'invid' : serialid, 
+					'comments' : serialComments
+				},
 				dataType: 'json',
 				success: function(data) {
 					console.log(data + ' iso_match');
@@ -2005,49 +2031,52 @@ return;
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
-		var isoCheck = [];
-		var init = true;
-		
-		var completed = $(this).data('datestamp');
-	
-		$('.shipping_update').children('tbody').children('tr').each(function() {
-			$(this).find('.iso_comment').each(function() {
-				//isoCheck.push($(this).data('serial'));
-				if($(this).val() != '') {
-					if(init) {
-						$('.iso_broken_parts').empty();
-						init = false;
-					}
-					//($(this).data('serial'));
-					var element = "<tr class='damaged'>\
-									<td>"+$(this).data('part')+"</td>\
-									<td>"+$(this).data('serial')+"</td>\
-									<td class='comment-data' data-invid='"+$(this).data('invid')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
-								</tr>";
-					$('.iso_broken_parts').append(element);
-				}
-			});
-		});
-		
-		if(init) {
-			$('.iso_broken_parts').empty();
+		if($('.check-save').length >0){
+			var isoCheck = [];
+			var init = true;
 			
-			var element = "<tr>\
-							<td><b>No Defects/Damage in Order</b></td>\
-							<td></td>\
-							<td></td>\
-						</tr>";
-			$('.iso_broken_parts').append(element);
-		}
+			var completed = $(this).data('datestamp');
 		
-		$("#modal-iso").modal("show");
-		
-		if(completed == '') {
-			$('.nav-tabs a[href="#iso_quality"]').tab('show');
+			$('.shipping_update').children('tbody').children('tr').each(function() {
+				$(this).find('.iso_comment').each(function() {
+					//isoCheck.push($(this).data('serial'));
+					if($(this).val() != '') {
+						if(init) {
+							$('.iso_broken_parts').empty();
+							init = false;
+						}
+						//($(this).data('serial'));
+						var element = "<tr class='damaged'>\
+										<td>"+$(this).data('part')+"</td>\
+										<td>"+$(this).data('serial')+"</td>\
+										<td class='comment-data' data-invid='"+$(this).data('invid')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+									</tr>";
+						$('.iso_broken_parts').append(element);
+					}
+				});
+			});
+			
+			if(init) {
+				$('.iso_broken_parts').empty();
+				
+				var element = "<tr>\
+								<td><b>No Defects/Damage in Order</b></td>\
+								<td></td>\
+								<td></td>\
+							</tr>";
+				$('.iso_broken_parts').append(element);
+			}
+			
+			$("#modal-iso").modal("show");
+			
+			if(completed == '') {
+				$('.nav-tabs a[href="#iso_quality"]').tab('show');
+			} else {
+				$('.nav-tabs a[href="#iso_match"]').tab('show');
+			}
 		} else {
-			$('.nav-tabs a[href="#iso_match"]').tab('show');
+			alert('No items queued to be shipped.');
 		}
-		
 	});
 	
 	$(document).on('click','.btn_iso_parts', function(e) {
@@ -2155,7 +2184,7 @@ return;
 					} else {
 						$("#alert_message").hide();
 					}
-					
+					alert("ON: "+order_number+" | Package #: "+package_number);
 					$.ajax({
 						type: "POST",
 						url: '/json/package_contents.php',
@@ -2165,17 +2194,19 @@ return;
 						},
 						dataType: 'json',
 						success: function(data) {
+							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 							console.log(data);
 							$('.modal-packing').empty();
 							$.each( data, function( i, val ) {
-								for(k = 0; k < val.length; k++) {
-									var element = "<tr>\
-											<td>"+ i +"</td>\
-											<td>"+ val[k] +"</td>\
-										</tr>";
-									$('.modal-packing').append( element );
-								}
-							});
+								$.each(val, function(it,serial){
+										var element = "<tr>\
+												<td>"+ i +"</td>\
+												<td>"+ serial +"</td>\
+											</tr>";
+										$('.modal-packing').append( element );
+									});
+								});
+								// for(var k = 0; k < val.length; k++) {
 							
 							//After the edit modal has been set with the proper data, show it
 							$("#modal-package").modal("show");
@@ -2264,8 +2295,10 @@ return;
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active");
 					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
-					$("#active_box_selector").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
-					$("#active_box_selector").val(id);
+					$(".active_box_selector").each(function(){
+						$(this).children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");		
+					});
+					$(".active_box_selector").val(id);
 					
 					console.log("JSON package addition packages.php: Success");
 				},
@@ -2281,7 +2314,10 @@ return;
 		$(document).on("click",".box_selector",function() {
 			$(this).siblings(".box_selector").removeClass("active");
 			$(this).addClass("active");
-			$("#active_box_selector").val($(this).attr("data-row-id"));
+			var num = $(this).attr("data-row-id");
+			if ($(".active_box_selector").find("option[value="+num+"]").is(':enabled')){
+				$(".active_box_selector").val(num);
+			}
 		});
 		
 //Change of a dropdown
@@ -2308,7 +2344,7 @@ return;
 				});
 		});
 
-function package_delete(pack, serialid){
+		function package_delete(pack, serialid){
 	$.ajax({
 		type: "POST",
 		url: '/json/packages.php',

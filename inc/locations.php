@@ -96,7 +96,7 @@
                 $selcted = $locations['instance'];
                 $limit = $locations['place'];
             }
-            $select = "Select * From `locations`";
+            $select = "Select DISTINCT instance From `locations`";
             $results = qdb($select);
                 
             $output .= "<select class='form-control input-sm $type' style='padding-left:0px;'>";

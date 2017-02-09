@@ -239,11 +239,11 @@
 		}
 		else if($start){
 			$start = prep(format_date($start, 'Y-m-d'));
-			$string = " AND $field > CAST($start AS DATE) ";
+			$string = " AND CAST($field AS DATE) >= CAST($start AS DATE) ";
 		}
 		else if($end){
 			$end = prep(format_date($end, 'Y-m-d'));
-			$string = " AND $field < CAST($end AS DATE) ";
+			$string = " AND CAST($field AS DATE) <= CAST($end AS DATE) ";
 		}
 		else{
 			$string = '';
@@ -253,6 +253,7 @@
 	
 	function search($search = ''){
 		$return = array();
+		
 		
 		$place = grab("place");
 		$location = grab("location");
@@ -270,24 +271,26 @@
 			$in = '(';
 			//Get all the parts from the search
 			$initial = hecidb($search);
-			foreach($initial as $id =>$info){
-				$in .= "'$id', ";
-			}
-			$in = trim($in, ", ");
-			$in .= ")";
-			$query  = "SELECT DISTINCT partid FROM inventory";
-			$query .= " WHERE partid IN $in";
-			$query .= sFilter('locationid', $locationid);
-			$query .= sFilter('item_condition',$condition);
-			$query .= sFilter('last_purchase',$order);
-			$query .= dFilter('date_created',$start, $end);
-			$query .= ";";
-			$result = qdb($query);
+			if ($initial){
+				foreach($initial as $id =>$info){
+					$in .= "'$id', ";
+				}
+				$in = trim($in, ", ");
+				$in .= ")";
+				$query  = "SELECT DISTINCT partid FROM inventory";
+				$query .= " WHERE partid IN $in";
+				$query .= sFilter('locationid', $locationid);
+				$query .= sFilter('item_condition',$condition);
+				$query .= sFilter('last_purchase',$order);
+				$query .= dFilter('date_created',$start, $end);
+				$query .= ";";
+				$result = qdb($query);
 			
-			if(mysqli_num_rows($result)>0){
-				//Loop through the results
-				foreach($result as $inv){
-					$parts[$inv['partid']] = $initial[$inv['partid']];
+				if(mysqli_num_rows($result)>0){
+					//Loop through the results
+					foreach($result as $inv){
+						$parts[$inv['partid']] = $initial[$inv['partid']];
+					}
 				}
 			}
 			
@@ -299,15 +302,17 @@
 			$query .= sFilter('last_purchase',$order);
 			$query .= dFilter('date_created',$start, $end);
 			$query .= ";";
-			$result = qdb($query);
 			
-			foreach ($result as $part){
-		    	$p = hecidb($part['partid'],'id');
-		    	foreach($p as $id => $info){
-		    		if(!isset($parts[$id])){
-		        		$parts[$id] = $info;
-		    		}
-		    	}
+			$result = qdb($query);
+			if (mysqli_num_rows($result) > 0){
+				foreach ($result as $part){
+			    	$p = hecidb($part['partid'],'id');
+			    	foreach($p as $id => $info){
+			    		if(!isset($parts[$id])){
+			        		$parts[$id] = $info;
+			    		}
+			    	}
+				}
 			}
 			
 			
@@ -354,7 +359,8 @@
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
 		$query .= " ORDER BY locationid, last_purchase, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
-
+		
+		
 		$rows = qdb($query);
 
 		foreach ($rows as $row){

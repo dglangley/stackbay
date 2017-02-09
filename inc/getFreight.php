@@ -28,6 +28,10 @@
             }
             else if($type == 'account'){
                 $select = "SELECT * FROM freight_accounts WHERE `id` LIKE $id;";
+                if ($value) {
+                    $select .= " companyid = $value";
+                }
+                $select .= ";";
             }
             $results = qdb($select);
             
