@@ -214,7 +214,6 @@
 								$("#mismo").prop("checked",true);
 							}
 							$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',company);
-							alert(company);
 						}
 						else{
 							// alert(order_type);
@@ -242,7 +241,6 @@
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 			$(document).on('change', '#companyid', function() {
 				var id = $(this).val();
-				alert(id);
 				$("#contactid").initSelect2("/json/contacts.php",'Select a Contact',id);
 			});
 			
@@ -866,6 +864,7 @@
 					//Gather the address from the select2 field
 					var addy = ($(this).val().slice(4));
 					//Otherwise, if it is a number, assume they were searching by the address itself
+					$("#address-modal-body").find("input").val('');
 					$("#address-modal-body").find("input[name='na_line_1']").val(addy);
 					var company = ($("#select2-companyid-container").attr("title"));
 					$("#address-modal-body").find("input[name='na_name']").val(company);
