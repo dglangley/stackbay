@@ -62,7 +62,7 @@
             
             //Output the final dropdown menu
 
-            $output = "<div class='$size'>";
+            $output = "<div class='$size' style='padding-right: 0;'>";
             if($label) {
         	    $output .=  "<label for='$id'>Carrier</label>";
             }
@@ -177,7 +177,7 @@
         			}
         	   	}
         $id = ($custom_id) ? $custom_id : "terms";
-        $output = "<div class='$size' id = '".$id."_div'>";          	
+        $output = "<div class='$size' id = '".$id."_div' style='padding-left: 0;'>";          	
         $output .= ($label)? "<label for='$id'>Terms</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm'>";
     	$output .= "	    $terms_options
