@@ -375,7 +375,7 @@
 						data: {
 							"field":"services",
 							"limit": new_account,
-							"size": "col-sm-7",
+							"size": "col-sm-4",
 							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
@@ -447,7 +447,7 @@
 					data: {
 						"field":"terms",
 						"limit":company,
-						"size": "col-sm-6",
+						"size": "col-sm-5",
 						"label": "Terms"
 						}, // serializes the form's elements.
 					dataType: 'json',
