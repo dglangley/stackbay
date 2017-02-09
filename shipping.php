@@ -410,6 +410,8 @@
 							//Grab a list of items from an associated sales order.
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
+								$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
+								$serials = qdb($select);
 								// print_r($inventory);
 						?>
 							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
@@ -428,11 +430,9 @@
 									
 								
 									<?php
-										$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
-										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
-									<div class="input-group">
+									<div class="input-group check-save" data-savable="true">
 									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 									    <span class="input-group-addon">
 									        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
@@ -453,8 +453,6 @@
 									
 									<div class='infiniteComments'>
 									<?php
-										$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
-										$serials = qdb($select);
 										foreach ($serials as $serial):
 									?>
 

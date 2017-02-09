@@ -51,7 +51,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	function saveReq($special_req, $contact_info, $transit_time, $so_number) {
+	function saveReq($special_req, $contact_info, $transit_time, $so_number, $invid, $comments) {
+		//Using for loop to parse through matching elements of 2 arrays instead of foreach
+		for($i = 0; $i < count($invid); $i++) {
+			$query = "UPDATE inventory SET notes = '".res($comments[$i])."' WHERE id = '".res($invid[$i])."';";
+			qdb($query);
+		}
+		
 		$query = "UPDATE iso SET special_req = '".res($special_req)."', shipping_info = '".res($contact_info)."', transit_time = '".res($transit_time)."' WHERE so_number = ".res($so_number).";";
 		$result = qdb($query);
 		
@@ -62,7 +68,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	if($type == 'part')
 		$result = savePart($part_no, $heci, $damage, $so_number, $invid, $comments);
 	else
-		$result = saveReq($special_req, $contact_info, $transit_time, $so_number);
+		$result = saveReq($special_req, $contact_info, $transit_time, $so_number, $invid, $comments);
 		
 	echo json_encode($result);
     exit;
