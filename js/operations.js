@@ -1230,11 +1230,14 @@
 									if (data.filename!='') {
 										filename = data.filename;
 									} else if (data.message) {
-										console.log(data.message);
+										alert(data.message);
+										return;
 									}
 								}
 							},
 							error: function(data, textStatus, errorThrown) {
+								alert(errorThrown);
+								return;
 							},
 						});
 					}
