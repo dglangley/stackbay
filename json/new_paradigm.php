@@ -92,12 +92,12 @@ function search_row(){
         // };
         
         //Default is ground aka 4 days
-        // $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
-        // $date = date("m/d/Y");
+        $date = addBusinessDays(date("Y-m-d H:i:s"), 4);
+        //$date = date("m/d/Y");
         
         //Set default Delivery Date
-        $A['d'] = 4;
-        $date = ($date)? $date : format_date($GLOBALS['now'],"m/d/Y",$A);
+        // $A['d'] = 4;
+        // $date = ($date)? $date : realDeliveryDate($GLOBALS['now'],$A);
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
