@@ -1167,7 +1167,7 @@
 
 				var isValid = nonFormCase($(this), e);
 				
-				if(isValid) {
+				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
@@ -1317,6 +1317,8 @@
 							
 						},
 					});
+				} else if($('.lazy-entry:visible').length > 0) {
+					alert("Please save all changes before updating.");
 				} else {
 					$(window).scrollTop();
 				}

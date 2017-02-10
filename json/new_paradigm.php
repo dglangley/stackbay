@@ -263,8 +263,8 @@ function sub_rows($search = ''){
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td></td>
                             <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+                            <td></td>
                             <td>$text</td>
                             <td></td>
                         </tr>
