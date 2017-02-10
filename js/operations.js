@@ -241,7 +241,7 @@
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 
-			$(document).on("keyup","#search_input > tr > td > input",function() {
+			$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
 					var s_qty = ($(this).find("input[name=ni_qty]").val());
@@ -249,9 +249,15 @@
 						qty += (parseInt($(this).find("input[name=ni_qty]").val()));
 					}
 				});
-				var display = price_format(qty * parseFloat($(".search_row").find("input[name=ni_price]").val()));
+				var price = parseFloat($(".search_row").find("input[name=ni_price]").val());
+				if (!isNaN(price) && !isNaN(qty)){
+					var display = price_format(qty * price);
+				}
+				else{
+					var display = '0.00';
+				}
 				$("tfoot").find("input[name=ni_ext]").val(display);
-				$("#search_input > tr.search_row > td:nth-child(7) > input").val(qty);
+				$("#search_input > tr.search_row > td:nth-child(6) > input").val(qty);
 			});
 		$(document).on("change","#order_selector",function() {
 			var order_type = $("body").attr("data-order-type");
@@ -298,6 +304,8 @@
 				// alert(id);
 				$("#contactid").initSelect2("/json/contacts.php","",company);
 				
+				$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
+				$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				
 				//Default selector for the addresses
 				$.ajax({
@@ -309,40 +317,49 @@
 						},
 					dataType: 'json',
 					success: function(right) {
-						var bvalue = right['b_value'];
-						var bdisplay = right['b_display'];
-						if(bdisplay && bvalue != $("bill_to").val()){
-							$("#select2-bill_to-container").html("");
-				    		$("#select2-bill_to-container").html(bdisplay);
-				    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
-						}
-			    		console.log("bdisplay: "+bdisplay);
 						
-						var svalue = right['s_value'];
-						var sdisplay = right['s_display'];
-						$("#select2-ship_to-container").html("");
-						if(sdisplay && svalue != $("bill_to").val()){
-				    		$("#select2-ship_to-container").html(sdisplay);
-				    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
-						}
-						console.log("sdisplay: "+sdisplay);
+							var bvalue = right['b_value'];
+							
+							$("#select2-bill_to-container").html("");
+							if (bvalue){
+								var bstring = right['b_street'];
+								// alert(bstring);
+								var useful = right['b_street']+'<br>'+right['b_city']+', '+right['b_state']+' '+right['b_postal_code'];
+					    		$("#select2-bill_to-container").html(useful);
+					    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bstring+"</option>");
+							}
+			    			console.log("bdisplay: "+bstring);
+							var svalue = right['s_value'];
+							$("#select2-ship_to-container").html("");
+							if (svalue){
+								var sstring = right['s_street'];
+								// alert(sstring);
+								var useful = right['s_street']+'<br>'+right['s_city']+', '+right['s_state']+' '+right['s_postal_code'];
+					    		$("#select2-ship_to-container").html(useful);
+					    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sstring+"</option>");
+							}
+
 			    		console.log("JSON address-default.php: Success");
+			    		console.log('/json/address-default.php?company='+limit+'&order='+order_type);
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON address-default.php: Error");
 					}
-				}).done(function(right){
-					$("#bill_to").initSelect2("/json/address-picker.php",'',limit);
-					$("#ship_to").initSelect2("/json/address-picker.php",'',limit);
 				});
 				
+				if(order_type == "Purchase"){
+					var comp = '25';
+				}
+				else{
+					var comp = company;
+				}
 				//Account default picker on update of the company
 				$.ajax({
 					type: "POST",
 					url: '/json/account-default.php',
 					data: {
-						"company": limit,
+						"company": comp,
 						"carrier": carrier,
 						},
 					dataType: 'json',
@@ -532,7 +549,7 @@
 					data: {
 						"field":"services",
 						"limit":limit,
-						"size": "col-sm-8",
+						"size": "col-sm-5",
 						"label": "Service",
 						"id" : "service"
 						}, // serializes the form's elements.

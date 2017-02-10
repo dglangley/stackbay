@@ -66,7 +66,7 @@ function head_out(){
 //========================= Build the search function =========================
 function search_row(){
     //The macro row will carry the same information as the sub rows, but will be
-    //a global-set matching row. It will mirror David's Item output page?
+    //a global-set matching row. It will mirror David's Item output page
         $line = "<tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>";
         
         //Line Number
@@ -92,9 +92,12 @@ function search_row(){
         // };
         
         //Default is ground aka 4 days
-        //$date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
-        //$date = date("m/d/Y");
+        // $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
+        // $date = date("m/d/Y");
         
+        //Set default Delivery Date
+        $A['d'] = 4;
+        $date = ($date)? $date : format_date($GLOBALS['now'],"m/d/Y",$A);
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
@@ -106,7 +109,7 @@ function search_row(){
         </td>";
         
         //Condition | condition can be set per each part. Will play around with the tactile (DROPPOP, BABY)
-        //Aaron is going to marry Lauren 2036
+        //Aaron is going to marry Aaron 2036 
         $line .= "<td>".dropdown('condition','','','',false)."</td>";
         //Warranty
         $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
@@ -215,8 +218,8 @@ function sub_rows($search = ''){
                             <td></td>
                             <td>
                                 <div class='row-fluid'>
-                                    <div class='col-md-6' style='padding:0%;'>Stock</div>
-                                    <div class='col-md-6' style='padding:0%;'>Order</div>
+                                    <div class='col-md-6' style='padding:0%;text-align:center;'>Stock</div>
+                                    <div class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
                                 </div>
                             </td>
                             <td></td>
@@ -225,8 +228,8 @@ function sub_rows($search = ''){
                     foreach ($items as $id => $info){
                         $sellable = false;
                         
-                        $text = "<div class='row-fluid'>";
-                        $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;width:33%;padding:0%;'><b>";
+                        $text = "<div class='row-flud'>";
+                        $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;padding:0%;'><b>";
                         if(array_key_exists($id, $stock)){
                             $sellable = true;
                             $text .= $stock[$id];
@@ -236,7 +239,7 @@ function sub_rows($search = ''){
                         }
                         $text .= "</b></div>";
                         
-                        $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;width:33%;padding-left:0%;padding-right:0%;'>";
+                        $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;padding-left:0%;padding-right:0%;'>";
                         if(array_key_exists($id, $inc)){
                             $sellable = true;
                             $text .= $inc[$id];

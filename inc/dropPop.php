@@ -137,10 +137,13 @@
                     ORDER BY n DESC
     				LIMIT 1;";
                     $preselected = qdb($default);
-                    if (isset($preselected)){
+                    if (mysqli_num_rows($preselected) > 0){
                         foreach ($preselected as $row){
                             $selected = $row['termsid'];
                         }
+                    }
+                    else{
+                        $selected = 6;
                     }
                 }
                 //Pull anything /explicitly allowed/ from the company terms table
@@ -178,7 +181,7 @@
         			}
         	   	}
         $id = ($custom_id) ? $custom_id : "terms";
-        $output = "<div class='$size' id = '".$id."_div' style='padding-left: 0;'>";          	
+        $output = "<div class='$size' id = '".$id."_div'>";          	
         $output .= ($label)? "<label for='$id'>Terms</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm'>";
     	$output .= "	    $terms_options

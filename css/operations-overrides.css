@@ -256,6 +256,14 @@ input:-moz-placeholder { text-transform: uppercase; }
 	background-color:#ddd;
 }
 
+.po-terms .col-sm-5 {
+	padding-right: 0;	
+}
+
+.so-terms .col-sm-5 {
+	padding-left: 0;
+}
+
 /* End David additions */
 
 

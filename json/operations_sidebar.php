@@ -150,47 +150,61 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Payment Terms and warranty
-		$right .= "<div class='row'>
-					<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
-		    	
-		//Associated order module
-		if ($order_number != 'New'){
-			$right .= "
-						<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
-			";
-		} else {
-			$right .= "
-						<label for='assoc'>Customer Order</label>
-			";
-		}
-		if ($order_type == "Sales") {
-			
-			if ($order_number == 'New') {
+
+		if ($order_type != "Purchase"){
+			$right .= "<div class='row'>
+						<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
+			    	
+			//Associated order module
+			if ($order_number != 'New'){
 				$right .= "
-							<div class='input-group'>
-								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-								<span class='input-group-btn'>
-									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
-								</span>
-							</div><!-- /input-group -->
-							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
+							<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
 				";
+			} else {
+				$right .= "
+							<label for='assoc'>Customer Order</label>
+				";
+			}
+			if ($order_type == "Sales") {
+				if ($order_number == 'New') {
+					$right .= "
+								<div class='input-group'>
+									<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+									<span class='input-group-btn'>
+										<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
+									</span>
+								</div><!-- /input-group -->
+								<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
+					";
+				} else {
+					$right .= "
+								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+				";
+				}
 			} else {
 				$right .= "
 							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 			";
 			}
-			$right .= "
-			";
-		} else {
-			$right .= "
-						<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			";
 		}
 		$right .= "
-	    			</div>
-						".dropdown('terms',$terms,$companyid, 'col-sm-5')."
-		    	</div>";
+	    			</div>";
+	    if ($order_type != "Sales") {
+    		$right .= "<div class='row po-terms'  style='padding-bottom: 10px;'>
+				";
+    	} else {
+    		$right .= "<div class='so-terms'>";
+    	}	
+    	
+		$right .= dropdown('terms',$terms,$companyid, 'col-sm-5');
+		
+		$right .= "</div>";
+    	
+    	if ($order_type == "Sales") {
+    		$right .= "</div>
+				";
+    	}
+		    	
 		//Contact
 		$right .= "
 				<div class='row'>
@@ -238,9 +252,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-							<input id='mismo' type=checkbox></input> (Same as billing)
-						</label>
+						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]";
+		$right .= ($order_type == "Purchase")? "" : " &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
+		$right .=		"</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
 							<option value = '$s_add' >$s_name</option>
 	                    </select>
