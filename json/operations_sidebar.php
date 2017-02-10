@@ -181,8 +181,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
 				";
 				}
-				$right .= "
-				";
 			} else {
 				$right .= "
 							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
@@ -190,9 +188,23 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			}
 		}
 		$right .= "
-	    			</div>
-						".dropdown('terms',$terms,$companyid, 'col-sm-5')."
-		    	</div>";
+	    			</div>";
+	    if ($order_type != "Sales") {
+    		$right .= "<div class='row po-terms'  style='padding-bottom: 10px;'>
+				";
+    	} else {
+    		$right .= "<div class='so-terms'>";
+    	}	
+    	
+		$right .= dropdown('terms',$terms,$companyid, 'col-sm-5');
+		
+		$right .= "</div>";
+    	
+    	if ($order_type == "Sales") {
+    		$right .= "</div>
+				";
+    	}
+		    	
 		//Contact
 		$right .= "
 				<div class='row'>

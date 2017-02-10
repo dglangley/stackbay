@@ -178,7 +178,7 @@
         			}
         	   	}
         $id = ($custom_id) ? $custom_id : "terms";
-        $output = "<div class='$size' id = '".$id."_div' style='padding-left: 0;'>";          	
+        $output = "<div class='$size' id = '".$id."_div'>";          	
         $output .= ($label)? "<label for='$id'>Terms</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm'>";
     	$output .= "	    $terms_options
