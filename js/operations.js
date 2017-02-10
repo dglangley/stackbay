@@ -967,13 +967,15 @@
 				    		//If it didn't have an update, it is a new field
 					    	if (field == "ship_to"){
 					    		$("#select2-ship_to-container").html(name);
-					    		$("#ship_to").append("<option selected value='"+data+"'>"+name+"</option>");
+					    		$("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
+					    		$("#ship_to").val(data);
 					    		updateShipTo();
 					    		//$("#ship_display").html();	
 					    	}
 					    	else{
 					    		// $("#select2-bill_to-container").html(text);
-					    		$("#bill_to").append("<option selected value='"+data+"'>"+name+"</option>");
+					    		$("#bill_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
+					    		$("#bill_to").val(data);
 								//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
 								$("#mismo").prop("checked",false);
 					    	}

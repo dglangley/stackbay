@@ -93,6 +93,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
+
 		$account = array();
 		$account = getFreight('account','',$slected_account);
 		if ($account){
@@ -104,7 +105,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		} else if($order_number > 0) {
 			$acct_display .= "<option selected value = 'null'>PREPAID</option>";
 		}
-		
 		// foreach($account as $f){
 		// 	$f[''];
 		// }
