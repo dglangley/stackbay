@@ -109,7 +109,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//THis will be split into distinct elements at some point in the next few weeks.
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 10px;'>";
-		$right .= "		<div class='sidebar-container' style='padding-top: 20px'>";
+		$right .= "		<div class='sidebar-container' style='padding-top: 10px'>";
 
 		//Company						
 		$right .="
@@ -150,6 +150,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Payment Terms and warranty
+
 		if ($order_type != "Purchase"){
 			$right .= "<div class='row'>
 						<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
@@ -183,8 +184,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				";
 			} else {
 				$right .= "
-							<input class='form-control input-sm' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-				";
+							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+			";
 			}
 		}
 		$right .= "
@@ -253,18 +254,22 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$selected_carrier = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$selected_service = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
 		$right .= "
-				<div class='row'>
-				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-3')."
-				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-5')."
-				    <div class='col-sm-4' style='padding-left: 0;'>
-						<div class = 'account forms_section'>
-							<label for='account'>Account</label>
-							<select id='account_select' class='form-control input-xs'>
-								$acct_display
-							</select>
-						</div>
+				<div class='row' style='padding-bottom: 10px;'>
+				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-4')."
+				    ".dropdown('services',$selected_service,$selected_carrier,'col-sm-8')."
+				    
+			    </div>
+			    <div class='row'>
+			    <div class='col-sm-12'>
+					<div class = 'account forms_section'>
+						<label for='account'>Account</label>
+						<select id='account_select' class='form-control input-xs'>
+							$acct_display
+						</select>
 					</div>
-			    </div>";
+				</div>
+				</div>";
+			    
 		
 		//NOTES SECTION (Band together)
 		$right .= "
@@ -411,7 +416,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$lists = array();
 				
 				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
-				$result = qdb($query);
+				$result = qdb($query) OR die(qe().' '.$query);
 				if($page != 'Purchase') {
 					while ($row = $result->fetch_assoc()) {
 						$lists[] = $row['datetime'];

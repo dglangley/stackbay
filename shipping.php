@@ -407,6 +407,7 @@
 						</thead>
 						<?php
 							//Grab a list of items from an associated sales order.
+							$serials = array();
 							foreach($items as $item): 
 								$inventory = getInventory($item['partid']);
 								$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
