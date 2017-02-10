@@ -92,12 +92,12 @@ function search_row(){
         // };
         
         //Default is ground aka 4 days
-        // $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
-        // $date = date("m/d/Y");
-        
+        $date = addBusinessDays(date("Y-m-d H:i:s"), 4);
+        //$date = date("m/d/Y");
+
         //Set default Delivery Date
-        $A['d'] = 4;
-        $date = ($date)? $date : format_date($GLOBALS['now'],"m/d/Y",$A);
+        // $A['d'] = 4;
+        // $date = ($date)? $date : realDeliveryDate($GLOBALS['now'],$A);
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
@@ -153,7 +153,7 @@ function format($parts){
 // 	$name = '<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>';
 //     $name .= '<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>';
 
-    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
+    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci']."</span>";
     $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
     return $name;
 }
@@ -263,8 +263,8 @@ function sub_rows($search = ''){
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td></td>
                             <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+                            <td></td>
                             <td>$text</td>
                             <td></td>
                         </tr>

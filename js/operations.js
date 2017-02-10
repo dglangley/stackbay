@@ -1064,7 +1064,7 @@
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
-					var acct = ($(this).val().slice(4));
+					var acct = ($(this).val().slice(5));
 					
 					//If the first number is the address, assume the user is searching by an address name
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
@@ -1167,7 +1167,7 @@
 
 				var isValid = nonFormCase($(this), e);
 				
-				if(isValid) {
+				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
@@ -1317,6 +1317,8 @@
 							
 						},
 					});
+				} else if($('.lazy-entry:visible').length > 0) {
+					alert("Please save all changes before updating.");
 				} else {
 					$(window).scrollTop();
 				}

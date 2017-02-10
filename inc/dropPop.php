@@ -68,7 +68,6 @@
             }
             $output .="
         			    <select id = '$id' class='form-control input-sm'>
-        			        <option value = 'NULL'> </option>
         				    $carrier_options
         			    </select>
         	        </div>";
@@ -90,7 +89,6 @@
             $output = "<div class='$size' id = '".$id."_div'>	            	
     			    <label for='services'>Service</label>
     			    <select id = '$id' class='required form-control input-sm'>
-    			        <option value = 'NULL'> </option>
     				    $service_options
     			    </select>
     	        </div>";
@@ -141,9 +139,6 @@
                         foreach ($preselected as $row){
                             $selected = $row['termsid'];
                         }
-                    }
-                    else{
-                        $selected = 6;
                     }
                 }
                 //Pull anything /explicitly allowed/ from the company terms table

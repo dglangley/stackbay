@@ -48,7 +48,10 @@
             $output[] = $line;
         }
     }
-    
+    $output[] = array(
+            'id' => "null",
+            'text' => "PREPAID"
+        );
     if (strlen($q) > 1){
         $output[] = array(
             'id' => "Add: $q",
