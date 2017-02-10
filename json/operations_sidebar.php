@@ -415,7 +415,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$lists = array();
 				
 				$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
-				$result = qdb($query);
+				$result = qdb($query) OR die(qe().' '.$query);
 				if($page != 'Purchase') {
 					while ($row = $result->fetch_assoc()) {
 						$lists[] = $row['datetime'];

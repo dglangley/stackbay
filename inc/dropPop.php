@@ -157,6 +157,7 @@
                 $range .= ")";
                 }
             }
+			if (! $selected) { $selected = 12; }//david 2/9/17 to default all orders to CC if none selected
                     
                     
                 $terms = "Select * FROM terms";

@@ -81,6 +81,9 @@ div.table-filter div {
 .input-xxs:hover {
   border:1px solid #ddd;
 }
+select.input-sm {
+  padding-left:5px;
+}
 
 /*.sub-nav #pad-wrapper {*/
 #pad-wrapper {
