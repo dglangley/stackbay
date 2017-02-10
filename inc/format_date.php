@@ -112,35 +112,29 @@
 		$DATE_TIMES[$hr.$mn.$sc.$mo.$dy.$yr.$date_format] = $new_date;
 		return ($new_date);
 	}
+    
+    function addBusinessDays($startDate, $businessDays, $holidays = '') {
+    	$holidays = array();
+    	
+	    $date = strtotime($startDate);
+	    $i = 0;
 	
-	// $date = date of shipping, $days = expected number of days in transit
-    function realDeliveryDate($date, $days) {
-        //Add Holidays here '01/01'.... No year required as it pulls current year
-        $holidays = array("01/30", "01/31");
-        foreach ($holidays as &$value) {
-            $value = $value . '/' . date('Y');
-        }
-        $checkday = strtotime($date." +".$days." days");
-        // check if it's a holiday
-        while(in_array(date("m/d/Y",$checkday), $holidays)) {
-            $checkday = strtotime(date("m/d/Y",$checkday)." +1 day");
-        }
-        // make sure it's not Saturday
-        if (date("w",$checkday) == 6) {
-            $checkday = strtotime(date("m/d/Y",$checkday)." +2 days");
-        }
-        // make sure it's not Sunday
-        if (date("w",$checkday) == 0) {
-            $checkday = strtotime(date("m/d/Y",$checkday)." +1 day");
-        }
-        // make sure it's not another holiday
-        //This function will pull a Saturday if and only if Monday -> Friday is a holiday
-        while(in_array(date("m/d/Y",$checkday), $holidays)) {
-            $checkday = strtotime(date("m/d/Y",$checkday)." +1 day");
-        }
-        
-        return $checkday;
-    }
+	    while($i < $businessDays)
+	    {
+	        //get number of week day (1-7)
+	        $day = date('N',$date);
+	        //get just Y-m-d date
+	        $dateYmd = date("Y-m-d",$date);
+	
+	        if($day < 6 && !in_array($dateYmd, $holidays)){
+	            $i++;
+	        }       
+	        $date = strtotime($dateYmd . ' +1 day');
+	    }       
+	
+	    return date('m/d/Y',$date);
+	
+	}
 
 
 	function format_time($s,$hr_format='g') {

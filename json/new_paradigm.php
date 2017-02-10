@@ -91,13 +91,13 @@ function search_row(){
         //     $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
         // };
         
-        // //Default is ground aka 4 days
-        // $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
-        // $date = date("m/d/Y");
-        
+        //Default is ground aka 4 days
+        $date = addBusinessDays(date("Y-m-d H:i:s"), 4);
+        //$date = date("m/d/Y");
+
         //Set default Delivery Date
-        $A['d'] = 4;
-        $date = ($date)? $date : format_date($GLOBALS['now'],"m/d/Y",$A);
+        // $A['d'] = 4;
+        // $date = ($date)? $date : realDeliveryDate($GLOBALS['now'],$A);
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
