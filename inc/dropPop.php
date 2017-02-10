@@ -137,10 +137,13 @@
                     ORDER BY n DESC
     				LIMIT 1;";
                     $preselected = qdb($default);
-                    if (isset($preselected)){
+                    if (mysqli_num_rows($preselected) > 0){
                         foreach ($preselected as $row){
                             $selected = $row['termsid'];
                         }
+                    }
+                    else{
+                        $selected = 6;
                     }
                 }
                 //Pull anything /explicitly allowed/ from the company terms table
