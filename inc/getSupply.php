@@ -307,6 +307,7 @@
 
 				// add rfq flag if it has been rfq'd by user (see query above)
 				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']) {
+					if (! isset($results[$key]['rfq'])) { $results[$key]['rfq'] = false; }
 					$results[$key]['rfq'] = $rfqs[$r['partid']][$r['companyid']];
 				}
 				continue;
@@ -354,6 +355,7 @@
 				}
 
 				if ((isset($rfqs[$r['partid']]) AND isset($rfqs[$r['partid']][$r['companyid']])) OR $results[$key]['rfq']) {
+					if (! isset($results[$key]['rfq'])) { $results[$key]['rfq'] = false; }
 					$results[$key]['rfq'] = $rfqs[$r['partid']][$r['companyid']];
 				}
 				continue;
