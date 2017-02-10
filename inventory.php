@@ -341,7 +341,7 @@ s
 						
 						$(".part-container").html("").remove();	
 						// var p = JSON.parse(part)
-						console.log(part);
+						//console.log(part);
 						var revisions, parts;
 						var locations = $('.locations').clone();
 						
@@ -356,6 +356,11 @@ s
 						revisions = "<option value='' selected>All</option>";
 						//If there are multiple parts being returned, loop through them all
 						$.each(part, function(partid, macro){
+							console.log(macro);
+							if(macro == '') {
+								part = '';
+								return false; 
+							}
 							//Add each part to the revisions page
 							counter++;
 							$.each(macro, function(key,info){
@@ -410,24 +415,6 @@ s
 										parts += "	<td class='data '>"+key[2]+"</td>";
 										parts += "<td class='edit'><input class='newQty form-control' value='"+serial[2]+"' data-id='"+serial[0]+"'></td>\
 												<td class='edit status_holder' data-status='"+serial[3]+"'></td>";
-										// console.log(history);
-										// var init = true;			
-										// $.each(history.history,function(record, details){
-										// 	console.log(details);
-										// 	if(init) {
-												
-															
-										// 		if(details.last_sale != null) {
-										// 			//parts += "<td class='last_sale data'>"+details.last_sale+"</td>";
-										// 			//parts += "<td class='edit'><input class='newSO form-control' placeholder='"+details.last_sale+"'>"+details.last_sale+"</td>";
-										// 		} else {
-										// 			//parts += "<td class='last_sale data'></td>";
-										// 			//parts += "<td class='edit'><input class='newSO form-control' placeholder=''></td>";
-										// 		}
-												
-										// 		init = false;
-										// 	}
-										// });
 										parts += "<td class='data'></td><td class='data'></td>";
 										parts += "<td class='edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>\
 													<td class='edit condition_holder' data-condition='"+key[3]+"'></td>";
