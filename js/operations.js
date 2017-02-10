@@ -1591,204 +1591,220 @@
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 		
+		function callback(obj) {
+			//Grab each of the parameters from the top line
+			var $serial = obj;
+			
+			//po_number gets any parameter set to on, E.G. Sales Number is also pulled
+			var po_number = getUrlParameter('on');
+			var savedSerial = $serial.attr('data-saved');
+			var qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
+			var page = getPageName();
+			var serial = $serial.val();
+			var partid = $serial.closest('tr').find('.part_id').data('partid');
+			var condition = $serial.closest('tr').find('.condition_field').val();
+			var part = $serial.closest('tr').find('.part_id').data('part');
+			//Package number will be only used on the shipping order page
+			var package_no = $serial.closest('tr').find(".active_box_selector").val();
+			
+			if(condition == '') {
+				condition = $serial.closest('tr').find('.condition_field').data('condition');
+			}
+			
+			//Clone the serial field for usage when appending more fields
+			var $serialClone = $serial.parent().clone();
+			
+			//alert(getPageName());
+		
+			//Only if there is some quantity and there is some serial on the inventory addition page
+	    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
+	    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
+	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
+	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
+	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		// alert(place+"-"+instance);
+	    		if(place != 'null' && instance != 'null'){
+		    		$.ajax({
+						type: "POST",
+						url: '/json/inventory-add-dynamic.php',
+						data: {
+							 'partid' : partid,
+							 'condition' : condition,
+							 'serial' : serial,
+							 'po_number' : po_number,
+							 'savedSerial' : savedSerial,
+							 'place' : place,
+							 'instance' : instance
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 
+							if(result['query'] && !result['saved']) {
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+								
+								//Update the value of the qty left avoiding if it hits below 0
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+								} else if(qty <= 0) {
+									if(localStorage.getItem(result['partid']) != 'shown'){
+								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+								    	localStorage.setItem(result['partid'],'shown')	
+									}
+							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
+								
+								//Set matching condition field to the serial saved
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+								$serial.closest('tr').find('.locations_tracker:first').attr("data-serial", serial);
+								
+								//Set Default Values here, remember clone doesn't save select values otherwise it will
+								$serialClone.find('input').val("");
+								
+								$locationClone.find('select:first').val(place);
+								$locationClone.find('select:last').val(instance);
+								
+								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').attr('disabled', false);
+								$serial.closest('.infiniteSerials').find('button.updateSerialRow').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').find('button.updateSerialRow').hide();
+								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').show();
+								
+								//Switch buttons from update to delete and enable the disable button
+								$serialClone.find('button.updateSerialRow').show();
+								$serialClone.find('button.deleteSerialRow').hide();
+								$serialClone.find('button.deleteSerialRow').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').val(condition);
+								
+								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								if(qty == 0) {
+							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	//alert('Part: ' + part + ' has been received.');
+									modalAlertShow('Part Received!','Part "'+part+'" has now been received in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+
+							} else if(result['saved']) {
+								$serial.attr("data-saved", serial);
+								alert('Item has been updated.');
+							} else {
+								alert('Serial already exists for this item.');
+							}
+							window.onbeforeunload = null;
+							
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("Inventory-add-dynamic.php: ERROR");
+						},				
+						
+					});
+	    		} else {
+	    			alert("Location can not be empty.");
+	    		}
+		    } else if(serial != '' && page == 'shipping') {
+				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
+				//Submit the data from the live scanned boxes
+				qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
+
+				if(package_no != null) {
+			    	$.ajax({
+						type: "POST",
+						url: '/json/shipping-update-dynamic.php',
+						data: {
+							 'partid' : partid,
+							 'serial' : serial,
+							 'so_number' : po_number,
+							 'condition' : condition,
+							 'package_no' : package_no
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							// console.log(result);
+							if(result['query']) {
+								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+
+								//Area to duplicate the box field
+								$serial.closest('tr').find(".active_box_selector").first().clone()
+								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
+								.removeClass("active_box_selector")
+								.addClass("drop_box")
+								.val($serial.closest('tr').find(".active_box_selector").first().val())
+								.attr("data-associated",serial);
+
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
+								}
+								$serialClone.find('input').val("");
+								
+								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+								$serialClone.find('button').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
+								
+								$serial.closest('tr').find('.infiniteComments').prepend(element);
+								
+								if(qty == 0) {
+							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	var date = new Date();
+							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
+							    	
+							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
+							    	alert('Part: ' + part + ' has been shipped.');
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+							} else {
+								alert(result['error']);
+							}
+							window.onbeforeunload = null;
+						
+							console.log("Shipping-add-dynamic.php: Success");
+						
+							
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("Shipping-add-dynamic.php: ERROR");
+							console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition);
+							},	
+					});
+				} else {
+					alert('A Box required.');
+				}
+		    } else if(serial == '') {
+		    	alert('Serial Missing');
+		    } 
+		
+		}
 //This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			if(e.which == 13) {
-				//Grab each of the parameters from the top line
-				var $serial = $(this);
-				
-				//po_number gets any parameter set to on, E.G. Sales Number is also pulled
-				var po_number = getUrlParameter('on');
-				var savedSerial = $serial.attr('data-saved');
-				var qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
-				var page = getPageName();
-				var serial = $serial.val();
-				var partid = $serial.closest('tr').find('.part_id').data('partid');
-				var condition = $serial.closest('tr').find('.condition_field').val();
-				var part = $serial.closest('tr').find('.part_id').data('part');
-				//Package number will be only used on the shipping order page
-				var package_no = $serial.closest('tr').find(".active_box_selector").val();
-				
-				if(condition == '') {
-					condition = $serial.closest('tr').find('.condition_field').data('condition');
-				}
-				
-				//Clone the serial field for usage when appending more fields
-				var $serialClone = $serial.parent().clone();
-				
-				//alert(getPageName());
-			
-				//Only if there is some quantity and there is some serial on the inventory addition page
-		    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
-		    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
-		    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
-		    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
-		    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
-		    		// alert(place+"-"+instance);
-		    		if(place != 'null' && instance != 'null'){
-			    		$.ajax({
-							type: "POST",
-							url: '/json/inventory-add-dynamic.php',
-							data: {
-								 'partid' : partid,
-								 'condition' : condition,
-								 'serial' : serial,
-								 'po_number' : po_number,
-								 'savedSerial' : savedSerial,
-								 'place' : place,
-								 'instance' : instance
-							},
-							dataType: 'json',
-							success: function(result) {
-								console.log(result);
-								//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-	
-								if(result['query'] && !result['saved']) {
-									//Decrement the qty by 1 after success and no errors detected
-									qty--;
-									
-									//Update the value of the qty left avoiding if it hits below 0
-									if(qty >= 0) {
-										$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
-									} else if(qty <= 0) {
-										if(localStorage.getItem(result['partid']) != 'shown'){
-									    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
-									    	localStorage.setItem(result['partid'],'shown')	
-										}
-								    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
-								    }
-									
-									//Set matching condition field to the serial saved
-									$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
-									
-									//Set Default Values here, remember clone doesn't save select values otherwise it will
-									$serialClone.find('input').val("");
-									
-									$locationClone.find('select:first').val(place);
-									$locationClone.find('select:last').val(instance);
-									
-									$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
-									$serialClone.find('button').attr('disabled', true);
-									
-									$serial.closest('.infiniteSerials').prepend($serialClone);
-									$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-									
-									$serial.closest('tr').find('.infiniteCondition').children('select:first').val(condition);
-									
-									$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
-									$serial.closest('.infiniteSerials').find('input:first').focus();
-									
-									if(qty == 0) {
-								    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-								    	//alert('Part: ' + part + ' has been received.');
-										modalAlertShow('Part Received!','Part "'+part+'" has now been received in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
-								    }
-								    
-								    $serial.attr("data-saved", serial);
-	
-								} else if(result['saved']) {
-									$serial.attr("data-saved", serial);
-									alert('Item has been updated.');
-								} else {
-									alert('Serial already exists for this item.');
-								}
-								window.onbeforeunload = null;
-								
-							},
-							error: function(xhr, status, error) {
-								alert(error+" | "+status+" | "+xhr);
-								console.log("Inventory-add-dynamic.php: ERROR");
-							},				
-							
-						});
-		    		} else {
-		    			alert("Location can not be empty.");
-		    		}
-			    } else if(serial != '' && page == 'shipping') {
-					//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
-					//Submit the data from the live scanned boxes
-					qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
-	
-					if(package_no != null) {
-				    	$.ajax({
-							type: "POST",
-							url: '/json/shipping-update-dynamic.php',
-							data: {
-								 'partid' : partid,
-								 'serial' : serial,
-								 'so_number' : po_number,
-								 'condition' : condition,
-								 'package_no' : package_no
-							},
-							dataType: 'json',
-							success: function(result) {
-								console.log(result);
-								
-								//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-								// console.log(result);
-								if(result['query']) {
-									$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-									//Decrement the qty by 1 after success and no errors detected
-									qty--;
-	
-									//Area to duplicate the box field
-									$serial.closest('tr').find(".active_box_selector").first().clone()
-									.insertAfter($serial.closest('tr').find(".active_box_selector").first())
-									.removeClass("active_box_selector")
-									.addClass("drop_box")
-									.val($serial.closest('tr').find(".active_box_selector").first().val())
-									.attr("data-associated",serial);
-	
-									if(qty >= 0) {
-										$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
-									}
-									$serialClone.find('input').val("");
-									
-									$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
-									$serialClone.find('button').attr('disabled', true);
-									
-									$serial.closest('.infiniteSerials').prepend($serialClone);
-									$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-									$serial.closest('.infiniteSerials').find('input:first').focus();
-									
-									var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
-									
-									$serial.closest('tr').find('.infiniteComments').prepend(element);
-									
-									if(qty == 0) {
-								    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-								    	var date = new Date();
-								    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
-								    	
-								    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
-								    	alert('Part: ' + part + ' has been shipped.');
-								    }
-								    
-								    $serial.attr("data-saved", serial);
-								} else {
-									alert(result['error']);
-								}
-								window.onbeforeunload = null;
-							
-								console.log("Shipping-add-dynamic.php: Success");
-							
-								
-							},
-							error: function(xhr, status, error) {
-								alert(error+" | "+status+" | "+xhr);
-								console.log("Shipping-add-dynamic.php: ERROR");
-								console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition);
-								},	
-						});
-					} else {
-						alert('A Box required.');
-					}
-			    } else if(serial == '') {
-			    	alert('Serial Missing');
-			    } 
+				callback($(this));
 			}
+		});
+		
+		$('body').on('click', '.updateSerialRow', function(e) {
+			callback($(this).closest('tr').find('input[name="NewSerial"]'));
 		});
 		
 		$(document).on('click', '.serial-expand', function() {
@@ -1953,6 +1969,7 @@
 						if(page != 'shipping') {
 							$row.closest('tr').find('.infiniteCondition').siblings('.remaining_qty').find('input').val(qty);
 							$row.closest('tr').find('.infiniteCondition').find('select[data-serial="'+ serial +'"]').remove();
+							$row.closest('tr').find('.infiniteLocations').find('.locations_tracker[data-serial="'+ serial +'"]').remove();
 						} else {
 							qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').text());
 							qty++; 
