@@ -81,9 +81,6 @@ div.table-filter div {
 .input-xxs:hover {
   border:1px solid #ddd;
 }
-select.input-sm {
-  padding-left:5px;
-}
 
 /*.sub-nav #pad-wrapper {*/
 #pad-wrapper {
@@ -1789,6 +1786,10 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
   margin: 0;
   padding: 0;
   list-style-position: outside;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .megamenu-block ul li a {
   padding: 2px 20px;

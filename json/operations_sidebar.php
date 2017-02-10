@@ -93,18 +93,17 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
-		if ($selected_account){
-			$account = array();
-			$account = getFreight('account','',$slected_account);
-			if ($account){
-				foreach ($account as $a){
-					if ($selected_account == $a['id']){
-						$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
-					}
-				}
+
+		$account = array();
+		$account = getFreight('account','',$slected_account);
+		if ($account){
+			foreach ($account as $a){
+				if ($selected_account == $a['id']){
+					$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
+				} 
 			}
-		}else{
-			$acct_display = "<option selected value = 'null' data-carrier-id='null'>PREPAID</option>";
+		} else if($order_number > 0) {
+			$acct_display .= "<option selected value = 'null'>PREPAID</option>";
 		}
 		// foreach($account as $f){
 		// 	$f[''];
@@ -214,7 +213,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='contact'>
 							<label for='contactid'>Contact</label>
-							<select name='contactid' id='contactid' class='form-control input-xs contact-selector required' style = 'width:100%;'>
+							<select name='contactid' id='contactid' class='form-control input-xs contact-selector' style = 'width:100%;'>
 								<option value = $contact>".getContact($contact)."</option>
 							</select>
 						</div>

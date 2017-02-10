@@ -68,9 +68,9 @@
 		$item_table = strtolower($order_type)."_items";
 		$date_field = ($order_type == "Purchase") ? "receive_date" : "delivery_date";
 
-$order_table = 'purchase_orders';
-$number_type = 'po_number';
-$order_number = 1428;
+//$order_table = 'purchase_orders';
+//$number_type = 'po_number';
+//$order_number = 1428;
 
 		$order = "SELECT * FROM $order_table WHERE `$number_type` = $order_number;";
 		// echo $order;exit;    
@@ -217,7 +217,7 @@ $order_number = 1428;
 				</tr>
 				<tr>
 					<td class="address">
-						'.address_out($oi["bill_to_id"]).'
+						'.address_out($oi["remit_to_id"]).'
 					</td>
 				</tr>
 			</table>
@@ -251,9 +251,11 @@ $order_number = 1428;
                 </td>
                 <td class="address">
                     '.address_out($oi['ship_to_id']).'
+<!--
                     <br>
                     '.getFreight('account',"",$oi['freight_account_id'],"account_no").'
                     '.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
+-->
                 </td>
                 
                 

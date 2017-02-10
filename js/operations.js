@@ -1169,7 +1169,7 @@
 
 				var isValid = nonFormCase($(this), e);
 				
-				if(isValid) {
+				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
 					var order_number = $(this).closest("body").attr("data-order-number");
@@ -1319,6 +1319,8 @@
 							
 						},
 					});
+				} else if($('.lazy-entry:visible').length > 0) {
+					alert("Please save all changes before updating.");
 				} else {
 					$(window).scrollTop();
 				}
@@ -1648,7 +1650,8 @@
 									
 									if(qty == 0) {
 								    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-								    	alert('Part: ' + part + ' has been received.');
+								    	//alert('Part: ' + part + ' has been received.');
+										modalAlertShow('Part Received!','Part "'+part+'" has now been received in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
 								    }
 								    
 								    $serial.attr("data-saved", serial);
