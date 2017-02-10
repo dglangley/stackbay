@@ -142,9 +142,6 @@
                             $selected = $row['termsid'];
                         }
                     }
-                    else{
-                        $selected = 6;
-                    }
                 }
                 //Pull anything /explicitly allowed/ from the company terms table
                 $company_specific = "SELECT `termsid` From company_terms WHERE `companyid` LIKE $companyid;";
