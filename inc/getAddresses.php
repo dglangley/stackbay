@@ -10,7 +10,7 @@
         $result = qdb("Select * From addresses where id = '$addressid'");
         foreach ($result as $row){
             if($field){
-                return $row[$field] . ' ' . $row['city'] . ' ' . $row['state'] . ', ' . $row['postal_code'];
+                return $row[$field];
             }
             else{
     		    return($row);

@@ -93,16 +93,19 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
-		$account = array();
-		$account = getFreight('account','',$slected_account);
-		if ($account){
-			foreach ($account as $a){
-				if ($selected_account == $a['id']){
-					$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
+		if ($selected_account){
+			$account = array();
+			$account = getFreight('account','',$slected_account);
+			if ($account){
+				foreach ($account as $a){
+					if ($selected_account == $a['id']){
+						$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
+					}
 				}
 			}
+		}else{
+			$acct_display = "<option selected value = 'null' data-carrier-id='null'>PREPAID</option>";
 		}
-		
 		// foreach($account as $f){
 		// 	$f[''];
 		// }
