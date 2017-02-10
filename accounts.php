@@ -286,6 +286,7 @@
 	if($report_type == 'summary'){
 	    foreach ($result as $row){
             $id = $row['quote_id'];
+			if ($order AND $order<>$id) { continue; }
 
 			$r['price'] = format_price($r['price'],true,'',true);
 			$ext_amt = $row['price']*$row['qty'];
@@ -320,6 +321,8 @@
         }
 	} else if ($report_type=='detail') {
 		foreach ($result as $r){
+			if ($order AND $order<>$r['quote_id']) { continue; }
+
 			$r['price'] = format_price($r['price'],true,'',true);
 
 			//Set the amount to zero for the number of items and the total price
@@ -388,6 +391,15 @@
 			';
 		}
 	}/* end $report_type=='detail' */
+
+	if ($keyword) {
+		echo '
+	<div class="alert alert-warning text-center">
+		<i class="fa fa-'.$alert_icon.' fa-2x"></i>
+		Results limited to "'.$keyword.'"
+	</div>
+		';
+	}
 ?>
 
 

@@ -134,6 +134,9 @@ foreach ($results as $k => $row) {
 
     //Take in the list of partids from the initial search
     $resultSet = getSupply($partids,1);    
+
+	//added 2/10/17 by david so that we can show entire list (not just delta) on Fridays
+	$N = date("N");
     
     //Reset the day counter
     $i = 0;
@@ -216,12 +219,13 @@ foreach ($results as $k => $row) {
 
 //	if ($k>5) { break; }
     
-    if (!$any_delta){
-        continue;
-    }
+	// disregard deltas or empty availabilities on Friday; all other days of the week, it matters
+	if ($N<>5) {
+		if (!$any_delta){ continue; }
     
-    //If there is still no entry into the availability script, skip.
-    if(empty($output['availability'])){continue;}
+		//If there is still no entry into the availability script, skip.
+		if(empty($output['availability'])){continue;}
+	}
 
     //Start the new line
     $email_str .= "<tr style='background-color:".$bgc[$rownum].";'>";
