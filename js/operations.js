@@ -762,22 +762,23 @@
 			});
 			
 //Function to submit the individual line item edits
-			$(document).on("click",".line_item_submit",function() {
+			function line_item_submit(){
 				
-				var new_search = $(this).closest("tr").find('.item-selected').find("option").last().val();
-				var old_search = $(this).closest("tr").find('.item-selected').find("option").attr("data-search");
-				var line_item_id = $(this).closest("tr").prev().data('record');
+				
+				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
+				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
+				var line_item_id = $('.line_item_submit').closest("tr").prev().data('record');
 
 				//This line fixes the bug if the user exits the select2 prematurely   
 				if(isNaN(new_search)){var search = old_search;}
 				else{var search = new_search;}
-			    var date = $(this).closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
-			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(this).closest("tr").find(".warranty").val();
-	   		    var editRow = ((parseInt($(this).closest("tr").index())));
-	   		    var condition = $(this).closest("tr").find(".condition").val();
+			    var date = $('.line_item_submit').closest("tr").find("input[name=ni_date]").val();
+	   		    var qty = $('.line_item_submit').closest("tr").find("input[name=ni_qty]").val();
+			    var price = $('.line_item_submit').closest("tr").find("input[name=ni_price]").val();
+	   		    var lineNumber = $('.line_item_submit').closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $('.line_item_submit').closest("tr").find(".warranty").val();
+	   		    var editRow = ((parseInt($('.line_item_submit').closest("tr").index())));
+	   		    var condition = $('.line_item_submit').closest("tr").find(".condition").val();
 
 				$.ajax({
 					type: "POST",
@@ -807,6 +808,12 @@
 	
 		    	$(this).closest(".lazy-entry").hide();
 		    	$(this).closest("tr").prev(".easy-output").show();
+			
+				
+			}
+			
+			$(document).on("click",".line_item_submit",function() {
+				line_item_submit();
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {

@@ -251,11 +251,6 @@
                 </td>
                 <td class="address">
                     '.address_out($oi['ship_to_id']).'
-<!--
-                    <br>
-                    '.getFreight('account',"",$oi['freight_account_id'],"account_no").'
-                    '.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
--->
                 </td>
                 
                 
