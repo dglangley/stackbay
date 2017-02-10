@@ -9,6 +9,7 @@
 			});
 		}
 		//toggleLoader();
+		loadOrders();
 
 		// adjust height dynamically to size of the rows within section
 		$(".market-table").each(function() {
@@ -1584,6 +1585,40 @@
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
+	}
+	function loadOrders() {
+		// do the thing
+		refreshOrders();
+		// now load the thing on a schedule for every X mins
+		setInterval( refreshOrders,(1000*60*15));//15 mins
+	}
+	function refreshOrders() {
+        console.log(window.location.origin+"/json/orders-list.php");
+		$.ajax({
+			url: 'json/orders-list.php',
+			type: 'get',
+			data: {},
+			dataType: 'json',
+			success: function(json, status) {
+				var sales = $("#sales-orders-list");
+				sales.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.sales, function(order_num, company) {
+					sales.append('<li><a href="/order_form.php?ps=Sale&on='+order_num+'">'+order_num+' '+company+'</a></li>');
+				});
+				var purchases = $("#purchase-orders-list");
+				purchases.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.purchases, function(order_num, company) {
+					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order_num+'">'+order_num+' '+company+'</a></li>');
+				});
+			},
+			error: function(xhr, desc, err) {
+                console.log("Details: " + desc + "\nError:" + err);
+			}
+		});
 	}
 
 	Dropzone.autoDiscover = false;
