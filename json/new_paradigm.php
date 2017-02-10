@@ -91,7 +91,7 @@ function search_row(){
         //     $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
         // };
         
-        //Default is ground aka 4 days
+        // //Default is ground aka 4 days
         // $date = date('m/d/Y', realDeliveryDate(date("m/d/Y"), 4));
         // $date = date("m/d/Y");
         

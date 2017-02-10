@@ -1064,7 +1064,7 @@
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
-					var acct = ($(this).val().slice(4));
+					var acct = ($(this).val().slice(5));
 					
 					//If the first number is the address, assume the user is searching by an address name
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
