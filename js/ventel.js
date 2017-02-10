@@ -1604,15 +1604,15 @@
 				sales.find("li").each(function() {
 					$(this).remove();
 				});
-				$.each(json.sales, function(order_num, company) {
-					sales.append('<li><a href="/order_form.php?ps=Sale&on='+order_num+'">'+order_num+' '+company+'</a></li>');
+				$.each(json.sales, function(key, order) {
+					sales.append('<li><a href="/order_form.php?ps=Sale&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 				var purchases = $("#purchase-orders-list");
 				purchases.find("li").each(function() {
 					$(this).remove();
 				});
-				$.each(json.purchases, function(order_num, company) {
-					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order_num+'">'+order_num+' '+company+'</a></li>');
+				$.each(json.purchases, function(key, order) {
+					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

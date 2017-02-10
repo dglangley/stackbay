@@ -1646,7 +1646,8 @@
 									
 									if(qty == 0) {
 								    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-								    	alert('Part: ' + part + ' has been received.');
+								    	//alert('Part: ' + part + ' has been received.');
+										modalAlertShow('Part Received!','Part "'+part+'" has now been received in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
 								    }
 								    
 								    $serial.attr("data-saved", serial);
