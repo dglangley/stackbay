@@ -13,6 +13,7 @@
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
 		include_once $rootdir.'/inc/dbconnect.php';
+		include_once $rootdir.'/inc/dictionary.php';
 		include_once $rootdir.'/inc/format_date.php';
 		include_once $rootdir.'/inc/format_price.php';
 		include_once $rootdir.'/inc/getCompany.php';
@@ -44,7 +45,9 @@
 		$partid = $row['search'];
 		$p = hecidb($partid,'id');
 		foreach ($p as $r){
-             $display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
+            //$display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
+            $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 		}
 		
 		
