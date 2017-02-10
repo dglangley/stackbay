@@ -168,9 +168,9 @@
 				<h2><?php echo ($order_number != '' ? 'Outstanding Items for PO #' . $order_number : 'Inventory Addition'); ?></h2>
 			</div>
 			<div class="col-sm-4">
-				<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">
-					Complete
-				</button>
+				<!--<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">-->
+				<!--	Complete-->
+				<!--</button>-->
 			</div>
 		</div>
 		
@@ -226,7 +226,7 @@
 										?>
 									</td>
 									<td  class="infiniteLocations">
-										<div class="row-fluid">
+										<div class="row-fluid locations_tracker" data-serial="">
 											<div class="col-md-6" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
@@ -246,7 +246,8 @@
 										<div class="input-group" style="margin-bottom: 6px;">
 										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 										    <span class="input-group-addon">
-										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+										        <button class="btn btn-secondary deleteSerialRow" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+										        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-check fa-4" aria-hidden="true"></i></button>
 										    </span>
 							            </div>
 									</td>
@@ -259,7 +260,7 @@
 												<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
 											</div>
 											<!--<span class="input-group-addon">-->
-												<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>
+												<button class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>
 											<!--</span>-->
 										<!--</div>-->
 									</td>
