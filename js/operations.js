@@ -762,22 +762,23 @@
 			});
 			
 //Function to submit the individual line item edits
-			$(document).on("click",".line_item_submit",function() {
+			function line_item_submit(){
 				
-				var new_search = $(this).closest("tr").find('.item-selected').find("option").last().val();
-				var old_search = $(this).closest("tr").find('.item-selected').find("option").attr("data-search");
-				var line_item_id = $(this).closest("tr").prev().data('record');
+				
+				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
+				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
+				var line_item_id = $('.line_item_submit').closest("tr").prev().data('record');
 
 				//This line fixes the bug if the user exits the select2 prematurely   
 				if(isNaN(new_search)){var search = old_search;}
 				else{var search = new_search;}
-			    var date = $(this).closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
-			    var price = $(this).closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(this).closest("tr").find(".warranty").val();
-	   		    var editRow = ((parseInt($(this).closest("tr").index())));
-	   		    var condition = $(this).closest("tr").find(".condition").val();
+			    var date = $('.line_item_submit').closest("tr").find("input[name=ni_date]").val();
+	   		    var qty = $('.line_item_submit').closest("tr").find("input[name=ni_qty]").val();
+			    var price = $('.line_item_submit').closest("tr").find("input[name=ni_price]").val();
+	   		    var lineNumber = $('.line_item_submit').closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $('.line_item_submit').closest("tr").find(".warranty").val();
+	   		    var editRow = ((parseInt($('.line_item_submit').closest("tr").index())));
+	   		    var condition = $('.line_item_submit').closest("tr").find(".condition").val();
 
 				$.ajax({
 					type: "POST",
@@ -807,6 +808,12 @@
 	
 		    	$(this).closest(".lazy-entry").hide();
 		    	$(this).closest("tr").prev(".easy-output").show();
+			
+				
+			}
+			
+			$(document).on("click",".line_item_submit",function() {
+				line_item_submit();
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
@@ -892,10 +899,20 @@
 //Address Suite of functions
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
+					
 					var display = $("#select2-bill_to-container").html()
 					var value = $("#bill_to").val();
-		    		$("#select2-ship_to-container").html(display)
-		    		$("#ship_to").append("<option selected value='"+value+"'>"+display+"</option>");
+					var option = $('<option></option>').
+					prop('selected', true).
+					text(display).
+					val(value);
+					/* insert the option (which is already 'selected'!) into the select */
+					option.appendTo($("#ship_to"));
+					/* Let select2 do whatever it likes with this */
+					$("#ship_to").trigger('change');
+					
+					
+		    		
 				}
 			}
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -966,32 +983,45 @@
 				    	if (!id){
 				    		//If it didn't have an update, it is a new field
 					    	if (field == "ship_to"){
-					    		$("#select2-ship_to-container").html(name);
-					    		$("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-					    		$("#ship_to").val(data);
-					    		updateShipTo();
+					    		// $("#select2-ship_to-container").html(line_1);
+					    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
+					    		// $("#ship_to").val(data);
+			    					var option = $('<option></option>').
+										prop('selected', true).
+										text(line_1).
+										val(data);
+										/* insert the option (which is already 'selected'!) into the select */
+										option.appendTo($("#ship_to"));
+										/* Let select2 do whatever it likes with this */
+										$("#ship_to").trigger('change');
+					    		
+					    		// updateShipTo();
 					    		//$("#ship_display").html();	
 					    	}
 					    	else{
 					    		// $("#select2-bill_to-container").html(text);
-					    		$("#bill_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-					    		$("#bill_to").val(data);
-								//$("#bill_display").replaceWith(("<div //id='bill_display'>"+$(this).text())+"</div>");	
-								$("#mismo").prop("checked",false);
+			    					var option = $('<option></option>').
+										prop('selected', true).
+										text(line_1).
+										val(data);
+										/* insert the option (which is already 'selected'!) into the select */
+										option.appendTo($("#bill_to"));
+										/* Let select2 do whatever it likes with this */
+										$("#bill_to").trigger('change');
 					    	}
 				    	}
 				    	else{
 				    		//Otherwise, this is an old field
 				    		if (field == "ship_to"){
-				    			$("#select2-ship_to-container").text(name);
+				    			$("#select2-ship_to-container").text(line_1);
 				    			if ($("#mismo").prop("checked")){
-				    				$("#select2-bill_to-container").text(name);
+				    				$("#select2-bill_to-container").text(line_1);
 				    			}
 				    		}
 				    		else{
-				    			$("#select2-bill_to-container").text(name);
+				    			$("#select2-bill_to-container").text(line_1);
 			    				if ($("#mismo").prop("checked")){
-				    				$("#select2-ship_to-container").text(name);
+				    				$("#select2-ship_to-container").text(line_1);
 				    			}
 				    		}
 
@@ -1168,7 +1198,9 @@
 				
 
 				var isValid = nonFormCase($(this), e);
-				
+				if($(".search_lines").length > 0){
+					line_item_submit();
+				}
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
