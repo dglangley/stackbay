@@ -205,7 +205,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Shipping</title>
+		<title><title>Shipping <?=($order_number != 'New' ? '#' . $order_number : '')?></title></title>
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
