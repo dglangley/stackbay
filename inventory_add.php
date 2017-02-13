@@ -131,6 +131,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
+		<title>Outstanding PO <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.table td {
@@ -165,7 +166,7 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php echo ($order_number != '' ? 'Outstanding Items for PO #' . $order_number : 'Inventory Addition'); ?></h2>
+				<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
 			</div>
 			<div class="col-sm-4">
 				<!--<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">-->
@@ -227,10 +228,10 @@
 									</td>
 									<td  class="infiniteLocations">
 										<div class="row-fluid locations_tracker" data-serial="">
-											<div class="col-md-6" style="padding: 0 0 0 5px;">
+											<div class="col-md-6 location" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
-											<div class="col-md-6" style="padding: 0 0 0 5px">
+											<div class="col-md-6 instance" style="padding: 0 0 0 5px">
 												<?=loc_dropdowns('instance')?>
 											</div>
 										</div>
@@ -303,16 +304,5 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
-		<script type="text/javascript">
-			// function updateBillTo(){
-			// 	if ( $("#mismo").prop( "checked" )){
-			// 		var display = $("#select2-ship_to-container").html()
-			// 		var value = $("#ship_to").val();
-		 //   		$("#select2-bill_to-container").html(display)
-		 //   		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
-			// 	}
-			// }
-		</script>
-
 	</body>
 </html>
