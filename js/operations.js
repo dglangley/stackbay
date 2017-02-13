@@ -1804,7 +1804,7 @@
 		});
 		
 		$('body').on('click', '.updateSerialRow', function(e) {
-			callback($(this).closest('tr').find('input[name="NewSerial"]'));
+			callback($(this).closest('tr').find('input[name="NewSerial"]:first'));
 		});
 		
 		$(document).on('click', '.serial-expand', function() {
@@ -2174,6 +2174,7 @@
 				$('.nav-tabs a[href="#iso_quality"]').tab('show');
 			} else {
 				$('.nav-tabs a[href="#iso_match"]').tab('show');
+				$('.nav-tabs a').attr("data-toggle","tab");
 			}
 		} else {
 			alert('No items queued to be shipped.');

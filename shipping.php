@@ -68,6 +68,8 @@
 	$notes;
 	$shipid;
 	$selected_carrier;
+	$selected_service;
+	$selected_account;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -79,6 +81,8 @@
 		$notes = $result['public_notes'];
 		$shipid = $result['ship_to_id'];
 		$selected_carrier = $result['freight_carrier_id'];
+		$selected_service = $result['freight_services_id'];
+		$selected_account = $result['freight_account_id'];
 	}
 	
 	function getItems($so_number = 0) {

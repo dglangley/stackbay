@@ -65,9 +65,13 @@
 						<b>Shipping Address:</b><br>
 						<?= address_out($shipid); ?><br><br>
 						
-						<b >CARRIER INFORMATION:</b><br>
+						<b>Shipping Instructions:</b><br>
 						<?= getFreight('carrier',$selected_carrier,'','name'); ?>
-						
+						<?= getFreight('services','',$selected_service,'method'); ?>
+						<br><br>
+						<b>Account:</b><br>
+						<?= ($selected_account ? getFreight('account','',$selected_account,'account_no'): 'Prepaid'); ?>
+
 						<div class='row'>
 							<div class="col-md-12">
 								<button class="btn-flat primary btn-sm pull-right btn_iso_parts" disabled data-form="" data-callback="" data-element="">Save & Print</button>
