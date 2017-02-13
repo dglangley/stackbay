@@ -237,7 +237,7 @@
 										</div>
 									</td>
 									<td class="infiniteCondition">
-										<select class="form-control condition_field condition" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+										<select class="form-control condition_field condition input-sm" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
 											<?php foreach(getEnumValue() as $condition): ?>
 												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?> value="<?php echo $condition; ?>"><?php echo $condition; ?></option>
 											<?php endforeach; ?>

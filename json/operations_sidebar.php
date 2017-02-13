@@ -403,7 +403,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
 				$right .= "<br><br>";
-				$right .= "<b style='color: #526273;font-size: 14px;'>CARRIER INFORMATION:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS:</b><br>";
 				if($selected_carrier){
 					$right .= getFreight('carrier',$selected_carrier,'','name');
 				}
