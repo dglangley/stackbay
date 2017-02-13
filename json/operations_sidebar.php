@@ -267,7 +267,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//Sets UPS to default
 		$selected_carrier = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
-		$selected_service = (strtolower($selected_carrier) != "null" && $selected_carrier)? $selected_carrier : '1' ;
+		$selected_service = (strtolower($selected_service) != "null" && $selected_service)? $selected_service : '1' ;
 		$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 				    ".dropdown('carrier',$selected_carrier, '', 'col-sm-4')."
