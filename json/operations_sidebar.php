@@ -445,7 +445,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 								$init = false;
 							}
-							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+							
+							$dateF = date_create($num);
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> Box #' . date_format($dateF, "N j/y g:ia") . '<br>';
 						}
 					}
 				}

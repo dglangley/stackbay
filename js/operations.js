@@ -2002,7 +2002,7 @@
 
 
 		//Shipping update button, mainly used for lot and serial redirection
-		$('#btn_update').click(function(e){
+		$('.btn_update').click(function(e){
 			e.preventDefault();
 			//Save to reactivate button if needed
 			$click = $(this);
@@ -2014,6 +2014,11 @@
 			var damage = false;
 			var serialid = [];
 			var serialComments = [];
+			var print = '';
+			
+			if ($(this).data('print') != '') {
+				print = $(this).data('print');
+			}
 			
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				$(this).find('.iso_comment').each(function() {
@@ -2046,17 +2051,18 @@
 			
 			var checkChanges = false;
 			
+			
 			//Get everything from the form and place it into its own array
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				//Overlook all the rows that are complete in the order and grab all the others
-				if(!$(this).hasClass('order-complete')) {
+				//if(!$(this).hasClass('order-complete')) {
 					var partid = $(this).find('.part_id').data('partid');
 					var serials = [];
 					var savedSerials = [];
 					var boxes = [];
-					var condition;
 					var lot = false;
-					var qty;
+					var qty, condition;
+					
 
 					//Grab the conidtion value set by the sales order
 					condition = $(this).find('.condition_field').data('condition');
@@ -2092,11 +2098,11 @@
 					items.push(lot);
 					items.push(qty);
 					items.push(boxes);
-				}
+				//}
 			});
 			
 			//Testing purposes
-			console.log(items);
+			//console.log(items);
 			
 			$.ajax({
 				type: 'POST',
@@ -2104,12 +2110,24 @@
 				data: {'so_number' : so_number, 'items' : items},
 				dataType: 'json',
 				success: function(data) {
-					console.log('Save Data ' + data['test']);
+					console.log('test ' + data['timestamp']);
 					
 					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
-						window.location.href = window.location.href + "&success=true";
+						if(print != '' && data['timestamp'] != null) {
+							var newWin = window.open('/'+data['timestamp']+'', '_blank');
+							if (newWin) {
+							    //Browser has allowed it to be opened
+							    newWin.focus();
+							    window.location.href = window.location.href + "&success=true";
+							} else {
+							    //Browser has blocked it
+							    alert('Please allow popups for this website');
+							}
+						} else {
+							window.location.href = window.location.href + "&success=true";
+						}
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
 						alert(data['error']);
@@ -2135,38 +2153,35 @@
 		if($('.check-save').length >0){
 			var isoCheck = [];
 			var init = true;
+			var damaged = '';
 			
 			var completed = $(this).data('datestamp');
 		
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				$(this).find('.iso_comment').each(function() {
 					//isoCheck.push($(this).data('serial'));
-					if($(this).val() != '') {
+					//if($(this).val() != '') {
 						if(init) {
 							$('.iso_broken_parts').empty();
 							init = false;
 						}
+						
+						if($(this).val() != ''){
+							damaged = 'damaged';
+						} else {
+							damaged = '';
+						}
+						
 						//($(this).data('serial'));
-						var element = "<tr class='damaged'>\
+						var element = "<tr class='"+ damaged +"'>\
 										<td>"+$(this).data('part')+"</td>\
 										<td>"+$(this).data('serial')+"</td>\
-										<td class='comment-data' data-invid='"+$(this).data('invid')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+										<td class='comment-data' data-invid='"+$(this).data('inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
 									</tr>";
 						$('.iso_broken_parts').append(element);
-					}
+					//}
 				});
 			});
-			
-			if(init) {
-				$('.iso_broken_parts').empty();
-				
-				var element = "<tr>\
-								<td><b>No Defects/Damage in Order</b></td>\
-								<td></td>\
-								<td></td>\
-							</tr>";
-				$('.iso_broken_parts').append(element);
-			}
 			
 			$("#modal-iso").modal("show");
 			
