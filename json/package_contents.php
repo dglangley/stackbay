@@ -44,16 +44,20 @@
         foreach($result as $row){
 			$content_id[] = $row['serialid'];
 		}
-		$content = implode(",",$content_id);
-		$query = "SELECT part, serial_no FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
-        $result = qdb($query);
-        
-        if (mysqli_num_rows($result) > 0) {
-		    foreach($result as $row) {
-                $contents[$row['part']][] = $row['serial_no'];
+		if($content_id){
+    		$content = implode(",",$content_id);
+    		$query = "SELECT part, serial_no FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+            $result = qdb($query);
+    		
+            if (mysqli_num_rows($result) > 0) {
+    		    foreach($result as $row) {
+                    $contents[$row['part']][] = $row['serial_no'];
+        		}
     		}
-		}
-
+        }
+        else{
+            $contents = false;
+        }
         return $contents;
     
     }
