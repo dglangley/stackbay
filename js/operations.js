@@ -2180,6 +2180,12 @@
 		}
 	});
 	
+	
+	//This function auto opens the next locations drop down when the first one is changed
+	$(document).on('change', '.infiniteLocations .instance:first select', function() {
+		$(this).closest('tr').find('.infiniteSerials').find('input:first').focus();
+	});
+	
 	$(document).on('click','.btn_iso_parts', function(e) {
 		e.preventDefault();
 		var damage = false;
@@ -2285,7 +2291,7 @@
 					} else {
 						$("#alert_message").hide();
 					}
-					alert("ON: "+order_number+" | Package #: "+package_number);
+					//alert("ON: "+order_number+" | Package #: "+package_number);
 					$.ajax({
 						type: "POST",
 						url: '/json/package_contents.php',
