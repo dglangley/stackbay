@@ -2266,7 +2266,7 @@
 //Open Modal
 		$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
-				var order_number = $(".box_selector.active").data('order-number');
+				var order_number = $("body").data('order-number');
 				if (package_number){
 					$("#package_title").text("Editing Box #"+package_number);
 					$("#alert_title").text("Box #"+package_number);
@@ -2298,20 +2298,28 @@
 							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 							console.log(data);
 							$('.modal-packing').empty();
-							$.each( data, function( i, val ) {
-								$.each(val, function(it,serial){
-										var element = "<tr>\
-												<td>"+ i +"</td>\
-												<td>"+ serial +"</td>\
-											</tr>";
-										$('.modal-packing').append( element );
+							if (data){
+								$.each( data, function( i, val ) {
+									$.each(val, function(it,serial){
+											var element = "<tr>\
+													<td>"+ i +"</td>\
+													<td>"+ serial +"</td>\
+												</tr>";
+											$('.modal-packing').append( element );
+										});
 									});
-								});
-								// for(var k = 0; k < val.length; k++) {
-							
-							//After the edit modal has been set with the proper data, show it
-							$("#modal-package").modal("show");
-						}
+									// for(var k = 0; k < val.length; k++) {
+							}
+								
+								//After the edit modal has been set with the proper data, show it
+								$("#modal-package").modal("show");
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("JSON packages_contents.php: Error");
+							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+						},				
+						
 					});
 				}
 				else{
