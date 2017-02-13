@@ -228,10 +228,10 @@
 									</td>
 									<td  class="infiniteLocations">
 										<div class="row-fluid locations_tracker" data-serial="">
-											<div class="col-md-6" style="padding: 0 0 0 5px;">
+											<div class="col-md-6 location" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
-											<div class="col-md-6" style="padding: 0 0 0 5px">
+											<div class="col-md-6 instance" style="padding: 0 0 0 5px">
 												<?=loc_dropdowns('instance')?>
 											</div>
 										</div>
@@ -304,16 +304,5 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
-		<script type="text/javascript">
-			// function updateBillTo(){
-			// 	if ( $("#mismo").prop( "checked" )){
-			// 		var display = $("#select2-ship_to-container").html()
-			// 		var value = $("#ship_to").val();
-		 //   		$("#select2-bill_to-container").html(display)
-		 //   		$("#bill_to").append("<option selected value='"+value+"'>"+display+"</option>");
-			// 	}
-			// }
-		</script>
-
 	</body>
 </html>

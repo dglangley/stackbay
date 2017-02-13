@@ -205,7 +205,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title><title>Shipping <?=($order_number != 'New' ? '#' . $order_number : '')?></title></title>
+		<title>Shipping <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
@@ -361,7 +361,7 @@
 								if (mysqli_num_rows($results) > 0){
 									$init = true;
 									foreach($results as $b){
-										$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary active')." box_selector'";
+										$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
 										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
@@ -371,7 +371,8 @@
 										echo($box_button);
 			                        	
 			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
-			                        	$init = false;
+			                        	if($b['datetime'] == '' && $init)
+			                        		$init = false;
 									}
 								} else {
 									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
