@@ -1076,10 +1076,13 @@
 						"zip" : zip,
 						"id" : id
 				    },function(data){
-				    	
+				    	console.log("Logging the ID (there should be none): "+id);
 				    	console.log("Return from Address Submission: "+data);
 				    	
-				    	if (!id){
+				    	if (!isNaN(id)){
+				    		data = id;
+				    	}
+				    	// if (!id){
 				    		//If it didn't have an update, it is a new field
 					    	if (field == "ship_to"){
 					    		// $("#select2-ship_to-container").html(line_1);
@@ -1093,8 +1096,7 @@
 										option.appendTo($("#ship_to"));
 										/* Let select2 do whatever it likes with this */
 										$("#ship_to").trigger('change');
-					    		
-					    		// updateShipTo();
+					    				console.log("Ship to updated to: "+$("#ship_to").val())
 					    		//$("#ship_display").html();	
 					    	}
 					    	else{
@@ -1107,24 +1109,28 @@
 										option.appendTo($("#bill_to"));
 										/* Let select2 do whatever it likes with this */
 										$("#bill_to").trigger('change');
+										console.log("Bill to updated to: "+$("#bill_to").val());
+					    				updateShipTo();
 					    	}
-				    	}
-				    	else{
-				    		//Otherwise, this is an old field
-				    		if (field == "ship_to"){
-				    			$("#select2-ship_to-container").text(line_1);
-				    			if ($("#mismo").prop("checked")){
-				    				$("#select2-bill_to-container").text(line_1);
-				    			}
-				    		}
-				    		else{
-				    			$("#select2-bill_to-container").text(line_1);
-			    				if ($("#mismo").prop("checked")){
-				    				$("#select2-ship_to-container").text(line_1);
-				    			}
-				    		}
+				    	// }
+				    	// else{
+				    	// 	//Otherwise, this is an old field
+				    	// 	if (field == "ship_to"){
+				    	// 		$("#select2-ship_to-container").text(line_1);
+				    	// 		if ($("#mismo").prop("checked")){
+				    	// 			$("#select2-bill_to-container").text(line_1);
+				    	// 		}
+				    	// 		console.log("oh shit");
+				    	// 	}
+				    	// 	else{
+				    	// 		$("#select2-bill_to-container").text(line_1);
+			    		// 		if ($("#mismo").prop("checked")){
+				    	// 			$("#select2-ship_to-container").text(line_1);
+				    	// 		}
+				    	// 		console.log("This didn't ");
+				    	// 	}
 
-				    	}
+				    	// }
 				    	
 				    	
 				    	$('.modal').modal('hide');
@@ -1341,9 +1347,6 @@
 					else{
 						var account = '';
 					}
-					var pri_notes = $('#private_notes').val();
-					var pub_notes = $('#public_notes').val();
-					//var warranty = $('.warranty').val();
 
 					var filename;
 					/* David's file uploader */
