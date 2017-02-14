@@ -79,17 +79,6 @@ body{
 	padding-bottom: 5px;
 }
 
-/* all */
-::-webkit-input-placeholder { text-transform: uppercase; }
-::-moz-placeholder { text-transform: uppercase; } /* firefox 19+ */
-:-ms-input-placeholder { text-transform: uppercase; } /* ie */
-input:-moz-placeholder { text-transform: uppercase; }
-
-/*.forms_section .select2-selection{*/
-/*	height:34px;*/
-	
-/*}*/
-
 .forms_section .select2-container{
 	width:100%;
 }
