@@ -100,7 +100,6 @@
 		#modalHistoryBody div:nth-child(even){
 			background-color:#f7f7f7;
 		}
-s
 	</style>
 
 </head>
