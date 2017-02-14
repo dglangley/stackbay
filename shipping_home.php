@@ -237,11 +237,11 @@
 		    background: #ddd;
 		}
 		
-		.select2-container--default .select2-selection--single {
-		    border: 1px solid #ccc;
-		    border-radius: 4px 0px 0px 4px;
-		    height: 30px;
-		}
+		/*.select2-container--default .select2-selection--single {*/
+		/*    border: 1px solid #ccc;*/
+		/*    border-radius: 4px 0px 0px 4px;*/
+		/*    height: 30px;*/
+		/*}*/
 		
 		@media screen and (max-width: 991px){
 			.date-options {

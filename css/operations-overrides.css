@@ -10,15 +10,17 @@ body{
 .row-fluid{
 	margin: 0;
 }
-.container-fluid.pad-wrapper{
-	height: 100%;
-}
+
+/*.left-side-main .container-fluid.pad-wrapper{*/
+/*	height: 100%;*/
+/*}*/
+
 .cmbar{
 	height: 100%;
 	overflow: auto;
 }
 
-.select2{
+.left-side-main .select2{
 	width:100% !important;
 	overflow:hidden;
 }
@@ -54,6 +56,7 @@ body{
 /*.ui-select {		*/
 /*	width:180px;		*/
 /*}		*/
+
 .ui-select.addresses {		
 	width:320px;		
 }
@@ -82,6 +85,7 @@ input:-moz-placeholder { text-transform: uppercase; }
 /*	height:34px;*/
 	
 /*}*/
+
 .forms_section .select2-container{
 	width:100%;
 }
