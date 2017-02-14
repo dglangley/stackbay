@@ -1267,13 +1267,13 @@
 							"field": "condition",
 							"selected": value,
 							"limit": '',
-							"size": "condition",
+							"size": "col-md-6",
 							"id":"condition"
 							},
 						dataType: 'json',
 						success: function(result) {
-							// alert(result);
-							$("#condition").replaceWith(result);
+							//alert(result);
+							$(".condition").not( document.getElementById( "condition_global" ) ).replaceWith(result);
 							console.log("Condition Set - dropPop.php: Success");
 							// $('#new_warranty').parent().replaceWith(result)
 							// .parent().removeClass('col-md-12');
