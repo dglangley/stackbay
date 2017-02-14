@@ -378,7 +378,7 @@
 				 $r[$key]['place'] = display_location($row['locationid'], 'place');
 				 $r[$key]['instance'] = display_location($row['locationid'], 'instance');
 				 $r[$key]['vendorid'] = getVendor($row['last_purchase']);
-				 $r[$key]['vendor'] = getCompany($r['vendorid']);
+				 $r[$key]['vendor'] = getCompany($r[$key]['vendorid']);
 				 $r[$key]['unique'] = $row['invid'];
 			 }
 			 //Null Serial handler and serial grouping/append

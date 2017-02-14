@@ -381,7 +381,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .= "<div class='row'>";
 			$right .= "<div class='col-md-12'>";
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".getContact($contact)."<br><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".
+							"<b style='color: #526273;font-size: 12px;'>".getContact($contact)."</b><br><br>";
 				
 				//Order Number
 				if($ref_ln != '') {
