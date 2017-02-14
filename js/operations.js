@@ -716,7 +716,7 @@
 								if (result){
 									$('#search_input').append(result);
 									$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
-									//var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+									//	 var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
 									if($(".easy-output").length > 0){
 										$('#totals_row').find("input[name='np_total']").val(updateTotal());
 										$('#totals_row').show();
@@ -1253,7 +1253,7 @@
 							"selected": value,
 							"limit": '',
 							"size": "warranty",
-							"id":"new_row_warranty"
+							"id":"new_warranty"
 							},
 						dataType: 'json',
 						success: function(result) {
@@ -1896,10 +1896,10 @@
 							},	
 					});
 				} else {
-					modalAlertShow('A Box is required.', false);
+					modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'A Box is required for each item being shipped. <br><br> Please create a box or add the item to an available box.', false);
 				}
 		    } else if(serial == '') {
-		    	modalAlertShow('Error', 'Serial is missing.', false);
+		    	modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'Serial is missing.', false);
 		    } 
 		
 		}
@@ -2230,7 +2230,7 @@
 							    window.location.href = window.location.href + "&success=true";
 							} else {
 							    //Browser has blocked it
-							    alert('Please allow popups for this website');
+							    modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Pop-up Blocked",'Please allow popups for this website', false);
 							}
 						} else {
 							window.location.href = window.location.href + "&success=true";
@@ -2328,7 +2328,7 @@
 				$('.nav-tabs a').attr("data-toggle","tab");
 			}
 		} else {
-			alert('No items queued to be shipped.');
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",'No items queued to be shipped.', false);
 		}
 	});
 	
