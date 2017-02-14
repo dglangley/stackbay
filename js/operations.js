@@ -1305,6 +1305,7 @@
 				if($(".search_lines").length > 0){
 					line_item_submit();
 				}
+				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					//var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
@@ -1459,8 +1460,10 @@
 						},
 					});
 				} else if($('.lazy-entry:visible').length > 0) {
-					alert("Please save all changes before updating.");
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Please save all changes before updating.", false);
 				} else {
+					if(isValid)
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","PO can not be created without any items.<br><br> Please add items before creating the PO.", false);
 					$(window).scrollTop();
 				}
 			});
@@ -1796,7 +1799,7 @@
 								$serial.attr("data-saved", serial);
 								modalAlertShow('Success', 'Item has been updated.', false);
 							} else {
-								modalAlertShow('Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
+								modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
 								if(savedSerial != '') {
 									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
 								}
@@ -1811,7 +1814,7 @@
 						
 					});
 	    		} else {
-	    			modalAlertShow('Missing Fields', "Location can not be empty.", false);
+	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		}
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
