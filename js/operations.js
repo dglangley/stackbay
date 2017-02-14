@@ -241,7 +241,7 @@
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 
-			$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
+		$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
 					var s_qty = ($(this).find("input[name=ni_qty]").val());
@@ -355,7 +355,7 @@
 					var comp = company;
 				}
 				//Account default picker on update of the company
-				$.ajax({
+			/*	$.ajax({
 					type: "POST",
 					url: '/json/account-default.php',
 					data: {
@@ -422,7 +422,7 @@
 						});
 				}
 				});
-				
+			*/	
 				//Default Global Warranty
 				// $.ajax({
 				// 	type: "POST",
@@ -549,7 +549,7 @@
 					data: {
 						"field":"services",
 						"limit":limit,
-						"size": "col-sm-5",
+						"size": "col-sm-8",
 						"label": "Service",
 						"id" : "service"
 						}, // serializes the form's elements.
@@ -602,9 +602,27 @@
 				}
 				// #right_side_main > tr.easy-output > td.line_line
 			}
+			function updateTotal(){
+				var total = 0.00;
+				$(".easy-output").each(function() {
+				    var qty = $(this).find(".line_qty").data('qty');
+				    var cost = $(this).find(".line_price").text();
+				    if (cost){
+				    	cost = parseFloat(cost.slice(1));
+				    }
+				    else{
+				    	cost = 0.00;
+				    }
+				    total += cost * qty;
+				});
+				//Get all the prices
+				return price_format(total);
+			}
+			
 			$("#right_side_main").ready(function(){
 				var order_number = $("#order_body").attr("data-order-number");
 				var order_type = $("#order_body").attr("data-order-type");
+				var rows = 0;
 				console.log("Order-number: "+order_number+" | Order-type: "+order_type);
 				$.ajax({
 					type: "POST",
@@ -617,6 +635,35 @@
 					dataType: 'json',
 					success: function(result) {
 						$('#right_side_main').append(result);
+						rows = $(".easy-output").length;
+						$.ajax({
+							type: "POST",
+							url: '/json/new_paradigm.php',
+							data: {
+								
+							}, // serializes the form's elements.
+							dataType: 'json',
+							success: function(result) {
+								if (result){
+									$('#search_input').append(result);
+									$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
+									// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+									if($(".easy-output").length > 0){
+										$('#totals_row').find("input[name='np_total']").val(updateTotal());
+										$('#totals_row').show();
+									}
+			
+								}
+								else{
+									
+								}
+								console.log("JSON | NewPar Line Pop | new_paradigm.php: Success");
+							},					
+							error: function(xhr, status, error) {
+								alert(error+" | "+status+" | "+xhr);
+								console.log("JSON | NewPar Line Pop | new_paradigm.php: Error");
+							}	
+						});
 						console.log("JSON | Initial table load | order-table-out.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -626,30 +673,7 @@
 
 					
 				});
-				$.ajax({
-					type: "POST",
-					url: '/json/new_paradigm.php',
-					data: {
-						
-					}, // serializes the form's elements.
-					dataType: 'json',
-					success: function(result) {
-						if (result){
-							$('#search_input').append(result);
-							$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
-							// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-							$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
-						}
-						else{
-							
-						}
-						console.log("JSON | NewPar Line Pop | new_paradigm.php: Success");
-					},					
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON | NewPar Line Pop | new_paradigm.php: Error");
-					}	
-				});
+
 			});
 		
 		//MultiPart Search Feature
@@ -796,8 +820,10 @@
 						},
 					dataType: 'json',
 					success: function(row_out) {
+						console.log(row_out);
 						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
 						console.log("order-table-out.php : Success");
+						$('#totals_row').find("input[name='np_total']").val(updateTotal());
 					},
 					error: function(xhr, status, error) {
 						console.log("order-table-out.php : Error");
@@ -806,9 +832,9 @@
 					
 				});
 	
-		    	$(this).closest(".lazy-entry").hide();
-		    	$(this).closest("tr").prev(".easy-output").show();
-			
+		    	$('.line_item_submit').closest(".lazy-entry").hide();
+		    	$('.line_item_submit').closest("tr").prev(".easy-output").show();
+
 				
 			}
 			
@@ -862,7 +888,9 @@
 								success: function(row_out) {
 									$("#right_side_main").append(row_out);
 									$(".search_lines").html("").remove();
+									$("#totals_row").show();
 									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
+									$('#totals_row').find("input[name='np_total']").val(updateTotal());
 	 							}
 							});
 		   		        }
@@ -1114,7 +1142,11 @@
 					company = $("#companyid").val();
 				}
 			    var data = [account, carrier, company];
-		
+				var assoc = {
+					account: account, 
+					carrier: carrier,
+					company: company
+				}
 			    $.post("/json/accountSubmit.php", {'test[]' : data},function(data){
 					$("#select2-account_select-container").html(account);
 					$("#carrier").val(carrier);
@@ -1123,7 +1155,7 @@
 			    	$("#account-modal-body").find("input[name='na_account']").val('');
 			    	$("#account-modal-body").find('input[name="associate"]').prop("checked",false);
 			    });
-				$("#account_select").initSelect2("/json/freight-account-search.php","Account",company);
+				$("#account_select").initSelect2("/json/freight-account-search.php","Account",assoc);
 			});
 
 //Global Warranty function

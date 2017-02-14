@@ -67,7 +67,19 @@ function head_out(){
 function search_row(){
     //The macro row will carry the same information as the sub rows, but will be
     //a global-set matching row. It will mirror David's Item output page
-        $line = "<tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>";
+        $line = "
+            <tr id = 'totals_row' style='display:none;'>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td style='text-align:right;'>Total:</td>
+                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
+                <td></td>
+            </tr>";
+        $line .= "<tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>";
         
         //Line Number
         $line .= "<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>";
@@ -101,9 +113,9 @@ function search_row(){
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
-			    <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
-			    <span class='input-group-addon'>
-			        <span class='fa fa-calendar'></span>
+                <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
+                <span class='input-group-addon'>
+                    <span class='fa fa-calendar'></span>
 			    </span>
             </div>
         </td>";
@@ -138,6 +150,7 @@ function search_row(){
                 </td>";
 
     $line .= "</tr>";
+    
     
     //Adding load bar feature here
     $line .= "<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>";
