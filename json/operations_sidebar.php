@@ -129,7 +129,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>
-						<label for='bill_to'>Remit to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='bill_to'>Remit to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
@@ -403,7 +403,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
 				$right .= "<br><br>";
-				$right .= "<b style='color: #526273;font-size: 14px;'>CARRIER INFORMATION:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS:</b><br>";
 				if($selected_carrier){
 					$right .= getFreight('carrier',$selected_carrier,'','name');
 				}
@@ -440,12 +440,24 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					
 					$init = true;
 					foreach($lists as $num) {
+						$box = array();
 						if($num != '') {
 							if($init) {
 								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 								$init = false;
 							}
-							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> ' . $num . '<br>';
+							
+							$query =  "SELECT package_no FROM packages WHERE datetime = '$num';";
+							$result = qdb($query);
+							
+							while ($row = $result->fetch_assoc()) {
+								$box[] = $row['package_no'];
+							}
+							
+							$boxList = implode(', ', $box);
+							
+							$dateF = date_create($num);
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> Box #  ' . $boxList . ' ' . date_format($dateF, "N/j/y g:ia") . '<br>';
 						}
 					}
 				}

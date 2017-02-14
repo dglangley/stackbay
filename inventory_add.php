@@ -114,11 +114,11 @@
 	}
 	
 	function format($partid){
-		$parts = reset(hecidb($partid, 'id'));
-	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
-	    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+		$r = reset(hecidb($partid, 'id'));
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
-	    return $name;
+	    return $display;
 	}
 	
 	
@@ -237,7 +237,7 @@
 										</div>
 									</td>
 									<td class="infiniteCondition">
-										<select class="form-control condition_field condition" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+										<select class="form-control condition_field condition input-sm" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
 											<?php foreach(getEnumValue() as $condition): ?>
 												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?> value="<?php echo $condition; ?>"><?php echo $condition; ?></option>
 											<?php endforeach; ?>

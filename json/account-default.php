@@ -12,7 +12,7 @@
     $companyid = grab('company');
     $carrier = grab('carrier');
     $result;
-    $line = array();
+    $line = array('value'=>'NULL','display'=>'PREPAID','carrier'=>'');
     
 	if($companyid){
 	    //If there is a value set for the company, load their defaults to the top result always.
@@ -24,20 +24,16 @@
 	    $select .= "companyid = '$companyid' ";
 	    
 	    if ($carrier && $carrier != 'NULL'){
-	    	$select .= "AND carrier = '$carrier'";
+	    	$select .= "AND carrierid = '$carrier'";
 	    }
 	    $select .= ";";
 	    $result = qdb($select);
-	}
-	if ($result){
-		$row = mysqli_fetch_array($result);
-        $line['value'] = $row['id'];
-        $line['display'] = $row['account_no'];
-        $line['carrier'] = $row['carrierid'];
-	}
-	else{
-        $line['value'] = 'NULL';
-        $line['display'] = 'Prepaid';
+		if (mysqli_num_rows($result)>0) {
+			$row = mysqli_fetch_array($result);
+			$line['value'] = $row['id'];
+			$line['display'] = $row['account_no'];
+			$line['carrier'] = $row['carrierid'];
+		}
 	}
 
 	echo json_encode($line);

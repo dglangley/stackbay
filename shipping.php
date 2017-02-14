@@ -68,6 +68,8 @@
 	$notes;
 	$shipid;
 	$selected_carrier;
+	$selected_service;
+	$selected_account;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -79,6 +81,8 @@
 		$notes = $result['public_notes'];
 		$shipid = $result['ship_to_id'];
 		$selected_carrier = $result['freight_carrier_id'];
+		$selected_service = $result['freight_services_id'];
+		$selected_account = $result['freight_account_id'];
 	}
 	
 	function getItems($so_number = 0) {
@@ -191,11 +195,11 @@
 	}
 	
 	function format($partid){
-		$parts = reset(hecidb($partid, 'id'));
-	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
-	    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+		$r = reset(hecidb($partid, 'id'));
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
-	    return $name;
+	    return $display;
 	}
 
 	$items = getItems($sales_order);
@@ -240,15 +244,15 @@
 				margin-bottom: 10px;
 			}
 			
-			table {
+			table.num {
 			    counter-reset: rowNumber;
 			}
 			
-			table tr > td:first-child {
+			table.num tr > td:first-child {
 			    counter-increment: rowNumber;
 			}
 			
-			table tr td:first-child::before {
+			table.num tr td:first-child::before {
 			    content: counter(rowNumber);
 			    min-width: 1em;
 			    margin-right: 0.5em;
@@ -284,7 +288,7 @@
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Order Info</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
 			</div>
 			<div class="col-md-4 text-center">
 				<?php
@@ -518,7 +522,7 @@
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		<script>
 			(function($){
-				$('#item-updated-timer').delay(3000).fadeOut('fast');
+				$('#item-updated-timer').delay(1000).fadeOut('fast');
 			})(jQuery);
 		</script>
 	</body>

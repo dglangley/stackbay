@@ -83,166 +83,170 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		foreach($item_split as $product) {
 			//If serial is an array then parse thru everything in the partid as an array of items
-			if($product[4] == 'false' && sizeof($product[2]) > 1) {
-				$result['type'] = 'array';
-				for($i = 0; $i < sizeof($product[2]); $i++) {
-					//If the serial is not null then proceed, otherwise ignore the entry
-					if($product[2][$i] != '') {
-						//If there is an actual saved serial then initiate editing of the product
-						//Else insert the new item
+			// if($product[4] == 'false' && sizeof($product[2]) > 1) {
+			// 	$result['type'] = 'array';
+			// 	for($i = 0; $i < sizeof($product[2]); $i++) {
+			// 		//If the serial is not null then proceed, otherwise ignore the entry
+			// 		if($product[2][$i] != '') {
+			// 			//If there is an actual saved serial then initiate editing of the product
+			// 			//Else insert the new item
 						
-						//Check if the item exists already in the inventory
-						$exists = checkNewItems(reset($product), $product[2][$i], $product[3]);
-						$incomplete = checkShipDate($so_number, reset($product), $product[3]);
+			// 			//Check if the item exists already in the inventory
+			// 			$exists = checkNewItems(reset($product), $product[2][$i], $product[3]);
+			// 			$incomplete = checkShipDate($so_number, reset($product), $product[3]);
 						
-						if($product[1][$i]  == '') {
-							//If the serial exists then proceed to outbound phase of the shipment
-							if($incomplete == 1 && $exists) {
-								//Increase the qty received by 1 for each item received
-								$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-								qdb($query);
+			// 			if($product[1][$i]  == '') {
+			// 				//If the serial exists then proceed to outbound phase of the shipment
+			// 				if($incomplete == 1 && $exists) {
+			// 					//Increase the qty received by 1 for each item received
+			// 					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 					qdb($query);
 		
-								//Check the SO and - inventory or mark a ship date
-								checkSOShipped($so_number, reset($product), $product[3]);
+			// 					//Check the SO and - inventory or mark a ship date
+			// 					checkSOShipped($so_number, reset($product), $product[3]);
 								
-								//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-								$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE partid='". res(reset($product)) ."' AND serial_no = '". res(reset($product[2])) ."' AND item_condition = '". res($product[3]) ."';";
-								$result['query'] = qdb($query);
-							}
-						//This scenario is treated as the user has already registered the item, but decided to change the item they want to ship of same partid but different serial and on top of that they do not match
-						} else if($exists && $product[1][$i] != $product[2][$i]) {
-							//Restore the previous Serialized item back to in stock and received
-							$query = "UPDATE inventory SET qty = qty + 1 WHERE serial_no = '" . res($product[1][$i]) . "' AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."';";
-							qdb($query);
+			// 					//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+			// 					$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE partid='". res(reset($product)) ."' AND serial_no = '". res(reset($product[2])) ."' AND item_condition = '". res($product[3]) ."';";
+			// 					$result['query'] = qdb($query);
+			// 				}
+			// 			//This scenario is treated as the user has already registered the item, but decided to change the item they want to ship of same partid but different serial and on top of that they do not match
+			// 			} else if($exists && $product[1][$i] != $product[2][$i]) {
+			// 				//Restore the previous Serialized item back to in stock and received
+			// 				$query = "UPDATE inventory SET qty = qty + 1 WHERE serial_no = '" . res($product[1][$i]) . "' AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."';";
+			// 				qdb($query);
 							
-							$query = "UPDATE inventory SET qty = qty - 1 WHERE serial_no = '" . res($product[2][$i]) . "' AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."';";
-							$result['query'] = qdb($query);
+			// 				$query = "UPDATE inventory SET qty = qty - 1 WHERE serial_no = '" . res($product[2][$i]) . "' AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."';";
+			// 				$result['query'] = qdb($query);
 							
-							//Error check and if the new item fails then default back to the original
-							if(!$result['query']) {
-								$result['error'] = 'Incomplete item detected in table.';
-							}
-						}
-						//Else everything matches so check other fields for changes
-					}
-				}
-			//Single item update or insert	
-			//Check if lot is false and that the serial is not empty
-			} else if($product[4] == 'false' && reset($product[2]) != '') {
-				$exists = checkNewItems(reset($product), reset($product[2]), $product[3]);
-				$incomplete = checkShipDate($so_number, reset($product), $product[3]);
+			// 				//Error check and if the new item fails then default back to the original
+			// 				if(!$result['query']) {
+			// 					$result['error'] = 'Incomplete item detected in table.';
+			// 				}
+			// 			}
+			// 			//Else everything matches so check other fields for changes
+			// 		}
+			// 	}
+			// //Single item update or insert	
+			// //Check if lot is false and that the serial is not empty
+			// } else if($product[4] == 'false' && reset($product[2]) != '') {
+			// 	$exists = checkNewItems(reset($product), reset($product[2]), $product[3]);
+			// 	$incomplete = checkShipDate($so_number, reset($product), $product[3]);
 				
-				//No items exists in the inventory so continue inserting of the item and there is still room to add more items
-				if($incomplete == 1 && $exists) {
+			// 	//No items exists in the inventory so continue inserting of the item and there is still room to add more items
+			// 	if($incomplete == 1 && $exists) {
 					
-					//Increase the qty received by 1 for each item received
-					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-					qdb($query);
+			// 		//Increase the qty received by 1 for each item received
+			// 		$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 		qdb($query);
 					
-					//Check if the order is complete by order number, partid and condition
-					checkSOShipped($so_number, reset($product), $product[3]);
+			// 		//Check if the order is complete by order number, partid and condition
+			// 		checkSOShipped($so_number, reset($product), $product[3]);
 					
-					//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-			 		$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE partid='". res(reset($product)) ."' AND serial_no = '". res(reset($product[2])) ."' AND item_condition = '". res($product[3]) ."';";
-					$result['query'] = qdb($query);
+			// 		//['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+			//  		$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE partid='". res(reset($product)) ."' AND serial_no = '". res(reset($product[2])) ."' AND item_condition = '". res($product[3]) ."';";
+			// 		$result['query'] = qdb($query);
 					
-				//The item already exists (Any updates will be made to the actual product EG Serial edits)
-				} else {
-					$result['error'] = 'Warning: Serial# ' . reset($product[2]) . ' does not exists or is out of stock, all other items have been saved.';
-				}
+			// 	//The item already exists (Any updates will be made to the actual product EG Serial edits)
+			// 	} else {
+			// 		$result['error'] = 'Warning: Serial# ' . reset($product[2]) . ' does not exists or is out of stock, all other items have been saved.';
+			// 	}
 			//Handler if lot is checked
-			} else if($product[4] == 'true') {
-				$result['type'] = 'Lot Item Detected';
+			// } else if($product[4] == 'true') {
+			// 	$result['type'] = 'Lot Item Detected';
 				
-				//Check and make sure the lot being made does not exceed the amount of actual items ordered
-				$curQty;
-				$query = "SELECT qty_shipped FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-				$query = qdb($query);
+			// 	//Check and make sure the lot being made does not exceed the amount of actual items ordered
+			// 	$curQty;
+			// 	$query = "SELECT qty_shipped FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 	$query = qdb($query);
 				
-				if (mysqli_num_rows($query)>0) {
-					$count = mysqli_fetch_assoc($query);
-					$curQty = $count['qty_shipped'];
-				}
+			// 	if (mysqli_num_rows($query)>0) {
+			// 		$count = mysqli_fetch_assoc($query);
+			// 		$curQty = $count['qty_shipped'];
+			// 	}
 				
-				//Add in the new lot that user is trying to add
-				$curQty += $product[5];
+			// 	//Add in the new lot that user is trying to add
+			// 	$curQty += $product[5];
 				
-				//Prevent user from adding more than the intended stock ordered on the SO
-				$query = "SELECT qty, CASE WHEN qty < '" . res($curQty) . "' THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-				$match = qdb($query);
+			// 	//Prevent user from adding more than the intended stock ordered on the SO
+			// 	$query = "SELECT qty, CASE WHEN qty < '" . res($curQty) . "' THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 	$match = qdb($query);
 				
-				$count = mysqli_fetch_assoc($match);
-				$matchCond = $count['is_matching'];
+			// 	$count = mysqli_fetch_assoc($match);
+			// 	$matchCond = $count['is_matching'];
 
-				if($matchCond == '0') {
+			// 	if($matchCond == '0') {
 					
-					$result['lot_received'] = $curQty;
+			// 		$result['lot_received'] = $curQty;
 
-					//Check if the item already exists in the inventory
-					$exists = checkNewItems(reset($product), 'null', $product[3]);
+			// 		//Check if the item already exists in the inventory
+			// 		$exists = checkNewItems(reset($product), 'null', $product[3]);
 					
-					//If exists then update the lot with no serial else insert
-					if($exists) {
+			// 		//If exists then update the lot with no serial else insert
+			// 		if($exists) {
 						
-						$query = "UPDATE sales_items SET qty_shipped = " . res($curQty) . " WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-						qdb($query);
+			// 			$query = "UPDATE sales_items SET qty_shipped = " . res($curQty) . " WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 			qdb($query);
 						
-						//Quick check to see if the inventory has been fulfilled
-						checkSOShipped($so_number, reset($product), $product[3]);
+			// 			//Quick check to see if the inventory has been fulfilled
+			// 			checkSOShipped($so_number, reset($product), $product[3]);
 						
-						//Check if the lot is not being compeletely sold then split and make a new record and deduct from that order for history tracking
-						$query = "SELECT qty, CASE WHEN qty = '" . res($curQty) . "' THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
-						$match = qdb($query);
+			// 			//Check if the lot is not being compeletely sold then split and make a new record and deduct from that order for history tracking
+			// 			$query = "SELECT qty, CASE WHEN qty = '" . res($curQty) . "' THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res(reset($product)) ." AND cond = '". res($product[3]) ."';";
+			// 			$match = qdb($query);
 						
-						$count = mysqli_fetch_assoc($match);
-						$leftovers = $count['is_matching'];
+			// 			$count = mysqli_fetch_assoc($match);
+			// 			$leftovers = $count['is_matching'];
 						
-						//Quantity shipped matches the entire lot inventory, no splitting
-						//Is Null prevents partial lot later entire lot from updating the split shipment
-						if($leftovers == 1) {
-							$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) .", status = 'outbound', last_sale = '". res($so_number) ."'  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
-							$result['query'] = qdb($query);
-						//Quanity does not match split the order out and create a new row for the sold item
-						} else {
-							//This updates the main unsold items, hence IS NULL for the last sales order is a must
-							$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) ."  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
-							$result['lot_split'] = qdb($query);
+			// 			//Quantity shipped matches the entire lot inventory, no splitting
+			// 			//Is Null prevents partial lot later entire lot from updating the split shipment
+			// 			if($leftovers == 1) {
+			// 				$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) .", status = 'outbound', last_sale = '". res($so_number) ."'  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
+			// 				$result['query'] = qdb($query);
+			// 			//Quanity does not match split the order out and create a new row for the sold item
+			// 			} else {
+			// 				//This updates the main unsold items, hence IS NULL for the last sales order is a must
+			// 				$query  = "UPDATE inventory SET qty = qty -  ". res($product[5]) ."  WHERE serial_no IS NULL AND partid = ". res(reset($product)) ." AND item_condition = '". res($product[3]) ."' AND last_sale IS NULL;";
+			// 				$result['lot_split'] = qdb($query);
 
-							$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
-							$result['lot_split_add'] = qdb($query);
-							$result['query'] = true;
+			// 				$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES (NULL, '". res($product[5]) ."','". res(reset($product)) ."', '". res($product[3]) ."', 'received', '', NULL, '". res($so_number) ."', NULL, '1', CAST('". res(date("Y-m-d")) ."' AS DATE), NULL);";
+			// 				$result['lot_split_add'] = qdb($query);
+			// 				$result['query'] = true;
 							
-							$id = qid();
+			// 				$id = qid();
 
-							//Split was successful? set it up as compelete and outbound
-							if($result['lot_split_add'] && $id != ''){
-								$query  = "UPDATE inventory SET qty = 0, status = 'outbound'  WHERE id = " . res($id) . ";";
-								$result['lot_split'] = qdb($query);
-								$result['query'] = true;
-							}
-						}
-					} else {
-						$result['error'] = 'Warning: Lot does not exists or is out of stock, all other items have been saved.';
-					}
-				} else {
-					$result['error'] = 'Lot exceeds the amount ordered.';
-				}
-			}
+			// 				//Split was successful? set it up as compelete and outbound
+			// 				if($result['lot_split_add'] && $id != ''){
+			// 					$query  = "UPDATE inventory SET qty = 0, status = 'outbound'  WHERE id = " . res($id) . ";";
+			// 					$result['lot_split'] = qdb($query);
+			// 					$result['query'] = true;
+			// 				}
+			// 			}
+			// 		} else {
+			// 			$result['error'] = 'Warning: Lot does not exists or is out of stock, all other items have been saved.';
+			// 		}
+			// 	} else {
+			// 		$result['error'] = 'Lot exceeds the amount ordered.';
+			// 	}
+			// }
 			//Else do not touch the item
 			
 			//This query updates and saves the box as closed only if there are no errors in the order
-			if($result['error'] == '') {
+			//if($result['error'] == '') {
 				foreach($product[6] as $box) {
+					$check;
 					//Check and only ship boxes that have something placed into them
 					$query = "SELECT * FROM package_contents WHERE packageid = '".res($box)."';";
 					$data = qdb($query);
 					
 					if (mysqli_num_rows($data)>0) {
 						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
-						qdb($query);
+						$check = qdb($query);
 					}
 				}
-			}
+				
+				$result['timestamp'] = $date;
+				$result['on'] = $so_number;
+			//}
 		}
 		
 		return $result;

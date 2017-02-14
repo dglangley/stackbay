@@ -1,9 +1,14 @@
 <?php
 	include '../inc/dbconnect.php';
 	include '../inc/format_date.php';
+	include '../inc/cmp.php';
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
+	$scope = '';
+	if (isset($_REQUEST['scope'])) { $scope = trim($_REQUEST['scope']); }
+	if ($scope=='S' OR $scope=='Sale' OR $scope=='Sales') { $scope = 'sales'; }
+	else if ($scope=='P' OR $scope=='Purchase' OR $scope=='Purchases') { $scope = 'purchases'; }
 	$add_custom = false;
 	if (isset($_REQUEST['add_custom'])) { $add_custom = $_REQUEST['add_custom']; }
 
@@ -83,17 +88,59 @@
 
 		krsort($firsts);
 	} else {
-		$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
-		$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
-		$query .= "AND (source IS NULL OR (LENGTH(source)<>2 AND source NOT RLIKE '^[0-9]+$')) ";//this is to filter out ebay results and broker-sites that are amea-pulled
-		if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
-		$query .= "GROUP BY companyid ORDER BY n DESC; ";
-		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$arr = array('id'=>$r['id'],'text'=>$r['name']);
+		if (! $scope OR $scope=='search') {
+			$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
+			$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
+			$query .= "AND (source IS NULL OR (LENGTH(source)<>2 AND source NOT RLIKE '^[0-9]+$')) ";//this is to filter out ebay results and broker-sites that are amea-pulled
+			if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
+			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
 
-			$firsts[$r['name'].'.'.$r['id']] = $arr;
+				$firsts[$key] = $arr;
+			}
 		}
+
+		if ($scope=='orders' OR $scope=='sales') {
+			$query = "SELECT companyid id, name, COUNT(so_number) n FROM sales_orders, companies ";
+			$query .= "WHERE created >= '".$past_date."' AND sales_orders.companyid = companies.id ";
+			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
+			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
+
+				// sum results if already present
+				if (isset($firsts[$key])) {
+					$firsts[$key]['n'] += $r['n'];
+				} else {
+					$firsts[$key] = $arr;
+				}
+			}
+		}
+
+		if ($scope=='orders' OR $scope=='purchases') {
+			$query = "SELECT companyid id, name, COUNT(po_number) n FROM purchase_orders, companies ";
+			$query .= "WHERE created >= '".$past_date."' AND purchase_orders.companyid = companies.id ";
+			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
+			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
+
+				// sum results if already present
+				if (isset($firsts[$key])) {
+					$firsts[$key]['n'] += $r['n'];
+				} else {
+					$firsts[$key] = $arr;
+				}
+			}
+		}
+		uasort($firsts,'cmp_n');
 	}
 
 //now sorted only within scope of a user search ($q)
