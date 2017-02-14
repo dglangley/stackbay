@@ -24,7 +24,7 @@ body{
 	overflow: auto;
 }
 
-.left-side-main .select2{
+.left-side-main .select2, .table-header .select2 {
 	width:100% !important;
 	overflow:hidden;
 }
@@ -78,17 +78,6 @@ body{
 	font-size:17pt;
 	padding-bottom: 5px;
 }
-
-/* all */
-::-webkit-input-placeholder { text-transform: uppercase; }
-::-moz-placeholder { text-transform: uppercase; } /* firefox 19+ */
-:-ms-input-placeholder { text-transform: uppercase; } /* ie */
-input:-moz-placeholder { text-transform: uppercase; }
-
-/*.forms_section .select2-selection{*/
-/*	height:34px;*/
-	
-/*}*/
 
 .forms_section .select2-container{
 	width:100%;
@@ -246,6 +235,7 @@ input:-moz-placeholder { text-transform: uppercase; }
 .infiniteSerials input {
 	text-transform: uppercase;
 }
+
 /* David additions */
 
 #order_header .btn-flat {

@@ -328,6 +328,8 @@
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
+				//Check to see if an order number exists or is this a new order
+				var po_number = getUrlParameter('on');
 				var company = $(this).val();
 				// update global
 				if(order_type == "Purchase"){
@@ -513,6 +515,8 @@
 				// $("#contactid").initSelect2("/json/contacts.php","Select Contact",25)
 				// alert(company);
 				// //Populate the terms with the company preferences
+				//Check if a order number exists
+				
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -524,7 +528,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						$('#terms_div').replaceWith(result);
+						//Run this if this is a new PO otherwise the items are preset and we don't want to change terms
+						if(po_number == null)
+							$('#terms_div').replaceWith(result);
 						console.log("JSON company terms dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -1305,6 +1311,7 @@
 				if($(".search_lines").length > 0){
 					line_item_submit();
 				}
+				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					//var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
@@ -1456,8 +1463,10 @@
 						},
 					});
 				} else if($('.lazy-entry:visible').length > 0) {
-					alert("Please save all changes before updating.");
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Please save all changes before updating.", false);
 				} else {
+					if(isValid)
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","PO can not be created without any items.<br><br> Please add items before creating the PO.", false);
 					$(window).scrollTop();
 				}
 			});
@@ -1793,7 +1802,7 @@
 								$serial.attr("data-saved", serial);
 								modalAlertShow('Success', 'Item has been updated.', false);
 							} else {
-								modalAlertShow('Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
+								modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
 								if(savedSerial != '') {
 									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
 								}
@@ -1808,7 +1817,7 @@
 						
 					});
 	    		} else {
-	    			modalAlertShow('Missing Fields', "Location can not be empty.", false);
+	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		}
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
