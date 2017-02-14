@@ -70,9 +70,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$result['query'] = false;
 			}
 		} else {
-			$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
-			$result['query'] = qdb($query) or die(qe());
-			$result['saved'] = $serial;
+			$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
+			$check = qdb($query);
+
+			if($check->num_rows == 0) {
+				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
+				$result['query'] = qdb($query) or die(qe());
+				$result['saved'] = $serial;
+			} else {
+				$result['query'] = false;
+			}
 		}
 		
 		return $result;
