@@ -149,7 +149,7 @@
         $service = prep($service);
         $account = prep($account);
         $assoc_order = prep($assoc_order);
-        $tracking = prep($tracking);
+        
         
         
         if($order_type=="Purchase"){
@@ -187,6 +187,7 @@
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
+//David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
 //            $macro .= updateNull('ref_ln','NULL');
             $macro .= updateNull('bill_to_id',$bill);
         }
@@ -203,7 +204,7 @@
         
         //Query the database
 
-        qdb($macro) OR die(qe());
+        $form_result = qdb($macro) OR die(qe());
     }
     
 
@@ -252,7 +253,7 @@
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
-                qdb($update);
+                $line_update = qdb($update);
             }
         }
     }
@@ -268,8 +269,9 @@
         'error' => qe(),
         'stupid' => $stupid,
         'update' => $macro,
-        'trek' => $tracking,
-        'input' => $insert
+        'update_result' => $update_result,
+        'input' => $insert,
+        'qar' => qar()
     );
     
     echo json_encode($form);
