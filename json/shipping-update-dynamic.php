@@ -22,7 +22,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	//This is a list of everything
 	$partid = grab('partid');
-	$serial = grab('serial');
+	$serial = strtoupper(grab('serial'));
 	$condition = grab('condition');
 	$so_number = grab('so_number');
 	$package = grab('package_no');

@@ -24,7 +24,7 @@ body{
 	overflow: auto;
 }
 
-.left-side-main .select2{
+.left-side-main .select2, .table-header .select2 {
 	width:100% !important;
 	overflow:hidden;
 }
@@ -243,8 +243,8 @@ body{
     top: -5px;
 }
 
-.shoot_me {
-	display: none;
+.infiniteSerials input {
+	text-transform: uppercase;
 }
 
 /* David additions */
@@ -298,9 +298,6 @@ body{
 		/*border-top-color: #;*/
 		border-width: 36px;
 		margin-left: -36px;
-	}
-	.shoot_me {
-		display: block;
 	}
 }
 /*End shipping.php*/

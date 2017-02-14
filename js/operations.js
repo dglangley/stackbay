@@ -226,6 +226,8 @@
 						//If this is an edit page, limit all the appropriate dropdowns
 						// alert("success");
 						if (page == 'order'){
+							
+							
 							var company = $("#companyid").val();
 
 							//Initialize each of the select2 fields when the left side loads.
@@ -326,6 +328,8 @@
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
+				//Check to see if an order number exists or is this a new order
+				var po_number = getUrlParameter('on');
 				var company = $(this).val();
 				// update global
 				if(order_type == "Purchase"){
@@ -444,7 +448,7 @@
 						data: {
 							"field":"services",
 							"limit": $("#carrier").val(),/*new_account,*/
-							"size": "col-sm-4",
+							"size": "col-sm-8",
 							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
@@ -511,6 +515,8 @@
 				// $("#contactid").initSelect2("/json/contacts.php","Select Contact",25)
 				// alert(company);
 				// //Populate the terms with the company preferences
+				//Check if a order number exists
+				
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -522,7 +528,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						$('#terms_div').replaceWith(result);
+						//Run this if this is a new PO otherwise the items are preset and we don't want to change terms
+						if(po_number == null)
+							$('#terms_div').replaceWith(result);
 						console.log("JSON company terms dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
@@ -1068,10 +1076,13 @@
 						"zip" : zip,
 						"id" : id
 				    },function(data){
-				    	
+				    	console.log("Logging the ID (there should be none): "+id);
 				    	console.log("Return from Address Submission: "+data);
 				    	
-				    	if (!id){
+				    	if (!isNaN(id)){
+				    		data = id;
+				    	}
+				    	// if (!id){
 				    		//If it didn't have an update, it is a new field
 					    	if (field == "ship_to"){
 					    		// $("#select2-ship_to-container").html(line_1);
@@ -1085,8 +1096,7 @@
 										option.appendTo($("#ship_to"));
 										/* Let select2 do whatever it likes with this */
 										$("#ship_to").trigger('change');
-					    		
-					    		// updateShipTo();
+					    				console.log("Ship to updated to: "+$("#ship_to").val())
 					    		//$("#ship_display").html();	
 					    	}
 					    	else{
@@ -1099,24 +1109,28 @@
 										option.appendTo($("#bill_to"));
 										/* Let select2 do whatever it likes with this */
 										$("#bill_to").trigger('change');
+										console.log("Bill to updated to: "+$("#bill_to").val());
+					    				updateShipTo();
 					    	}
-				    	}
-				    	else{
-				    		//Otherwise, this is an old field
-				    		if (field == "ship_to"){
-				    			$("#select2-ship_to-container").text(line_1);
-				    			if ($("#mismo").prop("checked")){
-				    				$("#select2-bill_to-container").text(line_1);
-				    			}
-				    		}
-				    		else{
-				    			$("#select2-bill_to-container").text(line_1);
-			    				if ($("#mismo").prop("checked")){
-				    				$("#select2-ship_to-container").text(line_1);
-				    			}
-				    		}
+				    	// }
+				    	// else{
+				    	// 	//Otherwise, this is an old field
+				    	// 	if (field == "ship_to"){
+				    	// 		$("#select2-ship_to-container").text(line_1);
+				    	// 		if ($("#mismo").prop("checked")){
+				    	// 			$("#select2-bill_to-container").text(line_1);
+				    	// 		}
+				    	// 		console.log("oh shit");
+				    	// 	}
+				    	// 	else{
+				    	// 		$("#select2-bill_to-container").text(line_1);
+			    		// 		if ($("#mismo").prop("checked")){
+				    	// 			$("#select2-ship_to-container").text(line_1);
+				    	// 		}
+				    	// 		console.log("This didn't ");
+				    	// 	}
 
-				    	}
+				    	// }
 				    	
 				    	
 				    	$('.modal').modal('hide');
@@ -1297,6 +1311,7 @@
 				if($(".search_lines").length > 0){
 					line_item_submit();
 				}
+				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
 					//var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
@@ -1332,9 +1347,6 @@
 					else{
 						var account = '';
 					}
-					var pri_notes = $('#private_notes').val();
-					var pub_notes = $('#public_notes').val();
-					//var warranty = $('.warranty').val();
 
 					var filename;
 					/* David's file uploader */
@@ -1451,8 +1463,10 @@
 						},
 					});
 				} else if($('.lazy-entry:visible').length > 0) {
-					alert("Please save all changes before updating.");
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Please save all changes before updating.", false);
 				} else {
+					if(isValid)
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","PO can not be created without any items.<br><br> Please add items before creating the PO.", false);
 					$(window).scrollTop();
 				}
 			});
@@ -1786,9 +1800,9 @@
 
 							} else if(result['saved']) {
 								$serial.attr("data-saved", serial);
-								alert('Item has been updated.');
+								modalAlertShow('Success', 'Item has been updated.', false);
 							} else {
-								alert('Serial already exists for this item.');
+								modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
 								if(savedSerial != '') {
 									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
 								}
@@ -1803,7 +1817,7 @@
 						
 					});
 	    		} else {
-	    			alert("Location can not be empty.");
+	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		}
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);
@@ -1887,10 +1901,6 @@
 		    } else if(serial == '') {
 		    	modalAlertShow('Error', 'Serial is missing.', false);
 		    } 
-		    
-		 //   $("body").animate({
-			//     height: $("#div").height()
-			// },600);
 		
 		}
 //This function also handles the functionality for the shipping page

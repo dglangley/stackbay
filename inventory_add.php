@@ -245,7 +245,7 @@
 										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
-										        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-check fa-4" aria-hidden="true"></i></button>
+										        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
 										    </span>
 							            </div>
 									</td>

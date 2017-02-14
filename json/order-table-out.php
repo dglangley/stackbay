@@ -101,7 +101,7 @@
 							</a>
 							
 							<a class='btn-flat success pull-right line_item_submit' style='padding: 7px;'>
-								<i class='fa fa-check fa-4' aria-hidden='true'></i>
+								<i class='fa fa-save fa-4' aria-hidden='true'></i>
 							</a>
 						</div>
 					</td>
