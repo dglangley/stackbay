@@ -11,6 +11,10 @@ body{
 	margin: 0;
 }
 
+.remove-margin {
+	margin: 0;
+}
+
 /*.left-side-main .container-fluid.pad-wrapper{*/
 /*	height: 100%;*/
 /*}*/

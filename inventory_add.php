@@ -169,9 +169,6 @@
 				<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
 			</div>
 			<div class="col-sm-4">
-				<!--<button class="btn-flat pull-right" id = "save_button_inventory" style="margin-top:2%;margin-bottom:2%;">-->
-				<!--	Complete-->
-				<!--</button>-->
 			</div>
 		</div>
 		

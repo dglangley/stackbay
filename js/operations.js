@@ -665,6 +665,7 @@
 			}
 			function updateTotal(){
 				var total = 0.00;
+				// #right_side_main > tr.lazy-entry > td:nth-child(8) > input
 				$(".easy-output").each(function() {
 				    var qty = $(this).find(".line_qty").data('qty');
 				    var cost = $(this).find(".line_price").text();
@@ -800,6 +801,8 @@
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = $(this).closest("tr").find(".line_linext").text();
+				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
 			});
 
 			$(document).on("dblclick",".easy-output td",function() {
@@ -807,6 +810,8 @@
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = $(this).closest("tr").find(".line_linext").text();
+				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
 			});
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
@@ -847,7 +852,6 @@
 			
 //Function to submit the individual line item edits
 			function line_item_submit(){
-				
 				
 				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
 				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
@@ -1511,16 +1515,7 @@
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
 					$(this).closest("body").children("#view-head").show();
-					// if ($(this).closest(".shipping-dash").hasClass("sd-sales")){
-					// 	$("#view-head-text").text(title);
-					// 	$(this).closest("body").find("button[data-value='Sales']").addClass("active");
-					// 	$(this).closest("body").find("button[data-value='Purchases']").removeClass("active");
-					// }
-					// else{
-					// 	$("#view-head-text").text('Purchase Orders');
-					// 	$(this).closest("body").find("button[data-value='Purchases']").addClass("active");
-					// 	$(this).closest("body").find("button[data-value='Sales']").removeClass("active");
-					// }
+
 				}
 				else{
 					$(this).closest("body").children(".table-header").hide();
@@ -1746,7 +1741,7 @@
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
 								} else if(qty <= 0) {
 									if(localStorage.getItem(result['partid']) != 'shown'){
-								    	alert('Serials Exceed Amount of Items Purchased in the Purchase Order. Please update Purchase Order. Item will be added to Inventory');
+								    	modalAlertShow('Item Already Received!','Item "'+part+'" has already been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
 								    	localStorage.setItem(result['partid'],'shown')	
 									}
 							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
@@ -1794,6 +1789,9 @@
 								alert('Item has been updated.');
 							} else {
 								alert('Serial already exists for this item.');
+								if(savedSerial != '') {
+									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
+								}
 							}
 							window.onbeforeunload = null;
 							
@@ -1864,7 +1862,6 @@
 							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
 							    	
 							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
-							    	//alert('Part: ' + part + ' has been shipped.');
 									modalAlertShow('Item Shipped!','Item "'+part+'" has now been SHIPPED in full!',false);
 							    }
 							    
@@ -1885,11 +1882,15 @@
 							},	
 					});
 				} else {
-					alert('A Box required.');
+					modalAlertShow('A Box is required.', false);
 				}
 		    } else if(serial == '') {
-		    	alert('Serial Missing');
+		    	modalAlertShow('Error', 'Serial is missing.', false);
 		    } 
+		    
+		 //   $("body").animate({
+			//     height: $("#div").height()
+			// },600);
 		
 		}
 //This function also handles the functionality for the shipping page
