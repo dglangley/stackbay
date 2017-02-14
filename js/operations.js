@@ -326,6 +326,8 @@
 		
 		//If the company information changes, run
 			$(document).on("change","#companyid",function() {
+				//Check to see if an order number exists or is this a new order
+				var po_number = getUrlParameter('on');
 				var company = $(this).val();
 				// update global
 				if(order_type == "Purchase"){
@@ -444,7 +446,7 @@
 						data: {
 							"field":"services",
 							"limit": $("#carrier").val(),/*new_account,*/
-							"size": "col-sm-4",
+							"size": "col-sm-8",
 							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
@@ -511,6 +513,8 @@
 				// $("#contactid").initSelect2("/json/contacts.php","Select Contact",25)
 				// alert(company);
 				// //Populate the terms with the company preferences
+				//Check if a order number exists
+				
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -522,7 +526,9 @@
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
-						$('#terms_div').replaceWith(result);
+						//Run this if this is a new PO otherwise the items are preset and we don't want to change terms
+						if(po_number == null)
+							$('#terms_div').replaceWith(result);
 						console.log("JSON company terms dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {

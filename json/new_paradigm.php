@@ -146,7 +146,7 @@ function search_row(){
         $line .= "
                 <td colspan='2' id = 'check_collumn'> 
                     <a class='btn-sm btn-flat success pull-right multipart_sub' >
-                    <i class='fa fa-check fa-4' aria-hidden='true'></i></a>
+                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
                 </td>";
 
     $line .= "</tr>";
