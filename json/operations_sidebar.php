@@ -129,7 +129,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>
-						<label for='bill_to'>Remit to: [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='bill_to'>Remit to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>

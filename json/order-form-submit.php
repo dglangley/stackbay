@@ -163,7 +163,7 @@
 
             $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
             `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $rep, $cid, $contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active')";
+            ($created_by, $rep, $cid, $contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
 
     //Run the update
@@ -187,7 +187,7 @@
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
-            $macro .= updateNull('ref_ln','Null');
+//            $macro .= updateNull('ref_ln','NULL');
             $macro .= updateNull('bill_to_id',$bill);
         }
         $macro .= updateNull('ship_to_id',$ship);

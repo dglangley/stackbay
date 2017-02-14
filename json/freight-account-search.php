@@ -5,23 +5,32 @@
 	include_once '../inc/keywords.php';
 	include_once '../inc/getContact.php';
 	include_once '../inc/getContacts.php';
+	include_once '../inc/getCompany.php';
 	include_once '../inc/form_handle.php';
 
     $q = grab('q');
 
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
-    $companyid = prep(grab('limit'),"'%'"); 
+    $companyid = grab('limit');
+    $cid = prep($companyid,"'0'"); 
+    $carrierid = prep(grab('carrierid'),"'0'"); 
     $output = array();
     
-    $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '%$q%' AND `companyid` LIKE $companyid;";
+    $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '".res($q)."%' ";
+	if ($carrierid) { $query .= "AND `carrierid` = $carrierid "; }
+	$query .= "ORDER BY IF(`companyid`=$cid,0,1), `account_no`;";
     $results = qdb($query);
     
     if (isset($results)){
         foreach($results as $row){
+			$account = $row['account_no'];
+			if ($row['companyid']<>$companyid) {
+				$account .= ' '.getCompany($row['companyid']);
+			}
             $line = array(
                 'id' => $row['id'], 
-                'text' => $row['account_no']
+                'text' => $account,
             );
             $output[] = $line;
         }
@@ -29,9 +38,10 @@
 
     
     
+/*
     //Then append the rest of the contacts ordered by alphabetical
     $secondary = " SELECT DISTINCT * FROM `freight_accounts`
-    WHERE `account_no` LIKE '%$q%' 
+    WHERE `account_no` LIKE '$q%' 
     ORDER BY `account_no`;";
     $second = qdb($secondary);
     // $output[] = array(
@@ -48,6 +58,8 @@
             $output[] = $line;
         }
     }
+*/
+	// always add Prepaid option
     $output[] = array(
             'id' => "null",
             'text' => "PREPAID"
