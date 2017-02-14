@@ -136,7 +136,7 @@
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
-			<li class="dropdown<?php if ($SEARCH_MODE=='/') { echo ' active'; } ?>">
+			<li class="dropdown<?php if ($SEARCH_MODE=='/' OR $SEARCH_MODE=='/order_form.php') { echo ' active'; } ?>">
 				<a href="javascript:void(0);" data-action="/" class="mode-tab dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false"><i class="fa fa-cubes"></i> <span>Sales</span> <b class="caret"></b></a>
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
 					<li>
@@ -144,21 +144,15 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-money"></i> Sales <span class="pull-right"><a href="/order_form.php?ps=Sale" title="Start New SO"><i class="fa fa-plus"></i></a></span></h4>
+                                    <h4 class="megamenu-block-title"><i class="fa fa-money"></i> Sales <span class="pull-right"><a href="/order_form.php?ps=Sale" onClick="setSearchMode('/order_form.php')" title="Start New SO"><i class="fa fa-plus"></i></a></span></h4>
                                     <ul id="sales-orders-list">
-<!--
-                                        <li><a href="/order_form.php?ps=Sale"><i class="fa fa-plus"></i> New...</a></li>
--->
                                     </ul>
                                 </div>
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-shopping-cart"></i> Purchases <span class="pull-right"><a href="/order_form.php?ps=Purchase" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
+                                    <h4 class="megamenu-block-title"><i class="fa fa-shopping-cart"></i> Purchases <span class="pull-right"><a href="/order_form.php?ps=Purchase" onClick="setSearchMode('/order_form.php')" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
                                     <ul id="purchase-orders-list">
-<!--
-                                        <li><a href="/order_form.php?ps=Purchase"><i class="fa fa-plus"></i> New...</a></li>
--->
                                     </ul>
                                 </div>
                             </div>

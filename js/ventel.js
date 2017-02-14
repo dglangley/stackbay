@@ -709,7 +709,7 @@
 		$(".mode-tab").click(function() {
 			var form = $(this).closest("form");
 			// remember the user's selection for next time they open a page
-			$.cookie("SEARCH_MODE",$(this).data('action'));
+			setSearchMode($(this).data('action'));
 			form.prop('action',$(this).data('action'));
 			form.submit();
 		});
@@ -1619,6 +1619,10 @@
                 console.log("Details: " + desc + "\nError:" + err);
 			}
 		});
+	}
+	// sets action url on search mode of navbar tabs
+	function setSearchMode(action) {
+		$.cookie("SEARCH_MODE",action);
 	}
 
 	Dropzone.autoDiscover = false;

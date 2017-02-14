@@ -665,6 +665,7 @@
 			}
 			function updateTotal(){
 				var total = 0.00;
+				// #right_side_main > tr.lazy-entry > td:nth-child(8) > input
 				$(".easy-output").each(function() {
 				    var qty = $(this).find(".line_qty").data('qty');
 				    var cost = $(this).find(".line_price").text();
@@ -800,6 +801,8 @@
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = $(this).closest("tr").find(".line_linext").text();
+				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
 			});
 
 			$(document).on("dblclick",".easy-output td",function() {
@@ -807,6 +810,8 @@
 				$(this).closest("tr").next().show()
 				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = $(this).closest("tr").find(".line_linext").text();
+				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
 			});
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
@@ -847,7 +852,6 @@
 			
 //Function to submit the individual line item edits
 			function line_item_submit(){
-				
 				
 				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
 				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
@@ -1180,7 +1184,6 @@
 
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
-/*
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
@@ -1190,7 +1193,6 @@
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
 					$("#modal-account").modal('show');
 				}
-*/
 			});
 			
 //Account modal handling function
