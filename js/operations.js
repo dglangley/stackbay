@@ -1186,7 +1186,6 @@
 
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
-/*
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
@@ -1196,7 +1195,6 @@
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
 					$("#modal-account").modal('show');
 				}
-*/
 			});
 			
 //Account modal handling function
@@ -1790,9 +1788,9 @@
 
 							} else if(result['saved']) {
 								$serial.attr("data-saved", serial);
-								alert('Item has been updated.');
+								modalAlertShow('Success', 'Item has been updated.', false);
 							} else {
-								alert('Serial already exists for this item.');
+								modalAlertShow('Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
 								if(savedSerial != '') {
 									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
 								}
@@ -1807,7 +1805,7 @@
 						
 					});
 	    		} else {
-	    			alert("Location can not be empty.");
+	    			modalAlertShow('Missing Fields', "Location can not be empty.", false);
 	    		}
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+po_number+'&condition='+condition+'&package_no='+package_no);

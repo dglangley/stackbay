@@ -23,8 +23,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//This is a list of everything
 	$partid = grab('partid');
 	$condition = grab('condition');
-	$serial = grab('serial');
-	$savedSerial = grab('savedSerial');
+	$serial = strtoupper(grab('serial'));
+	$savedSerial = strtoupper(grab('savedSerial'));
 	$po_number = grab('po_number');
 	$place = grab('place');
 	$instance = grab('instance');

@@ -243,10 +243,9 @@ input:-moz-placeholder { text-transform: uppercase; }
     top: -5px;
 }
 
-.shoot_me {
-	display: none;
+.infiniteSerials input {
+	text-transform: uppercase;
 }
-
 /* David additions */
 
 #order_header .btn-flat {
@@ -298,9 +297,6 @@ input:-moz-placeholder { text-transform: uppercase; }
 		/*border-top-color: #;*/
 		border-width: 36px;
 		margin-left: -36px;
-	}
-	.shoot_me {
-		display: block;
 	}
 }
 /*End shipping.php*/

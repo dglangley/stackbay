@@ -6,16 +6,16 @@
 		'left' =>
 			array(
 
-				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','alias'=>''),
-				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','alias'=>'/job.php'),
-				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i>','title'=>'Repairs','alias'=>''),
-				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i>','title'=>'Shipping','alias'=>''),
-				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory','alias'=>''),
+				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','aliases'=>array()),
+				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','aliases'=>array('/job.php')),
+				array('action'=>'#','image'=>'<i class="fa fa-wrench"></i>','title'=>'Repairs','aliases'=>array()),
+				array('action'=>'/shipping_home.php','image'=>'<i class="fa fa-truck"></i>','title'=>'Shipping','aliases'=>array()),
+				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory','aliases'=>array()),
 			),
 		'right' =>
 			array(
-				/*array('action'=>'/','image'=>'<i class="fa fa-cubes"></i>','title'=>'Sales','alias'=>''),*/
-				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i>','title'=>'Accounts','alias'=>''),
+				/*array('action'=>'/','image'=>'<i class="fa fa-cubes"></i>','title'=>'Sales','aliases'=>array()),*/
+				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i>','title'=>'Accounts','aliases'=>array()),
 			),
 	);
 
@@ -36,7 +36,7 @@
 		foreach ($tabs_arr as $tab) {
 			// set addl class to 'active' when tab is selected ($selected_tab)
 			$cls = '';
-			if ($tab['action']==$selected_tab OR $tab['alias']==$selected_tab) { $cls = ' active'; }
+			if ($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) { $cls = ' active'; }
 
 			$tabs .= '
             <li class="hidden-xs hidden-sm'.$cls.'">
