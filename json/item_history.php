@@ -140,7 +140,7 @@
 						$c[$r['field_changed']] = $r['field_changed'];
 						continue 2;
 					case 'new':
-						$string = "Item entered into system on ".format_date($r['date_changed'], 'm/d/Y');
+						$string = "Item entered into system on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
 						if($r['userid']){
 							$string .= " by ".getContact($r['userid']);
 						}

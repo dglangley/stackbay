@@ -1926,10 +1926,6 @@
 		    } else if(serial == '') {
 		    	modalAlertShow('Error', 'Serial is missing.', false);
 		    } 
-		    
-		 //   $("body").animate({
-			//     height: $("#div").height()
-			// },600);
 		
 		}
 //This function also handles the functionality for the shipping page
