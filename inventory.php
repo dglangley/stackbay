@@ -86,7 +86,7 @@
 		   margin: 0 !important;
 		}
 		
-		.input-group.datepicker-date {
+		.table-head .input-group.datepicker-date {
 			width: auto;
 			min-width: auto;
 			max-width: 100%;

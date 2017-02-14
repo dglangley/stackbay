@@ -716,7 +716,7 @@
 								if (result){
 									$('#search_input').append(result);
 									$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
-									// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+									//var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
 									if($(".easy-output").length > 0){
 										$('#totals_row').find("input[name='np_total']").val(updateTotal());
 										$('#totals_row').show();
