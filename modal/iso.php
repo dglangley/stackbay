@@ -19,17 +19,18 @@
 				<!-- Materials pane -->
 				<div class="tab-pane active" id="iso_quality">
 				    <form action="#" method="post" style="padding: 7px;">
-						<b>Summary of Comments</b>
+						<b class="iso_content_title"></b><br><br>
 						<table class="table table-hover table-striped table-condensed">
 							<thead>
 								<tr>
+									<th>Box</th>
 									<th>Part</th>
 									<th>Serial</th>
 									<th>Comments</th>
 								</tr>
 							</thead>
 							<tbody class='iso_broken_parts'>
-								<tr><td><b>No Defects/Damage in Order</b></td><td></td><td></td></tr>
+								<!--<tr><td><b>No Defects/Damage in Order</b></td><td></td><td></td></tr>-->
 							</tbody>
 						</table>
 						
@@ -37,7 +38,8 @@
 							<div class="col-md-12">
 								The list above accurately reflects the part number, HECI, cosmetic condition and component condition for this shipment.<br><br>
 								<span class='pull-right'><b>Approved by</b>: <?= $U['name']; ?></span><br><br>
-								<button class="btn-flat primary btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Confirm</button>
+								<button class="btn-flat success btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Approve</button>
+								<button class="btn-flat primary btn-sm pull-right btn_iso_parts_continue" data-form="" data-callback="" data-element="">Next</button>
 							</div>
 						</div>
 					</form>
@@ -74,8 +76,8 @@
 
 						<div class='row'>
 							<div class="col-md-12">
-								<button class="btn-flat primary btn-sm pull-right btn_iso_parts" disabled data-form="" data-callback="" data-element="">Save & Print</button>
-								<button class="btn-flat success btn-sm pull-right btn_update" id='btn_update' data-form="" data-callback="" data-element="" style='margin-right: 10px;'>Save</button>
+								<button class="btn-flat primary btn-sm pull-right btn_update" data-form="" data-callback="" data-element="" data-print="print">Save & Print</button>
+								<button class="btn-flat success btn-sm pull-right btn_update" data-form="" data-callback="" data-print="" data-element="" style='margin-right: 10px;'>Save</button>
 							</div>
 						</div>
 					</form>

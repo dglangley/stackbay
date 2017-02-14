@@ -114,11 +114,11 @@
 	}
 	
 	function format($partid){
-		$parts = reset(hecidb($partid, 'id'));
-	    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci'].' &nbsp; '.$parts['Manf'].' '.$parts['system'].' '.$parts['Descr']."</span>";
-	    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+		$r = reset(hecidb($partid, 'id'));
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
-	    return $name;
+	    return $display;
 	}
 	
 	
