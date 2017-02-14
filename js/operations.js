@@ -1180,7 +1180,6 @@
 
 //Account Modal Popup Instigation
 			$(document).on("change","#account_select",function() {
-/*
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
@@ -1190,7 +1189,6 @@
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
 					$("#modal-account").modal('show');
 				}
-*/
 			});
 			
 //Account modal handling function
