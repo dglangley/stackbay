@@ -2466,7 +2466,7 @@
 					// alert(final);
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
-					.addClass("active");
+					.addClass("active").removeClass('btn-grey').addClass('btn-secondary');
 					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
 					$(".active_box_selector").each(function(){
 						$(this).children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");		
