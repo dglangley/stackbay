@@ -313,208 +313,212 @@
 		<?php endif; ?>
 
 		<div class="loading_element">
-			<!--================== Begin Left Half ===================-->
-			<div class="left-side-main col-sm-2">
-				<!-- Everything here is put out by the order creation ajax script -->
-			</div>
-			<!--======================= End Left half ======================-->
-			
-			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
-				<div class = 'row'>
-					<div class = 'col-sm-3'>
-						<h3>Items to be Shipped</h3>
-					</div>
-					<div class="col-sm-9">
-						<div class="btn-group box_group" style = "padding-bottom:16px;">
-							<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
-								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
-							</button>
-							<?php
-								function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
+			<div class="row remove-margin">
+				<!--================== Begin Left Half ===================-->
+				<div class="left-side-main col-sm-2">
+					<!-- Everything here is put out by the order creation ajax script -->
+				</div>
+				<!--======================= End Left half ======================-->
+				
+				<div class="col-sm-10 shipping-list" style="padding-top: 20px">
+					<div class = 'row'>
+						<div class = 'col-sm-3'>
+							<h3>Items to be Shipped</h3>
+						</div>
+						<div class="col-sm-9">
+							<div class="btn-group box_group" style = "padding-bottom:16px;">
+								<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
+									<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
+								</button>
+								<?php
+									function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
+										$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+										$results = qdb($select);
+										
+										$drop = '';
+										foreach ($results as $item) {
+											//print_r($item);
+											$it[$item['id']] = $item['datetime'];	
+											$drop .= "<option value='".$item['id']."'";
+											if ($selected == $item['id']){
+												$drop .= ' selected';
+											}
+											$drop .= ($item['datetime'] != '' ? ' disabled': '');
+											$drop .= ">Box ".$item['package_no']."</option>";
+										}
+										$drop .= "</select>";
+										$drop .= "</div>";
+										if ($first){
+												$f = "<div>
+					            				<select class='form-control input-sm active_box_selector' data-associated = '$associated' data-serial = '$serial'>";
+											}
+											else{
+												$f = "<div>
+					            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
+											}
+											$f .= $drop;
+										return $f;
+									}
+									
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
+	
+									if (mysqli_num_rows($results) > 0){
+										$init = true;
+										foreach($results as $b){
+											$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
+											$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
+											$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
+											$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
+											$box_button .= " data-row-freight = '".$b['freight_amount']."'";
+											$box_button .= " data-order-number='" . $order_number . "'";
+											$box_button .= " data-box-shipped ='".($b['datetime'] != '' ? 'completed' : '')."'>".$b['package_no']."</button>";
+											echo($box_button);
+				                        	
+				                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+				                        	if($b['datetime'] == '' && $init)
+				                        		$init = false;
+										}
+									} else {
+										$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
+										qdb($insert);
+										echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
+									}
+	
 									
-									$drop = '';
-									foreach ($results as $item) {
-										//print_r($item);
-										$it[$item['id']] = $item['datetime'];	
-										$drop .= "<option value='".$item['id']."'";
-										if ($selected == $item['id']){
-											$drop .= ' selected';
-										}
-										$drop .= ($item['datetime'] != '' ? ' disabled': '');
-										$drop .= ">Box ".$item['package_no']."</option>";
-									}
-									$drop .= "</select>";
-									$drop .= "</div>";
-									if ($first){
-											$f = "<div>
-				            				<select class='form-control input-sm active_box_selector' data-associated = '$associated' data-serial = '$serial'>";
-										}
-										else{
-											$f = "<div>
-				            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
-										}
-										$f .= $drop;
-									return $f;
-								}
-								
-								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
-								$results = qdb($select);
-
-								if (mysqli_num_rows($results) > 0){
-									$init = true;
-									foreach($results as $b){
-										$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
-										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
-										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
-										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
-										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
-										$box_button .= " data-order-number='" . $order_number . "'";
-										$box_button .= " data-box-shipped ='".($b['datetime'] != '' ? 'completed' : '')."'>".$b['package_no']."</button>";
-										echo($box_button);
-			                        	
-			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
-			                        	if($b['datetime'] == '' && $init)
-			                        		$init = false;
-									}
-								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
-									qdb($insert);
-									echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
-								}
-
-								
-								
+									
+								?>
+								<button type="button" class="btn btn-primary box_addition" title = "">
+							  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+						  		</button>
+							</div>		
+						</div>
+					</div>
+				
+					<div class="table-responsive">
+						<table class="shipping_update table table-hover table-striped table-condensed" style="margin-top: 15px;">
+							<thead>
+								<tr>
+									<th>Item</th>
+									<th>SERIAL</th>
+									<th>Box #</th>
+									<th>Components</th>
+									<th>Ordered</th>
+									<th>Outstanding</th>
+									<th>Condition</th>
+									<th>Warranty</th>
+									<th>Delivery</th>
+									<th></th>
+								</tr>
+							</thead>
+							<?php
+								//Grab a list of items from an associated sales order.
+								$serials = array();
+								foreach($items as $item): 
+									$inventory = getInventory($item['partid']);
+									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
+									$serials = qdb($select);
+									// print_r($inventory);
 							?>
-							<button type="button" class="btn btn-primary box_addition" title = "">
-						  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
-					  		</button>
-						</div>		
+								<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
+									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
+										<?= format($item['partid']); ?>
+									</td>
+								
+								<!-- Grab the old serial values from the database and display them-->
+									<td class="infiniteSerials" style="padding-top: 10px !important;">
+										<div class="input-group">
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+										    <span class="input-group-addon">
+										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+										    </span>
+							            </div>
+										
+									
+										<?php
+											foreach ($serials as $serial):
+										?>
+										<div class="input-group check-save" data-savable="true">
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+										    <span class="input-group-addon">
+										        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+										    </span>
+							            </div>
+										<?php endforeach; ?>
+									</td>
+									<td class="infiniteBox" style="padding-top: 10px !important;">
+										<?=box_drop($order_number, '', true)?>
+										<?php foreach ($serials as $serial):?>
+											<?=box_drop($order_number,$serial['id'],'',$serial['packageid'], $serial['serial_no'])?>
+										<?php endforeach; ?>
+									</td>
+									<td style="padding-top: 10px !important;">
+										<div class="checkbox">
+											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
+										</div>
+										
+										<div class='infiniteComments'>
+										<?php
+											foreach ($serials as $serial):
+										?>
+	
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+	
+										<?php endforeach; ?>
+										</div>
+										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+									</td>
+									<td style="padding-top: 15px !important;">
+										<span class="qty_field"><?php echo $item['qty'] ?></span>
+									</td>
+									<td class="remaining_qty" style="padding-top: 15px !important;" data-qty="<?php echo $item['qty'] - $item['qty_shipped']; ?>">
+										<?php echo $item['qty'] - $item['qty_shipped']; ?>
+									</td>
+									<td style="padding-top: 15px !important;">
+										<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
+									</td>
+									<td style="padding-top: 15px !important;">
+										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty']); ?></span>
+									</td>
+									<td style="padding-top: 15px !important;">
+										<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
+									</td>
+									<td>
+										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+									</td>
+								</tr>
+								<?php $history = getHistory($item['partid']); if($history != '') { ?>
+									<!--<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>-->
+									<!--	<td colspan='12'>-->
+									<!--		<table class='table serial table-hover table-condensed'>-->
+									<!--			<thead>-->
+									<!--				<tr>-->
+									<!--					<th>Serial Number</th>-->
+									<!--					<th>Box #</th>-->
+									<!--					<th>Comments</th>-->
+									<!--				</tr>-->
+									<!--			</thead>-->
+									<!--			<tbody>-->
+									<!--			<?php foreach($history as $serial): ?>-->
+									<!--				<tr>-->
+									<!--					<td><?= $serial['serial_no']; ?></td>-->
+									<!--					<td></td>-->
+									<!--					<td><?= getComments($serial['id']); ?></td>-->
+									<!--				</tr>-->
+									<!--			<?php endforeach; ?>-->
+									<!--			</tbody>-->
+									<!--		</table>-->
+									<!--	</td>-->
+									<!--</tr>-->
+								<?php } ?>
+								
+							<?php endforeach; ?>
+						</table>
 					</div>
 				</div>
-			
-				<div class="table-responsive">
-					<table class="shipping_update table table-hover table-striped table-condensed" style="margin-top: 15px;">
-						<thead>
-							<tr>
-								<th>Item</th>
-								<th>SERIAL</th>
-								<th>Box #</th>
-								<th>Components</th>
-								<th>Ordered</th>
-								<th>Outstanding</th>
-								<th>Condition</th>
-								<th>Warranty</th>
-								<th>Delivery</th>
-								<th></th>
-							</tr>
-						</thead>
-						<?php
-							//Grab a list of items from an associated sales order.
-							$serials = array();
-							foreach($items as $item): 
-								$inventory = getInventory($item['partid']);
-								$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
-								$serials = qdb($select);
-								// print_r($inventory);
-						?>
-							<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
-								<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
-									<?= format($item['partid']); ?>
-								</td>
-							
-							<!-- Grab the old serial values from the database and display them-->
-								<td class="infiniteSerials" style="padding-top: 10px !important;">
-									<div class="input-group">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
-									    <span class="input-group-addon">
-									        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
-									    </span>
-						            </div>
-									
-								
-									<?php
-										foreach ($serials as $serial):
-									?>
-									<div class="input-group check-save" data-savable="true">
-									    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
-									    <span class="input-group-addon">
-									        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
-									    </span>
-						            </div>
-									<?php endforeach; ?>
-								</td>
-								<td class="infiniteBox" style="padding-top: 10px !important;">
-									<?=box_drop($order_number, '', true)?>
-									<?php foreach ($serials as $serial):?>
-										<?=box_drop($order_number,$serial['id'],'',$serial['packageid'], $serial['serial_no'])?>
-									<?php endforeach; ?>
-								</td>
-								<td style="padding-top: 10px !important;">
-									<div class="checkbox">
-										<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
-									</div>
-									
-									<div class='infiniteComments'>
-									<?php
-										foreach ($serials as $serial):
-									?>
-
-								    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
-
-									<?php endforeach; ?>
-									</div>
-									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
-								</td>
-								<td style="padding-top: 15px !important;">
-									<span class="qty_field"><?php echo $item['qty'] ?></span>
-								</td>
-								<td class="remaining_qty" style="padding-top: 15px !important;" data-qty="<?php echo $item['qty'] - $item['qty_shipped']; ?>">
-									<?php echo $item['qty'] - $item['qty_shipped']; ?>
-								</td>
-								<td style="padding-top: 15px !important;">
-									<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
-								</td>
-								<td style="padding-top: 15px !important;">
-									<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty']); ?></span>
-								</td>
-								<td style="padding-top: 15px !important;">
-									<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
-								</td>
-								<td>
-									<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
-								</td>
-							</tr>
-							<?php $history = getHistory($item['partid']); if($history != '') { ?>
-								<!--<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>-->
-								<!--	<td colspan='12'>-->
-								<!--		<table class='table serial table-hover table-condensed'>-->
-								<!--			<thead>-->
-								<!--				<tr>-->
-								<!--					<th>Serial Number</th>-->
-								<!--					<th>Box #</th>-->
-								<!--					<th>Comments</th>-->
-								<!--				</tr>-->
-								<!--			</thead>-->
-								<!--			<tbody>-->
-								<!--			<?php foreach($history as $serial): ?>-->
-								<!--				<tr>-->
-								<!--					<td><?= $serial['serial_no']; ?></td>-->
-								<!--					<td></td>-->
-								<!--					<td><?= getComments($serial['id']); ?></td>-->
-								<!--				</tr>-->
-								<!--			<?php endforeach; ?>-->
-								<!--			</tbody>-->
-								<!--		</table>-->
-								<!--	</td>-->
-								<!--</tr>-->
-							<?php } ?>
-							
-						<?php endforeach; ?>
-					</table>
-				</div>
+			<!--End Row-->
 			</div>
+		<!--End Loading Element-->
 		</div>
 		
 		<!-- End true body -->
