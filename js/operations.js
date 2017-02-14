@@ -226,6 +226,8 @@
 						//If this is an edit page, limit all the appropriate dropdowns
 						// alert("success");
 						if (page == 'order'){
+							
+							
 							var company = $("#companyid").val();
 
 							//Initialize each of the select2 fields when the left side loads.
