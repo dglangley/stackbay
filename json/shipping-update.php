@@ -241,10 +241,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					if (mysqli_num_rows($data)>0) {
 						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
 						$check = qdb($query);
-
-							$result['timestamp'] = qar();
 					}
 				}
+				
+				$result['timestamp'] = $date;
+				$result['on'] = $so_number;
 			//}
 		}
 		

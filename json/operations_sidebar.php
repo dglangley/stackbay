@@ -440,14 +440,24 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					
 					$init = true;
 					foreach($lists as $num) {
+						$box = array();
 						if($num != '') {
 							if($init) {
 								$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 								$init = false;
 							}
 							
+							$query =  "SELECT package_no FROM packages WHERE datetime = '$num';";
+							$result = qdb($query);
+							
+							while ($row = $result->fetch_assoc()) {
+								$box[] = $row['package_no'];
+							}
+							
+							$boxList = implode(', ', $box);
+							
 							$dateF = date_create($num);
-							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> Box #' . date_format($dateF, "N j/y g:ia") . '<br>';
+							$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> Box #  ' . $boxList . ' ' . date_format($dateF, "N/j/y g:ia") . '<br>';
 						}
 					}
 				}

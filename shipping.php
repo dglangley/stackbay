@@ -244,15 +244,15 @@
 				margin-bottom: 10px;
 			}
 			
-			table {
+			table.num {
 			    counter-reset: rowNumber;
 			}
 			
-			table tr > td:first-child {
+			table.num tr > td:first-child {
 			    counter-increment: rowNumber;
 			}
 			
-			table tr td:first-child::before {
+			table.num tr td:first-child::before {
 			    content: counter(rowNumber);
 			    min-width: 1em;
 			    margin-right: 0.5em;

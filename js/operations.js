@@ -2060,48 +2060,48 @@
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				//Overlook all the rows that are complete in the order and grab all the others
 				//if(!$(this).hasClass('order-complete')) {
-					var partid = $(this).find('.part_id').data('partid');
-					var serials = [];
-					var savedSerials = [];
-					var boxes = [];
-					var lot = false;
-					var qty, condition;
-					
+				var partid = $(this).find('.part_id').data('partid');
+				var serials = [];
+				var savedSerials = [];
+				var boxes = [];
+				var lot = false;
+				var qty, condition;
+				
 
-					//Grab the conidtion value set by the sales order
-					condition = $(this).find('.condition_field').data('condition');
+				//Grab the conidtion value set by the sales order
+				condition = $(this).find('.condition_field').data('condition');
+				
+				$('.box_group').find('.box_selector').each(function() {
+					boxes.push($(this).data('row-id'));
+				});
+				
+				$(this).find('.infiniteSerials').find('input').each(function() {
+					serials.push($(this).val());
+					savedSerials.push($(this).attr('data-saved'));
 					
-					$('.box_group').find('.box_selector').each(function() {
-						boxes.push($(this).data('row-id'));
-					});
-					
-					$(this).find('.infiniteSerials').find('input').each(function() {
-						serials.push($(this).val());
-						savedSerials.push($(this).attr('data-saved'));
-						
-						//If an item was saved previously then mark the page as something was edited
-						if($(this).attr('data-saved') != '') {
-							checkChanges = true;
-						}
-						
-					});
-					
-					//Check if the lot is checked or not
-					if($(this).find('.lot_inventory').prop('checked') == true) {
-						lot = true;
-					} else {
-						lot = false
+					//If an item was saved previously then mark the page as something was edited
+					if($(this).attr('data-saved') != '') {
+						checkChanges = true;
 					}
 					
-					qty = $(this).find('.remaining_qty').data('qty');
-					
-					items.push(partid);
-					items.push(savedSerials);
-					items.push(serials);
-					items.push(condition);
-					items.push(lot);
-					items.push(qty);
-					items.push(boxes);
+				});
+				
+				//Check if the lot is checked or not
+				if($(this).find('.lot_inventory').prop('checked') == true) {
+					lot = true;
+				} else {
+					lot = false
+				}
+				
+				qty = $(this).find('.remaining_qty').data('qty');
+				
+				items.push(partid);
+				items.push(savedSerials);
+				items.push(serials);
+				items.push(condition);
+				items.push(lot);
+				items.push(qty);
+				items.push(boxes);
 				//}
 			});
 			
@@ -2120,7 +2120,7 @@
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
 						if(print != '' && data['timestamp'] != null) {
-							var newWin = window.open('/'+data['timestamp']+'', '_blank');
+							var newWin = window.open('/packing-slip.php?on='+data['on']+'&date='+data['timestamp']+'', '_blank');
 							if (newWin) {
 							    //Browser has allowed it to be opened
 							    newWin.focus();
@@ -2160,31 +2160,59 @@
 			var damaged = '';
 			
 			var completed = $(this).data('datestamp');
-		
+			
 			$('.shipping_update').children('tbody').children('tr').each(function() {
-				$(this).find('.iso_comment').each(function() {
-					//isoCheck.push($(this).data('serial'));
-					//if($(this).val() != '') {
-						if(init) {
-							$('.iso_broken_parts').empty();
-							init = false;
-						}
-						
+				if(init) {
+					$('.iso_broken_parts').empty();
+					init = false;
+				}
+
+				//If an edit is present then grab only the present items
+				if($('.iso_comment:enabled').length > 0) {
+					$(this).find('.iso_comment:enabled').each(function() {
 						if($(this).val() != ''){
 							damaged = 'damaged';
 						} else {
 							damaged = '';
 						}
 						
-						//($(this).data('serial'));
+						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
+						
 						var element = "<tr class='"+ damaged +"'>\
+										<td>"+$(this).data('package')+"</td>\
 										<td>"+$(this).data('part')+"</td>\
 										<td>"+$(this).data('serial')+"</td>\
 										<td class='comment-data' data-invid='"+$(this).data('inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
 									</tr>";
 						$('.iso_broken_parts').append(element);
-					//}
-				});
+						
+						$('.btn_update').show();
+						$('.btn_iso_parts').show();
+						$('.btn_iso_parts_continue').hide();
+					});
+				//Else Grab everything currently on the order
+				} else {
+					$(this).find('.iso_comment').each(function() {
+						if($(this).val() != ''){
+							damaged = 'damaged';
+						} else {
+							damaged = '';
+						}
+						
+						$('.iso_content_title').html('<i class="fa fa-list" aria-hidden="true"></i> Shipped Contents');
+						
+						var element = "<tr class='"+ damaged +"'>\
+										<td>"+$(this).data('package')+"</td>\
+										<td>"+$(this).data('part')+"</td>\
+										<td>"+$(this).data('serial')+"</td>\
+										<td class='comment-data' data-invid='"+$(this).data('inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+									</tr>";
+						$('.iso_broken_parts').append(element);
+					});
+					$('.btn_update').hide();
+					$('.btn_iso_parts').hide()
+					$('.btn_iso_parts_continue').hide();
+				}
 			});
 			
 			$("#modal-iso").modal("show");
@@ -2192,7 +2220,8 @@
 			if(completed == '') {
 				$('.nav-tabs a[href="#iso_quality"]').tab('show');
 			} else {
-				$('.nav-tabs a[href="#iso_match"]').tab('show');
+				//$('.nav-tabs a[href="#iso_match"]').tab('show');
+				$('.nav-tabs a[href="#iso_quality"]').tab('show');
 				$('.nav-tabs a').attr("data-toggle","tab");
 			}
 		} else {
@@ -2204,6 +2233,15 @@
 	//This function auto opens the next locations drop down when the first one is changed
 	$(document).on('change', '.infiniteLocations .instance:first select', function() {
 		$(this).closest('tr').find('.infiniteSerials').find('input:first').focus();
+	});
+	
+	$(document).on('click','.btn_iso_parts_continue', function(e) {
+		e.preventDefault();
+		if($('.nav-tabs a[href="#iso_req"]').length > 0) {
+			$('.nav-tabs a[href="#iso_req"]').tab('show');	
+		} else {
+			$('.nav-tabs a[href="#iso_match"]').tab('show');
+		}
 	});
 	
 	$(document).on('click','.btn_iso_parts', function(e) {
