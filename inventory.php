@@ -604,7 +604,11 @@ s
 			e.preventDefault;
 			
 			var parent = $(this).closest('.parts-list').data('serial');
-			$('.' + parent).toggle();
+			if ($(".serial_listing").is(":visible")){
+				$('.' + parent).hide();
+			}else{
+				$('.' + parent).show();
+			}
 			
 			
 		});
@@ -624,7 +628,7 @@ s
 
 		$(document).on('click', '.revisions', function() {
 			$('.serial_listing').hide();
-			$('.parts-list').hide();
+			// $('.parts-list').hide();
 			var element = $(this).val();
 			if(element != '') {
 				$('.revisions :selected').each(function(i, selected){
@@ -634,7 +638,7 @@ s
 					}
 					else{
 						$('.parts-list').show();
-						$('.serial_listing').show();
+						// $('.serial_listing').show();
 						return false;
 					}
 				});
@@ -642,7 +646,7 @@ s
 			else {
 				// alert('here');
 				$('.parts-list').show();
-				$('.serial_listing').hide();
+				// $('.serial_listing').hide();
 			}
 		});
 	

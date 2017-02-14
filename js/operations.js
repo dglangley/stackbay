@@ -226,6 +226,8 @@
 						//If this is an edit page, limit all the appropriate dropdowns
 						// alert("success");
 						if (page == 'order'){
+							
+							
 							var company = $("#companyid").val();
 
 							//Initialize each of the select2 fields when the left side loads.
@@ -444,7 +446,7 @@
 						data: {
 							"field":"services",
 							"limit": $("#carrier").val(),/*new_account,*/
-							"size": "col-sm-4",
+							"size": "col-sm-8",
 							"label": "Service",
 							"id" : "service"
 							}, // serializes the form's elements.
