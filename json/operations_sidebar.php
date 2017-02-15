@@ -286,15 +286,30 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes</label>
-						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='4' style=''>$private</textarea>
+						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='3' style=''>$private</textarea>
 					</div>
 				</div>	
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
 						<label for='public_notes'>Public Notes / Customer Requirements</label>
-						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
+						<textarea id = 'public_notes' class='form-control' rows='3' style=''>$public</textarea>
 					</div>
-				</div>";
+				</div>
+		";
+		if ($order_number == 'New' AND $order_type == "Sales") {
+			$right .= "
+				<div class='row' style='padding-bottom: 10px;'>
+					<div class='col-sm-12'>
+						<input type='checkbox' name='email_confirmation' id = 'email_confirmation' value='1' checked />
+						<label for='email_confirmation'>Send Order Confirmation</label>
+						<p><strong>TO</strong> <em>Contact above already included</em></p>
+						<select name='email_to' id='email_to' class='form-control input-xs contact-selector' style = 'width:100%;'>
+						</select>
+						<p style='margin-top:10px'><strong>CC</strong> <i class='fa fa-check-square-o'></i> shipping@ven-tel.com</p>
+					</div>
+				</div>
+			";
+		}
 		//Closing Tag (Leave Outside of any if statment)
 	    	$right .= "</div>
 		</div>";
@@ -318,7 +333,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$public;
 		$s_carrier_name;
 		
-		//Navigaion changer
+		//Navigation changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container'>";
 		$right.="

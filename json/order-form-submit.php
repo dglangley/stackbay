@@ -26,6 +26,7 @@
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/getAddresses.php';
 		include_once $rootdir.'/inc/form_handle.php';
+		include_once $rootdir.'/inc/jsonDie.php';
 
 //=============================== Inputs section ==============================
 
@@ -110,6 +111,7 @@
     $terms = grab('terms');
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
+    $email_confirmation = grab('email_confirmation');
     
     //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
@@ -127,7 +129,7 @@
             $new_con = "INSERT INTO `contacts`(`name`,`title`,`notes`,`status`,`companyid`,`id`) 
             VALUES ($contact,$title,NULL,'Active',$companyid,NULL)";
             
-            qdb($new_con);
+            $result = qdb($new_con) OR jsonDie(qe().' '.$new_con);
             $contact = qid();
         }
     }
@@ -167,7 +169,7 @@
         }
 
     //Run the update
-        qdb($insert);
+        $result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
         //Create a new update number
         $order_number = qid();
@@ -204,7 +206,7 @@
         
         //Query the database
 
-        $form_result = qdb($macro) OR die(qe());
+		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
     
 
@@ -236,7 +238,7 @@
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
-                qdb($line_insert);
+                $result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
                 $update = "UPDATE ";
@@ -253,7 +255,7 @@
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
-                $line_update = qdb($update);
+                $line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }
         }
     }
@@ -269,7 +271,7 @@
         'error' => qe(),
         'stupid' => $stupid,
         'update' => $macro,
-        'update_result' => $update_result,
+		'message' => 'Success',
         'input' => $insert,
         'qar' => qar()
     );

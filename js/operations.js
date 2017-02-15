@@ -238,7 +238,7 @@
 							if($("#ship_to").val() == $("#bill_to").val()){
 								$("#mismo").prop("checked",true);
 							}
-							$("#contactid").initSelect2("/json/contacts.php",'Select Contact',company);
+							$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
 
 						}
 						else{
@@ -343,7 +343,7 @@
 				// alert("Limit: "+company+" | Carrier "+carrier);
 				
 				// alert(id);
-				$("#contactid").initSelect2("/json/contacts.php","Select Contact",company);
+				$(".contact-selector").initSelect2("/json/contacts.php","Select Contact",company);
 				
 				$("#bill_to").initSelect2("/json/address-picker.php",'Select Address',company);
 				$("#ship_to").initSelect2("/json/address-picker.php",'Select Address',company);
@@ -1052,6 +1052,10 @@
 					}
 				}
 			});
+			
+			$('#modal-address').on('shown.bs.modal', function () {
+			    $("#address-modal-body").find('input[name="na_city"]').focus();
+			}); 
 
 			$(document).on("click", "#address-continue", function(e) {
 			
@@ -1479,13 +1483,13 @@
 							console.log("Update form: "+form['update']);
 							console.log(form['input']);
 							console.log(form['update_result']);
-							if(!form['update_result']){
+							if (form['message']=='Success') {
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
 							else{
 							modalAlertShow(
 								"<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",
-								"A submission was not made correctly, please contact the Admins.",
+								form['message'],
 								false);
 							}
 						},
