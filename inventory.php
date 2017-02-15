@@ -86,7 +86,7 @@
 		   margin: 0 !important;
 		}
 		
-		.input-group.datepicker-date {
+		.table-head .input-group.datepicker-date {
 			width: auto;
 			min-width: auto;
 			max-width: 100%;
@@ -100,7 +100,6 @@
 		#modalHistoryBody div:nth-child(even){
 			background-color:#f7f7f7;
 		}
-s
 	</style>
 
 </head>

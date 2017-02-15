@@ -661,7 +661,7 @@
 		// This function outputs each of the items on the table, as well as the
 		// old information from the database
 		
-			function linenumber(){
+			function line_number(){
 				var last = $("#right_side_main").find(".line_line:last").attr("data-line-number");
 				if(last){
 					return parseInt(last)+1
@@ -717,6 +717,7 @@
 									$('#search_input').append(result);
 									$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
 									// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+									$('input[name="ni_line"]').val(line_number());
 									if($(".easy-output").length > 0){
 										$('#totals_row').find("input[name='np_total']").val(updateTotal());
 										$('#totals_row').show();
@@ -859,23 +860,32 @@
 			});
 			
 //Function to submit the individual line item edits
-			function line_item_submit(){
+			function line_item_submit(origin){
 				
-				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
-				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
-				var line_item_id = $('.line_item_submit').closest("tr").prev().data('record');
+				var new_search = $(origin).closest("tr").find('.item-selected').find("option").last().val();
+				var old_search = $(origin).closest("tr").find('.item-selected').find("option").first().attr("data-search");
+				var line_item_id = $(origin).closest("tr").prev().data('record');
 
 				//This line fixes the bug if the user exits the select2 prematurely   
 				if(isNaN(new_search)){var search = old_search;}
 				else{var search = new_search;}
-			    var date = $('.line_item_submit').closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $('.line_item_submit').closest("tr").find("input[name=ni_qty]").val();
-			    var price = $('.line_item_submit').closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $('.line_item_submit').closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $('.line_item_submit').closest("tr").find(".warranty").val();
-	   		    var editRow = ((parseInt($('.line_item_submit').closest("tr").index())));
-	   		    var condition = $('.line_item_submit').closest("tr").find(".condition").val();
-
+			    var date = $(origin).closest("tr").find("input[name=ni_date]").val();
+	   		    var qty = $(origin).closest("tr").find("input[name=ni_qty]").val();
+			    var price = $(origin).closest("tr").find("input[name=ni_price]").val();
+	   		    var lineNumber = $(origin).closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $(origin).closest("tr").find(".warranty").val();
+	   		    var editRow = ((parseInt($(origin).closest("tr").index())));
+	   		    var condition = $(origin).closest("tr").find(".condition").val();
+				console.log("\
+				date: "+date+"\
+				qty: "+qty+"\
+				price: "+price+"\
+				lineNumber: "+lineNumber+"\
+				warranty: "+warranty+"\
+				editRow: "+editRow+"\
+				condition: "+condition+"\
+				line_item_id\
+				");
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -904,14 +914,14 @@
 					
 				});
 	
-		    	$('.line_item_submit').closest(".lazy-entry").hide();
-		    	$('.line_item_submit').closest("tr").prev(".easy-output").show();
+		    	$(origin).closest(".lazy-entry").hide();
+		    	$(origin).closest("tr").prev(".easy-output").show();
 
 				
 			}
 			
 			$(document).on("click",".line_item_submit",function() {
-				line_item_submit();
+				line_item_submit(this);
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
@@ -961,7 +971,7 @@
 									$("#right_side_main").append(row_out);
 									$(".search_lines").html("").remove();
 									$("#totals_row").show();
-									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(linenumber());
+									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(line_number());
 									$('#totals_row').find("input[name='np_total']").val(updateTotal());
 	 							}
 							});
@@ -1042,6 +1052,10 @@
 					}
 				}
 			});
+			
+			$('#modal-address').on('shown.bs.modal', function () {
+			    $("#address-modal-body").find('input[name="na_city"]').focus();
+			}); 
 
 			$(document).on("click", "#address-continue", function(e) {
 			
@@ -1064,7 +1078,7 @@
 					// alert(ad['id']);
 					var text = name;
 					
-					$("#address-modal-body").attr("data-oldid",'');
+					$("#address-modal-body").attr("data-oldid",'false');
 					
 					console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
 				    $.post("/json/addressSubmit.php", {
@@ -1076,7 +1090,7 @@
 						"zip" : zip,
 						"id" : id
 				    },function(data){
-				    	console.log("Logging the ID (there should be none): "+id);
+				    	console.log("Logging the ID (this should be false if creating new): "+id);
 				    	console.log("Return from Address Submission: "+data);
 				    	
 				    	if (!isNaN(id)){
@@ -1234,36 +1248,51 @@
 					$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":$("#carrier").val()});
 		
 					});
+				$.ajax({
+					type: "POST",
+					url: '/json/dropPop.php',
+					data: {
+						"field":"services",
+						"limit":carrier,
+						"size": "col-sm-8",
+						"label": "Service",
+						"id" : "service"
+						}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						var initial_result = $("#service").val();
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
+						$('#service_div').replaceWith(result);
+						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
+						if (new_div_val){
+							$("#service").val(new_div_val);
+						}
+						console.log("== CARRIER CHANGE VALUES ==");
+						console.log("Initial ID: "+initial_result);
+						console.log("Initial Days: "+initial_days);
+						console.log("New ID: "+new_div_val);
+						var days = parseInt($("#service :selected").attr("data-days"));
+						if(!isNaN(days)){
+							$("input[name=ni_date]").val(freight_date(days));
+						}
+						console.log("JSON Services limited dropPop.php: Success");
+					},					
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON Services limited dropPop.php: Error");
+					}
+				});
+
 			});
 
 //Global Warranty function
 			$(document).on("change","#warranty_global",function() {
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
-				
-				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
 				if (value != "no"){
+					$("#new_warranty").val(value);
 					$(".line_war").text(text)
 					.attr("data-war",value);
-					$.ajax({
-						type: "POST",
-						url: '/json/dropPop.php',
-						data: {
-							"field": "warranty",
-							"selected": value,
-							"limit": '',
-							"size": "warranty",
-							"id":"new_row_warranty"
-							},
-						dataType: 'json',
-						success: function(result) {
-							// alert(result);
-							$("#new_row_warranty").replaceWith(result);
-							$('#new_warranty').parent().replaceWith(result)
-							.parent().removeClass('col-md-12');
-							console.log("Warranty - dropPop.php: Success");
-						}
-					});
 				}
 			});
 
@@ -1347,6 +1376,8 @@
 					else{
 						var account = '';
 					}
+					var pri_notes = $("#private_notes").val();
+					var pub_notes = $("#public_notes").val();
 
 					var filename;
 					/* David's file uploader */
@@ -1446,15 +1477,21 @@
 							var on = form["order"];
 							var ps = form["type"];
 							console.log("SAVED"+on+" | Order"+ps);
-							console.log(form['insert']);
-							console.log(form["error"]);
-							console.log(form["update"]);
-							console.log(form["update"]);
-							console.log(form['trek']);
-							console.log(form['update']);
+							console.log("Last Inserted: "+form['insert']);
+							console.log("Last Line Inserted: "+form['line_insert']);
+							console.log("Error from the last query: "+form["error"]);
+							console.log("Update form: "+form['update']);
 							console.log(form['input']);
-return;
-							window.location = "/order_form.php?ps="+ps+"&on="+on;
+							console.log(form['update_result']);
+							if (form['message']=='Success') {
+								window.location = "/order_form.php?ps="+ps+"&on="+on;
+							}
+							else{
+							modalAlertShow(
+								"<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",
+								form['message'],
+								false);
+							}
 						},
 						error: function(xhr, status, error) {
 						   	console.log("Order-form-submission Error:");
@@ -1897,10 +1934,10 @@ return;
 							},	
 					});
 				} else {
-					modalAlertShow('A Box is required.', false);
+					modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'A Box is required for each item being shipped. <br><br> Please create a box or add the item to an available box.', false);
 				}
 		    } else if(serial == '') {
-		    	modalAlertShow('Error', 'Serial is missing.', false);
+		    	modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'Serial is missing.', false);
 		    } 
 		
 		}
@@ -2231,7 +2268,7 @@ return;
 							    window.location.href = window.location.href + "&success=true";
 							} else {
 							    //Browser has blocked it
-							    alert('Please allow popups for this website');
+							    modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Pop-up Blocked",'Please allow popups for this website', false);
 							}
 						} else {
 							window.location.href = window.location.href + "&success=true";
@@ -2329,7 +2366,7 @@ return;
 				$('.nav-tabs a').attr("data-toggle","tab");
 			}
 		} else {
-			alert('No items queued to be shipped.');
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",'No items queued to be shipped.', false);
 		}
 	});
 	

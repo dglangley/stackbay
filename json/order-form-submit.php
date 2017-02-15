@@ -26,6 +26,7 @@
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/getAddresses.php';
 		include_once $rootdir.'/inc/form_handle.php';
+		include_once $rootdir.'/inc/jsonDie.php';
 
 //=============================== Inputs section ==============================
 
@@ -111,10 +112,6 @@
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
     $email_confirmation = grab('email_confirmation');
-
-	echo $email_confirmation;
-
-exit;
     
     //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
@@ -132,7 +129,7 @@ exit;
             $new_con = "INSERT INTO `contacts`(`name`,`title`,`notes`,`status`,`companyid`,`id`) 
             VALUES ($contact,$title,NULL,'Active',$companyid,NULL)";
             
-            qdb($new_con);
+            $result = qdb($new_con) OR jsonDie(qe().' '.$new_con);
             $contact = qid();
         }
     }
@@ -154,7 +151,7 @@ exit;
         $service = prep($service);
         $account = prep($account);
         $assoc_order = prep($assoc_order);
-        $tracking = prep($tracking);
+        
         
         
         if($order_type=="Purchase"){
@@ -172,7 +169,7 @@ exit;
         }
 
     //Run the update
-        qdb($insert);
+        $result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
         //Create a new update number
         $order_number = qid();
@@ -192,6 +189,7 @@ exit;
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
+//David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
 //            $macro .= updateNull('ref_ln','NULL');
             $macro .= updateNull('bill_to_id',$bill);
         }
@@ -208,7 +206,7 @@ exit;
         
         //Query the database
 
-        qdb($macro) OR die(qe());
+		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
     
 
@@ -240,7 +238,7 @@ exit;
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
-                qdb($line_insert);
+                $result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
                 $update = "UPDATE ";
@@ -257,7 +255,7 @@ exit;
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
-                qdb($update);
+                $line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }
         }
     }
@@ -273,8 +271,9 @@ exit;
         'error' => qe(),
         'stupid' => $stupid,
         'update' => $macro,
-        'trek' => $tracking,
-        'input' => $insert
+		'message' => 'Success',
+        'input' => $insert,
+        'qar' => qar()
     );
     
     echo json_encode($form);
