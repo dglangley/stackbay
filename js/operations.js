@@ -780,7 +780,7 @@
 				}
 			});
 			
-			$(document).on("keyup","input[name='ni_qty']",function(e){
+			$(document).on("keydown","input[name='ni_qty']",function(e){
 				if (e.keyCode == 9) {
 					e.preventDefault();
 					$('input[name="ni_price"]').focus();
@@ -792,6 +792,12 @@
 					//Down Arrow
 					$(this).closest('.search_lines').next().find("input[name='ni_qty']").focus();
 				}
+			});
+			
+			$(document).on("keydown","input[name='ni_price']",function(e){
+				if (e.keyCode == 9) {
+					e.preventDefault();
+				} 
 			});
 			
 			$(document).on("click",".li_search_button",function() {
