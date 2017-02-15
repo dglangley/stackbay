@@ -380,7 +380,12 @@
 								if (place == 'null'){
 									parts += 	"<td>"+info.location+"</td>";
 								}
-									parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+info.qty+"</span></td>";
+								
+								var counterqty = 0;
+								$.each(info.serials, function(i,s_string){
+									counterqty++;
+								});
+									parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
 								
 									parts += 	"<td>"+key[2]+"</td>";
 								if(!order){
@@ -406,26 +411,27 @@
 												parts += "		</tr>\
 															</thead>\
 															<tbody>";
+
 									$.each(info.serials, function(i,s_string){
 										var serial = s_string.split(", ");
 										//console.log(history);
 										parts += "<tr class='serial_listing_"+info.unique+"' style='display: none;'>\
 													<td class='data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>\
-													<td class='edit'><input class='newSerial form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
+													<td class='edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 										parts += "	<td class='data qty_original'>"+serial[2]+"</td>";
 										parts += "	<td class='data status_original'>"+serial[3]+"</td>";
 										parts += "	<td class='data '>"+info.location+"</td>";
 										parts += "	<td class='data '>"+key[2]+"</td>";
-										parts += "<td class='edit'><input class='newQty form-control' value='"+serial[2]+"' data-id='"+serial[0]+"'></td>\
-												<td class='edit status_holder' data-status='"+serial[3]+"'></td>";
-										parts += "<td class='data'></td><td class='data'></td>";
+										parts += "<td class='edit'>1</td>";
+										parts += "<td class='edit'>"+serial[3]+"</td>";
+										//parts += "<td class='data'></td>";
 										parts += "<td class='edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>\
 													<td class='edit condition_holder' data-condition='"+key[3]+"'></td>";
 													
 										parts += "<td style='text-align: right;'>\
 											<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
 											<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
-	                						<i class='fa fa-check fa-4' aria-hidden='true'></i></a>\
+	                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 	                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
 										parts += "</tr>";
 									}); //Serials loop end
@@ -438,8 +444,8 @@
 							// 		// <td colspan='12'>\
 							// 		// </td>\
 							// 		// </tr>"
-									
 							});
+							
 							$('.parts').append(parts);
 							parts = "";
 	

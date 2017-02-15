@@ -1967,7 +1967,7 @@
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', false);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty', qty);
 				$(this).closest('tr').find('.remaining_qty').children('input').val('');
-				$(this).closest('tr').find('.infiniteSerials').find('input').val('');
+				//$(this).closest('tr').find('.infiniteSerials').find('input').val('');
 				$(this).closest('tr').find('.remaining_qty').children('input').focus();
 			} else {
 				qty = $(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty');
