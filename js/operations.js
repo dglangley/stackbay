@@ -1052,6 +1052,10 @@
 					}
 				}
 			});
+			
+			$('#modal-address').on('shown.bs.modal', function () {
+			    $("#address-modal-body").find('input[name="na_city"]').focus();
+			}); 
 
 			$(document).on("click", "#address-continue", function(e) {
 			
