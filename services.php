@@ -98,6 +98,12 @@
 		.table td {
 			vertical-align:top !important;
 		}
+		@media print{
+			.table-header {
+				display:none;
+				visibility:hidden;
+			}
+		}
 	</style>
 </head>
 
@@ -351,7 +357,9 @@
 		$assignments = '';
 		$laborTotal = 0;
 		$laborTotalSecs = 0;
+//$keep = false;
 		foreach ($assigns as $techid => $a) {
+//if ($techid==5) { $keep = true; }
 			$timeLogged = '';
 
 			if ($financials) {
@@ -374,6 +382,7 @@
 			}
 			$assignments .= '<BR/>';
 		}
+//if ($keep===false) { continue; }
 
 		/***** CALCULATE JOB FINANCIALS TOTALS *****/
 		$financial_col = '';

@@ -1378,6 +1378,9 @@
 					}
 					var pri_notes = $("#private_notes").val();
 					var pub_notes = $("#public_notes").val();
+					var email_to = $("#email_to").val();
+					var email_confirmation = '';
+					if ($("#email_confirmation").is(':checked')) { email_confirmation = $("#email_confirmation").val(); }
 
 					var filename;
 					/* David's file uploader */
@@ -1471,6 +1474,8 @@
 							"pub_notes": pub_notes,
 							"table_rows":submit,
 							"filename":filename,
+							"email_confirmation":email_confirmation,
+							"email_to":email_to,
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {

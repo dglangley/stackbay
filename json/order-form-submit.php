@@ -18,6 +18,7 @@
 		include_once $rootdir.'/inc/dbconnect.php';
 		include_once $rootdir.'/inc/format_date.php';
 		include_once $rootdir.'/inc/format_price.php';
+		include_once $rootdir.'/inc/format_address.php';
 		include_once $rootdir.'/inc/getCompany.php';
 		include_once $rootdir.'/inc/getPart.php';
 		include_once $rootdir.'/inc/pipe.php';
@@ -27,6 +28,11 @@
 		include_once $rootdir.'/inc/getAddresses.php';
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/jsonDie.php';
+		include_once $rootdir.'/inc/getContact.php';
+		include_once $rootdir.'/inc/send_gmail.php';
+
+		// initializes Amea's gmail API session
+		setGoogleAccessToken(5);
 
 //=============================== Inputs section ==============================
 
@@ -111,8 +117,15 @@
     $terms = grab('terms');
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
+    $email_to = grab('email_to');
     $email_confirmation = grab('email_confirmation');
-    
+	if ($email_confirmation) {
+		$addl_recp = getContact($email_to,'id','email');
+		if (! $addl_recp) {
+			jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
+		}
+	}
+
     //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
 
@@ -133,7 +146,33 @@
             $contact = qid();
         }
     }
-    
+
+    $service = prep($service);
+
+	// build freight service and terms descriptors for email confirmation
+	$freight_service = '';
+	$freight_terms = '';
+	if ($email_confirmation) {
+		$query = "SELECT method, name FROM freight_services fs, freight_carriers fc, companies c ";
+		$query .= "WHERE fs.id = $service AND fs.carrierid = fc.id AND fc.companyid = c.id; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$freight_service = $r['name'].' '.$r['method'];
+		}
+		if ($account AND strtoupper($account)<>'NULL') { $freight_terms = $account; }
+		else { $freight_terms = 'Prepay and Bill'; }
+
+		$sbj = 'Order '.$assoc_order.' Confirmation';
+
+		// build confirmation email headers, then line items below
+		$msg = "<p>Here's your confirmation for order number ".$assoc_order.". <em>Please review for accuracy.</em></p>";
+		$msg .= "<p><strong>Order number:</strong> ".$assoc_order."</p>";
+		$msg .= "<p><strong>Shipping Service:</strong> ".$freight_service."</p>";
+		$msg .= "<p><strong>Shipping Terms:</strong> ".$freight_terms."</p>";
+		$msg .= "<p><strong>Shipping Address:</strong><br/>";
+		$msg .= format_address($ship)."</p>";
+	}
 
     if ($order_number == "New"){
         //If this is a new entry, save the value, insert the row, and return the
@@ -148,7 +187,6 @@
         $bill = prep($bill); 
         $public = prep($public);
         $private = prep($private);
-        $service = prep($service);
         $account = prep($account);
         $assoc_order = prep($assoc_order);
         
@@ -169,7 +207,7 @@
         }
 
     //Run the update
-        $result = qdb($insert) OR jsonDie(qe().' '.$insert);
+//		$result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
         //Create a new update number
         $order_number = qid();
@@ -206,16 +244,19 @@
         
         //Query the database
 
-		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
+//		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
     
 
     $stupid = 0;
-    
-    
+
     //RIGHT HAND SUBMIT
     
     if(isset($form_rows)){
+		if (count($form_rows)>0) {
+			$msg .= "<p><strong>Item Details:</strong><br/>";
+		}
+
         foreach ($form_rows as $r){
             $stupid++;
             $line_number = prep($r['line_number']);
@@ -226,8 +267,20 @@
             $condition = prep($r['condition']);
             $qty = prep($r['qty']);
             $unitPrice = prep(format_price($r['price'],true,'',true));
-            
-            
+
+			if ($r['line_number']) { $msg .= '<span style="color:#aaa">'.$r['line_number'].'.</span> '; }
+			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
+			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				if ($r2['heci']) {
+					$msg .= substr($r2['heci'],0,7).' ';
+				}
+				$msg .= $r2['part'];
+			}
+			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
+			$msg .= '<br/>';
+
             if ($record == 'new'){
                 
                 //Build the insert statements
@@ -238,7 +291,7 @@
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
-                $result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
+//				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
                 $update = "UPDATE ";
@@ -255,10 +308,20 @@
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
-                $line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
+//				$line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }
         }
     }
+
+	// send order confirmation
+	if ($email_confirmation) {
+		$send_success = send_gmail($msg,$sbj,array('david@ven-tel.com'));
+		if ($send_success) {
+			echo json_encode(array('message'=>'Success'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		}
+	}
 
     
     //Return the meta data about the information submitted, including the order
