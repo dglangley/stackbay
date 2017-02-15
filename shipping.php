@@ -339,7 +339,7 @@
 										foreach ($results as $item) {
 											//print_r($item);
 											$it[$item['id']] = $item['datetime'];	
-											$drop .= "<option value='".$item['id']."'";
+											$drop .= "<option data-boxno='".$item['package_no']."' value='".$item['id']."'";
 											if ($selected == $item['id']){
 												$drop .= ' selected';
 											}
@@ -354,7 +354,7 @@
 											}
 											else{
 												$f = "<div>
-					            					<select class='form-control box_drop input-sm'  data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
+					            					<select class='form-control box_drop input-sm' data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
 											}
 											$f .= $drop;
 										return $f;
