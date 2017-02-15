@@ -860,23 +860,32 @@
 			});
 			
 //Function to submit the individual line item edits
-			function line_item_submit(){
+			function line_item_submit(origin){
 				
-				var new_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").last().val();
-				var old_search = $('.line_item_submit').closest("tr").find('.item-selected').find("option").attr("data-search");
-				var line_item_id = $('.line_item_submit').closest("tr").prev().data('record');
+				var new_search = $(origin).closest("tr").find('.item-selected').find("option").last().val();
+				var old_search = $(origin).closest("tr").find('.item-selected').find("option").first().attr("data-search");
+				var line_item_id = $(origin).closest("tr").prev().data('record');
 
 				//This line fixes the bug if the user exits the select2 prematurely   
 				if(isNaN(new_search)){var search = old_search;}
 				else{var search = new_search;}
-			    var date = $('.line_item_submit').closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $('.line_item_submit').closest("tr").find("input[name=ni_qty]").val();
-			    var price = $('.line_item_submit').closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $('.line_item_submit').closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $('.line_item_submit').closest("tr").find(".warranty").val();
-	   		    var editRow = ((parseInt($('.line_item_submit').closest("tr").index())));
-	   		    var condition = $('.line_item_submit').closest("tr").find(".condition").val();
-
+			    var date = $(origin).closest("tr").find("input[name=ni_date]").val();
+	   		    var qty = $(origin).closest("tr").find("input[name=ni_qty]").val();
+			    var price = $(origin).closest("tr").find("input[name=ni_price]").val();
+	   		    var lineNumber = $(origin).closest("tr").find("input[name=ni_line]").val();
+	   		    var warranty = $(origin).closest("tr").find(".warranty").val();
+	   		    var editRow = ((parseInt($(origin).closest("tr").index())));
+	   		    var condition = $(origin).closest("tr").find(".condition").val();
+				console.log("\
+				date: "+date+"\
+				qty: "+qty+"\
+				price: "+price+"\
+				lineNumber: "+lineNumber+"\
+				warranty: "+warranty+"\
+				editRow: "+editRow+"\
+				condition: "+condition+"\
+				line_item_id\
+				");
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -905,14 +914,14 @@
 					
 				});
 	
-		    	$('.line_item_submit').closest(".lazy-entry").hide();
-		    	$('.line_item_submit').closest("tr").prev(".easy-output").show();
+		    	$(origin).closest(".lazy-entry").hide();
+		    	$(origin).closest("tr").prev(".easy-output").show();
 
 				
 			}
 			
 			$(document).on("click",".line_item_submit",function() {
-				line_item_submit();
+				line_item_submit(this);
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
