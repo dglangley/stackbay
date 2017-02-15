@@ -439,7 +439,6 @@
 											</table>\
 										</td>\
 									</tr>";
-									
 							// 		// parts += "<tr>\
 							// 		// <td colspan='12'>\
 							// 		// </td>\
