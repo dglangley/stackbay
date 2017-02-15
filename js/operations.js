@@ -238,7 +238,7 @@
 							if($("#ship_to").val() == $("#bill_to").val()){
 								$("#mismo").prop("checked",true);
 							}
-							$("#contactid").initSelect2("/json/contacts.php",'Select Contact',company);
+							$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
 
 						}
 						else{
@@ -343,7 +343,7 @@
 				// alert("Limit: "+company+" | Carrier "+carrier);
 				
 				// alert(id);
-				$("#contactid").initSelect2("/json/contacts.php","Select Contact",company);
+				$(".contact-selector").initSelect2("/json/contacts.php","Select Contact",company);
 				
 				$("#bill_to").initSelect2("/json/address-picker.php",'Select Address',company);
 				$("#ship_to").initSelect2("/json/address-picker.php",'Select Address',company);
@@ -1453,6 +1453,7 @@
 							console.log(form['trek']);
 							console.log(form['update']);
 							console.log(form['input']);
+return;
 							window.location = "/order_form.php?ps="+ps+"&on="+on;
 						},
 						error: function(xhr, status, error) {

@@ -208,11 +208,15 @@ s
 	</div>
 	<div id="item-updated" class="alert alert-success fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-	    <strong>Success!</strong> Changes have been updated. Refresh required to re-organize data.
+	    <strong>Success!</strong> Changes have been updated. Refresh required to re-organize data
 	</div>
 	<div id="item-failed" class="alert alert-danger fade in text-center" style="display: none;">
 	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-	    <strong>Uh Oh!</strong> Something went wrong with the update, please look into a fix for this error.
+	    <strong>Uh Oh!</strong> Something went wrong with the update, please look into a fix for this error
+	</div>
+	<div id="item-none" class="alert alert-warning fade in text-center" style="display: none;">
+	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+        <i class="fa fa-frown-o fa-2x"></i> <strong>Lame!</strong> No item(s) found
 	</div>
 	
 <!----------------------------------------------------------------------------->
@@ -476,15 +480,16 @@ s
 							$(this).find(".instance").val(instance);
 						});
 						
+						$(".loading_element_listing").show();
 						if(part != '') {
-							$(".loading_element_listing").show();
 						} else {
-							$(".loading_element_listing").hide();
-					  		alert("No Parts Found with those parameters");
+							//$(".loading_element_listing").hide();
+					  		//alert("No Parts Found with those parameters");
+							$("#item-none").show();
 						}
 					},
 					error: function(xhr, status, error) {
-						$(".loading_element_listing").hide();
+						//$(".loading_element_listing").hide();
 						console.log('Failed call: /json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&condition="+condition+"&vendor="+vendor);
 						alert(error);
 					   	alert("No Parts Found with those parameters");

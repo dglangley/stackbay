@@ -110,6 +110,11 @@
     $terms = grab('terms');
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
+    $email_confirmation = grab('email_confirmation');
+
+	echo $email_confirmation;
+
+exit;
     
     //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
