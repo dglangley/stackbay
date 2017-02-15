@@ -1074,7 +1074,7 @@
 					// alert(ad['id']);
 					var text = name;
 					
-					$("#address-modal-body").attr("data-oldid",'');
+					$("#address-modal-body").attr("data-oldid",'false');
 					
 					console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
 				    $.post("/json/addressSubmit.php", {
@@ -1086,7 +1086,7 @@
 						"zip" : zip,
 						"id" : id
 				    },function(data){
-				    	console.log("Logging the ID (there should be none): "+id);
+				    	console.log("Logging the ID (this should be false if creating new): "+id);
 				    	console.log("Return from Address Submission: "+data);
 				    	
 				    	if (!isNaN(id)){
