@@ -1280,28 +1280,6 @@
 					$("#new_warranty").val(value);
 					$(".line_war").text(text)
 					.attr("data-war",value);
-<<<<<<< HEAD
-					$.ajax({
-						type: "POST",
-						url: '/json/dropPop.php',
-						data: {
-							"field": "warranty",
-							"selected": value,
-							"limit": '',
-							"size": "warranty",
-							"id":"new_warranty"
-							},
-						dataType: 'json',
-						success: function(result) {
-							// alert(result);
-							$("#new_row_warranty").replaceWith(result);
-							$('#new_warranty').parent().replaceWith(result)
-							.parent().removeClass('col-md-12');
-							console.log("Warranty - dropPop.php: Success");
-						}
-					});
-=======
->>>>>>> 88dec22ab9ea8e5ef9708f58238214575a1608e8
 				}
 			});
 
