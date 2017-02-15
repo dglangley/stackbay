@@ -693,6 +693,7 @@
 				var order_number = $("#order_body").attr("data-order-number");
 
 				console.log("Order-number: "+order_number+" | Order-type: "+order_type);
+				
 				$.ajax({
 					type: "POST",
 					url: '/json/order-table-out.php',
@@ -786,6 +787,29 @@
 					data: {
 						"mode" : "search",
 						"item": search,
+						"page" : $("#order_body").attr("data-order-type"),
+					}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						$(".search_lines").html("").remove();
+						$("#search_input").append(result)
+					},
+					error: function(xhr, status, error) {
+					   	alert(error+" | "+status+" | "+xhr);
+					},					
+				});
+
+			});
+			$(document).on("click","#show_more",function() {
+				var search = $("#go_find_me").val();
+				//Ajax Call the new paradigm
+				$.ajax({
+					type: "POST",
+					url: '/json/new_paradigm.php',
+					data: {
+						"mode" : "search",
+						"item": search,
+						"show": true,
 						"page" : $("#order_body").attr("data-order-type"),
 					}, // serializes the form's elements.
 					dataType: 'json',
