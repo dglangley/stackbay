@@ -83,6 +83,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
 				$selected_service = $row['freight_services_id'];
 				$selected_account = $row['freight_account_id'];
+				
 				$public = $row['public_notes'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
@@ -94,21 +95,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//Account information (Similar to Drop Pop, but for a select2)
 
-		$account = array();
-		$account = getFreight('account','',$slected_account);
-		if ($account){
-			foreach ($account as $a){
-				if ($selected_account == $a['id']){
-					$acct_display .= "<option selected value = '".$a['id']."' data-carrier-id='".$a['id']."'>".$a['account_no']."</option>";
-				} 
-			}
-		} else if($order_number > 0) {
+		
+		if ($selected_account){
+			$account_display = getFreight('account','',$selected_account,'account_no');
+			$acct_display .= "<option selected value = '$selected_account' data-carrier-id='$selected_carrier'>$account_display</option>";
+		} 
+		else{
 			$acct_display .= "<option selected value = 'null'>PREPAID</option>";
 		}
-		// foreach($account as $f){
-		// 	$f[''];
-		// }
-		
+
 		//THis will be split into distinct elements at some point in the next few weeks.
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 10px'>";
@@ -279,7 +274,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class = 'account forms_section'>
 						<label for='account'>Account</label>
 						<select id='account_select' class='form-control input-xs'>
-							$acct_display
+							$account_display
 						</select>
 					</div>
 				</div>
@@ -291,15 +286,30 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
 						<label for='private_notes'>Private Notes</label>
-						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='4' style=''>$private</textarea>
+						<textarea id='private_notes' class='form-control textarea-info' name='email' rows='3' style=''>$private</textarea>
 					</div>
 				</div>	
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
 						<label for='public_notes'>Public Notes / Customer Requirements</label>
-						<textarea id = 'public_notes' class='form-control' rows='4' style=''>$public</textarea>
+						<textarea id = 'public_notes' class='form-control' rows='3' style=''>$public</textarea>
 					</div>
-				</div>";
+				</div>
+		";
+		if ($order_number == 'New' AND $order_type == "Sales") {
+			$right .= "
+				<div class='row' style='padding-bottom: 10px;'>
+					<div class='col-sm-12'>
+						<input type='checkbox' name='email_confirmation' id = 'email_confirmation' value='1' checked />
+						<label for='email_confirmation'>Send Order Confirmation</label>
+						<p><strong>TO</strong> <em>Contact above already included</em></p>
+						<select name='email_to' id='email_to' class='form-control input-xs contact-selector' style = 'width:100%;'>
+						</select>
+						<p style='margin-top:10px'><strong>CC</strong> <i class='fa fa-check-square-o'></i> shipping@ven-tel.com</p>
+					</div>
+				</div>
+			";
+		}
 		//Closing Tag (Leave Outside of any if statment)
 	    	$right .= "</div>
 		</div>";
@@ -323,7 +333,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$public;
 		$s_carrier_name;
 		
-		//Navigaion changer
+		//Navigation changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		$right .= "		<div class='sidebar-container'>";
 		$right.="

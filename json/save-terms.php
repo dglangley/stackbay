@@ -1,11 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 	header("Content-Type: application/json", true);
-
-	function reportError($err) {
-		echo json_encode(array('message'=>$err));
-		exit;
-	}
 
 	$companyid = 0;
 	$category = '';
@@ -19,30 +15,30 @@
 	if (isset($_REQUEST['termsids'])) { $termsids = $_REQUEST['termsids']; }
 
 	if (! $companyid) {
-		reportError('Missing companyid');
+		jsonDie('Missing companyid');
 	} else if (! $category) {
-		reportError('Missing category');
+		jsonDie('Missing category');
 	} else if (count($termsids)==0) {
-		reportError('Missing valid input data');
+		jsonDie('Missing valid input data');
 	}
 
 	// is this valid input?
 	$query = "DELETE FROM company_terms WHERE companyid = '".$companyid."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
+	$result = qdb($query) OR jsonDie(qe().' '.$query);
 
 	$msg = 'Success';
 	if (! is_array($termsids)) { $termsids = explode(',',$termsids); }
 	foreach ($termsids as $termsid) {
 		//validate the termsid
 		$query = "SELECT * FROM terms WHERE id = '".res($termsid)."'; ";
-		$result = qdb($query) OR reportError(qe().' '.$query);
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
 		if (mysqli_num_rows($result)==0) {
-			reportError("One or more of the terms you entered are invalid");
+			jsonDie("One or more of the terms you entered are invalid");
 		}
 
 		$query = "INSERT INTO company_terms (companyid, termsid, category) ";
 		$query .= "VALUES ('".$companyid."','".$termsid."','".$category."'); ";
-		$result = qdb($query) OR reportError(qe().' '.$query);
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}
 
 	echo json_encode(array('message'=>$msg));
