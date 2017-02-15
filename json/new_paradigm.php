@@ -175,6 +175,7 @@ function format($parts){
 //==================== Build the individual version output ====================
 function sub_rows($search = ''){
     $page = grab('page');
+    $show = grab('show');
     //On Click of the "GO!" Button, populate a dropped down list of each of the parameters.
     
     //Declare general collection variables
@@ -186,35 +187,37 @@ function sub_rows($search = ''){
         //Item information
         $items = hecidb($search);
             foreach ($items as $id => $data){
-                //Here is where I will produce and maintain the display text
+                // Grab all the matches from whatever search was passed in.
                 $matches[] = $id;
             }
-            if(isset($matches)){
+            if($matches){
                 $match_string = implode(", ",$matches);
             
-                //Get all the in stock
-                $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) ";
-
-                $inventory .= "GROUP BY partid;";
-                $purchased = "SELECT SUM(qty) total, partid FROM purchase_items WHERE partid in ($match_string) GROUP BY partid;";
-                
+                //Get all the currently in hand
+                $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
                 $in_stock  = qdb($inventory);
-                $incoming = qdb($purchased);
                 if (mysqli_num_rows($in_stock) > 0){
                     foreach ($in_stock as $r){
                         $stock[$r['partid']] = $r['total'];
                     }
                 }
+                
+                // Get all the ordered quantities
+                $purchased = "SELECT SUM(qty) total, partid FROM purchase_items WHERE partid in ($match_string) GROUP BY partid;";
+                $incoming = qdb($purchased);
                 if (mysqli_num_rows($incoming) > 0){
                     foreach ($incoming as $i){
                         $inc[$i['partid']] = $i['total'];
                     }
                 }
-                if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's')){
+                
+                
+                
+                if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's') && !$show){
                     $rows = "
                         <tr class = 'search_lines' data-line-id = $id>
                             <td></td>
-                            <td colspan='6' style=''>No parts in stock</td>
+                            <td colspan='6' style=''>No parts in stock. <span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show all</span></td>
                             <td style=''></td>
                         </tr>
                     ";
@@ -240,9 +243,10 @@ function sub_rows($search = ''){
         
                     foreach ($items as $id => $info){
                         $sellable = false;
-                        
+                    
                         $text = "<div class='row-flud'>";
                         $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;padding:0%;'><b>";
+                        //Output the quantity of items sellable
                         if(array_key_exists($id, $stock)){
                             $sellable = true;
                             $text .= $stock[$id];
@@ -262,7 +266,7 @@ function sub_rows($search = ''){
                         }
                         $text .= "</div>";
                         $text .= "</div>";
-                        if (($page == 'Sales' || $page == 's') && !$sellable){
+                        if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
                             $text = '';
                             continue;
                         }
@@ -292,7 +296,7 @@ function sub_rows($search = ''){
                     //EXT price
                     }
                 }
-        }
+        }//End the "If there are matches" check
             else{
                 $rows .= "
                     <tr class = 'search_lines' data-line-id = $id>
