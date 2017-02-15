@@ -97,7 +97,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 		
 		if ($selected_account){
-			$account_display = getFreight('account','',$selected_account,'account_no');
+			$account_display = getFreight("account","",$selected_account,"account_no");
 			$acct_display .= "<option selected value = '$selected_account' data-carrier-id='$selected_carrier'>$account_display</option>";
 		} 
 		else{
@@ -274,7 +274,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					<div class = 'account forms_section'>
 						<label for='account'>Account</label>
 						<select id='account_select' class='form-control input-xs'>
-							$account_display
+							$acct_display
 						</select>
 					</div>
 				</div>
