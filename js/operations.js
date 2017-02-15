@@ -770,7 +770,8 @@
 							} else {
 								$('.nothing_found').hide();
 							}
-							$("#search_input").append(result)
+							$("#search_input").append(result);
+							$(".search_lines input[name='ni_qty']:first").focus();
 						},
 						error: function(xhr, status, error) {
 						   	alert(error+" | "+status+" | "+xhr);
@@ -778,6 +779,21 @@
 					});
 				}
 			});
+			
+			$(document).on("keyup","input[name='ni_qty']",function(e){
+				if (e.keyCode == 9) {
+					e.preventDefault();
+					$('input[name="ni_price"]').focus();
+				} else if (e.keyCode == 38) {
+					//Up Arrow
+					$(this).closest('.search_lines').prev().find("input[name='ni_qty']").focus();
+					//alert('down');
+				} else if(e.keyCode == 40) {
+					//Down Arrow
+					$(this).closest('.search_lines').next().find("input[name='ni_qty']").focus();
+				}
+			});
+			
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
 				//Ajax Call the new paradigm
