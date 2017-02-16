@@ -1692,11 +1692,12 @@
 					var title = $(".shipping-dash-full .shipping_section_head").data('title');
 					$(".shipping_section_head").hide();
 					
-					$("#view-head-text").text(title);
+					//$("#view-head-text").text(title);
+					$("#filter-title").text(title);
 					
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
-					$(this).closest("body").children("#view-head").show();
+					//$(this).closest("body").children("#view-head").show();
 
 				}
 				else{
@@ -1713,10 +1714,11 @@
 					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').hide();
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
+					$("#filter-title").text('Operations Dashboard');
 					
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
 					$(this).parents("body").find(".overview").hide();
-					$(this).parents("body").children("#view-head").hide();
+					//$(this).parents("body").children("#view-head").hide();
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
 				headerOffset();
