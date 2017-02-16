@@ -1130,18 +1130,10 @@
 //Address Suite of functions
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					
-					var display = $("#select2-bill_to-container").html()
+					var display = $("#bill_to").text().trim();
 					var value = $("#bill_to").val();
-					var option = $('<option></option>').
-					prop('selected', true).
-					text(display).
-					val(value);
-					/* insert the option (which is already 'selected'!) into the select */
-					option.appendTo($("#ship_to"));
-					/* Let select2 do whatever it likes with this */
-					$("#ship_to").trigger('change');
-
+					console.log("Display: "+display+" | Value: "+value);
+					$("#ship_to").setDefault(display,value);
 				}
 			}
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -1244,7 +1236,7 @@
 										/* Let select2 do whatever it likes with this */
 										$("#bill_to").trigger('change');
 										console.log("Bill to updated to: "+$("#bill_to").val());
-					    				updateShipTo();
+					    				// updateShipTo();
 					    	}
 				    	// }
 				    	// else{
@@ -1295,6 +1287,7 @@
 			$(document).on("click",".address_edit",function() {
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
+				alert(origin);
 				var add_id = drop.last('option').val();
 				if(add_id){
 					console.log(add_id);
@@ -1307,6 +1300,7 @@
 						dataType: 'json',
 						success: function(address) {
 							console.log(address);
+							$("#address-modal-body").attr("data-origin",origin);
 							$("#address-modal-body").attr("data-oldid",add_id);
 							$("#add_name").val('').val(address.name);
 							$('#add_line_1').val('').val(address.street);
