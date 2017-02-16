@@ -47,7 +47,7 @@
     }
     
     //Expects: Warehouse, Place, or Instance
-    function loc_dropdowns($type = '', $selcted = '',$limit = '',$default = ''){
+    function loc_dropdowns($type = '', $selected = '',$limit = '',$default = ''){
         // Populates the location dropdown with the accurate value/paired information
         $type = strtolower($type);
         
@@ -60,7 +60,7 @@
             $output .= "<option value = 'none'>Warehouse</option>";
     	    foreach($result as $row){
     	        $output .= "<option ";
-    	        if ($row['id'] == $selcted){$output .= ' selected ';}
+    	        if ($row['id'] == $selected){$output .= ' selected ';}
     	        $output .= "value = '".$row['id']."'> ".$row['name']."</option>";
     	    }
     	    $output .= "
@@ -68,39 +68,41 @@
     	        </div>";
         }    
         else if ($type == "place") {
-            
-            if ($selcted){
+
+            if ($selected){
                 $locations = mysqli_fetch_assoc(getLocation($selected));
-                $selcted = $locations['place'];
+                $selected = $locations['place'];
             }
             
             $results = getplaces();
             
                 
                 $output = "<select class='form-control input-sm $type' style='padding-left:0px;'>";
-    	        if(!$selcted and !$default){
+    	        if(!$selected and !$default){
                     $output .= "<option selected value = 'null'>Column</option>";
     	        }
 
         	    foreach($results as $row){
         	        $output .= "<option ";
-        	        if ($row['place'] == $selcted){$output .= ' selected ';}
+        	        if ($row['place'] == $selected){$output .= ' selected ';}
         	        $output .= "value = '".strtoupper($row['place'])."'> ".strtoupper($row['place'])."</option>";
         	    }
         	    $output .= "</select>";
         }
         else if ($type == "instance") {
             // 
-            if ($selcted){
+            if ($selected){
                 $locations = mysqli_fetch_assoc(getLocation($selected));
-                $selcted = $locations['instance'];
+                $selected = $locations['instance'];
                 $limit = $locations['place'];
             }
-            $select = "Select DISTINCT instance From `locations`";
+            //WE WILL LIMIT LATER BY THE DROPDOWN VALUE
+            $select = "Select * From `locations`;";
+            // echo $select; exit;
             $results = qdb($select);
-                
+            
             $output .= "<select class='form-control input-sm $type' style='padding-left:0px;'>";
-            if(!$selcted and !$default){
+            if(!$selected and !$default){
                     $output .= "<option selected value = 'null'>Shelf</option>";
     	        }
             //Takes in the location ID and returns the 
@@ -108,7 +110,7 @@
         	    foreach($results as $row){
         	        $output .= "<option ";
         	        $output .= " data-place = '".$row['place']."' ";
-        	        if ($row['instance'] == $selcted && $row['instance']){$output .= ' selected ';}
+        	        if ($row['instance'] == $selected && $row['instance']){$output .= ' selected ';}
         	        $output .= "value = '".strtoupper($row['instance'])."'> ".strtoupper($row['instance'])."</option>";
         	    }
     	    }

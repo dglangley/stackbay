@@ -112,6 +112,8 @@
 
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'modal/history.php'?>
+	<?php include_once 'modal/rm.php'?>
+
 	
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -404,12 +406,12 @@
 															<thead>\
 																<tr>";
 												// parts += "			<th>Part</th>";
-												parts += "			<th>Serial Number</th>";
-												parts += "			<th>qty</th>";
-												parts += "			<th>Status</th>";
-												parts += "			<th>Location</th>";
-												parts += "			<th>Condition</th>";
-												parts += "			<th></th>";
+												parts += "			<th class='serial_col col-md-2'>Serial Number</th>";
+												parts += "			<th class='qty_col col-md-1'>qty</th>";
+												parts += "			<th class='status_col col-md-1'>Status</th>";
+												parts += "			<th class='location_col col-md-2'>Location</th>";
+												parts += "			<th class='condition_col col-md-1'>Condition</th>";
+												parts += "			<th class='edit_col col-md-1'></th>";
 												parts += "		</tr>\
 															</thead>\
 															<tbody>";
@@ -417,17 +419,26 @@
 									$.each(info.serials, function(i,s_string){
 										var serial = s_string.split(", ");
 										//console.log(history);
-										parts += "<tr class='serial_listing_"+info.unique+"' style='display: none;'>";
-										// parts += "	<td>"+"bleh"+"</td>";
-										parts += "	<td class='data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
-										parts += "	<td class='data qty_original'>"+serial[2]+"</td>";
-										parts += "	<td class='data status_original'>"+serial[3]+"</td>";
-										parts += "	<td class='data '>"+info.location+"</td>";
-										parts += "	<td class='data '>"+key[2]+"</td>";
+										parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status="+serial[3];
+										parts += " data-invid="+serial[2]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";										// parts += "	<td>"+"bleh"+"</td>";
+										parts += "	<td class='serial_col data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
+										parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
+										parts += "	<td class='status_col data status_original'>"+serial[3]+"</td>";
+										parts += "	<td class='location_col data '>"+info.location+"</td>";
+										parts += "	<td class='condition_col data '>"+key[2]+"</td>";
+										
+										parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
+										parts += "	<td class='qty_col edit'>1</td>";
+										parts += "	<td class='status_col edit'>"+serial[3]+"</td>";
+										parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
+										parts += "	<td class='condition_col edit condition_holder' data-condition='"+key[2]+"'></td>";
+										
 										//parts += "<td class='data'></td>";
 										
-										parts += "<td style='text-align: right;'>\
+										parts += "<td class='edit_col' style='text-align: right;'>\
+											<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
 											<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
+											<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
 	                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 	                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
 										parts += "</tr>";
@@ -436,6 +447,7 @@
 											</table>\
 										</td>\
 									</tr>";
+									
 							// 		// parts += "<tr>\
 							// 		// <td colspan='12'>\
 							// 		// </td>\
@@ -501,29 +513,12 @@
 		$(document).on('click', '.edit_button', function(e) {
 			e.preventDefault();
 			
-			//Initialize variables
-			var edit = '';
-			var init_partid = '';
-			var serial = '';
-			var location = '';
-			var instance = '';
-			// $(this).closest('tr').find('.edit').show();
+			$(this).closest('tr').find('.edit').show();
 			$(this).closest('tr').find('.data').hide();
-			
-			//Gather initial values
-			
-			edit += "	<td class='edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
-			edit += "	<td class='edit'>1</td>";
-			edit += "	<td class='edit'>"+serial[3]+"</td>";
-			edit += "	<td class='edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
-			edit += "	<td class='edit condition_holder' data-condition='"+key[2]+"'></td>";
-			edit += "	<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>";
 			$(this).closest('table').find('th span.edit').show();
 			
 			$(this).closest('tr').find('.delete_button').hide();
 			$(this).hide();
-			
-			
 		});
 		
 		$(document).on('click', '.save_button', function(e) {

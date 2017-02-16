@@ -96,7 +96,16 @@
 				escapeMarkup: function (markup) { return markup; }//let our custom formatter work
 		    });
 		}
-		
+		jQuery.fn.setDefault = function (string,id){
+			var option = $('<option></option>').
+				prop('selected',true).
+				text(string).
+				val(id);
+			option.appendTo($(this));//insert pre-selected option into select menu
+			// initialize the change so it takes effect
+			$(this).trigger("change");
+		}
+
 
 		$(document).ready(function() {
 			
@@ -1065,9 +1074,7 @@
 					option.appendTo($("#ship_to"));
 					/* Let select2 do whatever it likes with this */
 					$("#ship_to").trigger('change');
-					
-					
-		    		
+
 				}
 			}
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -1222,7 +1229,8 @@
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
 				var add_id = drop.last('option').val();
-				console.log(add_id);
+				if(add_id){
+					console.log(add_id);
 					$.ajax({
 						type: "POST",
 						url: '/json/address-pull.php',
@@ -1249,6 +1257,7 @@
 						   	console.log("Address grab: Error");
 						},
 					});
+				}
 				});
 			
 			$(document).on("click","#mismo",function() {
@@ -1453,8 +1462,10 @@
 										return;
 									}
 								}
+								console.log("Order-upload:Success");
 							},
 							error: function(data, textStatus, errorThrown) {
+								console.log("Order-upload: Failure");
 								alert(errorThrown);
 								return;
 							},
@@ -1530,7 +1541,7 @@
 							console.log(form['input']);
 							console.log(form['update_result']);
 							if (form['message']=='Success') {
-								window.location = "/order_form.php?ps="+ps+"&on="+on;
+								// window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
 							else{
 							modalAlertShow(
@@ -2765,6 +2776,27 @@
 		
 }); //END OF THE GENERAL DOCUMENT READY TAG
 //=========================== End Inventory Addition ===========================
+
+//==============================================================================
+//===================================== RM =====================================
+//==============================================================================
+	
+	$(document).on("click",".rm_button",function(){
+		var partid = $(this).closest("tr").data("part");
+		var text = $(this).closest("tr").data("name");
+		$("#modalRMBody").find(".item_search").initSelect2("/json/part-search.php","Select a Part","purchase");
+		$("#modalRMBody").find(".item_search").setDefault(text,partid);
+		$("#modal-RM").modal("show");
+		
+		$(this).closest("table").clone().appendTo("#RM-options")
+		.hide();
+	});
+	$(document).on("click","RM-continue",function() {
+		
+	});
+
+
+//=================================== End RM ===================================
 
 //==============================================================================
 //=================================== HISTORY ================================== 

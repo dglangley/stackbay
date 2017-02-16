@@ -45,8 +45,7 @@
 	date_default_timezone_set('America/Los_Angeles');
 
 	$DEV_ENV = false;
-	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') { $DEV_ENV = true; }
-$DEV_ENV = true;
+	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]<>'www.stackbay.com') { $DEV_ENV = true; }	
 
 	$today = date("Y-m-d");
 	$now = $today.' '.date("H:i:s");
