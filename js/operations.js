@@ -1604,9 +1604,7 @@
 						dataType: 'json',
 						success: function(form) {
 							if (form['message']=='Success') {
-<<<<<<< HEAD
-								// window.location = "/order_form.php?ps="+ps+"&on="+on;
-=======
+
 								var on = form["order"];
 								var ps = form["type"];
 								console.log("SAVED"+on+" | Order"+ps);
@@ -1618,7 +1616,6 @@
 								console.log(form['update_result']);
 
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
->>>>>>> f8b198559d3eb5bab071315bcc068ec0ac05e9df
 							}
 							else{
 							modalAlertShow(
@@ -2861,15 +2858,39 @@
 	$(document).on("click",".rm_button",function(){
 		var partid = $(this).closest("tr").data("part");
 		var text = $(this).closest("tr").data("name");
+		var invid = $(this).closest("tr").data("invid");
 		$("#modalRMBody").find(".item_search").initSelect2("/json/part-search.php","Select a Part","purchase");
 		$("#modalRMBody").find(".item_search").setDefault(text,partid);
+		$("#modalRMBody").data("partid",partid);
+		$("#modalRMBody").data("invid",invid);
 		$("#modal-RM").modal("show");
-		
-		$(this).closest("table").clone().appendTo("#RM-options")
-		.hide();
 	});
-	$(document).on("click","RM-continue",function() {
-		
+	$(document).on("click","#RM-continue",function() {
+		var init_part = $("#modalRMBody").data("partid");
+		var new_part = $("#modalRMBody").find(".item_search").val();
+		// console.log("OG PART: "+init_part+)
+		if (new_part != init_part){
+			var invid = $("#modalRMBody").data("invid");
+			$.ajax({
+				type: "POST",
+				url: '/json/rm-processor.php',
+				data: {
+					"invid" : invid,
+					"part" : new_part
+				},
+				dataType: 'json',
+				success: function(result) {
+					console.log("JSON RM PROCESSOR | Success | /json/rm-processor.php?invid="+invid+"&part="+new_part);
+					location.reload();
+					console.log(result);
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
+				}
+		});
+
+		}
 	});
 
 
