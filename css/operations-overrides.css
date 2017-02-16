@@ -102,7 +102,7 @@ body{
 .search_collumn > div > span{	
 	width:100% !important;
 	text-overflow: ellipsis;
-	
+	overflow: hidden;
 }
 
 #item-selected{

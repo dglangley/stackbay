@@ -736,6 +736,10 @@
 									
 								}
 								console.log("JSON | NewPar Line Pop | new_paradigm.php: Success");
+								var days = $('#service').find(':selected').data('days');
+								if (days != 4){
+									$("input[name=ni_date]").val(freight_date(days));
+								}
 							},					
 							error: function(xhr, status, error) {
 								alert(error+" | "+status+" | "+xhr);
@@ -752,6 +756,14 @@
 					
 				});
 
+			});
+			
+			$(document).on('focusout', '.datetime-picker-line input', function() {
+				var days = $('#service').find(':selected').data('days');
+				
+				if($(this).val() == '') {
+					$("input[name=ni_date]").val(freight_date(days));
+				}
 			});
 		
 		//MultiPart Search Feature
@@ -1160,9 +1172,18 @@
 					}
 					else{
 						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
-						$("#mismo").prop("checked",false);
+						//$("#mismo").prop("checked",false);
 					}
 				}
+			});
+			
+			$(document).on('change', '#ship_to', function(){
+				if($(this).val() != $('#bill_to').val()) {
+					$("#mismo").prop("checked",false);
+				} else {
+					$("#mismo").prop("checked",true);
+				}
+				console.log($(this).val() + ' vs ' + $('#bill_to').val());
 			});
 			
 			$('#modal-address').on('shown.bs.modal', function () {
@@ -1687,11 +1708,12 @@
 					var title = $(".shipping-dash-full .shipping_section_head").data('title');
 					$(".shipping_section_head").hide();
 					
-					$("#view-head-text").text(title);
+					//$("#view-head-text").text(title);
+					$("#filter-title").text(title);
 					
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
-					$(this).closest("body").children("#view-head").show();
+					//$(this).closest("body").children("#view-head").show();
 
 				}
 				else{
@@ -1708,10 +1730,11 @@
 					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').hide();
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
+					$("#filter-title").text('Operations Dashboard');
 					
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
 					$(this).parents("body").find(".overview").hide();
-					$(this).parents("body").children("#view-head").hide();
+					//$(this).parents("body").children("#view-head").hide();
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
 				headerOffset();

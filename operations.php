@@ -13,7 +13,7 @@
 	include_once $rootdir.'/inc/locations.php';
 	
 //==============================================================================
-//============================ Function Delcaration (Declaration?) ============================
+//================== Function Delcaration (Declaration?) =======================
 //==============================================================================
 	
 	//Output Module acts as the general output for each of the dashboard sections.
@@ -31,7 +31,7 @@
 			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
 			<div class='shipping-dash'>
 
-				<div class='shipping_section_head' data-title='Sales Orders'>";
+				<div class='shipping_section_head' data-title='".$status_out.$order_out." Orders'>";
 		echo $status_out.$order_out.' Orders';
 		// echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
 		// <i class='fa fa-plus'></i> 
@@ -116,14 +116,14 @@
 				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
 			}
 			//$query .= "AND status = '" . res($status) . "' ";
-			$query .= "ORDER BY o.po_number LIMIT 0 , 100;";
+			$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
 		}
 		else{
 			$query .= "sales_orders o, sales_items i ";
 			$query .= "WHERE o.so_number = i.so_number ";
 			if($status == 'Active') {
 				$query .= "AND i.ship_date IS NULL ";
-				$query .= "ORDER BY o.so_number LIMIT 0 , 100;";
+				$query .= "ORDER BY o.so_number DESC LIMIT 0 , 100;";
 			} else {
 				$query .= "AND i.ship_date IS NOT NULL ";
 				$query .= "ORDER BY i.ship_date DESC LIMIT 0 , 100;";
@@ -266,6 +266,7 @@
 
 			<div class="col-md-2 col-sm-2">
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
+<!--
 				<div class="row">
 					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
 					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
@@ -275,8 +276,10 @@
 			            </div>
 					</div>
 				</div>
+-->
 			</div>
 			<div class = "col-md-2">
+<!--
 				<div class="form-group col-md-6 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
 			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
@@ -293,22 +296,26 @@
 			            </span>
 				    </div>
 				</div>
+-->
 			</div>
 			<div class="col-md-4 col-sm-4 text-center">
-            	<h2 class="minimal">Operations Dashboard</h2>
+            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
 			</div>
 			
 			<!--This Handles the Search Bar-->
 			<div class="col-md-2 col-sm-2">
+<!--
 				<div class="input-group">
 	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
               		<span class="input-group-btn">
 	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
 	            </div>
+-->
 			</div>
 			
 			<div class="col-md-2 col-sm-2">
+<!--
 				<div class="company input-group">
 					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
 						<option value=''>Select a Company</option>
@@ -317,6 +324,7 @@
 						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
+-->
 			</div>
 		</div>
 	</div>
@@ -408,11 +416,6 @@
 			</td>
 		</tr>
 	</table>
-	<div class="row head text-center" id = "view-head" style="display:none;">
-    	<div class="col-md-12">
-        	<h2 id="view-head-text"></h2>
-        </div>
-    </div>
 	<div class="row">
 		<?php 
 			output_module("p","Active");

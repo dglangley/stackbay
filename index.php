@@ -9,6 +9,11 @@
 	include_once 'inc/getShelflife.php';
 	include_once 'inc/array_stristr.php';
 
+	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST) {
+		header('Location: '.$SEARCH_MODE);
+		exit;
+	}
+
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
 	else if (isset($_REQUEST['upload_listid']) AND is_numeric($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']>0) { $listid = $_REQUEST['upload_listid']; }
