@@ -1604,7 +1604,10 @@
 						dataType: 'json',
 						success: function(form) {
 							if (form['message']=='Success') {
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2d8fd6421a635d0972090d9311e958a97909d3ed
 								var on = form["order"];
 								var ps = form["type"];
 								console.log("SAVED"+on+" | Order"+ps);
@@ -1677,8 +1680,8 @@
 				e.preventDefault();
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
-					$(this).closest("body").children(".table-header").show();
-					$(this).closest("body").children(".initial-header").hide();
+					//$(this).closest("body").children(".table-header").show();
+					//$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
 					//Show everything
@@ -1701,8 +1704,8 @@
 
 				}
 				else{
-					$(this).closest("body").children(".table-header").hide();
-					$(this).closest("body").children(".initial-header").show();
+					//$(this).closest("body").children(".table-header").hide();
+					//$(this).closest("body").children(".initial-header").show();
 					$(".shipping-dash-full").removeClass("shipping-dash-full");
 					$(this).closest("table").find(".overview").hide();
 					$(this).parents("body").find(".shipping_section_head").fadeIn("fast");
