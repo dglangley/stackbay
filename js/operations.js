@@ -1180,9 +1180,18 @@
 					}
 					else{
 						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
-						$("#mismo").prop("checked",false);
+						//$("#mismo").prop("checked",false);
 					}
 				}
+			});
+			
+			$(document).on('change', '#ship_to', function(){
+				if($(this).val() != $('#bill_to').val()) {
+					$("#mismo").prop("checked",false);
+				} else {
+					$("#mismo").prop("checked",true);
+				}
+				console.log($(this).val() + ' vs ' + $('#bill_to').val());
 			});
 			
 			$('#modal-address').on('shown.bs.modal', function () {
