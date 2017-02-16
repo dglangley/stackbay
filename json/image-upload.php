@@ -16,8 +16,7 @@
     // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 	$s3 = false;
 	$bucket = '';
-//	if (! $DEV_ENV) {
-	if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+	if (! $DEV_ENV) {
 		$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
 
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
@@ -40,8 +39,7 @@
         try {
             // check for file existing already
 			$keyExists = false;
-//			if ($DEV_ENV) {
-			if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+			if ($DEV_ENV) {
 				// at least for debugging purposes, save to temp dir because otherwise the file is immediately
 				// lost after this script is complete
 				if (move_uploaded_file($tmp_file, $temp_dir.$filename)) {
@@ -64,8 +62,7 @@
             if ($keyExists) {//file has already been uploaded
 				die($filename.' image name is already uploaded');
             } else {
-//				if (! $DEV_ENV) {
-				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+				if (! $DEV_ENV) {
 	                $upload = $s3->upload($bucket, $filename, fopen($tmp_file, 'rb'), 'public-read');
 
 					// create stamped image, and upload as well

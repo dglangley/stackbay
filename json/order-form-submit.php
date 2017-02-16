@@ -62,8 +62,7 @@
 				}
 
 				if ($keyExists) {//file has already been uploaded
-					echo json_encode(array('filename'=>'','message'=>'File has already been uploaded!'));
-					exit;
+					jsonDie('File has already been uploaded!');
 				}
 
 				if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
@@ -148,6 +147,7 @@
     }
 
     $service = prep($service);
+	$account = prep($account);
 
 	// build freight service and terms descriptors for email confirmation
 	$freight_service = '';
@@ -160,13 +160,21 @@
 			$r = mysqli_fetch_assoc($result);
 			$freight_service = $r['name'].' '.$r['method'];
 		}
-		if ($account AND strtoupper($account)<>'NULL') { $freight_terms = $account; }
-		else { $freight_terms = 'Prepay and Bill'; }
+		if ($account AND strtoupper($account)<>'NULL') {
+			$query = "SELECT account_no FROM freight_accounts WHERE id = $account; ";
+			$result = qdb($query) OR jsonDie(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$freight_terms = $r['account_no'];
+			}
+		} else {
+			$freight_terms = 'Prepay and Bill';
+		}
 
 		$sbj = 'Order '.$assoc_order.' Confirmation';
 
 		// build confirmation email headers, then line items below
-		$msg = "<p>Here's your confirmation for order number ".$assoc_order.". <em>Please review for accuracy.</em></p>";
+		$msg = "<p>Here's your confirmation for order number ".$assoc_order.". <em>Please review for accuracy.</em></p><br/><br/>";
 		$msg .= "<p><strong>Order number:</strong> ".$assoc_order."</p>";
 		$msg .= "<p><strong>Shipping Service:</strong> ".$freight_service."</p>";
 		$msg .= "<p><strong>Shipping Terms:</strong> ".$freight_terms."</p>";
@@ -187,7 +195,6 @@
         $bill = prep($bill); 
         $public = prep($public);
         $private = prep($private);
-        $account = prep($account);
         $assoc_order = prep($assoc_order);
         
         
@@ -207,7 +214,7 @@
         }
 
     //Run the update
-//		$result = qdb($insert) OR jsonDie(qe().' '.$insert);
+		$result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
         //Create a new update number
         $order_number = qid();
@@ -244,7 +251,7 @@
         
         //Query the database
 
-//		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
+		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
     
 
@@ -291,7 +298,7 @@
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
                 
-//				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
+				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
                 $update = "UPDATE ";
@@ -308,7 +315,7 @@
                 `warranty` = $warranty,
                 `cond` = $condition 
                 WHERE id = $record;";
-//				$line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
+				$line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }
         }
     }
@@ -317,9 +324,9 @@
 	if ($email_confirmation) {
 		$send_success = send_gmail($msg,$sbj,array('david@ven-tel.com'));
 		if ($send_success) {
-			echo json_encode(array('message'=>'Success'));
+//			jsonDie('Success');
 		} else {
-			echo json_encode(array('message'=>$SEND_ERR));
+//			jsonDie($SEND_ERR);
 		}
 	}
 

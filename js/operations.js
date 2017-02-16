@@ -1525,16 +1525,17 @@
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
-							var on = form["order"];
-							var ps = form["type"];
-							console.log("SAVED"+on+" | Order"+ps);
-							console.log("Last Inserted: "+form['insert']);
-							console.log("Last Line Inserted: "+form['line_insert']);
-							console.log("Error from the last query: "+form["error"]);
-							console.log("Update form: "+form['update']);
-							console.log(form['input']);
-							console.log(form['update_result']);
 							if (form['message']=='Success') {
+								var on = form["order"];
+								var ps = form["type"];
+								console.log("SAVED"+on+" | Order"+ps);
+								console.log("Last Inserted: "+form['insert']);
+								console.log("Last Line Inserted: "+form['line_insert']);
+								console.log("Error from the last query: "+form["error"]);
+								console.log("Update form: "+form['update']);
+								console.log(form['input']);
+								console.log(form['update_result']);
+
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
 							else{
