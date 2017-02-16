@@ -651,11 +651,9 @@
 				var days = parseInt($("#service :selected").attr("data-days"));
 				if (!isNaN(days)){
 					$("input[name=ni_date]").val(freight_date(days));
+					$('.line_date').text(freight_date(days));
+					$('.line_date').attr("data-date",freight_date(days));
 				}
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
-				// $.ajax({
- 
-				// });
 			});
 		//======================== Right side page load ========================
 		// This function outputs each of the items on the table, as well as the
@@ -678,14 +676,14 @@
 				    var qty = $(this).find(".line_qty").data('qty');
 				    var cost = $(this).find(".line_price").text();
 				    if (cost){
-				    	cost = parseFloat(cost.slice(1));
+				    	cost = Number(cost.replace(/[^0-9\.]+/g,""));
 				    }
 				    else{
 				    	cost = 0.00;
 				    }
 				    total += cost * qty;
 				});
-				//Get all the prices
+				//Get all the 
 				return price_format(total);
 			}
 			
@@ -780,6 +778,8 @@
 				}
 			});
 			
+			//This allows you to use the up and down arrows on the Search lines in PO/SO
+			//Also on tab of qty it will go straight to the price
 			$(document).on("keydown","input[name='ni_qty']",function(e){
 				if (e.keyCode == 9) {
 					e.preventDefault();
@@ -797,7 +797,62 @@
 			$(document).on("keydown","input[name='ni_price']",function(e){
 				if (e.keyCode == 9) {
 					e.preventDefault();
-				} 
+				} else if (e.keyCode == 13) {
+					var isValid = nonFormCase($(this), e);
+					var update = false;
+					
+					if(isValid) {
+			   		    $(".search_lines").each(function() {
+						    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
+						    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
+				   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
+				   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
+			   		    	var partid = $(this).attr("data-line-id");
+			   		        var qty = $(this).find("input[name=ni_qty]").val();
+							var condition = $(".multipart_sub").closest("tr").find(".condition").val();
+							
+						
+		   		        if(qty > 0){
+		   		        	update = true;
+		       					$.ajax({
+									type: "POST",
+									url: '/json/order-table-out.php',
+									data: {
+						   		    	"line":lineNumber,
+						   		    	"search":partid,
+						   		    	"date":date,
+						   		    	"qty":qty,
+						   		    	"unitPrice":price,
+										"warranty":warranty,
+										"condition":condition,
+						   		    	"id": 'new',
+						   		    	"mode":'append'
+										}, // serializes the form's elements.
+									dataType: 'json',
+									success: function(row_out) {
+										$("#right_side_main").append(row_out);
+										$(".search_lines").html("").remove();
+										$("#totals_row").show();
+										$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(line_number());
+										$('#totals_row').find("input[name='np_total']").val(updateTotal());
+										$('#go_find_me').focus();
+		 							}
+								});
+			   		        }
+			   		    });
+			   		    
+						var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+						if (!lineNumber){lineNumber = 0;}
+						$("#go_find_me").val("");
+		    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
+		       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+		       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+		       			
+		       			if(!update) {
+		       				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
+		       			}
+					} 
+				}
 			});
 			
 			$(document).on("click",".li_search_button",function() {
@@ -985,6 +1040,7 @@
 //New Multi-line insertion 			
 			$(document).on("click",".multipart_sub",function(e) {
 				var isValid = nonFormCase($(this), e);
+				var update = false;
 				
 				if(isValid) {
 		   		    $(".search_lines").each(function() {
@@ -997,7 +1053,8 @@
 						var condition = $(".multipart_sub").closest("tr").find(".condition").val();
 						
 					
-	   		        if(qty){
+	   		        if(qty > 0){
+	   		        	update = true;
 	       					$.ajax({
 								type: "POST",
 								url: '/json/order-table-out.php',
@@ -1019,9 +1076,10 @@
 									$("#totals_row").show();
 									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(line_number());
 									$('#totals_row').find("input[name='np_total']").val(updateTotal());
+									$('#go_find_me').focus();
 	 							}
 							});
-		   		        }
+		   		        } 
 		   		    });
 		   		    
 					var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
@@ -1030,9 +1088,18 @@
 	    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
 	       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
 	       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
-				}
+	       			
+	       			if(!update) {
+	       				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
+	       			}
+				} 
 			});
 			
+			$(document).keydown(function(e) {
+			     if(e.keyCode==13){
+			         $('.modal').modal('hide');
+			     }
+			});
 //Delete Button
 			$(document).on("click",".forms_trash",function() {
 				if(confirm("Are you sure you want to delete this row?")){
