@@ -8,8 +8,8 @@
         $type = grab('type');
         $selected = grab('selected');
         $limit = grab('limit');
-        $warehouse = grab('warehouse');
+        // $warehouse = grab('warehouse');
         
-        echo json_encode(loc_dropdowns($type, $selcted,$limit));
+        echo json_encode(loc_dropdowns($type, $selected,$limit));
     
 ?>

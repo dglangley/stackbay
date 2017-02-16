@@ -96,7 +96,16 @@
 				escapeMarkup: function (markup) { return markup; }//let our custom formatter work
 		    });
 		}
-		
+		jQuery.fn.setDefault = function (string,id){
+			var option = $('<option></option>').
+				prop('selected',true).
+				text(string).
+				val(id);
+			option.appendTo($(this));//insert pre-selected option into select menu
+			// initialize the change so it takes effect
+			$(this).trigger("change");
+		}
+
 
 		$(document).ready(function() {
 			
@@ -1132,9 +1141,7 @@
 					option.appendTo($("#ship_to"));
 					/* Let select2 do whatever it likes with this */
 					$("#ship_to").trigger('change');
-					
-					
-		    		
+
 				}
 			}
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -1289,7 +1296,8 @@
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
 				var add_id = drop.last('option').val();
-				console.log(add_id);
+				if(add_id){
+					console.log(add_id);
 					$.ajax({
 						type: "POST",
 						url: '/json/address-pull.php',
@@ -1316,6 +1324,7 @@
 						   	console.log("Address grab: Error");
 						},
 					});
+				}
 				});
 			
 			$(document).on("click","#mismo",function() {
@@ -1523,8 +1532,10 @@
 										return;
 									}
 								}
+								console.log("Order-upload:Success");
 							},
 							error: function(data, textStatus, errorThrown) {
+								console.log("Order-upload: Failure");
 								alert(errorThrown);
 								return;
 							},
@@ -1665,8 +1676,8 @@
 				e.preventDefault();
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6').hide();
-					$(this).closest("body").children(".table-header").show();
-					$(this).closest("body").children(".initial-header").hide();
+					//$(this).closest("body").children(".table-header").show();
+					//$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
 					//Show everything
@@ -1689,8 +1700,8 @@
 
 				}
 				else{
-					$(this).closest("body").children(".table-header").hide();
-					$(this).closest("body").children(".initial-header").show();
+					//$(this).closest("body").children(".table-header").hide();
+					//$(this).closest("body").children(".initial-header").show();
 					$(".shipping-dash-full").removeClass("shipping-dash-full");
 					$(this).closest("table").find(".overview").hide();
 					$(this).parents("body").find(".shipping_section_head").fadeIn("fast");
@@ -2838,6 +2849,51 @@
 		
 }); //END OF THE GENERAL DOCUMENT READY TAG
 //=========================== End Inventory Addition ===========================
+
+//==============================================================================
+//===================================== RM =====================================
+//==============================================================================
+	
+	$(document).on("click",".rm_button",function(){
+		var partid = $(this).closest("tr").data("part");
+		var text = $(this).closest("tr").data("name");
+		var invid = $(this).closest("tr").data("invid");
+		$("#modalRMBody").find(".item_search").initSelect2("/json/part-search.php","Select a Part","purchase");
+		$("#modalRMBody").find(".item_search").setDefault(text,partid);
+		$("#modalRMBody").data("partid",partid);
+		$("#modalRMBody").data("invid",invid);
+		$("#modal-RM").modal("show");
+	});
+	$(document).on("click","#RM-continue",function() {
+		var init_part = $("#modalRMBody").data("partid");
+		var new_part = $("#modalRMBody").find(".item_search").val();
+		// console.log("OG PART: "+init_part+)
+		if (new_part != init_part){
+			var invid = $("#modalRMBody").data("invid");
+			$.ajax({
+				type: "POST",
+				url: '/json/rm-processor.php',
+				data: {
+					"invid" : invid,
+					"part" : new_part
+				},
+				dataType: 'json',
+				success: function(result) {
+					console.log("JSON RM PROCESSOR | Success | /json/rm-processor.php?invid="+invid+"&part="+new_part);
+					location.reload();
+					console.log(result);
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
+				}
+		});
+
+		}
+	});
+
+
+//=================================== End RM ===================================
 
 //==============================================================================
 //=================================== HISTORY ================================== 

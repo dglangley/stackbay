@@ -44,7 +44,7 @@
 		require($rootdir.'/vendor/autoload.php');
 
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
-		if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+		if (!$DEV_ENV) {
 			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
 			$bucket = getenv('S3_ORDER_UPLOADS')?: die('No "S3_ORDER_UPLOADS" config var in found in env!');
 		}
@@ -56,7 +56,7 @@
 
 				// check for file existing already
 				$keyExists = false;
-				if (! isset($_SERVER["SERVER_NAME"]) OR $_SERVER["SERVER_NAME"]<>'marketmanager.local') {
+				if (!$DEV_ENV) {
 					$s3->registerStreamWrapper();
 					$keyExists = file_exists("s3://".$bucket."/".$filename);
 				}
@@ -65,7 +65,7 @@
 					jsonDie('File has already been uploaded!');
 				}
 
-				if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+				if ($DEV_ENV) {
 					$temp_dir = sys_get_temp_dir();
 					if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 					$temp_file = $temp_dir.$filename;
