@@ -13,7 +13,7 @@
 //	header('Content-Type:image/jpeg');
 //	readfile('img/data-center.jpg');
 
-	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+	if ($DEV_ENV) {
 		if (strstr($_SERVER["REQUEST_URI"],'devimgs')) {
 			$dir = sys_get_temp_dir();
 			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
@@ -72,7 +72,7 @@
 	// check that the file actually exists, and if it doesn't with the appended "-vttn",
 	// try removing it because some of brian's pictures don't have it for some reason;
 	// distinction for local vs remote because img_exists() is for remote, file_exists() for local
-	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+	if ($DEV_ENV) {
 		$img_exists = file_exists($img);
 	} else {
 		$img_exists = img_exists($img);

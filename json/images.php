@@ -14,7 +14,7 @@
 	if (isset($_REQUEST['img']) AND $_REQUEST['img']) { $img = $_REQUEST['img']; }
 	if (isset($_REQUEST['imgAction']) AND $_REQUEST['imgAction']) { $imgAction = $_REQUEST['imgAction']; }
 
-	if (isset($_SERVER["SERVER_NAME"]) AND $_SERVER["SERVER_NAME"]=='marketmanager.local') {
+	if ($DEV_ENV) {
 //		$dir = '/devimgs/';
 
 		$prefix = sys_get_temp_dir();

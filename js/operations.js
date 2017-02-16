@@ -1500,6 +1500,9 @@
 					}
 					var pri_notes = $("#private_notes").val();
 					var pub_notes = $("#public_notes").val();
+					var email_to = $("#email_to").val();
+					var email_confirmation = '';
+					if ($("#email_confirmation").is(':checked')) { email_confirmation = $("#email_confirmation").val(); }
 
 					var filename;
 					/* David's file uploader */
@@ -1595,20 +1598,27 @@
 							"pub_notes": pub_notes,
 							"table_rows":submit,
 							"filename":filename,
+							"email_confirmation":email_confirmation,
+							"email_to":email_to,
 							}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
-							var on = form["order"];
-							var ps = form["type"];
-							console.log("SAVED"+on+" | Order"+ps);
-							console.log("Last Inserted: "+form['insert']);
-							console.log("Last Line Inserted: "+form['line_insert']);
-							console.log("Error from the last query: "+form["error"]);
-							console.log("Update form: "+form['update']);
-							console.log(form['input']);
-							console.log(form['update_result']);
 							if (form['message']=='Success') {
+<<<<<<< HEAD
 								// window.location = "/order_form.php?ps="+ps+"&on="+on;
+=======
+								var on = form["order"];
+								var ps = form["type"];
+								console.log("SAVED"+on+" | Order"+ps);
+								console.log("Last Inserted: "+form['insert']);
+								console.log("Last Line Inserted: "+form['line_insert']);
+								console.log("Error from the last query: "+form["error"]);
+								console.log("Update form: "+form['update']);
+								console.log(form['input']);
+								console.log(form['update_result']);
+
+								window.location = "/order_form.php?ps="+ps+"&on="+on;
+>>>>>>> f8b198559d3eb5bab071315bcc068ec0ac05e9df
 							}
 							else{
 							modalAlertShow(
