@@ -315,7 +315,14 @@ $DEV_ENV = true;
     
 		return 'Other';
 	}
+	if (isset($_REQUEST['SEARCH_MODE']) AND $_REQUEST['SEARCH_MODE']) {
+		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_REQUEST['SEARCH_MODE']);
+	} else if (isset($_COOKIE['SEARCH_MODE'])) {
+		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_COOKIE['SEARCH_MODE']);
+	} else {
+		$SEARCH_MODE = '/';//default
+	}
 
 	// version control for css and js includes
-	$V = '20170124';
+	$V = '20170125';
 ?>
