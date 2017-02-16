@@ -678,14 +678,14 @@
 				    var qty = $(this).find(".line_qty").data('qty');
 				    var cost = $(this).find(".line_price").text();
 				    if (cost){
-				    	cost = parseFloat(cost.slice(1));
+				    	cost = Number(cost.replace(/[^0-9\.]+/g,""));
 				    }
 				    else{
 				    	cost = 0.00;
 				    }
 				    total += cost * qty;
 				});
-				//Get all the prices
+				//Get all the 
 				return price_format(total);
 			}
 			
