@@ -1492,12 +1492,13 @@
 					var carrier = $('#carrier').val();
 					var freight = $('#terms').val();
 					var service = $('#service').val();
-					if (($('#account_select').last('option').val())){
-						var account = $('#account_select').last('option').val();
-					}
-					else{
-						var account = '';
-					}
+					var account = $('#account_select').val();
+					// if (($('#account_select').last('option').val())){
+					// 	var account = $('#account_select').last('option').val();
+					// }
+					// else{
+					// 	var account = '';
+					// }
 					var pri_notes = $("#private_notes").val();
 					var pub_notes = $("#public_notes").val();
 					var email_to = $("#email_to").val();
