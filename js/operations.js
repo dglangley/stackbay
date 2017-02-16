@@ -736,6 +736,10 @@
 									
 								}
 								console.log("JSON | NewPar Line Pop | new_paradigm.php: Success");
+								var days = $('#service').find(':selected').data('days');
+								if (days != 4){
+									$("input[name=ni_date]").val(freight_date(days));
+								}
 							},					
 							error: function(xhr, status, error) {
 								alert(error+" | "+status+" | "+xhr);
@@ -752,6 +756,14 @@
 					
 				});
 
+			});
+			
+			$(document).on('focusout', '.datetime-picker-line input', function() {
+				var days = $('#service').find(':selected').data('days');
+				
+				if($(this).val() == '') {
+					$("input[name=ni_date]").val(freight_date(days));
+				}
 			});
 		
 		//MultiPart Search Feature
