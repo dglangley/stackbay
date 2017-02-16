@@ -1,13 +1,16 @@
 <?php
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
-	include_once $rootdir.'/inc/dbconnect.php';
+	require_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/locations.php';
 	
 //==============================================================================
 //============================ Function Delcaration (Declaration?) ============================
@@ -203,7 +206,7 @@
 <html>
 <!-- Declaration of the standard head with  home set as title -->
 <head>
-	<title>VMM Shipping Home</title>
+	<title>VMM Operations Dashboard</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -237,11 +240,10 @@
 		    background: #ddd;
 		}
 		
-		/*.select2-container--default .select2-selection--single {*/
-		/*    border: 1px solid #ccc;*/
-		/*    border-radius: 4px 0px 0px 4px;*/
-		/*    height: 30px;*/
-		/*}*/
+		.nopadding {
+		   padding: 0 !important;
+		   margin: 0 !important;
+		}
 		
 		@media screen and (max-width: 991px){
 			.date-options {
@@ -259,88 +261,60 @@
 <!----------------------------------------------------------------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-	<div class="row-fluid table-header table-filter initial-header" id="order_header" style="width:100%;">
-		<div class="col-md-4">
-		</div>
-		<div class="col-md-4 text-center">
-			<h2 class="minimal">Shipping Dashboard</h2>			</div>
-	</div>
-		
-	<div class="table-header" style="width: 100%; min-height: 60px; display: none;">
-		<div class="row" style="padding: 15px">
+	<div class="table-header" style="width: 100%; min-height: 48px;">
+		<div class="row" style="padding: 8px;" id = "filterBar">
+
+			<div class="col-md-2 col-sm-2">
+				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
+				<div class="row">
+					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
+					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
+					<div class="col-md-3" style  = 'padding-right:0px;padding-left:5px;'>
+						<div class="input-group">
+			              <input type="text" class="form-control input-sm" id="po_filter" placeholder="PO">
+			            </div>
+					</div>
+				</div>
+			</div>
 			<div class = "col-md-2">
-		
-			    <div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
-			        	<i class="fa fa-sort-numeric-desc"></i>	
-			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
-			        	<i class="fa fa-history"></i>	
-			        </button>
-			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-			    </div>
-				<div class="btn-group">
-			        <button class="glow left large btn-report" type="submit" data-value="Sales" id = "sales">
-			        	Sales	
-			        </button>
-					<input type="radio" name="market_table" value="Sales" class="hidden"<?php if ($market_table=='Sales') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($market_table=='Purchases') { echo ' active'; } ?>" id="purchases" type="submit" data-value="Purchases">
-			        	Purchases
-			        </button>
-			        <input type="radio" name="market_table" value="Purchases" class="hidden"<?php if ($market_table=='Purchases') { echo ' checked'; } ?>>
-			    </div>
-			</div>
-			<div class = "col-md-1">
-				<div class="input-group date">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-			<div class = "col-md-1">
-				<div class="input-group date">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
+				<div class="form-group col-md-6 nopadding">
+					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
-			    </div>
-			</div>
-			<div class = "col-md-1 btn-group cal-buttons" data-toggle="buttons" id="shortDateRanges">
-				<div class="date-options">
-					<div class="btn btn-default btn-sm toggle-cal-options" data-name="show">&gt;</div>
-			        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
-	    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
-					<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
+			        </div>
+				</div>
+				<div class="form-group col-md-6 nopadding">
+					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
+			            <span class="input-group-addon">
+			                <span class="fa fa-calendar"></span>
+			            </span>
+				    </div>
 				</div>
 			</div>
-			<div class = "col-md-2">
-				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
+			<div class="col-md-4 col-sm-4 text-center">
+            	<h2 class="minimal">Operations Dashboard</h2>
 			</div>
-			<div class = "col-md-2">
+			
+			<!--This Handles the Search Bar-->
+			<div class="col-md-2 col-sm-2">
 				<div class="input-group">
-					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
-					<span class="input-group-addon">-</span>
-					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
-				</div>
+	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
+              		<span class="input-group-btn">
+	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
+	            	</span>
+	            </div>
 			</div>
-			<div class = "col-md-3">
-				<div class="input-group" style="width: 100%">
-					<select name="companyid" id="companyid" class="company-selector">
-					<option value="">- Select a Company -</option>
-					<?php 
-					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-					?>
+			
+			<div class="col-md-2 col-sm-2">
+				<div class="company input-group">
+					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
+						<option value=''>Select a Company</option>
 					</select>
-		            <span class="input-group-btn">
-						<button class="btn btn-primary btn-sm" type="submit" >
-							<i class="fa fa-filter" aria-hidden="true"></i>
-						</button>
+					<span class="input-group-btn">
+						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
 			</div>
