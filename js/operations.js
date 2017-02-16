@@ -1604,10 +1604,6 @@
 						dataType: 'json',
 						success: function(form) {
 							if (form['message']=='Success') {
-<<<<<<< HEAD
-
-=======
->>>>>>> 2d8fd6421a635d0972090d9311e958a97909d3ed
 								var on = form["order"];
 								var ps = form["type"];
 								console.log("SAVED"+on+" | Order"+ps);
