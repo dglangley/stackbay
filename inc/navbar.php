@@ -71,15 +71,18 @@
 	/*
 		This determines where the user is sent when they submit the search field
 	*/
-	$modes = array('/services.php','/repairs.php','/shipping_home.php','/inventory.php','/','/accounts.php','/job.php');
-	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
-	$mode_index = array_search($mode,$modes);
-	if (isset($_COOKIE['SEARCH_MODE'])) {
-		$SEARCH_MODE = $_COOKIE['SEARCH_MODE'];
+//	$modes = array('/services.php','/repairs.php','/operations.php','/inventory.php','/','/accounts.php','/job.php');
+//	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
+//	$mode_index = array_search($mode,$modes);
+	if (isset($_REQUEST['SEARCH_MODE']) AND $_REQUEST['SEARCH_MODE']) {
+		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_REQUEST['SEARCH_MODE']);
+	} else if (isset($_COOKIE['SEARCH_MODE'])) {
+		//$SEARCH_MODE = $_COOKIE['SEARCH_MODE'];
+		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_COOKIE['SEARCH_MODE']);
 	} else {
 		$SEARCH_MODE = '/';//default
 		// if the current page is one of the allowable $modes, set it to the global variable so we use it as our submit page
-		if ($mode_index!==false) { $SEARCH_MODE = $modes[$mode_index]; }
+//		if ($mode_index!==false) { $SEARCH_MODE = $modes[$mode_index]; }
 	}
 ?>
 	<!-- Please add this css into the overrides css when it is complete -->
@@ -104,6 +107,7 @@
 	</div>
 
 	<form class="form-inline search-form" method="post" action="<?php echo $SEARCH_MODE; ?>" enctype="multipart/form-data" >
+	<input type="hidden" name="SEARCH_MODE" id="SEARCH_MODE" value="<?php echo $SEARCH_MODE; ?>">
 
     <!-- navbar -->
     <header class="navbar navbar-inverse yamm" role="banner">
@@ -136,36 +140,6 @@
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
-			<li class="dropdown<?php if ($SEARCH_MODE=='/' OR $SEARCH_MODE=='/order_form.php') { echo ' active'; } ?>">
-				<a href="javascript:void(0);" data-action="/" class="mode-tab dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false"><i class="fa fa-cubes"></i> <span>Sales</span> <b class="caret"></b></a>
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
-					<li>
-					  <div class="yamm-content">
-						<div class="row">
-							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
-                                <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-money"></i> Sales <span class="pull-right"><a href="/order_form.php?ps=Sale" onClick="setSearchMode('/order_form.php')" title="Start New SO"><i class="fa fa-plus"></i></a></span></h4>
-                                    <ul id="sales-orders-list">
-                                    </ul>
-                                </div>
-                            </div>
-							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
-                                <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-shopping-cart"></i> Purchases <span class="pull-right"><a href="/order_form.php?ps=Purchase" onClick="setSearchMode('/order_form.php')" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
-                                    <ul id="purchase-orders-list">
-                                    </ul>
-                                </div>
-                            </div>
-						</div>
-					  </div>
-					</li>
-<!--
-                    <li><a href="/order_form.php?ps=Sale"><i class="fa fa-money"></i> New SO</a></li>
-                    <li><a href="/order_form.php?ps=Purchase"><i class="fa fa-line-chart"></i> New PO</a></li>
-                    <li><a href="/"><i class="fa fa-cubes"></i> Sales</a></li>
--->
-				</ul>
-			</li>
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">

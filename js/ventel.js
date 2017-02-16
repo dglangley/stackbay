@@ -706,11 +706,25 @@
 		$("#btn-range-options").hover(function() {
 			$("#date-ranges").toggleClass('hidden');
 		});
-		$(".mode-tab").click(function() {
+		$(".mode-tab").click(function(e) {
+			// prevent normal 'a href=' behavior
+			e.preventDefault();
+
+			// remember the user's selection for next time they open their browser
+			var action = $(this).prop('href');
+			$("#SEARCH_MODE").val(action);
+			// save to cookie for later recall after browser is closed and then re-opened
+			$.cookie("SEARCH_MODE",action);
+
+			// wrap the link into the wrapping form so we can post search data to the switched tab
 			var form = $(this).closest("form");
-			// remember the user's selection for next time they open a page
-			setSearchMode($(this).data('action'));
-			form.prop('action',$(this).data('action'));
+			form.prop('action',$(this).prop('href'));
+			// if the user is holding 'cmd' or 'ctrl' keys, open to new tab; otherwise, reset to here
+			if (e.metaKey || e.ctrlKey) {
+				form.prop('target','_newtab');
+			} else {
+				form.prop('target','');
+			}
 			form.submit();
 		});
 
@@ -1622,7 +1636,6 @@
 	}
 	// sets action url on search mode of navbar tabs
 	function setSearchMode(action) {
-		$.cookie("SEARCH_MODE",action);
 	}
 
 	Dropzone.autoDiscover = false;
