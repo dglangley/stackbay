@@ -96,20 +96,12 @@ function search_row(){
         </td>";
 
         // //Delivery Date
-        // $start_date = date('Y-m-d');
-        // $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
-        // $counter = 7;
-        // while($counter > NETWORKDAYS($start_date,$stop_date)){
-        //     $stop_date = date('m/d/Y', strtotime($start_date. ' +1 day'));
-        // };
         
         //Default is ground aka 4 days
-        $date = addBusinessDays(date("Y-m-d H:i:s"), 4);
+        $default_add = 4;
+        $date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
         //$date = date("m/d/Y");
-
-        //Set default Delivery Date
-        // $A['d'] = 4;
-        // $date = ($date)? $date : realDeliveryDate($GLOBALS['now'],$A);
+        
         $line .= "
         <td>			
 		    <div class='input-group date datetime-picker-line'>
