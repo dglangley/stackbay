@@ -651,11 +651,9 @@
 				var days = parseInt($("#service :selected").attr("data-days"));
 				if (!isNaN(days)){
 					$("input[name=ni_date]").val(freight_date(days));
+					$('.line_date').text(freight_date(days));
+					$('.line_date').attr("data-date",freight_date(days));
 				}
-            	// console.log(window.location.origin+"/json/order-table-out.php?ajax=true&limit="+limit+"&field=services&label=Service&id=service&size=col-sm-6");
-				// $.ajax({
- 
-				// });
 			});
 		//======================== Right side page load ========================
 		// This function outputs each of the items on the table, as well as the
