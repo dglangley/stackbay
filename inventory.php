@@ -646,11 +646,11 @@
 
 		$(document).on('click', '.revisions', function() {
 			$('.serial_listing').hide();
-			// $('.parts-list').hide();
+			$('.parts-list').hide();
 			var element = $(this).val();
 			if(element != '') {
-				$('.revisions :selected').each(function(i, selected){
-					var part = selected.value;
+				$('.revisions').find(':selected').each(function(i, selected){
+					var part = $(this).val();
 					if (part != ''){
 						$('.' + part).show();
 					}

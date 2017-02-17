@@ -11,6 +11,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/jsonDie.php';
 	
 //==============================================================================
 //================== Function Delcaration (Declaration?) =======================
@@ -18,9 +19,57 @@
 	
 	//Output Module acts as the general output for each of the dashboard sections.
 	//	INPUTS: Order(p,s);  Status(Active,Complete)
-	
+
 	$po_updated = $_REQUEST['po'];
 	$so_updated = $_REQUEST['so'];
+	
+	//Search first by the global seach if it is set or by the parameter after if global is not set
+	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
+	
+	function searchQuery($search) {
+		$initial = array();
+		
+		//$initial = hecidb($search);
+		$query = "SELECT * FROM inventory WHERE serial_no = '".res(strtoupper($search))."';";
+		$result = qdb($query) OR die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			$initial[] = $row;
+		}
+		
+		//If the initial search is empty populate the data with close alternates
+		if(empty($initial))
+			$initial = soundsLike($search);
+		
+		return $initial;
+	}
+	
+	function soundsLike($search) {
+		$arr = array();
+		//SQL Soundex searches the table for similar
+		$query = 'SELECT * FROM inventory WHERE soundex(serial_no) LIKE soundex("'.res(strtoupper($search)).'");';
+
+		$result = qdb($query) OR die(qe());
+		
+		//if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$arr[] = $row['serial_no'];
+			}
+		//}
+		
+		//This prevents duplicate entries of similar results
+		$arr = array_values(array_unique($arr));
+		for($i=0; $i<count($arr); $i++) {
+			$holder = $arr[$i];
+			//Run the levenshtein step search
+	   		$temp_arr[$i] = levenshtein($search, $holder);
+		}
+		
+		return $arr;
+	}
+	
+	print_r(searchQuery($search));
+	die();
 	
 	function output_module($order,$status){
 		
@@ -217,10 +266,6 @@
 			overflow-x: hidden;
 			margin-top: 10px;
 		}
-		
-		/*.select2-container {*/
-		/*    width: 90% !important;*/
-		/*}*/
 		
 		.date-options {
 			height: 30px;
@@ -437,6 +482,12 @@
 	(function($){
 		$('#item-updated-timer').delay(3000).fadeOut('fast');
 	})(jQuery);
+	
+	$(document).ready(function() {
+		//Triggering Aaron 2017
+		var search = "<?=$_REQUEST['s']; ?>";
+		window.history.replaceState(null, null, "/inventory.php?search=" + search);	
+	});
 </script>
 
 </body>
