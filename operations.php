@@ -68,8 +68,8 @@
 		return $arr;
 	}
 	
-	print_r(searchQuery($search));
-	die();
+	//print_r(searchQuery($search));
+	//die();
 	
 	function output_module($order,$status){
 		
