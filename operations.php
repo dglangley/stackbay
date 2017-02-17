@@ -13,7 +13,7 @@
 	include_once $rootdir.'/inc/locations.php';
 	
 //==============================================================================
-//============================ Function Delcaration (Declaration?) ============================
+//================== Function Delcaration (Declaration?) =======================
 //==============================================================================
 	
 	//Output Module acts as the general output for each of the dashboard sections.
