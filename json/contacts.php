@@ -48,28 +48,9 @@
         }
     }   
     
-/*
-    if ($companyid && strlen($q) > 0){
-        //Then append the rest of the contacts ordered by alphabetical
-        $secondary = " SELECT DISTINCT * FROM `contacts`
-        WHERE `companyid` != $companyid AND `name` LIKE '%$q%' 
-        ORDER BY `name`;";
-        $second = qdb($secondary);
-    
-        if (isset($second)){
-            foreach($second as $id => $row){
-                $line = array(
-                    'id' => $row['id'], 
-                    'text' => $row['name']
-                );
-                $output[] = $line;
-            }
-        }
-    }    
-*/
     if (strlen($q) > 0){
         $output[] = array(
-            'id' => "new $q",
+            'id' => "Add $q",
             'text' => "Add $q"
             );
     }
