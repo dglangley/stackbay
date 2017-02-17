@@ -1105,9 +1105,11 @@
 			});
 			
 			$(document).keydown(function(e) {
+/*
 			     if(e.keyCode==13){
 			         $('.modal').modal('hide');
 			     }
+*/
 			});
 //Delete Button
 			$(document).on("click",".forms_trash",function() {
@@ -1330,6 +1332,124 @@
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
 			});
+
+
+
+			/***********************************/
+			/***** CONTACT ADD/EDIT MODULE *****/
+			/***********************************/
+
+			$(document).on("click",".contact-edit",function() {
+				var contacts = $(this).closest("div").find('select');
+				var contactid = contacts.val();
+				if (! contactid) { return; }
+
+				// re-text the title
+				$("#modalContactTitle").text(contacts.select2('data')[0]['text']);
+				// erase previous values, just in case there's an error in setting the new values below
+				$("#modal-contact").find("input[type=text],input[type=email]").each(function() {
+					$(this).val('');
+				});
+
+				console.log(window.location.origin+"/json/contact.php?contactid="+contactid);
+				$.ajax({
+					type: "POST",
+					url: '/json/contact.php',
+					data: { 'contactid' : contactid, },
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message=='Success') {
+							$("#contact_name").val(json.name);
+							$("#contact_title").val(json.title);
+							$("#contact_email").val(json.email);
+							$("#contact_notes").val(json.notes);
+						} else {
+							alert(json.message);
+						}
+					},
+					error: function(xhr, desc, err) {
+                    	console.log("Details: " + desc + "\nError:" + err);
+					},
+					complete: function() {
+						// open modal
+						$("#modal-contact").modal('show');
+					}
+				});
+			});
+			$(document).on("shown.bs.modal","#modal-contact",function(e) {
+				var first_field = $(this).find("input[type=text]")[0];
+				first_field.select();
+				first_field.focus();
+			});
+
+			/* save contact info and close modal */
+			$(document).on("click","#save-contact",function() {
+				var companyid = $("#companyid").val();
+				var contactid = $("#contactid").val();
+				var contact_name = $("#contact_name").val();
+				var contact_title = $("#contact_title").val();
+				var contact_email = $("#contact_email").val();
+				var contact_notes = $("#contact_notes").val();
+
+				var params = "?contactid="+escape(contactid)+"&companyid="+companyid+"&name="+escape(contact_name)+
+					"&title="+escape(contact_title)+"&email="+escape(contact_email)+"&notes="+escape(contact_notes);
+				console.log(window.location.origin+"/json/save-contact.php"+params);
+				$.ajax({
+					type: "POST",
+					url: '/json/save-contact.php',
+					data: {
+						'contactid' : contactid,
+						'companyid' : companyid,
+						'name' : contact_name,
+						'title' : contact_title,
+						'email' : contact_email,
+						'notes' : contact_notes
+					},
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message=='Success') {
+							if (contactid.indexOf("Add")>-1) {
+								// re-populate dropdown with newly-created contact
+								var option = $('<option></option>').
+									prop('selected',true).
+									text(json.name).
+									val(json.contactid);
+								option.appendTo($("#contactid"));//insert pre-selected option into select menu
+								// initialize the change so it takes effect
+								$("#contactid").trigger("change");
+							}
+
+							$("#modal-contact").modal('hide');
+						} else {
+							alert(json.message);
+						}
+					},
+					error: function(xhr, desc, err) {
+                    	console.log("Details: " + desc + "\nError:" + err);
+					},
+					complete: function() {
+					}
+				});
+			});
+
+			$(document).on("change","#contactid",function() {
+				var contactid = $(this).val();
+
+				if (contactid.indexOf("Add") == -1) { return; }
+
+				// open modal
+				$("#modalContactTitle").text('Add New Contact');
+				// reset fields
+				$("#modal-contact").find("input[type=text],input[type=email]").each(function() {
+					$(this).val('');
+				});
+				$("#contact_name").val(contactid.replace('Add ',''));
+				$("#modal-contact").modal('show');
+			});
+
+			/***************************************/
+			/***** END CONTACT ADD/EDIT MODULE *****/
+			/***************************************/
 				
 
 //Account Modal Popup Instigation
@@ -1475,11 +1595,13 @@
 					var company = $("#companyid").val();
 					
 					var contact = $("#contactid").val();
+/*
 					if (contact.includes("new")){
 						contact = $("#select2-contactid-container").text();
 						//Get rid of the 'Add' portion of the text
 						contact = contact.slice(4);
 					}
+*/
 					var assoc = $("#assoc_order").val();
 					
 					if (order_type == 'Purchase'){

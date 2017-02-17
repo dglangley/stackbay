@@ -1,9 +1,9 @@
-<div class="modal modal-alert fade" id="modal-address" tabindex="-1" role="dialog" aria-labelledby="modalAlertTitle">
+<div class="modal modal-alert fade" id="modal-address" tabindex="-1" role="dialog" aria-labelledby="modalAddressTitle">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
-        <h4 class="modal-title" id="modalAlertTitle">Add New Address</h4>
+        <h4 class="modal-title" id="modalAddressTitle">Add New Address</h4>
 	  </div>
       <div class="modal-body address-modal" id="address-modal-body" data-origin = "ship_to" data-oldid = "false">
           <div class="row-fluid">
