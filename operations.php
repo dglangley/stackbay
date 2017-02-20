@@ -46,18 +46,19 @@
 		}
 		
 		switch ($type) {
-		    case 'so':
-        		$query = "SELECT DISTINCT * FROM inventory WHERE last_sale = '".res(strtoupper($search))."';";
+		    case 's':
+        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
 		        break;
-		    case 'po':
-        		$query = "SELECT DISTINCT * FROM inventory WHERE last_purchase = '".res(strtoupper($search))."';";
+		    case 'p':
+        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number;";
 		        break;
-		    case 'rma':
-        		$query = "SELECT DISTINCT * FROM inventory WHERE last_rma = '".res(strtoupper($search))."';";
-		        break;
-		    case 'ro':
-        		$query = "SELECT DISTINCT * FROM inventory WHERE last_ro = '".res(strtoupper($search))."';";
-		        break;
+		    //Holder for future RMA and RO
+		    // case 'rma':
+      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_rma = '".res(strtoupper($search))."';";
+		    //     break;
+		    // case 'ro':
+      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_ro = '".res(strtoupper($search))."';";
+		    //     break;
 			default:
 				//Should rarely ever happen
 				break;
@@ -69,8 +70,19 @@
 		}
 		
 		if($trigger == 'parts') {
-			$query = "SELECT DISTINCT * FROM inventory WHERE partid IN (" . implode(',', array_map('intval', $arrayID)) . ");";
 			
+			switch ($type) {
+			    case 's':
+	        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.so_number = i.so_number;";
+			        break;
+			    case 'p':
+	        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.po_number = i.po_number;";
+			        break;
+			    default:
+					//Should rarely ever happen
+					break;
+			}
+
 			$result = qdb($query) OR die(qe());
 			
 			while ($row = $result->fetch_assoc()) {
@@ -78,7 +90,18 @@
 			}
 		}
 		
-		$query = "SELECT DISTINCT * FROM inventory WHERE serial_no = '".res(strtoupper($search))."';";
+		switch ($type) {
+		    case 's':
+		    	$query = "SELECT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' AND inv.last_sale = i.so_number AND o.so_number = i.so_number;";
+		        break;
+		    case 'p':
+		    	$query = "SELECT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' AND inv.last_purchase = i.po_number AND o.po_number = i.po_number;";
+		        break;
+		    default:
+				//Should rarely ever happen
+				break;
+		}
+		
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
@@ -104,51 +127,53 @@
 		$query = 'SELECT * FROM inventory WHERE soundex(serial_no) LIKE soundex("'.res(strtoupper($search)).'");';
 		$result = qdb($query) OR die(qe());
 		
-		//if (mysqli_num_rows($result)>0) {
+		if (mysqli_num_rows($result)>0) {
 			while ($row = $result->fetch_assoc()) {
 				$arr[] = $row['serial_no'];
 			}
-		//}
-		
-		//This prevents duplicate entries of similar results
-		$arr = array_values(array_unique($arr));
-		for($i=0; $i<count($arr); $i++) {
-			$holder = $arr[$i];
-			//Run the levenshtein step search
-	   		$temp_arr[$i] = levenshtein($search, $holder);
 		}
 		
-		asort($temp_arr);
-		
-		foreach($temp_arr as $k => $v) {
-		    $sorted_arr[] = $arr[$k];
-		}
-		
-		$closest_arr = array_slice($sorted_arr, 0, 3);
-		
-		$query = "SELECT DISTINCT * FROM inventory WHERE serial_no IN (" . implode(',', array_map('intval', $closest_arr)) . ");";
-		$result = qdb($query) OR die(qe());
-		
-		while ($row = $result->fetch_assoc()) {
-			//Checks if the array row already exists within the array, if not add it to the list
-			if (!in_array($row, $initial)) {
-			    $initial[] = $row;
+		if(!empty($arr)) {
+			//This prevents duplicate entries of similar results
+			$arr = array_values(array_unique($arr));
+			for($i=0; $i<count($arr); $i++) {
+				$holder = $arr[$i];
+				//Run the levenshtein step search
+		   		$temp_arr[$i] = levenshtein($search, $holder);
+			}
+			
+			asort($temp_arr);
+			
+			foreach($temp_arr as $k => $v) {
+			    $sorted_arr[] = $arr[$k];
+			}
+			
+			$closest_arr = array_slice($sorted_arr, 0, 3);
+			
+			$query = "SELECT DISTINCT * FROM inventory WHERE serial_no IN (" . implode(',', array_map('intval', $closest_arr)) . ");";
+			$result = qdb($query) OR die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				//Checks if the array row already exists within the array, if not add it to the list
+				if (!in_array($row, $initial)) {
+				    $initial[] = $row;
+				}
 			}
 		}
 		
 		return $initial;
 	}
 	
-	function output_module($order,$status){
+	function output_module($order,$status, $search){
 		
-		$status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
+		//$status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
 		$order_out = ($order =="p") ? "Purchase" : "Sales";
 
 		echo"
 			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
 			<div class='shipping-dash'>
 
-				<div class='shipping_section_head' data-title='".$status_out.$order_out." Orders'>";
+				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
 		echo $status_out.$order_out.' Orders';
 		// echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
 		// <i class='fa fa-plus'></i> 
@@ -158,7 +183,11 @@
 		            <table class="table heighthover heightstriped table-condensed">';
 		            output_header($status);
 		echo	'<tbody>';
-            		output_rows($order,$status);
+					//if($search == '') {
+            			output_rows($order,$status, $search);
+					// } else {
+					// 	output_search_rows($search, $order);
+					// }
 		echo '	</tbody>
 		            </table>
 		    	</div>
@@ -220,83 +249,80 @@
 	//Inputs expected:
 	//	- Status: Completed, Active
 	//	- Order: s, p
-	function output_rows($order, $status){
+	function output_rows($order, $status, $search){
+		$results;
 		
-		//Select a joint summary query of the order we are requesting
-		$query = "SELECT * FROM ";
-		if ($order == 'p'){
-			$query .= "purchase_orders o, purchase_items i ";
-			$query .= "WHERE o.po_number = i.po_number ";
-			if($status == 'Active') {
-				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
-			} else {
-				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
+		if($search =='') {
+			//Select a joint summary query of the order we are requesting
+			$query = "SELECT * FROM ";
+			if ($order == 'p'){
+				$query .= "purchase_orders o, purchase_items i ";
+				$query .= "WHERE o.po_number = i.po_number ";
+				$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
 			}
-			//$query .= "AND status = '" . res($status) . "' ";
-			$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-		}
-		else{
-			$query .= "sales_orders o, sales_items i ";
-			$query .= "WHERE o.so_number = i.so_number ";
-			if($status == 'Active') {
-				$query .= "AND i.ship_date IS NULL ";
-				$query .= "ORDER BY o.so_number DESC LIMIT 0 , 100;";
-			} else {
-				$query .= "AND i.ship_date IS NOT NULL ";
-				$query .= "ORDER BY i.ship_date DESC LIMIT 0 , 100;";
+			else{
+				$query .= "sales_orders o, sales_items i ";
+				$query .= "WHERE o.so_number = i.so_number ";
 			}
+			
+			$results = qdb($query);
+		} else {
+			$results = searchQuery($search, $order);
 		}
-		
-		$results = qdb($query);
 	
 		//display only the first N rows, but output all of them
 		$count = 0;
 		
 		//Loop through the results.
-		foreach ($results as $r){
-			$count++;
-			if ($order == 's'){
-				$purchaseOrder = $r['so_number'];
+		if(!empty($results))
+			foreach ($results as $r){
+				$count++;
+				if ($order == 's'){
+					$purchaseOrder = $r['so_number'];
+				}
+				else{
+					$purchaseOrder = $r['po_number'];
+				}
+				$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
+				$company = getCompany($r['companyid']);
+				$item = getPart($r['partid']);
+				$qty = $r['qty'];
+				if ($order != 's'){
+					$status = ($r['qty_received'] >= $r['qty'] ? 'danger' : '');
+				} else {
+					$status = ($r['qty_shipped'] >= $r['qty'] ? 'danger' : '');
+				}
+			
+				if($count<=10){
+					echo'	<tr class="'.$status.'">';
+				}
+				else{
+					echo'	<tr class="show_more '.$status.'" style="display:none;">';
+				}
+					echo'        <td>'.$date.'</td>';
+					echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+					//Either go to inventory add or PO or shipping for SO
+					if($order == 'p')
+						echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+					else
+						echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+					echo'        <td>'.$item.'</td>';
+					echo'    	<td>'.$qty.'</td>';
+				if($status=="Complete"){
+					$arr = explode(' ',trim($item));
+					echo'    	<td class="status">
+									<a href="/inventory.php?search='.$arr[0].'"><i style="margin-right: 5px;" class="fa fa-qrcode" aria-hidden="true"></i></a>
+									<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
+									<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
+								</td>';
+				} else {
+					echo'    	<td class="status">
+									<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
+									<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
+								</td>'; 
+				}
+				echo'	</tr>';
 			}
-			else{
-				$purchaseOrder = $r['po_number'];
-			}
-			$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
-			$company = getCompany($r['companyid']);
-			$item = getPart($r['partid']);
-			$qty = $r['qty'];
-		
-		
-			if($count<=10){
-				echo'	<tr>';
-			}
-			else{
-				echo'	<tr class="show_more" style="display:none;">';
-			}
-				echo'        <td>'.$date.'</td>';
-				echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
-				//Either go to inventory add or PO or shipping for SO
-				if($order == 'p')
-					echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-				else
-					echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-				echo'        <td>'.$item.'</td>';
-				echo'    	<td>'.$qty.'</td>';
-			if($status=="Complete"){
-				$arr = explode(' ',trim($item));
-				echo'    	<td class="status">
-								<a href="/inventory.php?search='.$arr[0].'"><i style="margin-right: 5px;" class="fa fa-qrcode" aria-hidden="true"></i></a>
-								<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
-								<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
-							</td>';
-			} else {
-				echo'    	<td class="status">
-								<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
-								<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
-							</td>'; 
-			}
-			echo'	</tr>';
-		}
 		
 		// //If there are less than ten rows, fill with blanks
 		while ($count < 10){
@@ -385,7 +411,7 @@
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
 
-			<div class="col-md-2 col-sm-2">
+			<div class="col-md-2">
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
 <!--
 				<div class="row">
@@ -419,12 +445,12 @@
 				</div>
 -->
 			</div>
-			<div class="col-md-4 col-sm-4 text-center">
+			<div class="col-md-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
 			</div>
 			
 			<!--This Handles the Search Bar-->
-			<div class="col-md-2 col-sm-2">
+			<div class="col-md-2">
 <!--
 				<div class="input-group">
 	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
@@ -435,7 +461,7 @@
 -->
 			</div>
 			
-			<div class="col-md-2 col-sm-2">
+			<div class="col-md-2 ">
 <!--
 				<div class="company input-group">
 					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
@@ -537,19 +563,17 @@
 			</td>
 		</tr>
 	</table>
-
-	<?php //print_r(searchQuery($search, 'po')); ?>
 	
 	<div class="row table-holder">
 		<?php 
-			output_module("p","Active");
-			output_module("s","Active");
+			output_module("p","Active",$search);
+			output_module("s","Active",$search);
 		?>
     </div>
 	<div class="row table-holder">
 		<?php 
-			output_module("p","Complete");
-			output_module("s","Complete");
+			//output_module("p","Complete");
+			//output_module("s","Complete");
 		?>
     </div> 
 
@@ -565,10 +589,6 @@
 		//Search parameter has been passed in that case show the search results
 		if(search != '') {
 			window.history.replaceState(null, null, "/operations.php?search=" + search);	
-			
-			//$('.table-holder .col-lg-6').hide();
-			
-			//$('#filter-title').text('RMA Search');
 
 		}
 	})(jQuery);
