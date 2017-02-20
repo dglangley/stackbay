@@ -2,6 +2,7 @@
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	require_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
@@ -26,15 +27,65 @@
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 	
-	function searchQuery($search) {
-		$initial = array();
+	function searchQuery($search, $type) {
+		$trigger;
+		$triggerArray = array();
 		
-		//$initial = hecidb($search);
-		$query = "SELECT * FROM inventory WHERE serial_no = '".res(strtoupper($search))."';";
+		$initial = array();
+		$arrayID = array();
+		$query;
+		
+		$parts = hecidb($search);
+		
+		//If Heci DB detects anything from the search then create a trigger to also search through the parts ID
+		if(!empty($parts)) {
+			foreach($parts as $id) {
+				$arrayID[] = $id['id'];
+			}
+			$trigger = 'parts';
+		}
+		
+		switch ($type) {
+		    case 'so':
+        		$query = "SELECT DISTINCT * FROM inventory WHERE last_sale = '".res(strtoupper($search))."';";
+		        break;
+		    case 'po':
+        		$query = "SELECT DISTINCT * FROM inventory WHERE last_purchase = '".res(strtoupper($search))."';";
+		        break;
+		    case 'rma':
+        		$query = "SELECT DISTINCT * FROM inventory WHERE last_rma = '".res(strtoupper($search))."';";
+		        break;
+		    case 'ro':
+        		$query = "SELECT DISTINCT * FROM inventory WHERE last_ro = '".res(strtoupper($search))."';";
+		        break;
+			default:
+				//Should rarely ever happen
+				break;
+		}
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
 			$initial[] = $row;
+		}
+		
+		if($trigger == 'parts') {
+			$query = "SELECT DISTINCT * FROM inventory WHERE partid IN (" . implode(',', array_map('intval', $arrayID)) . ");";
+			
+			$result = qdb($query) OR die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				$initial[] = $row;
+			}
+		}
+		
+		$query = "SELECT DISTINCT * FROM inventory WHERE serial_no = '".res(strtoupper($search))."';";
+		$result = qdb($query) OR die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			//Checks if the array row already exists within the array, if not add it to the list
+			if (!in_array($row, $initial)) {
+			    $initial[] = $row;
+			}
 		}
 		
 		//If the initial search is empty populate the data with close alternates
@@ -46,9 +97,11 @@
 	
 	function soundsLike($search) {
 		$arr = array();
-		//SQL Soundex searches the table for similar
+		$initial = array();
+		$query;
+		
+		//$query = "SELECT DISTINCT * FROM inventory as i, parts as p WHERE soundex(p.part) LIKE soundex('".res(strtoupper($search))."') and p.id = i.partid;";
 		$query = 'SELECT * FROM inventory WHERE soundex(serial_no) LIKE soundex("'.res(strtoupper($search)).'");';
-
 		$result = qdb($query) OR die(qe());
 		
 		//if (mysqli_num_rows($result)>0) {
@@ -65,11 +118,26 @@
 	   		$temp_arr[$i] = levenshtein($search, $holder);
 		}
 		
-		return $arr;
+		asort($temp_arr);
+		
+		foreach($temp_arr as $k => $v) {
+		    $sorted_arr[] = $arr[$k];
+		}
+		
+		$closest_arr = array_slice($sorted_arr, 0, 3);
+		
+		$query = "SELECT DISTINCT * FROM inventory WHERE serial_no IN (" . implode(',', array_map('intval', $closest_arr)) . ");";
+		$result = qdb($query) OR die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			//Checks if the array row already exists within the array, if not add it to the list
+			if (!in_array($row, $initial)) {
+			    $initial[] = $row;
+			}
+		}
+		
+		return $initial;
 	}
-	
-	//print_r(searchQuery($search));
-	//die();
 	
 	function output_module($order,$status){
 		
@@ -245,6 +313,14 @@
 		 echo'	</tr>';
 		 $count++;
 		}
+	}
+	
+	function format($partid){
+		$r = reset(hecidb($partid, 'id'));
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
+
+	    return $display;
 	}
 ?>
 
@@ -461,33 +537,41 @@
 			</td>
 		</tr>
 	</table>
-	<div class="row">
+
+	<?php //print_r(searchQuery($search, 'po')); ?>
+	
+	<div class="row table-holder">
 		<?php 
 			output_module("p","Active");
 			output_module("s","Active");
 		?>
     </div>
-	<div class="row">
+	<div class="row table-holder">
 		<?php 
 			output_module("p","Complete");
 			output_module("s","Complete");
 		?>
-    </div>    
-
-
+    </div> 
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 <script>
 	(function($){
 		$('#item-updated-timer').delay(3000).fadeOut('fast');
-	})(jQuery);
 	
-	$(document).ready(function() {
 		//Triggering Aaron 2017
-		var search = "<?=$_REQUEST['s']; ?>";
-		window.history.replaceState(null, null, "/inventory.php?search=" + search);	
-	});
+		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
+		
+		//Search parameter has been passed in that case show the search results
+		if(search != '') {
+			window.history.replaceState(null, null, "/operations.php?search=" + search);	
+			
+			//$('.table-holder .col-lg-6').hide();
+			
+			//$('#filter-title').text('RMA Search');
+
+		}
+	})(jQuery);
 </script>
 
 </body>
