@@ -221,15 +221,9 @@
 	function output_header($status){
 			echo'<thead>';
 			echo'<tr>';
-			if($status=="Complete"){
-				echo'	<th class="col-md-1">';
-				echo'		Ship Date';
-				echo'	</th>';
-			} else {
-				echo'	<th class="col-md-1">';
-				echo'		Date';
-				echo'	</th>';
-			}
+			echo'	<th class="col-md-1">';
+			echo'		Date';
+			echo'	</th>';
 			echo'	<th class="col-md-4">';
 			echo'	<span class="line"></span>';
 			echo'		Company';
@@ -238,12 +232,7 @@
             echo'		<span class="line"></span>';
             echo'		Order#';
             echo'	</th>';
-        if($status=="Active"){
-            echo'   <th class="col-md-4">';
-        }
-        else {
         	echo'   <th class="col-md-4">';
-        }
             echo'   	<span class="line"></span>';
             echo'       Item';
             echo'	</th>';
@@ -251,19 +240,11 @@
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
-		if($status=="Complete"){
-            echo'  	<th class="col-md-2">';
-            echo'  		&nbsp;';
-            echo'  	</th>';
-            echo'</tr>';
-            echo'</thead>';
-		} else {
 			echo'  	<th class="col-md-2">';
             echo'  		&nbsp;';
             echo'  	</th>';
             echo'</tr>';
 			echo'</thead>';
-		}
 	}
 	
 	//Inputs expected:
