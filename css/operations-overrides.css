@@ -7,6 +7,10 @@ html{
 body{
 	height: 100%;
 }
+/*Keep an eye on using global code on this guy*/
+body.modal-open.accounts-body, #order_body.modal-open {
+	margin-right: 0;
+}
 .row-fluid{
 	margin: 0;
 }

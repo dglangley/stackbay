@@ -1836,6 +1836,7 @@
 					
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
+					$(this).parent().removeClass("shipping_section_foot_lock");
 					//$(this).closest("body").children("#view-head").show();
 
 				}
@@ -1858,6 +1859,7 @@
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
 					$(this).parents("body").find(".overview").hide();
 					//$(this).parents("body").children("#view-head").hide();
+					$(this).parent().addClass("shipping_section_foot_lock");
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
 				headerOffset();
@@ -2559,6 +2561,38 @@
 				},	
 			});
 		});
+
+//==============================================================================
+//================================== RMA =======================================
+//==============================================================================
+
+$(document).on('click', '.rma-button', function() {
+	
+		if($('.check-save').length >0){
+			var isoCheck = [];
+			var init = true;
+			
+			$('.shipping_update').children('tbody').children('tr').each(function() {
+				if(init) {
+					$('.rma_parts').empty();
+					init = false;
+				}
+
+				$(this).find('.iso_comment').each(function() {
+					var element = "<tr>\
+									<td>"+$(this).data('part')+"</td>\
+									<td>"+$(this).data('serial')+"</td>\
+									<td><input type='checkbox'></td>\
+								</tr>";
+					$('.rma_parts').append(element);
+				});
+			});
+			
+			$("#modal-rma").modal("show");
+		} else {
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",'No items for RMA currently.', false);
+		}
+});
 
 //==============================================================================
 //================================== ISO Quality ===============================
