@@ -66,7 +66,8 @@
 		<?php include 'inc/navbar.php';
 		include_once $rootdir.'/modal/address.php';
 		include_once $rootdir.'/modal/accounts.php';
-		include_once $rootdir.'/modal/alert.php'
+		include_once $rootdir.'/modal/alert.php';
+		include_once $rootdir.'/modal/contact.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#f7fff0":"#f5dfba";?> 

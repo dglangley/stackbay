@@ -206,7 +206,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
 						<div class ='contact'>
-							<label for='contactid'>Contact</label>
+							<label for='contactid'>Contact [ <i class='contact-edit fa fa-pencil' aria-hidden='true'></i> ]</label>
 							<select name='contactid' id='contactid' class='form-control input-xs contact-selector' style = 'width:100%;'>
 								<option value = $contact>".getContact($contact)."</option>
 							</select>
