@@ -290,7 +290,7 @@
 	
 	//Inputs expected:
 	//	- Status: Completed, Active
-	//	- Order: s, p
+	//	- Order: s, p, rma, ro
 	function output_rows($order = '', $search = ''){
 		global $serialDetection;
 		$results;
@@ -364,21 +364,6 @@
 				}
 			}
 		}
-		// //If there are less than ten rows, fill with blanks
-		// while ($count < 10){
-		// 	echo'	<tr class = "empty_row">';
-		// 	echo'        <td>&nbsp;</td>';
-		// 	echo'        <td>&nbsp;</td>';
-		// 	echo'        <td>&nbsp;</td>';
-		// 	echo'        <td>&nbsp;</td>';
-		// 	echo'   	 <td>&nbsp;</td>';
-		// 	// if($status=="Active"){
-		// 	// 	echo'    	<td class="status">&nbsp;</td>';
-		// 	// }
-		// 	echo'	</tr>';
-		//  echo'	</tr>';
-		//  $count++;
-		// }
 	}
 	
 	function format($partid, $desc = true){
@@ -434,13 +419,13 @@
 		}
 		
 		.shipping-dash {
-			min-height: 388px;
+			min-height: 410px;
 		}
 		
 		.shipping_section_foot_lock {
 			padding-bottom: 15px;
 		    position: absolute;
-		    bottom: 20px;
+		    bottom: 0px;
 		}
 		
 		@media screen and (max-width: 991px){
@@ -479,36 +464,36 @@
 
 			</div>
 			<div class = "col-md-3">
-				<div class="form-group col-md-4 nopadding">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-			        </div>
-				</div>
-				<div class="form-group col-md-4 nopadding">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-				    </div>
-				</div>
-				<div class="form-group col-md-4 nopadding">
-					<div class="btn-group" id="dateRanges">
-						<div id="btn-range-options">
-							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>
-						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>
-								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>
-							</div><!-- animated fadeIn -->
-						</div><!-- btn-range-options -->
-					</div><!-- btn-group -->
-				</div><!-- form-group -->
+				<!--<div class="form-group col-md-4 nopadding">-->
+				<!--	<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">-->
+			 <!--           <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">-->
+			 <!--           <span class="input-group-addon">-->
+			 <!--               <span class="fa fa-calendar"></span>-->
+			 <!--           </span>-->
+			 <!--       </div>-->
+				<!--</div>-->
+				<!--<div class="form-group col-md-4 nopadding">-->
+				<!--	<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">-->
+			 <!--           <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">-->
+			 <!--           <span class="input-group-addon">-->
+			 <!--               <span class="fa fa-calendar"></span>-->
+			 <!--           </span>-->
+				<!--    </div>-->
+				<!--</div>-->
+				<!--<div class="form-group col-md-4 nopadding">-->
+				<!--	<div class="btn-group" id="dateRanges">-->
+				<!--		<div id="btn-range-options">-->
+				<!--			<button class="btn btn-default btn-sm">&gt;</button>-->
+				<!--			<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>-->
+				<!--		        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>-->
+				<!--    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>-->
+				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>-->
+				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>-->
+				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>-->
+				<!--			</div><!-- animated fadeIn -->
+				<!--		</div><!-- btn-range-options -->
+				<!--	</div><!-- btn-group -->
+				<!--</div><!-- form-group -->
 			</div>
 			<div class="col-md-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
@@ -517,29 +502,24 @@
 			<!--This Handles the Search Bar-->
 
 			<div class="col-md-2 col-sm-2">
-
-
-
-				<div class="input-group">
-	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
-              		<span class="input-group-btn">
-	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
-	            	</span>
-	            </div>
-
+				<!--<div class="input-group">-->
+	   <!--           <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">-->
+    <!--          		<span class="input-group-btn">-->
+	   <!--             	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              -->
+	   <!--         	</span>-->
+	   <!--         </div>-->
 			</div>
 			
 
 			<div class="col-md-2 col-sm-2">
-				<div class="company input-group">
-					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
-						<option value=''>Select a Company</option>
-					</select>
-					<span class="input-group-btn">
-						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
-					</span>
-				</div>
-
+				<!--<div class="company input-group">-->
+				<!--	<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >-->
+				<!--		<option value=''>Select a Company</option>-->
+				<!--	</select>-->
+				<!--	<span class="input-group-btn">-->
+				<!--		<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   -->
+				<!--	</span>-->
+				<!--</div>-->
 			</div>
 		</div>
 	</div>
