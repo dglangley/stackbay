@@ -26,6 +26,9 @@
 	
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
+	$levenshtein = false;
+	$nothingFound = false;
+	$serialDetection = false;
 	
 	function searchQuery($search, $type) {
 		$trigger;
@@ -119,6 +122,7 @@
 	}
 	
 	function soundsLike($search, $type) {
+		global $levenshtein, $nothingFound;
 		$arr = array();
 		$initial = array();
 		$query;
@@ -132,11 +136,16 @@
 			while ($row = $result->fetch_assoc()) {
 				$arr[] = $row['serial_no'];
 			}
+		} else {
+			$nothingFound = true;
 		}
 		
 		//print_r($arr); die();
 		
 		if(!empty($arr)) {
+			//Something was found similar to the search
+			$levenshtein = true;
+			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
 			for($i=0; $i<count($arr); $i++) {
@@ -179,7 +188,7 @@
 		return $initial;
 	}
 	
-	function output_module($order,$status, $search){
+	function output_module($order, $search){
 		
 		$order_out;
 		
@@ -194,7 +203,7 @@
 		}
 
 		echo"
-			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
+			<div class='col-lg-6 pad-wrapper data-load' style='margin: 15px 0 20px 0; display: none;'>
 			<div class='shipping-dash'>
 
 				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
@@ -205,9 +214,9 @@
 		echo	'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed">';
-		            output_header($status);
+		            output_header();
 		echo	'<tbody>';
-        			output_rows($order,$status, $search);
+        			output_rows($order, $search);
 		echo '	</tbody>
 		            </table>
 		    	</div>
@@ -218,13 +227,13 @@
         </div>';
 	}
 	
-	function output_header($status){
+	function output_header(){
 			echo'<thead>';
 			echo'<tr>';
 			echo'	<th class="col-md-1">';
 			echo'		Date';
 			echo'	</th>';
-			echo'	<th class="col-md-4">';
+			echo'	<th class="col-md-4 company_col">';
 			echo'	<span class="line"></span>';
 			echo'		Company';
 			echo'	</th>';
@@ -236,7 +245,7 @@
             echo'   	<span class="line"></span>';
             echo'       Item';
             echo'	</th>';
-            echo'   <th class="col-md-1">';
+            echo'   <th class="col-md-1 qty_col">';
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
@@ -250,8 +259,10 @@
 	//Inputs expected:
 	//	- Status: Completed, Active
 	//	- Order: s, p
-	function output_rows($order = '', $status = '', $search = ''){
+	function output_rows($order = '', $search = ''){
+		global $serialDetection;
 		$results;
+		$status;
 		
 		if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
@@ -278,6 +289,8 @@
 			//Loop through the results.
 			if(!empty($results)) {
 				foreach ($results as $r){
+					//set if a serial is present or not
+					$serialDetection = ($r['serial_no'] != '' ? true : false);
 					$count++;
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
@@ -309,20 +322,11 @@
 						else
 							echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
 						echo'        <td>'.$item.'</td>';
-						echo'    	<td>'.$qty.'</td>';
-					if($status=="Complete"){
-						$arr = explode(' ',trim($item));
-						echo'    	<td class="status">
-										<a href="/inventory.php?search='.$arr[0].'"><i style="margin-right: 5px;" class="fa fa-qrcode" aria-hidden="true"></i></a>
-										<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
-										<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
-									</td>';
-					} else {
+						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 						echo'    	<td class="status">
 										<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
 										<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
 									</td>'; 
-					}
 					echo'	</tr>';
 				}
 			}
@@ -569,14 +573,14 @@
 	
 	<div class="row table-holder">
 		<?php 
-			output_module("p","",$search);
-			output_module("s","",$search);
+			output_module("p",$search);
+			output_module("s",$search);
 		?>
     </div>
 	<div class="row table-holder">
 		<?php 
-			output_module("rma","",$search);
-			output_module("ro","",$search);
+			output_module("rma",$search);
+			output_module("ro",$search);
 		?>
     </div> 
 
@@ -588,12 +592,31 @@
 	
 		//Triggering Aaron 2017
 		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
+		var levenshtein = "<?=$levenshtein;?>";
+		var searched = "<?=$nothingFound;?>";
+		var serialDetection = "<?=$serialDetection;?>";
 		
 		//Search parameter has been passed in that case show the search results
 		if(search != '') {
 			window.history.replaceState(null, null, "/operations.php?search=" + search);	
-
+			if(levenshtein) {
+				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
+			} else if(searched) {
+				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
+			}
 		}
+		
+		//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
+		if(serialDetection) {
+			$('.qty_col').text('Serial');
+			$('.qty_col').addClass('col-md-2');
+			$('.qty_col').removeClass('col-md-1');
+			$('.company_col').addClass('col-md-3');
+			$('.company_col').removeClass('col-md-4');
+		}
+		
+		//Load in the objects after the page is loaded for less jumpy frenziness
+		$('.data-load').show();
 	})(jQuery);
 </script>
 
