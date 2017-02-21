@@ -24,6 +24,39 @@
 	$po_updated = $_REQUEST['po'];
 	$so_updated = $_REQUEST['so'];
 	
+	function params_array($type){
+		$info = array();
+		if($type == "p"){
+			$info['display'] = "Purchase";
+			$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
+			$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
+			$info['url'] = "inventory_add";
+		}
+		else if ($type == "s"){
+			$info['display'] = "Sales";
+			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND i.ship_date IS NULL ";
+			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+			$info['url'] = "shipping";
+		}
+		else if ($type == "rma"){
+			$info['display'] = "RMA";
+			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND i.ship_date IS NULL ";
+			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+			$info['url'] = "inventory_add";
+		}
+		else{
+				$info['case'] = $type;
+		}
+		return $info;
+	}
+	
+
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 	$levenshtein = false;
@@ -127,7 +160,6 @@
 		$initial = array();
 		$query;
 		
-		//$query = "SELECT DISTINCT * FROM inventory as i, parts as p WHERE soundex(p.part) LIKE soundex('".res(strtoupper($search))."') and p.id = i.partid;";
 		$query = 'SELECT * FROM inventory WHERE soundex(serial_no) LIKE soundex("'.res(strtoupper($search)).'");';
 
 		$result = qdb($query) OR die(qe());
@@ -190,7 +222,7 @@
 	
 	function output_module($order, $search){
 		
-		$order_out;
+		 $order_out;
 		
 		if($order =="p") {
 			$order_out = 'Purchase';
@@ -201,11 +233,9 @@
 		} else {
 			$order_out = 'Repair';
 		}
-
 		echo"
-			<div class='col-lg-6 pad-wrapper data-load' style='margin: 15px 0 20px 0; display: none;'>
+			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
 			<div class='shipping-dash'>
-
 				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
 		echo $status_out.$order_out.' Orders';
 		// echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
@@ -281,6 +311,7 @@
 				$results = qdb($query);
 			} else {
 				$results = searchQuery($search, $order);
+
 			}
 		
 			//display only the first N rows, but output all of them
@@ -417,24 +448,25 @@
 	<?php include 'inc/navbar.php'; ?>
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
+			<div class="col-md-1">
+			    <div class="btn-group">
+			        <button class="glow left large btn-report <?=($report_type=='summary')? ' active' : ''?>" type="submit" data-value="summary">
+			        	<i class="fa fa-sort-numeric-desc"></i>	
+			        </button>
+					<input type="radio" name="report_type" value="summary" class="hidden"<?=($report_type=='summary')? ' checked' : ''?>>
+			        <button class="glow center large btn-report<?=($report_type=='detail')? ' active' : '' ?>" type="submit" data-value="detail">
+			        	<i class="fa fa-history"></i>	
+			        </button>
+			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+					<button class="glow right large btn-report<?=($report_type=='all')? ' active' : '' ?>" type="submit" data-value="detail">
+			        	All<!--<i class="fa fa-history"></i>	-->
+			        </button>
+			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			    </div>
 
-			<div class="col-md-2">
-				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
-<!--
-				<div class="row">
-					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
-					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
-					<div class="col-md-3" style  = 'padding-right:0px;padding-left:5px;'>
-						<div class="input-group">
-			              <input type="text" class="form-control input-sm" id="po_filter" placeholder="PO">
-			            </div>
-					</div>
-				</div>
--->
 			</div>
-			<div class = "col-md-2">
-<!--
-				<div class="form-group col-md-6 nopadding">
+			<div class = "col-md-3">
+				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
 			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
@@ -442,7 +474,7 @@
 			            </span>
 			        </div>
 				</div>
-				<div class="form-group col-md-6 nopadding">
+				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
 			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 			            <span class="input-group-addon">
@@ -450,26 +482,42 @@
 			            </span>
 				    </div>
 				</div>
--->
+				<div class="form-group col-md-4 nopadding">
+					<div class="btn-group" id="dateRanges">
+						<div id="btn-range-options">
+							<button class="btn btn-default btn-sm">&gt;</button>
+							<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>
+						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>
+							</div><!-- animated fadeIn -->
+						</div><!-- btn-range-options -->
+					</div><!-- btn-group -->
+				</div><!-- form-group -->
 			</div>
 			<div class="col-md-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
 			</div>
 			
 			<!--This Handles the Search Bar-->
-			<div class="col-md-2">
-<!--
+
+			<div class="col-md-2 col-sm-2">
+
+
+
 				<div class="input-group">
 	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
               		<span class="input-group-btn">
 	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
 	            </div>
--->
+
 			</div>
 			
-			<div class="col-md-2 ">
-<!--
+
+			<div class="col-md-2 col-sm-2">
 				<div class="company input-group">
 					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
 						<option value=''>Select a Company</option>
@@ -478,7 +526,7 @@
 						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
--->
+
 			</div>
 		</div>
 	</div>
@@ -490,6 +538,7 @@
 		</div>
 	<?php endif; ?>
 	
+
 	<table class="" style="display:none;">
 		<tr id = "filterTableOutput">
 			<td class = "col-md-2">

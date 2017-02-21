@@ -148,8 +148,6 @@
     }
 */
 
-    $service = prep($service);
-	$account = prep($account);
 
 	// build freight service and terms descriptors for email confirmation
 	$freight_service = '';
@@ -195,6 +193,8 @@
         $terms = prep($terms);
         $ship = prep($ship);
         $bill = prep($bill); 
+        $service = prep($service);
+    	$account = prep($account);
         $public = prep($public);
         $private = prep($private);
         $assoc_order = prep($assoc_order);
