@@ -101,7 +101,8 @@
 				prop('selected',true).
 				text(string).
 				val(id);
-			option.appendTo($(this));//insert pre-selected option into select menu
+			alert($(this).html());
+			$(this).html(option);//insert pre-selected option into select menu
 			// initialize the change so it takes effect
 			$(this).trigger("change");
 		}
@@ -1144,7 +1145,7 @@
 //Address Suite of functions
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					var display = $("#bill_to").text().trim();
+					var display = $("#bill_to").text();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
 					$("#ship_to").setDefault(display,value);
@@ -1173,20 +1174,20 @@
 						updateShipTo();
 					}
 					else{
+						if($(this).val() != $('#bill_to').val()) {
+							$("#mismo").prop("checked",false);
+						} else {
+							$("#mismo").prop("checked",true);
+						}
+						console.log($(this).val() + ' vs ' + $('#bill_to').val());
 						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
 						//$("#mismo").prop("checked",false);
 					}
 				}
 			});
 			
-			$(document).on('change', '#ship_to', function(){
-				if($(this).val() != $('#bill_to').val()) {
-					$("#mismo").prop("checked",false);
-				} else {
-					$("#mismo").prop("checked",true);
-				}
-				console.log($(this).val() + ' vs ' + $('#bill_to').val());
-			});
+			// $(document).on('change', '#ship_to', function(){
+			// });
 			
 			$('#modal-address').on('shown.bs.modal', function () {
 			    $("#address-modal-body").find('input[name="na_city"]').focus();
@@ -1259,7 +1260,7 @@
 										/* Let select2 do whatever it likes with this */
 										$("#bill_to").trigger('change');
 										console.log("Bill to updated to: "+$("#bill_to").val());
-					    				// updateShipTo();
+					    				updateShipTo();
 					    	}
 				    	// }
 				    	// else{
@@ -1310,7 +1311,7 @@
 			$(document).on("click",".address_edit",function() {
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
-				alert(origin);
+				// alert(origin);
 				var add_id = drop.last('option').val();
 				if(add_id){
 					console.log(add_id);
