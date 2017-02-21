@@ -234,7 +234,7 @@
 			$order_out = 'Repair';
 		}
 		echo"
-			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
+			<div class='col-lg-6 pad-wrapper data-load' style='margin: 10px 0 20px 0; display: none;'>
 			<div class='shipping-dash'>
 				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
 		echo $status_out.$order_out.' Orders';
@@ -331,7 +331,7 @@
 					}
 					$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$company = getCompany($r['companyid']);
-					$item = getPart($r['partid']);
+					$item = format($r['partid'], false);
 					$qty = $r['qty'];
 					if ($order != 's'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'danger' : '');
@@ -379,9 +379,10 @@
 		}
 	}
 	
-	function format($partid){
+	function format($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
 	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+	    if($desc)
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
 	    return $display;
