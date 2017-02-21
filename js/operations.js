@@ -1835,6 +1835,7 @@
 					
 					$(this).closest("table").find(".overview").show();
 					$(this).text("Show Less");
+					$(this).parent().removeClass("shipping_section_foot_lock");
 					//$(this).closest("body").children("#view-head").show();
 
 				}
@@ -1857,6 +1858,7 @@
 					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
 					$(this).parents("body").find(".overview").hide();
 					//$(this).parents("body").children("#view-head").hide();
+					$(this).parent().addClass("shipping_section_foot_lock");
 					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
 				}
 				headerOffset();

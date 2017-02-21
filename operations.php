@@ -24,6 +24,8 @@
 	$po_updated = $_REQUEST['po'];
 	$so_updated = $_REQUEST['so'];
 	
+	$filter = $_REQUEST['filter'];
+	
 	function params_array($type){
 		$info = array();
 		if($type == "p"){
@@ -234,7 +236,7 @@
 			$order_out = 'Repair';
 		}
 		echo"
-			<div class='col-lg-6 pad-wrapper data-load' style='margin: 10px 0 20px 0; display: none;'>
+			<div class='col-lg-6 pad-wrapper data-load' style='margin: 15px 0 20px 0; display: none;'>
 			<div class='shipping-dash'>
 				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
 		echo $status_out.$order_out.' Orders';
@@ -250,7 +252,7 @@
 		echo '	</tbody>
 		            </table>
 		    	</div>
-		    	<div class="col-md-12 text-center shipping_section_foot more" style="padding-bottom: 15px;">
+		    	<div class="col-md-12 text-center shipping_section_foot shipping_section_foot_lock more" style="padding-bottom: 15px;">
 	            	<a href="#">Show more</a>
 	            </div>
             </div>
@@ -334,13 +336,13 @@
 					$item = format($r['partid'], false);
 					$qty = $r['qty'];
 					if ($order != 's'){
-						$status = ($r['qty_received'] >= $r['qty'] ? 'danger' : '');
+						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else {
-						$status = ($r['qty_shipped'] >= $r['qty'] ? 'danger' : '');
+						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					}
 				
 					if($count<=10){
-						echo'	<tr class="'.$status.'">';
+						echo'	<tr class="filter_item '.$status." ".($status == "complete_item" ? "danger": "").'">';
 					}
 					else{
 						echo'	<tr class="show_more '.$status.'" style="display:none;">';
@@ -363,20 +365,20 @@
 			}
 		}
 		// //If there are less than ten rows, fill with blanks
-		while ($count < 10){
-			echo'	<tr class = "empty_row">';
-			echo'        <td>&nbsp;</td>';
-			echo'        <td>&nbsp;</td>';
-			echo'        <td>&nbsp;</td>';
-			echo'        <td>&nbsp;</td>';
-			echo'   	 <td>&nbsp;</td>';
-			// if($status=="Active"){
-			// 	echo'    	<td class="status">&nbsp;</td>';
-			// }
-			echo'	</tr>';
-		 echo'	</tr>';
-		 $count++;
-		}
+		// while ($count < 10){
+		// 	echo'	<tr class = "empty_row">';
+		// 	echo'        <td>&nbsp;</td>';
+		// 	echo'        <td>&nbsp;</td>';
+		// 	echo'        <td>&nbsp;</td>';
+		// 	echo'        <td>&nbsp;</td>';
+		// 	echo'   	 <td>&nbsp;</td>';
+		// 	// if($status=="Active"){
+		// 	// 	echo'    	<td class="status">&nbsp;</td>';
+		// 	// }
+		// 	echo'	</tr>';
+		//  echo'	</tr>';
+		//  $count++;
+		// }
 	}
 	
 	function format($partid, $desc = true){
@@ -431,6 +433,16 @@
 		   margin: 0 !important;
 		}
 		
+		.shipping-dash {
+			min-height: 388px;
+		}
+		
+		.shipping_section_foot_lock {
+			padding-bottom: 15px;
+		    position: absolute;
+		    bottom: 20px;
+		}
+		
 		@media screen and (max-width: 991px){
 			.date-options {
 				position: relative;
@@ -450,19 +462,19 @@
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
 			<div class="col-md-1">
-			    <div class="btn-group">
-			        <button class="glow left large btn-report <?=($report_type=='summary')? ' active' : ''?>" type="submit" data-value="summary">
+			    <div class="btn-group" data-toggle="buttons">
+			        <button class="glow left large btn-report filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?=($report_type=='summary')? ' checked' : ''?>>
-			        <button class="glow center large btn-report<?=($report_type=='detail')? ' active' : '' ?>" type="submit" data-value="detail">
+					<!--<input type="radio" name="report_type" value="summary" class="hidden">-->
+			        <button class="glow center large btn-report filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-					<button class="glow right large btn-report<?=($report_type=='all')? ' active' : '' ?>" type="submit" data-value="detail">
+			        <!--<input type="radio" name="report_type" value="detail" class="hidden">-->
+					<button class="glow right large btn-report filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all" checked>
 			        	All<!--<i class="fa fa-history"></i>	-->
 			        </button>
-			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			        <!--<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>-->
 			    </div>
 
 			</div>
@@ -642,13 +654,19 @@
 	
 		//Triggering Aaron 2017
 		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
+		var filter = "<?=$filter;?>";
+		
 		var levenshtein = "<?=$levenshtein;?>";
 		var searched = "<?=$nothingFound;?>";
 		var serialDetection = "<?=$serialDetection;?>";
 		
 		//Search parameter has been passed in that case show the search results
 		if(search != '') {
-			window.history.replaceState(null, null, "/operations.php?search=" + search);	
+			if(filter != '') {
+				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=" + filter);
+			} else {
+				window.history.replaceState(null, null, "/operations.php?search=" + search);
+			}
 			if(levenshtein) {
 				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
 			} else if(searched) {
@@ -665,8 +683,48 @@
 			$('.company_col').removeClass('col-md-4');
 		}
 		
+		//Prefilter if loaded with a parameter in url
+		if(filter != '') {
+			var type = filter;
+			
+			$('.filter_item').hide();
+
+			if(type == 'complete') {
+				$('.complete_item').show();
+			} else if(type == 'active') {
+				$('.active_item ').show();	
+			} else {
+				$('.filter_item').show();
+			}
+		}
+		
+		$(document).on("click onload", ".filter_status", function(){
+			var type = $(this).data('filter');
+			
+			$('.filter_item').hide();
+			$('.filter_status').removeClass('active');
+			
+			if(type == 'complete') {
+				$('.complete_item').show();
+				$(this).addClass('active');
+			} else if(type == 'active') {
+				$('.active_item ').show();	
+				$(this).addClass('active');
+			} else {
+				$('.filter_item').show();
+				$(this).addClass('active');
+			}
+			
+			if(search != '') {
+				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=" + type);
+			} else {
+				window.history.replaceState(null, null, "/operations.php?filter=" + type);
+			}
+		});
+		
 		//Load in the objects after the page is loaded for less jumpy frenziness
 		$('.data-load').show();
+		
 	})(jQuery);
 </script>
 
