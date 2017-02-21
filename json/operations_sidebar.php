@@ -7,7 +7,6 @@
 // and the display mode. Each gets the mode the number and the type. It then  |
 // counts and outputs the row function.                                       | 
 //                                                                            |
-//                                                                            | 
 // Last update: Aaron Morefield - November 29th, 2016                         |
 //=============================================================================
 

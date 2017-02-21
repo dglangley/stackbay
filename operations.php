@@ -22,26 +22,59 @@
 	$po_updated = $_REQUEST['po'];
 	$so_updated = $_REQUEST['so'];
 	
-	function output_module($order,$status){
-		
-		$status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
-		$order_out = ($order =="p") ? "Purchase" : "Sales";
+	function params_array($type){
 
+		$info = array();
+		if($type == "p"){
+			$info['display'] = "Purchase";
+			$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
+			$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
+			$info['url'] = "inventory_add"
+		}
+		else if ($type == "s"){
+			$info['display'] = "Sales";
+			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND i.ship_date IS NULL ";
+			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+			$info['url'] = "shipping"
+		}
+		else if ($type == "rma"){
+			$info['display'] = "RMA";
+			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+			$info['short'] = "po";
+			$info['active'] = " AND i.ship_date IS NULL ";
+			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+			$info['url'] = "inventory_add"
+		}
+		else{
+				$info['case'] = $type;
+		}
+		return $info;
+	}
+	
+	function output_module($type,$status){
+		
+		// $status_out = ($status =="Active") ? 'Outstanding ' : "Completed ";
+		// $order_out = ($order =="p") ? "Purchase" : "Sales";
+		$i = params_array($type);
 		echo"
 			<div class='col-lg-6 pad-wrapper' style='margin: 25px 0;'>
 			<div class='shipping-dash'>
 
-				<div class='shipping_section_head' data-title='".$status_out.$order_out." Orders'>";
-		echo $status_out.$order_out.' Orders';
+				<div class='shipping_section_head' data-title='".$i['display']." Orders'>";
+		echo $i['display'].' Orders';
 		// echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
 		// <i class='fa fa-plus'></i> 
 		// </div></a>";
 		echo	'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed">';
-		            output_header($status);
+		            output_header($i,$status);
 		echo	'<tbody>';
-            		output_rows($order,$status);
+            		output_rows($i,$status);
 		echo '	</tbody>
 		            </table>
 		    	</div>
@@ -52,7 +85,7 @@
         </div>';
 	}
 	
-	function output_header($status){
+	function output_header($info, $status){
 			echo'<thead>';
 			echo'<tr>';
 			if($status=="Complete"){
@@ -103,32 +136,36 @@
 	//Inputs expected:
 	//	- Status: Completed, Active
 	//	- Order: s, p
-	function output_rows($order, $status){
+	function output_rows($info, $status){
 		
+		$i = $info;
 		//Select a joint summary query of the order we are requesting
-		$query = "SELECT * FROM ";
-		if ($order == 'p'){
-			$query .= "purchase_orders o, purchase_items i ";
-			$query .= "WHERE o.po_number = i.po_number ";
-			if($status == 'Active') {
-				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
-			} else {
-				$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
-			}
-			//$query .= "AND status = '" . res($status) . "' ";
-			$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-		}
-		else{
-			$query .= "sales_orders o, sales_items i ";
-			$query .= "WHERE o.so_number = i.so_number ";
-			if($status == 'Active') {
-				$query .= "AND i.ship_date IS NULL ";
-				$query .= "ORDER BY o.so_number DESC LIMIT 0 , 100;";
-			} else {
-				$query .= "AND i.ship_date IS NOT NULL ";
-				$query .= "ORDER BY i.ship_date DESC LIMIT 0 , 100;";
-			}
-		}
+		$query = "SELECT * FROM ".$i['tables'];
+		// $query .= ($status == "Active")? $i['active'] : $i['inactive'];
+		$query .= " LIMIT 0,100;";
+		
+		// if ($order == 'p'){
+		// 	$query .= "purchase_orders o, purchase_items i ";
+		// 	$query .= "WHERE o.po_number = i.po_number ";
+		// 	if($status == 'Active') {
+		// 		$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
+		// 	} else {
+		// 		$query .= "AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
+		// 	}
+		// 	//$query .= "AND status = '" . res($status) . "' ";
+		// 	$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
+		// }
+		// else{
+		// 	$query .= "sales_orders o, sales_items i ";
+		// 	$query .= "WHERE o.so_number = i.so_number ";
+		// 	if($status == 'Active') {
+		// 		$query .= "AND i.ship_date IS NULL ";
+		// 		$query .= "ORDER BY o.so_number DESC LIMIT 0 , 100;";
+		// 	} else {
+		// 		$query .= "AND i.ship_date IS NOT NULL ";
+		// 		$query .= "ORDER BY i.ship_date DESC LIMIT 0 , 100;";
+		// 	}
+		// }
 		
 		$results = qdb($query);
 	
@@ -263,24 +300,24 @@
 	<?php include 'inc/navbar.php'; ?>
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
-
-			<div class="col-md-2 col-sm-2">
-				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
-<!--
-				<div class="row">
-					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
-					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
-					<div class="col-md-3" style  = 'padding-right:0px;padding-left:5px;'>
-						<div class="input-group">
-			              <input type="text" class="form-control input-sm" id="po_filter" placeholder="PO">
-			            </div>
-					</div>
-				</div>
--->
+			<div class="col-md-1">
+			    <div class="btn-group">
+			        <button class="glow left large btn-report <?=($report_type=='summary')? ' active' : ''?>" type="submit" data-value="summary">
+			        	<i class="fa fa-sort-numeric-desc"></i>	
+			        </button>
+					<input type="radio" name="report_type" value="summary" class="hidden"<?=($report_type=='summary')? ' checked' : ''?>>
+			        <button class="glow center large btn-report<?=($report_type=='detail')? ' active' : '' ?>" type="submit" data-value="detail">
+			        	<i class="fa fa-history"></i>	
+			        </button>
+			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+					<button class="glow right large btn-report<?=($report_type=='all')? ' active' : '' ?>" type="submit" data-value="detail">
+			        	All<!--<i class="fa fa-history"></i>	-->
+			        </button>
+			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			    </div>
 			</div>
-			<div class = "col-md-2">
-<!--
-				<div class="form-group col-md-6 nopadding">
+			<div class = "col-md-3">
+				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
 			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
 			            <span class="input-group-addon">
@@ -288,7 +325,7 @@
 			            </span>
 			        </div>
 				</div>
-				<div class="form-group col-md-6 nopadding">
+				<div class="form-group col-md-4 nopadding">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
 			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
 			            <span class="input-group-addon">
@@ -296,7 +333,20 @@
 			            </span>
 				    </div>
 				</div>
--->
+				<div class="form-group col-md-4 nopadding">
+					<div class="btn-group" id="dateRanges">
+						<div id="btn-range-options">
+							<button class="btn btn-default btn-sm">&gt;</button>
+							<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>
+						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>
+								<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>
+							</div><!-- animated fadeIn -->
+						</div><!-- btn-range-options -->
+					</div><!-- btn-group -->
+				</div><!-- form-group -->
 			</div>
 			<div class="col-md-4 col-sm-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
@@ -304,18 +354,18 @@
 			
 			<!--This Handles the Search Bar-->
 			<div class="col-md-2 col-sm-2">
-<!--
+
 				<div class="input-group">
 	              <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">
               		<span class="input-group-btn">
 	                	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              
 	            	</span>
 	            </div>
--->
+
 			</div>
 			
 			<div class="col-md-2 col-sm-2">
-<!--
+
 				<div class="company input-group">
 					<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >
 						<option value=''>Select a Company</option>
@@ -324,7 +374,7 @@
 						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
--->
+
 			</div>
 		</div>
 	</div>
@@ -336,96 +386,16 @@
 		</div>
 	<?php endif; ?>
 	
-	<table class="" style="display:none;">
-		<tr id = "filterTableOutput">
-			<td class = "col-md-2">
-	
-			    <div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
-			        	<i class="fa fa-sort-numeric-desc"></i>	
-			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
-			        	<i class="fa fa-history"></i>	
-			        </button>
-			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-			    </div>
-				<div class="btn-group">
-			        <button class="glow left large btn-report" type="submit" data-value="Sales" id = "sales">
-			        	Sales	
-			        </button>
-					<input type="radio" name="market_table" value="Sales" class="hidden"<?php if ($market_table=='Sales') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($market_table=='Purchases') { echo ' active'; } ?>" id="purchases" type="submit" data-value="Purchases">
-			        	Purchases
-			        </button>
-			        <input type="radio" name="market_table" value="Purchases" class="hidden"<?php if ($market_table=='Purchases') { echo ' checked'; } ?>>
-			    </div>
-			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-			    </div>
-			</td>
-			<td class = "col-md-1 btn-group" data-toggle="buttons" id="shortDateRanges">
-				<div class="date-options">
-					<div class="btn btn-default btn-sm">&gt;</div>
-			        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
-	    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
-					<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
-				</div>
-			</td>
-			<td class = "col-md-2">
-				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
-			</td>
-			<td class = "col-md-2">
-				<div class="input-group">
-					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
-					<span class="input-group-addon">-</span>
-					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
-				</div>
-			</td>
-			<td class = "col-md-3">
-				<div class="pull-right form-inline">
-					<div class="input-group">
-						<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					<?php 
-					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-					?>
-					</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
-					</div>
-				</div>
-			</td>
-		</tr>
-	</table>
 	<div class="row">
 		<?php 
-			output_module("p","Active");
-			output_module("s","Active");
+			output_module("p");
+			output_module("s");
 		?>
     </div>
 	<div class="row">
 		<?php 
-			output_module("p","Complete");
-			output_module("s","Complete");
+			output_module("rma");
+			output_module("s");
 		?>
     </div>    
 
