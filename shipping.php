@@ -285,6 +285,7 @@
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
 			include_once $rootdir.'/modal/iso.php';
+			include_once $rootdir.'/modal/rma.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
@@ -391,7 +392,10 @@
 								<button type="button" class="btn btn-primary box_addition" title = "">
 							  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
 						  		</button>
-							</div>		
+							</div>
+							<button class="btn-sm btn-flat gray pull-right rma-button" style="margin-right: 10px;">
+						  		RMA
+					  		</button>
 						</div>
 					</div>
 				

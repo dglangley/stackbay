@@ -2562,6 +2562,38 @@
 		});
 
 //==============================================================================
+//================================== RMA =======================================
+//==============================================================================
+
+$(document).on('click', '.rma-button', function() {
+	
+		if($('.check-save').length >0){
+			var isoCheck = [];
+			var init = true;
+			
+			$('.shipping_update').children('tbody').children('tr').each(function() {
+				if(init) {
+					$('.rma_parts').empty();
+					init = false;
+				}
+
+				$(this).find('.iso_comment').each(function() {
+					var element = "<tr>\
+									<td>"+$(this).data('part')+"</td>\
+									<td>"+$(this).data('serial')+"</td>\
+									<td><input type='checkbox'></td>\
+								</tr>";
+					$('.rma_parts').append(element);
+				});
+			});
+			
+			$("#modal-rma").modal("show");
+		} else {
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",'No items for RMA currently.', false);
+		}
+});
+
+//==============================================================================
 //================================== ISO Quality ===============================
 //==============================================================================
 

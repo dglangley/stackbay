@@ -640,6 +640,9 @@
 		var searched = "<?=$nothingFound;?>";
 		var serialDetection = "<?=$serialDetection;?>";
 		
+		//Load in the objects after the page is loaded for less jumpy frenziness
+		$('.data-load').fadeIn();
+		
 		//Search parameter has been passed in that case show the search results
 		if(search != '') {
 			if(filter != '') {
@@ -701,9 +704,6 @@
 				window.history.replaceState(null, null, "/operations.php?filter=" + type);
 			}
 		});
-		
-		//Load in the objects after the page is loaded for less jumpy frenziness
-		$('.data-load').show();
 		
 	})(jQuery);
 </script>
