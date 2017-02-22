@@ -620,9 +620,10 @@
 		//This function show all the serial if the user clicks on the qty link
 		$(document).on('click', '.check_serials', function(e) {
 			e.preventDefault;
-			
+//body > div.loading_element_listing > div:nth-child(2) > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > span
+//body > div.loading_element_listing > div:nth-child(2) > div > table > tbody > tr.serial_listing.serial_listing_5
 			var parent = $(this).closest('.parts-list').data('serial');
-			if ($(".serial_listing").is(":visible")){
+			if ($("."+parent).is(":visible")){
 				$('.' + parent).hide();
 			}else{
 				$('.' + parent).show();
@@ -646,11 +647,11 @@
 
 		$(document).on('click', '.revisions', function() {
 			$('.serial_listing').hide();
-			// $('.parts-list').hide();
+			$('.parts-list').hide();
 			var element = $(this).val();
 			if(element != '') {
-				$('.revisions :selected').each(function(i, selected){
-					var part = selected.value;
+				$('.revisions').find(':selected').each(function(i, selected){
+					var part = $(this).val();
 					if (part != ''){
 						$('.' + part).show();
 					}
