@@ -49,7 +49,7 @@ exit;
 			// if no companyid from above, add company to db; all ensuing iterations will be aliases
 			if (! $companyid) {
 				$query = "INSERT INTO companies (name, notes) ";
-				$query .= "VALUES ('".res($name)."','Added from db 1.0, 7/22/16'); ";
+				$query .= "VALUES ('".res($name)."','Added from db 1.0, ".date("n/j/y")."'); ";
 if ($debug) { echo $query.'<BR>'; }
 				$result = qdb($query) OR die(qe().' '.$query);
 				$companyid = qid();
@@ -66,7 +66,7 @@ if ($debug) { echo $query.'<BR>'; }
 			if (mysqli_num_rows($result)>0) { continue; }// alias already exists, even if not an import from old db
 
 			$query = "INSERT INTO company_aliases (name, companyid, notes) ";
-			$query .= "VALUES ('".$name."','".$companyid."','Added from db 1.0, 7/22/16'); ";
+			$query .= "VALUES ('".$name."','".$companyid."','Added from db 1.0, ".date("n/j/y")."'); ";
 if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().' '.$query);
 		}

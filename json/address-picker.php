@@ -20,7 +20,7 @@
 	    $d_bill = "Select count(`remit_to_id`) mode, max(`created`) recent, `remit_to_id`, a.`name`, 
 			a.`street`, a.`city`, a.`state`,a.`postal_code`
     	    FROM purchase_orders po, addresses a
-    	    WHERE po.`remit_to_id` = a.`id` AND `companyid` = $companyid
+    	    WHERE po.`remit_to_id` = a.`id` /*AND `companyid` = $companyid*/
     	    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
     	    GROUP BY `remit_to_id` 
     	    ORDER BY mode,recent 

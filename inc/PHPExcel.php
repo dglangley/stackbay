@@ -3,9 +3,13 @@
 
 	function PHPExcel($filename) {
 		$bid_col = 3;
-		$qty_col = 22;
-		$heci_col = 7;
-		$part_col = 11;
+		//$qty_col = 22;
+		//$heci_col = 7;
+		//$part_col = 11;
+		// changed cols above 2/22/17 after verizon srm upgrade
+		$qty_col = 24;
+		$heci_col = 9;
+		$part_col = 13;
 		$keepers = array();
 		$results = array();
 
@@ -35,7 +39,7 @@
 									$bid_num = $columns[$bid_col];
 									$qty = $columns[$qty_col];
 								}
-								if ($cell->getCoordinate()=='L'.$row_num) {
+								if ($cell->getCoordinate()=='M'.$row_num) {
 									$heci = preg_replace('/[^[:alnum:]]*/','',$columns[$heci_col]);
 									$part = $columns[$part_col];
 								}
@@ -49,7 +53,9 @@
 					if (! $heci) { continue; }
 					if (strtoupper($heci)=='NONE' OR strtoupper($heci)=='NOCLEI') { $heci = ''; }
 
+					// set headers for columns on first row only
 					if (! isset($results[$bid_num])) { $results[$bid_num][] = array('heci','part','qty'); }
+					// populate columns with data
 					$results[$bid_num][] = array($heci,$part,$qty);
 //					echo 'Row number - ' . $row_num . ':'.$bid_num . ' = '.$qty.' '.$heci.' '.$part.'<BR>';
 				}

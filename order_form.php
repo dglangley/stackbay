@@ -129,9 +129,9 @@
 									$get_reps .= "WHERE users.contactid = contacts.id; ";
 									if ($order_number != 'New'){
 		                        		$old_rep = "Select `sales_rep_id` from $db_table WHERE `$db_order` = $order_number";
-		                        		$set_rep = qdb($old_rep);
-		                        		$set_rep = mysqli_fetch_assoc($set_rep);
-		                        		$set_rep = $set_rep['sales_rep_id'];
+		                        		$rep_res = qdb($old_rep);
+		                        		$rep_row = mysqli_fetch_assoc($rep_res);
+		                        		$set_rep = $rep_row['sales_rep_id'];
 		                        		// echo("<option>$old_rep</option>");
 		                        	}
 		                        	$all_reps = qdb($get_reps);
