@@ -285,7 +285,6 @@
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
 			include_once $rootdir.'/modal/iso.php';
-			include_once $rootdir.'/modal/rma.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
