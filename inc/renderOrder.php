@@ -392,7 +392,12 @@
                 Please communicate all questions regarding these conditions within 15 days.
             </p>
             <p class="'.($order_type == 'RMA' ? '' : 'remove').'">
-                RMA text goes here.
+                Return Instructions:<br><br>
+                Print and return this form with the product(s) to be returned. Improperly packaged or incomplete product(s) will void this RMA. Returned product(s) must match this RMA exactly, substitutes are not allowed. RMA is valid for 30 calendar days.
+                <br><br>
+                Product(s) returned can be replaced, credited or refunded at Ventura Telephone\'s sole discretion. Product(s) remain billable in full if not credited or refunded. No Trouble Found ("NTF") product(s) are subject to a restocking fee. RMA processing may take up to 30 calendar days after receipt.
+                <br><br>
+                Please ship UPS Ground on Account# 360E2A.
             </p>
         </div>
     </body>
