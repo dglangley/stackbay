@@ -496,8 +496,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	if ($mode == 'order'){
 		edit($number,$type);
-	}
-	else{
+	} else {
 		display($number,$type);
 	}
 		
