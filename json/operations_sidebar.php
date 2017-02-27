@@ -317,7 +317,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			echo json_encode($right);
     }
     
-		function getPackages($order_number){
+	function getPackages($order_number){
 			$order_number = prep($order_number);
 			$query = "Select * From packages WHERE order_number = $order_number;";
 			$result = qdb($query);
@@ -334,7 +334,40 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		//Navigation changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
+		if ($page == "RMA"){$right = "";}
 		$right .= "		<div class='sidebar-container'>";
+	if ($order_number) {
+		
+		$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
+		$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
+		
+		$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
+		$results = qdb($query);
+		
+		foreach ($results as $row){
+			$companyid = $row['companyid'];
+			$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
+			$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
+			$contact = $row['contactid'];
+			if($page == 'Purchase'){
+				$b_add = $row['remit_to_id'];
+			}
+			else{
+				$b_add = $row['bill_to_id'];
+				$ref_ln = $row['ref_ln'];
+			}
+			$b_name = getAddresses($b_add,'name');
+			$s_add = $row['ship_to_id'];
+			$s_name = getAddresses($s_add,'name');
+			$selected_carrier = $row['freight_carrier_id'];
+			//$s_carrier_name = getFreight('carrier',$row['freight_carrier_id'])['name'];
+			$selected_service = $row['freight_services_id'];
+			$selected_account = $row['freight_account_id'];
+			$public = $row['public_notes'];
+			$private = $row['private_notes'];
+			$terms = $row['termsid'];
+		}
+	if($page != "RMA"){
 		$right.="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
@@ -344,47 +377,17 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$right .= "</label>
 							<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
 		
-		if ($order_number) {
-			
-			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
-			$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
-			
-			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
-			$results = qdb($query);
-			
-			foreach ($results as $row){
-				$companyid = $row['companyid'];
-				$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
-				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
-				$contact = $row['contactid'];
-				if($page == 'Purchase'){
-					$b_add = $row['remit_to_id'];
-				}
-				else{
-					$b_add = $row['bill_to_id'];
-					$ref_ln = $row['ref_ln'];
-				}
-				$b_name = getAddresses($b_add,'name');
-				$s_add = $row['ship_to_id'];
-				$s_name = getAddresses($s_add,'name');
-				$selected_carrier = $row['freight_carrier_id'];
-				//$s_carrier_name = getFreight('carrier',$row['freight_carrier_id'])['name'];
-				$selected_service = $row['freight_services_id'];
-				$selected_account = $row['freight_account_id'];
-				$public = $row['public_notes'];
-				$private = $row['private_notes'];
-				$terms = $row['termsid'];
-			}
-			
-			if($order_number){ 
-					$right.="			<option value = $order_number>$order_number - $company_name</option>";
-			}
-		}	
+					
+					if($order_number){ 
+							$right.="			<option value = $order_number>$order_number - $company_name</option>";
+					}
+				}	
 
 		$right.="			</select>
 						</div>
 					</div>
 				</div>";
+	}
 		if($results){
 			//Contact Output
 			$right .= "<div class='row'>";
@@ -490,29 +493,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			echo json_encode($right);
 	}
 	
-	
-	function address_out($address_id){
-		//General function for handling the standard display of addresses
-		$address = '';
-		//Address Handling
-		$row = getAddresses($address_id);
-		$name = $row['name'];
-		$street = $row['street'];
-		$city = $row['city'];
-		$state = $row['state'];
-		$zip = $row['postal_code'];
-		$country = $row['country'];
-		
-		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($city && $state){$address .= $city.", ".$state;}
-		else if ($city || $state){ ($address .= $city.$state);}
-		if($zip){$address .= "  $zip";}
-		
-		return $address;
-	}
-	
+
 	if ($mode == 'order'){
 		edit($number,$type);
 	}

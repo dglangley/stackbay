@@ -12,28 +12,7 @@
     $companyid = grab('company');
     $order_type = grab('order');
     $line = array();
-	function address_out($address_id){
-		//General function for handling the standard display of addresses
-		$address = '';
-		//Address Handling
-		$row = getAddresses($address_id);
-		$name = $row['name'];
-		$street = $row['street'];
-		$city = $row['city'];
-		$state = $row['state'];
-		$zip = $row['postal_code'];
-		$country = $row['country'];
-		
-		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($city && $state){$address .= $city.", ".$state;}
-		else if ($city || $state){ ($address .= $city.$state);}
-		if($zip){$address .= "  $zip";}
-		
-		return $address;
-	}
-	
+
 	$ps = ($order_type == "Purchase")? 'po' : 'so' ;
 	$ot = ($order_type == "Purchase")? 'purchase_orders' : 'sales_orders' ;
 	$br = ($order_type == "Purchase")? 'remit_to_id' : 'bill_to_id';

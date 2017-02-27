@@ -1148,6 +1148,7 @@
 					var display = $("#bill_to").text();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
+					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", value);
 					$("#ship_to").setDefault(display,value);
 				}
 			}
@@ -1172,6 +1173,7 @@
 					if (origin == "bill_to"){
 						//$("#ship_display").replaceWith(right);	
 						updateShipTo();
+						// $("#select2-ship_to-container").html(right);
 					}
 					else{
 						if($(this).val() != $('#bill_to').val()) {
@@ -3069,6 +3071,49 @@ $(document).on('click', '.rma-button', function() {
 
 
 //=================================== End RM ===================================
+
+//==============================================================================
+//==================================== RMA =====================================
+//==============================================================================
+
+	$(".rma-macro").ready(function(){
+		var order_number = 2;
+		var page = 'rma';
+		var order_type = "RMA"
+		
+		//Left Side Main output on load of the page
+		$.ajax({
+			type: "POST",
+			url: '/json/operations_sidebar.php',
+			data: {
+				"number": order_number,
+				"type": order_type,
+				"page": page,
+				},
+			dataType: 'json',
+			success: function(right) {
+				$(".rma-macro").append(right);
+			},
+			complete: function() {
+				console.log("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Success");
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.error("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Error");
+			}
+			
+		});
+	});
+
+
+
+//================================== END RMA ===================================
+
+
+
+
+
+
 
 //==============================================================================
 //=================================== HISTORY ================================== 
