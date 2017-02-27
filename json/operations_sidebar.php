@@ -513,10 +513,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $address;
 	}
 	
-	if ($mode == 'order'){
+	if ($mode == 'order') {
 		edit($number,$type);
-	}
-	else{
+	} else {
 		display($number,$type);
 	}
 		
