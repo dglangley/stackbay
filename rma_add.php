@@ -286,13 +286,13 @@
 						</div>
 						
 						<div class="col-md-6" style="padding: 0 0 0 5px;">
-							<div class="input-group" style="margin-bottom: 6px;">
+							<!--<div class="input-group" style="margin-bottom: 6px;">-->
 							    <input class="form-control input-sm serialInput" type="text" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
-							    <span class="input-group-addon">
-							        <button class="btn btn-secondary" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
-							        <button class="btn btn-secondary" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
-							    </span>
-				            </div>
+							    <!--<span class="input-group-addon">-->
+							    <!--    <button class="btn btn-secondary" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>-->
+							    <!--    <button class="btn btn-secondary" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>-->
+							    <!--</span>-->
+				            <!--</div>-->
 			            </div>
 		            </div>
 				</div>
@@ -344,7 +344,7 @@
 												<div class="input-group">
 													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
 													<span class="input-group-addon">
-														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked' : '');?>>
+														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
 													</span>
 												</div>
 											</div>
@@ -388,7 +388,7 @@
 												$serialData = getSerial($item['inventoryid']);
 										?>
 											<div class="row">
-												<span class="text-center location-input" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
+												<span class="text-center location-input" data-location="<?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?>" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
 											</div>	
 										<?php 
 											} 
@@ -468,7 +468,8 @@
 							//Prevent no values
 							if(serialVal != '') {
 								var existing = $('.serial-check[data-assocSerial="'+serialVal+'"]').length;
-								if(existing == 1) {
+								var is_checked = $('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked');
+								if(existing == 1 && !is_checked) {
 									//Item is already checked
 									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked')) {
 										modalAlertShow("Warning", "Item has already been received.<br><br>Locations will be updated if a change has occured.", false);
@@ -484,6 +485,8 @@
 									$('#rma_complete').prop('disabled', false);
 									$('#rma_complete').removeClass("gray");
 									$('#rma_complete').addClass("success");
+								} else if(is_checked) {
+									modalAlertShow("Error", serialVal + " has been received.<br><br>Please try a different serial.", false);
 								} else if(existing == 0) {
 									modalAlertShow("Error", "No RMA Serials found for " + serialVal, false);
 								} else {
