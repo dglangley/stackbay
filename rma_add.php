@@ -3,12 +3,8 @@
 //=============================================================================
 //======================== Order Form General Template ========================
 //=============================================================================
-//  This is the general output form for the sales and purchase order forms.   |
-//	This will be designed to cover all general use cases for shipping forms,  |
-//  so generality will be crucial. Each of the sections is to be modularized  |
-//	for the sake of general accessiblilty and practicality.					  |
+//  																		  |
 //																			  |
-//	Aaron Morefield - October 18th, 2016									  |
 //=============================================================================
 
 	//Standard includes section
@@ -124,6 +120,7 @@
 	}
 	
 	function getAddress($order_number) {
+		$address;
 		$query = "SELECT * FROM returns AS r, sales_orders AS s WHERE r.rma_number = ".res($order_number)." AND r.order_number = s.so_number;";
 		$result = qdb($query) or die(qe());
 		
@@ -135,6 +132,21 @@
 		$address = address_out($address);
 		
 		return $address;
+	}
+	
+	function getCreated($order_number) {
+		$date;
+		$query = "SELECT * FROM returns WHERE rma_number = ".res($order_number).";";
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$date = $result['created'];
+		}
+		
+		$date = date_format(date_create($date), "M j, Y");
+		
+		return $date;
 	}
 	
 	function format($partid){
@@ -239,7 +251,7 @@
 						<div class="col-md-12">
 							<b style="color: #526273;font-size: 14px;">RMA Order #<?php echo $order_number; ?></b><br>
 							<b style="color: #526273;font-size: 12px;"><?=getRep('1');?></b><br>
-							March 31, 2017<br><br>
+							<?=getCreated($order_number);?><br><br>
 							
 	
 							<b style="color: #526273;font-size: 14px;">CUSTOMER:</b><br>
@@ -325,12 +337,14 @@
 										<?php 
 											if(!empty($serials)):
 											foreach($serials as $item) { 
+												$serialData = getSerial($item['inventoryid']);
+												
 										?>
 											<div class="row">
 												<div class="input-group">
-													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=getSerial($item['inventoryid'])['serial_no'];?></span>
+													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
 													<span class="input-group-addon">
-														<input class="serial-check" data-place="" data-instance="" data-assocSerial="<?=getSerial($item['inventoryid'])['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == getSerial($item['inventoryid'])['last_return'] ? 'checked' : '');?>>
+														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked' : '');?>>
 													</span>
 												</div>
 											</div>
@@ -371,9 +385,10 @@
 										<?php 
 											if(!empty($serials)):
 											foreach($serials as $item) { 
+												$serialData = getSerial($item['inventoryid']);
 										?>
 											<div class="row">
-												<span class="text-center location-input" data-serial="<?=getSerial($item['inventoryid'])['serial_no'];?>" data-location="<?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) );?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) )?></span>
+												<span class="text-center location-input" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
 											</div>	
 										<?php 
 											} 
@@ -454,12 +469,18 @@
 							if(serialVal != '') {
 								var existing = $('.serial-check[data-assocSerial="'+serialVal+'"]').length;
 								if(existing == 1) {
+									//Item is already checked
+									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked')) {
+										modalAlertShow("Warning", "Item has already been received.<br><br>Locations will be updated if a change has occured.", false);
+									} 
+									
 									$('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked', true);
 									$('.location-input[data-serial="'+serialVal+'"]').text(location);
 									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-place', $('.place').val());
 									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-instance', $('.instance').val());
-									$(this).val("").focus();
 									
+									$(this).val("").focus();
+										
 									$('#rma_complete').prop('disabled', false);
 									$('#rma_complete').removeClass("gray");
 									$('#rma_complete').addClass("success");
@@ -486,29 +507,35 @@
 						var place = $(this).data('place');
 						var instance = $(this).data('instance');
 						
-						items.push(partid);
-						items.push(serial);
-						items.push(place);
-						items.push(instance);
+						//If the bare minimum place is empty
+						if(place != '') {
+							items.push(partid);
+							items.push(serial);
+							items.push(place);
+							items.push(instance);
+						}
 					});
-					console.log(items);
-					$.ajax({
-						type: "POST",
-						url: '/json/rma-add.php',
-						data: {
-							 'rmaItems' : items, 'rma_number' : rma_number
-						},
-						dataType: 'json',
-						success: function(result) {
-							console.log(result);
-							//Error handler or success handler
-							if(result == true) {
-								alert('success');
-							} else {
-								alert('fail');
-							}
-						},
-					});
+					
+					//Dont run this if there is nothing to be saved
+					if(items.length === 0){
+						$.ajax({
+							type: "POST",
+							url: '/json/rma-add.php',
+							data: {
+								 'rmaItems' : items, 'rma_number' : rma_number
+							},
+							dataType: 'json',
+							success: function(result) {
+								console.log(result);
+								//Error handler or success handler
+								if(result == true) {
+									alert('success');
+								} else {
+									alert('fail');
+								}
+							},
+						});	
+					}
 				});
 			})(jQuery);
 			

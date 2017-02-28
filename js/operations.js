@@ -2991,7 +2991,7 @@
 			var place = $(this).val();
 			$(this).closest(".row").find(".instance option[data-place!='"+place+"']").hide();
 			$(this).closest(".row").find(".instance option[data-place='"+place+"']").show();
-			$(this).closest(".row").find(".instance").val("");
+			$(this).closest(".row").find(".instance option[data-place='"+place+"']:first").prop("selected", true);
 		});
 		
 }); //END OF THE GENERAL DOCUMENT READY TAG
