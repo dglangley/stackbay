@@ -79,7 +79,7 @@
 	    
 	    if (mysqli_num_rows($result)>0) {
 			$result = mysqli_fetch_assoc($result);
-			$serial = $result['serial_no'];
+			$serial = $result;
 		}
 		
 		return $serial;
@@ -223,7 +223,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>RMA #<?php echo $order_number.' Receiving'; ?></h2>
 			</div>
@@ -328,9 +328,9 @@
 										?>
 											<div class="row">
 												<div class="input-group">
-													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=getSerial($item['inventoryid'])?></span>
+													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=getSerial($item['inventoryid'])['serial_no'];?></span>
 													<span class="input-group-addon">
-														<input class="serial-check" data-assocSerial="<?=getSerial($item['inventoryid'])?>" style="margin: 0 !important" type="checkbox">
+														<input class="serial-check" data-place="" data-instance="" data-assocSerial="<?=getSerial($item['inventoryid'])['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == getSerial($item['inventoryid'])['last_return'] ? 'checked' : '');?>>
 													</span>
 												</div>
 											</div>
@@ -373,7 +373,7 @@
 											foreach($serials as $item) { 
 										?>
 											<div class="row">
-												<span class="text-center location-input" data-serial="<?=getSerial($item['inventoryid'])?>" data-location="<?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) )?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) )?></span>
+												<span class="text-center location-input" data-serial="<?=getSerial($item['inventoryid'])['serial_no'];?>" data-location="<?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) );?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($item['last_return']) ? 'TBD' : getLocation($item['locationid']) )?></span>
 											</div>	
 										<?php 
 											} 
@@ -394,10 +394,25 @@
 		</div> 
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
-		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
+		<script src="js/operations.js"></script>
 		
 		<script>
-		
+			
+			function getUrlParameter(sParam) {
+			    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+			        sURLVariables = sPageURL.split('&'),
+			        sParameterName,
+			        i;
+			
+			    for (i = 0; i < sURLVariables.length; i++) {
+			        sParameterName = sURLVariables[i].split('=');
+			
+			        if (sParameterName[0] === sParam) {
+			            return sParameterName[1] === undefined ? true : sParameterName[1];
+			        }
+			    }
+			}
+			
 			//We can import this code later on into the operations js but this code is only for this page and the features on this page
 			(function($){
 				$('.data-load').fadeIn();
@@ -412,6 +427,7 @@
 					
 					if(!$(this).prop("checked")) {
 						$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').text(pastLocation);
+						//modalAlertShow("Warning", "Locations is missing.<br><br> Please select a location and try again.", false);
 					}
 				});
 				
@@ -440,6 +456,8 @@
 								if(existing == 1) {
 									$('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked', true);
 									$('.location-input[data-serial="'+serialVal+'"]').text(location);
+									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-place', $('.place').val());
+									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-instance', $('.instance').val());
 									$(this).val("").focus();
 									
 									$('#rma_complete').prop('disabled', false);
@@ -455,6 +473,42 @@
 							modalAlertShow("Error", "Locations is missing.<br><br> Please select a location and try again.", false);
 						}
 					}
+				});
+				
+				$(document).on('click', '#rma_complete', function() {
+					//Find each serial checkbox that is checked
+					var items = [];
+					var rma_number = getUrlParameter('on');
+					
+					$(".serial-check:checked").each(function() {
+						var partid = $(this).data('partid');
+						var serial = $(this).data('assocserial');
+						var place = $(this).data('place');
+						var instance = $(this).data('instance');
+						
+						items.push(partid);
+						items.push(serial);
+						items.push(place);
+						items.push(instance);
+					});
+					console.log(items);
+					$.ajax({
+						type: "POST",
+						url: '/json/rma-add.php',
+						data: {
+							 'rmaItems' : items, 'rma_number' : rma_number
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							//Error handler or success handler
+							if(result == true) {
+								alert('success');
+							} else {
+								alert('fail');
+							}
+						},
+					});
 				});
 			})(jQuery);
 			
