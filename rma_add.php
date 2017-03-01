@@ -73,11 +73,11 @@
 		return $listSerial;
 	}
 	
-	//Using inventory ID this function grabs the serial_no, locationid, and last_return values to be used in the tables
+	//Using inventory ID this function grabs the serial_no, locationid, invid and last_return values to be used in the tables
 	function getSerial($invid) {
 		$serial;
 		
-		$query = "SELECT locationid, serial_no, last_return FROM inventory WHERE id = ". res($invid) .";";
+		$query = "SELECT locationid, serial_no, last_return, id FROM inventory WHERE id = ". res($invid) .";";
 		$result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {
@@ -257,6 +257,7 @@
 			</div>
 		</div>
 		
+		<!--Add in success message-->
 		<?php if($rma_updated == 'true'): ?>
 			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
 			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
@@ -358,7 +359,7 @@
 												<div class="input-group serial-<?=$serialData['serial_no'];?>">
 													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
 													<span class="input-group-addon">
-														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
+														<input class="serial-check" data-invid="<?=$serialData['id'];?>" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
 													</span>
 												</div>
 											</div>
@@ -588,15 +589,14 @@
 						//Dont store data for completed items
 						if(!$(this).prop('disabled')) {
 							//Get all the needed data to save
-							var partid = $(this).data('partid');
-							var serial = $(this).data('assocserial');
+							var invid = $(this).data('invid');
 							var place = $(this).data('place');
 							var instance = $(this).data('instance');
 							
 							//If the bare minimum place is empty
 							if(place != '') {
 								//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
-								placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
+								placeholder = { 'invid' : invid, 'place' : place, 'instance': instance};
 								items.push(placeholder);
 								//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
 							}

@@ -2292,7 +2292,7 @@
 				
 				$(this).find('.infiniteSerials').find('input').each(function() {
 					// added by david 2-28-17
-					ids.push($(this).data('item-id');
+					ids.push($(this).data('item-id'));
 					serials.push($(this).val());
 					savedSerials.push($(this).data('saved'));
 					
@@ -2344,7 +2344,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						window.location = "/shipping_home.php?po=true";
+						window.location = "/operations.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
@@ -2353,12 +2353,12 @@
 					} else {
 						//alert('No changes have been made.');
 						$click.attr('id','save_button_inventory');
-						window.location = "/shipping_home.php?po=true";
+						window.location = "/operations.php?po=true";
 					}
 				},
 				error: function(xhr, status, error) {
 					//alert(error+" | "+status+" | "+xhr);
-					window.location = "/shipping_home.php?po=true";
+					window.location = "/operations.php?po=true";
 					console.log("inventory-add-complete.php: ERROR");
 				},	
 			});
