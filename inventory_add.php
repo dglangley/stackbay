@@ -56,26 +56,19 @@
 	function getPOParts () {
 		global $order_number;
 		
-		$listParts;
+		$listParts = array();
 		
 		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty != qty_received;";
 		$result = qdb($query);
-	    
-	    if($result)
-	    if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$listParts[] = $row;
-			}
+		while ($row = $result->fetch_assoc()) {
+			$listParts[] = $row;
 		}
 		
 		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty = qty_received;";
 		$result = qdb($query);
 	    
-	    if($result)
-	    if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$listParts[] = $row;
-			}
+		while ($row = $result->fetch_assoc()) {
+			$listParts[] = $row;
 		}
 		
 		return $listParts;
@@ -100,7 +93,7 @@
 		global $order_number;
 		$listSerials;
 		
-		$query = "SELECT * FROM inventory WHERE last_purchase = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$query = "SELECT * FROM inventory WHERE purchase_item_id = ". res($order_number) ." AND partid = '". res($partid) ."';";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -242,7 +235,7 @@
 									</td>
 									<td class="infiniteSerials">
 										<div class="input-group" style="margin-bottom: 6px;">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-item-id="<?php echo $part['id']; ?>" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>

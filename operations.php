@@ -130,10 +130,12 @@
 		
 		switch ($type) {
 		    case 's':
-		    	$query = "SELECT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' AND inv.last_sale = i.so_number AND o.so_number = i.so_number;";
+		    	$query = "SELECT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND inv.sales_item_id = i.id AND o.so_number = i.so_number;";
 		        break;
 		    case 'p':
-		    	$query = "SELECT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' AND inv.last_purchase = i.po_number AND o.po_number = i.po_number;";
+		    	$query = "SELECT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
 		        break;
 		    default:
 				//Should rarely ever happen
@@ -198,10 +200,12 @@
 			
 			switch ($type) {
 			    case 's':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN ('" . $closest_arr . "') AND inv.last_sale = i.so_number AND o.so_number = i.so_number;";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+					$query .= "AND inv.sales_item_id = i.id AND o.so_number = i.so_number;";
 			        break;
 			    case 'p':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN ('" . $closest_arr . "') AND inv.last_purchase = i.po_number AND o.po_number = i.po_number;";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+					$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
 			        break;
 			    default:
 					//Should rarely ever happen

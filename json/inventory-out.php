@@ -88,12 +88,34 @@
 		
 		return $stockNumber;
 	}
+
+	$POs = array();
+	function getPO($itemid) {
+		global $POs;
+		$po;
+
+		if (! $itemid) { return $po; }
+		if (isset($POs[$itemid])) { return ($POs[$itemid]); }
+
+		$itemid = prep($itemid);
+		$query = "SELECT po_number FROM purchase_items WHERE id = $itemid;";
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$po = $result['po_number'];
+		}
+
+		$POs[$itemid] = $po;
+		
+		return $po;
+	}
 	
 	function getVendor($order_number) {
 		$company;
 		
 		$order_number = prep($order_number);
-		$query = "SELECT * FROM purchase_orders WHERE po_number = $order_number;";
+		$query = "SELECT companyid FROM purchase_orders WHERE po_number = $order_number;";
 		$result = qdb($query) or die(qe());
 		
 		if (mysqli_num_rows($result)>0) {
@@ -253,6 +275,7 @@
 	
 	function search($search = ''){
 		$return = array();
+		$parts = array();
 		
 		
 		$place = grab("place");
@@ -267,8 +290,8 @@
 		}
 		$vendor = grab("vendor");
 		$order = grab("order");
-		if ($search){
-			$in = '(';
+		if ($search || $locationid || $condition || $order || ($start && $end)){
+			$in = '';
 			//Get all the parts from the search
 			$initial = hecidb($search);
 			if ($initial){
@@ -276,34 +299,46 @@
 					$in .= "'$id', ";
 				}
 				$in = trim($in, ", ");
-				$in .= ")";
-				$query  = "SELECT DISTINCT partid FROM inventory";
-				$query .= " WHERE partid IN $in";
-				$query .= sFilter('locationid', $locationid);
-				$query .= sFilter('item_condition',$condition);
-				$query .= sFilter('last_purchase',$order);
-				$query .= dFilter('date_created',$start, $end);
-				$query .= ";";
-				$result = qdb($query);
-			
+			}
+
+			$query  = "SELECT *, i.id invid FROM inventory i, parts p ";
+			if ($order) { $query .= ", purchase_items pi "; }
+			$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+			if ($in) { $query .= "AND i.partid IN (".$in.") "; }
+			if ($order) { $query .= "AND pi.id = i.purchase_item_id "; }
+			$query .= sFilter('i.locationid', $locationid);
+			$query .= sFilter('i.item_condition',$condition);
+			if ($order) { $query .= sFilter('pi.po_number',$order); }
+			$query .= dFilter('i.date_created',$start, $end);
+			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.item_condition, i.date_created;";
+			$result = qdb($query);
+			$result1 = query_first($result);
+/*
 				if(mysqli_num_rows($result)>0){
 					//Loop through the results
 					foreach($result as $inv){
 						$parts[$inv['partid']] = $initial[$inv['partid']];
 					}
 				}
-			}
+*/
 			
 			//This portion searches by serial number and appends the values of all the partids by serial
-			$search = prep($search);
-			$query  = "SELECT DISTINCT `partid` FROM inventory where serial_no LIKE $search";
-			$query .= sFilter('locationid', $locationid);
-			$query .= sFilter('item_condition',$condition);
-			$query .= sFilter('last_purchase',$order);
-			$query .= dFilter('date_created',$start, $end);
-			$query .= ";";
+			if ($search) {
+				$search = prep($search);
+				$query  = "SELECT *, i.id invid FROM inventory i, parts p ";
+				if ($order) { $query .= ", purchase_items pi "; }
+				$query .= "WHERE serial_no = $search AND i.partid = p.id AND i.qty > 0 ";
+				if ($order) { $query .= "AND pi.id = i.purchase_item_id "; }
+				$query .= sFilter('i.locationid', $locationid);
+				$query .= sFilter('i.item_condition',$condition);
+				if ($order) { $query .= sFilter('pi.po_number',$order); }
+				$query .= dFilter('i.date_created',$start, $end);
+				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.item_condition, i.date_created;";
 			
-			$result = qdb($query);
+				$result = qdb($query);
+				$result2 = query_first($result);
+			}
+/*
 			if (mysqli_num_rows($result) > 0){
 				foreach ($result as $part){
 			    	$p = hecidb($part['partid'],'id');
@@ -314,17 +349,16 @@
 			    	}
 				}
 			}
-			
-			
 		}
-		else if($locationid || $condition || $order || ($start && $end)){
 
-		    $parts = array();
-			$query  = "SELECT DISTINCT partid FROM inventory WHERE `qty` > 0";
-			$query .= sFilter('locationid', $locationid);
-			$query .= sFilter('item_condition',$condition);
-			$query .= sFilter('last_purchase',$order);
-			$query .= dFilter('date_created',$start, $end);
+			$query  = "SELECT DISTINCT i.partid FROM inventory i ";
+			if ($order) { $query .= ", purchase_items pi "; }
+			$query .= "WHERE i.qty > 0 ";
+			if ($order) { $query .= "pi.id = i.purchase_item_id "; }
+			$query .= sFilter('i.locationid', $locationid);
+			$query .= sFilter('i.item_condition',$condition);
+			if ($order) { $query .= sFilter('pi.po_number',$order); }
+			$query .= dFilter('i.date_created',$start, $end);
 			$query .= ";";
 			$result = qdb($query);
 			foreach ($result as $part){
@@ -333,68 +367,78 @@
 		        	$parts[$id] = $info;
 		    	}
 			}
+*/
 		}
 		else{
 			$return = "Please enter a search parameter";
 		}
-		if(isset($parts)){
-			foreach($parts as $id => $info){
-				$return[$id] = query_first($id,$info);
-				
-			}
+
+/*
+		foreach($parts as $id => $info){
+			$return[$id] = query_first($id,$info);
 		}
+
 		return ($return);
+*/
+		return (array_merge($result1,$result2));
 	}
 	
-	function query_first($partid,$info){
+	function query_first($rows) {//$partid,$info){
 		//Query to grab rows first
 		$r = array();
-		
 
 		//Filter Grabber
 		
+/*
 		$partid = prep($partid);
-		$query = "SELECT `serial_no`,`partid`, `qty`, `locationid`, `item_condition`, `last_purchase`, `status`, `last_sale`, `date_created`, `id` invid ";
+		$query = "SELECT `serial_no`,`partid`, `qty`, `locationid`, `item_condition`, `purchase_item_id`, `status`, `sales_item_id`, `date_created`, `id` invid ";
 		$query .= "FROM inventory ";
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
-		$query .= " ORDER BY locationid, last_purchase, item_condition, date_created;";
+		$query .= " ORDER BY locationid, purchase_item_id, item_condition, date_created;";
 		// $query .= "ORDER BY sumqty;";
 		
 		
 		$rows = qdb($query);
+*/
 
 		foreach ($rows as $row){
 			// print_r($row);
 			$date = format_date($row['date_created'],"m/d/Y");
-			 $key = $row['locationid'].'+'.$row['last_purchase'].'+'.$row['item_condition'].'+'.$date;
+			$po = getPO($row['purchase_item_id']);
+			$key = $row['locationid'].'+'.$po.'+'.$row['item_condition'].'+'.$date;
+			$partid = $row['partid'];
+
+			if (! isset($r[$partid])) {
+				$r[$partid] = array();
+			}
 			
 			//Macro Level information on the key
-			 if (!isset($r[$key])) {
-				 $r[$key]['serials'] = array();
-				 $r[$key]['part_name'] =  $info['part']." ".$info['heci']; 
-				 $r[$key]['qty'] += $row['qty'];
-				 $r[$key]['locationid'] = $row['locationid'];
-				 $r[$key]['location'] = display_location($row['locationid']);
-				 $r[$key]['place'] = display_location($row['locationid'], 'place');
-				 $r[$key]['instance'] = display_location($row['locationid'], 'instance');
-				 $r[$key]['vendorid'] = getVendor($row['last_purchase']);
-				 $r[$key]['vendor'] = getCompany($r[$key]['vendorid']);
-				 $r[$key]['unique'] = $row['invid'];
+			 if (!isset($r[$partid][$key])) {
+				 $r[$partid][$key]['serials'] = array();
+				 //$r[$partid][$key]['part_name'] =  $info['part']." ".$info['heci']; 
+				 $r[$partid][$key]['part_name'] =  $row['part']." ".$row['heci']; 
+				 $r[$partid][$key]['qty'] += $row['qty'];
+				 $r[$partid][$key]['partid'] = $row['partid'];
+				 $r[$partid][$key]['locationid'] = $row['locationid'];
+				 $r[$partid][$key]['location'] = display_location($row['locationid']);
+				 $r[$partid][$key]['place'] = display_location($row['locationid'], 'place');
+				 $r[$partid][$key]['instance'] = display_location($row['locationid'], 'instance');
+				 $r[$partid][$key]['vendorid'] = getVendor($po);
+				 $r[$partid][$key]['vendor'] = getCompany($r[$partid][$key]['vendorid']);
+				 $r[$partid][$key]['unique'] = $row['invid'];
 			 }
 			 //Null Serial handler and serial grouping/append
 			 $serial = 'null';
 			 
 			if ($row['serial_no']){
-				$r[$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'];
+				$r[$partid][$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'];
 			}
 			else{
-				$r[$key]['null'][] = $serial;
+				$r[$partid][$key]['null'][] = $serial;
 			}
-			 	
 		}
 		return $r;
 	}
-	// $parts_arr = array();
 
 
 $search = grab('search');

@@ -257,7 +257,10 @@ echo $query2.'<BR>';
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM inventory; ";
 	$result = qdb($query) OR die(qe().' '.$query);
+	$query = "DELETE FROM inventory_history; ";
+	$result = qdb($query) OR die(qe().' '.$query);
 
+	$purchStart = '2013-01-01';
 	$startDate = '2014-01-01';
 	$endDate = '2014-03-31';
 	$bogus_serial = 100001;
@@ -277,8 +280,8 @@ echo $query2.'<BR>';
 	$query .= "inventory_manufacturer m, inventory_purchasequote pq ";
 	$query .= "WHERE po.purchasequote_ptr_id = iq.quote_id AND iq.company_id = c.id AND iq.inventory_id = i.id ";
 	$query .= "AND m.id = i.manufacturer_id_id AND pq.id = iq.quote_id ";
-	if ($startDate) {
-		$dbStartDate = format_date($startDate, 'Y-m-d');
+	if ($purchStart) {
+		$dbStartDate = format_date($purchStart, 'Y-m-d');
 		$dbEndDate = format_date($endDate, 'Y-m-d');
 		$query .= "AND po.po_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
@@ -323,8 +326,9 @@ echo $query2.'<BR>';
 		}
 		$ln = 'NULL';
 		$qty = 0;
+		$recd_qty = 0;
 		if ($r['quantity']>0) {
-			$qty = prep($r['quantity']);
+			$qty = $r['quantity'];
 		}
 		$price = prep($r['price']);
 		$receive_date = 'NULL';
@@ -344,30 +348,20 @@ echo $query2.'<BR>';
 			$ref2 = prep($r['pn_override']);
 			$ref2_label = prep('PN');
 		}
-/*
-		$warranty = 'NULL';
-		// better be a valid quote_id! otherwise bad data
-		if ($r['quote_id']) {
-			$query2 = "SELECT warranty_period_id FROM inventory_purchasequote WHERE id = '".$r['quote_id']."'; ";
-			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
-			if (mysqli_num_rows($result2)>0) {
-				$r2 = mysqli_fetch_assoc($result2);
-				$warranty = $WARRANTY_MAPS[$r2['warranty_period_id']];
-			}
-		}
-*/
+
 		$warranty = $WARRANTY_MAPS[$r['warranty_period_id']];
 
 		$po_number = prep($new_po[$r['quote_id']]);
 		$partid = prep($partid);
 
 		// add line items
-		$query2 = "REPLACE purchase_items (partid, po_number, line_number, qty, price, receive_date, ";
+		$query2 = "REPLACE purchase_items (partid, po_number, line_number, qty, qty_received, price, receive_date, ";
 		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, cond) ";
-		$query2 .= "VALUES ($partid, $po_number, $ln, $qty, $price, $receive_date, ";
+		$query2 .= "VALUES ($partid, $po_number, $ln, $qty, $qty, $price, $receive_date, ";
 		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 'used'); ";
 echo $query2.'<BR>';
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		$po_item_id = qid();
 
 		// add notes from quote to prices table
 		setNotes($partid,$r['notes'],$created_by,$date);
@@ -404,6 +398,7 @@ echo $query3.'<BR>';
 			}
 
 			$serials = explode(chr(10),$r2['serials']);
+			$recd_qty += count($serials);
 			foreach ($serials as $serial) {
 				$serial = trim($serial);
 				if (! $serial) { continue; }
@@ -425,9 +420,32 @@ echo $query3.'<BR>';
 					$r3 = mysqli_fetch_assoc($result3);
 					$serialid = $r3['id'];
 
-					$query3 = "UPDATE inventory SET last_purchase = $po_number WHERE id = $serialid LIMIT 1; ";
+					$query3 = "UPDATE inventory SET last_purchase = $po_number WHERE id = $serialid; ";
+echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-					continue;
+
+					$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+					$query3 .= "WHERE invid = $serialid AND field_changed = 'last_purchase' AND value = $po_number; ";
+echo $query3.'<BR>';
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+/*
+					// get last updated record from inventory_history to update with the record's date, not current timestamp
+					$query3 = "SELECT changed_from, date_changed FROM inventory_history ";
+					$query3 .= "WHERE invid = $serialid AND field_changed = 'last_purchase' ";
+					$query3 .= "ORDER BY date_changed DESC; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$changed_from = $r3['changed_from'];
+						$date_changed = $r3['date_changed'];
+
+						$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+						$query3 .= "WHERE invid = $serialid AND field_changed = 'last_purchase' ";
+						$query3 .= "AND date_changed = '".$date_changed."' AND changed_from = '".$changed_from."'; ";
+						$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					}
+*/
+					//continue;
 				} else {
 					$query3 = "REPLACE inventory (serial_no, qty, partid, item_condition, status, locationid, ";
 					$query3 .= "last_purchase, last_sale, last_return, userid, date_created, notes) ";
@@ -436,6 +454,11 @@ echo $query3.'<BR>';
 echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					$serialid = qid();
+
+					$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+					$query3 .= "WHERE invid = $serialid; ";
+echo $query3.'<BR>';
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				}
 
 				$query3 = "REPLACE package_contents (packageid, serialid) VALUES ($pkgid, $serialid); ";
@@ -443,14 +466,20 @@ echo $query3.'<BR>';
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 			}
 		}
+
+		// finished receiving all serials (qtys), compare now with the PO qty and if not the same,
+		// update the purchase_items with the correct qty_received
+		if ($recd_qty<>$qty) {
+			$query2 = "UPDATE purchase_items SET qty_received = $recd_qty WHERE id = $po_item_id; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		}
 	}
-exit;
 
 	$new_so = array();
 	$query = "SELECT oq.company_id, oq.quote_id, oq.id oqid, so.so_date, canceled_by_id, oq.contact_id, oq.creator_id, ";
 	$query .= "so.po_number, so.po_file, so.ext_memo, so.memo, so.bill_to_id, so.ship_to_id, oq.notes, ";
 	$query .= "freight_carrier_id, so_terms_id, freight_notes, oq.inventory_id, i.part_number, i.clei, i.heci, ";
-	$query .= "i.short_description description, m.name manf, ";
+	$query .= "i.short_description description, m.name manf, so.ship_to_override, ";
 	$query .= "oq.line_number, oq.quantity, oq.price, so.delivery_date, oq.ref_no, so.freight_charge ";
 	$query .= "FROM inventory_salesorder so, inventory_outgoing_quote oq, inventory_company c, inventory_inventory i, inventory_manufacturer m ";
 	$query .= "WHERE so.quote_ptr_id = oq.quote_id AND oq.company_id = c.id AND oq.inventory_id = i.id AND m.id = i.manufacturer_id_id ";
@@ -473,7 +502,11 @@ exit;
 		$po_file = prep($r['po_file']);
 		$ext_memo = preg_replace('/^((none)|(n\/a))$/i','',trim($r['ext_memo']));
 		$freight_notes = preg_replace('/^((none)|(n\/a))$/i','',trim($r['freight_notes']));
-		$public_notes = prep(trim($freight_notes.' '.$ext_memo));
+		$public_notes = trim($freight_notes.' '.$ext_memo);
+		if ($r['ship_to_override']) {
+			$public_notes .= chr(10).chr(10).$r['ship_to_override'];
+		}
+		$public_notes = prep($public_notes);
 		$private_notes = prep(preg_replace('/^((none)|(n\/a))$/i','',trim($r['memo'])));
 		$bill_to_id = prep(mapAddress($r['bill_to_id']));
 		$ship_to_id = prep(mapAddress($r['ship_to_id']));
@@ -481,8 +514,6 @@ exit;
 		$freight_services_id = prep($SERVICE_MAPS[$r['freight_carrier_id']]);
 		$freight_account_id = 'NULL';
 		$termsid = prep($TERMS_MAPS[$r['so_terms_id']]);
-
-		// what to do with `ship_to_override` text and `freight_charge`?
 
 		if (! isset($new_so[$r['quote_id']])) {
 			$query2 = "REPLACE sales_orders (so_number, created, created_by, sales_rep_id, companyid, contactid, ";
@@ -506,8 +537,9 @@ echo $query2.'<BR>';
 		}
 		$ln = prep($r['line_number']);
 		$qty = 0;
+		$qty_shipped = 0;
 		if ($r['quantity']>0) {
-			$qty = prep($r['quantity']);
+			$qty = $r['quantity'];
 		}
 		$price = prep($r['price']);
 		$ship_date = 'NULL';
@@ -537,19 +569,25 @@ echo $query2.'<BR>';
 			}
 		}
 
-		$so_number = prep($new_so[$r['quote_id']]);
+		$so_number = $new_so[$r['quote_id']];
 		$partid = prep($partid);
 
 		// add line items
-		$query2 = "REPLACE sales_items (partid, so_number, line_number, qty, price, delivery_date, ship_date, ";
+		$query2 = "REPLACE sales_items (partid, so_number, line_number, qty, qty_shipped, price, delivery_date, ship_date, ";
 		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, cond) ";
-		$query2 .= "VALUES ($partid, $so_number, $ln, $qty, $price, $delivery_date, $ship_date, ";
+		$query2 .= "VALUES ($partid, $so_number, $ln, $qty, $qty, $price, $delivery_date, $ship_date, ";
 		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 'used'); ";
 echo $query2.'<BR>';
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		$so_item_id = qid();
 
 		// add notes from quote to prices table
 		setNotes($partid,$r['notes'],$created_by,$date);
+
+		$freight = 'NULL';
+		if ($r['freight_charge']>0) {
+			$freight = prep($r['freight_charge']);
+		}
 
 		// add package data, only once per order (so only the first time for this 'quote_id', per IF condition above)
 		if (! isset($packages['SO'.$r['quote_id']])) { $packages['SO'.$r['quote_id']] = array(); }
@@ -572,13 +610,17 @@ echo $query2.'<BR>';
 				$query3 = "REPLACE packages (weight, length, width, height, order_number, package_no, ";
 				$query3 .= "tracking_no, datetime, freight_amount) ";
 				$query3 .= "VALUES (NULL, NULL, NULL, NULL, $so_number, $n, ";
-				$query3 .= "'".$r2['tracking_no']."', '".$r2['date']." 16:00:00',NULL); ";
+				$query3 .= "'".$r2['tracking_no']."', '".$r2['date']." 16:00:00', $freight); ";
 echo $query3.'<BR>';
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				$pkgid = qid();
+
+				// apply all freight on one package, then reset for all ensuing packages
+				$freight = 'NULL';
 			}
 
 			$serials = explode(chr(10),$r2['serials']);
+			$qty_shipped += count($serials);
 			foreach ($serials as $serial) {
 				$serial = trim($serial);
 				if (! $serial) { continue; }
@@ -612,9 +654,32 @@ echo $query3.'<BR>';
 					$r3 = mysqli_fetch_assoc($result3);
 					$serialid = $r3['id'];
 
-					$query3 = "UPDATE inventory SET last_sale = $so_number, qty = 0 WHERE id = $serialid LIMIT 1; ";
+					$query3 = "UPDATE inventory SET last_sale = $so_number, qty = 0 WHERE id = $serialid; ";
+echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-					continue;
+
+					$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+					$query3 .= "WHERE invid = $serialid AND field_changed = 'last_sale' AND value = $so_number; ";
+echo $query3.'<BR>';
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+
+/*
+					// get last updated record from inventory_history to update with the record's date, not current timestamp
+					$query3 = "SELECT changed_from, date_changed FROM inventory_history ";
+					$query3 .= "WHERE invid = $serialid AND field_changed = 'last_sale' ";
+					$query3 .= "ORDER BY date_changed DESC; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$changed_from = $r3['changed_from'];
+						$date_changed = $r3['date_changed'];
+
+						$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+						$query3 .= "WHERE invid = $serialid AND field_changed = 'last_sale' ";
+						$query3 .= "AND date_changed = '".$date_changed."' AND changed_from = '".$changed_from."'; ";
+						$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					}
+*/
 				} else {
 					$query3 = "REPLACE inventory (serial_no, qty, partid, item_condition, status, locationid, ";
 					$query3 .= "last_purchase, last_sale, last_return, userid, date_created, notes) ";
@@ -623,6 +688,11 @@ echo $query3.'<BR>';
 echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					$serialid = qid();
+
+					$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date." 10:00:00' ";
+					$query3 .= "WHERE invid = $serialid; ";
+echo $query3.'<BR>';
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				}
 //see SO 13081 for major issue to resolve on serializing
 
@@ -630,6 +700,13 @@ echo $query3.'<BR>';
 echo $query3.'<BR>';
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 			}
+		}
+
+		// finished shipping all serials (qtys), compare now with the SO qty and if not the same,
+		// update the sales_items with the correct qty_shipped
+		if ($qty_shipped<>$qty) {
+			$query2 = "UPDATE sales_items SET qty_shipped = $qty_shipped WHERE id = $so_item_id; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		}
 
 		// ISO checklist

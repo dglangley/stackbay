@@ -33,6 +33,8 @@
 
             // check for file existing already
 			$keyExists = false;
+//as of 2/22/17, all uploads are going to temp dir (until we see fit to have them on S3, which seems impractical right now)
+$DEV_ENV = true;
 			if (! $DEV_ENV) {
 	            $s3->registerStreamWrapper();
 				$keyExists = file_exists("s3://".$bucket."/".$filename);
@@ -40,7 +42,7 @@
 
             if ($keyExists) {//file has already been uploaded
                 $ALERT = array('code'=>14,'message'=>$E[14]['message']);
-die('file already is uploaded');
+die('"s3://'.$bucket.'/'.$filename.'" is already uploaded!');
             } else {
 				// default
 				$expDate = format_date(date("m-d-Y 17:00"),"n/j/Y g:i A",array('d'=>7));
@@ -86,7 +88,7 @@ die('file already is uploaded');
 					} else {
 		                $upload = $s3->upload($bucket, $filename, fopen($_FILES['upload_file']['tmp_name'], 'rb'), 'public-read');
 
-		                $query = "INSERT INTO uploads (filename, userid, companyid, datetime, exp_datetime, type, processed, link) ";
+		                $query = "INSERT INTO uploads (filename, userid, metaid, exp_datetime, type, processed, link) ";
 		                $query .= "VALUES ('".res($_FILES['upload_file']['name'])."','".res($U['id'])."','".$metaid."',";
 		                $query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
 					}
