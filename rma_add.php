@@ -355,7 +355,7 @@
 												
 										?>
 											<div class="row">
-												<div class="input-group">
+												<div class="input-group serial-<?=$serialData['serial_no'];?>">
 													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
 													<span class="input-group-addon">
 														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
@@ -402,7 +402,7 @@
 												$serialData = getSerial($item['inventoryid']);
 										?>
 											<div class="row">
-												<span class="text-center location-input" data-location="<?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?>" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
+												<span class="text-center <?=(empty($serialData['last_return']) ? 'location-input' : ''); ?>" data-location="<?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?>" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
 											</div>	
 										<?php 
 											} 
@@ -453,6 +453,10 @@
 				
 				//If anything was changed on the form then enable the ability to save and complete the order
 				$(document).on('change', '.serial-check', function(){
+					//This function removes the green highlight from a multiple options warning
+					$('.input-group').removeClass('alert-success');
+					
+					//Get the past location so if the user deselects it will default back
 					var pastLocation = 	$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').data('location');
 					
 					//If the user unselects a non-saved item it will reset the locations to the original TDB or whatever is the default for a blank location
@@ -492,6 +496,9 @@
 				
 				$(document).on('keydown', '.serialInput', function(e){
 					if(e.keyCode == 13) {
+						//This function removes the green highlight from a multiple options warning
+						$('.input-group').removeClass('alert-success');
+					
 						//Prevent anything else from happening if the location is not set
 						if($('.place').val() != 'null') {
 							var location = $('.place').val();
@@ -510,14 +517,28 @@
 							
 							//Prevent no values for the serial input
 							if(serialVal != '') {
+								var is_checked;
+								//this will be used for multiple of the same serial and to check if it is multiple 1 complete and other incomplete
+								var temp_counter = 0;
 								//This point checks if the user is trying to edit or select a serial that has already been received
 								var existing = $('.serial-check[data-assocSerial="'+serialVal+'"]').length;
-								var is_checked = $('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked');
+								
+								//If there is more than 1 of the same issue then we need to change the way the selector tranverses
+								if(existing > 1){
+									$('.serial-check[data-assocSerial="'+serialVal+'"]').each(function(){
+										if(!$(this).prop('disabled'))
+											temp_counter++;
+									});
+								//Mark as the item has been received if only 1 exists
+								} else {
+									is_checked = $('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked');
+								}
 								
 								//If serial exists (in the list of serial with checkboxes) and it has not already been receive "is_checked" then.. else error message
-								if(existing == 1 && !is_checked) {
+								//Temp_counter 1 means that there are multiple serials of the same but only 1 is left unchecked and the rest received
+								if((existing == 1 && !is_checked) || temp_counter == 1) {
 									//Item is already checked
-									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked')) {
+									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked') && temp_counter != 1) {
 										modalAlertShow("Warning", "Item has already been received.<br><br>Locations will be updated if a change has occured.", false);
 									} 
 									
@@ -535,8 +556,8 @@
 									$('#rma_complete').removeClass("gray");
 									$('#rma_complete').addClass("success");
 								
-								//Item has been received
-								} else if(is_checked) {
+								//Item has been received and tempcounter 0 means multiple items found and they all are checked
+								} else if(is_checked && temp_counter == 0) {
 									modalAlertShow("Error", serialVal + " has been received.<br><br>Please try a different serial.", false);
 									
 								//Nothing was found for the serial inputted
@@ -545,6 +566,7 @@
 									
 								//Multiple rows of inputted serial was found... Require user to check manually
 								} else {
+									$('.serial-'+serialVal).addClass('alert-success');
 									modalAlertShow("Error", "<b>Multiple</b> Serials found for " + serialVal + "<br><br> Please select the correct serial below.", false);
 								}
 							}
@@ -563,18 +585,21 @@
 					var rma_number = getUrlParameter('on');
 					
 					$(".serial-check:checked").each(function() {
-						//Get all the needed data to save
-						var partid = $(this).data('partid');
-						var serial = $(this).data('assocserial');
-						var place = $(this).data('place');
-						var instance = $(this).data('instance');
-						
-						//If the bare minimum place is empty
-						if(place != '') {
-							//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
-							placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
-							items.push(placeholder);
-							//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
+						//Dont store data for completed items
+						if(!$(this).prop('disabled')) {
+							//Get all the needed data to save
+							var partid = $(this).data('partid');
+							var serial = $(this).data('assocserial');
+							var place = $(this).data('place');
+							var instance = $(this).data('instance');
+							
+							//If the bare minimum place is empty
+							if(place != '') {
+								//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
+								placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
+								items.push(placeholder);
+								//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
+							}
 						}
 					});
 					
