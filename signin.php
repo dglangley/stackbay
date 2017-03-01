@@ -191,6 +191,6 @@ if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U[
 } else if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']) {
     //Remove the object once the user is logged in
     unset($venLog);
-    header('Location: index.php');
+    header('Location: /');
 }
 ?>

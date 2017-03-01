@@ -283,8 +283,8 @@
 				location : $("#filterBar").find(".instance").val(),
 				start : $("#filterBar").find("input[name='START_DATE']").val(),
 				end : $("#filterBar").find("input[name='END_DATE']").val(),
-				condition : $("#filterBar").find("#condition_global").val(),
-				vendor : $("#filterBar").find("#companyid").val()
+				condition : $("#condition_global").val(),
+				vendor : $("#companyid").val()
 			};
 			console.log(output);
 			return output;
@@ -295,9 +295,9 @@
 			var location = $("#filterBar").find(".instance").val();
 			var start = $("#filterBar").find("input[name='START_DATE']").val();
 			var end = $("#filterBar").find("input[name='END_DATE']").val();
-			var condition = $("#filterBar").find("#condition_global").val();
-			var vendor = $("#filterBar").find("#companyid").val();
-			var order = $("#filterBar").find("#po_filter").val();
+			var condition = $("#condition_global").val();
+			var vendor = $("#companyid").val();
+			var order = $("#po_filter").val();
 
 			$.ajax({
 					type: "POST",
@@ -374,6 +374,7 @@
 									revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
 									rev_arr[info.part_name] = false;
 								}
+								// break apart key to get relevant data (PO)
 								var key = key.split("+");
 								console.log(key);
 								parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";

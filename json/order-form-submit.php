@@ -323,7 +323,7 @@
     }
 
 	// send order confirmation
-	if ($email_confirmation) {
+	if ($email_confirmation AND ! $DEV_ENV) {
 		$send_success = send_gmail($msg,$sbj,array('david@ven-tel.com'));
 		if ($send_success) {
 //			jsonDie('Success');

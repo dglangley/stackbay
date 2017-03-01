@@ -1,7 +1,7 @@
 <?php
     //If no session user should not even be here, redirect them to the main login on the index.php
     if(empty($_SESSION) && !isset($_GET['user'])) {
-         header('Location: index.php');    
+         header('Location: /');    
     }
     
     if(!isset($_GET['user'])) {

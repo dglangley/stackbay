@@ -35,6 +35,7 @@
 			$dir = sys_get_temp_dir();
 			if (substr($dir,strlen($dir)-1,1)<>'/') { $dir .= '/'; }
 		}
+		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
 	} else {
 		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
 	}

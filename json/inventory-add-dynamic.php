@@ -26,11 +26,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$serial = strtoupper(grab('serial'));
 	$savedSerial = strtoupper(grab('savedSerial'));
 	$po_number = grab('po_number');
+	$item_id = grab('item_id');
 	$place = grab('place');
 	$instance = grab('instance');
 	
 	//items = ['partid', 'serial', 'qty', 'location', 'status', 'condition'];
-	function savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial, $place, $instance){
+	function savetoDatabase($partid, $condition, $serial, $po_number, $item_id, $savedSerial, $place, $instance){
 		$result = array();
 		$locationid;
 		$query;
@@ -49,42 +50,35 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		
 		$result['query'] = true;
-		
-		if($savedSerial == '') {
-			$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
-			$check = qdb($query);
+		$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
+		$check = qdb($query);
+		if($check->num_rows > 0) {
+			$result['query'] = false;
+		} else {//== 0
+			if($savedSerial == '') {// no record for this item previously, so creating a new record
 
-			if($check->num_rows == 0) {
-				
 				//DEPRECATED To find this later on
-				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
+				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE id = '".res($item_id)."'; ";//po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				qdb($query);
 				
 				//Insert the item into the inventory
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, last_purchase, last_sale, last_return, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
+		 		//$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
+		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
 				
-				$result['test'] = $query;
-				$result['query'] = qdb($query);
-				$result['query'] = $query;
+				//$result['test'] = $query;
+				$result['query'] = qdb($query) or die(qe());
+				//$result['query'] = $query;
 			} else {
-				$result['query'] = false;
-			}
-		} else {
-			$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
-			$check = qdb($query);
-
-			if($check->num_rows == 0) {
-				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."' WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
+				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
+				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 				$result['query'] = qdb($query) or die(qe());
 				$result['saved'] = $serial;
-			} else {
-				$result['query'] = false;
 			}
 		}
 		
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $condition, $serial, $po_number, $savedSerial, $place, $instance);
+	$result = savetoDatabase($partid, $condition, $serial, $po_number, $item_id, $savedSerial, $place, $instance);
 	echo json_encode($result);
     exit;

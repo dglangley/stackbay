@@ -90,8 +90,9 @@
 		
 		//First run a check just in case the sales order was changed recently and reflect the changes (E.G. qty order was increase, if qty is less than order admin may need to intervene)
 		
-		$query = "UPDATE sales_items SET ship_date = NULL WHERE so_number = ". res($so_number) ." AND qty_shipped < qty;";
-		qdb($query);
+//david 2-28-17
+//		$query = "UPDATE sales_items SET ship_date = NULL WHERE so_number = ". res($so_number) ." AND qty_shipped < qty;";
+//		qdb($query);
 		
 		//Get all the items, including old items from the sales order.
 		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
@@ -134,11 +135,10 @@
 		return $inventory;
 	}
 	
-	function getHistory($partid) {
-		global $order_number;
+	function getHistory($itemid) {
 		$listSerials;
 		
-		$query = "SELECT * FROM inventory WHERE last_sale = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$query = "SELECT * FROM inventory WHERE sales_item_id = '". res($itemid) ."';";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -152,7 +152,6 @@
 	}
 	
 	function getComments($invid) {
-		global $order_number;
 		$comment;
 		
 		$query = "SELECT * FROM inventory WHERE id = ". res($invid) .";";
@@ -323,7 +322,9 @@
 				<div class="col-sm-10 shipping-list" style="padding-top: 20px">
 					<div class = 'row'>
 						<div class = 'col-sm-3'>
+<!--
 							<h3>Items to be Shipped</h3>
+-->
 						</div>
 						<div class="col-sm-9">
 							<div class="btn-group box_group" style = "padding-bottom:16px;">
@@ -419,13 +420,16 @@
 								$serials = array();
 								foreach($items as $item): 
 									$inventory = getInventory($item['partid']);
-									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND last_sale = ".prep($order_number)." and partid = ".prep($item['partid'])." AND p.id = packageid;";
+									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
 									$serials = qdb($select);
 									// print_r($inventory);
+									$parts = explode(' ',getPartName($item['partid']));
+									$part = $parts[0];
 							?>
 								<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
-									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo getPartName($item['partid']); ?>" style="padding-top: 15px !important;">
-										<?= format($item['partid']); ?>
+									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
+										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
+										<div class="product-descr"><?= format($item['partid']); ?></div>
 									</td>
 								
 								<!-- Grab the old serial values from the database and display them-->
@@ -442,7 +446,7 @@
 											foreach ($serials as $serial):
 										?>
 										<div class="input-group check-save" data-savable="true">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
@@ -490,7 +494,7 @@
 										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 									</td>
 								</tr>
-								<?php $history = getHistory($item['partid']); if($history != '') { ?>
+								<?php $history = getHistory($item['id']); if($history != '') { ?>
 									<!--<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>-->
 									<!--	<td colspan='12'>-->
 									<!--		<table class='table serial table-hover table-condensed'>-->
