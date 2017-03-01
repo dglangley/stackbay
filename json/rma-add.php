@@ -45,9 +45,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $locationid;
 	}
 	
-	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty', 'part', 'instance']
 	function savetoDatabase($productid, $rma_number){
-		//This is splitting each product from mass of items
 		$result;
 		$locationid;
 		

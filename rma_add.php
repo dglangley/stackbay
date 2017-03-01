@@ -614,10 +614,16 @@
 							},
 							dataType: 'json',
 							success: function(result) {
+								//Aaron's nightmare, just preventing &success duplications over and over again
+								var terror = "<?=$rma_updated?>";
 								console.log(result);
 								//Success or fail handler
 								if(result == true) {
-									window.location.href = window.location.href + "&success=true";
+									if(terror == '') {
+										window.location.href = window.location.href + "&success=true";
+									} else {
+										window.location.href = window.location.href;
+									}
 								
 								//Unless database outputs an error this should never occur
 								} else {
