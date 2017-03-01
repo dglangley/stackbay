@@ -227,10 +227,13 @@
 			.serialInput {
 				text-transform: uppercase;
 			}
+			body.modal-open#rma-add {
+				margin-right: 0;
+			}
 		</style>
 	</head>
 	
-	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
@@ -286,13 +289,7 @@
 						</div>
 						
 						<div class="col-md-6" style="padding: 0 0 0 5px;">
-							<!--<div class="input-group" style="margin-bottom: 6px;">-->
-							    <input class="form-control input-sm serialInput" type="text" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
-							    <!--<span class="input-group-addon">-->
-							    <!--    <button class="btn btn-secondary" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>-->
-							    <!--    <button class="btn btn-secondary" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>-->
-							    <!--</span>-->
-				            <!--</div>-->
+						    <input class="form-control input-sm serialInput" type="text" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
 			            </div>
 		            </div>
 				</div>
@@ -413,6 +410,7 @@
 		
 		<script>
 			
+			//Get a parameter value from the URL
 			function getUrlParameter(sParam) {
 			    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
 			        sURLVariables = sPageURL.split('&'),
@@ -430,28 +428,50 @@
 			
 			//We can import this code later on into the operations js but this code is only for this page and the features on this page
 			(function($){
+				//Fade in the page after the load has happened.... Avoids elements jumping around upon loading in
 				$('.data-load').fadeIn();
 				
 				//If anything was changed on the form then enable the ability to save and complete the order
 				$(document).on('change', '.serial-check', function(){
 					var pastLocation = 	$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').data('location');
 					
-					$('#rma_complete').prop('disabled', false);
-					$('#rma_complete').removeClass("gray");
-					$('#rma_complete').addClass("success");
-					
+					//If the user unselects a non-saved item it will reset the locations to the original TDB or whatever is the default for a blank location
 					if(!$(this).prop("checked")) {
 						$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').text(pastLocation);
-						//modalAlertShow("Warning", "Locations is missing.<br><br> Please select a location and try again.", false);
+						
+					//Item is being checked so we need to make sure a location is set then enter in the respective data
+					} else if($('.place').val() != 'null') {
+						var location = $('.place').val();
+						var serialVal = $(this).data('assocserial');
+						
+						if($('.instance').val() != ''){
+							location += " - " + $('.instance').val();
+						}
+						
+						$('.location-input[data-serial="'+serialVal+'"]').text(location);
+						$('.serial-check[data-assocserial="'+serialVal+'"]').data('place', $('.place').val());
+						$('.serial-check[data-assocserial="'+serialVal+'"]').data('instance', $('.instance').val());
+						
+						//Enable the usage of the save button, otherwise disabled if nothing is changed
+						$('#rma_complete').prop('disabled', false);
+						$('#rma_complete').removeClass("gray");
+						$('#rma_complete').addClass("success");
+						
+					//No Location was found
+					} else {
+						$(this).prop("checked", false);
+						modalAlertShow("Error", "Locations is missing.<br><br> Please select a location and try again.", false);
 					}
 				});
 				
+				//Any location changes to the select will invoke this
 				$(document).on('change', '.instance, .location', function(){
 					$('.serialInput').focus();
 				})
 				
 				$(document).on('keydown', '.serialInput', function(e){
 					if(e.keyCode == 13) {
+						//Prevent anything else from happening if the location is not set
 						if($('.place').val() != 'null') {
 							var location = $('.place').val();
 							var serialVal = $(this).val();
@@ -460,39 +480,55 @@
 								location += " - " + $('.instance').val();
 							}
 							
+							//Check if the serial is all numeral or a mix of numeral and letters
 							if(/^\d+$/.test(serialVal)) {
 								serialVal = serialVal;
 							} else {
 								serialVal = serialVal.toUpperCase();
 							}
-							//Prevent no values
+							
+							//Prevent no values for the serial input
 							if(serialVal != '') {
+								//This point checks if the user is trying to edit or select a serial that has already been received
 								var existing = $('.serial-check[data-assocSerial="'+serialVal+'"]').length;
 								var is_checked = $('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked');
+								
+								//If serial exists (in the list of serial with checkboxes) and it has not already been receive "is_checked" then.. else error message
 								if(existing == 1 && !is_checked) {
 									//Item is already checked
 									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked')) {
 										modalAlertShow("Warning", "Item has already been received.<br><br>Locations will be updated if a change has occured.", false);
 									} 
 									
+									//Set the serial's associated checkbox to checked and set the location selected for that serial row... also set data values to be used when saving the page
 									$('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked', true);
 									$('.location-input[data-serial="'+serialVal+'"]').text(location);
-									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-place', $('.place').val());
-									$('.serial-check[data-assocserial="'+serialVal+'"]').attr('data-instance', $('.instance').val());
+									$('.serial-check[data-assocserial="'+serialVal+'"]').data('place', $('.place').val());
+									$('.serial-check[data-assocserial="'+serialVal+'"]').data('instance', $('.instance').val());
 									
+									//Clear the serial input and focus it for the next entry
 									$(this).val("").focus();
-										
+									
+									//Something was saved so enable the save button	
 									$('#rma_complete').prop('disabled', false);
 									$('#rma_complete').removeClass("gray");
 									$('#rma_complete').addClass("success");
+								
+								//Item has been received
 								} else if(is_checked) {
 									modalAlertShow("Error", serialVal + " has been received.<br><br>Please try a different serial.", false);
+									
+								//Nothing was found for the serial inputted
 								} else if(existing == 0) {
 									modalAlertShow("Error", "No RMA Serials found for " + serialVal, false);
+									
+								//Multiple rows of inputted serial was found... Require user to check manually
 								} else {
 									modalAlertShow("Error", "<b>Multiple</b> Serials found for " + serialVal + "<br><br> Please select the correct serial below.", false);
 								}
 							}
+						
+						//Locations is missing and needs to be filled in by the user
 						} else {
 							modalAlertShow("Error", "Locations is missing.<br><br> Please select a location and try again.", false);
 						}
@@ -506,6 +542,7 @@
 					var rma_number = getUrlParameter('on');
 					
 					$(".serial-check:checked").each(function() {
+						//Get all the needed data to save
 						var partid = $(this).data('partid');
 						var serial = $(this).data('assocserial');
 						var place = $(this).data('place');
@@ -516,10 +553,12 @@
 							//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
 							placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
 							items.push(placeholder);
+							//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
 						}
 					});
 					
 					//Dont run this if there is nothing to be saved
+					//Should never not run but this is a last last fallback if all the other catches don't get invoked for errors
 					if(items.length !== 0){
 						$.ajax({
 							type: "POST",
@@ -530,7 +569,7 @@
 							dataType: 'json',
 							success: function(result) {
 								console.log(result);
-								//Error handler or success handler
+								//Success or fail handler
 								if(result == true) {
 									alert('success');
 								} else {
