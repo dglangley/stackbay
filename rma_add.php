@@ -25,8 +25,12 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
 
+	//Set initials to be used throughout the page
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
 	$order_type = "rma";
+	
+	//Check if the page has invoked a success in saving
+	$rma_updated = $_REQUEST['success'];
 	
 	if(empty($order_number)) {
 		header( 'Location: /operations.php' ) ;
@@ -38,7 +42,8 @@
 		
 		$listPartid;
 		
-		$query = "SELECT partid FROM return_items WHERE rma_number = ". res($order_number) ." GROUP BY partid;";
+		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
+		$query = "SELECT DISTINCT partid FROM return_items WHERE rma_number = ". res($order_number) .";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -51,7 +56,8 @@
 		return $listPartid;
 	}
 	
-	function getRMASerial($order_number, $partid) {
+	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
+	function getRMAitem($order_number, $partid) {
 		$listSerial;
 		
 		$query = "SELECT * FROM return_items WHERE rma_number = ". res($order_number) ." AND partid = ". res($partid) .";";
@@ -67,10 +73,11 @@
 		return $listSerial;
 	}
 	
+	//Using inventory ID this function grabs the serial_no, locationid, and last_return values to be used in the tables
 	function getSerial($invid) {
 		$serial;
 		
-		$query = "SELECT * FROM inventory WHERE id = ". res($invid) .";";
+		$query = "SELECT locationid, serial_no, last_return FROM inventory WHERE id = ". res($invid) .";";
 		$result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {
@@ -119,6 +126,7 @@
 		return $address;
 	}
 	
+	//This with conjunction with address out creates the standard format for printing addresses in the sidebar
 	function getAddress($order_number) {
 		$address;
 		$query = "SELECT * FROM returns AS r, sales_orders AS s WHERE r.rma_number = ".res($order_number)." AND r.order_number = s.so_number;";
@@ -134,6 +142,7 @@
 		return $address;
 	}
 	
+	//This is solely used to grab the date the order was created "RMA" for sidebar usage
 	function getCreated($order_number) {
 		$date;
 		$query = "SELECT * FROM returns WHERE rma_number = ".res($order_number).";";
@@ -149,6 +158,7 @@
 		return $date;
 	}
 	
+	//This formats the part information to the standard form of part heci desc with dictionary
 	function format($partid){
 		$r = reset(hecidb($partid, 'id'));
 	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
@@ -157,7 +167,7 @@
 	    return $display;
 	}
 	
-	
+	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
 ?>
 
@@ -247,6 +257,13 @@
 			</div>
 		</div>
 		
+		<?php if($rma_updated == 'true'): ?>
+			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
+			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+			    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
+			</div>
+		<?php endif; ?>
+		
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
@@ -322,7 +339,7 @@
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
 									$item = getPartName($part['partid']);
-									$serials = getRMASerial($order_number, $part['partid']);
+									$serials = getRMAitem($order_number, $part['partid']);
 						?>
 								<tr class="<?php //echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td>
@@ -428,6 +445,9 @@
 			
 			//We can import this code later on into the operations js but this code is only for this page and the features on this page
 			(function($){
+				//If the order has been updated allow the success message to show for a shrot time
+				$('#item-updated-timer').delay(1000).fadeOut('fast');
+				
 				//Fade in the page after the load has happened.... Avoids elements jumping around upon loading in
 				$('.data-load').fadeIn();
 				
@@ -448,6 +468,7 @@
 							location += " - " + $('.instance').val();
 						}
 						
+						//Set the serial's associated checkbox to checked and set the location selected for that serial row... also set data values to be used when saving the page
 						$('.location-input[data-serial="'+serialVal+'"]').text(location);
 						$('.serial-check[data-assocserial="'+serialVal+'"]').data('place', $('.place').val());
 						$('.serial-check[data-assocserial="'+serialVal+'"]').data('instance', $('.instance').val());
@@ -571,17 +592,24 @@
 								console.log(result);
 								//Success or fail handler
 								if(result == true) {
-									alert('success');
+									window.location.href = window.location.href + "&success=true";
+								
+								//Unless database outputs an error this should never occur
 								} else {
-									alert('fail');
+									modalAlertShow("Error", "Items failed to save.<br><br> Please try again.", false);
 								}
 							},
 						});	
+					
+					//No changes detected
+					} else {
+						modalAlertShow("Warning", "No changes detected in RMA.", false);
 					}
 				});
 			})(jQuery);
 			
 			//This overwrites the other focus for the global search
+			//Talk about creating a function and using possibly a class to enable overwriting the global focus has taken place
 			$(window).load(function(){
 				$('.serialInput').focus();	
 			});
