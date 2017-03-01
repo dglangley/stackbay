@@ -50,15 +50,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//This is splitting each product from mass of items
 		$result;
 		$locationid;
-		$item_split = array_chunk($productid, 4);
 		//Array['part', 'serial', 'place', 'instance'];
 		
 		// //Fall back if empty to prevent php fatal errors
-		if(!empty($item_split)) {
-			foreach($item_split as $product) {
-				$locationid = getLocation($product[2], $product[3]);
+		if(!empty($productid)) {
+			foreach($productid as $product) {
+				$locationid = getLocation($product['place'], $product['instance']);
 
-				$query = "UPDATE inventory SET last_return = ". res($rma_number) .", status = 'received', qty = '1', locationid = '". res($locationid) ."' WHERE partid = ". res(reset($product)) ." AND serial_no = '". res($product[1]) ."';";
+				$query = "UPDATE inventory SET last_return = ". res($rma_number) .", status = 'received', qty = '1', locationid = '". res($locationid) ."' WHERE partid = ". res($product['partid']) ." AND serial_no = '". res($product['serial']) ."';";
 				$result = qdb($query) or die(qe());
 			}
 		}

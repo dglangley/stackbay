@@ -200,7 +200,7 @@
 				text-overflow: ellipsis;
 			}
 			
-			.inventory_add .row {
+			.rma_add .row {
 				margin: 0;
 			}
 			
@@ -298,7 +298,7 @@
 				</div>
 			
 				<div class="table-responsive">
-					<table class="inventory_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
+					<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 						<thead>
 					         <tr>
 					            <th class="col-sm-2">
@@ -328,7 +328,7 @@
 									$serials = getRMASerial($order_number, $part['partid']);
 						?>
 								<tr class="<?php //echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
-									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
+									<td>
 										<?php 
 											echo format($part['partid']);
 										?>
@@ -502,6 +502,7 @@
 				$(document).on('click', '#rma_complete', function() {
 					//Find each serial checkbox that is checked
 					var items = [];
+					var placeholder = [];
 					var rma_number = getUrlParameter('on');
 					
 					$(".serial-check:checked").each(function() {
@@ -512,15 +513,14 @@
 						
 						//If the bare minimum place is empty
 						if(place != '') {
-							items.push(partid);
-							items.push(serial);
-							items.push(place);
-							items.push(instance);
+							//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
+							placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
+							items.push(placeholder);
 						}
 					});
 					
 					//Dont run this if there is nothing to be saved
-					if(items.length === 0){
+					if(items.length !== 0){
 						$.ajax({
 							type: "POST",
 							url: '/json/rma-add.php',
