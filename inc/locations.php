@@ -77,7 +77,7 @@
             $results = getplaces();
             
                 
-                $output = "<select class='form-control input-sm $type' style='padding-left:0px;'>";
+                $output = "<select name='$type'class='form-control input-sm $type' style='padding-left:0px;'>";
     	        if(!$selected and !$default){
                     $output .= "<option selected value = 'null'>Column</option>";
     	        }
@@ -101,9 +101,11 @@
             // echo $select; exit;
             $results = qdb($select);
             
-            $output .= "<select class='form-control input-sm $type' style='padding-left:0px;'>";
-            if(!$selected and !$default){
+            $output .= "<select name='$type' class='form-control input-sm $type' style='padding-left:0px;'>";
+            if(!$selected and !$default and !$locations){
                     $output .= "<option selected value = 'null'>Shelf</option>";
+    	        }  else if($locations) {
+    	            $output .= "<option selected value = 'null'></option>";
     	        }
             //Takes in the location ID and returns the 
     	    if ($results){
