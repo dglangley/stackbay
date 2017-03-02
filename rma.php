@@ -227,7 +227,7 @@
 												    <span class="input-group-addon">
 												    	<input type="checkbox" name="line_<?=$line?>_selected" <?=($inf['id'])? "checked" : ''?>/>
 												    </span>
-												    <? } ?>
+												    <?php } ?>
 									            </div>
 												<?php $line++; ?>
 											<?php endforeach; ?>
