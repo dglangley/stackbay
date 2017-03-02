@@ -3057,7 +3057,7 @@
 //==============================================================================
 
 	$(".rma-macro").ready(function(){
-		var order_number = 2;
+		var order_number = $("body").data("associated");
 		var page = 'rma';
 		var order_type = "RMA"
 		
