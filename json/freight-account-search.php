@@ -59,17 +59,18 @@
         }
     }
 */
-	// always add Prepaid option
-    $output[] = array(
+    if (strlen($q) > 1){
+        $output[] = array(
+            'id' => "Add $q",
+            'text' => "Add $q"
+        );
+    } else if (! $q) {
+		// always add Prepaid option when the user is not specifically typing something
+		$output[] = array(
             'id' => "null",
             'text' => "PREPAID"
         );
-    if (strlen($q) > 1){
-        $output[] = array(
-            'id' => "Add: $q",
-            'text' => "Add: $q"
-        );
-    }
+	}
     
 //	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 /*    

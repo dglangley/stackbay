@@ -20,6 +20,9 @@
 		$prefix = sys_get_temp_dir();
 		if (substr($prefix,strlen($prefix)-1,1)<>'/') { $prefix .= '/'; }
 		$dir = $prefix;
+
+//2-23-17 for display purposes only
+		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';
 	} else {
 //		$dir = '/img/parts/';
 		$dir = 'https://s3-us-west-2.amazonaws.com/ven-tel.com-product-images/';

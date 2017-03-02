@@ -7,8 +7,12 @@
 	//Function designed by Aaron to act as a direct conversion from the value in the old database
 	//to the new one via the curated table called company_aliases.
 
+	$COMPANY_MAPS = array();
 	function dbTranslate($companyid, $oldToNew = true){
-		
+		global $COMPANY_MAPS;
+
+		if (isset($COMPANY_MAPS[$companyid][$oldToNew])) { return ($COMPANY_MAPS[$companyid][$oldToNew]); }
+
 		if ($oldToNew){
 			$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid';";
 		} else {
@@ -19,10 +23,14 @@
 		if(mysqli_num_rows($result)){
 			foreach($result as $row){
 //				echo "Found the translation: ".$row['c'];
+				$COMPANY_MAPS[$companyid][$oldToNew] = $row['c'];
+
 				return $row['c'];
 			}
 		}
 		else{
+			$COMPANY_MAPS[$companyid][$oldToNew] = $companyid;
+
 			return $companyid;
 		}
 	}

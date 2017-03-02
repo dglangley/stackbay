@@ -24,11 +24,12 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$partid = grab('partid');
 	$serial = strtoupper(grab('serial'));
 	$condition = grab('condition');
+	$item_id = grab('item_id');
 	$so_number = grab('so_number');
 	$package = grab('package_no');
 	
 	//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array'];
-	function savetoDatabase($partid, $serial, $condition, $so_number, $package){
+	function savetoDatabase($partid, $serial, $condition, $so_number, $package, $item_id){
 		$result = array();
 		$exists = false;
 		$qty = 0;
@@ -39,52 +40,56 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//If the serial is declared then search for it, otherwise query for a lot item.
 		if($serial != '') {
 			
-			//Where there exists a serial number, get all the values of the serial which are still in stock
-			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND qty > 0;";
+			//Where there exists a serial number, get serial which is still in stock
+			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND qty > 0 LIMIT 0,1;";
 			$check = qdb($query);
+
+			if (mysqli_num_rows($check)==0) {
+				$result['query'] = false;
+				$result['error'] = "Item does not exist or is out of stock for current serial.";
+			}
 			
 			//If the serial exists then run the single serial query... (This is assuming that the serial law is well maintained and not the same item has the same serial number)
-			if($check->num_rows == 1) {
-				$check = mysqli_fetch_assoc($check);
+			while ($row = mysqli_fetch_assoc($check)) {
+				$inventory_id = $row['id'];
 					 
 				//Check to make sure that the conditions match, else trigger an error (Future dev: trigger a warning to override the order specified condition)
-				if($check['item_condition'] == $condition) {
+//dgl 2-28-17 at this point we don't care about mismatching condition
+//				if($row['item_condition'] == $condition) {
 					
 					//Set the qty shipped for values on a sales order.
-					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE partid='". res($partid) ."' AND so_number = '". res($so_number) ."';";
+					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE id = '".$item_id."'; ";//partid='". res($partid) ."' AND so_number = '". res($so_number) ."';";
 					qdb($query);
 					
-					$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE partid='". res($partid) ."' AND serial_no = '". res($serial) ."';";
+					//$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE id = $inventory_id; ";
+					$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
 					$result['query'] = qdb($query);
 					
 					//Check to see if the aty received and the qty ordered is matching or not
-					$query = "SELECT qty, qty_shipped, CASE WHEN qty = qty_shipped THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
+					$query = "SELECT qty, qty_shipped, CASE WHEN qty = qty_shipped THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE id = '".$item_id."'; ";//so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
 					$match = qdb($query) or die(qe());
 					
 					//Pair the package to the line item of the inventory number we changed.
-					$inventory_id = $check['id'];
 					$package_query = "INSERT INTO package_contents VALUES ('$package','$inventory_id');";
 					$result['package'] = qdb($package_query) OR die(qe());
 					
 					if (mysqli_num_rows($match)>0) {
 						$match = mysqli_fetch_assoc($match);
-						$result['qty_match'] = $match['is_matching'];
+
+						//If the qty matches then the order is compelete. Mark it as received with the date received
+						if ($match['is_matching']) {
+					
+							$query = "UPDATE sales_items SET ship_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE id = '".$item_id."'; ";//so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
+							qdb($query);
+						}
 					}
 					
-					//If the qty matches then the order is compelete. Mark it as received with the date received
-					if($result['qty_match'] == 1) {
-						$query = "UPDATE sales_items SET ship_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
-						qdb($query);
-					}
-					
-					$result['invid'] = $check['id'];
-				} else {
-					$result['query'] = false;
-					$result['error'] = "Item Scanned Condition is: '". $check['item_condition'] ."' does not match with the specified sales order condition: '$condition'.";
-				}
-			} else {
-				$result['query'] = false;
-				$result['error'] = "Item does not exist or is out of stock for current serial.";
+					$result['invid'] = $inventory_id;
+//dgl 2-28-17 at this point we don't care about mismatching condition
+//				} else {
+//					$result['query'] = false;
+//					$result['error'] = "Item Scanned Condition is: '". $row['item_condition'] ."' does not match with the specified sales order condition: '$condition'.";
+//				}
 			}
 		//Lot item query here
 		} else {
@@ -92,8 +97,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$check = qdb($query);
 			
 			if (mysqli_num_rows($check)>0) {
-				$check = mysqli_fetch_assoc($check);
-				$qty = $check['qty'];
+				$row = mysqli_fetch_assoc($check);
+				$qty = $row['qty'];
 				$exists = true;
 			}
 			
@@ -109,6 +114,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $serial, $condition, $so_number,$package);
+	$result = savetoDatabase($partid, $serial, $condition, $so_number, $package, $item_id);
 	echo json_encode($result);
     exit;

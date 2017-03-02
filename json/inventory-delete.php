@@ -53,7 +53,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			//Current process is shipping
 			} else {
-				$query = "UPDATE inventory SET qty = qty + 1, last_sale = NULL, status = 'received' WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
+				$query = "UPDATE inventory SET qty = qty + 1, sales_item_id = NULL, status = 'received' WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
 				$result['query'] = qdb($query);
 	
 				//If the item is deleted from the inventory then increment the purchase items back to original state, before the serial was scanned

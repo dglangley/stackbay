@@ -37,8 +37,8 @@
     $datetime = grab('date');
     
     $order = "SELECT * FROM sales_orders WHERE so_number = $order_number;";
-    $items = "SELECT serial_no, qty, last_sale,inventory.id invid, partid, package_no, packages.datetime date 
-    FROM inventory, packages, package_contents WHERE last_sale = $order_number AND serialid = inventory.id and packageid = packages.id AND datetime = '$datetime';";
+    $items = "SELECT serial_no, qty, sales_item_id,inventory.id invid, partid, package_no, packages.datetime date 
+    FROM inventory, packages, package_contents WHERE sales_item_id = $order_number AND serialid = inventory.id and packageid = packages.id AND datetime = '$datetime';";
 
 	$order_result = qdb($order);
 	$items_results = qdb($items);

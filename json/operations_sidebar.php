@@ -460,7 +460,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$init = false;
 							}
 							
-							$query =  "SELECT package_no FROM packages WHERE datetime = '$num';";
+							$query =  "SELECT package_no FROM packages WHERE datetime = '$num' AND order_number = '".res($order_number)."';";
 							$result = qdb($query);
 							
 							while ($row = $result->fetch_assoc()) {

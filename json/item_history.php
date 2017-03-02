@@ -44,91 +44,64 @@
     	if(mysqli_num_rows($history)>0){
 	    	//Loop through the history results
 	    	foreach ($history as $r){
+				$string = '';
 				switch ($r['field_changed']){
 					case 'locationid':
-						$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($c['locationid'])." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
+						$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($c['locationid'])." ";
 						//Update the current locationid to make the rest of the phrases make sense.
 						$c['locationid'] = $r['changed_from'];
 						//Break the loop
-						continue 2;
+						break;
+
 					case 'serial_no':
-						$string = "Serial number was changed from ".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
+						$string = "Serial number was changed from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
 						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
+						break;
+
 					case 'condition':
-						$string = "Condition was updated from ".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
+						$string = "Condition was updated from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
 						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
+						break;
 	
 					case 'qty':
-						if($r['changed_from'] > $c[$r['field_changed']]){
-							$string = "Quantity decremented from ".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-							if($r['userid']){
-								$string .= " by ".getContact($r['userid']);
-							}
-							$output[] = $string;
-						}
-						else{
-							$string = "Quantity incremented from ".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-							if($r['userid']){
-								$string .= " by ".getContact($r['userid']);
-							}
-							$output[] = $string;
-						}
+						$string = "Quantity ";
+						if($r['changed_from'] > $c[$r['field_changed']]){ $string .= "decremented "; }
+						else { $string .= "incremented "; }
+						$string .= "from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
+
 						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
+						break;
+
 					case 'partid':
-						$string = "Part was changed from ".getPart($r['changed_from'])." to ".getPart($c[$r['field_changed']])." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
+						$string = "Part was changed from ".getPart($r['changed_from'])." to ".getPart($c[$r['field_changed']])." ";
 						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
-					case 'last_purchase':
-						$string = "Item was previously puchased from PO$".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
+						break;
+
+					case 'purchase_item_id':
+					case 'sales_item_id':
+					case 'returns_item_id':
+						$order_type = strtoupper(substr($r['field_changed'],0,1))."O";
+						$event = 'purchased';
+						if ($r['field_changed']=='returns_item_id') {
+							$order_type = 'RMA';
+							$event = 'returned';
+						} else if ($r['field_changed']=='sales_item_id') {
+							$event = 'sold';
 						}
-						$output[] = $string;
+						$string = "Item was previously ".$event." from ".$order_type."#".$r['changed_from']." to ".$c[$r['field_changed']]." ";
 						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
-					case 'last_sale':
-						$string = "Item was previously sold on SO#".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
-						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
-					case 'last_sale':
-						$string = "Item was previously sold on SO#".$r['changed_from']." to ".$c[$r['field_changed']]." on ".format_date($r['date_changed'], 'm/d/Y');
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
-						$c[$r['field_changed']] = $r['field_changed'];
-						continue 2;
+						break;
+
 					case 'new':
-						$string = "Item entered into system on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
-						if($r['userid']){
-							$string .= " by ".getContact($r['userid']);
-						}
-						$output[] = $string;
-						continue 2;
+						$string = "Item entered into system ";
+						break;
+
 				}
+				$string .= "on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
+				if($r['userid']){
+					$string .= " by ".getContact($r['userid']);
+				}
+				$output[] = $string;
 	    	}
     	}
     	else{
