@@ -54,7 +54,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			foreach($productid as $product) {
 				$locationid = getLocation($product['place'], $product['instance']);
 
-				$query = "UPDATE inventory SET last_return = ". res($rma_number) .", status = 'received', qty = '1', locationid = '". res($locationid) ."' WHERE id = '". res($product['invid']) ."';";
+				$query = "UPDATE inventory SET returns_item_id = ". res($product['id']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."' WHERE id = '". res($product['invid']) ."';";
 				$result = qdb($query) or die(qe());
 			}
 		}

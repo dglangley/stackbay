@@ -43,7 +43,7 @@
 		$listPartid;
 		
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
-		$query = "SELECT DISTINCT partid FROM return_items WHERE rma_number = ". res($order_number) .";";
+		$query = "SELECT id FROM return_items WHERE rma_number = ". res($order_number) .";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -57,10 +57,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitem($order_number, $partid) {
+	function getRMAitem($rid) {
 		$listSerial;
 		
-		$query = "SELECT * FROM return_items WHERE rma_number = ". res($order_number) ." AND partid = ". res($partid) .";";
+		$query = "SELECT * FROM return_items WHERE id = ". res($rid) .";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -77,7 +77,7 @@
 	function getSerial($invid) {
 		$serial;
 		
-		$query = "SELECT locationid, serial_no, last_return, id FROM inventory WHERE id = ". res($invid) .";";
+		$query = "SELECT locationid, serial_no, returns_item_id, id FROM inventory WHERE id = ". res($invid) .";";
 		$result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {
@@ -339,10 +339,9 @@
 							//Grab all the parts from the specified PO #
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
-									$item = getPartName($part['partid']);
-									$serials = getRMAitem($order_number, $part['partid']);
+									$serials = getRMAitem($part['id']);
 						?>
-								<tr class="<?php //echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
+								<tr>
 									<td>
 										<?php 
 											echo format($part['partid']);
@@ -359,7 +358,7 @@
 												<div class="input-group serial-<?=$serialData['serial_no'];?>">
 													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
 													<span class="input-group-addon">
-														<input class="serial-check" data-invid="<?=$serialData['id'];?>" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
+														<input class="serial-check" data-rmaid="<?=$item['id'];?>" data-invid="<?=$serialData['id'];?>" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
 													</span>
 												</div>
 											</div>
@@ -411,8 +410,6 @@
 										?>
 									</td>
 								</tr>
-								
-								
 							<?php 
 									endforeach;
 								} 
@@ -592,13 +589,13 @@
 							var invid = $(this).data('invid');
 							var place = $(this).data('place');
 							var instance = $(this).data('instance');
+							var id = $(this).data('rmaid');
 							
-							//If the bare minimum place is empty
 							if(place != '') {
 								//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
-								placeholder = { 'invid' : invid, 'place' : place, 'instance': instance};
+								placeholder = { 'invid' : invid, 'place' : place, 'instance': instance, 'id' : id};
 								items.push(placeholder);
-								//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
+								//Array([object], [object], ...) .... [object] = {partid, serial, place, instance, id}
 							}
 						}
 					});
