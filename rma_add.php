@@ -29,6 +29,49 @@
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
 	$order_type = "rma";
 	
+	//Variables used for the post save
+	$rmaid = '';
+	$invid = '';
+	$itemLocation = '';
+	$errorHandler = '';
+	$place = '';
+	$instance = '';
+	$rmaArray = array();
+	
+	if(grab('rmaid') || (grab('invid') && grab('rmaid'))) {
+		$rmaid = strtoupper(grab('rmaid'));
+		$invid = grab('invid');
+		
+		$place = grab('place');
+		$instance = grab('instance');
+		
+		$itemLocation = getLocationID($place,$instance);
+		
+		//Find the items pertaining to the RMA number and the serial searched
+		$rmaArray = findRMAItems($rmaid);
+			
+		if(empty($itemLocation)) {
+			$errorHandler = "Locations can not be empty.";
+		} else {
+			//Check if there is 1, multiple, or none found
+			if(count($rmaArray) == 1 || $invid != '') {
+				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
+				
+				//Clear values after save
+				if($errorHandler == '') {
+					$rmaid = '';
+					$invid = '';
+					//$itemLocation = '';
+				}
+			} else if(count($rmaArray) > 1) {
+				$errorHandler = "Multiple items found for serial: " . $rmaid . ". Please select the correct one using the list below.";
+			} else {
+				$errorHandler = "No items found for serial: " . $rmaid;
+			}
+			
+		}
+	}
+	
 	//Check if the page has invoked a success in saving
 	$rma_updated = $_REQUEST['success'];
 	
@@ -43,7 +86,7 @@
 		$listPartid;
 		
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
-		$query = "SELECT DISTINCT partid FROM return_items WHERE rma_number = ". res($order_number) .";";
+		$query = "SELECT id, partid FROM return_items WHERE rma_number = ". res($order_number) ." GROUP BY partid;";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -57,10 +100,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitem($order_number, $partid) {
+	function getRMAitems($partid) {
 		$listSerial;
 		
-		$query = "SELECT * FROM return_items WHERE rma_number = ". res($order_number) ." AND partid = ". res($partid) .";";
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid;";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -73,11 +116,11 @@
 		return $listSerial;
 	}
 	
-	//Using inventory ID this function grabs the serial_no, locationid, and last_return values to be used in the tables
+	//Using inventory ID this function grabs the serial_no, locationid, invid and last_return values to be used in the tables
 	function getSerial($invid) {
 		$serial;
 		
-		$query = "SELECT locationid, serial_no, last_return FROM inventory WHERE id = ". res($invid) .";";
+		$query = "SELECT locationid, serial_no, returns_item_id, id FROM inventory WHERE id = ". res($invid) .";";
 		$result = qdb($query);
 	    
 	    if (mysqli_num_rows($result)>0) {
@@ -87,44 +130,7 @@
 		
 		return $serial;
 	}
-	
-	//Get the part name from the part id
-	function getPartName($partid) {
-		$part;
-		
-		$query = "SELECT parts.part, parts.heci, parts.description, systems.system FROM parts LEFT JOIN systems ON systems.id = parts.systemid WHERE parts.id = ". res($partid) .";";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$part[] = $result;
-		}
-	
-		return $part[0];
-	}
-	
-	function address_out($address_id){
-		//General function for handling the standard display of addresses
-		$address = '';
-		//Address Handling
-		//$row = getAddresses(1);
-		$row = getAddresses($address_id);
-		$name = $row['name'];
-		$street = $row['street'];
-		$city = $row['city'];
-		$state = $row['state'];
-		$zip = $row['postal_code'];
-		$country = $row['country'];
-		
-		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($city && $state){$address .= $city.", ".$state;}
-		else if ($city || $state){ ($address .= $city.$state);}
-		if($zip){$address .= "  $zip";}
-		
-		return $address;
-	}
+
 	
 	//This with conjunction with address out creates the standard format for printing addresses in the sidebar
 	function getAddress($order_number) {
@@ -165,6 +171,74 @@
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
 	    return $display;
+	}
+	
+	//This is saving the data selected
+	function getLocationID($place, $instance) {
+		$locationid;
+		$query;
+		
+		//Get the location ID based on the preset ones in the table
+		if($instance != '') {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
+		} else {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
+		}
+		
+		$locationResult = qdb($query);
+		
+		if (mysqli_num_rows($locationResult)>0) {
+			$locationResult = mysqli_fetch_assoc($locationResult);
+			$locationid = $locationResult['id'];
+		}
+		
+		return $locationid;
+	}
+	
+	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
+	function findRMAItems($search, $type = 'all'){
+		$rma_search = array();
+		$query = '';
+		
+		if($type == 'all')
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id;";
+		else
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL;";
+		//Query or pass back error
+		$result = qdb($query) or die(qe());
+		
+		while ($row = $result->fetch_assoc()) {
+			$rma_search[] = $row;
+		}
+		
+		return $rma_search;
+	}
+	
+	function savetoDatabase($locationid, $data, $invid = ''){
+		$result;
+		$receive_check;
+		$query;
+		$id;
+		
+		if($invid != '') {
+			$id = $invid;
+		} else {
+			$id = $data['inventoryid'];
+		}
+		
+		//Check to see if the item has been received
+		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
+		$receive_check = qdb($query);
+		
+		if (mysqli_num_rows($receive_check)>0) {
+			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."' WHERE id = '". res($id) ."';";
+			//Query or pass back error
+			$result = (qdb($query) ? '' : qe());
+		} else {
+			$result = "Item has already been received.";
+		}
+
+		return $result;
 	}
 	
 	//Grab all parts of the RMA
@@ -231,7 +305,7 @@
 			}
 			
 			.data-load {
-				display: none;
+				/*display: none;*/
 			}
 			
 			.serialInput {
@@ -248,28 +322,29 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php<?= ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2>RMA #<?php echo $order_number.' Receiving'; ?></h2>
+				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
-				<button class="btn-flat gray pull-right btn-update" id="rma_complete" style="margin-top: 10px; margin-right: 10px;" disabled>Save</button>
+			<!--	<button class="btn-flat gray pull-right btn-update" id="rma_complete" style="margin-top: 10px; margin-right: 10px;" disabled>Save</button>-->
 			</div>
 		</div>
 		
-		<?php if($rma_updated == 'true'): ?>
-			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
+		<!--Add in Error message-->
+		<?php if($errorHandler != ''): ?>
+			<div id="item-updated-timer" class="alert alert-danger fade in text-center" style="margin-bottom: 0px; width: 100%; z-index: 9999; top: 95px;">
 			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-			    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
+			    <strong>Error!</strong> <?=$errorHandler;?>
 			</div>
 		<?php endif; ?>
 		
-		
+		<form method="post">
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
 					<div class="row">
 						<div class="col-md-12">
-							<b style="color: #526273;font-size: 14px;">RMA Order #<?php echo $order_number; ?></b><br>
+							<b style="color: #526273;font-size: 14px;">RMA Order #<?= $order_number; ?></b><br>
 							<b style="color: #526273;font-size: 12px;"><?=getRep('1');?></b><br>
 							<?=getCreated($order_number);?><br><br>
 							
@@ -292,23 +367,25 @@
 			
 				<div class="row" style="margin: 20px 0;">
 					
-					<div class="col-md-7" style="padding-left: 0px !important;">
-						<div class="col-md-6 location">
-							<div class="row">
-								<div class="col-md-6" style="padding-left: 0px !important;">
-									<?=loc_dropdowns('place')?>
-								</div>
-								
-								<div class="col-md-6">
-									<?=loc_dropdowns('instance')?>
+					
+						<div class="col-md-7" style="padding-left: 0px !important;">
+							<div class="col-md-6 location">
+								<div class="row">
+									<div class="col-md-6" style="padding-left: 0px !important;">
+										<?=loc_dropdowns('place', $itemLocation)?>
+										<?=$locationid;?>
+									</div>
+									
+									<div class="col-md-6">
+										<?=loc_dropdowns('instance', $itemLocation)?>
+									</div>
 								</div>
 							</div>
-						</div>
-						
-						<div class="col-md-6" style="padding: 0 0 0 5px;">
-						    <input class="form-control input-sm serialInput" type="text" placeholder="Serial" data-saved="" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
+							
+							<div class="col-md-6" style="padding: 0 0 0 5px;">
+							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rmaid ? $rmaid : '');?>" autofocus>
+				            </div>
 			            </div>
-		            </div>
 				</div>
 			
 				<div class="table-responsive">
@@ -338,10 +415,10 @@
 							//Grab all the parts from the specified PO #
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
-									$item = getPartName($part['partid']);
-									$serials = getRMAitem($order_number, $part['partid']);
+									$serials = getRMAitems($part['partid']);
+
 						?>
-								<tr class="<?php //echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
+								<tr>
 									<td>
 										<?php 
 											echo format($part['partid']);
@@ -350,20 +427,18 @@
 									<td class="serialsExpected">
 										<?php 
 											if(!empty($serials)):
-											foreach($serials as $item) { 
-												$serialData = getSerial($item['inventoryid']);
-												
+												foreach($serials as $item) { 
 										?>
-											<div class="row">
-												<div class="input-group">
-													<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$serialData['serial_no'];?></span>
-													<span class="input-group-addon">
-														<input class="serial-check" data-locationid="<?=$serialData['locationid'];?>" data-place="" data-instance="" data-assocSerial="<?=$serialData['serial_no'];?>" data-partid="<?=$part['partid'];?>" style="margin: 0 !important" type="checkbox" <?=($order_number == $serialData['last_return'] ? 'checked disabled' : '');?>>
-													</span>
+												<div class="row">
+													<div class="input-group">
+														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
+														<span class="input-group-addon">
+															<input class="serial-check" type="checkbox" onClick="submit();" name='invid' value="<?=$item['inventoryid'];?>" <?=(($item['serial_no'] == $rmaid) && (count($rmaArray) == 1) ? 'checked' : '');?> <?=($item['returns_item_id'] ? 'checked disabled' : '');?>>
+														</span>
+													</div>
 												</div>
-											</div>
 										<?php 
-											} 
+												} 
 											endif;
 										?>
 									</td>
@@ -371,13 +446,13 @@
 									<td class="reason">
 										<?php 
 											if(!empty($serials)):
-											foreach($serials as $item) { 
+												foreach($serials as $item) { 
 										?>
-											<div class="row">
-												<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['reason']?></span>
-											</div>	
+												<div class="row">
+													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['reason']?></span>
+												</div>	
 										<?php 
-											} 
+												} 
 											endif;
 										?>
 									</td>
@@ -395,23 +470,21 @@
 											endif;
 										?>
 									</td>
+									
 									<td>
 										<?php 
 											if(!empty($serials)):
-											foreach($serials as $item) { 
-												$serialData = getSerial($item['inventoryid']);
+												foreach($serials as $item) { 
 										?>
-											<div class="row">
-												<span class="text-center location-input" data-location="<?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?>" data-serial="<?=$serialData['serial_no'];?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($serialData['last_return']) ? 'TBD' : display_location($serialData['locationid']) )?></span>
-											</div>	
+												<div class="row">
+													<span class="text-center <?=(empty($item['last_return']) ? 'location-input' : ''); ?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($item['returns_item_id']) ? 'TBD' : display_location($item['locationid']) )?></span>
+												</div>	
 										<?php 
-											} 
+												} 
 											endif;
 										?>
 									</td>
 								</tr>
-								
-								
 							<?php 
 									endforeach;
 								} 
@@ -420,199 +493,12 @@
 					</table>
 				</div>
 			</div>
+			</form>
 		</div> 
+		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-		
-		<script>
-			
-			//Get a parameter value from the URL
-			function getUrlParameter(sParam) {
-			    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-			        sURLVariables = sPageURL.split('&'),
-			        sParameterName,
-			        i;
-			
-			    for (i = 0; i < sURLVariables.length; i++) {
-			        sParameterName = sURLVariables[i].split('=');
-			
-			        if (sParameterName[0] === sParam) {
-			            return sParameterName[1] === undefined ? true : sParameterName[1];
-			        }
-			    }
-			}
-			
-			//We can import this code later on into the operations js but this code is only for this page and the features on this page
-			(function($){
-				//If the order has been updated allow the success message to show for a shrot time
-				$('#item-updated-timer').delay(1000).fadeOut('fast');
-				
-				//Fade in the page after the load has happened.... Avoids elements jumping around upon loading in
-				$('.data-load').fadeIn();
-				
-				//If anything was changed on the form then enable the ability to save and complete the order
-				$(document).on('change', '.serial-check', function(){
-					var pastLocation = 	$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').data('location');
-					
-					//If the user unselects a non-saved item it will reset the locations to the original TDB or whatever is the default for a blank location
-					if(!$(this).prop("checked")) {
-						$('.location-input[data-serial="'+$(this).data('assocserial')+'"]').text(pastLocation);
-						
-					//Item is being checked so we need to make sure a location is set then enter in the respective data
-					} else if($('.place').val() != 'null') {
-						var location = $('.place').val();
-						var serialVal = $(this).data('assocserial');
-						
-						if($('.instance').val() != ''){
-							location += " - " + $('.instance').val();
-						}
-						
-						//Set the serial's associated checkbox to checked and set the location selected for that serial row... also set data values to be used when saving the page
-						$('.location-input[data-serial="'+serialVal+'"]').text(location);
-						$('.serial-check[data-assocserial="'+serialVal+'"]').data('place', $('.place').val());
-						$('.serial-check[data-assocserial="'+serialVal+'"]').data('instance', $('.instance').val());
-						
-						//Enable the usage of the save button, otherwise disabled if nothing is changed
-						$('#rma_complete').prop('disabled', false);
-						$('#rma_complete').removeClass("gray");
-						$('#rma_complete').addClass("success");
-						
-					//No Location was found
-					} else {
-						$(this).prop("checked", false);
-						modalAlertShow("Error", "Locations is missing.<br><br> Please select a location and try again.", false);
-					}
-				});
-				
-				//Any location changes to the select will invoke this
-				$(document).on('change', '.instance, .location', function(){
-					$('.serialInput').focus();
-				})
-				
-				$(document).on('keydown', '.serialInput', function(e){
-					if(e.keyCode == 13) {
-						//Prevent anything else from happening if the location is not set
-						if($('.place').val() != 'null') {
-							var location = $('.place').val();
-							var serialVal = $(this).val();
-							
-							if($('.instance').val() != ''){
-								location += " - " + $('.instance').val();
-							}
-							
-							//Check if the serial is all numeral or a mix of numeral and letters
-							if(/^\d+$/.test(serialVal)) {
-								serialVal = serialVal;
-							} else {
-								serialVal = serialVal.toUpperCase();
-							}
-							
-							//Prevent no values for the serial input
-							if(serialVal != '') {
-								//This point checks if the user is trying to edit or select a serial that has already been received
-								var existing = $('.serial-check[data-assocSerial="'+serialVal+'"]').length;
-								var is_checked = $('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked');
-								
-								//If serial exists (in the list of serial with checkboxes) and it has not already been receive "is_checked" then.. else error message
-								if(existing == 1 && !is_checked) {
-									//Item is already checked
-									if($('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked')) {
-										modalAlertShow("Warning", "Item has already been received.<br><br>Locations will be updated if a change has occured.", false);
-									} 
-									
-									//Set the serial's associated checkbox to checked and set the location selected for that serial row... also set data values to be used when saving the page
-									$('.serial-check[data-assocSerial="'+serialVal+'"]').prop('checked', true);
-									$('.location-input[data-serial="'+serialVal+'"]').text(location);
-									$('.serial-check[data-assocserial="'+serialVal+'"]').data('place', $('.place').val());
-									$('.serial-check[data-assocserial="'+serialVal+'"]').data('instance', $('.instance').val());
-									
-									//Clear the serial input and focus it for the next entry
-									$(this).val("").focus();
-									
-									//Something was saved so enable the save button	
-									$('#rma_complete').prop('disabled', false);
-									$('#rma_complete').removeClass("gray");
-									$('#rma_complete').addClass("success");
-								
-								//Item has been received
-								} else if(is_checked) {
-									modalAlertShow("Error", serialVal + " has been received.<br><br>Please try a different serial.", false);
-									
-								//Nothing was found for the serial inputted
-								} else if(existing == 0) {
-									modalAlertShow("Error", "No RMA Serials found for " + serialVal, false);
-									
-								//Multiple rows of inputted serial was found... Require user to check manually
-								} else {
-									modalAlertShow("Error", "<b>Multiple</b> Serials found for " + serialVal + "<br><br> Please select the correct serial below.", false);
-								}
-							}
-						
-						//Locations is missing and needs to be filled in by the user
-						} else {
-							modalAlertShow("Error", "Locations is missing.<br><br> Please select a location and try again.", false);
-						}
-					}
-				});
-				
-				$(document).on('click', '#rma_complete', function() {
-					//Find each serial checkbox that is checked
-					var items = [];
-					var placeholder = [];
-					var rma_number = getUrlParameter('on');
-					
-					$(".serial-check:checked").each(function() {
-						//Get all the needed data to save
-						var partid = $(this).data('partid');
-						var serial = $(this).data('assocserial');
-						var place = $(this).data('place');
-						var instance = $(this).data('instance');
-						
-						//If the bare minimum place is empty
-						if(place != '') {
-							//Doing this to prevent David from going crazy and pushing each element like Inventory Add (Extinct)
-							placeholder = { 'partid' : partid, 'serial': serial, 'place' : place, 'instance': instance};
-							items.push(placeholder);
-							//Array([object], [object], ...) .... [object] = {partid, serial, place, instance}
-						}
-					});
-					
-					//Dont run this if there is nothing to be saved
-					//Should never not run but this is a last last fallback if all the other catches don't get invoked for errors
-					if(items.length !== 0){
-						$.ajax({
-							type: "POST",
-							url: '/json/rma-add.php',
-							data: {
-								 'rmaItems' : items, 'rma_number' : rma_number
-							},
-							dataType: 'json',
-							success: function(result) {
-								console.log(result);
-								//Success or fail handler
-								if(result == true) {
-									window.location.href = window.location.href + "&success=true";
-								
-								//Unless database outputs an error this should never occur
-								} else {
-									modalAlertShow("Error", "Items failed to save.<br><br> Please try again.", false);
-								}
-							},
-						});	
-					
-					//No changes detected
-					} else {
-						modalAlertShow("Warning", "No changes detected in RMA.", false);
-					}
-				});
-			})(jQuery);
-			
-			//This overwrites the other focus for the global search
-			//Talk about creating a function and using possibly a class to enable overwriting the global focus has taken place
-			$(window).load(function(){
-				$('.serialInput').focus();	
-			});
-		</script>
+
 	</body>
 </html>

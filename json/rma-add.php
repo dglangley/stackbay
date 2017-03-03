@@ -45,19 +45,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $locationid;
 	}
 	
-	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty', 'part', 'instance']
 	function savetoDatabase($productid, $rma_number){
-		//This is splitting each product from mass of items
 		$result;
 		$locationid;
-		//Array['part', 'serial', 'place', 'instance'];
 		
-		// //Fall back if empty to prevent php fatal errors
+		//Fall back if empty to prevent php fatal errors
 		if(!empty($productid)) {
 			foreach($productid as $product) {
 				$locationid = getLocation($product['place'], $product['instance']);
 
-				$query = "UPDATE inventory SET last_return = ". res($rma_number) .", status = 'received', qty = '1', locationid = '". res($locationid) ."' WHERE partid = ". res($product['partid']) ." AND serial_no = '". res($product['serial']) ."';";
+				$query = "UPDATE inventory SET returns_item_id = ". res($product['id']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."' WHERE id = '". res($product['invid']) ."';";
 				$result = qdb($query) or die(qe());
 			}
 		}

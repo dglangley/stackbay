@@ -42,27 +42,6 @@
 		die();
 	}
 	
-	function address_out($address_id){
-		//General function for handling the standard display of addresses
-		$address = '';
-		//Address Handling
-		$row = getAddresses($address_id);
-		$name = $row['name'];
-		$street = $row['street'];
-		$city = $row['city'];
-		$state = $row['state'];
-		$zip = $row['postal_code'];
-		$country = $row['country'];
-		
-		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($city && $state){$address .= $city.", ".$state;}
-		else if ($city || $state){ ($address .= $city.$state);}
-		if($zip){$address .= "  $zip";}
-		
-		return $address;
-	}
 	
 	$sales_order;
 	$notes;

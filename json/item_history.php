@@ -21,25 +21,7 @@
     $inventory = grab('inventory');
 	$mode = grab('mode');
 
-	//COME BACK TO THIS!!!
-	function getItemHistory($invid = 0) {
-		$invid = prep($invid);
-		$query  = "SELECT * FROM inventory_history WHERE invid = $invid;";
-		$result = qdb($query);
-		
-		if(mysqli_num_rows($result) > 0){
-    		foreach($result as $history){
-                $record = array();
-    			$record['date'] = date_format(date_create($history['date_changed']), 'm/d/Y');
-    			$record['user'] = getRep($history['userid']);
-    			$record['field'] = $history['field_changed'];
-    			$record['history'] = $history['changed_from'];
-    	        $output[] = $record;
-    		}
-		}
-		
-		return $output;
-	}
+
 
     function display_history($invid){
     	//Initialize variables

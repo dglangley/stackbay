@@ -18,29 +18,7 @@
     include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	
-	//I will eventually have to generalize this: It is useful enough
-	function address_out($address_id){
-		//General function for handling the standard display of addresses
-		$address = '';
-		//Address Handling
-		$row = getAddresses($address_id);
-		$name = $row['name'];
-		$street = $row['street'];
-		$city = $row['city'];
-		$state = $row['state'];
-		$zip = $row['postal_code'];
-		$country = $row['country'];
-		
-		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($city && $state){$address .= $city.", ".$state;}
-		else if ($city || $state){ ($address .= $city.$state);}
-		if($zip){$address .= "  $zip";}
-		
-		return $address;
-	}
-    
+
     function display_terms($id){
         if($id){
             $terms = "Select terms FROM terms WHERE id = $id;";

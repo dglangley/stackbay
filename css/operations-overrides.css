@@ -204,6 +204,11 @@ body.modal-open.accounts-body, #order_body.modal-open {
 	bottom: 0;
 }
 
+.lonk{
+	 color: #428bca; 
+	 cursor: pointer;
+}
+
 .left-side-main {
 	height: 100%;
 }

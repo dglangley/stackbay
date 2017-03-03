@@ -101,7 +101,8 @@
 				prop('selected',true).
 				text(string).
 				val(id);
-			option.appendTo($(this));//insert pre-selected option into select menu
+			alert($(this).html());
+			$(this).html(option);//insert pre-selected option into select menu
 			// initialize the change so it takes effect
 			$(this).trigger("change");
 		}
@@ -771,22 +772,23 @@
 					if (origin == "bill_to"){
 						//$("#ship_display").replaceWith(right);	
 						updateShipTo();
+						// $("#select2-ship_to-container").html(right);
 					}
 					else{
+						if($(this).val() != $('#bill_to').val()) {
+							$("#mismo").prop("checked",false);
+						} else {
+							$("#mismo").prop("checked",true);
+						}
+						console.log($(this).val() + ' vs ' + $('#bill_to').val());
 						//$("#bill_display").hr("<div //id='bill_display'>"+right+"</div>");	
 						//$("#mismo").prop("checked",false);
 					}
 				}
 			});
 			
-			$(document).on('change', '#ship_to', function(){
-				if($(this).val() != $('#bill_to').val()) {
-					$("#mismo").prop("checked",false);
-				} else {
-					$("#mismo").prop("checked",true);
-				}
-				console.log($(this).val() + ' vs ' + $('#bill_to').val());
-			});
+			// $(document).on('change', '#ship_to', function(){
+			// });
 			
 			$('#modal-address').on('shown.bs.modal', function () {
 			    $("#address-modal-body").find('input[name="na_city"]').focus();
@@ -1663,7 +1665,7 @@
 						if(result['error'] != undefined)
 							alert(result['error']);
 						window.onbeforeunload = null;
-						window.location = "/shipping_home.php?po=true";
+						window.location = "/operations.php?po=true";
 					//Error occured enough to stop the page from continuing
 					} else if(result['error'] != undefined) {
 						alert(result['error']);
@@ -1672,12 +1674,12 @@
 					} else {
 						//alert('No changes have been made.');
 						$click.attr('id','save_button_inventory');
-						window.location = "/shipping_home.php?po=true";
+						window.location = "/operations.php?po=true";
 					}
 				},
 				error: function(xhr, status, error) {
 					//alert(error+" | "+status+" | "+xhr);
-					window.location = "/shipping_home.php?po=true";
+					window.location = "/operations.php?po=true";
 					console.log("inventory-add-complete.php: ERROR");
 				},	
 			});
@@ -1886,10 +1888,6 @@
 				},	
 			});
 		});
-
-//==============================================================================
-//================================== RMA =======================================
-//==============================================================================
 
 
 //==============================================================================
@@ -2360,6 +2358,43 @@
 			});
 		});
 //=================================== END HISTORY ================================== 
+
+//==============================================================================
+//==================================== RMA =====================================
+//==============================================================================
+
+	$(".rma-macro").each(function(){
+		var order_number = $("body").data("associated");
+		var page = 'rma';
+		var order_type = "RMA"
+		
+		//Left Side Main output on load of the page
+		$.ajax({
+			type: "POST",
+			url: '/json/operations_sidebar.php',
+			data: {
+				"number": order_number,
+				"type": order_type,
+				"page": page,
+				},
+			dataType: 'json',
+			success: function(right) {
+				$(".rma-macro").append(right);
+			},
+			complete: function() {
+				console.log("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Success");
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.error("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Error");
+			}
+			
+		});
+	});
+
+
+
+//================================== END RMA ===================================
 		
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
@@ -2690,9 +2725,12 @@
 				},
 			});
         } 
-//==============================================================================		
-//================================= LOCATIONS ==================================
-//==============================================================================
+
+
+
+
+
+
 		function location_changer(type,limit,home,warehouse){
 			var finder = "."+type;
 			$.ajax({
@@ -2715,7 +2753,6 @@
 					}
 			});
 		}
-//================================= END LOCATIONS ==================================
 
 
 
