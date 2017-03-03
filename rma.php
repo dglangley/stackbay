@@ -271,8 +271,9 @@
 				<div class="col-md-4">
 					<?php
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $order_number . '" | href="/docs/'.$order_type[0].'O'.$order_number.'.pdf"
-						echo '<a class="btn-flat pull-left">To Origin</a> ';
+						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'">To Origin</a> ';
 						echo '<a class="btn-flat pull-left" target="_new">Create Printable RMA</a>';
+						echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
 					?>
 					
 				</div>
