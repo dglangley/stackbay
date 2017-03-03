@@ -38,9 +38,18 @@
 	$instance = '';
 	$rmaArray = array();
 	
-	if(grab('rmaid') || (grab('invid') && grab('rmaid'))) {
+	if(grab('rmaid') || grab('invid')) {
 		$rmaid = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
+		
+		if($rmaid == '') {
+			$query = "SELECT serial_no FROM inventory WHERE id = ".res($invid).";";
+			$serial_find = qdb($query) or die(qe());
+			if (mysqli_num_rows($serial_find)>0) {
+				$serial_find = mysqli_fetch_assoc($serial_find);
+				$rmaid = $serial_find['serial_no'];
+			}
+		}
 		
 		$place = grab('place');
 		$instance = grab('instance');
