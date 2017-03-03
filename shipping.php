@@ -414,7 +414,7 @@
 								<!-- Grab the old serial values from the database and display them-->
 									<td class="infiniteSerials" style="padding-top: 10px !important;">
 										<div class="input-group">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-item-id='<?=$item['id']?>' data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
@@ -425,7 +425,7 @@
 											foreach ($serials as $serial):
 										?>
 										<div class="input-group check-save" data-savable="true">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id ='<?=$serial['id']?>' data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
@@ -473,30 +473,6 @@
 										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 									</td>
 								</tr>
-								<?php $history = getHistory($item['id']); if($history != '') { ?>
-									<!--<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>-->
-									<!--	<td colspan='12'>-->
-									<!--		<table class='table serial table-hover table-condensed'>-->
-									<!--			<thead>-->
-									<!--				<tr>-->
-									<!--					<th>Serial Number</th>-->
-									<!--					<th>Box #</th>-->
-									<!--					<th>Comments</th>-->
-									<!--				</tr>-->
-									<!--			</thead>-->
-									<!--			<tbody>-->
-									<!--			<?php foreach($history as $serial): ?>-->
-									<!--				<tr>-->
-									<!--					<td><?= $serial['serial_no']; ?></td>-->
-									<!--					<td></td>-->
-									<!--					<td><?= getComments($serial['id']); ?></td>-->
-									<!--				</tr>-->
-									<!--			<?php endforeach; ?>-->
-									<!--			</tbody>-->
-									<!--		</table>-->
-									<!--	</td>-->
-									<!--</tr>-->
-								<?php } ?>
 								
 							<?php endforeach; ?>
 						</table>
