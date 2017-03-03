@@ -40,7 +40,7 @@
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
 	$so_number = grab("on");
-	$rma_number = (grab("rma") ? grab("rma") : '');
+	$rma_number = grab("rma",'');
 	
 	//Check for any post data from save
 	//Array = [counter] = invid
