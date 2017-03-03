@@ -364,17 +364,15 @@
 										qdb($insert);
 										echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
 									}
-	
-									
-									
+		
 								?>
 								<button type="button" class="btn btn-primary box_addition" title = "">
 							  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
 						  		</button>
 							</div>
-							<button class="btn-sm btn-flat gray pull-right rma-button" style="margin-right: 10px;">
+							<a href="/rma.php?on=<?=$order_number;?>" class="btn-sm btn-flat gray pull-right rma-button" style="margin-right: 10px;">
 						  		RMA
-					  		</button>
+					  		</a>
 						</div>
 					</div>
 				
