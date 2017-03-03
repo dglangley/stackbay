@@ -18,6 +18,7 @@
 		include_once $rootdir.'/inc/format_price.php';
 		include_once $rootdir.'/inc/getCompany.php';
 		include_once $rootdir.'/inc/getWarranty.php';
+		include_once $rootdir.'/inc/getCondition.php';
 		include_once $rootdir.'/inc/getPart.php';
 		include_once $rootdir.'/inc/pipe.php';
 		include_once $rootdir.'/inc/keywords.php';
@@ -42,12 +43,15 @@
 		
 		//Process the search ID into readable text.
 		$display = '';
+		$select_display = '';
 		$partid = $row['search'];
 		$p = hecidb($partid,'id');
 		foreach ($p as $r){
             //$display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
-            $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
+			$select_display = $r['part'].' '.$r['heci'];
+            $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span> &nbsp; ";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">';
+			$display .= dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 		}
 		
 		
@@ -61,7 +65,7 @@
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
             <td class = 'line_date' data-date = '$date'>".$date."</td>
-            <td class = 'line_cond'  data-cond = ".$row['condition'].">".ucwords($row['condition'])."</td>
+            <td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
             <td class = 'line_war'  data-war = ".$row['warranty'].">".getWarranty($row['warranty'],'name')."</td>
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
@@ -77,7 +81,7 @@
 		            <td class='search_collumn'>
 		            	<div class = 'item-selected'>
 							<select class='item_search input-xs'>
-								<option data-search = '$partid'>".$display."</option>
+								<option data-search = '$partid'>".$select_display."</option>
 							</select>
 						</div>
 					</td>
@@ -89,7 +93,7 @@
 				            </span>
 			            </div>
 				    </td>
-		            <td>".dropdown('condition',$row['condition'],'','',false)."</td>
+		            <td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
 		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
@@ -121,7 +125,7 @@
 		$line = grab('line');
 		$id = grab('id','NULL');
 		$warranty = grab('warranty','NULL');
-		$condition = grab('condition');
+		$conditionid = grab('conditionid');
 
 		//Store all caught data into the standard array and build the row.
 		$row = array(
@@ -133,7 +137,7 @@
 			'uPrice' => $uPrice,
 			'line' => $line,
 			'warranty' => $warranty,
-			'condition' => $condition,
+			'conditionid' => $conditionid,
 			);
 		$row_out = build_row($row);
 		
@@ -172,7 +176,7 @@
 					'qty' => $r['qty'],
 					'uPrice' => $r['price'],
 					'warranty' => $r['warranty'],
-					'condition' => $r['cond']
+					'conditionid' => $r['conditionid']
 					);
 					$table .= build_row($new_row);			
 					

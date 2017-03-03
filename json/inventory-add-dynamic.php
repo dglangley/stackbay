@@ -22,7 +22,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	//This is a list of everything
 	$partid = grab('partid');
-	$condition = grab('condition');
+	$conditionid = grab('conditionid');
 	$serial = strtoupper(grab('serial'));
 	$savedSerial = strtoupper(grab('savedSerial'));
 	$po_number = grab('po_number');
@@ -30,8 +30,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$place = grab('place');
 	$instance = grab('instance');
 	
-	//items = ['partid', 'serial', 'qty', 'location', 'status', 'condition'];
-	function savetoDatabase($partid, $condition, $serial, $po_number, $item_id, $savedSerial, $place, $instance){
+	//items = ['partid', 'serial', 'qty', 'location', 'status', 'conditionid'];
+	function savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance){
 		$result = array();
 		$locationid;
 		$query;
@@ -62,14 +62,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				qdb($query);
 				
 				//Insert the item into the inventory
-		 		//$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, item_condition, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($condition) ."', 'received', '". res($locationid) ."', '". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
+		 		//$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
+		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', '". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
 				
 				//$result['test'] = $query;
 				$result['query'] = qdb($query) or die(qe());
 				//$result['query'] = $query;
 			} else {
-				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', item_condition = '". res($condition) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
+				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', conditionid = '". res($conditionid) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
 				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 				$result['query'] = qdb($query) or die(qe());
 				$result['saved'] = $serial;
@@ -79,6 +79,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $condition, $serial, $po_number, $item_id, $savedSerial, $place, $instance);
+	$result = savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance);
 	echo json_encode($result);
     exit;

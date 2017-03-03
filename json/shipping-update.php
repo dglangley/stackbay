@@ -26,7 +26,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	
 	$date = date("Y-m-d h:i:sa");
 	
-	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
 		$result = [];
 		

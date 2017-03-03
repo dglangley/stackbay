@@ -53,7 +53,7 @@ function head_out(){
     $head .= "<th class='col-md-5'>Item Information</th>";
     $head .= "<th class='col-md-2'>Delivery Date</th>";
     $head .= "<th class='col-md-1'>Condition</th>";
-    $head .= "<th class='col-md-1'>".dropPop("condition","","","",false,"warranty_global")."</th>";
+    $head .= "<th class='col-md-1'>".dropPop("conditionid","","","",false,"warranty_global")."</th>";
     $head .= "<th class='col-md-1'>Qty</th>";
     $head .= "<th class='col-md-1'>Price</th>";
     $head .= "<th class='col-md-1'>Ext. Price</th>";
@@ -67,6 +67,17 @@ function head_out(){
 function search_row(){
     //The macro row will carry the same information as the sub rows, but will be
     //a global-set matching row. It will mirror David's Item output page
+
+        //Default is ground aka 4 days
+        $default_add = 4;
+        $date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
+        //Condition | conditionid can be set per each part. Will play around with the tactile (DROPPOP, BABY)
+        //Aaron is going to marry Aaron 2036 
+        $condition_dropdown = dropdown('conditionid','','','',false);
+        //Warranty
+        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
+
+/*
         $line = "
             <tr id = 'totals_row' style='display:none;'>
                 <td></td>
@@ -78,88 +89,56 @@ function search_row(){
                 <td style='text-align:right;'>Total:</td>
                 <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
                 <td></td>
-            </tr>";
-        $line .= "<tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>";
-        
-        //Line Number
-        $line .= "<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>";
-        
-        //Item Search Funciton
-        $line .= "
-        <td id = 'search'>
-            <div class='input-group'>
-              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
-              <span class='input-group-btn'>
-                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
-            </span>
-            </div>
-        </td>";
-
-        // //Delivery Date
-        
-        //Default is ground aka 4 days
-        $default_add = 4;
-        $date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
-        //$date = date("m/d/Y");
-        
-        $line .= "
-        <td>			
-		    <div class='input-group date datetime-picker-line'>
-                <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
-                <span class='input-group-addon'>
-                    <span class='fa fa-calendar'></span>
-			    </span>
-            </div>
-        </td>";
-        
-        //Condition | condition can be set per each part. Will play around with the tactile (DROPPOP, BABY)
-        //Aaron is going to marry Aaron 2036 
-        $line .= "<td>".dropdown('condition','','','',false)."</td>";
-        //Warranty
-        $line .= "<td>".dropdown('warranty',$warranty,'','',false,'new_warranty')."</td>";
-
-        
-        //Qty | Each of the qty inputs had supplimental inventory information
-        $line .="<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = '$qty'></td>";
-        
-        //Price
-        $line .= "
-            <td>
-                <div class='input-group'>
-                    <span class='input-group-addon'>$</span>
-                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='$price'>
-                </div>
-            </td>";
-        
-        //EXT PRICE
-        $line .= "<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>";
-        
-        //Submission button
-        $line .= "
+            </tr>
+            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
+        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
+		        <td id = 'search'>
+		            <div class='input-group'>
+		              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
+		              <span class='input-group-btn'>
+		                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+		            </span>
+		            </div>
+		        </td>
+		        <td>			
+				    <div class='input-group date datetime-picker-line'>
+		                <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
+		                <span class='input-group-addon'>
+		                    <span class='fa fa-calendar'></span>
+					    </span>
+		            </div>
+		        </td>
+        		<td>".$condition_dropdown."</td>
+        		<td>".$warranty_dropdown."</td>
+        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+            	<td>
+	                <div class='input-group'>
+	                    <span class='input-group-addon'>$</span>
+	                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
+	                </div>
+	            </td>
+        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
                 <td colspan='2' id = 'check_collumn'> 
                     <a class='btn-sm btn-flat success pull-right multipart_sub' >
                     <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
-                </td>";
-
-    $line .= "</tr>";
+                </td>
+			</tr>
+		    <!-- Adding load bar feature here -->
+	   	 	<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>
     
+			<!-- dummy line for nothing found -->
+	   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
+		";
     
-    //Adding load bar feature here
-    $line .= "<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>";
-    
-    //Adding dummy line for nothing found
-    $line .= "<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>";
-    
-    return $line;
-    //The macro row will /NOT/ be stored, and will dissappear after each new item is added.
+	    return $line;
+*/
+	    //The macro row will /NOT/ be stored, and will dissappear after each new item is added.
 }
 
 function format($parts){
-// 	$name = '<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>';
-//     $name .= '<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>';
-
     $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci']."</span>";
     $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
+
     return $name;
 }
 
@@ -207,7 +186,7 @@ function sub_rows($search = ''){
                 
                 if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's') && !$show){
                     $rows = "
-                        <tr class = 'search_lines' data-line-id = $id>
+                        <tr class = '' data-line-id = $id>
                             <td></td>
                             <td colspan='6' style=''>No parts in stock. <span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show all</span></td>
                             <td style=''></td>
@@ -216,7 +195,7 @@ function sub_rows($search = ''){
                 }
                 else{
                         $rows = "
-                        <tr class = 'search_lines' data-line-id = $id>
+                        <tr class = '' data-line-id = $id>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -281,7 +260,7 @@ function sub_rows($search = ''){
                     //Ask David about the line-level control with each of these.
                     //Delivery Date
                     
-                    //Condition | condition can be set per each part. Will play around with the tactile
+                    //Condition | conditionid can be set per each part. Will play around with the tactile
                     //Warranty    
                     //Qty | Each of the qty inputs had supplimental inventory information
                     //Price 
@@ -291,7 +270,7 @@ function sub_rows($search = ''){
         }//End the "If there are matches" check
             else{
                 $rows .= "
-                    <tr class = 'search_lines' data-line-id = $id>
+                    <tr class = '' data-line-id = $id>
                         <td></td>
                         <td colspan='6' style=''>Nothing Found</td>
                         <td style=''></td>
@@ -311,8 +290,10 @@ if ($mode == "search"){
     $output .= sub_rows($search_string);
 }
 else{
-    $output .= search_row();
+//david 3/1/17 not using no mo
+//    $output .= search_row();
 }
+//echo $output;exit;
 
 echo json_encode($output);
 exit;

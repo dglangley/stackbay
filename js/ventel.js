@@ -693,13 +693,16 @@
 				else { $(this).toggleClass('fa-sort-asc fa-sort-desc'); }
 			});
 		});
-		$("#s").focus(function() {
-			if (! $("#advanced-search-options").hasClass('hidden')) {
-				$("#advanced-search-options").toggleClass('hidden');
-				$("#s").val($("#s2").val().replace(/\r\n|\r|\n/g," "));
-			} else {
-			}
-		});
+		// focus to navbar search field if there is no class overriding the focus
+		if ($(".auto-focus").length==0) {
+			$("#s").focus(function() {
+				if (! $("#advanced-search-options").hasClass('hidden')) {
+					$("#advanced-search-options").toggleClass('hidden');
+					$("#s").val($("#s2").val().replace(/\r\n|\r|\n/g," "));
+				} else {
+				}
+			});
+		}
 		$("#s").change(function() {
 			$("#s2").val("");
 		});

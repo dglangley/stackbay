@@ -182,8 +182,8 @@
 			<!--Condition Drop down Handler-->
 			<div class="col-md-1 col-sm-1">
 				<?php
-					$condition_selected = grab('condition','');
-					echo dropdown('condition',$condition_selected,'','',false,"condition_global");
+					$condition_selected = grab('conditionid','');
+					echo dropdown('conditionid',$condition_selected,'','',false,"condition_global");
 				?>
 			</div>
 			
@@ -257,7 +257,7 @@
 		
 		<div class="conditions row">
 			<div class="col-md-12">
-				<?=dropdown('condition')?>
+				<?=dropdown('conditionid')?>
 			</div>
 		</div>
 		
@@ -283,7 +283,7 @@
 				location : $("#filterBar").find(".instance").val(),
 				start : $("#filterBar").find("input[name='START_DATE']").val(),
 				end : $("#filterBar").find("input[name='END_DATE']").val(),
-				condition : $("#condition_global").val(),
+				conditionid : $("#condition_global").val(),
 				vendor : $("#companyid").val()
 			};
 			console.log(output);
@@ -295,10 +295,11 @@
 			var location = $("#filterBar").find(".instance").val();
 			var start = $("#filterBar").find("input[name='START_DATE']").val();
 			var end = $("#filterBar").find("input[name='END_DATE']").val();
-			var condition = $("#condition_global").val();
+			var conditionid = $("#condition_global").val();
 			var vendor = $("#companyid").val();
 			var order = $("#po_filter").val();
 
+			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&conditionid="+conditionid+"&vendor="+vendor);
 			$.ajax({
 					type: "POST",
 					url: '/json/inventory-out.php',
@@ -308,13 +309,12 @@
 						"location" : location,
 						"start" : start,
 						"end" : end,
-						"condition" : condition,
+						"conditionid" : conditionid,
 						"vendor" : vendor,
 						"order" : order
 					},
 					dataType: 'json',
 					success: function(part) {
-						console.log('Successfully called: /json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&condition="+condition+"&vendor="+vendor);
 						// Add feature to auto update the URL without a refresh
 						if(search == '') {
 							window.history.replaceState(null, null, "/inventory.php");
@@ -504,9 +504,7 @@
 					},
 					error: function(xhr, status, error) {
 						//$(".loading_element_listing").hide();
-						console.log('Failed call: /json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&condition="+condition+"&vendor="+vendor);
-						alert(error);
-					   	alert("No Parts Found with those parameters");
+					   	alert("No Parts Found with those parameters: "+error);
 					},			
 			});
 		}
@@ -534,10 +532,9 @@
 			var newSales = $save.closest('tr').find('.newSO').val();
 			var newPlace = $save.closest('tr').find('.place').val();
 			var newInstance = $save.closest('tr').find('.instance').val();
-			var newCondition = $save.closest('tr').find('#condition').val();
+			var newCondition = $save.closest('tr').find('#conditionid').val();
 			
-			//alert("INVID: " + id + " New Serial: " + newSerial + " Qty: " + newQty + " Status: " + newStatus + " New SO: " + newSales + " New Place: " + newPlace + " New Instance: " + newInstance + " New Condition: " + newCondition);
-			
+			console.log(window.location.origin+'/json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&conditionid='+newCondition);
 			$.ajax({
 				type: "POST",
 				url: '/json/inventory-edit.php',
@@ -549,11 +546,10 @@
 					"so": newSales,
 					"place": newPlace,
 					"instance": newInstance,
-					"condition": newCondition
+					"conditionid": newCondition
 				},
 				dataType: 'json',
 				success: function(result) {
-					console.log('Success call: /json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&condition='+newCondition);
 					if(result) {
 						$save.closest('tr').find('.edit').hide();
 						$save.closest('tr').find('.data').show();
@@ -572,9 +568,7 @@
 				},
 				error: function(xhr, status, error) {
 					// $(".loading_element_listing").hide();
-					console.log('Failed call: /json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&condition='+newCondition);
-					alert(error);
-				   	alert("No Parts Found with those parameters");
+				   	alert("No Parts Found with those parameters: "+error);
 				},
 			});
 		});

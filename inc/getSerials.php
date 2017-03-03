@@ -7,13 +7,7 @@
 			$locationid = prep($locationid);
 			$query .= " AND locationid = $locationid";
 		}
-		$query .= " ORDER BY
-				  CASE item_condition
-				    WHEN 'new' THEN 1
-				    WHEN 'used' THEN 2
-				    ELSE 3
-				  END, qty DESC;
-				  ";
+		$query .= " ORDER BY IF(conditionid=1,0,1), qty DESC; ";
 		$result = qdb($query);
 		
 		while ($row = $result->fetch_assoc()) {

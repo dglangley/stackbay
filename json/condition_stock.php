@@ -1,5 +1,6 @@
 <?php
 	include '../inc/dbconnect.php';
+	include '../inc/getCondition.php';
 
 	$partid = '';
 	
@@ -7,43 +8,24 @@
     
     $items = array();
     
-    function getStock($condition, $partid) {
+    function getStock($conditionid, $partid) {
         global $items;
 		$stock;
 		
 		$partid = res($partid);
-		$condition = res($condition);
+		$conditionid = res($conditionid);
 		
-		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND item_condition = '$condition';";
+		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND conditionid = '$conditionid';";
         $result = qdb($query);
         if (mysqli_num_rows($result)>0) { 
             $row = mysqli_fetch_assoc($result);
-            $items[] = ucwords($condition) . ' ' . ($row['total'] != '' ? " &nbsp; " . $row['total'] . ")" : ' &nbsp; (0)');
+            $items[] = getCondition($conditionid) . ' ' . ($row['total'] != '' ? " &nbsp; " . $row['total'] . ")" : ' &nbsp; (0)');
         }
 	}
 	
-	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
-		$statusVals;
-		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	    $result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$statusVals = $result;
-		}
-		
-		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
-		
-		$enum = explode("','", $matches[1]);
-		
-		return $enum;
-	}
-	
-	$enums = getEnumValue();
-	
-	foreach($enums as $cond) {
-	    getStock($cond, $partid);
+	getCondition();//init for all conditions
+	foreach ($CONDITIONS as $conditionid => $cond) {
+	    getStock($conditionid, $partid);
 	}
     
 	echo json_encode($items);//array('results'=>$companies,'more'=>false));

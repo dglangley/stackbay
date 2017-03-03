@@ -1,28 +1,28 @@
 		jQuery.fn.initDatetimePicker = function (format,maxDate) {
-		  	if (!format){
+			if (!format){
 		  		format = false;
 		  	}
 		  	if (!maxDate){
 		  		var maxDate = false;
 		  	}
 
-		           $(this).datetimepicker({
-		               /* use font awesome icons instead of glyphicons. because i said so. */
-		               icons: {
-		                   time: 'fa fa-clock-o',
-		                   date: 'fa fa-calendar',
-		                   up: 'fa fa-chevron-up',
-		                   down: 'fa fa-chevron-down',
-		                   previous: 'fa fa-chevron-left',
-		                   next: 'fa fa-chevron-right',
-		                   today: 'fa fa-screenshot',
-		                   clear: 'fa fa-trash',
-		                   close: 'fa fa-close'
-		               },
-		               format: format,
-		               maxDate: maxDate,
-		           });
-		   }
+			$(this).datetimepicker({
+		        /* use font awesome icons instead of glyphicons. because i said so. */
+		        icons: {
+		            time: 'fa fa-clock-o',
+		            date: 'fa fa-calendar',
+		            up: 'fa fa-chevron-up',
+		            down: 'fa fa-chevron-down',
+		            previous: 'fa fa-chevron-left',
+		            next: 'fa fa-chevron-right',
+		            today: 'fa fa-screenshot',
+		            clear: 'fa fa-trash',
+		            close: 'fa fa-close'
+		        },
+		        format: format,
+		        maxDate: maxDate,
+		    });
+		}
 		jQuery.fn.initSelect2 = function(load_url,holder,args,active){ 
 			console.log("init initSelect2: "+load_url);
 			$(this).select2({
@@ -109,116 +109,76 @@
 
 
 		$(document).ready(function() {
-			
 
-		// ======== Output the header clear for the padding on the page ========
-			function headerOffset() {
-				var height = $('header.navbar').height();
-		        //get possible filter bar height
-		        var heightOPT = 0;
-		        var heightError = 0;
-		        if ($('.table-header').css("display")!='none'){
-		        	heightOPT = $('.table-header').height();
-		        }
-		        //heightError = $('.general-form-error').height();
-		        
-		        var offset = height + heightOPT + heightError;
-				
-				
-				$('body').css('padding-top', offset);
+			// This is our global for all functions, all day baby
+			var	order_type = $("body").attr("data-order-type");
+			if(order_type == "Purchase"){
+				var receiver_companyid = '25';//ventel id
 			}
+			else{
+				var receiver_companyid = $("#companyid").val();
+			}
+
+			if ($("#right_side_main").length > 0) {
+				var order_number = $("#order_body").attr("data-order-number");
+
+				console.log(window.location.origin+"/json/order-table-out.php?mode=load&number="+order_number+"&type="+order_type);
+
+				$.ajax({
+					type: "POST",
+					url: '/json/order-table-out.php',
+					data: {
+						"type": order_type,
+						"number": order_number,
+		   		    	"mode":'load'
+						}, // serializes the form's elements.
+					dataType: 'json',
+					success: function(result) {
+						$('#right_side_main').append(result);
+						rows = $(".easy-output").length;
+						$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
+						// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
+						// auto-populate next line number to the search row line
+						$(".search_row").find('input[name="ni_line"]').val(line_number());
+						if($(".easy-output").length > 0){
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#totals_row').show();
+						}
+					},					
+					error: function(xhr, status, error) {
+						console.log("JSON | Initial table load | order table out.php: "+error);
+					}
+				});
+			}
+
+			// ======== Output the header clear for the padding on the page ========
 			//get main header height
 			
 			$( window ).resize(function() {
 		        headerOffset();
 			});
-			
-			//headerOffset();
 
 			$.when(headerOffset()).then(function(){
 				$('.loading_element').css('visibility','visible').hide().fadeIn();
 			});
-			
-		
-		//======================== End the header clear ========================
+			//======================== End the header clear ========================
 
-//==============================================================================
-//============================== BEGIN ORDER FORM ==============================
-//==============================================================================
+			//==============================================================================
+			//============================== BEGIN ORDER FORM ==============================
+			//==============================================================================
 
-		//Adding in all slide sidebar options to pages that utilize the classes depicted below
-		
-		function toggleSidebar() {
-		
-			var $marginLefty = $('.left-sidebar');
-					
-			$(window).resize(function() {
-				$marginLefty.animate({
-					marginLeft: 0
-				});
-				
-				$('.icon-button').addClass('fa-chevron-left');
-				$('.icon-button').removeClass('fa-chevron-right');
-				
-				if($('.left-sidebar .sidebar-container').is(':hidden')){
-		            $('.icon-button-mobile').removeClass('fa-chevron-up');
-					$('.icon-button-mobile').addClass('fa-chevron-down');
-					
-					$('.left-sidebar .sidebar-container').fadeIn();
-		        }
-			});
+			//========================= Left side main page =========================
+			//Load the meta information panel, initialize the clickable fields, and
+			//populate whatever fields are prefilled. THIS WILL WORK ACROSS MULTIPLE PAGES!
 			
-			$('.click_me').on('click', function() {
-				// alert('clicked');
-				var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
-				$marginLefty.animate({
-					marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
-					},{
-					complete: function() {
-						if(check == 'collapsed') {
-							//$('.company_meta .row').hide();
-						}
-					}
-				});
-				
-				if(check == 'collapsed') {
-					//$('.shipping-list').animate({width: '90%'}, 550);
-					$('.icon-button').addClass('fa-chevron-right');
-					$('.icon-button').removeClass('fa-chevron-left');
-					//$('.company_meta .row').hide();
-				} 
-				
-				if(check != 'collapsed') {
-					//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
-					$('.icon-button').addClass('fa-chevron-left');
-					$('.icon-button').removeClass('fa-chevron-right');
-					//$('.company_meta .row').show();
-				}
-			});
-
-			$('.shoot_me').click(function() {
-				$('.left-sidebar .sidebar-container').slideToggle(function(){
-					if($('.left-sidebar .sidebar-container').is(':visible')){
-			            $('.icon-button-mobile').addClass('fa-chevron-up');
-						$('.icon-button-mobile').removeClass('fa-chevron-down');
-			        }else{
-			            $('.icon-button-mobile').addClass('fa-chevron-down');
-						$('.icon-button-mobile').removeClass('fa-chevron-up');
-			        }
-				});
-			});
-		}
-		//========================= Left side main page =========================
-		//Load the meta information panel, initialize the clickable fields, and
-		//populate whatever fields are prefilled. THIS WILL WORK ACROSS MULTIPLE PAGES!
-			
-			$(".left-side-main").ready(function(){
+			$(".left-side-main").each(function(){
 				var order_number = 'new';
 				var page = 'order';
 				
-				order_number = $("body").data("order-number");
-				page = $(".left-side-main").data("page");
+				order_number = $("body").attr("data-order-number");
+				page = $(".left-side-main").attr("data-page");
 				
+				console.log(window.location.origin+"/json/operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page);
 				//Left Side Main output on load of the page
 				$.ajax({
 					type: "POST",
@@ -227,7 +187,7 @@
 						"number": order_number,
 						"type": order_type,
 						"page": page,
-						},
+					},
 					dataType: 'json',
 					success: function(right) {
 						$(".left-side-main").append(right);
@@ -254,30 +214,18 @@
 						else{
 							$("#order_selector").initSelect2("/json/order-select.php","Select Order",order_type);
 						}
-						console.log("JSON operations_sidebar.php: Success");
+
+						toggleSidebar();
 					},
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON operations_sidebar.php: Error");
 					}
-					
 				});
-				
-				toggleSidebar();
-
-/*
-				$(document).on("change load","#freight-carrier",function() {
-					var carrier = ($("#freight-carrier :selected").data('carrier-id'));
-					$("#freight-services").val("Freight Services");
-					$("#freight-services").children("option[data-carrier-id!='"+carrier+"']").hide();
-					$("#freight-services").children("option[data-carrier-id='"+carrier+"']").show();
-				});
-*/
-			});
+			});/* END .left-side-main */
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-
-		$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
+			$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
 				var qty = 0;
 				$.each($(".search_lines"),function(){
 					var s_qty = ($(this).find("input[name=ni_qty]").val());
@@ -295,48 +243,39 @@
 				$("tfoot").find("input[name=ni_ext]").val(display);
 				$("#search_input > tr.search_row > td:nth-child(6) > input").val(qty);
 			});
-		$(document).on("change","#order_selector",function() {
-			// alert(order_type);
-			var change = ($(this).val());
-			if(order_type == 'Purchase'){
-				window.location = "/inventory_add.php?on="+change;
-			}
-			else{
-				window.location = "/shipping.php?on="+change;
-			}
-		});	
+			$(document).on("change","#order_selector",function() {
+				// alert(order_type);
+				var change = ($(this).val());
+				if(order_type == 'Purchase'){
+					window.location = "/inventory_add.php?on="+change;
+				}
+				else{
+					window.location = "/shipping.php?on="+change;
+				}
+			});	
 
-		// This is our global for all functions, all day baby
-		var	order_type = $("body").data("order-type");
-		if(order_type == "Purchase"){
-			var receiver_companyid = '25';//ventel id
-		}
-		else{
-			var receiver_companyid = $("#companyid").val();
-		}
+			/* David, Flame Broiler is at stake */
+			$(document).on("click",".btn-order-upload",function() {
+				$("#order-upload").click();
+			});
+			var orderUploadFiles;
+			$(document).on("change","input#order-upload",function(e) {
+				orderUploadFiles = e.target.files;
 
-		/* David, Flame Broiler is at stake */
-		$(document).on("click",".btn-order-upload",function() {
-			$("#order-upload").click();
-		});
-		var orderUploadFiles;
-		$(document).on("change","input#order-upload",function(e) {
-			orderUploadFiles = e.target.files;
+				// get new upload file name
+				var upload_file = $(this).val().replace("C:\\fakepath\\","");
 
-			// get new upload file name
-			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+				// change "Customer Order:" label with name of upload file, and color with primary text
+				var order_label = $("#customer_order").find("label[for='assoc']");
+				order_label.html(upload_file);
+				order_label.prop('class','text-info');
 
-			// change "Customer Order:" label with name of upload file, and color with primary text
-			var order_label = $("#customer_order").find("label[for='assoc']");
-			order_label.html(upload_file);
-			order_label.prop('class','text-info');
-
-			// change icon on upload button as additional indicator of successful selection
-			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
-		});
+				// change icon on upload button as additional indicator of successful selection
+				$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
+			});
 	
 		
-		//If the company information changes, run
+			//If the company information changes, run
 			$(document).on("change","#companyid",function() {
 				//Check to see if an order number exists or is this a new order
 				var po_number = getUrlParameter('on');
@@ -418,7 +357,7 @@
 
 				//Account default picker on update of the company
 
-				console.log("/json/account-default.php?"+"company="+receiver_companyid+"&carrier="+carrier);
+				console.log(window.location.origin+"/json/account-default.php?"+"company="+receiver_companyid+"&carrier="+carrier);
 				$.ajax({
 					type: "POST",
 					url: '/json/account-default.php',
@@ -450,8 +389,6 @@
 						console.log("JSON account-default.php: Error");
 					}
 				}).done(function(right) {
-//				    var new_account = ($("#account_select").data("carrier"));
-//					if (new_account){
 					$.ajax({
 						type: "POST",
 						url: '/json/dropPop.php',
@@ -465,7 +402,7 @@
 						dataType: 'json',
 						success: function(result) {
 							var initial_result = $("#service").val();
-							var initial_days = $("#service").find("[value='"+initial_result+"']").data("days");
+							var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 							$('#service_div').replaceWith(result);
 							var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
 							if (new_div_val){
@@ -475,7 +412,7 @@
 							console.log("Initial ID: "+initial_result);
 							console.log("Initial Days: "+initial_days);
 							console.log("New ID: "+new_div_val);
-							var days = parseInt($("#service :selected").data("days"));
+							var days = parseInt($("#service :selected").attr("data-days"));
 							if(!isNaN(days)){
 								$("input[name=ni_date]").val(freight_date(days));
 							}
@@ -486,47 +423,8 @@
 								console.log("JSON Services limited dropPop.php: Error");
 							}
 						});
-//				}
 				});
 
-				//Default Global Warranty
-				// $.ajax({
-				// 	type: "POST",
-				// 	url: '/json/warranty-default.php',
-				// 	data: {
-				// 		"company": company,
-				// 		},
-				// 	dataType: 'json',
-				// 	success: function(right) {
-				// 		var bvalue = right['b_value'];
-				// 		var bdisplay = right['b_display'];
-			 //   		$("#select2-bill_to-container").html(bdisplay)
-			 //   		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bdisplay+"</option>");
-						
-				// 		var svalue = right['s_value'];
-				// 		var sdisplay = right['s_display'];
-			 //   		$("#select2-ship_to-container").html(sdisplay)
-			 //   		$("#ship_to").append("<option selected value='"+svalue+"'>"+sdisplay+"</option>");
-			 //   		console.log("JSON address-default.php: Success");
-				// 	},					
-				// 	error: function(xhr, status, error) {
-				// 		alert(error+" | "+status+" | "+xhr);
-				// 		console.log("JSON address-default.php: Error");
-				// 	}
-				// });
-				
-				//david 2/13/17
-				//$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":company,"carrierid":$("#carrier").val()});
-				// alert(new_account);
-				
-				//Reload the Addresses
-				
-				//Reload the contact
-				// $("#contactid").initSelect2("/json/contacts.php","Select Contact",25)
-				// alert(company);
-				// //Populate the terms with the company preferences
-				//Check if a order number exists
-				
 				$.ajax({
 					type: "POST",
 					url: '/json/dropPop.php',
@@ -549,42 +447,7 @@
 					}
 				});
 			});
-			
-			function getWorkingDays(startDate, endDate){
-				var result = 0;
-				var currentDate = startDate;
-				while (currentDate <= endDate)  {  
-				
-				var weekDay = currentDate.getDay();
-				if(weekDay != 0 && weekDay != 6)
-					result++;
-					currentDate.setDate(currentDate.getDate()+1); 
-				}
-				return result;
-			}
-			
-			function freight_date(days){
-				var today = new Date();
-				var dayOfTheWeek = today.getDay();
-				var calendarDays = days;
-				var deliveryDay = dayOfTheWeek + days;
-				if (deliveryDay >= 6) {
-					//deduct this-week days
-					days -= 6 - dayOfTheWeek;
-					//count this coming weekend
-					calendarDays += 2;
-					//how many whole weeks?
-					var deliveryWeeks = Math.floor(days / 5);
-					//two days per weekend per week
-					calendarDays += deliveryWeeks * 2;
-				}
-				
-				today.setTime(today.getTime() + calendarDays * 24 * 60 * 60 * 1000);
-				
-				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
-				return today;
-			}
-			
+
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
 
@@ -635,7 +498,7 @@
 					dataType: 'json',
 					success: function(result) {
 						var initial_result = $("#service").val();
-						var initial_days = $("#service").find("[value='"+initial_result+"']").data("days");
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
 						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
 						if (new_div_val){
@@ -645,7 +508,7 @@
 						console.log("Initial ID: "+initial_result);
 						console.log("Initial Days: "+initial_days);
 						console.log("New ID: "+new_div_val);
-						var days = parseInt($("#service :selected").data("days"));
+						var days = parseInt($("#service :selected").attr("data-days"));
 						if(!isNaN(days)){
 							$("input[name=ni_date]").val(freight_date(days));
 						}
@@ -658,128 +521,30 @@
 				});
 			});
 			$(document).on("change","#service",function() {
-				var days = parseInt($("#service :selected").data("days"));
+				var days = parseInt($("#service :selected").attr("data-days"));
 				if (!isNaN(days)){
 					$("input[name=ni_date]").val(freight_date(days));
 					$('.line_date').text(freight_date(days));
-					$('.line_date').data("date",freight_date(days));
+					$('.line_date').attr("data-date",freight_date(days));
 				}
 			});
-		//======================== Right side page load ========================
-		// This function outputs each of the items on the table, as well as the
-		// old information from the database
+
 		
-			function line_number(){
-				var last = $("#right_side_main").find(".line_line:last").data("line-number");
-				if(last){
-					return parseInt(last)+1
-				}
-				else{
-					return 1;
-				}
-				// #right_side_main > tr.easy-output > td.line_line
-			}
-			function updateTotal(){
-				var total = 0.00;
-				// #right_side_main > tr.lazy-entry > td:nth-child(8) > input
-				$(".easy-output").each(function() {
-				    var qty = $(this).find(".line_qty").data('qty');
-				    var cost = $(this).find(".line_price").text();
-				    if (cost){
-				    	cost = Number(cost.replace(/[^0-9\.]+/g,""));
-				    }
-				    else{
-				    	cost = 0.00;
-				    }
-				    total += cost * qty;
-				});
-				//Get all the 
-				return price_format(total);
-			}
-			
-			$("#right_side_main").ready(function(){
-				var order_number = $("#order_body").data("order-number");
-
-				console.log("Order-number: "+order_number+" | Order-type: "+order_type);
-				
-				$.ajax({
-					type: "POST",
-					url: '/json/order-table-out.php',
-					data: {
-						"type": order_type,
-						"number": order_number,
-		   		    	"mode":'load'
-						}, // serializes the form's elements.
-					dataType: 'json',
-					success: function(result) {
-						$('#right_side_main').append(result);
-						rows = $(".easy-output").length;
-						$.ajax({
-							type: "POST",
-							url: '/json/new_paradigm.php',
-							data: {
-								
-							}, // serializes the form's elements.
-							dataType: 'json',
-							success: function(result) {
-								if (result){
-									$('#search_input').append(result);
-									$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
-									// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-									$('input[name="ni_line"]').val(line_number());
-									if($(".easy-output").length > 0){
-										$('#totals_row').find("input[name='np_total']").val(updateTotal());
-										$('#totals_row').show();
-									}
-			
-								}
-								else{
-									
-								}
-								console.log("JSON | NewPar Line Pop | new_paradigm.php: Success");
-								var days = $('#service').find(':selected').data('days');
-								if (days != 4){
-									$("input[name=ni_date]").val(freight_date(days));
-								}
-							},					
-							error: function(xhr, status, error) {
-								alert(error+" | "+status+" | "+xhr);
-								console.log("JSON | NewPar Line Pop | new_paradigm.php: Error");
-							}	
-						});
-						console.log("JSON | Initial table load | order-table-out.php: Success");
-					},					
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON | Initial table load | order-table-out.php: Error");
-					}
-
-					
-				});
-
-			});
-			
-			$(document).on('focusout', '.datetime-picker-line input', function() {
-				var days = $('#service').find(':selected').data('days');
-				
-				if($(this).val() == '') {
-					$("input[name=ni_date]").val(freight_date(days));
-				}
-			});
-		
-		//MultiPart Search Feature
+			//MultiPart Search Feature
 			$(document).on("keyup","#go_find_me",function(e){
 				if (e.keyCode == 13) {
 					$(".search_loading").show();
 					var search = $("#go_find_me").val();
+					var order_type = $("#order_body").attr("data-order-type");
 					//Ajax Call the new paradigm
+					console.log(window.location.origin+"/json/new_paradigm.php?mode=search&item="+search+"&page="+order_type);
 					$.ajax({
 						type: "POST",
 						url: '/json/new_paradigm.php',
 						data: {
 							"mode" : "search",
 							"item": search,
-							"page" : $("#order_body").data("order-type"),
+							"page" : order_type,
 						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(result) {
@@ -821,58 +586,11 @@
 					e.preventDefault();
 				} else if (e.keyCode == 13) {
 					var isValid = nonFormCase($(this), e);
-					var update = false;
 					
 					if(isValid) {
-			   		    $(".search_lines").each(function() {
-						    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
-						    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
-				   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
-				   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
-			   		    	var partid = $(this).data("line-id");
-			   		        var qty = $(this).find("input[name=ni_qty]").val();
-							var condition = $(".multipart_sub").closest("tr").find(".condition").val();
-							
-						
-		   		        if(qty > 0){
-		   		        	update = true;
-		       					$.ajax({
-									type: "POST",
-									url: '/json/order-table-out.php',
-									data: {
-						   		    	"line":lineNumber,
-						   		    	"search":partid,
-						   		    	"date":date,
-						   		    	"qty":qty,
-						   		    	"unitPrice":price,
-										"warranty":warranty,
-										"condition":condition,
-						   		    	"id": 'new',
-						   		    	"mode":'append'
-										}, // serializes the form's elements.
-									dataType: 'json',
-									success: function(row_out) {
-										$("#right_side_main").append(row_out);
-										$(".search_lines").html("").remove();
-										$("#totals_row").show();
-										$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(line_number());
-										$('#totals_row').find("input[name='np_total']").val(updateTotal());
-										$('#go_find_me').focus();
-		 							}
-								});
-			   		        }
-			   		    });
-			   		    
-						var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-						if (!lineNumber){lineNumber = 0;}
-						$("#go_find_me").val("");
-		    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-		       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-		       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
-		       			
-		       			if(!update) {
-		       				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
-		       			}
+   		    			$(".search_lines").each(function() {
+							populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+						});
 					} 
 				}
 			});
@@ -886,7 +604,7 @@
 					data: {
 						"mode" : "search",
 						"item": search,
-						"page" : $("#order_body").data("order-type"),
+						"page" : $("#order_body").attr("data-order-type"),
 					}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -909,7 +627,7 @@
 						"mode" : "search",
 						"item": search,
 						"show": true,
-						"page" : $("#order_body").data("order-type"),
+						"page" : $("#order_body").attr("data-order-type"),
 					}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -923,31 +641,43 @@
 
 			});
 			
-	//========================== Usability Functions ==========================
+			$(document).on('focusout', '.datetime-picker-line input', function() {
+				var days = $('#service').find(':selected').attr('data-days');
+				
+				if($(this).val() == '') {
+					$("input[name=ni_date]").val(freight_date(days));
+				}
+			});
+			
 	
+			//========================== Usability Functions ==========================
 	
-		//Any time a field is clicked for editing, or double clicked at all, show
-		//the easy output portion of the row, populated with the relevant updated pages.
+			//Any time a field is clicked for editing, or double clicked at all, show
+			//the easy output portion of the row, populated with the relevant updated pages.
 			$(document).on("click",".forms_edit",function() {
-				$(this).closest("tr").hide();
-				$(this).closest("tr").next().show()
-				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").data("page"));
-				var ext = $(this).closest("tr").find(".line_linext").text();
-				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
+				var click_row = $(this).closest("tr");
+				var lazy_row = click_row.next();
+				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
+				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = click_row.find(".line_linext").text();
+				lazy_row.find("input[name='ni_ext']").val(ext);
+				click_row.hide();
+				lazy_row.show();
 			});
 
 			$(document).on("dblclick",".easy-output td",function() {
-				$(this).closest("tr").hide();
-				$(this).closest("tr").next().show()
-				.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				$(this).closest("tr").next().show().find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").data("page"));
-				var ext = $(this).closest("tr").find(".line_linext").text();
-				$(this).closest("tr").next().find("input[name='ni_ext']").val(ext);
+				var click_row = $(this).closest("tr");
+				click_row.hide();
+				var lazy_row = click_row.next();
+				lazy_row.show();
+				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
+				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+				var ext = click_row.find(".line_linext").text();
+				lazy_row.find("input[name='ni_ext']").val(ext);
 			});
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
-		    //$(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").data("page"));
+		    //$(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 	
 	
 		    //This function runs the method append and adds a row to the end of the table
@@ -961,13 +691,7 @@
 			    $(this).closest("body").find(".lazy-entry").hide();
 			    $(this).closest("body").find(".easy-output").show();
 			});
-			
-			function price_format(ext){
-				var display = ext.toFixed(2);
-				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-			    display = '$'+(display);
-			    return display;
-			}
+
 			//Total Price output
 			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
 				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
@@ -982,76 +706,15 @@
 			    }
 			});
 			
-//Function to submit the individual line item edits
-			function line_item_submit(origin){
-				
-				var new_search = $(origin).closest("tr").find('.item-selected').find("option").last().val();
-				var old_search = $(origin).closest("tr").find('.item-selected').find("option").first().data("search");
-				var line_item_id = $(origin).closest("tr").prev().data('record');
-
-				//This line fixes the bug if the user exits the select2 prematurely   
-				if(isNaN(new_search)){var search = old_search;}
-				else{var search = new_search;}
-			    var date = $(origin).closest("tr").find("input[name=ni_date]").val();
-	   		    var qty = $(origin).closest("tr").find("input[name=ni_qty]").val();
-			    var price = $(origin).closest("tr").find("input[name=ni_price]").val();
-	   		    var lineNumber = $(origin).closest("tr").find("input[name=ni_line]").val();
-	   		    var warranty = $(origin).closest("tr").find(".warranty").val();
-	   		    var editRow = ((parseInt($(origin).closest("tr").index())));
-	   		    var condition = $(origin).closest("tr").find(".condition").val();
-				console.log("\
-				date: "+date+"\
-				qty: "+qty+"\
-				price: "+price+"\
-				lineNumber: "+lineNumber+"\
-				warranty: "+warranty+"\
-				editRow: "+editRow+"\
-				condition: "+condition+"\
-				line_item_id\
-				");
-				$.ajax({
-					type: "POST",
-					url: '/json/order-table-out.php',
-					data: {
-						"line":lineNumber,
-						"search":search,
-						"date":date,
-						"qty":qty,
-						"unitPrice":price,
-						"id":line_item_id,
-						"warranty":warranty,
-						"condition":condition,
-						"mode":'update'
-						},
-					dataType: 'json',
-					success: function(row_out) {
-						console.log(row_out);
-						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
-						console.log("order-table-out.php : Success");
-						$('#totals_row').find("input[name='np_total']").val(updateTotal());
-					},
-					error: function(xhr, status, error) {
-						console.log("order-table-out.php : Error");
-					   	alert(error);
-					},
-					
-				});
-	
-		    	$(origin).closest(".lazy-entry").hide();
-		    	$(origin).closest("tr").prev(".easy-output").show();
-
-				
-			}
-			
 			$(document).on("click",".line_item_submit",function() {
-				line_item_submit(this);
+				populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
 				var defaultQty;
 				
 				$(this).closest("tr").find("input").each(function() {
-					defaultQty = $(this).data('value');
+					defaultQty = $(this).attr('data-value');
 					$(this).val(defaultQty);	
 				});
 				
@@ -1059,75 +722,21 @@
 		    	$(this).closest("tr").prev(".easy-output").show();
 			});
 
-//New Multi-line insertion 			
+			//New Multi-line insertion 			
 			$(document).on("click",".multipart_sub",function(e) {
 				var isValid = nonFormCase($(this), e);
-				var update = false;
 				
 				if(isValid) {
-		   		    $(".search_lines").each(function() {
-					    var date = $(".multipart_sub").closest("tr").find("input[name=ni_date]").val();
-					    var price = $(".multipart_sub").closest("tr").find("input[name=ni_price]").val();
-			   		    var lineNumber = $(".multipart_sub").closest("tr").find("input[name=ni_line]").val();
-			   		    var warranty = $(".multipart_sub").closest("tr").find(".warranty").val();
-		   		    	var partid = $(this).data("line-id");
-		   		        var qty = $(this).find("input[name=ni_qty]").val();
-						var condition = $(".multipart_sub").closest("tr").find(".condition").val();
-						
-					
-	   		        if(qty > 0){
-	   		        	update = true;
-	       					$.ajax({
-								type: "POST",
-								url: '/json/order-table-out.php',
-								data: {
-					   		    	"line":lineNumber,
-					   		    	"search":partid,
-					   		    	"date":date,
-					   		    	"qty":qty,
-					   		    	"unitPrice":price,
-									"warranty":warranty,
-									"condition":condition,
-					   		    	"id": 'new',
-					   		    	"mode":'append'
-									}, // serializes the form's elements.
-								dataType: 'json',
-								success: function(row_out) {
-									$("#right_side_main").append(row_out);
-									$(".search_lines").html("").remove();
-									$("#totals_row").show();
-									$(".multipart_sub").closest("tr").find("input[name=ni_line]").val(line_number());
-									$('#totals_row').find("input[name='np_total']").val(updateTotal());
-									$('#go_find_me').focus();
-	 							}
-							});
-		   		        } 
-		   		    });
-		   		    
-					var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
-					if (!lineNumber){lineNumber = 0;}
-					$("#go_find_me").val("");
-	    			$(".multipart_sub").closest("tr").find("input[name=ni_price]").val("");
-	       			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-	       			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
-	       			
-	       			if(!update) {
-	       				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
-	       			}
+	    			$(".search_lines").each(function() {
+						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+					});
 				} 
 			});
 			
-			$(document).keydown(function(e) {
-/*
-			     if(e.keyCode==13){
-			         $('.modal').modal('hide');
-			     }
-*/
-			});
-//Delete Button
+			//Delete Button
 			$(document).on("click",".forms_trash",function() {
 				if(confirm("Are you sure you want to delete this row?")){
-					var id = $(this).closest("tr").data('record');
+					var id = $(this).closest("tr").attr('data-record');
 					$(this).closest("tr").remove();
 					$(this).closest("tr").next().remove();
 					$.ajax({
@@ -1142,16 +751,6 @@
 				}
 			});
 
-//Address Suite of functions
-			function updateShipTo(){
-				if ( $("#mismo").prop( "checked" )){
-					var display = $("#bill_to").text();
-					var value = $("#bill_to").val();
-					console.log("Display: "+display+" | Value: "+value);
-					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", value);
-					$("#ship_to").setDefault(display,value);
-				}
-			}
 			$(document).on("change","#ship_to, #bill_to",function() {
 				//Get the identifier of the initial textbox
 				var origin = ($(this).parent().find('select').attr('id'));
@@ -1166,7 +765,7 @@
 					$("#address-modal-body").find("input[name='na_line_1']").val(addy);
 					var company = ($("#select2-companyid-container").attr("title"));
 					$("#address-modal-body").find("input[name='na_name']").val(company);
-					$("#address-modal-body").data('origin',origin);
+					$("#address-modal-body").attr('data-origin',origin);
 					$("#modal-address").modal('show');
 				}
 				else{
@@ -1200,152 +799,112 @@
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
 				//('object initiating the validation', the event, 'type of item being validated aka modal')
 				var isValid = nonFormCase($(this), e, 'modal');
-				
-				if(isValid) {
+				if(! isValid) { return false; }
 
-				    var field = '';
-				    field = $("#address-modal-body").data("origin");
+			    var field = '';
+			    field = $("#address-modal-body").attr("data-origin");
 				    
-				    var name = $("#add_name").val();
-					var line_1 = $('#add_line_1').val();
-					var line2 = $('#add_line2').val();
-					var city = $('#add_city').val();
-					var state = $('#add_state').val();
-					var zip = $('#add_zip').val();
-					var id = $("#address-modal-body").data("oldid");
-					// alert(ad['id']);
-					var text = name;
-					
-					$("#address-modal-body").data("oldid",'false');
-					
-					console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
-				    $.post("/json/addressSubmit.php", {
-				    	"name" : name,
-						"line_1" : line_1,
-						"line2" : line2,
-						"city" : city,
-						"state" : state,
-						"zip" : zip,
-						"id" : id
-				    },function(data){
-				    	console.log("Logging the ID (this should be false if creating new): "+id);
-				    	console.log("Return from Address Submission: "+data);
-				    	
-				    	if (!isNaN(id)){
-				    		data = id;
+			    var name = $("#add_name").val();
+				var line_1 = $('#add_line_1').val();
+				var line2 = $('#add_line2').val();
+				var city = $('#add_city').val();
+				var state = $('#add_state').val();
+				var zip = $('#add_zip').val();
+				var id = $("#address-modal-body").attr("data-oldid");
+				// alert(ad['id']);
+				var text = name;
+				
+				$("#address-modal-body").attr("data-oldid",'false');
+				
+				console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
+			    $.post("/json/addressSubmit.php", {
+			    	"name" : name,
+					"line_1" : line_1,
+					"line2" : line2,
+					"city" : city,
+					"state" : state,
+					"zip" : zip,
+					"id" : id
+			    },function(data){
+			    	console.log("Logging the ID (this should be false if creating new): "+id);
+			    	console.log("Return from Address Submission: "+data);
+			    	
+			    	if (!isNaN(id)){
+			    		data = id;
+			    	}
+		    		//If it didn't have an update, it is a new field
+			    	if (field == "ship_to"){
+			    		// $("#select2-ship_to-container").html(line_1);
+			    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
+			    		// $("#ship_to").val(data);
+	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
+							/* insert the option (which is already 'selected'!) into the select */
+							option.appendTo($("#ship_to"));
+							/* Let select2 do whatever it likes with this */
+							$("#ship_to").trigger('change');
 				    	}
-				    	// if (!id){
-				    		//If it didn't have an update, it is a new field
-					    	if (field == "ship_to"){
-					    		// $("#select2-ship_to-container").html(line_1);
-					    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-					    		// $("#ship_to").val(data);
-			    					var option = $('<option></option>').
-										prop('selected', true).
-										text(line_1).
-										val(data);
-										/* insert the option (which is already 'selected'!) into the select */
-										option.appendTo($("#ship_to"));
-										/* Let select2 do whatever it likes with this */
-										$("#ship_to").trigger('change');
-					    				console.log("Ship to updated to: "+$("#ship_to").val())
-					    		//$("#ship_display").html();	
-					    	}
-					    	else{
-					    		// $("#select2-bill_to-container").html(text);
-			    					var option = $('<option></option>').
-										prop('selected', true).
-										text(line_1).
-										val(data);
-										/* insert the option (which is already 'selected'!) into the select */
-										option.appendTo($("#bill_to"));
-										/* Let select2 do whatever it likes with this */
-										$("#bill_to").trigger('change');
-										console.log("Bill to updated to: "+$("#bill_to").val());
-					    				updateShipTo();
-					    	}
-				    	// }
-				    	// else{
-				    	// 	//Otherwise, this is an old field
-				    	// 	if (field == "ship_to"){
-				    	// 		$("#select2-ship_to-container").text(line_1);
-				    	// 		if ($("#mismo").prop("checked")){
-				    	// 			$("#select2-bill_to-container").text(line_1);
-				    	// 		}
-				    	// 		console.log("oh shit");
-				    	// 	}
-				    	// 	else{
-				    	// 		$("#select2-bill_to-container").text(line_1);
-			    		// 		if ($("#mismo").prop("checked")){
-				    	// 			$("#select2-ship_to-container").text(line_1);
-				    	// 		}
-				    	// 		console.log("This didn't ");
-				    	// 	}
-
-				    	// }
-				    	
-				    	
-				    	$('.modal').modal('hide');
-				    });
-				}
-		});
+				    	else{
+	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
+							/* insert the option (which is already 'selected'!) into the select */
+							option.appendTo($("#bill_to"));
+							/* Let select2 do whatever it likes with this */
+							$("#bill_to").trigger('change');
+				    	}
+			    	$('.modal').modal('hide');
+			    });
+			});
 			
 			$(document).on("click", "#address-cancel", function(e) {
-	
-				    var field = $("#address-modal-body").data("origin");
+			    var field = $("#address-modal-body").attr("data-origin");
 			   	
 			   	
-				   	//verify that the field is adding if you cancel the value
-				   	if($("#"+field).val().indexOf("Add") > -1){
-				    	if (field == "ship_to"){
-					    		$("#select2-ship_to-container").html('');
-					    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
-					    	}
-					    	else{
-					    		$("#select2-bill_to-container").html('');
-					    		$("#bill_to").append("<option selected value='"+null+"'>"+''+"</option>");
-					    	}
-					    	
-					    	$('.modal').modal('hide');
-				    	}
+			   	//verify that the field is adding if you cancel the value
+			   	if($("#"+field).val().indexOf("Add") > -1){
+			    	if (field == "ship_to"){
+			    		$("#select2-ship_to-container").html('');
+			    		$("#ship_to").append("<option selected value='"+null+"'>"+''+"</option>");
+			    	}
+			    	else{
+			    		$("#select2-bill_to-container").html('');
+			    		$("#bill_to").append("<option selected value='"+null+"'>"+''+"</option>");
+			    	}
+				    	
+			    	$('.modal').modal('hide');
+			   	}
 			});
 			
 			$(document).on("click",".address_edit",function() {
 				var drop = $(this).closest("div").find('select');
 				var origin = drop.attr('id');
-				// alert(origin);
+				//alert(origin);
 				var add_id = drop.last('option').val();
-				if(add_id){
-					console.log(add_id);
-					$.ajax({
-						type: "POST",
-						url: '/json/address-pull.php',
-						data: {
-							'address' : add_id,
-						},
-						dataType: 'json',
-						success: function(address) {
-							console.log(address);
-							$("#address-modal-body").data("origin",origin);
-							$("#address-modal-body").data("oldid",add_id);
-							$("#add_name").val('').val(address.name);
-							$('#add_line_1').val('').val(address.street);
-							$('#add_city').val('').val(address.city);
-							$('#add_state').val('').val(address.state);
-							$('#add_zip').val('').val(address.postal_code);
-							
-							$("#modal-address").modal('show');
-							
-							
-							console.log("Address Grab - address-grab.php: Success");
-						},
-						error: function(xhr, status, error) {
-						   	alert(error);
-						   	console.log("Address grab: Error");
-						},
-					});
-				}
+				console.log(window.location.origin+"/json/address-pull.php?address="+add_id);
+				if(! add_id) { return; }
+
+				$.ajax({
+					type: "POST",
+					url: '/json/address-pull.php',
+					data: {
+						'address' : add_id,
+					},
+					dataType: 'json',
+					success: function(address) {
+						console.log(address);
+						$("#address-modal-body").attr("data-origin",origin);
+						$("#address-modal-body").attr("data-oldid",add_id);
+						$("#add_name").val('').val(address.name);
+						$('#add_line_1').val('').val(address.street);
+						$('#add_city').val('').val(address.city);
+						$('#add_state').val('').val(address.state);
+						$('#add_zip').val('').val(address.postal_code);
+						
+						$("#modal-address").modal('show');
+					},
+					error: function(xhr, status, error) {
+					   	alert(error);
+					},
 				});
+			});
 			
 			$(document).on("click","#mismo",function() {
 				updateShipTo();
@@ -1521,7 +1080,7 @@
 					dataType: 'json',
 					success: function(result) {
 						var initial_result = $("#service").val();
-						var initial_days = $("#service").find("[value='"+initial_result+"']").data("days");
+						var initial_days = $("#service").find("[value='"+initial_result+"']").attr("data-days");
 						$('#service_div').replaceWith(result);
 						var new_div_val = $('#service').find("[data-days='"+initial_days+"']").val();
 						if (new_div_val){
@@ -1531,7 +1090,7 @@
 						console.log("Initial ID: "+initial_result);
 						console.log("Initial Days: "+initial_days);
 						console.log("New ID: "+new_div_val);
-						var days = parseInt($("#service :selected").data("days"));
+						var days = parseInt($("#service :selected").attr("data-days"));
 						if(!isNaN(days)){
 							$("input[name=ni_date]").val(freight_date(days));
 						}
@@ -1549,10 +1108,11 @@
 			$(document).on("change","#warranty_global",function() {
 				var value = $(this).val();
 				var text = $("#warranty_global option:selected").text();
-				if (value != "no"){
+				if (value != ""){
 					$("#new_warranty").val(value);
-					$(".line_war").text(text)
-					.data("war",value);
+					$(".line_war").each(function() {
+						$(this).text(text).attr("data-war",value);
+					});
 				}
 			});
 
@@ -1562,23 +1122,23 @@
 				var text = $("#condition_global option:selected").text();
 				
 				console.log(window.location.origin+"/json/dropPop.php?ajax=true&limit="+value+"&field=services&label=Service&id=service&size=col-sm-6");
-				if (value != "no"){
+				if (value != ""){
 					$(".line_cond").text(text)
-					.data("cond",value);
+					.attr("data-cond",value);
 					$.ajax({
 						type: "POST",
 						url: '/json/dropPop.php',
 						data: {
-							"field": "condition",
+							"field": "conditionid",
 							"selected": value,
 							"limit": '',
 							"size": "col-md-6",
-							"id":"condition"
+							"id":"conditionid"
 							},
 						dataType: 'json',
 						success: function(result) {
 							//alert(result);
-							$(".condition").not( document.getElementById( "condition_global" ) ).replaceWith(result);
+							$(".conditionid").not( document.getElementById( "condition_global" ) ).replaceWith(result);
 							console.log("Condition Set - dropPop.php: Success");
 							// $('#new_warranty').parent().replaceWith(result)
 							// .parent().removeClass('col-md-12');
@@ -1597,18 +1157,24 @@
 				
 
 				var isValid = nonFormCase($(this), e);
-				if($(".search_lines").length > 0){
-					line_item_submit();
-				}
+				//if($(".search_lines").length > 0){
+					//line_item_submit();
+				//}
+
+				// save any pending rows before proceeding
+				$(".search_lines").each(function() {
+					// require callback variable so this doesn't release asynchronously before the entire process is complete
+					var completed_item = populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+				});
 				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
 					//Get page macro information
-					//var order_type = $(this).closest("body").data("order-type"); //Where there is 
-					var order_number = $(this).closest("body").data("order-number");
+					//var order_type = $(this).closest("body").attr("data-order-type"); //Where there is 
+					var order_number = $(this).closest("body").attr("data-order-number");
 	
 					//Get General order information
-					var created_by = $("#sales-rep").data('creator');
-					var repid = $("#sales-rep option:selected").data("rep-id");
+					var created_by = $("#sales-rep").attr('data-creator');
+					var repid = $("#sales-rep option:selected").attr("data-rep-id");
 
 					var company = $("#companyid").val();
 					
@@ -1691,14 +1257,14 @@
 					//This loop runs through the right-hand side and parses out the general values from the page
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 						var row = {
-							"line_number" : $(this).find(".line_line").data("line-number"),
-							"part" : $(this).find(".line_part").data("search"),
-							"id" : $(this).find(".line_part").data("record"),
-							"date" : $(this).find(".line_date").data("date"),
-							"condition" : $(this).find(".line_cond").data("cond"),
-							"warranty" : $(this).find(".line_war").data("war"),
+							"line_number" : $(this).find(".line_line").attr("data-line-number"),
+							"part" : $(this).find(".line_part").attr("data-search"),
+							"id" : $(this).find(".line_part").attr("data-record"),
+							"date" : $(this).find(".line_date").attr("data-date"),
+							"conditionid" : $(this).find(".line_cond").attr("data-cond"),
+							"warranty" : $(this).find(".line_war").attr("data-war"),
 							"price" : $(this).find(".line_price").text(),
-							"qty" : $(this).find(".line_qty").data("qty"),
+							"qty" : $(this).find(".line_qty").attr("data-qty"),
 						};
 
 							// alert("line_number "+row["line_number"]);
@@ -1710,7 +1276,7 @@
 							// alert("price "+row["price"]);
 							// alert("qty "+row["qty"]);
 							
-							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"condition"+condition+"warranty"+warranty+"price"+price+"qty"+qty;
+							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"conditionid"+conditionid+"warranty"+warranty+"price"+price+"qty"+qty;
 
 						submit.push(row);
 					});
@@ -1741,7 +1307,7 @@
 							"filename":filename,
 							"email_confirmation":email_confirmation,
 							"email_to":email_to,
-							}, // serializes the form's elements.
+						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
 							if (form['message']=='Success') {
@@ -1787,18 +1353,18 @@
 //Order Form Calendar Toggle Dates
 			$('.toggle-cal-options').click(function(e){
 				e.preventDefault();
-				if ($(this).data('name') == 'show') {
+				if ($(this).attr('data-name') == 'show') {
 		            $('.date-options').animate({
 		                width: '295px'
 		            });
-		            $(this).data('name', 'hide')
+		            $(this).attr('data-name', 'hide')
 		        } else {
 		            $('.date-options').animate({
 		                width: '100%'
 		            }, function() {
 		            	$('.cal-buttons').attr( "style", "" );;
 		            });
-		            $(this).data('name', 'show')
+		            $(this).attr('data-name', 'show')
 		        }
 			});
   /*=============================================================================*/
@@ -1830,7 +1396,7 @@
 					$(".shipping-dash-full").fadeIn('fast');
 					$('body').scrollTop('fast');
 					
-					var title = $(".shipping-dash-full .shipping_section_head").data('title');
+					var title = $(".shipping-dash-full .shipping_section_head").attr('data-title');
 					$(".shipping_section_head").hide();
 					
 					//$("#view-head-text").text(title);
@@ -1966,259 +1532,11 @@
 			});
 //=========== END OF FUNCTION FOR THE SHIPPING DASHBOARD =======================
 
-
-//============================= Inventory Addition =============================
-		//Get the url argument parameter
-		function getUrlParameter(sParam) {
-		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-		        sURLVariables = sPageURL.split('&'),
-		        sParameterName,
-		        i;
-		
-		    for (i = 0; i < sURLVariables.length; i++) {
-		        sParameterName = sURLVariables[i].split('=');
-		
-		        if (sParameterName[0] === sParam) {
-		            return sParameterName[1] === undefined ? true : sParameterName[1];
-		        }
-		    }
-		}
-		
-		
-		//This function gets the pages title without the extension aka .php
-		function getPageName(url = window.location.href) {
-		    var index = url.lastIndexOf("/") + 1;
-		    var filenameWithExtension = url.substr(index);
-		    var filename = filenameWithExtension.split(".")[0]; 
-		    return filename;                                    
-		}
-	
-		//This function checks to see if month is less than 10, after add 0 in front if so
-		function getFormattedPartTime(partTime){
-	        if (partTime<10)
-	           return "0"+partTime;
-	        return partTime;
-	    }
-//==============================================================================
-//================================ SHIPPING PAGE ===============================
-//==============================================================================
 		
 		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		     if( $( this ).val() != '' )
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
-		
-		function callback(obj) {
-			//Grab each of the parameters from the top line
-			var $serial = obj;
-			
-			//order_num gets any parameter set to on, E.G. Sales Number is also pulled
-			var order_num = getUrlParameter('on');
-			var savedSerial = $serial.data('saved');
-			var item_id = $serial.data('item-id');
-			var qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
-			var page = getPageName();
-			var serial = $serial.val();
-			var partid = $serial.closest('tr').find('.part_id').data('partid');
-			var condition = $serial.closest('tr').find('.condition_field').val();
-			var part = $serial.closest('tr').find('.part_id').data('part');
-			//Package number will be only used on the shipping order page
-			var package_no = $serial.closest('tr').find(".active_box_selector").val();
-			
-			if(condition == '') {
-				condition = $serial.closest('tr').find('.condition_field').data('condition');
-			}
-			
-			//Clone the serial field for usage when appending more fields
-			var $serialClone = $serial.parent().clone();
-			
-			//alert(getPageName());
-		
-			//Only if there is some quantity and there is some serial on the inventory addition page
-	    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
-	    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
-	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
-	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
-	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
-	    		// alert(place+"-"+instance);
-	    		if(place != 'null' && instance != 'null'){
-		    		$.ajax({
-						type: "POST",
-						url: '/json/inventory-add-dynamic.php',
-						data: {
-							 'partid' : partid,
-							 'condition' : condition,
-							 'serial' : serial,
-							 'po_number' : order_num,
-							 'item_id' : item_id,
-							 'savedSerial' : savedSerial,
-							 'place' : place,
-							 'instance' : instance
-						},
-						dataType: 'json',
-						success: function(result) {
-							console.log(result);
-							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-
-							if(result['query'] && !result['saved']) {
-								//Decrement the qty by 1 after success and no errors detected
-								qty--;
-								
-								//Update the value of the qty left avoiding if it hits below 0
-								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
-								} else if(qty <= 0) {
-									if(localStorage.getItem(result['partid']) != 'shown'){
-								    	modalAlertShow('Item Already Received!','Item "'+part+'" has already been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
-								    	localStorage.setItem(result['partid'],'shown')	
-									}
-							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
-							    }
-								
-								//Set matching condition field to the serial saved
-								$serial.closest('tr').find('.infiniteCondition').children('select:first').data("serial", serial);
-								$serial.closest('tr').find('.locations_tracker:first').data("serial", serial);
-								
-								//Set Default Values here, remember clone doesn't save select values otherwise it will
-								$serialClone.find('input').val("");
-								
-								$locationClone.find('select:first').val(place);
-								$locationClone.find('select:last').val(instance);
-								
-								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').attr('disabled', false);
-								$serial.closest('.infiniteSerials').find('button.updateSerialRow').attr('disabled', true);
-								
-								$serial.closest('.infiniteSerials').find('button.updateSerialRow').hide();
-								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').show();
-								
-								//Switch buttons from update to delete and enable the disable button
-								$serialClone.find('button.updateSerialRow').show();
-								$serialClone.find('button.deleteSerialRow').hide();
-								$serialClone.find('button.deleteSerialRow').attr('disabled', true);
-								
-								$serial.closest('.infiniteSerials').prepend($serialClone);
-								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-								
-								$serial.closest('tr').find('.infiniteCondition').children('select:first').val(condition);
-								
-								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
-								$serial.closest('.infiniteSerials').find('input:first').focus();
-								
-								if(qty == 0) {
-							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-							    	//alert('Part: ' + part + ' has been received.');
-									modalAlertShow('Item Received!','Item "'+part+'" has now been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
-							    }
-							    
-							    $serial.data("saved", serial);
-
-							} else if(result['saved']) {
-								$serial.data("saved", serial);
-								modalAlertShow('Success', 'Item has been updated.', false);
-							} else {
-								modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
-								if(savedSerial != '') {
-									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
-								}
-							}
-							window.onbeforeunload = null;
-							
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("Inventory-add-dynamic.php: ERROR");
-						},				
-						
-					});
-	    		} else {
-	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
-	    		}
-		    } else if(serial != '' && page == 'shipping') {
-				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+order_num+'&condition='+condition+'&package_no='+package_no);
-				//Submit the data from the live scanned boxes
-				qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
-
-				if(package_no != null) {
-			    	$.ajax({
-						type: "POST",
-						url: '/json/shipping-update-dynamic.php',
-						data: {
-							 'partid' : partid,
-							 'serial' : serial,
-							 'so_number' : order_num,
-							 'item_id' : item_id,
-							 'condition' : condition,
-							 'package_no' : package_no
-						},
-						dataType: 'json',
-						success: function(result) {
-							console.log(result);
-							
-							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
-							// console.log(result);
-							if(result['query']) {
-								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
-								//Decrement the qty by 1 after success and no errors detected
-								qty--;
-
-								//Area to duplicate the box field
-								$serial.closest('tr').find(".active_box_selector").first().clone()
-								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
-								.removeClass("active_box_selector")
-								.addClass("drop_box")
-								.val($serial.closest('tr').find(".active_box_selector").first().val())
-								.data("associated",serial);
-
-								if(qty >= 0) {
-									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
-								}
-								$serialClone.find('input').val("");
-								
-								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
-								$serialClone.find('button').attr('disabled', true);
-								
-								$serial.closest('.infiniteSerials').prepend($serialClone);
-								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
-								$serial.closest('.infiniteSerials').find('input:first').focus();
-								
-								var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
-								
-								$serial.closest('tr').find('.infiniteComments').prepend(element);
-								
-								if(qty == 0) {
-							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-							    	var date = new Date();
-							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
-							    	
-							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
-									modalAlertShow('Item Shipped!','Item "'+part+'" has now been SHIPPED in full!',false);
-							    }
-							    
-							    $serial.data("saved", serial);
-							} else {
-								alert(result['error']);
-							}
-							window.onbeforeunload = null;
-						
-							console.log("Shipping-add-dynamic.php: Success");
-						
-							
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("Shipping-add-dynamic.php: ERROR");
-							console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+order_num+'&condition='+condition);
-							},	
-					});
-				} else {
-					modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'A Box is required for each item being shipped. <br><br> Please create a box or add the item to an available box.', false);
-				}
-		    } else if(serial == '') {
-		    	modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'Serial is missing.', false);
-		    } 
-		
-		}
 //This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			if(e.which == 13) {
@@ -2231,7 +1549,7 @@
 		});
 		
 		$(document).on('click', '.serial-expand', function() {
-			var data = $(this).data('serial');
+			var data = $(this).attr('data-serial');
 			
 			$('.' + data).toggle();
 		});
@@ -2243,12 +1561,12 @@
 				qty = $(this).closest('tr').find('.remaining_qty').children('input').val();
 				$(this).closest('tr').find('.infiniteSerials').find('input').attr('readonly', true);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', false);
-				$(this).closest('tr').find('.remaining_qty').children('input').data('qty', qty);
+				$(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty', qty);
 				$(this).closest('tr').find('.remaining_qty').children('input').val('');
 				//$(this).closest('tr').find('.infiniteSerials').find('input').val('');
 				$(this).closest('tr').find('.remaining_qty').children('input').focus();
 			} else {
-				qty = $(this).closest('tr').find('.remaining_qty').children('input').data('qty');
+				qty = $(this).closest('tr').find('.remaining_qty').children('input').attr('data-qty');
 				$(this).closest('tr').find('.infiniteSerials').find('input').attr('readonly', false);
 				$(this).closest('tr').find('.remaining_qty').children('input').attr('readonly', true);
 				$(this).closest('tr').find('.remaining_qty').children('input').val(qty);
@@ -2271,7 +1589,7 @@
 			
 			//Get everything from the form and place it into its own array
 			$('.inventory_add').children('tbody').children('tr').each(function() {
-				var partid = $(this).find('.part_id').data('partid');
+				var partid = $(this).find('.part_id').attr('data-partid');
 				var serials = [];
 				var savedSerials = [];
 				var ids = [];
@@ -2295,18 +1613,18 @@
 				
 				$(this).find('.infiniteSerials').find('input').each(function() {
 					// added by david 2-28-17
-					ids.push($(this).data('item-id'));
+					ids.push($(this).attr('data-item-id'));
 					serials.push($(this).val());
-					savedSerials.push($(this).data('saved'));
+					savedSerials.push($(this).attr('data-saved'));
 					
 					//If an item was saved previously then mark the page as soemthing was edited
-					if($(this).data('saved') != '') {
+					if($(this).attr('data-saved') != '') {
 						checkSaved = true;
 					}
 					
 					//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
-					//if($(this).data('saved') == '')
-					//$(this).data("saved", $(this).val());
+					//if($(this).attr('data-saved') == '')
+					//$(this).attr("data-saved", $(this).val());
 				});
 				
 				//Check if the lot is checked or not
@@ -2375,13 +1693,13 @@
 			var $row = $(this).closest('.input-group');
 			var qty = parseInt($row.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
 			//Grab the serial being deleted for futher usage to delete the item from the system
-			var serial = $row.find('input').data('saved');
-			var invid = $row.find('input').data('inv-id');
+			var serial = $row.find('input').attr('data-saved');
+			var invid = $row.find('input').attr('data-inv-id');
 
-			var pack = $row.find('input').data('package');
+			var pack = $row.find('input').attr('data-package');
 			
 			//Grab all the required data to be passed into the delete ajax
-			var partid = $row.closest('tr').find('.part_id').data('partid');
+			var partid = $row.closest('tr').find('.part_id').attr('data-partid');
 			
 			if (confirm("Are you sure you want to delete serial: '"+ serial +"'?")) {
 				$.ajax({
@@ -2443,15 +1761,15 @@
 			var serialComments = [];
 			var print = '';
 			
-			if ($(this).data('print') != '') {
-				print = $(this).data('print');
+			if ($(this).attr('data-print') != '') {
+				print = $(this).attr('data-print');
 			}
 			
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				$(this).find('.iso_comment').each(function() {
-					//isoCheck.push($(this).data('serial'));
+					//isoCheck.push($(this).attr('data-serial'));
 					if($(this).val() != '') {
-						serialid.push($(this).data('invid'));
+						serialid.push($(this).attr('data-invid'));
 						serialComments.push($(this).val());
 					}
 				});
@@ -2483,27 +1801,27 @@
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				//Overlook all the rows that are complete in the order and grab all the others
 				//if(!$(this).hasClass('order-complete')) {
-				var partid = $(this).find('.part_id').data('partid');
+				var partid = $(this).find('.part_id').attr('data-partid');
 				var serials = [];
 				var savedSerials = [];
 				var boxes = [];
 				var lot = false;
-				var qty, condition;
+				var qty, conditionid;
 				
 
 				//Grab the conidtion value set by the sales order
-				condition = $(this).find('.condition_field').data('condition');
+				conditionid = $(this).find('.condition_field').attr('data-condition');
 				
 				$('.box_group').find('.box_selector').each(function() {
-					boxes.push($(this).data('row-id'));
+					boxes.push($(this).attr('data-row-id'));
 				});
 				
 				$(this).find('.infiniteSerials').find('input').each(function() {
 					serials.push($(this).val());
-					savedSerials.push($(this).data('saved'));
+					savedSerials.push($(this).attr('data-saved'));
 					
 					//If an item was saved previously then mark the page as something was edited
-					if($(this).data('saved') != '') {
+					if($(this).attr('data-saved') != '') {
 						checkChanges = true;
 					}
 					
@@ -2516,12 +1834,12 @@
 					lot = false
 				}
 				
-				qty = $(this).find('.remaining_qty').data('qty');
+				qty = $(this).find('.remaining_qty').attr('data-qty');
 				
 				items.push(partid);
 				items.push(savedSerials);
 				items.push(serials);
-				items.push(condition);
+				items.push(conditionid);
 				items.push(lot);
 				items.push(qty);
 				items.push(boxes);
@@ -2571,10 +1889,6 @@
 			});
 		});
 
-//==============================================================================
-//================================== RMA =======================================
-//==============================================================================
-
 
 //==============================================================================
 //================================== ISO Quality ===============================
@@ -2587,7 +1901,7 @@
 			var init = true;
 			var damaged = '';
 			
-			var completed = $(this).data('datestamp');
+			var completed = $(this).attr('data-datestamp');
 			
 			$('.shipping_update').children('tbody').children('tr').each(function() {
 				if(init) {
@@ -2607,10 +1921,10 @@
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
 						
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-serial="'+$(this).data('serial')+'"]').find(':selected').data('boxno')+"</td>\
-										<td>"+$(this).data('part')+"</td>\
-										<td>"+$(this).data('serial')+"</td>\
-										<td class='comment-data' data-invid='"+$(this).data('inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-serial="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
+										<td>"+$(this).attr('data-part')+"</td>\
+										<td>"+$(this).attr('data-serial')+"</td>\
+										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
 									</tr>";
 						$('.iso_broken_parts').append(element);
 						
@@ -2630,10 +1944,10 @@
 						$('.iso_content_title').html('<i class="fa fa-list" aria-hidden="true"></i> Shipped Contents');
 						
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).data('package')+"</td>\
-										<td>"+$(this).data('part')+"</td>\
-										<td>"+$(this).data('serial')+"</td>\
-										<td class='comment-data' data-invid='"+$(this).data('inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).data('part')+"' data-serial = '"+$(this).data('serial')+"'>"+$(this).val()+"</td>\
+										<td>"+$(this).attr('data-package')+"</td>\
+										<td>"+$(this).attr('data-part')+"</td>\
+										<td>"+$(this).attr('data-serial')+"</td>\
+										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
 									</tr>";
 						$('.iso_broken_parts').append(element);
 					});
@@ -2650,7 +1964,7 @@
 			} else {
 				//$('.nav-tabs a[href="#iso_match"]').tab('show');
 				$('.nav-tabs a[href="#iso_quality"]').tab('show');
-				$('.nav-tabs a').data("toggle","tab");
+				$('.nav-tabs a').attr("data-toggle","tab");
 			}
 		} else {
 			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",'No items queued to be shipped.', false);
@@ -2679,7 +1993,7 @@
 		var serialid = [];
 		var serialComments = [];
 		
-		so_number = $('.shipping_header').data('so');
+		so_number = $('.shipping_header').attr('data-so');
 		
 		if($('.iso_broken_parts').find('.damaged').length) {
 			damage = true;
@@ -2688,9 +2002,9 @@
 		if(damage) {
 			$('.iso_broken_parts').children('tr.damaged').each(function() {
 				
-				var invid = $(this).find('.comment-data').data('invid');
-				var serial = $(this).find('.comment-data').data('serial');
-				var issue = $(this).find('.comment-data').data('comment');
+				var invid = $(this).find('.comment-data').attr('data-invid');
+				var serial = $(this).find('.comment-data').attr('data-serial');
+				var issue = $(this).find('.comment-data').attr('data-comment');
 				
 				serialid.push(invid);
 				serialComments.push(issue);
@@ -2732,7 +2046,7 @@
 		e.preventDefault();
 		var so_number;
 		
-		so_number = $('.shipping_header').data('so');
+		so_number = $('.shipping_header').attr('data-so');
 
 		$.ajax({
 			type: 'POST',
@@ -2758,19 +2072,19 @@
 //Open Modal
 		$(document).on("click",".box_edit", function(){
 				var package_number = $(".box_selector.active").text();
-				var order_number = $("body").data('order-number');
+				var order_number = $("body").attr('data-order-number');
 				if (package_number){
 					$("#package_title").text("Editing Box #"+package_number);
 					$("#alert_title").text("Box #"+package_number);
-					$("#modal-width").val($(".box_selector.active").data("width"));
-					$("#modal-height").val($(".box_selector.active").data("h"));
-					$("#modal-length").val($(".box_selector.active").data("l"));
-					$("#modal-weight").val($(".box_selector.active").data("weight"));
-					$("#modal-tracking").val($(".box_selector.active").data("tracking"));
-					$("#modal-freight").val($(".box_selector.active").data("row-freight"));
-					$("#package-modal-body").data("modal-id",$(".box_selector.active").data("row-id"));
+					$("#modal-width").val($(".box_selector.active").attr("data-width"));
+					$("#modal-height").val($(".box_selector.active").attr("data-h"));
+					$("#modal-length").val($(".box_selector.active").attr("data-l"));
+					$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
+					$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
+					$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
+					$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
 					
-					var status = $(".box_selector.active").data('box-shipped');
+					var status = $(".box_selector.active").attr('data-box-shipped');
 					
 					if(status == 'completed') {
 						$("#alert_message").show();
@@ -2828,15 +2142,15 @@
 					var weight = $("#modal-weight").val();
 					var tracking = $("#modal-tracking").val();
 					var freight = $("#modal-freight").val();
-					var id = $("#package-modal-body").data("modal-id");
+					var id = $("#package-modal-body").attr("data-modal-id");
 					
 					//Update the Data tags on the page
-					$(".box_selector.active").data("width",width);
-					$(".box_selector.active").data("h",height);
-					$(".box_selector.active").data("l",length);
-					$(".box_selector.active").data("weight",weight);
-					$(".box_selector.active").data("tracking",tracking);
-					$(".box_selector.active").data("row-freight",freight);
+					$(".box_selector.active").attr("data-width",width);
+					$(".box_selector.active").attr("data-h",height);
+					$(".box_selector.active").attr("data-l",length);
+					$(".box_selector.active").attr("data-weight",weight);
+					$(".box_selector.active").attr("data-tracking",tracking);
+					$(".box_selector.active").attr("data-row-freight",freight);
 
 					
 					$.ajax({
@@ -2874,7 +2188,7 @@
 				autoinc++;
 				// var updatedtext = final.text();
 				// updatedtext = updatedtext.slice(0,-2)+" "+autoinc;
-				var order_number = $("body").data("order-number");
+				var order_number = $("body").attr("data-order-number");
 				console.log("Order Number: "+ order_number);
 				// console.log("Updated Text: "+ updatedtext);
 
@@ -2893,7 +2207,7 @@
 				//Finally, output the button
 					// alert(final);
 					final.clone().text(autoinc).insertAfter(final)
-					.data("row-id",id).data("box-shipped", '')
+					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active").removeClass('btn-grey').addClass('btn-secondary');
 					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
 					$(".active_box_selector").each(function(){
@@ -2915,7 +2229,7 @@
 		$(document).on("click",".box_selector",function() {
 			$(this).siblings(".box_selector").removeClass("active");
 			$(this).addClass("active");
-			var num = $(this).data("row-id");
+			var num = $(this).attr("data-row-id");
 			if ($(".active_box_selector").find("option[value="+num+"]").is(':enabled')){
 				$(".active_box_selector").val(num);
 			}
@@ -2923,7 +2237,7 @@
 		
 //Change of a dropdown
 		$(document).on("change",".box_drop",function() {
-		    var assoc = $(this).data("associated");
+		    var assoc = $(this).attr("data-associated");
 		    var pack = $(this).val();
 				$.ajax({
 					type: "POST",
@@ -2944,52 +2258,10 @@
 					}
 				});
 		});
-
-		function package_delete(pack, serialid){
-	$.ajax({
-		type: "POST",
-		url: '/json/packages.php',
-		data: {
-			"action" : "delete",
-			"assoc" : serialid,
-			"package" : pack
-		},
-		dataType: 'json',
-		success: function(id) {
-			console.log("JSON Package Delete | packages.php: Success");
-		},
-		error: function(xhr, status, error) {
-			alert(error+" | "+status+" | "+xhr);
-			console.log("JSON Package Delete | packages.php: Error");
-		}
-	});
-}
 		
 //==============================================================================		
 //================================= LOCATIONS ==================================
 //==============================================================================
-		function location_changer(type,limit,home,warehouse){
-			var finder = "."+type;
-			$.ajax({
-					type: "POST",
-					url: '/json/loc_drop.php',
-					data: {
-						"type": type,
-						"selected" : "" ,
-						"limit" : limit ,
-						"warehouse" : warehouse,
-					},
-					dataType: 'json',
-					success: function(right) {
-						$(home).parent().parent().parent().find(finder).parent().html(right);
-						console.log("JSON location_changer loc_drop.php: Success");
-					},
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON location_changer loc_drop.php: Error");
-					}
-			});
-		}
 		$(document).on("change", ".warehouse",function() {
 			var home = this;
 			var limit = $(this).val();
@@ -3003,30 +2275,27 @@
 			$(this).closest(".row").find(".instance option[data-place='"+place+"']").show();
 			$(this).closest(".row").find(".instance option[data-place='"+place+"']:first").prop("selected", true);
 		});
-		
-}); //END OF THE GENERAL DOCUMENT READY TAG
-//=========================== End Inventory Addition ===========================
 
 //==============================================================================
 //===================================== RM =====================================
 //==============================================================================
 	
 	$(document).on("click",".rm_button",function(){
-		var partid = $(this).closest("tr").data("part");
-		var text = $(this).closest("tr").data("name");
-		var invid = $(this).closest("tr").data("invid");
+		var partid = $(this).closest("tr").attr("data-part");
+		var text = $(this).closest("tr").attr("data-name");
+		var invid = $(this).closest("tr").attr("data-invid");
 		$("#modalRMBody").find(".item_search").initSelect2("/json/part-search.php","Select a Part","purchase");
 		$("#modalRMBody").find(".item_search").setDefault(text,partid);
-		$("#modalRMBody").data("partid",partid);
-		$("#modalRMBody").data("invid",invid);
+		$("#modalRMBody").attr("data-partid",partid);
+		$("#modalRMBody").attr("data-invid",invid);
 		$("#modal-RM").modal("show");
 	});
 	$(document).on("click","#RM-continue",function() {
-		var init_part = $("#modalRMBody").data("partid");
+		var init_part = $("#modalRMBody").attr("data-partid");
 		var new_part = $("#modalRMBody").find(".item_search").val();
 		// console.log("OG PART: "+init_part+)
 		if (new_part != init_part){
-			var invid = $("#modalRMBody").data("invid");
+			var invid = $("#modalRMBody").attr("data-invid");
 			$.ajax({
 				type: "POST",
 				url: '/json/rm-processor.php',
@@ -3048,15 +2317,53 @@
 
 		}
 	});
-
-
 //=================================== End RM ===================================
+
+
+
+
+//==============================================================================
+//=================================== HISTORY ================================== 
+//==============================================================================
+
+		$(document).on("click",".serial_original",function() {
+			
+			var invid = $(this).attr('data-id');
+			//Call the AJAX
+			$.ajax({
+					type: "POST",
+					url: '/json/item_history.php',
+					data: {
+						'inventory' : invid,
+						'mode' : 'display'
+					},
+					dataType: 'json',
+					success: function(lines) {
+						//Clear the modal
+						$(".history_line").remove();
+						console.log(lines);
+						//Populate the modal
+						$.each(lines, function(i, phrase){
+							$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
+						});
+						//Show the modal
+						$("#modal-history").modal("show");
+						
+						console.log("JSON history_modal | Success | /json/item_history.php?inventory="+invid+"&mode=display");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON history_modal | Failure | /json/item_history.php?inventory="+invid+"&mode=display");
+					}
+			});
+		});
+//=================================== END HISTORY ================================== 
 
 //==============================================================================
 //==================================== RMA =====================================
 //==============================================================================
 
-	$(".rma-macro").ready(function(){
+	$(".rma-macro").each(function(){
 		var order_number = $("body").data("associated");
 		var page = 'rma';
 		var order_type = "RMA"
@@ -3088,6 +2395,9 @@
 
 
 //================================== END RMA ===================================
+		
+
+}); //END OF THE GENERAL DOCUMENT READY TAG
 
 
 
@@ -3095,111 +2405,569 @@
 
 
 
-//==============================================================================
-//=================================== HISTORY ================================== 
-//==============================================================================
 
-		$(document).on("click",".serial_original",function() {
-			
-			var invid = $(this).data('id');
-			//Call the AJAX
-			$.ajax({
+
+
+
+			function package_delete(pack, serialid){
+				$.ajax({
 					type: "POST",
-					url: '/json/item_history.php',
+					url: '/json/packages.php',
 					data: {
-						'inventory' : invid,
-						'mode' : 'display'
+						"action" : "delete",
+						"assoc" : serialid,
+						"package" : pack
 					},
 					dataType: 'json',
-					success: function(lines) {
-						//Clear the modal
-						$(".history_line").remove();
-						console.log(lines);
-						//Populate the modal
-						$.each(lines, function(i, phrase){
-							$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
-						});
-						//Show the modal
-						$("#modal-history").modal("show");
-						
-						console.log("JSON history_modal | Success | /json/item_history.php?inventory="+invid+"&mode=display");
+					success: function(id) {
+						console.log("JSON Package Delete | packages.php: Success");
 					},
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON history_modal | Failure | /json/item_history.php?inventory="+invid+"&mode=display");
+						console.log("JSON Package Delete | packages.php: Error");
+					}
+				});
+			}
+
+
+			
+			function getWorkingDays(startDate, endDate){
+				var result = 0;
+				var currentDate = startDate;
+				while (currentDate <= endDate)  {  
+				
+				var weekDay = currentDate.getDay();
+				if(weekDay != 0 && weekDay != 6)
+					result++;
+					currentDate.setDate(currentDate.getDate()+1); 
+				}
+				return result;
+			}
+			//Adding in all slide sidebar options to pages that utilize the classes depicted below
+		
+			function toggleSidebar() {
+				var $marginLefty = $('.left-sidebar');
+					
+				$(window).resize(function() {
+					$marginLefty.animate({
+						marginLeft: 0
+					});
+				
+					$('.icon-button').addClass('fa-chevron-left');
+					$('.icon-button').removeClass('fa-chevron-right');
+				
+					if($('.left-sidebar .sidebar-container').is(':hidden')){
+		            	$('.icon-button-mobile').removeClass('fa-chevron-up');
+						$('.icon-button-mobile').addClass('fa-chevron-down');
+					
+						$('.left-sidebar .sidebar-container').fadeIn();
+		        	}
+				});
+			
+				$('.click_me').on('click', function() {
+					// alert('clicked');
+					var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
+					$marginLefty.animate({
+						marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
+						},{
+						complete: function() {
+							if(check == 'collapsed') {
+								//$('.company_meta .row').hide();
+							}
+						}
+					});
+				
+					if(check == 'collapsed') {
+						//$('.shipping-list').animate({width: '90%'}, 550);
+						$('.icon-button').addClass('fa-chevron-right');
+						$('.icon-button').removeClass('fa-chevron-left');
+						//$('.company_meta .row').hide();
+					} 
+				
+					if(check != 'collapsed') {
+						//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
+						$('.icon-button').addClass('fa-chevron-left');
+						$('.icon-button').removeClass('fa-chevron-right');
+						//$('.company_meta .row').show();
+					}
+				});
+
+				$('.shoot_me').click(function() {
+					$('.left-sidebar .sidebar-container').slideToggle(function(){
+						if($('.left-sidebar .sidebar-container').is(':visible')){
+				            $('.icon-button-mobile').addClass('fa-chevron-up');
+							$('.icon-button-mobile').removeClass('fa-chevron-down');
+				        }else{
+				            $('.icon-button-mobile').addClass('fa-chevron-down');
+							$('.icon-button-mobile').removeClass('fa-chevron-up');
+				        }
+					});
+				});
+			}
+			
+			function freight_date(days){
+				var today = new Date();
+				var dayOfTheWeek = today.getDay();
+				var calendarDays = days;
+				var deliveryDay = dayOfTheWeek + days;
+				if (deliveryDay >= 6) {
+					//deduct this-week days
+					days -= 6 - dayOfTheWeek;
+					//count this coming weekend
+					calendarDays += 2;
+					//how many whole weeks?
+					var deliveryWeeks = Math.floor(days / 5);
+					//two days per weekend per week
+					calendarDays += deliveryWeeks * 2;
+				}
+				
+				today.setTime(today.getTime() + calendarDays * 24 * 60 * 60 * 1000);
+				
+				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
+				return today;
+			}
+			function headerOffset() {
+				var height = $('header.navbar').height();
+		        //get possible filter bar height
+		        var heightOPT = 0;
+		        var heightError = 0;
+		        if ($('.table-header').css("display")!='none'){
+		        	heightOPT = $('.table-header').height();
+		        }
+		        //heightError = $('.general-form-error').height();
+		        
+		        var offset = height + heightOPT + heightError;
+				
+				
+				$('body').css('padding-top', offset);
+			}
+			
+			//======================== Right side page load ========================
+			// This function outputs each of the items on the table, as well as the
+			// old information from the database
+		
+			function line_number(){
+				var last = $("#right_side_main").find(".line_line:last").attr("data-line-number");
+				if(last){
+					return parseInt(last)+1
+				}
+				else{
+					return 1;
+				}
+				// #right_side_main > tr.easy-output > td.line_line
+			}
+			function updateTotal(){
+				var total = 0.00;
+				// #right_side_main > tr.lazy-entry > td:nth-child(8) > input
+				$(".easy-output").each(function() {
+				    var qty = $(this).find(".line_qty").attr('data-qty');
+				    var cost = $(this).find(".line_price").text();
+				    if (cost){
+				    	cost = Number(cost.replace(/[^0-9\.]+/g,""));
+				    }
+				    else{
+				    	cost = 0.00;
+				    }
+				    total += cost * qty;
+				});
+				//Get all the 
+				return price_format(total);
+			}
+			
+/*
+			$("#service").ready(function() {
+				var days = parseInt($('#service option:selected').attr('data-days'));
+				if (days != 4){
+					$("input[name=ni_date]").val(freight_date(days));
+				}
+			});
+*/
+			
+			function price_format(ext){
+				var display = ext.toFixed(2);
+				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			    display = '$'+(display);
+			    return display;
+			}
+
+//Address Suite of functions
+			function updateShipTo(){
+				if ( $("#mismo").prop( "checked" )){
+					var display = $("#bill_to").text().trim();
+					var value = $("#bill_to").val();
+					console.log("Display: "+display+" | Value: "+value);
+					$("#ship_to").setDefault(display,value);
+				}
+			}
+
+
+//============================= Inventory Addition =============================
+		//Get the url argument parameter
+		function getUrlParameter(sParam) {
+		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
+		
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+		
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		}
+		
+		
+		//This function gets the pages title without the extension aka .php
+		function getPageName(url = window.location.href) {
+		    var index = url.lastIndexOf("/") + 1;
+		    var filenameWithExtension = url.substr(index);
+		    var filename = filenameWithExtension.split(".")[0]; 
+		    return filename;                                    
+		}
+	
+		//This function checks to see if month is less than 10, after add 0 in front if so
+		function getFormattedPartTime(partTime){
+	        if (partTime<10)
+	           return "0"+partTime;
+	        return partTime;
+	    }
+
+		function populateSearchResults(e,search,qty) {
+			//always must be a valid qty passed in
+  		    if (! qty) {
+	   			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+				return;
+			}
+
+			var sub_row = e.closest("tr");
+			var editRow = '';
+			var line_item_id = 'new';
+			var mode = 'append';
+			// editing an existing row as opposed to sending new data for appending to items list
+			if (! search) {
+				var search = '';
+   		    	var editRow = parseInt(sub_row.index());
+				var line_item_id = sub_row.prev().attr('data-record');
+				var mode = 'update';
+
+				// from line_item_submit:
+				var search_option = sub_row.find('.item-selected').find('option');
+				var new_search = search_option.last().val();
+				var old_search = search_option.first().attr('data-search');
+				//This line fixes the bug if the user exits the select2 prematurely
+				if(isNaN(new_search)){var search = old_search;}
+				else{var search = new_search;}
+			}
+
+		    var date = sub_row.find("input[name=ni_date]").val();
+		    var price = sub_row.find("input[name=ni_price]").val();
+   		    var lineNumber = sub_row.find("input[name=ni_line]").val();
+   		    var warranty = sub_row.find(".warranty").val();
+			var conditionid = sub_row.find(".conditionid").val();
+//	    	var partid = row.attr("data-line-id");
+//			var qty = row.find("input[name=ni_qty]").val();
+
+			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);
+
+   			$.ajax({
+				type: "POST",
+				url: '/json/order-table-out.php',
+				async: false,
+				data: {
+			       	"line":lineNumber,
+			       	"search":search,
+			       	"date":date,
+			       	"qty":qty,
+			       	"unitPrice":price,
+					"warranty":warranty,
+					"conditionid":conditionid,
+			       	"id":line_item_id,
+			       	"mode":mode
+				}, // serializes the form's elements.
+				dataType: 'json',
+				success: function(row_out) {
+					if (mode=='update') {
+						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
+						$('#totals_row').find("input[name='np_total']").val(updateTotal());
+					} else if (mode=='append') {
+						$("#right_side_main").append(row_out);
+						$(".search_lines").html("").remove();
+						$("#totals_row").show();
+						//sub_row.find("input[name=ni_line]").val(line_number());
+						$('#totals_row').find("input[name='np_total']").val(updateTotal());
+						$('#go_find_me').focus();
+					}
+				},
+				error: function(xhr, status, error) {
+					console.log("Error populating search results: "+error);
+				},
+				complete: function() {
+//					$(".line_war").each(function() {
+//						$(this).attr("data-war","test");
+//					});
+
+					if (mode=='update') {
+						var lazy_row = e.closest(".lazy-entry");
+						lazy_row.hide();
+						lazy_row.prev(".easy-output").show();
+					} else if (mode=='append') {
+						var lineNumber = parseInt(sub_row.find("input[name=ni_line]").val());
+						if (!lineNumber){lineNumber = 0;}
+						$("#go_find_me").val("");
+			   			sub_row.find("input[name=ni_price]").val("");
+			   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+			   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+					}
+		      			
+	   				//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
+				},
+			});
+        } 
+
+
+
+
+
+
+		function location_changer(type,limit,home,warehouse){
+			var finder = "."+type;
+			$.ajax({
+					type: "POST",
+					url: '/json/loc_drop.php',
+					data: {
+						"type": type,
+						"selected" : "" ,
+						"limit" : limit ,
+						"warehouse" : warehouse,
+					},
+					dataType: 'json',
+					success: function(right) {
+						$(home).parent().parent().parent().find(finder).parent().html(right);
+						console.log("JSON location_changer loc_drop.php: Success");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON location_changer loc_drop.php: Error");
 					}
 			});
-		});
+		}
 
-//=============================== Inventory Edit ===============================
-	// $(document).ready(function() {
-	// 	var search = $("body").data("search");
-	// 	//Inventory
-	// 	$.ajax({
-	// 		type: "POST",
-	// 		url: '/json/inventory-out.php',
-	// 		data: {
-	// 			"search": search,
-	// 			},
-	// 		dataType: 'json',
-	// 		success: function(right) {
-	// 			$(".loading_element").append(right);
-	// 		}
-	// 	});
 
+
+//==============================================================================
+//================================ SHIPPING PAGE ===============================
+//==============================================================================
 		
-	// 	$(document).on("click",".part_filter",function() {
+		function callback(obj) {
+			//Grab each of the parameters from the top line
+			var $serial = obj;
 			
-	// 	});
-	// });
-	
-
-		
-//============================= END INVENTORY EDIT =============================
-
-
-//************************* Legacy Code Worth Keeping *************************
-
-
-//This function submited a new row on the order forms when the row was static.
-	// $('#forms_submit').on("click", function() {
-	// 	var company = $("#").find('.item-selected').find("option").last().val();
-	//     var search = $(this).closest("tr").find('#item-selected').find("option").val();
-	//     var date = $(this).closest("tr").find("input[name=ni_date]").val();
-	// 		    var qty = $(this).closest("tr").find("input[name=ni_qty]").val();
-	//     var price = $(this).closest("tr").find("input[name=ni_price]").val();
-	// 		    var lineNumber = $(this).closest("tr").find("input[name=ni_line]").val();
-	// 		    var warranty = $(this).closest("tr").find(".warranty").val();
-		
-	
-	// 	$.ajax({
+			//order_num gets any parameter set to on, E.G. Sales Number is also pulled
+			var order_num = getUrlParameter('on');
+			var savedSerial = $serial.attr('data-saved');
+			var item_id = $serial.attr('data-item-id');
+			var qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val());
+			var page = getPageName();
+			var serial = $serial.val();
+			var partid = $serial.closest('tr').find('.part_id').attr('data-partid');
+			var conditionid = $serial.closest('tr').find('.condition_field').val();
+			var part = $serial.closest('tr').find('.part_id').attr('data-part');
+			//Package number will be only used on the shipping order page
+			var package_no = $serial.closest('tr').find(".active_box_selector").val();
 			
-	// 		type: "POST",
-	// 		url: '/json/order-table-out.php',
-	// 		data: {
-	//  		    	"line":lineNumber,
-	//  		    	"search":search,
-	//  		    	"date":date,
-	//  		    	"qty":qty,
-	//  		    	"unitPrice":price,
-	// 			"warranty":warranty,
-	//  		    	"id": 'new',
-	//  		    	"mode":'append'
-	// 			}, // serializes the form's elements.
-	// 		dataType: 'json',
-	// 		success: function(row_out) {
-	// 			$("#right_side_main").append(row_out);
-	// 		}
-	// 	});
-	
-	// 	$(this).closest("tr").children("td:first-child").show();
-	// 	$(this).closest("tr").children("td").slice(1).children()
-	// 	.val("")
-	// 	.toggle();
-	// 	$(this).closest("tr").find(".item_search").html("\
-	// 					<select class='item_search'>\
-	// 					</select>\
-	// 	")
-	// 	$(this).closest("tr").find(".select2-selection__rendered").html('');
+			if(conditionid == '') {
+				conditionid = $serial.closest('tr').find('.condition_field').attr('data-condition');
+			}
+			
+			//Clone the serial field for usage when appending more fields
+			var $serialClone = $serial.parent().clone();
+			
+			//alert(getPageName());
 		
-	// });
+			//Only if there is some quantity and there is some serial on the inventory addition page
+	    	if(((serial != '') || savedSerial != '') && page != 'shipping') {
+	    		var $conditionClone = $serial.closest('tr').find('.infiniteCondition').children('select:first').clone();
+	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
+	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
+	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		// alert(place+"-"+instance);
+	    		if(place != 'null' && instance != 'null'){
+		    		$.ajax({
+						type: "POST",
+						url: '/json/inventory-add-dynamic.php',
+						data: {
+							 'partid' : partid,
+							 'conditionid' : conditionid,
+							 'serial' : serial,
+							 'po_number' : order_num,
+							 'item_id' : item_id,
+							 'savedSerial' : savedSerial,
+							 'place' : place,
+							 'instance' : instance
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+
+							if(result['query'] && !result['saved']) {
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+								
+								//Update the value of the qty left avoiding if it hits below 0
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').children('input').val(qty);
+								} else if(qty <= 0) {
+									if(localStorage.getItem(result['partid']) != 'shown'){
+								    	modalAlertShow('Item Already Received!','Item "'+part+'" has already been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
+								    	localStorage.setItem(result['partid'],'shown')	
+									}
+							    	// $serial.closest('.infiniteSerials').children('input:first').attr('readonly', true);
+							    }
+								
+								//Set matching condition field to the serial saved
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').attr("data-serial", serial);
+								$serial.closest('tr').find('.locations_tracker:first').attr("data-serial", serial);
+								
+								//Set Default Values here, remember clone doesn't save select values otherwise it will
+								$serialClone.find('input').val("");
+								
+								$locationClone.find('select:first').val(place);
+								$locationClone.find('select:last').val(instance);
+								
+								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').attr('disabled', false);
+								$serial.closest('.infiniteSerials').find('button.updateSerialRow').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').find('button.updateSerialRow').hide();
+								$serial.closest('.infiniteSerials').find('button.deleteSerialRow').show();
+								
+								//Switch buttons from update to delete and enable the disable button
+								$serialClone.find('button.updateSerialRow').show();
+								$serialClone.find('button.deleteSerialRow').hide();
+								$serialClone.find('button.deleteSerialRow').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								
+								$serial.closest('tr').find('.infiniteCondition').children('select:first').val(conditionid);
+								
+								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								if(qty == 0) {
+							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	//alert('Part: ' + part + ' has been received.');
+									modalAlertShow('Item Received!','Item "'+part+'" has now been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+
+							} else if(result['saved']) {
+								$serial.attr("data-saved", serial);
+								modalAlertShow('Success', 'Item has been updated.', false);
+							} else {
+								modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Serial Exists', 'Item already exists in inventory. Please enter another serial.', false);
+								if(savedSerial != '') {
+									$('input[data-saved ="'+savedSerial+'"]').val(savedSerial);
+								}
+							}
+							window.onbeforeunload = null;
+							
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("Inventory-add-dynamic.php: ERROR");
+						},				
+						
+					});
+	    		} else {
+	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
+	    		}
+		    } else if(serial != '' && page == 'shipping') {
+				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid+'&package_no='+package_no);
+				//Submit the data from the live scanned boxes
+				qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
+
+				if(package_no != null) {
+			    	$.ajax({
+						type: "POST",
+						url: '/json/shipping-update-dynamic.php',
+						data: {
+							 'partid' : partid,
+							 'serial' : serial,
+							 'so_number' : order_num,
+							 'item_id' : item_id,
+							 'conditionid' : conditionid,
+							 'package_no' : package_no
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							
+							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
+							// console.log(result);
+							if(result['query']) {
+								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
+								//Decrement the qty by 1 after success and no errors detected
+								qty--;
+
+								//Area to duplicate the box field
+								$serial.closest('tr').find(".active_box_selector").first().clone()
+								.insertAfter($serial.closest('tr').find(".active_box_selector").first())
+								.removeClass("active_box_selector")
+								.addClass("drop_box")
+								.val($serial.closest('tr').find(".active_box_selector").first().val())
+								.attr("data-associated",serial);
+
+								if(qty >= 0) {
+									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);
+								}
+								$serialClone.find('input').val("");
+								
+								$serial.closest('.infiniteSerials').find('button').attr('disabled', false);
+								$serialClone.find('button').attr('disabled', true);
+								
+								$serial.closest('.infiniteSerials').prepend($serialClone);
+								$serial.closest('tr').find('.infiniteCondition').prepend($conditionClone);
+								$serial.closest('.infiniteSerials').find('input:first').focus();
+								
+								var element = "<input class='form-control input-sm iso_comment check-save' data-savable='true' style='margin-bottom: 10px;' type='textbox' data-part='"+part+"' data-serial='"+serial+"' data-invid='"+result['invid']+"' placeholder='Comments'>";
+								
+								$serial.closest('tr').find('.infiniteComments').prepend(element);
+								
+								if(qty == 0) {
+							    	$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
+							    	var date = new Date();
+							    	var str = (getFormattedPartTime(date.getMonth() + 1)) + "/" + getFormattedPartTime(date.getDate()) + "/" + date.getFullYear();
+							    	
+							    	$serial.closest('.infiniteSerials').siblings('.ship-date').text(str);
+									modalAlertShow('Item Shipped!','Item "'+part+'" has now been SHIPPED in full!',false);
+							    }
+							    
+							    $serial.attr("data-saved", serial);
+							} else {
+								alert(result['error']);
+							}
+							window.onbeforeunload = null;
+						
+							console.log("Shipping-add-dynamic.php: Success");
+						
+							
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("Shipping-add-dynamic.php: ERROR");
+							console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid);
+							},	
+					});
+				} else {
+					modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'A Box is required for each item being shipped. <br><br> Please create a box or add the item to an available box.', false);
+				}
+		    } else if(serial == '') {
+		    	modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Error', 'Serial is missing.', false);
+		    } 
+		
+		}

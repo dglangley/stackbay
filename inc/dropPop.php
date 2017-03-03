@@ -16,9 +16,10 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/getTerms.php';
+	include_once $rootdir.'/inc/getCondition.php';
 
     
-    function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+    function getEnumValue( $table = 'inventory', $field = 'status' ) {
 		$statusVals;
 		
 	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
@@ -116,7 +117,7 @@
         $output .= ($label)? "<label for='warranty'>Warranty:</label>" : '';
         $output .= "<select id = '$id' class='form-control input-sm warranty $limit'>";
     	if($id == 'warranty_global'){
-    	    $output .= "<option selected value='no'>Warranty</option>";
+    	    $output .= "<option selected value=''>Warranty</option>";
     	}
     	$output .= "	    $warranty_options
     			    </select>
@@ -183,36 +184,37 @@
     			    </select>
     	        </div>";
         }
-        else if ($field == 'condition'){
-            
+        else if ($field == 'conditionid'){
             // Grab all the variations of the enum into an iterable array
-            $condition = getEnumValue();
-            $id = ($custom_id) ? $custom_id : "condition";
+            
+            getCondition();//initialize global $CONDITIONS
+			global $CONDITIONS;
+
+            $id = ($custom_id) ? $custom_id : "conditionid";
 		    
 		    //If the condition value returns any results
-		    if ($condition){
-		        $init = false;
-    			foreach ($condition as $c){
-    			    if($id == 'condition_global') {
-    			        $init = true;
-    			    }
+	        $init = false;
+			$cond_list = '';
+			foreach ($CONDITIONS as $conditionid => $cond) {
+   			    if($id == 'condition_global') {
+   			        $init = true;
+   			    }
     			    
-    				if($c == $selected || ($selected == '' && $c == 'used' && !$init)){
-    					$cond .= "<option selected value=$c>".ucwords($c)."</option>";
-    				}
-    				else{
-    					$cond .= "<option value=$c>".ucwords($c)."</option>";
-    				}
+   				if($conditionid == $selected || ($selected == '' && $cond == 'Used' && !$init)){
+   					$cond_list .= "<option selected value=$conditionid>".$cond."</option>";
+   				}
+   				else{
+   					$cond_list .= "<option value=$conditionid>".$cond."</option>";
     			}
     	   	}
     	   	
             $output = "<div class=''>";
             $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
-            $output .= "<select id = '$id' class='form-control input-sm condition'>";
+            $output .= "<select id = '$id' class='form-control input-sm conditionid'>";
                 	if($id == 'condition_global'){
-                        $output .= "<option selected value='no'>Condition</option>";
+                        $output .= "<option selected value=''>Condition</option>";
                 	}
-    	    $output .= "    $cond
+    	    $output .= "    $cond_list
     			    </select>
     	        </div>";
 
