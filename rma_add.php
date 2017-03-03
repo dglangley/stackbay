@@ -109,10 +109,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitems($partid) {
+	function getRMAitems($partid, $order_number) {
 		$listSerial;
 		
-		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid;";
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($order_number).";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -248,6 +248,33 @@
 		}
 
 		return $result;
+	}
+	
+	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
+	function getDisposition($id = '') {
+		$dispositions = array();
+		$disp_value;
+		
+		if($id == '') {
+			$query = "SELECT * FROM dispositions;";
+			$result = qdb($query) or die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				$dispositions[$row['id']] = $row['disposition'];
+			}
+		} else {
+			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+			$result = qdb($query) or die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$disp_value = $result['disposition'];
+			}
+			
+			return $disp_value;
+		}
+		
+		return $dispositions;
 	}
 	
 	//Grab all parts of the RMA
@@ -424,7 +451,7 @@
 							//Grab all the parts from the specified PO #
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
-									$serials = getRMAitems($part['partid']);
+									$serials = getRMAitems($part['partid'],$order_number);
 
 						?>
 								<tr>
@@ -472,7 +499,7 @@
 											foreach($serials as $item) { 
 										?>
 											<div class="row">
-												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? 'Add Disposition Here' : 'None' )?></span>
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? getDisposition($item['dispositionid']) : 'None' )?></span>
 											</div>	
 										<?php 
 											} 
