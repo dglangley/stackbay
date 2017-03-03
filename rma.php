@@ -82,18 +82,70 @@
 	        	$reasonInfo = $reason[$invid];
 	        	
 	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
-	        	
-	        	$rmaQuery = "
-	                INSERT INTO `return_items`
-	                (`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) VALUES 
-	                ($partid ,$invid,".$rma_number.",NULL,'".$reasonInfo."',$disposition,1);
-	            ";
-	            
-	            if ($rmaQuery){
-		            //echo($rmaQuery);
-		            qdb($rmaQuery) OR die();
-		        }
+	        		//print_r($return); die;
+		        	$rmaQuery = "
+		                INSERT INTO `return_items`
+		                (`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) VALUES 
+		                ($partid ,$invid,".$rma_number.",NULL,'".$reasonInfo."',$disposition,1);
+		            ";
+	        	if ($rmaQuery){
+					//echo($rmaQuery);
+					qdb($rmaQuery) OR die();
+				}
 	        }
+	    //Tis an RMA Update or Delete
+		} else if($rma_number != '') {
+        	foreach($checkedItems as $invid) {
+	        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
+	        	$rmaSave = qdb($partidQuery) or die(qe());
+	        	
+	        	if (mysqli_num_rows($rmaSave)>0) {
+					$rmaSave = mysqli_fetch_assoc($rmaSave);
+					$partid = $rmaSave['partid'];
+				}
+	        	
+	        	$reasonInfo = $reason[$invid];
+	        	
+	        	// print_r($checkedItems);
+	        	// echo "<br>";
+	        	// print_r($return);
+	        	// die;
+	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
+	        	if ($return[$invid] != ''){
+		            $rmaQuery = "
+		            UPDATE `return_items` SET 
+		            `reason`= '$reasonInfo',
+		            `dispositionid`= $disposition
+		             WHERE `id` = ".prep($return[$invid]).";";
+	        	} else {
+	        		$rmaQuery = "
+		                INSERT INTO `return_items`
+		                (`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) VALUES 
+		                ($partid ,$invid,".$rma_number.",NULL,'".$reasonInfo."',$disposition,1);
+		            ";
+	        	}
+	        	
+	        	if ($rmaQuery){
+					//echo($rmaQuery);
+					qdb($rmaQuery) OR die();
+				}
+        	}
+        	//Garbage collection for unchecked data (the key = the inventoryid)
+				foreach($return as $key => $retid) {
+					if(!in_array($key, $checkedItems) && $retid != '') {
+						$query = "DELETE FROM `return_items` WHERE `id` = $retid;";
+						//echo $query;print_r($return);
+						qdb($query) OR die();
+					}
+					//print_r($checkedItems);
+		        	//echo $retid . "<br>";
+		        	//print_r($return);
+		        	
+				}
+				// print_r($checkedItems);
+	   //     	echo "<br>";
+	   //     	print_r($return);
+	   //     	die;
 		}
 	}
 
@@ -212,7 +264,7 @@
 		include_once $rootdir.'/modal/contact.php';
 		?>
 		
-		<form method="post">
+		<form action="" method="post">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				
