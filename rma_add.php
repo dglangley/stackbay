@@ -331,7 +331,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php<?= ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
 			</div>
