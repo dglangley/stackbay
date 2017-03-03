@@ -171,25 +171,48 @@
 				else{
 					$so_number = false;
 				}
+			} else {
+				$mode = 'old';
 			}
-
-			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
 			
+			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
 			$rma_micro = qdb($rma_mic);
+			$receive_check = '';
 			foreach($rma_micro as $line_item){
-				
+				$receive_check = $line_item['id'].", ";
 				$rma_items[$line_item['partid']][$line_item['inventoryid']] = $line_item;
 				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange");
-
+			}
+			$receive_check = trim($receive_check,", ");
+			//This Query will search the history to see if the parts were ever received against the line item record
+			$receive_query = "SELECT * FROM `inventory_history` where field_changed = 'returns_item_id' and value IN ($receive_check);";
+			$receive_result = qdb($receive_query);
+			//If there are more rows (Or equivalent rows) in the receive row result, then all items have been received)
+			if (mysqli_num_rows($rma_micro) <= mysqli_num_rows($receive_result) && mysqli_num_rows($rma_micro) > 0){
+				$mode = 'view';
 			}
 		}
 	}
 	
-	if($so_number){
+	if($so_number && $mode != 'view' && $mode != 'old'){
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 		$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
 		$sales_macro = mysqli_fetch_assoc(qdb($sales_macro));
-		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`;";
+		
+		//Check to see if these items have already been RMA'd off this particular sales order
+		$limiter = "SELECT `inventoryid` FROM `returns`, `return_items` WHERE order_number=".prep($so_number)." and order_type = 'Sale' and `returns`.`rma_number` = `return_items`.`rma_number`;";
+		
+		$limit_result = qdb($limiter);
+		$limit = '';
+		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+		if (mysqli_num_rows($limit_result) > 0){
+			foreach ($limit_result as $invid){
+				$limit .= $invid['inventoryid'].", ";
+			}
+			$limit = trim($limit,", ");
+			$sales_micro .= " AND i.id NOT IN ($limit)";
+		}
+		$sales_micro .= ";";
 		// echo($sales_micro);
 		$sales_micro = qdb($sales_micro);
 		// print_r($sales_micro);
