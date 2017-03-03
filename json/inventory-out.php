@@ -16,6 +16,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/getManf.php';
 	include_once $rootdir.'/inc/getSerials.php';
+	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
 	
@@ -204,7 +205,7 @@
 	function getStock($stock = '', $partid = 0,$location='') {
 		$stockNumber;
 		$stock = prep($stock);
-		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND item_condition = $stock ";
+		$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND conditionid = $stock ";
 		if ($location){
 			$location = prep($location);
 			$query .= " AND locationid = $location";
@@ -284,13 +285,15 @@
 		
 		$start = grab("start");
 		$end = grab("end");
-		$condition = grab("condition");
-		if ($condition == "no"){
-			$condition = '';
+		$conditionid = grab("conditionid");
+/*david 3-2-17
+		if ($conditionid == ""){
+			$conditionid = '';
 		}
+*/
 		$vendor = grab("vendor");
 		$order = grab("order");
-		if ($search || $locationid || $condition || $order || ($start && $end)){
+		if ($search || $locationid || $conditionid || $order || ($start && $end)){
 			$in = '';
 			//Get all the parts from the search
 			$initial = hecidb($search);
@@ -301,16 +304,18 @@
 				$in = trim($in, ", ");
 			}
 
-			$query  = "SELECT *, i.id invid FROM inventory i, parts p ";
+			$query  = "SELECT i.*, p.*, i.id invid ";
+			if ($order) { $query .= ", pi.po_number "; }
+			$query .= "FROM inventory i, parts p ";
 			if ($order) { $query .= ", purchase_items pi "; }
 			$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
 			if ($in) { $query .= "AND i.partid IN (".$in.") "; }
 			if ($order) { $query .= "AND pi.id = i.purchase_item_id "; }
 			$query .= sFilter('i.locationid', $locationid);
-			$query .= sFilter('i.item_condition',$condition);
+			$query .= sFilter('i.conditionid',$conditionid);
 			if ($order) { $query .= sFilter('pi.po_number',$order); }
 			$query .= dFilter('i.date_created',$start, $end);
-			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.item_condition, i.date_created;";
+			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
 			$result = qdb($query);
 			$result1 = query_first($result);
 /*
@@ -330,10 +335,10 @@
 				$query .= "WHERE serial_no = $search AND i.partid = p.id AND i.qty > 0 ";
 				if ($order) { $query .= "AND pi.id = i.purchase_item_id "; }
 				$query .= sFilter('i.locationid', $locationid);
-				$query .= sFilter('i.item_condition',$condition);
+				$query .= sFilter('i.conditionid',$conditionid);
 				if ($order) { $query .= sFilter('pi.po_number',$order); }
 				$query .= dFilter('i.date_created',$start, $end);
-				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.item_condition, i.date_created;";
+				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
 			
 				$result = qdb($query);
 				$result2 = query_first($result);
@@ -356,7 +361,7 @@
 			$query .= "WHERE i.qty > 0 ";
 			if ($order) { $query .= "pi.id = i.purchase_item_id "; }
 			$query .= sFilter('i.locationid', $locationid);
-			$query .= sFilter('i.item_condition',$condition);
+			$query .= sFilter('i.conditionid',$conditionid);
 			if ($order) { $query .= sFilter('pi.po_number',$order); }
 			$query .= dFilter('i.date_created',$start, $end);
 			$query .= ";";
@@ -391,10 +396,10 @@
 		
 /*
 		$partid = prep($partid);
-		$query = "SELECT `serial_no`,`partid`, `qty`, `locationid`, `item_condition`, `purchase_item_id`, `status`, `sales_item_id`, `date_created`, `id` invid ";
+		$query = "SELECT `serial_no`,`partid`, `qty`, `locationid`, `conditionid`, `purchase_item_id`, `status`, `sales_item_id`, `date_created`, `id` invid ";
 		$query .= "FROM inventory ";
 		$query .= "WHERE `partid` = $partid AND `qty` > 0 ";
-		$query .= " ORDER BY locationid, purchase_item_id, item_condition, date_created;";
+		$query .= " ORDER BY locationid, purchase_item_id, conditionid, date_created;";
 		// $query .= "ORDER BY sumqty;";
 		
 		
@@ -405,7 +410,7 @@
 			// print_r($row);
 			$date = format_date($row['date_created'],"m/d/Y");
 			$po = getPO($row['purchase_item_id']);
-			$key = $row['locationid'].'+'.$po.'+'.$row['item_condition'].'+'.$date;
+			$key = $row['locationid'].'+'.$po.'+'.getCondition($row['conditionid']).'+'.$date;
 			$partid = $row['partid'];
 
 			if (! isset($r[$partid])) {

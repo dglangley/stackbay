@@ -76,7 +76,7 @@
 						$c[$r['field_changed']] = $r['field_changed'];
 						break;
 
-					case 'condition':
+					case 'conditionid':
 						$string = "Condition was updated from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
 						$c[$r['field_changed']] = $r['field_changed'];
 						break;

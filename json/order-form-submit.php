@@ -273,7 +273,7 @@
             $record = $r['id'];
             $date = prep(format_date($r['date'],'Y-m-d'));
             $warranty = prep($r['warranty']);
-            $condition = prep($r['condition']);
+            $conditionid = prep($r['conditionid']);
             $qty = prep($r['qty']);
             $unitPrice = prep(format_price($r['price'],true,'',true));
 
@@ -297,8 +297,8 @@
                 $line_insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
                 $line_insert .=  " (`partid`, ";
                 $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
-                $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `cond`, `id`) VALUES ";
-                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $condition, NULL);";
+                $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`, `id`) VALUES ";
+                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $conditionid, NULL);";
                 
 				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
@@ -315,7 +315,7 @@
                 `delivery_date` = $date, ";
     $update .= "
                 `warranty` = $warranty,
-                `cond` = $condition 
+                `conditionid` = $conditionid 
                 WHERE id = $record;";
 				$line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }

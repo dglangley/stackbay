@@ -127,7 +127,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
 					</span>
-	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php' AND $_SERVER["PHP_SELF"]<>'/services.php') { echo 'autofocus'; } ?> />
+	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php' AND $_SERVER["PHP_SELF"]<>'/services.php') { echo ''; } ?> />
                 	<span class="input-group-btn">
 	                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
 	                </span>

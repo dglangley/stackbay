@@ -23,6 +23,7 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
+	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
@@ -33,7 +34,7 @@
 	
 	
 	//Get the ENUM values of the specified table and column (field)
-	function getEnumValue( $table = 'inventory', $field = 'item_condition' ) {
+	function getEnumValue( $table = 'inventory', $field = 'conditionid' ) {
 		$statusVals;
 		
 	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
@@ -227,9 +228,12 @@
 										</div>
 									</td>
 									<td class="infiniteCondition">
-										<select class="form-control condition_field condition input-sm" name="condition" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
-											<?php foreach(getEnumValue() as $condition): ?>
-												<option <?php echo ($condition == $part['cond'] ? 'selected' : '') ?> value="<?php echo $condition; ?>"><?php echo $condition; ?></option>
+										<select class="form-control condition_field conditionid input-sm" name="conditionid" data-serial="" style="margin-bottom: 5px; height: 31px;" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>>
+											<?php
+												getCondition();//init all conditions
+												foreach($CONDITIONS as $conditionid => $cond):
+											?>
+												<option <?php echo ($conditionid == $part['conditionid'] ? 'selected' : '') ?> value="<?php echo $conditionid; ?>"><?php echo $cond; ?></option>
 											<?php endforeach; ?>
 										</select>
 									</td>
@@ -275,7 +279,7 @@
 													<td><?= $serial['qty']; ?></td>
 													<td><?= $serial['status']; ?></td>
 													<td><?= display_location($serial['locationid']); ?></td>
-													<td><?= $serial['item_condition']; ?></td>
+													<td><?= $serial['conditionid']; ?></td>
 												</tr>
 											<?php endforeach; } ?>
 											</tbody>

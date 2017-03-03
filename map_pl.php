@@ -356,9 +356,9 @@ echo $query2.'<BR>';
 
 		// add line items
 		$query2 = "REPLACE purchase_items (partid, po_number, line_number, qty, qty_received, price, receive_date, ";
-		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, cond) ";
+		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, conditionid) ";
 		$query2 .= "VALUES ($partid, $po_number, $ln, $qty, $qty, $price, $receive_date, ";
-		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 'used'); ";
+		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 2); ";
 echo $query2.'<BR>';
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$po_item_id = qid();
@@ -447,9 +447,9 @@ echo $query3.'<BR>';
 */
 					//continue;
 				} else {
-					$query3 = "REPLACE inventory (serial_no, qty, partid, item_condition, status, locationid, ";
+					$query3 = "REPLACE inventory (serial_no, qty, partid, conditionid, status, locationid, ";
 					$query3 .= "last_purchase, last_sale, last_return, userid, date_created, notes) ";
-					$query3 .= "VALUES ($ser, 1, $partid, 'used', 'shelved', 1, ";
+					$query3 .= "VALUES ($ser, 1, $partid, 2, 'shelved', 1, ";
 					$query3 .= "$po_number, NULL, NULL, 0, '".$stock_date." 10:00:00', NULL); ";
 echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
@@ -574,9 +574,9 @@ echo $query2.'<BR>';
 
 		// add line items
 		$query2 = "REPLACE sales_items (partid, so_number, line_number, qty, qty_shipped, price, delivery_date, ship_date, ";
-		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, cond) ";
+		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, conditionid) ";
 		$query2 .= "VALUES ($partid, $so_number, $ln, $qty, $qty, $price, $delivery_date, $ship_date, ";
-		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 'used'); ";
+		$query2 .= "$ref1, $ref1_label, $ref2, $ref2_label, $warranty, 2); ";
 echo $query2.'<BR>';
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$so_item_id = qid();
@@ -681,9 +681,9 @@ echo $query3.'<BR>';
 					}
 */
 				} else {
-					$query3 = "REPLACE inventory (serial_no, qty, partid, item_condition, status, locationid, ";
+					$query3 = "REPLACE inventory (serial_no, qty, partid, conditionid, status, locationid, ";
 					$query3 .= "last_purchase, last_sale, last_return, userid, date_created, notes) ";
-					$query3 .= "VALUES ($ser, 0, $partid, 'used', 'manifest', 1, ";
+					$query3 .= "VALUES ($ser, 0, $partid, 2, 'manifest', 1, ";
 					$query3 .= "NULL, $so_number, NULL, 0, '".$stock_date." 12:00:00', NULL); ";
 echo $query3.'<BR>';
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);

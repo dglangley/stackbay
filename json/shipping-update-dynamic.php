@@ -23,13 +23,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//This is a list of everything
 	$partid = grab('partid');
 	$serial = strtoupper(grab('serial'));
-	$condition = grab('condition');
+	$conditionid = grab('conditionid');
 	$item_id = grab('item_id');
 	$so_number = grab('so_number');
 	$package = grab('package_no');
 	
-	//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'condition or array'];
-	function savetoDatabase($partid, $serial, $condition, $so_number, $package, $item_id){
+	//items = ['partid', 'serial or array of serials', 'qty', 'location or array', 'status or array', 'conditionid or array'];
+	function savetoDatabase($partid, $serial, $conditionid, $so_number, $package, $item_id){
 		$result = array();
 		$exists = false;
 		$qty = 0;
@@ -55,7 +55,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					 
 				//Check to make sure that the conditions match, else trigger an error (Future dev: trigger a warning to override the order specified condition)
 //dgl 2-28-17 at this point we don't care about mismatching condition
-//				if($row['item_condition'] == $condition) {
+//				if($row['conditionid'] == $conditionid) {
 					
 					//Set the qty shipped for values on a sales order.
 					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE id = '".$item_id."'; ";//partid='". res($partid) ."' AND so_number = '". res($so_number) ."';";
@@ -88,7 +88,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 //dgl 2-28-17 at this point we don't care about mismatching condition
 //				} else {
 //					$result['query'] = false;
-//					$result['error'] = "Item Scanned Condition is: '". $row['item_condition'] ."' does not match with the specified sales order condition: '$condition'.";
+//					$result['error'] = "Item Scanned Condition is: '". $row['condition'] ."' does not match with the specified sales order condition: '$conditionid'.";
 //				}
 			}
 		//Lot item query here
@@ -114,6 +114,6 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $serial, $condition, $so_number, $package, $item_id);
+	$result = savetoDatabase($partid, $serial, $conditionid, $so_number, $package, $item_id);
 	echo json_encode($result);
     exit;

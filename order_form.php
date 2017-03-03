@@ -34,13 +34,13 @@
 	$db_order = ($order_type == 'Purchase')? 'po_number' : 'so_number';
 	
 
-	function getStock($condition = 'new', $partid) {
+	function getStock($conditionid = 'new', $partid) {
 		$stock;
 		
 		$partid = res($partid);
-		$condition = res($condition);
+		$conditionid = res($conditionid);
 		
-		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND item_condition = '$condition';";
+		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND conditionid = '$conditionid';";
          $result = qdb($query);
          if (mysqli_num_rows($result)>0) { $stock = mysqli_fetch_assoc($result);}
 		
@@ -171,7 +171,7 @@
 	    				<?php
 	    					$rootdir = $_SERVER['ROOT_DIR'];
 	    					include_once($rootdir.'/inc/dropPop.php');
-	    					echo(dropdown("condition","","full_drop","",false,"condition_global"));
+	    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
 	    				?>
 	    				</th>
 	    				<th class='col-md-1'>
@@ -191,6 +191,65 @@
 						
 			        </tbody>
 					<tfoot id = "search_input">
+            <tr id = 'totals_row' style='display:none;'>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td style='text-align:right;'>Total:</td>
+                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
+                <td></td>
+            </tr>
+<?php
+        //Default is ground aka 4 days
+        $default_add = 4;
+        $default_date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
+        //Condition | conditionid can be set per each part. Will play around with the tactile (DROPPOP, BABY)
+        //Aaron is going to marry Aaron 2036 
+        $condition_dropdown = dropdown('conditionid','','','',false);
+        //Warranty
+        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
+?>
+            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
+        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
+		        <td id = 'search'>
+		            <div class='input-group'>
+		              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
+		              <span class='input-group-btn'>
+		                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+		            </span>
+		            </div>
+		        </td>
+		        <td>			
+				    <div class="input-group date datetime-picker-line">
+		                <input type="text" name="ni_date" class="form-control input-sm" value="<?php echo $default_date; ?>" style = "min-width:50px;"/>
+		                <span class="input-group-addon">
+		                    <span class="fa fa-calendar"></span>
+					    </span>
+		            </div>
+		        </td>
+        		<td><?php echo $condition_dropdown; ?></td>
+        		<td><?php echo $warranty_dropdown; ?></td>
+        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+            	<td>
+	                <div class='input-group'>
+	                    <span class='input-group-addon'>$</span>
+	                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
+	                </div>
+	            </td>
+        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
+                <td colspan='2' id = 'check_collumn'> 
+                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
+                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
+                </td>
+			</tr>
+		    <!-- Adding load bar feature here -->
+	   	 	<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>
+    
+			<!-- dummy line for nothing found -->
+	   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
 					</tfoot>
 
 				   </table>
