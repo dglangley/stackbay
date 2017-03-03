@@ -264,7 +264,7 @@
 		include_once $rootdir.'/modal/contact.php';
 		?>
 		
-		<form action="" method="post">
+		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" method="post">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				

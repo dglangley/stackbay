@@ -101,7 +101,7 @@
 				prop('selected',true).
 				text(string).
 				val(id);
-			alert($(this).html());
+			// alert($(this).html());
 			$(this).html(option);//insert pre-selected option into select menu
 			// initialize the change so it takes effect
 			$(this).trigger("change");
@@ -588,9 +588,13 @@
 					var isValid = nonFormCase($(this), e);
 					
 					if(isValid) {
+						var qty = 0;
    		    			$(".search_lines").each(function() {
-							populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						});
+						if (qty == 0){
+							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+						}
 					} 
 				}
 			});
@@ -707,7 +711,15 @@
 			});
 			
 			$(document).on("click",".line_item_submit",function() {
-				populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
+				var qty = 0;
+				var qty = 0;qty += 
+				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
+						if (qty == 0){
+							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+						}
+				if (qty == 0){
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+				}
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
@@ -728,7 +740,11 @@
 				
 				if(isValid) {
 	    			$(".search_lines").each(function() {
-						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+						var qty = 0;
+						qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+						if (qty == 0){
+							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+						}
 					});
 				} 
 			});
@@ -800,7 +816,6 @@
 				//('object initiating the validation', the event, 'type of item being validated aka modal')
 				var isValid = nonFormCase($(this), e, 'modal');
 				if(! isValid) { return false; }
-
 			    var field = '';
 			    field = $("#address-modal-body").attr("data-origin");
 				    
@@ -811,7 +826,6 @@
 				var state = $('#add_state').val();
 				var zip = $('#add_zip').val();
 				var id = $("#address-modal-body").attr("data-oldid");
-				// alert(ad['id']);
 				var text = name;
 				
 				$("#address-modal-body").attr("data-oldid",'false');
@@ -1164,7 +1178,11 @@
 				// save any pending rows before proceeding
 				$(".search_lines").each(function() {
 					// require callback variable so this doesn't release asynchronously before the entire process is complete
-					var completed_item = populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+					var completed_qty = 0;					
+					completed_qty = populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+					if (completed_qty == 0){
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+					}
 				});
 				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
@@ -2637,7 +2655,7 @@
 		function populateSearchResults(e,search,qty) {
 			//always must be a valid qty passed in
   		    if (! qty) {
-	   			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+	   			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 				return;
 			}
 
@@ -2720,7 +2738,7 @@
 			   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
 			   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
 					}
-		      			
+		      		return qty;
 	   				//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
 				},
 			});
