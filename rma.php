@@ -25,6 +25,7 @@
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
@@ -251,10 +252,10 @@
 		}
 	}
 	$i = 0;
-	// echo"<pre>";
-	// print_r($rma_items);
-	// echo"</pre>";
-	// exit;
+	echo"<pre>";
+	print_r($rma_items);
+	echo"</pre>";
+	exit;
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
 	function getDisposition($id = '') {
@@ -406,26 +407,13 @@
 	
 									</td>
 									<td class="warranty-col" style="">
-									<?php $initial = $i; ?>
-									<?php $line = $initial;?>
-									<?php foreach ($row as $i => $inf): ?>
-										<?php $i++; ?>
-										
-										<div class="input-group serial_box">
-										    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?>" readonly>
-
-											<!--Array Version-->
-											<input type="text" name="return[<?=$inf['inventoryid']?>]" style="display:none;" value = "<?=$inf['id']?>"/>
-											
-										    <?php if($mode!="view"){ ?>
-										    <span class="input-group-addon">
-										    	<input type="checkbox" name="inventory[]" value="<?=$inf['inventoryid']?>" <?=($inf['id'])? "checked" : ''?>/>
-										    </span>
-										    <?php } ?>
-							            </div>
-										<?php $line++; ?>
-									<?php endforeach; ?>
-
+										<?php	$line = $initial;?>
+										<?php foreach ($row as $i => $inf):?>
+											<div class='war-disp'>
+											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($inf['id'])?></div>
+											</div>
+											<?php $line++; ?>
+										<?php endforeach; ?>
 									</td>
 
 									<td class="disp-col">
