@@ -109,10 +109,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitems($partid) {
+	function getRMAitems($partid, $order_number) {
 		$listSerial;
 		
-		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid;";
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($order_number).";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -250,6 +250,75 @@
 		return $result;
 	}
 	
+	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
+	function getDisposition($id = '') {
+		$dispositions = array();
+		$disp_value;
+		
+		if($id == '') {
+			$query = "SELECT * FROM dispositions;";
+			$result = qdb($query) or die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				$dispositions[$row['id']] = $row['disposition'];
+			}
+		} else {
+			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+			$result = qdb($query) or die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$disp_value = $result['disposition'];
+			}
+			
+			return $disp_value;
+		}
+		
+		return $dispositions;
+	}
+	
+	//grab the warranty and creation date based on the inventory item id and calc the date of expiration
+	function calcWarranty($invid, $type = 'sales', $date_format = "m/d/Y") {
+		$date;
+		$warranty;
+		$warranty_lines;
+		$query;
+		
+		$today = date($date_format);
+
+		//If querying our warranty
+		if($type == 'sales') {
+			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
+		//If querying vendor warranty
+		} else {
+			$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.purchase_item_id = p.id AND p.warranty = w.id AND o.po_number = p.po_number;";
+		}
+		
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$date = $result['created'];
+			$warranty = $result['days'];
+		}
+		
+		//Create the date
+		$date = date($date);
+		//Add warranty days
+		$date = date($date_format, strtotime($date. ' + '.$warranty.' days'));
+		
+		//Expired
+		if($date < $today) {
+			$warranty_lines = "<span class='expired_warranty'>";
+		} else {
+			$warranty_lines = "<span class='in_warranty'>";
+		}
+		$warranty_lines .= $date;
+		$warranty_lines .= "</span>";
+		
+		return $warranty_lines;
+	}
+	
 	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
 ?>
@@ -331,7 +400,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
 			</div>
@@ -407,14 +476,20 @@
 					            <th class="text-center col-sm-2">
 									RMA Serial
 					        	</th>
-					        	<th class="col-sm-4">
+					        	<th class="text-center col-sm-1">
+									Warranty
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Disposition
+					        	</th>
+					        	<th class="col-sm-3">
 									Reason
 					        	</th>
 					        	<th class="text-center col-sm-2">
-									Disposition
-					        	</th>
-					        	<th class="text-center col-sm-2">
 									Location
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Vendor Warranty
 					        	</th>
 					         </tr>
 						</thead>
@@ -424,7 +499,7 @@
 							//Grab all the parts from the specified PO #
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
-									$serials = getRMAitems($part['partid']);
+									$serials = getRMAitems($part['partid'],$order_number);
 
 						?>
 								<tr>
@@ -452,30 +527,44 @@
 										?>
 									</td>
 									
-									<td class="reason">
+									<td class="warranty">
 										<?php 
 											if(!empty($serials)):
-												foreach($serials as $item) { 
+											foreach($serials as $item) { 
 										?>
-												<div class="row">
-													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['reason']?></span>
-												</div>	
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'sales');?></span>
+											</div>	
 										<?php 
-												} 
+											} 
 											endif;
 										?>
 									</td>
-									
+																		
 									<td class="disposition">
 										<?php 
 											if(!empty($serials)):
 											foreach($serials as $item) { 
 										?>
 											<div class="row">
-												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? 'Add Disposition Here' : 'None' )?></span>
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? getDisposition($item['dispositionid']) : 'None' )?></span>
 											</div>	
 										<?php 
 											} 
+											endif;
+										?>
+									</td>
+									
+									<td class="reason">
+										<?php 
+											if(!empty($serials)):
+												foreach($serials as $item) { 
+										?>
+												<div class="row">
+													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['reason']? $item['reason'] : 'No reason given'); ?></span>
+												</div>	
+										<?php 
+												} 
 											endif;
 										?>
 									</td>
@@ -490,6 +579,20 @@
 												</div>	
 										<?php 
 												} 
+											endif;
+										?>
+									</td>
+									
+									<td class="vwarranty">
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'purchase');?></span>
+											</div>	
+										<?php 
+											} 
 											endif;
 										?>
 									</td>

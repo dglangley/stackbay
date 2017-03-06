@@ -59,18 +59,22 @@
 	//Array = [inventoryid] = "String for Reason"
 	$reason = $_POST["reason"];
 	//Array = [inventoryid] = return_id
+	$dispositionArray = $_POST["disposition"];
+	//Array = [inventoryid] = return_id
 	$return = $_POST["return"];
 	
 	$companyid = $_POST['companyid'];
     $contactid = $_POST['contactid'];
     
-    $disposition = '0';
-	
 	if(!empty($checkedItems)){
+		//print_r($dispositionArray); die;
 		$rmaSave;
 		$partid;
 		$rmaQuery;
 		$partidQuery;
+		$reasonInfo;
+		$dispositionid;
+		$disposition;
 		
 		//New RMA
 		if ($rma_number == ""){
@@ -91,6 +95,7 @@
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
+	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 	        	
 	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
 	        		//print_r($return); die;
@@ -116,6 +121,7 @@
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
+	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 	        	
 	        	// print_r($checkedItems);
 	        	// echo "<br>";
@@ -256,6 +262,33 @@
 	// print_r($rma_items);
 	// echo"</pre>";
 	// exit;
+	
+	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
+	function getDisposition($id = '') {
+		$dispositions = array();
+		$disp_value;
+		
+		if($id == '') {
+			$query = "SELECT * FROM dispositions;";
+			$result = qdb($query) or die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				$dispositions[$row['id']] = $row['disposition'];
+			}
+		} else {
+			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+			$result = qdb($query) or die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$disp_value = $result['disposition'];
+			}
+			
+			return $disp_value;
+		}
+		
+		return $dispositions;
+	}
 	
 ?>
 
@@ -406,11 +439,18 @@
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
 											<div class='line-disp'>
+												<?php 
+													//Get all the disposition values
+													$dispositionoptions = getDisposition('');
+												?>
 											    <?php if($mode=='view'){?>
-											    <div class="infinite" style="line-height:30px;">Disposition</div>
+											    <div class="infinite" style="line-height:30px;"><?=getDisposition($inf['dispositionid']); ?></div>
 											    <?php }else{?>
-											    <select class="form-control infinite input-sm" name = "disposition_<?=$line?>">
-											    	<option value = "0">Disposition</option>
+											    <select class="form-control infinite input-sm" name='disposition[<?=$inf['inventoryid']?>]'>
+											    	<option value = "null">Disposition</option>
+											    	<?php foreach($dispositionoptions as $key => $value): ?>
+											    		<option value ="<?=$key?>" <?=($inf['dispositionid'] == $key ? 'selected' : '');?>><?=$value?></option>
+											    	<?php endforeach; ?>
 											    </select>
 											    <?php }?>
 											</div>
