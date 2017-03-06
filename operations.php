@@ -300,29 +300,28 @@
 		$results;
 		$status;
 		
-		if($order != 'rma' && $order != 'ro') {
+		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
 				//Select a joint summary query of the order we are requesting
 				$query = "SELECT * FROM ";
-				if ($order == 'p'){
+				if ($order == 'p') {
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-				}
-				else{
+				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
-					$query .= "WHERE o.so_number = i.so_number ";
+					$query .= "WHERE o.so_number = i.so_number;";
+				} else if ($order == 'rma') {
+					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
 				}
 				
 				$results = qdb($query);
 			} else {
 				$results = searchQuery($search, $order);
-
 			}
 		
 			//display only the first N rows, but output all of them
 			$count = 0;
-			
 			//Loop through the results.
 			if(!empty($results)) {
 				foreach ($results as $r){
@@ -332,17 +331,21 @@
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
 					}
-					else{
+					else if ($order == 'p'){
 						$purchaseOrder = $r['po_number'];
+					} else if ($order == 'rma'){
+						$purchaseOrder = $r['rma_number'];
 					}
 					$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$company = getCompany($r['companyid']);
 					$item = format($r['partid'], false);
 					$qty = $r['qty'];
-					if ($order != 's'){
+					if ($order != 's' && $order != 'rma'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
-					} else {
+					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
+					} else if($order == 'rma') {
+						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					}
 				
 					if($count<=10){
@@ -356,8 +359,10 @@
 						//Either go to inventory add or PO or shipping for SO
 						if($order == 'p')
 							echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else
+						else if($order == 's')
 							echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+						else if($order == 'rma')
+							echo'        <td><a href="/rma.php?rma='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 						echo'        <td>'.$item.'</td>';
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 						echo'    	<td class="status">
@@ -367,7 +372,7 @@
 					echo'	</tr>';
 				}
 			}
-		}
+		//}
 	}
 	
 	function format($partid, $desc = true){
