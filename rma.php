@@ -354,7 +354,7 @@
 			<div class="container-fluid">
 				<!--================== Begin Left Half ===================-->
 				<div class="rma-macro col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
-					
+					<?php include_once $rootdir.'/inc/operation_sidebar.php'; ?>
 				</div>
 			
 				<!--======================= End Left half ======================-->

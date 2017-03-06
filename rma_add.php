@@ -59,7 +59,7 @@
 		$itemLocation = getLocationID($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
-		$rmaArray = findRMAItems($rmaid);
+		$rmaArray = findRMAItems($rmaid, $order_number);
 			
 		if(empty($itemLocation)) {
 			$errorHandler = "Locations can not be empty.";
@@ -207,14 +207,14 @@
 	}
 	
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
-	function findRMAItems($search, $type = 'all'){
+	function findRMAItems($search, $order_number, $type = 'all'){
 		$rma_search = array();
 		$query = '';
 		
 		if($type == 'all')
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id;";
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
 		else
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL;";
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
 		
