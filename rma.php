@@ -37,17 +37,10 @@
 	$date_created = '';
 	$yesterday = '';
 	
-	//Functions
-	function getWarrantyExp($invid){
-		$sale_line = "SELECT `created`, `days` FROM sales_orders, sales_items, inventory,warranties WHERE inventory.id = ".prep($invid)." AND 
-		inventory.sales_item_id = sales_items.id AND sales_orders.so_number = sales_items.so_number AND sales_items.warranty = warranties.id;";
-		$result = qdb($sale_line);
-		if (mysqli_num_rows($result) > 0){
-			$row = mysqli_fetch_assoc($result);
-			return summarize_date(format_date($row['created'],'Y-m-d', array("d"=>$row['days'])));
-		}
-	}
+
+
 	
+
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
 	$so_number = grab("on");
