@@ -26,9 +26,32 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/display_part.php';
+	
+	//use this variable when RTV is used to grab all the checked items from the last post
+	$rtv_items = array();
+	$rtv_array = array();
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
+	
+	if($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') {
+		$order_type = "Purchase";
+	} else if($_REQUEST['ps'] == 'rtv' || $_REQUEST['ps'] == 'RTV') {
+		$order_type = "RTV";
+		
+		$rtv_items = $_REQUEST['partid'];
+		
+		//$rtv_items = array_count_values($rtv_items);
+		
+		foreach($rtv_items as $key => $item){
+			$rtv_array[$key] = array_count_values($item);
+		}
+		
+		 $rtv_items = $rtv_array;
+	} else {
+		$order_type = "Sales";
+	}
+
 	$order_short = ($order_type == 'Purchase')? 'po' : 'so';
 	$db_table = strtolower($order_type)."_orders";
 	$db_order = ($order_type == 'Purchase')? 'po_number' : 'so_number';
@@ -45,6 +68,39 @@
          if (mysqli_num_rows($result)>0) { $stock = mysqli_fetch_assoc($result);}
 		
 		return $stock['total'];
+	}
+	
+	function getRTVItems($invid) {
+		$item_row = '';
+		$data;
+		
+		$query = "SELECT * FROM inventory WHERE id = ".prep($invid).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)>0) { 
+			$data = mysqli_fetch_assoc($result);
+		}
+		
+		$item_row = '<tr class="easy-output">
+	        <td class="line_line"></td>
+            <td class="line_part">
+            	'.format($data['partid']).'
+        	</td>
+            <td class="line_date">03/09/2017</td>
+            <td class="line_cond">'.getCondition($data['conditionid']).'</td>
+            <td class="line_war">N/A</td>
+            <td class="line_qty">'.$data['qty'].'</td>
+            <td class="line_linext">$0.00</td>
+		</tr>';
+		
+		return $item_row;
+	}
+	
+	function format($partid){
+		$r = reset(hecidb($partid, 'id'));
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
+
+	    return $display;
 	}
 
 ?>
@@ -63,11 +119,12 @@
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		<div class="container-fluid pad-wrapper">
 
-		<?php include 'inc/navbar.php';
-		include_once $rootdir.'/modal/address.php';
-		include_once $rootdir.'/modal/accounts.php';
-		include_once $rootdir.'/modal/alert.php';
-		include_once $rootdir.'/modal/contact.php';
+		<?php 
+			include 'inc/navbar.php';
+			include_once $rootdir.'/modal/address.php';
+			include_once $rootdir.'/modal/accounts.php';
+			include_once $rootdir.'/modal/alert.php';
+			include_once $rootdir.'/modal/contact.php';
 		?>
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
 		<?= ($order_type == "Sales")?"#f7fff0":"#f5dfba";?> 
@@ -127,6 +184,7 @@
 		                        	//REP OUTPUT
 									$get_reps = "SELECT users.id userid, contacts.name name, contacts.id contactid FROM users, contacts ";
 									$get_reps .= "WHERE users.contactid = contacts.id; ";
+									
 									if ($order_number != 'New'){
 		                        		$old_rep = "Select `sales_rep_id` from $db_table WHERE `$db_order` = $order_number";
 		                        		$rep_res = qdb($old_rep);
@@ -134,6 +192,7 @@
 		                        		$set_rep = $rep_row['sales_rep_id'];
 		                        		// echo("<option>$old_rep</option>");
 		                        	}
+		                        	
 		                        	$all_reps = qdb($get_reps);
 		                        	foreach ($all_reps as $rep) {
 		                        		//If it is a new order, set the default to the current user
@@ -160,6 +219,7 @@
 		                </div>
 					</div>
 				</div> 
+				
 				<div class="table-responsive">
 					<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
 					<thead>
@@ -168,92 +228,94 @@
 	    				<th class='col-md-5'>Item Information</th>
 	    				<th class='col-md-2'>Delivery Date</th>
 	    				<th class='col-md-1'>
-	    				<?php
-	    					$rootdir = $_SERVER['ROOT_DIR'];
-	    					include_once($rootdir.'/inc/dropPop.php');
-	    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
-	    				?>
+		    				<?php
+		    					$rootdir = $_SERVER['ROOT_DIR'];
+		    					include_once($rootdir.'/inc/dropPop.php');
+		    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
+		    				?>
 	    				</th>
 	    				<th class='col-md-1'>
 	    					<?php
-	    					$rootdir = $_SERVER['ROOT_DIR'];
-	    					include_once($rootdir.'/inc/dropPop.php');
-	    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
+		    					$rootdir = $_SERVER['ROOT_DIR'];
+		    					include_once($rootdir.'/inc/dropPop.php');
+		    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
 	    					?>
     					</th>
     					<th class='col-md-1'>Qty</th>
 	    				<th class='col-md-1'>Price</th>
-	    				<th class='col-md-1'>Ext. Price</th>
-	    				<th style='min-width:30px;'></th>
-						<th style='min-width:30px;'></th>
+    					<th class='col-md-1'>Ext. Price</th>
     				</thead>
-					<tbody id="right_side_main" style = "font-size:13px;">
-						
-			        </tbody>
-					<tfoot id = "search_input">
-            <tr id = 'totals_row' style='display:none;'>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td style='text-align:right;'>Total:</td>
-                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
-                <td></td>
-            </tr>
-<?php
-        //Default is ground aka 4 days
-        $default_add = 4;
-        $default_date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
-        //Condition | conditionid can be set per each part. Will play around with the tactile (DROPPOP, BABY)
-        //Aaron is going to marry Aaron 2036 
-        $condition_dropdown = dropdown('conditionid','','','',false);
-        //Warranty
-        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
-?>
-            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
-        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
-		        <td id = 'search'>
-		            <div class='input-group'>
-		              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
-		              <span class='input-group-btn'>
-		                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
-		            </span>
-		            </div>
-		        </td>
-		        <td>			
-				    <div class="input-group date datetime-picker-line">
-		                <input type="text" name="ni_date" class="form-control input-sm" value="<?php echo $default_date; ?>" style = "min-width:50px;"/>
-		                <span class="input-group-addon">
-		                    <span class="fa fa-calendar"></span>
-					    </span>
-		            </div>
-		        </td>
-        		<td><?php echo $condition_dropdown; ?></td>
-        		<td><?php echo $warranty_dropdown; ?></td>
-        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-            	<td>
-	                <div class='input-group'>
-	                    <span class='input-group-addon'>$</span>
-	                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
-	                </div>
-	            </td>
-        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
-                <td colspan='2' id = 'check_collumn'> 
-                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
-                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
-                </td>
-			</tr>
-		    <!-- Adding load bar feature here -->
-	   	 	<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>
-    
-			<!-- dummy line for nothing found -->
-	   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
-					</tfoot>
 
-				   </table>
-			   </div>
+		        	<tbody id="right_side_main" <?=($order_type == 'RTV' ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
+		        	</tbody>
+			        
+			        <?php if($order_type != 'RTV') { ?>
+						<tfoot id = "search_input">
+				            <tr id = 'totals_row' style='display:none;'>
+				                <td></td>
+				                <td></td>
+				                <td></td>
+				                <td></td>
+				                <td></td>
+				                <td></td>
+				                <td style='text-align:right;'>Total:</td>
+				                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
+				                <td></td>
+				            </tr>
+				            
+							<?php
+							        //Default is ground aka 4 days
+							        $default_add = 4;
+							        $default_date = addBusinessDays(date("Y-m-d H:i:s"), $default_add);
+							        //Condition | conditionid can be set per each part. Will play around with the tactile (DROPPOP, BABY)
+							        //Aaron is going to marry Aaron 2036 
+							        $condition_dropdown = dropdown('conditionid','','','',false);
+							        //Warranty
+							        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
+							?>
+							
+				            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
+				        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
+						        <td id = 'search'>
+						            <div class='input-group'>
+						              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
+						              <span class='input-group-btn'>
+						                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+						            </span>
+						            </div>
+						        </td>
+						        <td>			
+								    <div class="input-group date datetime-picker-line">
+						                <input type="text" name="ni_date" class="form-control input-sm" value="<?php echo $default_date; ?>" style = "min-width:50px;"/>
+						                <span class="input-group-addon">
+						                    <span class="fa fa-calendar"></span>
+									    </span>
+						            </div>
+						        </td>
+				        		<td><?php echo $condition_dropdown; ?></td>
+				        		<td><?php echo $warranty_dropdown; ?></td>
+				        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+				            	<td>
+					                <div class='input-group'>
+					                    <span class='input-group-addon'>$</span>
+					                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
+					                </div>
+					            </td>
+				        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
+				                <td colspan='2' id = 'check_collumn'> 
+				                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
+				                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
+				                </td>
+							</tr>
+						    <!-- Adding load bar feature here -->
+					   	 	<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>
+				    
+							<!-- dummy line for nothing found -->
+					   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
+						</tfoot>
+					<?php } ?>
+			   </table>
+			</div>
 		</div>
 		<!--====================== End Right half ======================-->
 	</div>
@@ -283,6 +345,7 @@
 						}
 					});
 				});
+				
 			})(jQuery);
 		</script>
 
