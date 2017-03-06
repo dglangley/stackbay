@@ -252,10 +252,10 @@
 		}
 	}
 	$i = 0;
-	echo"<pre>";
-	print_r($rma_items);
-	echo"</pre>";
-	exit;
+	// echo"<pre>";
+	// print_r($rma_items);
+	// echo"</pre>";
+	// exit;
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
 	function getDisposition($id = '') {
@@ -410,7 +410,7 @@
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
 											<div class='war-disp'>
-											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($inf['id'])?></div>
+											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($i)?></div>
 											</div>
 											<?php $line++; ?>
 										<?php endforeach; ?>
