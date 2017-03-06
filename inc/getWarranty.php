@@ -57,7 +57,7 @@
 			$warranty = $result['days'];
 		
 			//Create the date
-			$warranty_date = format_date($row['created'],'Y-m-d', array("d"=>$row['days']));
+			$warranty_date = format_date($result['created'],'Y-m-d', array("d"=>$result['days']));
 			$date_text = summarize_date($warranty_date);
 			//Add warranty days
 			// $date = date($date_format, strtotime($date. ' + '.$warranty.' days'));
