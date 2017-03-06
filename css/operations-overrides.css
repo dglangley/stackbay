@@ -311,6 +311,15 @@ body.modal-open.accounts-body, #order_body.modal-open {
 }
 /*End shipping.php*/
 
+/*Warranty Display*/
+.in_warranty{
+	color: green;
+	font-weight: bold;
+}
+.expired_warranty{
+	color: red;
+	font-weight: bold;
+}
 
 /*Media Queries*/
 @media only screen and (max-width: 767px) {

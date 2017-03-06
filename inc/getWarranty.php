@@ -45,6 +45,9 @@
 		if($type == 'sales') {
 			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
 		//If querying vendor warranty
+		} else if($type == 'history'){
+		    //In the history case, the inventory ID is not what is passed in, rather we get the PO line item id
+		    $query = "SELECT w.days, o.created FROM purchase_items p, warranties w, purchase_orders o WHERE p.id = ".prep($invid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
 		} else {
 			$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.purchase_item_id = p.id AND p.warranty = w.id AND o.po_number = p.po_number;";
 		}
@@ -65,13 +68,13 @@
 			
 			//Expired
 			if($date < $warranty_date) {
-				$warranty_lines = "<span class='expired_warranty'>";
-			} else {
 				$warranty_lines = "<span class='in_warranty'>";
+			} else {
+				$warranty_lines = "<span class='expired_warranty'>";
 			}
 			$warranty_lines .= $date_text;
 			$warranty_lines .= "</span>";
 		}
 		
-		return $date_text;
+		return $warranty_lines;
 	}

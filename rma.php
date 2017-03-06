@@ -368,10 +368,10 @@
 								<tr>
 									<th class="col-md-3">Item</th>
 									<th class="col-md-2">Serials</th>
-									<th class="col-md-1">Warranty Expiration</th>
+									<th class="col-md-1">War. Expiration</th>
 									<th class="col-md-1">Disposition</th>
 									<th class="col-md-2">Reason</th>
-									<th class="col-md-2">History</th>
+									<th class="col-md-3">History</th>
 									<th></th>
 									<th></th>
 								</tr>
@@ -410,7 +410,7 @@
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
 											<div class='war-disp'>
-											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($i)?></div>
+											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($inf['inventoryid'])?></div>
 											</div>
 											<?php $line++; ?>
 										<?php endforeach; ?>
@@ -459,29 +459,69 @@
 										<div class = "infinite">
 											<?php 
 												$history_text ='';
+												$first_war = true;
+												$war_text = "";
 												$hist_count = 0;
 												foreach ($inf['history'] as $history){
+													$select = "";
+													$action = "";
 													if($hist_count > 0 && $hist_count != 3){echo(" | ");}
 													switch ($history['field']) {
 														case 'sales_item_id':
+															$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
 															$action = "Sold";
 															break;
-														case 'return_items_id':
+														case 'returns_item_id':
+															$select = "SELECT `id` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
 															$action = "Returned";
 															break;
 														case 'purchase_item_id':
+															$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
 															$action = "Purchased";
+															if($first_war){
+																$war_text = "Vendor War Exp: ";
+																// $most_recent_war = $history['value'];
+																$war_text .= calcWarranty($history['value'],"history");
+															}
 															break;
 															
-													} 
-													 echo  $action.": ".$history['date'];
-													$hist_count++;
-													if ($hist_count == 3){
-														echo  "<br>";
 													}
-													else if ($hist_count == 6){
-														echo "<a class = 'lonk'>Show more</a>";
-														break;
+													if($select){
+														$result = qdb($select);
+														$result = mysqli_fetch_assoc($result);
+														$action .= " #".$result['o'];
+													}
+													if($first_war && $war_text){
+														//Print out the $warranty text
+														echo $war_text." | ";
+														//We only care about the most recent warranty
+														$first_war = false;
+														$hist_count++;
+														//Then print out the Purchased warranty according to the existing standard of warranty
+														if ($hist_count == 3){
+															echo  "<br>";
+															echo  $action.": ".format_date($history['date'],"n/j/y");
+															$hist_count++;
+														}
+														else if ($hist_count == 6){
+															echo "<a class = 'lonk'>Show more</a>";
+															break;
+														}
+														else{
+															echo  $action.": ".format_date($history['date'],"n/j/y");
+															$hist_count++;
+														}
+													}else{
+														//Otherwise, ignore the warranty text  and just follow the normal rules
+														echo  $action.": ".format_date($history['date'], "n/j/y");
+														$hist_count++;
+														if ($hist_count == 3){
+															echo  "<br>";
+														}
+														else if ($hist_count == 5){
+															echo "<a class = 'lonk'>Show more</a>";
+															break;
+														}
 													}
 												}
 												if ($hist_count < 3){

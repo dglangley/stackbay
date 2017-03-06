@@ -193,7 +193,8 @@
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
 		else if ($date==$summary_tomorrow) { $date = 'Tomorrow' ; }
 		else if ($date>$summary_lastweek && $date < $summary_yesterday) { $date = format_date($date,'D'); }
-		else if ($date > $summary_tomorrow && $date < $summary_nextweek) { $date = format_date($date,'D M j'); }
+		else if ($date > $summary_tomorrow && $date < $summary_nextweek) { $date = format_date($date,'D, M j'); }
+		else if ($date > $summary_nextweek){$date = format_date($date, "n/j/y");}
 		else if ($date>=$summary_past) {
 //			$date = format_date($date,'M j');
 			// because $summary_past can change and is a floating point in time based on its particular usage,
