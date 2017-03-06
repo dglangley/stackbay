@@ -277,6 +277,48 @@
 		return $dispositions;
 	}
 	
+	//grab the warranty and creation date based on the inventory item id and calc the date of expiration
+	function calcWarranty($invid, $type = 'sales', $date_format = "m/d/Y") {
+		$date;
+		$warranty;
+		$warranty_lines;
+		$query;
+		
+		$today = date($date_format);
+
+		//If querying our warranty
+		if($type == 'sales') {
+			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
+		//If querying vendor warranty
+		} else {
+			$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.purchase_item_id = p.id AND p.warranty = w.id AND o.po_number = p.po_number;";
+		}
+		
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$date = $result['created'];
+			$warranty = $result['days'];
+		}
+		
+		//Create the date
+		$date = date($date);
+		//Add warranty days
+		$date = date($date_format, strtotime($date. ' + '.$warranty.' days'));
+		
+		//Expired
+		if($date < $today) {
+			$warranty_lines = "<span class='expired_warranty'>";
+		} else {
+			$warranty_lines = "<span class='in_warranty'>";
+		}
+		$warranty_lines .= $date;
+		$warranty_lines .= "</span>";
+		
+		return $warranty_lines;
+	}
+	
 	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
 ?>
@@ -434,14 +476,20 @@
 					            <th class="text-center col-sm-2">
 									RMA Serial
 					        	</th>
-					        	<th class="col-sm-4">
+					        	<th class="text-center col-sm-1">
+									Warranty
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Disposition
+					        	</th>
+					        	<th class="col-sm-3">
 									Reason
 					        	</th>
 					        	<th class="text-center col-sm-2">
-									Disposition
-					        	</th>
-					        	<th class="text-center col-sm-2">
 									Location
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Vendor Warranty
 					        	</th>
 					         </tr>
 						</thead>
@@ -479,20 +527,20 @@
 										?>
 									</td>
 									
-									<td class="reason">
+									<td class="warranty">
 										<?php 
 											if(!empty($serials)):
-												foreach($serials as $item) { 
+											foreach($serials as $item) { 
 										?>
-												<div class="row">
-													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['reason']?></span>
-												</div>	
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'sales');?></span>
+											</div>	
 										<?php 
-												} 
+											} 
 											endif;
 										?>
 									</td>
-									
+																		
 									<td class="disposition">
 										<?php 
 											if(!empty($serials)):
@@ -507,6 +555,20 @@
 										?>
 									</td>
 									
+									<td class="reason">
+										<?php 
+											if(!empty($serials)):
+												foreach($serials as $item) { 
+										?>
+												<div class="row">
+													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['reason']? $item['reason'] : 'No reason given'); ?></span>
+												</div>	
+										<?php 
+												} 
+											endif;
+										?>
+									</td>
+									
 									<td>
 										<?php 
 											if(!empty($serials)):
@@ -517,6 +579,20 @@
 												</div>	
 										<?php 
 												} 
+											endif;
+										?>
+									</td>
+									
+									<td class="vwarranty">
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'purchase');?></span>
+											</div>	
+										<?php 
+											} 
 											endif;
 										?>
 									</td>
