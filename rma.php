@@ -37,6 +37,17 @@
 	$date_created = '';
 	$yesterday = '';
 	
+	//Functions
+	function getWarrantyExp($invid){
+		$sale_line = "SELECT `created`, `days` FROM sales_orders, sales_items, inventory,warranties WHERE inventory.id = ".prep($invid)." AND 
+		inventory.sales_item_id = sales_items.id AND sales_orders.so_number = sales_items.so_number AND sales_items.warranty = warranties.id;";
+		$result = qdb($sale_line);
+		if (mysqli_num_rows($result) > 0){
+			$row = mysqli_fetch_assoc($result);
+			return summarize_date(format_date($row['created'],'Y-m-d', array("d"=>$row['days'])));
+		}
+	}
+	
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
 	$so_number = grab("on");
@@ -175,7 +186,7 @@
 				$mode = 'old';
 			}
 			
-			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
+			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i, sales_items si WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
 			$rma_micro = qdb($rma_mic);
 			$receive_check = '';
 			foreach($rma_micro as $line_item){
@@ -265,7 +276,7 @@
 			.serial_box{
 				padding-bottom:10px;
 			}
-			.reason-col, .serials-col, .qty-col,.disp-col,.history-col{
+			.reason-col, .serials-col, .qty-col,.disp-col,.history-col,.warranty-col{
 				padding-top:10px !important;
 			}
 			.infinite{
@@ -330,9 +341,10 @@
 								<tr>
 									<th class="col-md-3">Item</th>
 									<th class="col-md-2">Serials</th>
-									<th class="col-md-2">Disposition</th>
+									<th class="col-md-1">Warranty Expiration</th>
+									<th class="col-md-1">Disposition</th>
 									<th class="col-md-2">Reason</th>
-									<th class="">History</th>
+									<th class="col-md-2">History</th>
 									<th></th>
 									<th></th>
 								</tr>
@@ -367,6 +379,29 @@
 										<?php endforeach; ?>
 	
 									</td>
+									<td class="warranty-col" style="">
+									<?php $initial = $i; ?>
+									<?php $line = $initial;?>
+									<?php foreach ($row as $i => $inf): ?>
+										<?php $i++; ?>
+										
+										<div class="input-group serial_box">
+										    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?>" readonly>
+
+											<!--Array Version-->
+											<input type="text" name="return[<?=$inf['inventoryid']?>]" style="display:none;" value = "<?=$inf['id']?>"/>
+											
+										    <?php if($mode!="view"){ ?>
+										    <span class="input-group-addon">
+										    	<input type="checkbox" name="inventory[]" value="<?=$inf['inventoryid']?>" <?=($inf['id'])? "checked" : ''?>/>
+										    </span>
+										    <?php } ?>
+							            </div>
+										<?php $line++; ?>
+									<?php endforeach; ?>
+
+									</td>
+
 									<td class="disp-col">
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
