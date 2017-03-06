@@ -23,6 +23,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
 
@@ -278,6 +279,7 @@
 		return $dispositions;
 	}
 	
+
 	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
 ?>
