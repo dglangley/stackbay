@@ -34,6 +34,7 @@
 	$rtv_items = array();
 	$rtv_array = array();
 	$origin = '';
+	$order_short;
 	// $order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_number = grab('on','New');
 	
@@ -55,8 +56,15 @@
 	} else {
 		$order_type = "Sales";
 	}
-
-	$order_short = ($order_type == 'Purchase')? 'po' : 'so';
+	
+	if($order_type == "Purchase") {
+		$order_short = 'po';
+	} else if ($order_type == "Sales") {
+		$order_short = 'so';
+	} else if ($order_type == "RTV") {
+		$order_short = 'RTV';
+	}
+	
 	$db_table = strtolower($order_type)."_orders";
 	$db_order = ($order_type == 'Purchase')? 'po_number' : 'so_number';
 	
