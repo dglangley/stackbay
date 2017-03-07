@@ -27,7 +27,26 @@ include_once $rootdir.'/inc/getAddresses.php';
 include_once $rootdir.'/inc/form_handle.php';
 include_once $rootdir.'/inc/dropPop.php';
 
-
+	$rtv_items = array();
+	$rtv_array = array();
+	
+	if(strtolower($_REQUEST['ps']) == 'rtv'){
+		$order_type = "RTV";
+		$origin = $order_number;
+		$order_number = "New";
+		$rtv_items = $_REQUEST['partid'];
+		
+		//$rtv_items = array_count_values($rtv_items);
+		
+		foreach($rtv_items as $key => $item){
+			$rtv_array[$key] = array_count_values($item);
+		}
+		
+		 $rtv_items = $rtv_array;
+		 
+		 //print_r($rtv_items); die;
+	}
+	
 	// $number = grab('on');
 	// $rma = grab('rma');
 	
@@ -38,7 +57,7 @@ include_once $rootdir.'/inc/dropPop.php';
 	
 	
 	function edit($order_number,$order_type){
-		
+		global $rtv_items;
 	//======================= DECLARE VARIABLE DEFAULTS ======================= 
 		//This will have the reference order number(s) and associated files attached to it
 		$associated_order = '';
@@ -91,13 +110,35 @@ include_once $rootdir.'/inc/dropPop.php';
 		
 		if(strtolower($order_type) == 'rtv'){
 			//Overwrite the information from the purchase order based on the RTV Defaults
+			$purchase_lineid;
+			$data = array();
+			
+			$items = $rtv_items;
+			foreach($items as $lineitem => $item) {
+				$purchase_lineid = $lineitem;
+			}
+			
+			$query = "SELECT * FROM purchase_items p, purchase_orders o, inventory i WHERE p.id = ".prep($purchase_lineid)." AND p.po_number = o.po_number AND i.purchase_item_id = p.id;";
+			$result = qdb($query) or die(qe());
+			
+			if (mysqli_num_rows($result)>0) { 
+				$data = mysqli_fetch_assoc($result);
+			}
+			
 			$terms = 1;
+			$associated_order = $data['returns_item_id'];
 			$selected_service = '';
 			$selected_account = '';
 			$selected_account = '';
 			$private = 'RTV From PO #'.$order_number;
 			$public = '';
+			$contact = $data['contactid'];
 			
+			$b_add = $data['remit_to_id'];
+			$b_name = getAddresses($b_add,'street');
+			
+			$s_add = $data['remit_to_id'];
+			$s_name = getAddresses($s_add,'street');
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
