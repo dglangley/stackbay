@@ -137,8 +137,8 @@ include_once $rootdir.'/inc/dropPop.php';
 			// $b_add = $data['remit_to_id'];
 			// $b_name = getAddresses($b_add,'street');
 			
-			// $s_add = $data['remit_to_id'];
-			// $s_name = getAddresses($s_add,'street');
+			$s_add = '';
+			$s_name = '';
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
