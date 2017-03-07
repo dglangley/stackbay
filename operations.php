@@ -63,9 +63,11 @@
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 	$levenshtein = false;
 	$nothingFound = false;
+	$found = false;
 	$serialDetection = false;
 	
 	function searchQuery($search, $type) {
+		global $found;
 		$trigger;
 		$triggerArray = array();
 		
@@ -91,16 +93,22 @@
         		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number;";
 		        break;
 		    //Holder for future RMA and RO
-		    // case 'rma':
-      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_rma = '".res(strtoupper($search))."';";
-		    //     break;
-		    // case 'ro':
-      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_ro = '".res(strtoupper($search))."';";
-		    //     break;
+		    case 'rma':
+        		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number;";
+		        break;
+		    case 'ro':
+        		$query = "";
+		        break;
 			default:
 				//Should rarely ever happen
-				break;
+				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
+		        break;
 		}
+		
+		if(empty($query)) {
+			return '';
+		}
+		
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
@@ -150,16 +158,19 @@
 			    $initial[] = $row;
 			}
 		}
-		
 		//If the initial search is empty populate the data with close alternates
-		if(empty($initial))
+		if(empty($initial)) {
 			$initial = soundsLike($search, $type);
+		} else {
+			$found = true;
+		}
 		
+		//print_r($initial);
 		return $initial;
 	}
 	
 	function soundsLike($search, $type) {
-		global $levenshtein, $nothingFound;
+		global $levenshtein, $nothingFound, $found;
 		$arr = array();
 		$initial = array();
 		$query;
@@ -172,15 +183,18 @@
 			while ($row = $result->fetch_assoc()) {
 				$arr[] = $row['serial_no'];
 			}
-		} else {
-			$nothingFound = true;
+		} 
+		else {
+			if(!$found)
+				$nothingFound = true;
 		}
 		
 		//print_r($arr); die();
 		
 		if(!empty($arr)) {
 			//Something was found similar to the search
-			$levenshtein = true;
+			if(!$found)
+				$levenshtein = true;
 			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
@@ -234,7 +248,8 @@
 			$order_out = 'Purchase';
 		} else if($order =="s") {
 			$order_out = 'Sales';
-		} else if($order =="rma") {
+		} 
+		else if($order =="rma") {
 			$order_out = 'RMA';
 		} else {
 			$order_out = 'Repair';
@@ -311,15 +326,17 @@
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number;";
-				} else if ($order == 'rma') {
+				} 
+				else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
 				}
 				
 				$results = qdb($query);
 			} else {
 				$results = searchQuery($search, $order);
+				//print_r($results); die;
 			}
-		
+			
 			//display only the first N rows, but output all of them
 			$count = 0;
 			//Loop through the results.
@@ -331,25 +348,31 @@
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
 					}
+					
 					else if ($order == 'p'){
 						$purchaseOrder = $r['po_number'];
-					} else if ($order == 'rma'){
+					}
+					
+					else if ($order == 'rma'){
 						$purchaseOrder = $r['rma_number'];
 					}
+					
 					$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$company = getCompany($r['companyid']);
 					$item = format($r['partid'], false);
 					$qty = $r['qty'];
+					
 					if ($order != 's' && $order != 'rma'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
-					} else if($order == 'rma') {
+					}
+					else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					}
 				
 					if($count<=10){
-						echo'	<tr class="filter_item '.$status." ".($status == "complete_item" ? "danger": "").'">';
+						echo'	<tr class="filter_item '.$status.'">';
 					}
 					else{
 						echo'	<tr class="show_more '.$status.'" style="display:none;">';
@@ -533,6 +556,13 @@
 		</div>
 	</div>
 	
+	<?php //if($levenshtein || $nothingFound): ?>
+	<div id="item-warning-timer" class="alert alert-warning fade in text-center" style="display: none; position: fixed; width: 100%; z-index: 9999; top: 94px;">
+	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+	    <strong><i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning </strong> <span class="warning-message"></span>
+	</div>
+	<?php //endif; ?>
+	
 	<?php if($po_updated || $so_updated): ?>
 		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
 		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
@@ -659,10 +689,15 @@
 			} else {
 				window.history.replaceState(null, null, "/operations.php?search=" + search);
 			}
+			
 			if(levenshtein) {
-				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
+				$('.warning-message').html("No items found for <b>" + search + "</b>. Listed are similar results.");
+				$('#item-warning-timer').show().delay(3000).fadeOut('fast');
+				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
 			} else if(searched) {
-				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
+				$('.warning-message').html("No items found for <b>" + search + "</b>.");
+				$('#item-warning-timer').show().delay(3000).fadeOut('fast');
+				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
 			}
 		}
 		
