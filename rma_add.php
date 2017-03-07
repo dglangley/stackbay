@@ -361,7 +361,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
 			</div>
@@ -434,11 +434,11 @@
 					            <th class="col-sm-2">
 					            	PART	
 					            </th>
-					            <th class="text-center col-sm-2">
+					            <th class="text-center col-sm-1">
 									RMA Serial
 					        	</th>
 					        	<th class="text-center col-sm-1">
-									Warranty
+									Warr Exp
 					        	</th>
 					        	<th class="text-center col-sm-1">
 									Disposition
@@ -450,7 +450,10 @@
 									Location
 					        	</th>
 					        	<th class="text-center col-sm-1">
-									Vendor Warranty
+									Vendor Warr Exp
+					        	</th>
+					        	<th class="text-center col-sm-1">
+					        		Receive
 					        	</th>
 					         </tr>
 						</thead>
@@ -475,12 +478,12 @@
 												foreach($serials as $item) { 
 										?>
 												<div class="row">
-													<div class="input-group">
+													<!--<div class="input-group">-->
 														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
-														<span class="input-group-addon">
-															<input class="serial-check" type="checkbox" onClick="submit();" name='invid' value="<?=$item['inventoryid'];?>" <?=(($item['serial_no'] == $rmaid) && (count($rmaArray) == 1) ? 'checked' : '');?> <?=($item['returns_item_id'] ? 'checked disabled' : '');?>>
-														</span>
-													</div>
+														<!--<span class="input-group-addon">-->
+													
+														<!--</span>-->
+													<!--</div>-->
 												</div>
 										<?php 
 												} 
@@ -552,6 +555,20 @@
 											<div class="row">
 												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'purchase');?></span>
 											</div>	
+										<?php 
+											} 
+											endif;
+										?>
+									</td>
+									
+									<td>
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+										<div class="row text-center">
+											<button style="padding: 7px; margin-bottom: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=(($item['serial_no'] == $rmaid) && (count($rmaArray) == 1) ? 'checked' : '');?> <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button
+										</div>
 										<?php 
 											} 
 											endif;
