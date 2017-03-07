@@ -454,6 +454,7 @@ include_once $rootdir.'/inc/dropPop.php';
 			if($public){
 				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES:</b><br>";
 				$right .= $public;
+				$right .= "<br><br>";
 			}
 			
 			if($private){
