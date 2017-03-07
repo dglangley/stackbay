@@ -97,9 +97,6 @@
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
 
-
-
-    
     
     //Form Specifics
     $companyid = is_numeric($_REQUEST['companyid'])? trim($_REQUEST['companyid']) : trim(getCompany($_REQUEST['companyid'],'name','id'));
@@ -300,7 +297,7 @@
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`, `id`) VALUES ";
                 $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , $ref_1, $ref_1_label, NULL, NULL, $warranty , $conditionid, NULL);";
                 
-				$result = qdb($line_insert) OR jsonDie('MEH'.qe().' '.$line_insert);
+				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
                 $update = "UPDATE ";

@@ -1296,7 +1296,26 @@
 
 						submit.push(row);
 					});
-	
+					console.log(submit);
+					console.log(order_number+" | "+order_type);
+					console.log("/json/order-form-submit.php?"+
+							"sales-rep="+ repid+"&"+
+							"created_by="+ created_by+"&"+
+							"companyid="+company+"&"+
+							"order_type="+order_type+"&"+
+			   		    	"order_number="+order_number+"&"+
+							"contact="+ contact+"&"+
+							"assoc="+ assoc+"&"+
+							"tracking="+ tracking+"&"+
+							"ship_to="+ ship_to+"&"+
+							"bill_to="+ bill_to+"&"+
+							"carrier="+ carrier+"&"+
+							"account="+ account+"&"+
+							"terms=" + terms+"&"+
+							"service=" + service+"&"+
+							"pri_notes="+ pri_notes+"&"+
+							"pub_notes="+ pub_notes+"&"+
+							"table_rows"+ submit);
 					//Submit all rows and meta data for unpacking later
 					// alert(account);
 					$.ajax({
@@ -1336,6 +1355,10 @@
 								console.log("Update form: "+form['update']);
 								console.log(form['input']);
 								console.log(form['update_result']);
+								if (ps == 'RTV'){
+									ps = 's';
+								}
+							
 								
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
@@ -1564,6 +1587,7 @@
 //This function also handles the functionality for the shipping page
 		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
 			if(e.which == 13) {
+				e.preventDefault();
 				callback($(this));
 			}
 		});
@@ -2658,6 +2682,7 @@
 					} else if (mode=='append') {
 						$("#right_side_main").append(row_out);
 						$(".search_lines").html("").remove();
+						$(".items_label").html("").remove();
 						$("#totals_row").show();
 						//sub_row.find("input[name=ni_line]").val(line_number());
 						$('#totals_row').find("input[name='np_total']").val(updateTotal());
@@ -2689,10 +2714,6 @@
 				},
 			});
         } 
-
-
-
-
 
 
 		function location_changer(type,limit,home,warehouse){

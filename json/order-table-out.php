@@ -186,7 +186,7 @@
 			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
 				$row_num++;
 				$new_row = array(
-					'id' => null,
+					'id' => 'new',
 					'line' => $row_num,
 					'search' => key($item),
 					'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
