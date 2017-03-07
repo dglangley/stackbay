@@ -26,6 +26,7 @@
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/operation_sidebar.php';
 	include_once $rootdir.'/inc/locations.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
@@ -94,15 +95,15 @@
 		global $order_number;
 		$listSerials;
 		
-		$query = "SELECT * FROM inventory WHERE purchase_item_id = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$query = "SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid FROM inventory i, purchase_items p WHERE po_number = ". res($order_number) ." AND p.partid = '". res($partid) ."' AND i.purchase_item_id = p.id;";
 		$result = qdb($query);
 	    
 	    if($result)
-	    if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$listSerials[] = $row;
+		    if (mysqli_num_rows($result)>0) {
+				while ($row = $result->fetch_assoc()) {
+					$listSerials[] = $row;
+				}
 			}
-		}
 		
 		return $listSerials;
 	}
@@ -154,31 +155,37 @@
 	</head>
 	
 	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+		
 	<!----------------------- Begin the header output  ----------------------->
-		<div class="container-fluid pad-wrapper">
+	<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
-		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
-			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
-			</div>
-			<div class="col-sm-4">
-			</div>
-		</div>
 		
-		
-			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<?php if($order_number != '') { ?>
-				<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
-					<!-- Everything here is put out by the order creation ajax script -->
+		<form action="/order_form.php?ps=RTV" method="post">
+			
+			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
+				<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+				<div class="col-sm-4 text-center" style="padding-top: 5px;">
+					<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
 				</div>
+				<div class="col-sm-4">
+					<button type="submit" class="btn-flat btn-sm primary pull-right" id = "rtv_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
+						RTV
+					</button>
+				</div>
+			</div>
+
+				<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
+				<?php if($order_number != '') { ?>
+					<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
+						<?=sidebar_out()?>
+					</div>
+					
+					<div class="col-sm-10">
+				<?php } else { ?>
+					<div class="col-sm-12">
+				<?php } ?>
 				
-				<div class="col-sm-10">
-			<?php } else { ?>
-				<div class="col-sm-12">
-			<?php } ?>
-			
-			
+				
 				<div class="table-responsive">
 					<table class="inventory_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 						<thead>
@@ -195,11 +202,11 @@
 								<th class="col-sm-3">
 					            	Serial	(*Scan or Press Enter on Input for More)
 					            </th>
-					            <th class="col-sm-1">
+					            <th class="col-sm-2">
 									Remaining Qty
 					        	</th>
 					            <th class="col-sm-1">
-					            	Lot Inventory (No Serial)
+					            	<!--Lot Inventory (No Serial)-->
 					        	</th>
 					         </tr>
 						</thead>
@@ -251,11 +258,11 @@
 									</td>
 									<td>
 										<!--<div class="input-group" style="margin-bottom: 6px;">-->
-											<div class="checkbox">
-												<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
-											</div>
+											<!--<div class="checkbox">-->
+											<!--	<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>-->
+											<!--</div>-->
 											<!--<span class="input-group-addon">-->
-												<button class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>
+												<button type="button" class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style=""><i class="fa fa-list" aria-hidden="true"></i></button>
 											<!--</span>-->
 										<!--</div>-->
 									</td>
@@ -270,6 +277,7 @@
 													<th>Status</th>
 													<th><span class='edit'>Location</span></th>
 													<th><span class='edit'>Condition</span></th>
+													<th><span class='edit'>RTV</span></th>
 												</tr>
 											</thead>
 											<tbody>
@@ -279,7 +287,8 @@
 													<td><?= $serial['qty']; ?></td>
 													<td><?= $serial['status']; ?></td>
 													<td><?= display_location($serial['locationid']); ?></td>
-													<td><?= $serial['conditionid']; ?></td>
+													<td><?= getCondition($serial['conditionid']); ?></td>
+													<td><input type="checkbox" name='partid[<?=$part['id'];?>][]' value="<?=$part['partid'];?>"></td>
 												</tr>
 											<?php endforeach; } ?>
 											</tbody>
@@ -298,5 +307,6 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
+	</form>
 	</body>
 </html>

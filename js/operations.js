@@ -120,7 +120,15 @@
 			}
 
 			if ($("#right_side_main").length > 0) {
-				var order_number = $("#order_body").attr("data-order-number");
+				var order_number = $("#order_body").data("order-number");
+				var rtv_array = $("#right_side_main").data("rtvarray");
+				var mode = '';
+				
+				if(!$.isEmptyObject(rtv_array)) {
+					mode = 'rtv';
+				} else {
+					mode = 'load';
+				}
 
 				console.log(window.location.origin+"/json/order-table-out.php?mode=load&number="+order_number+"&type="+order_type);
 
@@ -130,7 +138,8 @@
 					data: {
 						"type": order_type,
 						"number": order_number,
-		   		    	"mode":'load'
+						"rtv_array": rtv_array,
+		   		    	"mode": mode
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -185,6 +194,7 @@
 					
 					var company = $("#companyid").val();
 
+
 					//Initialize each of the select2 fields when the left side loads.
 					$("#companyid").initSelect2("/json/companies.php", "Select Company",{"scope":order_type});
 					$("#bill_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
@@ -192,6 +202,7 @@
 					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
 					if($("#ship_to").val() == $("#bill_to").val()){
 						$("#mismo").prop("checked",true);
+
 					}
 					$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
 
@@ -2440,66 +2451,6 @@
 			}
 			//Adding in all slide sidebar options to pages that utilize the classes depicted below
 		
-			function toggleSidebar() {
-				var $marginLefty = $('.left-sidebar');
-					
-				$(window).resize(function() {
-					$marginLefty.animate({
-						marginLeft: 0
-					});
-				
-					$('.icon-button').addClass('fa-chevron-left');
-					$('.icon-button').removeClass('fa-chevron-right');
-				
-					if($('.left-sidebar .sidebar-container').is(':hidden')){
-		            	$('.icon-button-mobile').removeClass('fa-chevron-up');
-						$('.icon-button-mobile').addClass('fa-chevron-down');
-					
-						$('.left-sidebar .sidebar-container').fadeIn();
-		        	}
-				});
-			
-				$('.click_me').on('click', function() {
-					// alert('clicked');
-					var check = parseInt($marginLefty.css('marginLeft'),10) == 0 ? 'collapsed' : 'not-collapsed';
-					$marginLefty.animate({
-						marginLeft: (check == 'collapsed') ? -$marginLefty.outerWidth() : 0
-						},{
-						complete: function() {
-							if(check == 'collapsed') {
-								//$('.company_meta .row').hide();
-							}
-						}
-					});
-				
-					if(check == 'collapsed') {
-						//$('.shipping-list').animate({width: '90%'}, 550);
-						$('.icon-button').addClass('fa-chevron-right');
-						$('.icon-button').removeClass('fa-chevron-left');
-						//$('.company_meta .row').hide();
-					} 
-				
-					if(check != 'collapsed') {
-						//$('.shipping-list').animate({width: '83.33333333333334%'}, 300);
-						$('.icon-button').addClass('fa-chevron-left');
-						$('.icon-button').removeClass('fa-chevron-right');
-						//$('.company_meta .row').show();
-					}
-				});
-
-				$('.shoot_me').click(function() {
-					$('.left-sidebar .sidebar-container').slideToggle(function(){
-						if($('.left-sidebar .sidebar-container').is(':visible')){
-				            $('.icon-button-mobile').addClass('fa-chevron-up');
-							$('.icon-button-mobile').removeClass('fa-chevron-down');
-				        }else{
-				            $('.icon-button-mobile').addClass('fa-chevron-down');
-							$('.icon-button-mobile').removeClass('fa-chevron-up');
-				        }
-					});
-				});
-			}
-			
 			function freight_date(days){
 				var today = new Date();
 				var dayOfTheWeek = today.getDay();

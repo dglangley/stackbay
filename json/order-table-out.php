@@ -66,10 +66,11 @@
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
             <td class = 'line_date' data-date = '$date'>".$date."</td>
             <td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
-            <td class = 'line_war'  data-war = ".$row['warranty'].">".getWarranty($row['warranty'],'name')."</td>
+            <td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
+            <td class = 'line_ref' style='visibility: hidden;'>".$row['ref']."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";
@@ -146,7 +147,7 @@
 	
 	//The initial table output method will call on the load of the page. It
 	//accesses the database and outputs the current rows of the database.
-	function initalTableOutput (){ 
+	function initialTableOutput ($mode){ 
 		
 		//Prep the initial 
 		$table = '';
@@ -179,30 +180,38 @@
 					'conditionid' => $r['conditionid']
 					);
 					$table .= build_row($new_row);			
-					
 				}
+		} else if ($mode == 'rtv') {
+			$row_num = 0;
+			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
+				$row_num++;
+				$new_row = array(
+					'id' => null,
+					'line' => $row_num,
+					'search' => key($item),
+					'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+					'qty' => current($item),
+					'uPrice' => 0.00,
+					'ref' => $lineid,
+					'warranty' => 0,
+					'conditionid' => 2
+				);
+				$table .= build_row($new_row);
+				//$table .= key($item) . "<br>";
+			}
 		}
+		
 		echo json_encode($table); 
 		exit;
-		    	
-				
-			// 	$old = qdb($q_line);
-				
-	
-		 //   }
-			// echo json_encode($table);
-			// exit;
 	}
 //------------------------------------------------------------------------------
 //------------------------------------ Main ------------------------------------ 
 //------------------------------------------------------------------------------
 	if ($mode == "append" || $mode == "update"){
 		append_row($mode);
-	}
-	elseif ($mode == "load"){
-		initalTableOutput();
-	}
-	else{
+	} else if ($mode == "load" || $mode == "rtv") {
+		initialTableOutput($mode);
+	} else {
 		"Permanent";
 	}
 ?>
