@@ -78,3 +78,43 @@
 		
 		return $warranty_lines;
 	}
+	
+	//Temporary function to calculate Purchase Receive (Inventory Add) Vendor Warranty
+	function calcPOWarranty($orderid, $warranty) {
+		$date;
+		$warranty;
+		$warranty_lines;
+		$query;
+		
+		$today = date($date_format);
+
+		//If querying our warranty
+
+		$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o WHERE p.id = ".prep($orderid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
+		
+		$result = qdb($query) or die(qe());
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$date = $result['created'];
+			$warranty = $result['days'];
+		
+			//Create the date
+			$warranty_date = format_date($result['created'],'Y-m-d', array("d"=>$result['days']));
+			$date_text = summarize_date($warranty_date);
+            
+			//Add warranty days
+			// $date = date($date_format, strtotime($date. ' + '.$warranty.' days'));
+			
+			//Expired
+			if($date < $warranty_date) {
+				$warranty_lines = "<span class='in_warranty'>";
+			} else {
+				$warranty_lines = "<span class='expired_warranty'>";
+			}
+			$warranty_lines .= $date_text;
+			$warranty_lines .= "</span>";
+		}
+		
+		return $warranty_lines;
+	}

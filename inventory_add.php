@@ -22,6 +22,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getRep.php';
@@ -186,6 +187,9 @@
 					            <th class="col-sm-2">
 									Remaining Qty
 					        	</th>
+					        	<th class="col-sm-1">
+									Vendor Warr
+					        	</th>
 					            <th class="col-sm-1">
 					            	<!--Lot Inventory (No Serial)-->
 					        	</th>
@@ -236,6 +240,9 @@
 									</td>
 									<td class="remaining_qty">
 										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+									</td>
+									<td style="vertical-align: middle !important;">
+										<?=calcPOWarranty($part['id'], $part['warranty']);?>
 									</td>
 									<td>
 										<!--<div class="input-group" style="margin-bottom: 6px;">-->
