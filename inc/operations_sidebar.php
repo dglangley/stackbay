@@ -115,7 +115,7 @@ include_once $rootdir.'/inc/dropPop.php';
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 10px;'>";
 		$right .= "		<div class='sidebar-container' style='padding-top: 10px'>";
 	
-		//Company						
+		//Company
 		$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>						
@@ -138,25 +138,24 @@ include_once $rootdir.'/inc/dropPop.php';
 		                </select>
 				    </div>
 			    </div>";
-		}
-		else{
-		//Billing Address
-			$right .="
-				<div class='row'>
-					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-						<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-						</label>
-	                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-							<option value = '$b_add'>$b_name</option>
-	                    </select>
-				    </div>
-			    </div>";
-		}
-		
+		} else {
+			//Billing Address
+				$right .="
+					<div class='row'>
+						<div class='col-sm-12' style='padding-bottom: 10px;'>	     
+							<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+							</label>
+		                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
+								<option value = '$b_add'>$b_name</option>
+		                    </select>
+					    </div>
+				    </div>";
+			}
+
 		//Payment Terms and warranty
-		$right .= "	<div class='row'>";
+		$right .= "	<div class='row' style='padding-bottom: 10px;'>";
 		if ($order_type == "Sales" || $order_type == 'RTV'){
-			$right .= "		<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
+			$right .= "		<div class='col-sm-7' id='customer_order'>";
 			// Changes the label based off of creation of the order number
 			if ($order_number != 'New' && $associated_order){
 				$right .= "	<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
@@ -179,18 +178,6 @@ include_once $rootdir.'/inc/dropPop.php';
 			// $right .= "</div>";
 		$right .= "</div>";
 	
-	 //   if ($order_type == "Sales") {
-		// 	$right .= "<div class='po-terms'  style='padding-bottom: 10px;'>
-		// 		";
-		// } else {
-		// }	
-		
-		
-		
-		// if ($order_type != "Purchase") {
-		// 	$right .= "</div>
-		// 		";
-		// }
 		    	
 		//Contact
 		$right .= "

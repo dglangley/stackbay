@@ -186,7 +186,7 @@ function sub_rows($search = ''){
                 
                 if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's') && !$show){
                     $rows = "
-                        <tr class = '' data-line-id = $id>
+                        <tr class = 'items_label'>
                             <td></td>
                             <td colspan='6' style=''>No parts in stock. <span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show all</span></td>
                             <td style=''></td>
@@ -195,7 +195,7 @@ function sub_rows($search = ''){
                 }
                 else{
                         $rows = "
-                        <tr class = '' data-line-id = $id>
+                        <tr class = 'items_label'>
                             <td></td>
                             <td></td>
                             <td></td>
