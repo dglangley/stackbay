@@ -154,61 +154,43 @@ include_once $rootdir.'/inc/dropPop.php';
 		}
 		
 		//Payment Terms and warranty
-	
-		if ($order_type != "Purchase"){
-						
-			$right .= "	<div class='row'>";
+		$right .= "	<div class='row'>";
+		if ($order_type == "Sales" || $order_type == 'RTV'){
 			$right .= "		<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
-			    	
-			//Associated order module
+			// Changes the label based off of creation of the order number
 			if ($order_number != 'New' && $associated_order){
-				$right .= "
-							<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
-				";
+				$right .= "	<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
+							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>";
 			} else {
-				$right .= "
-							<label for='assoc'>Customer Order</label>
-				";
-			}
-			if ($order_type == "Sales" || $order_type == 'RTV') {
-				if ($order_number == 'New' || $order_type == "RTV") {
-					$right .= "
-								<div class='input-group'>
-									<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-									<span class='input-group-btn'>
-										<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
-									</span>
-								</div><!-- /input-group -->
-								<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
-					";
-				} else {
-					$right .= "
+				$right .= "	<label for='assoc'>Customer Order</label>
+							<div class='input-group'>
 								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
+								<span class='input-group-btn'>
+									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
+								</span>
+							</div><!-- /input-group -->
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
 				";
-				}
-			} else {
-				$right .= "
-							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			";
 			}
+			$right .= "</div>";
 		}
-		$right .= "
-	    			</div>";
-	    if ($order_type == "Sales") {
-			$right .= "<div class='po-terms'  style='padding-bottom: 10px;'>
-				";
-		} else {
-			$right .= "<div class='so-terms'>";
-		}	
-		
-		$right .= dropdown('terms',$terms,$companyid, 'col-sm-5');
-		
+			// $right .= "<div class='so-terms'>";
+			$right .= dropdown('terms',$terms,$companyid, 'col-sm-5');
+			// $right .= "</div>";
 		$right .= "</div>";
+	
+	 //   if ($order_type == "Sales") {
+		// 	$right .= "<div class='po-terms'  style='padding-bottom: 10px;'>
+		// 		";
+		// } else {
+		// }	
 		
-		if ($order_type != "Purchase") {
-			$right .= "</div>
-				";
-		}
+		
+		
+		// if ($order_type != "Purchase") {
+		// 	$right .= "</div>
+		// 		";
+		// }
 		    	
 		//Contact
 		$right .= "
