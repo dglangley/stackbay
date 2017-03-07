@@ -159,7 +159,7 @@
 				<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<?php if($order_number != '') { ?>
 					<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
-						<?=sidebar_out($order_number, $order_type)?>
+						<?=sidebar_out($order_number, $order_type,'display')?>
 					</div>
 					
 					<div class="col-sm-10">

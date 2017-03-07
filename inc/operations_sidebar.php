@@ -468,12 +468,12 @@ include_once $rootdir.'/inc/dropPop.php';
 		return $right;
 	}
 
-function sidebar_out($number, $type, $rma =''){
-	if(!empty($rma)) {
-		$mode = 'rma';
-	} else {
-		$mode = 'order';
-	}
+function sidebar_out($number, $type, $mode ='order'){
+	// if(!empty($rma)) {
+	// 	$mode = 'rma';
+	// } else {
+	// 	$mode = 'order';
+	// }
 	
 	if ($mode == 'order'){
 		echo edit($number,$type);

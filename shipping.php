@@ -28,7 +28,8 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	
+	include_once $rootdir.'/inc/operations_sidebar.php';
+		
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -144,19 +145,19 @@
 		return $comment;
 	}
 	
-	function getWarranty($id) {
-		$warranty;
-		$id = prep($id);
-		$query = "SELECT * FROM warranties WHERE id = $id";
-		$result = qdb($query) OR die(qe());
+	// function getWarranty($id) {
+	// 	$warranty;
+	// 	$id = prep($id);
+	// 	$query = "SELECT * FROM warranties WHERE id = $id";
+	// 	$result = qdb($query) OR die(qe());
 	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$warranty = $result['warranty'];
-		}
+	// 	if (mysqli_num_rows($result)>0) {
+	// 		$result = mysqli_fetch_assoc($result);
+	// 		$warranty = $result['warranty'];
+	// 	}
 		
-		return $warranty;
-	}
+	// 	return $warranty;
+	// }
 	
 	function getDateStamp($order_number) {
 		$datestamp = '';
@@ -294,7 +295,7 @@
 			<div class="row remove-margin">
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-sm-2">
-					<!-- Everything here is put out by the order creation ajax script -->
+					<?=sidebar_out($order_number, $order_type,'display')?>
 				</div>
 				<!--======================= End Left half ======================-->
 				
@@ -462,7 +463,7 @@
 										<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty']); ?></span>
+										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty'],"warranty"); ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
 										<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
