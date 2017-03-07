@@ -184,8 +184,11 @@
 								<th class="col-sm-3">
 					            	Serial	(*Scan or Press Enter on Input for More)
 					            </th>
-					            <th class="col-sm-2">
+					            <th class="col-sm-1">
 									Remaining Qty
+					        	</th>
+					        	<th class="col-sm-1">
+									RTV
 					        	</th>
 					        	<th class="col-sm-1">
 									Vendor Warr
@@ -241,6 +244,9 @@
 									<td class="remaining_qty">
 										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
 									</td>
+									<td>
+										<input type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+									</td>
 									<td style="vertical-align: middle !important;">
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
 									</td>
@@ -265,7 +271,6 @@
 													<th>Status</th>
 													<th><span class='edit'>Location</span></th>
 													<th><span class='edit'>Condition</span></th>
-													<th><span class='edit'>RTV</span></th>
 												</tr>
 											</thead>
 											<tbody>
@@ -276,7 +281,6 @@
 													<td><?= $serial['status']; ?></td>
 													<td><?= display_location($serial['locationid']); ?></td>
 													<td><?= getCondition($serial['conditionid']); ?></td>
-													<td><input type="checkbox" name='partid[<?=$part['id'];?>][]' value="<?=$part['partid'];?>"></td>
 												</tr>
 											<?php endforeach; } ?>
 											</tbody>

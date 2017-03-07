@@ -48,11 +48,12 @@
 		
 		//$rtv_items = array_count_values($rtv_items);
 		
-		foreach($rtv_items as $key => $item){
-			$rtv_array[$key] = array_count_values($item);
-		}
-		
-		 $rtv_items = $rtv_array;
+		// foreach($rtv_items as $key => $item){
+		// 	$rtv_array[$key] = array_count_values($item);
+		// }
+		// echo"<pre>";
+		// print_r($rtv_items);exit;
+		// echo"</pre>";
 	} else {
 		$order_type = "Sales";
 	}

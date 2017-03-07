@@ -70,7 +70,7 @@
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
-            <td class = 'line_ref' style='display: none;'>".$row['ref_1']."</td>
+            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";
@@ -190,9 +190,9 @@
 				$new_row = array(
 					'id' => 'new',
 					'line' => $row_num, 
-					'search' => key($item), //
+					'search' => current($item), //
 					'date' => date("n/j/Y"), 
-					'qty' => current($item), //This blows Andrew's Brain
+					'qty' => key($item), //This blows Andrew's Brain
 					'uPrice' => 0.00,
 					'ref_1' => $lineid,
 					'ref_1_label' => 'line_item_id',
