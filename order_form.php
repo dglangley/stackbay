@@ -83,31 +83,6 @@
 		return $stock['total'];
 	}
 	
-	// function getRTVItems($invid) {
-	// 	$item_row = '';
-	// 	$data;
-		
-	// 	$query = "SELECT * FROM inventory WHERE id = ".prep($invid).";";
-	// 	$result = qdb($query) or die(qe());
-	// 	if (mysqli_num_rows($result)>0) { 
-	// 		$data = mysqli_fetch_assoc($result);
-	// 	}
-		
-	// 	$item_row = '<tr class="easy-output">
-	//         <td class="line_line"></td>
- //           <td class="line_part">
- //           	'.format($data['partid']).'
- //       	</td>
- //           <td class="line_date">03/09/2017</td>
- //           <td class="line_cond">'.getCondition($data['conditionid']).'</td>
- //           <td class="line_war">N/A</td>
- //           <td class="line_qty">'.$data['qty'].'</td>
- //           <td class="line_linext">$0.00</td>
-	// 	</tr>';
-		
-	// 	return $item_row;
-	// }
-	
 	function format($partid){
 		$r = reset(hecidb($partid, 'id'));
 	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
