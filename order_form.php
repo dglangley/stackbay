@@ -26,6 +26,7 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/operation_sidebar.php';
 
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
 	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
@@ -110,6 +111,7 @@
 			<!--================== Begin Left Half ===================-->
 			<div class="left-side-main col-md-3 col-lg-2" data-page="order">
 				<!-- Everything here is put out by the order creation ajax script -->
+				<?=sidebar_out($order_number,$order_type)?>
 			</div>
 			<!--======================= End Left half ======================-->
 		

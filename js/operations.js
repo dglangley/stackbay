@@ -179,49 +179,26 @@
 				page = $(".left-side-main").attr("data-page");
 				
 				console.log(window.location.origin+"/json/operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page);
-				//Left Side Main output on load of the page
-				$.ajax({
-					type: "POST",
-					url: '/json/operations_sidebar.php',
-					data: {
-						"number": order_number,
-						"type": order_type,
-						"page": page,
-					},
-					dataType: 'json',
-					success: function(right) {
-						$(".left-side-main").append(right);
-					},
-					complete: function() {
-						//If this is an edit page, limit all the appropriate dropdowns
-						// alert("success");
-						if (page == 'order'){
-							
-							
-							var company = $("#companyid").val();
 
-							//Initialize each of the select2 fields when the left side loads.
-							$("#companyid").initSelect2("/json/companies.php", "Select Company",{"scope":order_type});
-							$("#bill_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
-							$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":$("#carrier").val()});
-							$("#ship_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
-							if($("#ship_to").val() == $("#bill_to").val()){
-								$("#mismo").prop("checked",true);
-							}
-							$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
+				if (page == 'order'){
+					
+					
+					var company = $("#companyid").val();
 
-						}
-						else{
-							$("#order_selector").initSelect2("/json/order-select.php","Select Order",order_type);
-						}
-
-						toggleSidebar();
-					},
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON operations_sidebar.php: Error");
+					//Initialize each of the select2 fields when the left side loads.
+					$("#companyid").initSelect2("/json/companies.php", "Select Company",{"scope":order_type});
+					$("#bill_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
+					$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":$("#carrier").val()});
+					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
+					if($("#ship_to").val() == $("#bill_to").val()){
+						$("#mismo").prop("checked",true);
 					}
-				});
+					$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
+
+				}
+				else{
+					$("#order_selector").initSelect2("/json/order-select.php","Select Order",order_type);
+				}
 			});/* END .left-side-main */
 			
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
@@ -2386,28 +2363,28 @@
 		var page = 'rma';
 		var order_type = "RMA"
 		
-		//Left Side Main output on load of the page
-		$.ajax({
-			type: "POST",
-			url: '/json/operations_sidebar.php',
-			data: {
-				"number": order_number,
-				"type": order_type,
-				"page": page,
-				},
-			dataType: 'json',
-			success: function(right) {
-				$(".rma-macro").append(right);
-			},
-			complete: function() {
-				console.log("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Success");
-			},
-			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
-				console.error("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Error");
-			}
+	// 	//Left Side Main output on load of the page
+	// 	$.ajax({
+	// 		type: "POST",
+	// 		url: '/json/operations_sidebar.php',
+	// 		data: {
+	// 			"number": order_number,
+	// 			"type": order_type,
+	// 			"page": page,
+	// 			},
+	// 		dataType: 'json',
+	// 		success: function(right) {
+	// 			$(".rma-macro").append(right);
+	// 		},
+	// 		complete: function() {
+	// 			console.log("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Success");
+	// 		},
+	// 		error: function(xhr, status, error) {
+	// 			alert(error+" | "+status+" | "+xhr);
+	// 			console.error("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Error");
+	// 		}
 			
-		});
+	// 	});
 	});
 
 
