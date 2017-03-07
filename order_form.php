@@ -26,20 +26,22 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
-	include_once $rootdir.'/inc/operation_sidebar.php';
+	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
 	$rtv_array = array();
-
-	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
+	$origin = '';
+	// $order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
+	$order_number = grab('on','New');
 	
 	if($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') {
 		$order_type = "Purchase";
-	} else if($_REQUEST['ps'] == 'rtv' || $_REQUEST['ps'] == 'RTV') {
+	} else if(strtolower($_REQUEST['ps']) == 'rtv'){
 		$order_type = "RTV";
-		
+		$origin = $order_number;
+		$order_number = "New";
 		$rtv_items = $_REQUEST['partid'];
 		
 		//$rtv_items = array_count_values($rtv_items);
@@ -167,6 +169,7 @@
 		
 			<!--================== Begin Left Half ===================-->
 			<div class="left-side-main col-md-3 col-lg-2" data-page="order">
+				<?php $order_number = ($origin)? $origin: $order_number;?>
 				<!-- Everything here is put out by the order creation ajax script -->
 				<?=sidebar_out($order_number,$order_type)?>
 			</div>

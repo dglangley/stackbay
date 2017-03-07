@@ -48,8 +48,6 @@ include_once $rootdir.'/inc/dropPop.php';
 		$carrier_options = '';
 		$ref_ln = '';
 	
-		
-		
 		//Notes: Associated to an ID, but I will simply load the text here.
 		$private = '';
 		$public = '';
@@ -57,9 +55,9 @@ include_once $rootdir.'/inc/dropPop.php';
 		//If it is an old record 
 		if ($order_number != 'New'){
 			$q_form = "SELECT * FROM ";
-			$q_form .= ($order_type == 'Purchase') ? 'purchase_orders' : 'sales_orders';
+			$q_form .= ($order_type == 'Purchase' || strtolower($order_type) == 'rtv') ? 'purchase_orders' : 'sales_orders';
 			$q_form .= " WHERE ";
-			$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
+			$q_form .= ($order_type == 'Purchase' || strtolower($order_type) == 'rtv') ? 'po_number' : 'so_number';
 			$q_form .= " = '$order_number';";
 			
 			$results = qdb($q_form);
@@ -89,6 +87,17 @@ include_once $rootdir.'/inc/dropPop.php';
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
 				else { $ref_ln = $row['ref_ln']; }
 			}
+		}
+		
+		if(strtolower($order_type) == 'rtv'){
+			//Overwrite the information from the purchase order based on the RTV Defaults
+			$terms = 1;
+			$selected_service = '';
+			$selected_account = '';
+			$selected_account = '';
+			$private = 'RTV From PO #'.$order_number;
+			$public = '';
+			
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
@@ -147,11 +156,12 @@ include_once $rootdir.'/inc/dropPop.php';
 		//Payment Terms and warranty
 	
 		if ($order_type != "Purchase"){
-			$right .= "<div class='row'>
-						<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
+						
+			$right .= "	<div class='row'>";
+			$right .= "		<div class='col-sm-7' id='customer_order' style='padding-bottom: 10px;'>";
 			    	
 			//Associated order module
-			if ($order_number != 'New'){
+			if ($order_number != 'New' && $associated_order){
 				$right .= "
 							<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
 				";
@@ -160,8 +170,8 @@ include_once $rootdir.'/inc/dropPop.php';
 							<label for='assoc'>Customer Order</label>
 				";
 			}
-			if ($order_type == "Sales") {
-				if ($order_number == 'New') {
+			if ($order_type == "Sales" || $order_type == 'RTV') {
+				if ($order_number == 'New' || $order_type == "RTV") {
 					$right .= "
 								<div class='input-group'>
 									<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
@@ -184,8 +194,8 @@ include_once $rootdir.'/inc/dropPop.php';
 		}
 		$right .= "
 	    			</div>";
-	    if ($order_type != "Sales") {
-			$right .= "<div class='row po-terms'  style='padding-bottom: 10px;'>
+	    if ($order_type == "Sales") {
+			$right .= "<div class='po-terms'  style='padding-bottom: 10px;'>
 				";
 		} else {
 			$right .= "<div class='so-terms'>";
@@ -195,7 +205,7 @@ include_once $rootdir.'/inc/dropPop.php';
 		
 		$right .= "</div>";
 		
-		if ($order_type == "Sales") {
+		if ($order_type != "Purchase") {
 			$right .= "</div>
 				";
 		}
@@ -495,7 +505,7 @@ function sidebar_out($number, $type, $rma =''){
 	} else {
 		$mode = 'order';
 	}
-
+	
 	if ($mode == 'order'){
 		echo edit($number,$type);
 	} else {

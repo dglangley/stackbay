@@ -1262,6 +1262,14 @@
 
 					//This loop runs through the right-hand side and parses out the general values from the page
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
+							var line_ref_1 = '';
+							var line_ref_1_label = '';
+							if(order_type == "RTV"){
+								line_ref_1 = $(this).find(".line_ref").text();
+								line_ref_1_label = 'line_item_id';
+								order_number = 'New';
+							}
+							
 						var row = {
 							"line_number" : $(this).find(".line_line").attr("data-line-number"),
 							"part" : $(this).find(".line_part").attr("data-search"),
@@ -1271,6 +1279,8 @@
 							"warranty" : $(this).find(".line_war").attr("data-war"),
 							"price" : $(this).find(".line_price").text(),
 							"qty" : $(this).find(".line_qty").attr("data-qty"),
+							"ref_1" : line_ref_1,
+							"ref_1_label" : line_ref_1_label
 						};
 
 							// alert("line_number "+row["line_number"]);
@@ -1316,9 +1326,20 @@
 						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
+							var on = form["order"];
+							var ps = form["type"];
 							if (form['message']=='Success') {
-								var on = form["order"];
-								var ps = form["type"];
+								console.log("SAVED"+on+" | Order"+ps);
+								console.log("Last Inserted: "+form['insert']);
+								console.log("Last Line Inserted: "+form['line_insert']);
+								console.log("Error from the last query: "+form["error"]);
+								console.log("Update form: "+form['update']);
+								console.log(form['input']);
+								console.log(form['update_result']);
+								
+								window.location = "/order_form.php?ps="+ps+"&on="+on;
+							}
+							else{
 								console.log("SAVED"+on+" | Order"+ps);
 								console.log("Last Inserted: "+form['insert']);
 								console.log("Last Line Inserted: "+form['line_insert']);
@@ -1327,9 +1348,6 @@
 								console.log(form['input']);
 								console.log(form['update_result']);
 
-								window.location = "/order_form.php?ps="+ps+"&on="+on;
-							}
-							else{
 							modalAlertShow(
 								"<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",
 								form['message'],

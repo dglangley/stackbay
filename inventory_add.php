@@ -26,33 +26,14 @@
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/operation_sidebar.php';
+	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/locations.php';
+	
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
 	$order_type = "Purchase";
-	
-	
-	//Get the ENUM values of the specified table and column (field)
-	function getEnumValue( $table = 'inventory', $field = 'conditionid' ) {
-		$statusVals;
-		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	    $result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$statusVals = $result;
-		}
-		
-		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
-		
-		$enum = explode("','", $matches[1]);
-		
-		return $enum;
-	}
-	
+
 
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
 	function getPOParts () {
@@ -160,7 +141,7 @@
 	<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		
-		<form action="/order_form.php?ps=RTV" method="post">
+		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post">
 			
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 				<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
@@ -177,7 +158,7 @@
 				<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<?php if($order_number != '') { ?>
 					<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
-						<?=sidebar_out()?>
+						<?=sidebar_out($order_number, $order_type)?>
 					</div>
 					
 					<div class="col-sm-10">
