@@ -195,7 +195,7 @@
 					'qty' => key($item), //This blows Andrew's Brain
 					'uPrice' => 0.00,
 					'ref_1' => $lineid,
-					'ref_1_label' => 'line_item_id',
+					'ref_1_label' => 'purchase_item_id',
 					'warranty' => 0,
 					'conditionid' => 2
 				);
