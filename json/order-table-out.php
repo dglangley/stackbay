@@ -70,7 +70,7 @@
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
-            <td class = 'line_ref' style='visibility: hidden;'>".$row['ref']."</td>
+            <td class = 'line_ref' style='display: none;'>".$row['ref_1']."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";
@@ -177,7 +177,9 @@
 					'qty' => $r['qty'],
 					'uPrice' => $r['price'],
 					'warranty' => $r['warranty'],
-					'conditionid' => $r['conditionid']
+					'conditionid' => $r['conditionid'],
+					'ref_1' => $r['ref_1'],
+					'ref_1_label' => $r['ref_1_label'],
 					);
 					$table .= build_row($new_row);			
 				}
@@ -187,12 +189,13 @@
 				$row_num++;
 				$new_row = array(
 					'id' => 'new',
-					'line' => $row_num,
-					'search' => key($item),
-					'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
-					'qty' => current($item),
+					'line' => $row_num, 
+					'search' => key($item), //
+					'date' => date("n/j/Y"), 
+					'qty' => current($item), //This blows Andrew's Brain
 					'uPrice' => 0.00,
-					'ref' => $lineid,
+					'ref_1' => $lineid,
+					'ref_1_label' => 'line_item_id',
 					'warranty' => 0,
 					'conditionid' => 2
 				);
