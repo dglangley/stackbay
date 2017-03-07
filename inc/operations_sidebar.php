@@ -126,19 +126,19 @@ include_once $rootdir.'/inc/dropPop.php';
 			}
 			
 			$terms = 1;
-			$associated_order = $data['returns_item_id'];
+			$associated_order = '';
 			$selected_service = '';
 			$selected_account = '';
 			$selected_account = '';
 			$private = 'RTV From PO #'.$order_number;
 			$public = '';
-			$contact = $data['contactid'];
+			$contact = '';
 			
-			$b_add = $data['remit_to_id'];
-			$b_name = getAddresses($b_add,'street');
+			// $b_add = $data['remit_to_id'];
+			// $b_name = getAddresses($b_add,'street');
 			
-			$s_add = $data['remit_to_id'];
-			$s_name = getAddresses($s_add,'street');
+			$s_add = '';
+			$s_name = '';
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
