@@ -588,11 +588,19 @@
 					
 					if(isValid) {
 						var qty = 0;
+						console.log($(".search_lines"));
    		    			$(".search_lines").each(function() {
 							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						});
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+						}else{
+							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
+							$("#totals_row").show();
+							//sub_row.find("input[name=ni_line]").val(line_number());
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#go_find_me').focus();
 						}
 					} 
 				}
@@ -712,12 +720,16 @@
 			$(document).on("click",".line_item_submit",function() {
 				var qty = 0;
 				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
-						if (qty == 0){
-							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-						}
 				if (qty == 0){
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-				}
+				}else{
+							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
+							$("#totals_row").show();
+							//sub_row.find("input[name=ni_line]").val(line_number());
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#go_find_me').focus();
+						}
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
@@ -744,7 +756,14 @@
 					});
 					if (qty == 0){
 						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-					}
+					}else{
+							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
+							$("#totals_row").show();
+							//sub_row.find("input[name=ni_line]").val(line_number());
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#go_find_me').focus();
+						}
 				} 
 			});
 			
@@ -1182,6 +1201,14 @@
 					if (completed_qty == 0){
 						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 					}
+					else{
+							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
+							$("#totals_row").show();
+							//sub_row.find("input[name=ni_line]").val(line_number());
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#go_find_me').focus();
+						}
 				});
 				
 				if(isValid && $('.lazy-entry:hidden').length > 0) {
@@ -2715,12 +2742,7 @@
 						$('#totals_row').find("input[name='np_total']").val(updateTotal());
 					} else if (mode=='append') {
 						$("#right_side_main").append(row_out);
-						$(".search_lines").html("").remove();
-						$(".items_label").html("").remove();
-						$("#totals_row").show();
-						//sub_row.find("input[name=ni_line]").val(line_number());
-						$('#totals_row').find("input[name='np_total']").val(updateTotal());
-						$('#go_find_me').focus();
+						
 					}
 				},
 				error: function(xhr, status, error) {
@@ -2739,9 +2761,9 @@
 						var lineNumber = parseInt(sub_row.find("input[name=ni_line]").val());
 						if (!lineNumber){lineNumber = 0;}
 						$("#go_find_me").val("");
-			   			sub_row.find("input[name=ni_price]").val("");
-			   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-			   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+			   			// sub_row.find("input[name=ni_price]").val("");
+			   			// $("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+			   			// $("#search_input > tr.search_row > td:nth-child(8) > input").val("");
 					}
 		      		// return qty;
 	   				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
