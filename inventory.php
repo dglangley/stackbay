@@ -436,8 +436,15 @@
 										
 										//parts += "<td class='data'></td>";
 										
-										parts += "<td class='edit_col' style='text-align: right;'>\
-											<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
+										parts += "<td class='edit_col' style='text-align: right;'>";
+										
+										if(serial[3] == 'in-repair') {
+											parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
+										} else {
+											parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
+										}
+										
+										parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
 											<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
 											<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
 	                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
@@ -449,10 +456,6 @@
 										</td>\
 									</tr>";
 									
-							// 		// parts += "<tr>\
-							// 		// <td colspan='12'>\
-							// 		// </td>\
-							// 		// </tr>"
 							});
 							
 							$('.parts').append(parts);
