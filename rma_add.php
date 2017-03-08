@@ -43,7 +43,7 @@
 	$instance = '';
 	$rmaArray = array();
 	
-	if(grab('rmaid') || grab('invid')) {
+	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
 		$rmaid = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
 		
@@ -84,6 +84,8 @@
 			}
 			
 		}
+	} else if(grab('exchange_trigger')) {
+		$invid = grab('exchange_trigger');
 	}
 	
 	//Check if the page has invoked a success in saving
@@ -381,13 +383,12 @@
 			</div>
 		<?php endif; ?>
 		
-		<form method="post">
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
 						<?=sidebar_out($order_number,"RMA","RMA_display")?>
 			</div>
 				
-				<div class="col-sm-10">
+			<div class="col-sm-10">
 			
 				<div class="row" style="margin: 20px 0;">
 					
@@ -437,7 +438,7 @@
 					        	<th class="text-center col-sm-1">
 									Vendor Warr Exp
 					        	</th>
-					        	<th class="text-center col-sm-1">
+					        	<th class="text-right col-sm-1">
 					        		Receive
 					        	</th>
 					         </tr>
@@ -552,7 +553,14 @@
 											foreach($serials as $item) { 
 										?>
 										<div class="row text-center">
-											<button style="padding: 7px; margin-bottom: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=(($item['serial_no'] == $rmaid) && (count($rmaArray) == 1) ? 'checked' : '');?> <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button
+											<form method="post">
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button>
+											</form>
+											
+											<form action="/shipping.php" method="post" style='float: right;'>
+												<button style="padding: 7px; margin-bottom: 5px;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
+											</form>
+											
 										</div>
 										<?php 
 											} 
@@ -568,7 +576,6 @@
 					</table>
 				</div>
 			</div>
-			</form>
 		</div> 
 		
 		<!-- End true body -->

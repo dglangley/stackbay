@@ -420,17 +420,22 @@
 									$.each(info.serials, function(i,s_string){
 										var serial = s_string.split(", ");
 										//console.log(history);
+										
+										var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
+										    return letter.toUpperCase();
+										});
+										
 										parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status="+serial[3];
 										parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";										// parts += "	<td>"+"bleh"+"</td>";
 										parts += "	<td class='serial_col data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
 										parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
-										parts += "	<td class='status_col data status_original'>"+serial[3]+"</td>";
+										parts += "	<td class='status_col data status_original'>"+status+"</td>";
 										parts += "	<td class='location_col data '>"+info.location+"</td>";
 										parts += "	<td class='condition_col data '>"+key[2]+"</td>";
 										
 										parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 										parts += "	<td class='qty_col edit'>1</td>";
-										parts += "	<td class='status_col edit'>"+serial[3]+"</td>";
+										parts += "	<td class='status_col edit'>"+status+"</td>";
 										parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
 										parts += "	<td class='condition_col edit condition_holder' data-condition='"+key[2]+"'></td>";
 										
