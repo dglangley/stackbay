@@ -22,10 +22,10 @@
             
             $update;
 			
-			if(grab('status') == "in-repair") {
+			if(grab('status') == "in repair") {
 				$update = "UPDATE `inventory` SET `status`= 'shelved' WHERE `id` = $invid;";
 			} else {
-				$update = "UPDATE `inventory` SET `status`= 'in-repair' WHERE `id` = $invid;";
+				$update = "UPDATE `inventory` SET `status`= 'in repair' WHERE `id` = $invid;";
 			}
 			
 			$result = qdb($update) OR jsonDie(qe().' '.$update);
