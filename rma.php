@@ -335,7 +335,7 @@
 		include_once $rootdir.'/modal/contact.php';
 		?>
 		
-		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" method="post">
+		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" method="post" style="height: 100%;">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				
@@ -363,7 +363,7 @@
 			</div>
 			
 			<!-- Row declaration for splitting the two "halves of the page  -->
-			<div class="container-fluid">
+			<div class="row remove-margin">
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
 					<!--'RMA'/$rma_number OR 'Sales'/$so_number-->

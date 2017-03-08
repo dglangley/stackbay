@@ -139,10 +139,10 @@
 	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		
 	<!----------------------- Begin the header output  ----------------------->
-	<div class="container-fluid pad-wrapper">
+	<div class="pad-wrapper">
 		<?php include 'inc/navbar.php';?>
 		
-		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post">
+		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
 			
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 				<div class="col-sm-4">
@@ -156,7 +156,7 @@
 				<div class="col-sm-4">
 				</div>
 			</div>
-
+			
 				<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<?php if($order_number != '') { ?>
 					<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">

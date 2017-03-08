@@ -15,8 +15,13 @@ body.modal-open.accounts-body, #order_body.modal-open {
 	margin: 0;
 }
 
+.pad-wrapper {
+	height: 100%;
+}
+
 .remove-margin {
 	margin: 0;
+	height: 100%;
 }
 
 /*.left-side-main .container-fluid.pad-wrapper{*/

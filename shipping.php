@@ -39,8 +39,8 @@
 	
 	//If no order is selected then return to shipping home
 	if(empty($order_number)) {
-		header("Location: /shipping_home.php");
-		die();
+		//header("Location: /shipping_home.php");
+		//die();
 	}
 	
 	
@@ -75,11 +75,13 @@
 //		qdb($query);
 		
 		//Get all the items, including old items from the sales order.
-		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
-		$result = qdb($query) OR die(qe());
-				
-		while ($row = $result->fetch_assoc()) {
-			$sales_items[] = $row;
+		if($so_number != 0) {
+			$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
+			$result = qdb($query) OR die(qe());
+					
+			while ($row = $result->fetch_assoc()) {
+				$sales_items[] = $row;
+			}
 		}
 		
 		return $sales_items;
@@ -396,6 +398,7 @@
 							<?php
 								//Grab a list of items from an associated sales order.
 								$serials = array();
+								if(!empty($items))
 								foreach($items as $item): 
 									$inventory = getInventory($item['partid']);
 									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
