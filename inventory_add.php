@@ -145,14 +145,15 @@
 		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post">
 			
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-				<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+				<div class="col-sm-4">
+					<a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a>
+					<button type="submit" class="btn-flat btn-sm primary pull-left" id = "rtv_button" data-validation="left-side-main" style="margin-top:10px;display:none;">RTV</button>
+					
+					</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
 					<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
 				</div>
 				<div class="col-sm-4">
-					<button type="submit" class="btn-flat btn-sm primary pull-right" id = "rtv_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
-						RTV
-					</button>
 				</div>
 			</div>
 
@@ -245,7 +246,7 @@
 										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
 									</td>
 									<td>
-										<input type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+										<input class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
 									</td>
 									<td style="vertical-align: middle !important;">
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
@@ -299,6 +300,21 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
+		<script type="text/javascript">
+			$(document).on("click", ".RTV_check",function(){
+				var show_rtv_button = false;
+				$.each($(".RTV_check"), function(){
+					if ($(this).prop("checked")){
+						show_rtv_button = true;
+					}
+				});
+				if(show_rtv_button){
+					$("#rtv_button").show();
+				} else {
+					$("#rtv_button").hide();
+				}
+			});
+		</script>
 	</form>
 	</body>
 </html>
