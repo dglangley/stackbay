@@ -268,7 +268,9 @@
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+				<a href="/rma.php?on=<?=$order_number;?>" class="btn-sm btn-flat gray pull-left rma-button" style="margin-right: 10px;">RMA</a>
 			</div>
+			
 			<div class="col-md-4 text-center">
 				<?php
 					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
@@ -371,9 +373,7 @@
 							  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
 						  		</button>
 							</div>
-							<a href="/rma.php?on=<?=$order_number;?>" class="btn-sm btn-flat gray pull-right rma-button" style="margin-right: 10px;">
-						  		RMA
-					  		</a>
+
 						</div>
 					</div>
 				
