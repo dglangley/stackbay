@@ -26,6 +26,9 @@
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/operations_sidebar.php'; 
+
+
 
 	//Set initials to be used throughout the page
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
@@ -381,26 +384,8 @@
 		<form method="post">
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-					<div class="row">
-						<div class="col-md-12">
-							<b style="color: #526273;font-size: 14px;">RMA Order #<?= $order_number; ?></b><br>
-							<b style="color: #526273;font-size: 12px;"><?=getRep('1');?></b><br>
-							<?=getCreated($order_number);?><br><br>
-							
-	
-							<b style="color: #526273;font-size: 14px;">CUSTOMER:</b><br>
-							<span style="color: #aaa;"><?=getAddress($order_number);?></span><br><br>
-							
-							<b style="color: #526273;font-size: 14px;">SHIPPING ADDRESS:</b><br>
-							<span style="font-size: 14px;">Ventura Telephone<br>3037 Golf Course Drive <br>
-                        		Unit 2 <br>
-                       		 	Ventura, CA 93003
-                       		</span><br><br>
-							
-							<b style="color: #526273;font-size: 14px;">SHIPPING INSTRUCTIONS:</b><br>UPS Ground<br><br>
-						</div>
-					</div>
-				</div>
+						<?=sidebar_out($order_number,"RMA","RMA_display")?>
+			</div>
 				
 				<div class="col-sm-10">
 			

@@ -57,6 +57,7 @@
 	//Array = [inventoryid] = return_id
 	$dispositionArray = $_POST["disposition"];
 	//Array = [inventoryid] = return_id
+	$rma_notes = $_POST["rma_notes"];
 	$return = $_POST["return"];
 	
 	$companyid = $_POST['companyid'];
@@ -75,8 +76,8 @@
 		//New RMA
 		if ($rma_number == ""){
 			
-	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`)
-	        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).");";
+	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
+	        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).",".prep($rma_notes).");";
 	        qdb($insert) OR die();
 	        $rma_number = qid();
 	    	
@@ -124,6 +125,8 @@
 	        	// print_r($return);
 	        	// die;
 	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
+	        	$rma_macro_update = "UPDATE `returns` SET `notes` = ".prep($rma_notes).";";
+	        	qdb($rma_macro_update) OR die();
 	        	if ($return[$invid] != ''){
 		            $rmaQuery = "
 		            UPDATE `return_items` SET 
@@ -164,6 +167,8 @@
 
 	// echo"<div style='position:fixed;right:15px;bottom:10px;'>";
 	if ($rma_number){
+		$sidebar_mode = 'RMA';
+		$sidebar_number = $rma_number;
 		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
 		$rma_select = qdb($rma_select);
 		//If this record exists, perform the check that there is some valid answer
@@ -205,6 +210,9 @@
 				$mode = 'view';
 			}
 		}
+	}else{
+		$sidebar_mode = 'Sales';
+		$sidebar_number = $so_number;
 	}
 	
 	if($so_number && $mode != 'view' && $mode != 'old'){
@@ -334,9 +342,11 @@
 				<div class="col-md-4">
 					<?php
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $order_number . '" | href="/docs/'.$order_type[0].'O'.$order_number.'.pdf"
-						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'">To Origin</a> ';
-						echo '<a class="btn-flat pull-left" target="_new">Create Printable RMA</a>';
-						echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO #'.$so_number.')</a>';
+						if($rma_number){
+							echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+						}
 					?>
 					
 				</div>
@@ -356,7 +366,8 @@
 			<div class="container-fluid">
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
-					<?=sidebar_out($order_number,$type,"rma")?>
+					<!--'RMA'/$rma_number OR 'Sales'/$so_number-->
+					<?=sidebar_out($sidebar_number,"RMA",$sidebar_mode)?>
 				</div>
 			
 				<!--======================= End Left half ======================-->
@@ -370,7 +381,7 @@
 								<tr>
 									<th class="col-md-3">Item</th>
 									<th class="col-md-2">Serials</th>
-									<th class="col-md-1">War. Expiration</th>
+									<th class="col-md-1">Warr Exp</th>
 									<th class="col-md-1">Disposition</th>
 									<th class="col-md-2">Reason</th>
 									<th class="col-md-3">History</th>
@@ -458,23 +469,26 @@
 									<td class="history-col">
 										<?php foreach ($row as $i => $inf):?>
 										
-										<div class = "infinite">
+										<div class = "infinite" style='line-height:15px;'>
 											<?php 
 												$history_text ='';
 												$first_war = true;
 												$war_text = "";
 												$hist_count = 0;
 												foreach ($inf['history'] as $history){
+													$link = "";
 													$select = "";
 													$action = "";
 													if($hist_count > 0 && $hist_count != 3){echo(" | ");}
 													switch ($history['field']) {
 														case 'sales_item_id':
 															$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
+															$link = "/order_form.php?ps=s&on=";
 															$action = "Sold";
 															break;
 														case 'returns_item_id':
 															$select = "SELECT `id` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
+															$link = "/rma.php?rma=";
 															$action = "Returned";
 															break;
 														case 'purchase_item_id':
@@ -483,6 +497,7 @@
 															if($first_war){
 																$war_text = "Vendor War Exp: ";
 																// $most_recent_war = $history['value'];
+																$link = "/order_form.php?ps=s&on=";
 																$war_text .= calcWarranty($history['value'],"history");
 															}
 															break;
@@ -491,7 +506,7 @@
 													if($select){
 														$result = qdb($select);
 														$result = mysqli_fetch_assoc($result);
-														$action .= " #".$result['o'];
+														$action .= "<a class = 'lonk' href='$link".$result['o']."'> #".$result['o']."</a>";
 													}
 													if($first_war && $war_text){
 														//Print out the $warranty text
@@ -526,8 +541,8 @@
 														}
 													}
 												}
-												if ($hist_count < 3){
-													echo"<br>&nbsp;";
+												if ($hist_count <= 3){
+													echo"&nbsp;";
 												}
 	
 											?>

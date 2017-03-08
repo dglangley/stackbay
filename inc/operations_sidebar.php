@@ -56,7 +56,7 @@ include_once $rootdir.'/inc/dropPop.php';
 	
 	
 	
-	function edit($order_number,$order_type){
+	function edit($order_number,$order_type, $mode=''){
 		global $rtv_items;
 	//======================= DECLARE VARIABLE DEFAULTS ======================= 
 		//This will have the reference order number(s) and associated files attached to it
@@ -343,7 +343,7 @@ include_once $rootdir.'/inc/dropPop.php';
 		return $result;
 	}
 	
-	function display($order_number = '',$page = 'Purchase'){
+	function display($order_number = '',$page = 'Purchase',$mode = ''){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
 		
@@ -351,12 +351,24 @@ include_once $rootdir.'/inc/dropPop.php';
 		$public;
 		$s_carrier_name;
 		
+		// Aquire macro level information about the RMA Item
+		if (substr($mode,0,3) == 'RMA' && $page =='RMA'){
+			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
+			$rma_macro_results = qdb($rma_macro_select);
+			$rma_macro = mysqli_fetch_assoc($rma_macro_results);
+			$rma_number = $order_number;
+			$order_number = $rma_macro['order_number'];
+			$rma_notes = $rma_macro['notes'];
+		}
+		
+		
 		//Navigation changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
-		if ($page == "RMA"){
-			$right = "";
-		}
+		// if ($page == "RMA"){
+		// 	$right = "";
+		// }
 		$right .= "		<div class='sidebar-container'>";
+		
 		if ($order_number) {
 			
 			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
@@ -388,6 +400,7 @@ include_once $rootdir.'/inc/dropPop.php';
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
 			}
+			
 			if($page != "RMA"){
 				$right.="
 						<div class='row'>
@@ -402,12 +415,18 @@ include_once $rootdir.'/inc/dropPop.php';
 							if($order_number){ 
 									$right.="			<option value = $order_number>$order_number - $company_name</option>";
 							}
-						}	
-			
 				$right.="			</select>
 								</div>
 							</div>
 						</div>";
+			}else{
+				$right.="
+						<div class='row'>
+							<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
+								Created from SO #$order_number
+							</div>
+						</div>";
+			}
 		}
 		
 		if($results) {
@@ -424,51 +443,83 @@ include_once $rootdir.'/inc/dropPop.php';
 			} else {
 				$right .=  $orderNumber . "<br><br>";
 			}
+			
+			if($page != "RMA"){
+				//Addresses
+				if($page != 'Purchase') {
+					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				} else {
+					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
+					//address function needs to be edited to take in remit to column insead of bill to
+					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
+				}
 				
-			//Addresses
-			if($page != 'Purchase') {
-				$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
-				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
-			} else {
-				$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
-				//address function needs to be edited to take in remit to column insead of bill to
-				$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
-			}
-			
-			$right .= "<br><br><b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
-			$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
-			$right .= "<br><br><b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS:</b><br>";
-			
-			if($selected_carrier){
-				$right .= getFreight('carrier',$selected_carrier,'','name');
-			} else {
-				$right .= "None";
-			}
-			
-			if ($selected_service){
-				$right .= " ".getFreight('services','',$selected_service,'method');
-			}
+				$right .= "<br><br><b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
+				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
+				$right .= "<br><br>";
+				//Shipping inforamtions
+				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS:</b><br>";
+				
+				if($selected_carrier){
+					$right .= getFreight('carrier',$selected_carrier,'','name');
+				} else {
+					$right .= "None";
+				}
+				
+				if ($selected_service){
+					$right .= " ".getFreight('services','',$selected_service,'method');
+				}
 	
-			$right .= "<br><br>";
+				$right .= "<br><br>";
+			}
 			
 			if($public){
-				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES";
+				if($page == "RMA"){$right .= " FROM SO #$order_number";}
+				$right .= ":</b><br>";
 				$right .= $public;
 				$right .= "<br><br>";
 			}
 			
 			if($private){
-				$right .= "<b style='color: #526273;font-size: 14px;'>PRIVATE NOTES:</b><br>";
+				
+				$right .= "<b style='color: #526273;font-size: 14px;'>PRIVATE NOTES";
+				if($page == "RMA"){$right .= " FROM SO #$order_number";}
+				$right .=":</b><br>";
 				$right .= $private;
 			}
-			
+
+			if($page == "RMA"){
+				$right .= "<br><br>";
+				if ($mode == "RMA_display"){
+					$right .= "
+						<div class='row' style='padding-bottom: 10px;'>
+							<div class='col-sm-12'>
+								<label for='rma_notes'>RMA Notes</label>
+								<br>$rma_notes
+							</div>
+						</div>	
+					";
+				} else {
+					$right .= "
+						<div class='row' style='padding-bottom: 10px;'>
+							<div class='col-sm-12'>
+								<label for='rma_notes'>RMA Notes</label>
+								<textarea id='rma_notes' class='form-control textarea' name='rma_notes' rows='3' style=''>$rma_notes</textarea>
+							</div>
+						</div>	
+					";
+				}
+			}
+
 			$right .= "<br><br>";
 			
 			$lists = array();
 			
 			$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 			$result = qdb($query) OR die(qe().' '.$query);
-			if($page != 'Purchase') {
+			if($page == 'Sales') {
 				
 				while ($row = $result->fetch_assoc()) {
 					$lists[] = $row['datetime'];
@@ -518,8 +569,8 @@ function sidebar_out($number, $type, $mode ='order'){
 	// }
 	
 	if ($mode == 'order'){
-		echo edit($number,$type);
+		echo edit($number,$type,$mode);
 	} else {
-		echo display($number,$type);
+		echo display($number,$type,$mode);
 	}
 }
