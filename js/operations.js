@@ -1861,15 +1861,15 @@
 				conditionid = $(this).find('.condition_field').attr('data-condition');
 				
 				$('.box_group').find('.box_selector').each(function() {
-					boxes.push($(this).attr('data-row-id'));
+					boxes.push($(this).data('row-id'));
 				});
 				
 				$(this).find('.infiniteSerials').find('input').each(function() {
 					serials.push($(this).val());
-					savedSerials.push($(this).attr('data-saved'));
+					savedSerials.push($(this).data('saved'));
 					
 					//If an item was saved previously then mark the page as something was edited
-					if($(this).attr('data-saved') != '') {
+					if($(this).data('saved') != '') {
 						checkChanges = true;
 					}
 					
@@ -1882,7 +1882,7 @@
 					lot = false
 				}
 				
-				qty = $(this).find('.remaining_qty').attr('data-qty');
+				qty = $(this).find('.remaining_qty').data('qty');
 				
 				items.push(partid);
 				items.push(savedSerials);
@@ -1895,7 +1895,7 @@
 			});
 			
 			//Testing purposes
-			//console.log(items);
+			console.log(items);
 			
 			$.ajax({
 				type: 'POST',
@@ -1928,7 +1928,7 @@
 					//Nothing was change
 					} else {
 						$click.attr('id','btn_update');
-						//window.location.href = window.location.href + "&success=true";
+						window.location.href = window.location.href + "&success=true";
 					}
 				},
 				error: function(xhr, status, error) {
@@ -2118,115 +2118,115 @@
 //==============================================================================
 
 //Open Modal
-		$(document).on("click",".box_edit", function(){
-				var package_number = $(".box_selector.active").text();
-				var order_number = $("body").attr('data-order-number');
-				if (package_number){
-					$("#package_title").text("Editing Box #"+package_number);
-					$("#alert_title").text("Box #"+package_number);
-					$("#modal-width").val($(".box_selector.active").attr("data-width"));
-					$("#modal-height").val($(".box_selector.active").attr("data-h"));
-					$("#modal-length").val($(".box_selector.active").attr("data-l"));
-					$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
-					$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
-					$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
-					$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
-					
-					var status = $(".box_selector.active").attr('data-box-shipped');
-					
-					if(status == 'completed') {
-						$("#alert_message").show();
-					} else {
-						$("#alert_message").hide();
-					}
-					//alert("ON: "+order_number+" | Package #: "+package_number);
-					$.ajax({
-						type: "POST",
-						url: '/json/package_contents.php',
-						data: {
-							"order_number": order_number,
-							"package_number": package_number
-						},
-						dataType: 'json',
-						success: function(data) {
-							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-							console.log(data);
-							$('.modal-packing').empty();
-							if (data){
-								$.each( data, function( i, val ) {
-									$.each(val, function(it,serial){
-											var element = "<tr>\
-													<td>"+ i +"</td>\
-													<td>"+ serial +"</td>\
-												</tr>";
-											$('.modal-packing').append( element );
-										});
-									});
-									// for(var k = 0; k < val.length; k++) {
-							}
-								
-								//After the edit modal has been set with the proper data, show it
-								$("#modal-package").modal("show");
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("JSON packages_contents.php: Error");
-							console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-						},				
-						
-					});
-				}
-				else{
-					alert('Please select a box before editing');
-				}
-			});
-//Submit Modal
-		$(document).on("click","#package-continue", function(){
-					
-					//Set redundant-ish variables for easier access
-					var width = $("#modal-width").val();
-					var height = $("#modal-height").val();
-					var length = $("#modal-length").val();
-					var weight = $("#modal-weight").val();
-					var tracking = $("#modal-tracking").val();
-					var freight = $("#modal-freight").val();
-					var id = $("#package-modal-body").attr("data-modal-id");
-					
-					//Update the Data tags on the page
-					$(".box_selector.active").attr("data-width",width);
-					$(".box_selector.active").attr("data-h",height);
-					$(".box_selector.active").attr("data-l",length);
-					$(".box_selector.active").attr("data-weight",weight);
-					$(".box_selector.active").attr("data-tracking",tracking);
-					$(".box_selector.active").attr("data-row-freight",freight);
-
-					
-					$.ajax({
-						type: "POST",
-						url: '/json/packages.php',
-						data: {
-							"action": "update",
-							"width": width,
-							"height": height,
-							"length": length,
-							"weight": weight,
-							"tracking": tracking,
-							"freight": freight,
-							"id": id,
-						},
-						dataType: 'json',
-						success: function(update) {
-							console.log("JSON packages.php: Success");
-							console.log(update);
-						},
-						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
-							console.log("JSON packages.php: Error");
-						},				
-						
-					});
+	$(document).on("click",".box_edit", function(){
+		var package_number = $(".box_selector.active").text();
+		var order_number = $("body").attr('data-order-number');
+		if (package_number){
+			$("#package_title").text("Editing Box #"+package_number);
+			$("#alert_title").text("Box #"+package_number);
+			$("#modal-width").val($(".box_selector.active").attr("data-width"));
+			$("#modal-height").val($(".box_selector.active").attr("data-h"));
+			$("#modal-length").val($(".box_selector.active").attr("data-l"));
+			$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
+			$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
+			$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
+			$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
 			
+			var status = $(".box_selector.active").attr('data-box-shipped');
+			
+			if(status == 'completed') {
+				$("#alert_message").show();
+			} else {
+				$("#alert_message").hide();
+			}
+			//alert("ON: "+order_number+" | Package #: "+package_number);
+			$.ajax({
+				type: "POST",
+				url: '/json/package_contents.php',
+				data: {
+					"order_number": order_number,
+					"package_number": package_number
+				},
+				dataType: 'json',
+				success: function(data) {
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+					console.log(data);
+					$('.modal-packing').empty();
+					if (data){
+						$.each( data, function( i, val ) {
+							$.each(val, function(it,serial){
+									var element = "<tr>\
+											<td>"+ i +"</td>\
+											<td>"+ serial +"</td>\
+										</tr>";
+									$('.modal-packing').append( element );
+								});
+							});
+							// for(var k = 0; k < val.length; k++) {
+					}
+						
+						//After the edit modal has been set with the proper data, show it
+						$("#modal-package").modal("show");
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON packages_contents.php: Error");
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+				},				
+				
 			});
+		}
+		else{
+			alert('Please select a box before editing');
+		}
+	});
+//Submit Modal
+	$(document).on("click","#package-continue", function(){
+			
+		//Set redundant-ish variables for easier access
+		var width = $("#modal-width").val();
+		var height = $("#modal-height").val();
+		var length = $("#modal-length").val();
+		var weight = $("#modal-weight").val();
+		var tracking = $("#modal-tracking").val();
+		var freight = $("#modal-freight").val();
+		var id = $("#package-modal-body").attr("data-modal-id");
+		
+		//Update the Data tags on the page
+		$(".box_selector.active").attr("data-width",width);
+		$(".box_selector.active").attr("data-h",height);
+		$(".box_selector.active").attr("data-l",length);
+		$(".box_selector.active").attr("data-weight",weight);
+		$(".box_selector.active").attr("data-tracking",tracking);
+		$(".box_selector.active").attr("data-row-freight",freight);
+
+		
+		$.ajax({
+			type: "POST",
+			url: '/json/packages.php',
+			data: {
+				"action": "update",
+				"width": width,
+				"height": height,
+				"length": length,
+				"weight": weight,
+				"tracking": tracking,
+				"freight": freight,
+				"id": id,
+			},
+			dataType: 'json',
+			success: function(update) {
+				console.log("JSON packages.php: Success");
+				console.log(update);
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON packages.php: Error");
+			},				
+			
+		});
+	
+	});
 			
 //Add New Box
 		$(document).on("click",".box_addition", function(){
@@ -2257,9 +2257,9 @@
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active").removeClass('btn-grey').addClass('btn-secondary');
-					$(".box_drop").children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");
+					$(".box_drop").children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
 					$(".active_box_selector").each(function(){
-						$(this).children("option").last().after("<option value='"+id+"'>Box "+autoinc+"</option>");		
+						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");		
 					});
 					$(".active_box_selector").val(id);
 					
