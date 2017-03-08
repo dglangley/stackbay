@@ -105,7 +105,7 @@
 	</head>
 	<!---->
 	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
-		<div class="container-fluid pad-wrapper">
+		<div class="pad-wrapper">
 
 			<?php 
 				include 'inc/navbar.php';
@@ -151,7 +151,7 @@
 			
 			
 			<!-- Row declaration for splitting the two "halves of the page  -->
-			<div class="container-fluid">
+			<div class="row remove-margin">
 			
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order">
