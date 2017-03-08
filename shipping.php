@@ -36,12 +36,11 @@
 	$order_type = "Sales";
 	
 	if ($_POST['exchange_trigger']){
-		//Insertion of the values of from the exhange parameters
-		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, `ref_1`, `ref_1_label`, `warranty`, `conditionid`)
-		SELECT s.`partid`, s.`so_number`, s.`line_number`, 0 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, `inventory`.`sales_item_id` AS `ref_1`, 'sales_item_id' AS `ref_1_label`, `warranty`, s.`conditionid`
-		FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
-		qdb($insert);
+	
 	}
+	
+	
+	
 	$so_updated = $_REQUEST['success'];
 	
 	//If no order is selected then return to shipping home
@@ -153,20 +152,6 @@
 		
 		return $comment;
 	}
-	
-	// function getWarranty($id) {
-	// 	$warranty;
-	// 	$id = prep($id);
-	// 	$query = "SELECT * FROM warranties WHERE id = $id";
-	// 	$result = qdb($query) OR die(qe());
-	
-	// 	if (mysqli_num_rows($result)>0) {
-	// 		$result = mysqli_fetch_assoc($result);
-	// 		$warranty = $result['warranty'];
-	// 	}
-		
-	// 	return $warranty;
-	// }
 	
 	function getDateStamp($order_number) {
 		$datestamp = '';

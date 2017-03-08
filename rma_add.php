@@ -85,7 +85,14 @@
 			
 		}
 	} else if(grab('exchange_trigger')) {
-		$invid = grab('exchange_trigger');
+		//Insertion of the values of from the exhange parameters
+		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, `ref_1`, `ref_1_label`, `warranty`, `conditionid`)
+		SELECT s.`partid`, s.`so_number`, s.`line_number`, 0 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, `inventory`.`sales_item_id` AS `ref_1`, 'sales_item_id' AS `ref_1_label`, `warranty`, s.`conditionid`
+		FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
+		qdb($insert);
+		$exchangeid = qid();
+		
+		print_r($exchangeid); die;
 	}
 	
 	//Check if the page has invoked a success in saving
@@ -389,7 +396,7 @@
 			</div>
 				
 			<div class="col-sm-10">
-			
+				<form method="post">
 				<div class="row" style="margin: 20px 0;">
 					
 					
@@ -553,13 +560,12 @@
 											foreach($serials as $item) { 
 										?>
 										<div class="row text-center">
-											<form method="post">
-												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button>
-											</form>
 											
-											<form action="/shipping.php" method="post" style='float: right;'>
-												<button style="padding: 7px; margin-bottom: 5px;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
-											</form>
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button>
+											<!--</form>-->
+											
+											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
+												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
 											
 										</div>
 										<?php 
@@ -575,12 +581,13 @@
 						</tbody>
 					</table>
 				</div>
+				</form>
 			</div>
 		</div> 
 		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-
+	
 	</body>
 </html>

@@ -107,14 +107,15 @@
 				}
 	        }
 	    //Tis an RMA Update or Delete
-		} else if($rma_number != '') {
+		} else if($rma_number != '') { 
         	foreach($checkedItems as $invid) {
-	        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
+	        	$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
 	        	$rmaSave = qdb($partidQuery) or die(qe());
 	        	
 	        	if (mysqli_num_rows($rmaSave)>0) {
 					$rmaSave = mysqli_fetch_assoc($rmaSave);
 					$partid = $rmaSave['partid'];
+					$so_number = $rmaSave['sales_item_id'];
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
