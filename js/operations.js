@@ -595,12 +595,7 @@
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 						}else{
-							$(".search_lines").html("").remove();
-							$(".items_label").html("").remove();
-							$("#totals_row").show();
-							//sub_row.find("input[name=ni_line]").val(line_number());
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
-							$('#go_find_me').focus();
+
 						}
 					} 
 				}
@@ -2682,7 +2677,17 @@
 	           return "0"+partTime;
 	        return partTime;
 	    }
-
+		function clearSearchResults(){
+			$(".search_lines").html("").remove();
+			$(".items_label").html("").remove();
+			$("#totals_row").show();
+			//sub_row.find("input[name=ni_line]").val(line_number());
+			$('#totals_row').find("input[name='np_total']").val(updateTotal());
+			$('#go_find_me').focus();
+   			sub_row.find("input[name=ni_price]").val("");
+   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
+   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+		}
 		function populateSearchResults(e,search,qty) {
 			//always must be a valid qty passed in
   		    if (! qty) {

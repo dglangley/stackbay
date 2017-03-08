@@ -246,7 +246,7 @@
 	function sFilter($field, $value){
 		if ($value){
 			$value = prep($value);
-			$string = " AND `$field` = $value ";
+			$string = " AND $field = $value ";
 		}
 		else{
 			$string = '';
@@ -277,7 +277,8 @@
 	function search($search = ''){
 		$return = array();
 		$parts = array();
-		
+		$result1 = array();
+		$result2 = array();
 		
 		$place = grab("place");
 		$location = grab("location");
@@ -317,7 +318,10 @@
 			$query .= dFilter('i.date_created',$start, $end);
 			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
 			$result = qdb($query);
-			$result1 = query_first($result);
+			if (mysqli_num_rows($result) > 0){
+				$result1 = query_first($result);
+			} 
+			
 /*
 				if(mysqli_num_rows($result)>0){
 					//Loop through the results
@@ -341,7 +345,9 @@
 				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
 			
 				$result = qdb($query);
-				$result2 = query_first($result);
+				if (mysqli_num_rows($result) > 0){
+					$result2 = query_first($result);
+				} 
 			}
 /*
 			if (mysqli_num_rows($result) > 0){
@@ -373,8 +379,7 @@
 		    	}
 			}
 */
-		}
-		else{
+		}else{
 			$return = "Please enter a search parameter";
 		}
 
@@ -385,6 +390,7 @@
 
 		return ($return);
 */
+		
 		return (array_merge($result1,$result2));
 	}
 	
@@ -449,9 +455,16 @@
 $search = grab('search');
 $filters = grab('filters');
 
+
 $return = (search($search));
+
+if (count($return) > 0){
+	echo json_encode($return);
+} else {
+	echo json_encode('test');
+}
+
 // echo '<pre>' . print_r(get_defined_vars(), true) . '</pre>';
 // print_r($return);
 // exit;
-echo json_encode($return);
 ?>
