@@ -111,7 +111,8 @@
 		$(document).ready(function() {
 
 			// This is our global for all functions, all day baby
-			var	order_type = $("body").attr("data-order-type");
+			var order_type = '';
+			order_type = $("body").attr("data-order-type");
 			if(order_type == "Purchase"){
 				var receiver_companyid = '25';//ventel id
 			}
@@ -212,6 +213,15 @@
 				}
 			});/* END .left-side-main */
 			
+			//Auto Focus Correct for the Public Notes
+			if (order_type == 'Purchase'){
+				$("#public_notes").keyup(function(e){
+				    if (e == '9') {
+				    	e.preventDefault();
+    					;
+    				}	
+				});
+			}
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
 			$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
 				var qty = 0;
@@ -538,6 +548,7 @@
 						success: function(result) {
 							$(".search_loading").hide();
 							$(".search_lines").html("").remove();
+							$(".nothing_found").html("").remove();
 							if(result == "") {
 								$('.nothing_found').show();
 							} else {
@@ -700,7 +711,6 @@
 			
 			$(document).on("click",".line_item_submit",function() {
 				var qty = 0;
-				var qty = 0;qty += 
 				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
@@ -727,13 +737,14 @@
 				var isValid = nonFormCase($(this), e);
 				
 				if(isValid) {
+					var qty = 0;
 	    			$(".search_lines").each(function() {
-						var qty = 0;
-						qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
-						if (qty == 0){
-							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-						}
+						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+						qty += $(this).find("input[name=ni_qty]").val();
 					});
+					if (qty == 0){
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+					}
 				} 
 			});
 			
@@ -2732,8 +2743,8 @@
 			   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
 			   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
 					}
-		      		return qty;
-	   				//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
+		      		// return qty;
+	   				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
 				},
 			});
         } 
@@ -2888,7 +2899,7 @@
 						error: function(xhr, status, error) {
 							alert(error+" | "+status+" | "+xhr);
 							console.log("Inventory-add-dynamic.php: ERROR");
-						},				
+						},
 						
 					});
 	    		} else {
