@@ -193,7 +193,7 @@
 						<option value=''>Select a Company</option>
 					</select>
 					<span class="input-group-btn">
-						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
+						<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
 			</div>
