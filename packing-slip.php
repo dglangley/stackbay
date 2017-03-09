@@ -167,7 +167,7 @@
                     Box #".$box[0]."
                 </b></td>
                 <td colspan = '5' style = 'text-align:right; border:none;'>
-                    ".$box[1]."
+                    "."test"."
                 </td>
             </tr>
             <tr>
