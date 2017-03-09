@@ -800,7 +800,7 @@
 				else{
 					if (origin == "bill_to"){
 						//$("#ship_display").replaceWith(right);	
-						updateShipTo();
+						updateShipTo(origin);
 						// $("#select2-ship_to-container").html(right);
 					}
 					else{
@@ -853,30 +853,16 @@
 					"zip" : zip,
 					"id" : id
 			    },function(data){
-			    	console.log("Logging the ID (this should be false if creating new): "+id);
+			    	// console.log("Test");
+			    	console.log("The ID (this should be false if creating new): "+id);
 			    	console.log("Return from Address Submission: "+data);
 			    	
 			    	if (!isNaN(id)){
 			    		data = id;
 			    	}
+					$("#"+field).setDefault(line_1,data);
+					updateShipTo(field);
 		    		//If it didn't have an update, it is a new field
-			    	if (field == "ship_to"){
-			    		// $("#select2-ship_to-container").html(line_1);
-			    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-			    		// $("#ship_to").val(data);
-	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
-							/* insert the option (which is already 'selected'!) into the select */
-							option.appendTo($("#ship_to"));
-							/* Let select2 do whatever it likes with this */
-							$("#ship_to").trigger('change');
-				    	}
-				    	else{
-	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
-							/* insert the option (which is already 'selected'!) into the select */
-							option.appendTo($("#bill_to"));
-							/* Let select2 do whatever it likes with this */
-							$("#bill_to").trigger('change');
-				    	}
 			    	$('.modal').modal('hide');
 			    });
 			});
@@ -934,7 +920,7 @@
 			});
 			
 			$(document).on("click","#mismo",function() {
-				updateShipTo();
+				updateShipTo("ship_to");
 			});
 
 
@@ -1546,7 +1532,6 @@
 						$(".sd-outstanding.sd-sales")
 						.find("tfoot").find("a").text("Show Less");
 						$(".sd-outstanding.sd-sales").find(".overview").show();
-	
 					}
 					else{
 						$(".sd-completed.sd-sales")
@@ -1556,8 +1541,7 @@
 						.find(".shipping_section_head").hide();
 						$(".sd-completed.sd-sales")
 						.find("tfoot").find("a").text("Show Less");
-						$(".sd-completed.sd-sales").find(".overview").show();				
-						
+						$(".sd-completed.sd-sales").find(".overview").show();
 					}
 				}	
 			});
@@ -2635,12 +2619,20 @@
 			}
 
 //Address Suite of functions
-			function updateShipTo(){
-				if ( $("#mismo").prop( "checked" )){
+			function updateShipTo(field){
+				if ( $("#mismo").prop( "checked" ) && field == 'bill_to'){
 					var display = $("#bill_to").text().trim();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
 					$("#ship_to").setDefault(display,value);
+					// var option = $('<option></option>').
+					// 	prop('selected',true).
+					// 	text(display).
+					// 	val(value);
+					// // alert($(this).html());
+					// $("#ship_to").html(option);//insert pre-selected option into select menu
+					// // initialize the change so it takes effect
+					// $("#ship_to").trigger("change");
 				}
 			}
 
