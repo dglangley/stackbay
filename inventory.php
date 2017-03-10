@@ -223,8 +223,10 @@
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
 <!----------------------------------------------------------------------------->
-
+	<span class='loading_search' style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Loading Search Results...</span>
+	
 	<div class="loading_element_listing" style="display: none;">
+		
 		<div class='col-sm-12' style='padding-top: 20px'>
 			<select class='revisions' multiple>
 				
@@ -632,8 +634,12 @@
 					$("#part_search").val(phpStuff);
 				}
 				
-				inventory_history(search);
+				$.when( inventory_history(search) ).then(function() {
+					$('.loading_search').hide();
+				});
 			}
+			
+			$('.loading_search').hide();
 		});
 		
 		

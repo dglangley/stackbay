@@ -529,7 +529,7 @@
 
 		
 			//MultiPart Search Feature
-			$(document).on("keyup","#go_find_me",function(e){
+			$(document).on("keydown","#go_find_me",function(e){
 				if (e.keyCode == 13) {
 					$(".search_loading").show();
 					var search = $("#go_find_me").val();
@@ -548,12 +548,14 @@
 						success: function(result) {
 							$(".search_loading").hide();
 							$(".search_lines").html("").remove();
-							$(".nothing_found").html("").remove();
+							//$(".nothing_found").html("").remove();
+							
 							if(result == "") {
 								$('.nothing_found').show();
 							} else {
 								$('.nothing_found').hide();
 							}
+							
 							$("#search_input").append(result);
 							$(".search_lines input[name='ni_qty']:first").focus();
 						},
@@ -592,10 +594,18 @@
    		    			$(".search_lines").each(function() {
 							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						});
+						
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-						}else{
-
+						} else {
+							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
+							$("#totals_row").show();
+							$(this).val("");
+							$("input[name='ni_qty']").val("");
+							//sub_row.find("input[name=ni_line]").val(line_number());
+							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$('#go_find_me').focus();
 						}
 					} 
 				}
@@ -755,6 +765,8 @@
 							$(".search_lines").html("").remove();
 							$(".items_label").html("").remove();
 							$("#totals_row").show();
+							$("input[name='ni_price']").val("");
+							$("input[name='ni_qty']").val("");
 							//sub_row.find("input[name=ni_line]").val(line_number());
 							$('#totals_row').find("input[name='np_total']").val(updateTotal());
 							$('#go_find_me').focus();
@@ -800,7 +812,7 @@
 				else{
 					if (origin == "bill_to"){
 						//$("#ship_display").replaceWith(right);	
-						updateShipTo(origin);
+						updateShipTo();
 						// $("#select2-ship_to-container").html(right);
 					}
 					else{
@@ -853,16 +865,30 @@
 					"zip" : zip,
 					"id" : id
 			    },function(data){
-			    	// console.log("Test");
-			    	console.log("The ID (this should be false if creating new): "+id);
+			    	console.log("Logging the ID (this should be false if creating new): "+id);
 			    	console.log("Return from Address Submission: "+data);
 			    	
 			    	if (!isNaN(id)){
 			    		data = id;
 			    	}
-					$("#"+field).setDefault(line_1,data);
-					updateShipTo(field);
 		    		//If it didn't have an update, it is a new field
+			    	if (field == "ship_to"){
+			    		// $("#select2-ship_to-container").html(line_1);
+			    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
+			    		// $("#ship_to").val(data);
+	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
+							/* insert the option (which is already 'selected'!) into the select */
+							option.appendTo($("#ship_to"));
+							/* Let select2 do whatever it likes with this */
+							$("#ship_to").trigger('change');
+				    	}
+				    	else{
+	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
+							/* insert the option (which is already 'selected'!) into the select */
+							option.appendTo($("#bill_to"));
+							/* Let select2 do whatever it likes with this */
+							$("#bill_to").trigger('change');
+				    	}
 			    	$('.modal').modal('hide');
 			    });
 			});
@@ -920,7 +946,7 @@
 			});
 			
 			$(document).on("click","#mismo",function() {
-				updateShipTo("ship_to");
+				updateShipTo();
 			});
 
 
@@ -1532,6 +1558,7 @@
 						$(".sd-outstanding.sd-sales")
 						.find("tfoot").find("a").text("Show Less");
 						$(".sd-outstanding.sd-sales").find(".overview").show();
+	
 					}
 					else{
 						$(".sd-completed.sd-sales")
@@ -1541,7 +1568,8 @@
 						.find(".shipping_section_head").hide();
 						$(".sd-completed.sd-sales")
 						.find("tfoot").find("a").text("Show Less");
-						$(".sd-completed.sd-sales").find(".overview").show();
+						$(".sd-completed.sd-sales").find(".overview").show();				
+						
 					}
 				}	
 			});
@@ -2248,6 +2276,8 @@
 //Add New Box
 		$(document).on("click",".box_addition", function(){
 			//Automatically build the name for the button
+				var $button = $(this);
+				$button.prop('disabled', true);
 				var final = $(this).siblings(".box_selector").last();
 				var autoinc = parseInt(final.text());
 				autoinc++;
@@ -2278,7 +2308,12 @@
 					$(".active_box_selector").each(function(){
 						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");		
 					});
+					$(".box_selector").each(function(){
+						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");		
+					});
 					$(".active_box_selector").val(id);
+					
+					$button.prop('disabled', false);
 					
 					console.log("JSON package addition packages.php: Success");
 				},
@@ -2598,20 +2633,12 @@
 			}
 
 //Address Suite of functions
-			function updateShipTo(field){
-				if ( $("#mismo").prop( "checked" ) && field == 'bill_to'){
+			function updateShipTo(){
+				if ( $("#mismo").prop( "checked" )){
 					var display = $("#bill_to").text().trim();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
 					$("#ship_to").setDefault(display,value);
-					// var option = $('<option></option>').
-					// 	prop('selected',true).
-					// 	text(display).
-					// 	val(value);
-					// // alert($(this).html());
-					// $("#ship_to").html(option);//insert pre-selected option into select menu
-					// // initialize the change so it takes effect
-					// $("#ship_to").trigger("change");
 				}
 			}
 
@@ -2648,17 +2675,7 @@
 	           return "0"+partTime;
 	        return partTime;
 	    }
-		function clearSearchResults(){
-			$(".search_lines").html("").remove();
-			$(".items_label").html("").remove();
-			$("#totals_row").show();
-			//sub_row.find("input[name=ni_line]").val(line_number());
-			$('#totals_row').find("input[name='np_total']").val(updateTotal());
-			$('#go_find_me').focus();
-   			sub_row.find("input[name=ni_price]").val("");
-   			$("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-   			$("#search_input > tr.search_row > td:nth-child(8) > input").val("");
-		}
+
 		function populateSearchResults(e,search,qty) {
 			//always must be a valid qty passed in
   		    if (! qty) {

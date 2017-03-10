@@ -268,15 +268,15 @@ function sub_rows($search = ''){
                     }
                 }
         }//End the "If there are matches" check
-            else{
-                $rows .= "
-                    <tr class = '' data-line-id = $id>
-                        <td></td>
-                        <td colspan='6' style=''>Nothing Found</td>
-                        <td style=''></td>
-                    </tr>
-                ";
-            }
+            // else{
+            //     $rows .= "
+            //         <tr class = '' data-line-id = $id>
+            //             <td></td>
+            //             <td colspan='6' style=''>Nothing Found</td>
+            //             <td style=''></td>
+            //         </tr>
+            //     ";
+            // }
     return $rows;
 }
 
