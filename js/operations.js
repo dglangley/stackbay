@@ -765,6 +765,8 @@
 							$(".search_lines").html("").remove();
 							$(".items_label").html("").remove();
 							$("#totals_row").show();
+							$("input[name='ni_price']").val("");
+							$("input[name='ni_qty']").val("");
 							//sub_row.find("input[name=ni_line]").val(line_number());
 							$('#totals_row').find("input[name='np_total']").val(updateTotal());
 							$('#go_find_me').focus();
