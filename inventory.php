@@ -415,6 +415,8 @@
 													parts += "			<th class='status_col col-md-1'>Status</th>";
 													parts += "			<th class='location_col col-md-2'>Location</th>";
 													parts += "			<th class='condition_col col-md-1'>Condition</th>";
+													parts += "			<th class='notes_col col-md-2'>Notes<th>";
+													parts += "			<th class='actions_col col-md-1'></th>";
 													parts += "			<th class='edit_col col-md-1'></th>";
 													parts += "		</tr>\
 																</thead>\
@@ -435,29 +437,33 @@
 											parts += "	<td class='status_col data status_original'>"+status+"</td>";
 											parts += "	<td class='location_col data '>"+info.location+"</td>";
 											parts += "	<td class='condition_col data '>"+key[2]+"</td>";
+											parts += "	<td class='notes_col data '>"+'Blank Notes atm'+"</td>";
+
 											
 											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											parts += "	<td class='qty_col edit'>1</td>";
 											parts += "	<td class='status_col edit'>"+status+"</td>";
 											parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
 											parts += "	<td class='condition_col edit condition_holder' data-condition='"+key[2]+"'></td>";
-											
+											parts += "	<td class='notes_col edit notes_holder' data-notes='"+key[2]+"'><input class='new_notes input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											//parts += "<td class='data'></td>";
 											
 											parts += "<td class='edit_col' style='text-align: right;'>";
 											
 											if(serial[3] == 'in repair') {
-												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
+												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
 											} else {
-												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
+												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
 											}
 											
 											parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
-												<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
-												<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
-		                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
+														<i style='margin-right: 5px;' class='fa fa-history serial_original pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>\
+														</td>";
+		                					parts +="<td>\
+												<a class='edit save_button btn-sm btn-flat success pull-left multipart_sub'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i>\
-												<i style='margin-right: 5px;' class='fa fa-history serial_original pointer' aria-hidden='true' data-id='"+serial[0]+"'></i></td>";
+												<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
+		                						</td>";
 		                						
 											parts += "</tr>";
 										}); //Serials loop end
