@@ -529,7 +529,7 @@
 
 		
 			//MultiPart Search Feature
-			$(document).on("keyup","#go_find_me",function(e){
+			$(document).on("keydown","#go_find_me",function(e){
 				if (e.keyCode == 13) {
 					$(".search_loading").show();
 					var search = $("#go_find_me").val();
@@ -548,12 +548,14 @@
 						success: function(result) {
 							$(".search_loading").hide();
 							$(".search_lines").html("").remove();
-							$(".nothing_found").html("").remove();
+							//$(".nothing_found").html("").remove();
+							
 							if(result == "") {
 								$('.nothing_found').show();
 							} else {
 								$('.nothing_found').hide();
 							}
+							
 							$("#search_input").append(result);
 							$(".search_lines input[name='ni_qty']:first").focus();
 						},
@@ -592,12 +594,15 @@
    		    			$(".search_lines").each(function() {
 							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						});
+						
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-						}else{
+						} else {
 							$(".search_lines").html("").remove();
 							$(".items_label").html("").remove();
 							$("#totals_row").show();
+							$(this).val("");
+							$("input[name='ni_qty']").val("");
 							//sub_row.find("input[name=ni_line]").val(line_number());
 							$('#totals_row').find("input[name='np_total']").val(updateTotal());
 							$('#go_find_me').focus();
