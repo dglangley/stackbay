@@ -271,9 +271,9 @@
 				<?php
 					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 					if(!$exchange) {
-						echo " Shipping Order";
+						echo " Shipping Order ";
 					} else {
-						echo " Exchange for SO";
+						echo " Exchange for SO ";
 					}
 					if ($order_number!='New'){
 						echo "#$order_number";
@@ -337,7 +337,7 @@
 											}
 											else{
 												$f = "<div>
-					            					<select class='form-control box_drop input-sm' data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
+					            					<select class='form-control box_drop input-sm ".($it[$selected] != '' ? '': 'box_selector')."' data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
 											}
 											$f .= $drop;
 										return $f;

@@ -444,8 +444,8 @@
 											
 											parts += "<td class='edit_col' style='text-align: right;'>";
 											
-											if(serial[3] == 'in-repair') {
-												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
+											if(serial[3] == 'in repair') {
+												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
 											} else {
 												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
 											}
