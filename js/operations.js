@@ -2382,39 +2382,18 @@
 
 		}
 	});
+	
+
 //=================================== End RM ===================================
 
 
-	$(document).on("click",".repair_button",function(){
-		var status = $(this).data("status");
-		var invid = $(this).data("invid");
-		
-		$.ajax({
-			type: "POST",
-			url: '/json/repair.php',
-			data: {
-				"invid" : invid,
-				"status" : status
-			},
-			dataType: 'json',
-			success: function(result) {
-				console.log("JSON RM PROCESSOR | Success | /json/repair.php?invid="+invid+"&status="+status);
-				location.reload();
-				console.log(result);
-			},
-			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
-				console.log("JSON RM PROCESSOR | Failure | /json/repair.php?invid="+invid+"&status="+status);
-			}
-		});
-	});
 
 
 //==============================================================================
 //=================================== HISTORY ================================== 
 //==============================================================================
 
-		$(document).on("click",".serial_original",function() {
+		$(document).on("click",".history_button",function() {
 			
 			var invid = $(this).attr('data-id');
 			//Call the AJAX

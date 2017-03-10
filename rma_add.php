@@ -59,7 +59,7 @@
 		$place = grab('place');
 		$instance = grab('instance');
 		
-		$itemLocation = getLocationID($place,$instance);
+		$itemLocation = dropdown_processor($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
 		$rmaArray = findRMAItems($rmaid, $order_number);
@@ -207,28 +207,7 @@
 	    return $display;
 	}
 	
-	//This is saving the data selected
-	function getLocationID($place, $instance) {
-		$locationid;
-		$query;
-		
-		//Get the location ID based on the preset ones in the table
-		if($instance != '') {
-			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
-		} else {
-			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
-		}
-		
-		$locationResult = qdb($query);
-		
-		if (mysqli_num_rows($locationResult)>0) {
-			$locationResult = mysqli_fetch_assoc($locationResult);
-			$locationid = $locationResult['id'];
-		}
-		
-		return $locationid;
-	}
-	
+
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
 	function findRMAItems($search, $order_number, $type = 'all'){
 		$rma_search = array();
