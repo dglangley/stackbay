@@ -340,6 +340,7 @@
 								headers +=	"<th>Vendor</th>";
 							}
 							headers +=	"<th>Date Added</th>";
+							headers +=	"<th></th>"
 							headers += "</tr>";
 							
 							$(".revisions").empty();
@@ -400,6 +401,7 @@
 										parts += 	"<td>"+info.vendor+"</td>";
 									}
 										parts += 	"<td>"+key[3]+"</td>";
+										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
 										parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
@@ -444,7 +446,7 @@
 											
 											parts += "<td class='edit_col' style='text-align: right;'>";
 											
-											if(serial[3] == 'in-repair') {
+											if(serial[3] == 'in repair') {
 												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
 											} else {
 												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status="+serial[3]+" aria-hidden='true'></i>";
@@ -454,7 +456,9 @@
 												<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
 												<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
 		                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
-		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
+		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i>\
+												<i style='margin-right: 5px;' class='fa fa-history serial_original pointer' aria-hidden='true' data-id='"+serial[0]+"'></i></td>";
+		                						
 											parts += "</tr>";
 										}); //Serials loop end
 										parts += "</tbody>\
