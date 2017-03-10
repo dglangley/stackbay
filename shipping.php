@@ -35,12 +35,6 @@
 	$order_number = $_REQUEST['on'];
 	$order_type = "Sales";
 	
-	if ($_POST['exchange_trigger']){
-	
-	}
-	
-	
-	
 	$so_updated = $_REQUEST['success'];
 	
 	//If no order is selected then return to shipping home
@@ -56,6 +50,7 @@
 	$selected_carrier;
 	$selected_service;
 	$selected_account;
+	$exchange = false;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -71,9 +66,9 @@
 		$selected_account = $result['freight_account_id'];
 	}
 	
-	function getItems($so_number = 0) {
+	function getItems($so_number = 0, $exchange) {
 		$sales_items = array();
-		
+		$query;
 		//First run a check just in case the sales order was changed recently and reflect the changes (E.G. qty order was increase, if qty is less than order admin may need to intervene)
 		
 //david 2-28-17
@@ -82,7 +77,7 @@
 		
 		//Get all the items, including old items from the sales order.
 		if($so_number != 0) {
-			$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
+			$query = "SELECT * FROM sales_items WHERE so_number = ". prep($so_number) ." ORDER BY ship_date, ref_2 DESC;";
 			$result = qdb($query) OR die(qe());
 					
 			while ($row = $result->fetch_assoc()) {
@@ -167,15 +162,18 @@
 		return $datestamp;
 	}
 	
-	function format($partid){
+	function format($partid, $exchange = false){
 		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']." ".($exchange ? '<b style="color: #428bca;">(Exchange)</b>' : '')."</span>";
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
 	    return $display;
 	}
-
-	$items = getItems($sales_order);
+	if (grab('exchange')){
+		$exchange = grab('exchange');
+	}
+	
+	$items = getItems($sales_order, $exchange);
 ?>
 	
 
@@ -248,6 +246,10 @@
 				-webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.25);
 				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
 			}
+			
+			.order-exchange td {
+				background-color: #f5fafc !important;
+			}
 		</style>
 
 	</head>
@@ -268,9 +270,13 @@
 			<div class="col-md-4 text-center">
 				<?php
 					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
-					echo " Shipping Order";
+					if(!$exchange) {
+						echo " Shipping Order";
+					} else {
+						echo " Exchange for SO";
+					}
 					if ($order_number!='New'){
-						echo " #$order_number";
+						echo "#$order_number";
 					}
 					echo"</h2>";
 				?>
@@ -283,7 +289,7 @@
 		<?php if($so_updated == 'true'): ?>
 			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
 			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-			    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
+			    <strong>Success!</strong> <?= ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
 			</div>
 		<?php endif; ?>
 
@@ -339,10 +345,16 @@
 									
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
+									
+									//Check for any open items to be shipped
+									$check = "SELECT * FROM `sales_items`  WHERE  `so_number` = '$order_number' AND qty_shipped < qty";
+									$open_items = qdb($check);
 	
 									if (mysqli_num_rows($results) > 0){
 										$init = true;
+										$package_no = 0;
 										foreach($results as $b){
+											$package_no = $b['package_no'];
 											$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
 											$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 											$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
@@ -356,10 +368,25 @@
 				                        	if($b['datetime'] == '' && $init)
 				                        		$init = false;
 										}
+										
+										//There are still open items to be shipped
+										if (mysqli_num_rows($open_items) > 0){
+											//Check for any open boxes to be shipped
+											$check = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number' AND datetime IS NULL";
+											$open_boxes = qdb($check);
+											$package_no = $package_no + 1;
+											//echo mysqli_num_rows($open_boxes);
+											//There is no boxes open and there are items to be shipped
+											if (mysqli_num_rows($open_boxes) == 0){
+												$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, ".$package_no.");";
+												qdb($insert);
+												echo("<button type='button' class='btn btn-secondary active box_selector' data-row-id = '".qid()."'>$package_no</button>");
+											}
+										}
 									} else {
 										$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
 										qdb($insert);
-										echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
+										echo("<button type='button' class='btn btn-secondary active box_selector' data-row-id = '".qid()."'>1</button>");
 									}
 		
 								?>
@@ -399,10 +426,10 @@
 									$parts = explode(' ',getPartName($item['partid']));
 									$part = $parts[0];
 							?>
-								<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
+								<tr class="<?= (!empty($item['ship_date']) ? 'order-complete' : ''); ?> <?= (!empty($item['ref_2']) ? 'order-exchange' : ''); ?>" style = "padding-bottom:6px;">
 									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
 										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
-										<div class="product-descr"><?= format($item['partid']); ?></div>
+										<div class="product-descr"><?= format($item['partid'] , (!empty($item['ref_2']) ? true : false)); ?></div>
 									</td>
 								
 								<!-- Grab the old serial values from the database and display them-->
@@ -455,7 +482,7 @@
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
+										<span class="condition_field" data-condition="<?php echo $item['conditionid'] ?>"><?php echo $item['conditionid'] ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
 										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty'],"warranty"); ?></span>
