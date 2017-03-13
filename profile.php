@@ -50,7 +50,13 @@
 				<div class="pull-right form-group">
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
-<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } else { echo '<option value="">- Select a Company -</option>'.chr(10); } ?>
+						<?php 
+							if ($companyid) { 
+								echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); 
+							} else { 
+								echo '<option value="">- Select a Company -</option>'.chr(10); 
+							} 
+						?>
 					</select>
 					<input class="btn btn-primary btn-sm" type="submit" value="Go">
 				</div>
@@ -85,6 +91,29 @@
 	            <a href="/accounts.php?companyid=<?php echo $companyid; ?>" class="btn btn-default icon pull-right" data-toggle="tooltip" title="Accounts" data-placement="top"><i class="fa fa-building-o"></i></a>
 			</div>
         </div>
+        
+         <ul class="nav nav-tabs nav-tabs-ar">
+			<li class="active"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
+			<li class=""><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
+			<li class=""><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+		</ul>
+		
+		<div class="tab-content">
+
+			<!-- Materials pane -->
+			<div class="tab-pane active" id="addresses_tab">
+			  
+			</div>
+			
+			<div class="tab-pane" id="contacts_tab">
+			    
+			</div>
+			
+			<!-- Materials pane -->
+			<div class="tab-pane" id="terms_tab">
+				
+			</div>
+		</div>
 
         <div class="row">
             <!-- bio, new note & orders column -->
@@ -187,12 +216,6 @@
 						<?php echo $company_phone; ?>
                     </li>
 <?php } ?>
-<!--
-                    <li class="ico-li">
-                        <i class="ico-mail"></i>
-                        <a href="#">alejandra@detail.com</a>
-                    </li>
--->
                 </ul>
             </div>
         </div><!-- row -->

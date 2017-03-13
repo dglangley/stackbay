@@ -242,24 +242,21 @@
 										    </span>
 							            </div>
 									</td>
+									
 									<td class="remaining_qty">
-										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+										<input style="margin-bottom: 6px;" class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+										<div class='infiniteComments'>
+									    	<!--<input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial='' data-inv-id='' data-part="">-->
+										</div>
 									</td>
 									<td>
 										<input class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
 									</td>
-									<td style="vertical-align: middle !important;">
+									<td>
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
 									</td>
 									<td>
-										<!--<div class="input-group" style="margin-bottom: 6px;">-->
-											<!--<div class="checkbox">-->
-											<!--	<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>-->
-											<!--</div>-->
-											<!--<span class="input-group-addon">-->
-												<button type="button" class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style=""><i class="fa fa-list" aria-hidden="true"></i></button>
-											<!--</span>-->
-										<!--</div>-->
+										<button type="button" class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style=""><i class="fa fa-list" aria-hidden="true"></i></button>
 									</td>
 								</tr>
 								<tr class='serial-<?=$part['id'] ?>' style='display:none;'>
