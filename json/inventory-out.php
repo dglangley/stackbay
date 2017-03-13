@@ -448,6 +448,8 @@
 				 $r[$partid][$key]['instance'] = display_location($row['locationid'], 'instance');
 				 $r[$partid][$key]['vendorid'] = getVendor($po);
 				 $r[$partid][$key]['vendor'] = getCompany($r[$partid][$key]['vendorid']);
+				 $r[$partid][$key]['conditionid'] = $row['conditionid'];
+				 $r[$partid][$key]['notes'] = $row['notes'];
 				 $r[$partid][$key]['unique'] = $row['invid'];
 			 }
 			 //Null Serial handler and serial grouping/append
@@ -469,7 +471,7 @@ $filters = grab('filters');
 
 
 $return = (search($search));
-
+// print_r($return); exit;
 if (count($return) > 0){
 	echo json_encode($return);
 } else {
