@@ -106,96 +106,162 @@
 			</div>
 			
 			<div class="tab-pane" id="contacts_tab">
-			    
+			    <div class="col-md-8 bio">
+	                <div class="profile-box">
+	
+	                    <!-- recent orders table -->
+	                    <table class="table table-hover table-striped table-condensed">
+	                        <thead>
+	                            <tr>
+	                                <th class="col-md-3">
+	                                    Contact Name
+	                                </th>
+	                                <th class="col-md-3">
+	                                    <span class="line"></span>
+	                                    Email(s)
+	                                </th>
+	                                <th class="col-md-3">
+	                                    <span class="line"></span>
+	                                    Phone Number(s)
+	                                </th>
+	                                <th class="col-md-1">
+	                                    <span class="line"></span>
+	                                    IM
+	                                </th>
+	                                <th class="col-md-2">
+	                                    <span class="line"></span>
+	                                    Notes
+	                                </th>
+	                            </tr>
+	                        </thead>
+	                        <tbody>
+	<?php
+		$contacts = getContacts($companyid);
+		foreach ($contacts as $contactid => $contact) {
+			$cls = ' static-form';
+			if ($contactid) { $cls = ' active-form'; }
+			$name_plh = 'Full Name (Last Name optional)';
+			if ($contactid==0) { $name_plh = 'Add New Contact Name...'; }
+	
+			$emails = '';
+			foreach($contact['emails'] as $e) {
+				$email_plh = $e['email'];
+				if (! $email_plh) { $email_plh = 'this@that.com'; }
+				$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
+			}
+			$phones = '';
+			foreach($contact['phones'] as $p) {
+				$phone_plh = $p['phone'];
+				if (! $phone_plh) { $phone_plh = '(000) 555-1212 or 000-555-1212'; }
+				$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
+			}
+	?>
+	                            <tr data-contactid="<?php echo $contactid; ?>">
+	                                <td>
+	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="name" value="<?php echo $contact['name']; ?>" placeholder="<?php echo $name_plh; ?>">
+	                                </td>
+	                                <td>
+										<?php echo $emails; ?>
+	                                </td>
+	                                <td>
+										<?php echo $phones; ?>
+	                                </td>
+	                                <td>
+	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="im" value="<?php echo $contact['im']; ?>">
+	                                </td>
+	                                <td>
+	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="notes" value="<?php echo $contact['notes']; ?>">
+	                                </td>
+	                            </tr>
+	<?php
+		}
+	?>
+								<tr>
+									<td colspan="5">
+										<button type="submit" class="btn btn-default btn-submit btn-sm" disabled>Save</button>
+									</td>
+								</tr>
+	                        </tbody>
+	                    </table>
+	                </div>
+	            </div>
 			</div>
 			
 			<!-- Materials pane -->
 			<div class="tab-pane" id="terms_tab">
+				<?php
+					$selPP = ' selected';
+					$selC = ' selected';
 				
+					$ar_list = '';
+					$ap_list = '';
+					$query = "SELECT * FROM terms LEFT JOIN company_terms ON company_terms.termsid = terms.id ";
+					$query .= "WHERE (companyid IS NULL OR companyid = '".$companyid."') ";
+					$query .= "ORDER BY days ASC, terms ASC; ";
+					$result = qdb($query) OR die(qe().' '.$query);
+					$num_terms = mysqli_num_rows($result);
+					// first iterate to find if any company-selections are made; if not, default to select all
+					$ar_selections = false;
+					$ap_selections = false;
+					while ($r = mysqli_fetch_assoc($result)) {
+						$terms[] = $r;
+						if ($r['companyid'] AND $r['category']=='AR') { $ar_selections = true; }
+						if ($r['companyid'] AND $r['category']=='AP') { $ap_selections = true; }
+					}
+					foreach ($terms as $r) {
+						$sel = '';
+						if (($r['category']=='AR' AND $r['companyid']) OR $ar_selections===false) { $sel = ' selected'; }
+						$ar_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
+				
+						$sel = '';
+						if (($r['category']=='AP' AND $r['companyid']) OR $ap_selections===false) { $sel = ' selected'; }
+						$ap_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
+					}
+				?>
+				
+						<div class="row terms-section bg-sales">
+							<div class="col-sm-2">
+								<h4><i class="fa fa-arrow-circle-o-left"></i> Receivable Terms</h4>
+							</div>
+							<div class="col-sm-2">
+								Type:<br/>
+								<select class="form-control terms-select2 terms-type" multiple>
+									<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
+									<option value="Credit"<?php echo $selC; ?>>Credit</option>
+								</select>
+							</div>
+							<div class="col-sm-8">
+								Approved Terms:<br/>
+								<select name="ar_termsids" class="form-control terms-select2 terms-selections" data-category="AR" data-companyid="<?php echo $companyid; ?>" multiple>
+									<?php echo $ar_list; ?>
+								</select>
+							</div>
+						</div>
+						<div class="row terms-section bg-purchases">
+							<div class="col-sm-2">
+								<h4><i class="fa fa-arrow-circle-o-right"></i> Payable Terms</h4>
+							</div>
+							<div class="col-sm-2">
+								Type:<br/>
+								<select class="form-control terms-select2 terms-type" multiple>
+									<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
+									<option value="Credit"<?php echo $selC; ?>>Credit</option>
+								</select>
+							</div>
+							<div class="col-sm-8">
+								Approved Terms:<br/>
+								<select name="ap_termsids" class="form-control terms-select2 terms-selections" data-category="AP" data-companyid="<?php echo $companyid; ?>" multiple>
+									<?php echo $ap_list; ?>
+								</select>
+							</div>
+						</div>
+				<?php } /* end (!$companyid) */ ?>
 			</div>
 		</div>
 
         <div class="row">
             <!-- bio, new note & orders column -->
-            <div class="col-md-8 bio">
-                <div class="profile-box">
-
-                    <!-- recent orders table -->
-                    <table class="table table-hover table-striped table-condensed">
-                        <thead>
-                            <tr>
-                                <th class="col-md-3">
-                                    Contact Name
-                                </th>
-                                <th class="col-md-3">
-                                    <span class="line"></span>
-                                    Email(s)
-                                </th>
-                                <th class="col-md-3">
-                                    <span class="line"></span>
-                                    Phone Number(s)
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>
-                                    IM
-                                </th>
-                                <th class="col-md-2">
-                                    <span class="line"></span>
-                                    Notes
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-<?php
-	$contacts = getContacts($companyid);
-	foreach ($contacts as $contactid => $contact) {
-		$cls = ' static-form';
-		if ($contactid) { $cls = ' active-form'; }
-		$name_plh = 'Full Name (Last Name optional)';
-		if ($contactid==0) { $name_plh = 'Add New Contact Name...'; }
-
-		$emails = '';
-		foreach($contact['emails'] as $e) {
-			$email_plh = $e['email'];
-			if (! $email_plh) { $email_plh = 'this@that.com'; }
-			$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
-		}
-		$phones = '';
-		foreach($contact['phones'] as $p) {
-			$phone_plh = $p['phone'];
-			if (! $phone_plh) { $phone_plh = '(000) 555-1212 or 000-555-1212'; }
-			$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
-		}
-?>
-                            <tr data-contactid="<?php echo $contactid; ?>">
-                                <td>
-                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="name" value="<?php echo $contact['name']; ?>" placeholder="<?php echo $name_plh; ?>">
-                                </td>
-                                <td>
-									<?php echo $emails; ?>
-                                </td>
-                                <td>
-									<?php echo $phones; ?>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="im" value="<?php echo $contact['im']; ?>">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="notes" value="<?php echo $contact['notes']; ?>">
-                                </td>
-                            </tr>
-<?php
-	}
-?>
-							<tr>
-								<td colspan="5">
-									<button type="submit" class="btn btn-default btn-submit btn-sm" disabled>Save</button>
-								</td>
-							</tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            
 
 <?php
 	$A = getAddress($companyid,'companyid');
@@ -219,76 +285,6 @@
                 </ul>
             </div>
         </div><!-- row -->
-
-<?php
-	$selPP = ' selected';
-	$selC = ' selected';
-
-	$ar_list = '';
-	$ap_list = '';
-	$query = "SELECT * FROM terms LEFT JOIN company_terms ON company_terms.termsid = terms.id ";
-	$query .= "WHERE (companyid IS NULL OR companyid = '".$companyid."') ";
-	$query .= "ORDER BY days ASC, terms ASC; ";
-	$result = qdb($query) OR die(qe().' '.$query);
-	$num_terms = mysqli_num_rows($result);
-	// first iterate to find if any company-selections are made; if not, default to select all
-	$ar_selections = false;
-	$ap_selections = false;
-	while ($r = mysqli_fetch_assoc($result)) {
-		$terms[] = $r;
-		if ($r['companyid'] AND $r['category']=='AR') { $ar_selections = true; }
-		if ($r['companyid'] AND $r['category']=='AP') { $ap_selections = true; }
-	}
-	foreach ($terms as $r) {
-		$sel = '';
-		if (($r['category']=='AR' AND $r['companyid']) OR $ar_selections===false) { $sel = ' selected'; }
-		$ar_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
-
-		$sel = '';
-		if (($r['category']=='AP' AND $r['companyid']) OR $ap_selections===false) { $sel = ' selected'; }
-		$ap_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
-	}
-?>
-
-		<div class="row terms-section bg-sales">
-			<div class="col-sm-2">
-				<h4><i class="fa fa-arrow-circle-o-left"></i> Receivable Terms</h4>
-			</div>
-			<div class="col-sm-2">
-				Type:<br/>
-				<select class="form-control terms-select2 terms-type" multiple>
-					<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
-					<option value="Credit"<?php echo $selC; ?>>Credit</option>
-				</select>
-			</div>
-			<div class="col-sm-8">
-				Approved Terms:<br/>
-				<select name="ar_termsids" class="form-control terms-select2 terms-selections" data-category="AR" data-companyid="<?php echo $companyid; ?>" multiple>
-					<?php echo $ar_list; ?>
-				</select>
-			</div>
-		</div>
-		<div class="row terms-section bg-purchases">
-			<div class="col-sm-2">
-				<h4><i class="fa fa-arrow-circle-o-right"></i> Payable Terms</h4>
-			</div>
-			<div class="col-sm-2">
-				Type:<br/>
-				<select class="form-control terms-select2 terms-type" multiple>
-					<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
-					<option value="Credit"<?php echo $selC; ?>>Credit</option>
-				</select>
-			</div>
-			<div class="col-sm-8">
-				Approved Terms:<br/>
-				<select name="ap_termsids" class="form-control terms-select2 terms-selections" data-category="AP" data-companyid="<?php echo $companyid; ?>" multiple>
-					<?php echo $ap_list; ?>
-				</select>
-			</div>
-		</div>
-
-<?php } /* end (!$companyid) */ ?>
-
 	</div>
     <!-- end main container -->
 
