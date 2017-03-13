@@ -102,7 +102,27 @@
 
 			<!-- Materials pane -->
 			<div class="tab-pane active" id="addresses_tab">
-			  
+				<?php
+					$A = getAddress($companyid,'companyid');
+					$company_phone = getCompany($companyid,'id','phone');
+				?>
+				
+		            <!-- side address column -->
+		            <div class="col-md-4 col-xs-12 address pull-right">
+				<?php if ($A['address']) { ?>
+	                	<iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?php echo urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
+				<?php } ?>
+		                <ul>
+		                    <li><?php echo $A['street']; ?></li>
+		                    <li><?php echo $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
+				<?php if ($company_phone) { ?>
+		                    <li class="ico-li">
+		                        <i class="ico-phone"></i>
+								<?php echo $company_phone; ?>
+		                    </li>
+				<?php } ?>
+		                </ul>
+		            </div>
 			</div>
 			
 			<div class="tab-pane" id="contacts_tab">
@@ -261,29 +281,7 @@
 
         <div class="row">
             <!-- bio, new note & orders column -->
-            
-
-<?php
-	$A = getAddress($companyid,'companyid');
-	$company_phone = getCompany($companyid,'id','phone');
-?>
-
-            <!-- side address column -->
-            <div class="col-md-4 col-xs-12 address pull-right">
-<?php if ($A['address']) { ?>
-                <iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?php echo urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
-<?php } ?>
-                <ul>
-                    <li><?php echo $A['street']; ?></li>
-                    <li><?php echo $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
-<?php if ($company_phone) { ?>
-                    <li class="ico-li">
-                        <i class="ico-phone"></i>
-						<?php echo $company_phone; ?>
-                    </li>
-<?php } ?>
-                </ul>
-            </div>
+           
         </div><!-- row -->
 	</div>
     <!-- end main container -->
