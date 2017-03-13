@@ -29,7 +29,8 @@
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/operations_sidebar.php';
-		
+	include_once $rootdir.'/inc/packages.php';
+	include_once $rootdir.'/inc/display_part.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -162,13 +163,6 @@
 		return $datestamp;
 	}
 	
-	function format($partid, $exchange = false){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']." ".($exchange ? '<b style="color: #428bca;">(Exchange)</b>' : '')."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
-
-	    return $display;
-	}
 	if (grab('exchange')){
 		$exchange = grab('exchange');
 	}
@@ -250,6 +244,10 @@
 			.order-exchange td {
 				background-color: #f5fafc !important;
 			}
+			
+			.master-package {
+				font-weight:bold;
+			}
 		</style>
 
 	</head>
@@ -314,35 +312,7 @@
 									<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 								</button>
 								<?php
-									function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
-										$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
-										$results = qdb($select);
-										
-										$drop = '';
-										foreach ($results as $item) {
-											//print_r($item);
-											$it[$item['id']] = $item['datetime'];	
-											$drop .= "<option data-boxno='".$item['package_no']."' value='".$item['id']."'";
-											if ($selected == $item['id']){
-												$drop .= ' selected';
-											}
-											$drop .= ($item['datetime'] != '' ? ' disabled': '');
-											$drop .= ">Box ".$item['package_no']."</option>";
-										}
-										$drop .= "</select>";
-										$drop .= "</div>";
-										if ($first){
-												$f = "<div>
-					            				<select class='form-control input-sm active_box_selector' data-associated = '$associated' data-serial = '$serial'>";
-											}
-											else{
-												$f = "<div>
-					            					<select class='form-control box_drop input-sm ".($it[$selected] != '' ? '': 'box_selector')."' data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
-											}
-											$f .= $drop;
-										return $f;
-									}
-									
+
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
 									
@@ -351,17 +321,28 @@
 									$open_items = qdb($check);
 	
 									if (mysqli_num_rows($results) > 0){
+										//Initialize
 										$init = true;
 										$package_no = 0;
+										
+										$masters = master_packages($order_number);
 										foreach($results as $b){
 											$package_no = $b['package_no'];
-											$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
+											$box_button = "<button type='button' class='btn ";
+											
+											//Build classes for the box buttons based off data-options
+											$box_button .= ($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary'); //If the button has been shipped
+											$box_button .= (($b['datetime'] == '' && $init) ? ' active' : ''); //If the box is active, indicate that
+											$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
+											$box_button .= " box_selector'";
+											
+											//Add Data tags for the future population of modals
 											$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 											$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 											$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 											$box_button .= " data-row-freight = '".$b['freight_amount']."'";
 											$box_button .= " data-order-number='" . $order_number . "'";
-											$box_button .= " data-box-shipped ='".($b['datetime'] != '' ? 'completed' : '')."'>".$b['package_no']."</button>";
+											$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."'>".$b['package_no']."</button>";
 											echo($box_button);
 				                        	
 				                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
@@ -386,7 +367,7 @@
 									} else {
 										$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
 										qdb($insert);
-										echo("<button type='button' class='btn btn-secondary active box_selector' data-row-id = '".qid()."'>1</button>");
+										echo("<button type='button' class='btn btn-secondary active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 									}
 		
 								?>
@@ -429,7 +410,7 @@
 								<tr class="<?= (!empty($item['ship_date']) ? 'order-complete' : ''); ?> <?= (!empty($item['ref_2']) ? 'order-exchange' : ''); ?>" style = "padding-bottom:6px;">
 									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
 										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
-										<div class="product-descr"><?= format($item['partid'] , (!empty($item['ref_2']) ? true : false)); ?></div>
+										<div class="product-descr"><?= display_part(current(hecidb($item['partid'],'id'))) ?></div>
 									</td>
 								
 								<!-- Grab the old serial values from the database and display them-->

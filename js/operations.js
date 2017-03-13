@@ -2179,7 +2179,7 @@
 			
 			var status = $(".box_selector.active").attr('data-box-shipped');
 			
-			if(status == 'completed') {
+			if(status) {
 				$("#alert_message").show();
 			} else {
 				$("#alert_message").hide();
