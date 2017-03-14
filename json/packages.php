@@ -8,6 +8,7 @@
     $action = grab('action');
     $order_number = grab('order');
     $name = grab('name');
-
-    echo json_encode(package_update($action,$order_number,$name));
+    $id = grab('id');
+    
+    echo json_encode(package_edit($action,$id,$order_number,$name));
 ?>

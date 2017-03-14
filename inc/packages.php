@@ -42,7 +42,7 @@
 		return $f;
 	}
     
-    function package_edit($action,$order,$name){
+    function package_edit($action,$id='',$order ='',$name =''){
     
     if ($action == 'addition'){
         $order_number = prep($order_number);
@@ -54,7 +54,7 @@
         
     }
     elseif($action == "update"){
-        $row_id = prep(grab('id'));
+        $row_id = prep($id);
         
         $update = "UPDATE packages SET ";
         $update .= updateNull("width",grab("width"));
@@ -159,4 +159,11 @@
         return $result;
     }
     
+    //Grab all packages by order number    
+	function getPackages($order_number){
+		$order_number = prep($order_number);
+		$query = "Select * From packages WHERE order_number = $order_number;";
+		$result = qdb($query);
+		return $result;
+	}
 ?>
