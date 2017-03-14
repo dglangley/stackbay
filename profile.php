@@ -30,6 +30,11 @@
 	<?php
 		include_once 'inc/scripts.php';
 	?>
+	<style>
+		.select2 {
+			width: auto !important;
+		}
+	</style>
 </head>
 <body class="sub-nav profile-body">
 
@@ -37,7 +42,7 @@
 
 	<form class="form-inline" method="get" action="/save-profile.php">
 <!--
-	<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
+	<input type="hidden" name="companyid" value="<?= $companyid; ?>">
 -->
 
     <table class="table table-header">
@@ -83,12 +88,12 @@
         <div class="row header">
             <div class="col-md-9">
 				<div class="business-icon"><i class="fa fa-book fa-4x"></i></div>
-                <h2 class="name"><?php echo getCompany($companyid); ?></h2>
+                <h2 class="name"><?= getCompany($companyid); ?></h2>
             </div>
             <div class="col-md-3 text-right">
 	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Delete" data-placement="top"><i class="fa fa-trash text-danger"></i></a>
 	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Edit" data-placement="top"><i class="fa fa-pencil"></i></a>
-	            <a href="/accounts.php?companyid=<?php echo $companyid; ?>" class="btn btn-default icon pull-right" data-toggle="tooltip" title="Accounts" data-placement="top"><i class="fa fa-building-o"></i></a>
+	            <a href="/accounts.php?companyid=<?= $companyid; ?>" class="btn btn-default icon pull-right" data-toggle="tooltip" title="Accounts" data-placement="top"><i class="fa fa-building-o"></i></a>
 			</div>
         </div>
         
@@ -108,21 +113,53 @@
 				?>
 				
 		            <!-- side address column -->
-		            <div class="col-md-4 col-xs-12 address pull-right">
+	            <div class="col-md-4 col-xs-12 address pull-right">
 				<?php if ($A['address']) { ?>
-	                	<iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?php echo urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
+                	<iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?= urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
 				<?php } ?>
-		                <ul>
-		                    <li><?php echo $A['street']; ?></li>
-		                    <li><?php echo $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
+	                <ul>
+	                    <li><?= $A['street']; ?></li>
+	                    <li><?= $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
 				<?php if ($company_phone) { ?>
-		                    <li class="ico-li">
-		                        <i class="ico-phone"></i>
-								<?php echo $company_phone; ?>
-		                    </li>
+	                    <li class="ico-li">
+	                        <i class="ico-phone"></i>
+							<?= $company_phone; ?>
+	                    </li>
 				<?php } ?>
-		                </ul>
-		            </div>
+	                </ul>
+	            </div>
+            
+				<div class="row">
+					<div class="col-md-12">
+						<input class="form-control required" name="na_name" id="add_name" placeholder="Address Name" type="text">
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-12">
+						<input class="form-control required" name="na_line_1" id="add_line_1" placeholder="Line 1" type="text">
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-12">
+						<input class="form-control" name="na_line2" id="add_line2" placeholder="Line 2" type="text">
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-6">
+						<input class="form-control required" name="na_city" id="add_city" placeholder="City" type="text">
+					</div>
+					<div class="col-md-2">
+						<input class="form-control required" name="state" id="add_state" placeholder="State" type="text">
+					</div>
+					<div class="col-md-4">
+						<input class="form-control required" name="na" id="add_zip" placeholder="Zip" type="text">
+					</div>
+				</div>
+				<br>
+				<button type="submit" class="btn btn-default btn-submit btn-sm">Save</button>
 			</div>
 			
 			<div class="tab-pane" id="contacts_tab">
@@ -167,30 +204,30 @@
 			foreach($contact['emails'] as $e) {
 				$email_plh = $e['email'];
 				if (! $email_plh) { $email_plh = 'this@that.com'; }
-				$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
+				$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$contactid.']['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
 			}
 			$phones = '';
 			foreach($contact['phones'] as $p) {
 				$phone_plh = $p['phone'];
-				if (! $phone_plh) { $phone_plh = '(000) 555-1212 or 000-555-1212'; }
-				$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
+				if (! $phone_plh) { $phone_plh = '(000) 000-0000 or 000-000-0000'; }
+				$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$contactid.']['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
 			}
 	?>
-	                            <tr data-contactid="<?php echo $contactid; ?>">
+	                            <tr>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="name" value="<?php echo $contact['name']; ?>" placeholder="<?php echo $name_plh; ?>">
+	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="name[<?= $contactid; ?>]" value="<?= $contact['name']; ?>" placeholder="<?= $name_plh; ?>">
 	                                </td>
 	                                <td>
-										<?php echo $emails; ?>
+										<?= $emails; ?>
 	                                </td>
 	                                <td>
-										<?php echo $phones; ?>
+										<?= $phones; ?>
 	                                </td>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="im" value="<?php echo $contact['im']; ?>">
+	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="im" value="<?= $contact['im']; ?>">
 	                                </td>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?php echo $cls; ?>" name="notes" value="<?php echo $contact['notes']; ?>">
+	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="notes" value="<?= $contact['notes']; ?>">
 	                                </td>
 	                            </tr>
 	<?php
@@ -246,14 +283,14 @@
 							<div class="col-sm-2">
 								Type:<br/>
 								<select class="form-control terms-select2 terms-type" multiple>
-									<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
-									<option value="Credit"<?php echo $selC; ?>>Credit</option>
+									<option value="Prepaid"<?= $selPP; ?>>Prepaid</option>
+									<option value="Credit"<?= $selC; ?>>Credit</option>
 								</select>
 							</div>
 							<div class="col-sm-8">
 								Approved Terms:<br/>
-								<select name="ar_termsids" class="form-control terms-select2 terms-selections" data-category="AR" data-companyid="<?php echo $companyid; ?>" multiple>
-									<?php echo $ar_list; ?>
+								<select name="ar_termsids" class="form-control terms-select2 terms-selections" data-category="AR" data-companyid="<?= $companyid; ?>" multiple>
+									<?= $ar_list; ?>
 								</select>
 							</div>
 						</div>
@@ -264,14 +301,14 @@
 							<div class="col-sm-2">
 								Type:<br/>
 								<select class="form-control terms-select2 terms-type" multiple>
-									<option value="Prepaid"<?php echo $selPP; ?>>Prepaid</option>
-									<option value="Credit"<?php echo $selC; ?>>Credit</option>
+									<option value="Prepaid"<?= $selPP; ?>>Prepaid</option>
+									<option value="Credit"<?= $selC; ?>>Credit</option>
 								</select>
 							</div>
 							<div class="col-sm-8">
 								Approved Terms:<br/>
-								<select name="ap_termsids" class="form-control terms-select2 terms-selections" data-category="AP" data-companyid="<?php echo $companyid; ?>" multiple>
-									<?php echo $ap_list; ?>
+								<select name="ap_termsids" class="form-control terms-select2 terms-selections" data-category="AP" data-companyid="<?= $companyid; ?>" multiple>
+									<?= $ap_list; ?>
 								</select>
 							</div>
 						</div>
