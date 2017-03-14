@@ -37,8 +37,16 @@
     $datetime = grab('date');
     
     $order = "SELECT * FROM sales_orders WHERE so_number = $order_number;";
-    $items = "SELECT serial_no, qty, sales_item_id,inventory.id invid, partid, package_no, packages.datetime date 
-    FROM inventory, packages, package_contents WHERE sales_item_id = $order_number AND serialid = inventory.id and packageid = packages.id AND datetime = '$datetime';";
+    $items = "
+    SELECT serial_no, tracking_no, inventory.qty, sales_item_id, inventory.id invid, inventory.partid, package_no, packages.datetime DATE, sales_orders.so_number
+    FROM inventory, packages, package_contents, sales_items,sales_orders
+    WHERE serialid = inventory.id
+    AND packageid = packages.id
+    AND sales_orders.so_number = sales_items.so_number
+    AND sales_items.id = `inventory`.`sales_item_id`
+    AND sales_orders.so_number = $order_number 
+    AND packages.datetime = '$datetime'
+    ORDER BY package_no ASC;";
 
 	$order_result = qdb($order);
 	$items_results = qdb($items);
@@ -47,7 +55,7 @@
 	if (mysqli_num_rows($order_result) > 0){
 	    $order_info = mysqli_fetch_assoc($order_result);
 	}
-	
+
 	$items_info = array();
 	$tracking = array();
 	if (mysqli_num_rows($items_results) > 0){
@@ -56,11 +64,12 @@
 	        $serial = $i['serial_no'];
 	        $qty = $i['qty'];
 	        $box = $i['package_no'];
-	        $tracking = $i['tracking'];
+	        $tracking = $i['tracking_no'];
+	        $date = $i['DATE'];
 	        //Nesting goes $meta[$box][$part]
-	        $items_info["$box,$tracking"][$part]['info'] = current(hecidb($part,'id'));
-	        $items_info["$box,$tracking"][$part]['qty'] += 1;
-	        $items_info["$box,$tracking"][$part]['serials'][] = $serial;
+	        $items_info["$box,$tracking,$date"][$part]['info'] = current(hecidb($part,'id'));
+	        $items_info["$box,$tracking,$date"][$part]['qty'] += 1;
+	        $items_info["$box,$tracking,$date"][$part]['serials'][] = $serial;
 	    }
 	}
 ;
@@ -158,6 +167,17 @@
             </tr>
         </table>
 <?php
+    $tracking_table  = "<table>";
+    $tracking_table .= "
+    <tr>
+        <td colspan='3'>Tracking Numbers</td>
+    </tr>
+    <tr>
+        <td>Box</td>
+        <td>Tracking Number</td>
+        <td>Shipping Date</td>
+    </tr>
+    ";
     foreach ($items_info as $box =>$part) {
         $box = explode(",",$box);
         echo"
@@ -166,9 +186,9 @@
                 <td colspan = '2' style = 'border:none;'><b>
                     Box #".$box[0]."
                 </b></td>
-                <td colspan = '5' style = 'text-align:right; border:none;'>
-                    "."test"."
-                </td>
+                <td colspan = '5' style = 'text-align:right; border:none;'><b>
+                    ".(($box[1])? "Tracking #: ".$box[1] : '')."
+                </b></td>
             </tr>
             <tr>
                 <td>Ln#</td>
@@ -198,7 +218,16 @@
             }
             echo "</tr>";
         echo "</table>";
+        $tracking_table .= "
+        <tr>
+            <td>".$box[0]."</td>
+            <td>".$box[1]."</td>
+            <td>".format_date($box[2],"N/j/y g:ia")."</td>
+        </tr>    
+        ";
     }
+        $tracking_table .= "</table>";
+        echo $tracking_table;
 ?>
         <div id="footer">If you have any questions, please call us at (805)212-4959</div>
     </body>

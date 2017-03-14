@@ -26,6 +26,7 @@ include_once $rootdir.'/inc/getFreight.php';
 include_once $rootdir.'/inc/getAddresses.php';
 include_once $rootdir.'/inc/form_handle.php';
 include_once $rootdir.'/inc/dropPop.php';
+include_once $rootdir.'/inc/packages.php';
 
 	$rtv_items = array();
 	$rtv_array = array();
@@ -336,13 +337,6 @@ include_once $rootdir.'/inc/dropPop.php';
 		return ($right);
 	}
 	
-	function getPackages($order_number){
-		$order_number = prep($order_number);
-		$query = "Select * From packages WHERE order_number = $order_number;";
-		$result = qdb($query);
-		return $result;
-	}
-	
 	function display($order_number = '',$page = 'Purchase',$mode = ''){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
@@ -513,41 +507,29 @@ include_once $rootdir.'/inc/dropPop.php';
 				}
 			}
 
-			$right .= "<br><br>";
 			
 			$lists = array();
 			
-			$query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
-			$result = qdb($query) OR die(qe().' '.$query);
+			// $query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 			if($page == 'Sales') {
+				// Grab the list of packages grouped by shipment datetime
+				$query = "SELECT GROUP_CONCAT(package_no ORDER BY package_no ASC) boxes, datetime FROM packages WHERE order_number = ".prep($order_number)." and datetime IS NOT NULL GROUP BY datetime;";
+				$result = qdb($query) OR die(qe().' '.$query);
 				
-				while ($row = $result->fetch_assoc()) {
-					$lists[] = $row['datetime'];
-				}
-				
-				$init = true;
-				foreach($lists as $num) {
-					$box = array();
-					if($num != '') {
-						if($init) {
-							$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
-							$init = false;
-						}
+				//If there are any existing packages, print them out on this list
+				if (mysqli_num_rows($result) > 0){
+					$right .= "<br>";
+					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+					foreach($result as $slip) {
+						//Create a date_time object
+						$dateF = date_create($slip['datetime']);
 						
-						$query =  "SELECT package_no FROM packages WHERE datetime = '$num' AND order_number = '".res($order_number)."';";
-						$result = qdb($query);
-						
-						while ($row = $result->fetch_assoc()) {
-							$box[] = $row['package_no'];
-						}
-						
-						$boxList = implode(', ', $box);
-						
-						$dateF = date_create($num);
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$num.'"><i class="fa fa-file" aria-hidden="true"></i></a> Box #  ' . $boxList . ' ' . date_format($dateF, "N/j/y g:ia") . '<br>';
+						// Append to right the packing slip options
+						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$slip['datetime'].'"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
+						$right .= '<b>Box #  ' . $slip['boxes']. '</b></a> ' . date_format($dateF, "N/j/y g:ia") . '<br>';
 					}
 				}
-			}
+			} //end of the sales specific section
 			
 			$right .= "<br></div></div>";
 		}
