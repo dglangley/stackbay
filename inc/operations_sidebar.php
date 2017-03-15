@@ -67,6 +67,7 @@ include_once $rootdir.'/inc/packages.php';
 		$f_account = '';
 		$carrier_options = '';
 		$ref_ln = '';
+		$status = 'Active';
 	
 		//Notes: Associated to an ID, but I will simply load the text here.
 		$private = '';
@@ -99,10 +100,10 @@ include_once $rootdir.'/inc/packages.php';
 				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
 				$selected_service = $row['freight_services_id'];
 				$selected_account = $row['freight_account_id'];
-				
 				$public = $row['public_notes'];
 				$private = $row['private_notes'];
 				$terms = $row['termsid'];
+				$status = $row['status'];
 				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
 				else { $ref_ln = $row['ref_ln']; }
@@ -330,8 +331,21 @@ include_once $rootdir.'/inc/packages.php';
 			";
 		}
 		//Closing Tag (Leave Outside of any if statment)
-	    	$right .= "</div>
-		</div>";
+	    	$right .= "</div>"; //close the immediate sidebar container
+		
+		
+		//Output the void button to the bottom left side of the collumn
+		if ($order_number != 'New' && $status == 'Active') {
+			$right .= "
+				<div class='row' style='padding-bottom: 10px;position:absolute;bottom:0px;'>
+					<div class='col-sm-12'>
+						<div class='btn btn-sm btn-danger' id = 'order_void'>Void</div>
+					</div>
+				</div>
+			";
+		}
+		
+		$right .= "</div>"; //Close the sidebar
 		
 		
 		return ($right);

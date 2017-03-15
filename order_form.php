@@ -25,72 +25,37 @@
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/order_parameters.php';
 	
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
 	$rtv_array = array();
+	
+	//General Variable Declarations
 	$origin = '';
 	$order_short;
-	// $order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "New";
-	$order_number = grab('on','New');
+	$o = array();
 	
-	if($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') {
-		$order_type = "Purchase";
-	} else if(strtolower($_REQUEST['ps']) == 'rtv'){
-		$order_type = "RTV";
+	
+	//High level order parameters
+	$o = o_params(grab('ps',"s"));
+	$order_number = grab('on','New');
+	$status = getOrderStatus($o['type'],$order_number);
+	
+	
+	 if(strtolower($o['type']) == 'rtv'){
 		$origin = $order_number;
 		$order_number = "New";
+		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-		
-		//$rtv_items = array_count_values($rtv_items);
-		
-		// foreach($rtv_items as $key => $item){
-		// 	$rtv_array[$key] = array_count_values($item);
-		// }
-		// echo"<pre>";
-		// print_r($rtv_items);exit;
-		// echo"</pre>";
-	} else {
-		$order_type = "Sales";
-	}
-	
-	if($order_type == "Purchase") {
-		$order_short = 'po';
-	} else if ($order_type == "Sales") {
-		$order_short = 'so';
-	} else if ($order_type == "RTV") {
-		$order_short = 'RTV';
-	}
-	
-	$db_table = strtolower($order_type)."_orders";
-	$db_order = ($order_type == 'Purchase')? 'po_number' : 'so_number';
-	
-
-	function getStock($conditionid = 'new', $partid) {
-		$stock;
-		
-		$partid = res($partid);
-		$conditionid = res($conditionid);
-		
-		$query = "SELECT SUM(qty) as total FROM inventory WHERE partid = $partid AND conditionid = '$conditionid';";
-         $result = qdb($query);
-         if (mysqli_num_rows($result)>0) { $stock = mysqli_fetch_assoc($result);}
-		
-		return $stock['total'];
-	}
-	
-	function format($partid){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
-
-	    return $display;
 	}
 
+	
 ?>
 
 <!DOCTYPE html>
@@ -100,11 +65,11 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
-		<title><?=($order_number != 'New' ? '' : 'New')?> <?=strtoupper($order_short)?><?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title><?=($order_number != 'New')? (strtoupper($o['short'])." #".$order_number) : ('New '.strtoupper($o['short']) )?></title>
 
 	</head>
 	<!---->
-	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
 		<div class="pad-wrapper">
 
 			<?php 
@@ -114,16 +79,13 @@
 				include_once $rootdir.'/modal/alert.php';
 				include_once $rootdir.'/modal/contact.php';
 			?>
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:
-			<?= ($order_type == "Sales")?"#f7fff0":"#f5dfba";?> 
-			;">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:<?=$o['color']?>;">
 				
 				<div class="col-md-4">
 					<?php
 					if($order_number != "New"){
-						$url = ($order_type == "Sales")?"shipping":"inventory_add";
-						echo '<a href="/'.$url.'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
-						echo '<a href="/docs/'.$order_type[0].'O'.$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+						echo '<a href="/'.$o['url'].'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+						echo '<a href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 					}
 					?>
 					
@@ -133,11 +95,14 @@
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if ($order_number=='New'){
-						echo $order_number;
+						echo "$order_number ";
 					}
-					echo " $order_type Order";
+					echo $o['type']." Order";
 					if ($order_number!='New'){
 						echo " #$order_number";
+					}
+					if (strtolower($status) == 'void'){
+						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
 					}
 					echo"</h2>"
 					?>
@@ -157,7 +122,7 @@
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order">
 					<?php $order_number = ($origin)? $origin: $order_number;?>
 					<!-- Everything here is put out by the order creation ajax script -->
-					<?=sidebar_out($order_number,$order_type)?>
+					<?=sidebar_out($order_number,$o['type'])?>
 				</div>
 				<!--======================= End Left half ======================-->
 			
@@ -176,9 +141,9 @@
 										$get_reps = "SELECT users.id userid, contacts.name name, contacts.id contactid FROM users, contacts ";
 										$get_reps .= "WHERE users.contactid = contacts.id; ";
 										
-										if ($order_number != 'New'){
-			                        		$old_rep = "Select `sales_rep_id` from $db_table WHERE `$db_order` = $order_number";
+			                        		$old_rep = "Select `sales_rep_id` from ".$o['table']." WHERE `".$o['id']."` = $order_number";
 			                        		$rep_res = qdb($old_rep);
+										if ($order_number != 'New'){
 			                        		$rep_row = mysqli_fetch_assoc($rep_res);
 			                        		$set_rep = $rep_row['sales_rep_id'];
 			                        		// echo("<option>$old_rep</option>");
@@ -239,10 +204,10 @@
 	    					<th></th>
 	    				</thead>
 	
-			        	<tbody id="right_side_main" <?=($order_type == 'RTV' ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
+			        	<tbody id="right_side_main" <?=($o['type'] == 'RTV' ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
 			        	</tbody>
 				        
-				        <?php if($order_type != 'RTV') { ?>
+				        <?php if($o['type'] != 'RTV') { ?>
 							<tfoot id = "search_input">
 					            <tr id = 'totals_row' style='display:none;'>
 					                <td></td>
@@ -318,6 +283,17 @@
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		
 		<script>
+			$('#order_void').click(function(){
+				var number = $("body").data("order-number");
+				var type = $("body").data("order-type");
+				if(confirm("Are you sure you want to void this order?")){
+			    	$.post('/json/void-order.php',{"number" : number,"type" : type}, function(data) {
+							location.reload();
+							console.log("Order Voided: /json/void-order.php?"+"number="+number+"&type="+type); 
+						}
+					);
+				}
+			});
  
 			(function($){
 				$('.item_search').select2().on("change", function(e) {
@@ -339,7 +315,6 @@
 						}
 					});
 				});
-				
 			})(jQuery);
 		</script>
 
