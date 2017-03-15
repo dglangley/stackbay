@@ -4,6 +4,7 @@
 	include_once 'inc/format_price.php';
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContacts.php';
+	include_once 'inc/getContact.php';
 	include_once 'inc/getPart.php';
 
 	function getAddress($searchid,$search_type='addressid') {
@@ -33,6 +34,10 @@
 	<style>
 		.select2 {
 			width: auto !important;
+		}
+		
+		.pointer {
+			cursor: pointer;
 		}
 	</style>
 </head>
@@ -101,6 +106,7 @@
 			<li class="active"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
 			<li class=""><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
 			<li class=""><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+			<li class=""><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
 		</ul>
 		
 		<div class="tab-content">
@@ -314,6 +320,115 @@
 						</div>
 				<?php } /* end (!$companyid) */ ?>
 			</div>
+			
+			<div class="tab-pane" id="orders">
+				<?php
+					$p_orders = array();
+					$s_orders = array();
+					$rma_orders = array();
+					
+					//RO coming soon
+					$ro_orders = array();
+					
+					$list_order = '';
+					
+					function getOrders($companyid, $table) {
+						$orders = array();
+						
+						//Pull items based on the company id and all the orders they have associated with them
+						$query = "SELECT * FROM $table ";
+						$query .= "WHERE companyid = $companyid ";
+						$query .= "ORDER BY created DESC;";
+						$result = qdb($query) OR die(qe().' '.$query);
+						
+						while ($r = mysqli_fetch_assoc($result)) {
+							$orders[] = $r;
+						}
+						
+						return $orders;
+					}
+					
+					$p_orders = getOrders($companyid, 'purchase_orders');
+					$s_orders = getOrders($companyid, 'sales_orders');
+					$rma_orders = getOrders($companyid, 'returns');
+					
+					foreach($p_orders as $r) {
+						$list_order .= "<tr class='pointer' onclick=\"location.href='order_form.php?ps=Purchase&on=".$r['po_number']."'\">";
+							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
+							$list_order .= "<td>".$r['po_number']."</td>";
+							$list_order .= "<td>PO</td>";
+							$list_order .= "<td>".getContact($r['contactid'])."</td>";
+							$list_order .= "<td>".$r['public_notes']."</td>";
+						$list_order .= "</tr>";
+					}
+					
+					foreach($s_orders as $r) {
+						$list_order .= "<tr class='pointer' onclick=\"location.href='order_form.php?on=".$r['so_number']."'\">";
+							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
+							$list_order .= "<td>".$r['so_number']."</td>";
+							$list_order .= "<td>SO</td>";
+							$list_order .= "<td>".getContact($r['contactid'])."</td>";
+							$list_order .= "<td>".$r['public_notes']."</td>";
+						$list_order .= "</tr>";
+					}
+					
+					foreach($rma_orders as $r) {
+						$list_order .= "<tr class='pointer' onclick=\"location.href='rma.php?on=".$r['rma_number']."'\">";
+							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
+							$list_order .= "<td>".$r['rma_number']."</td>";
+							$list_order .= "<td>RMA</td>";
+							$list_order .= "<td>".getContact($r['contactid'])."</td>";
+							$list_order .= "<td>".$r['public_notes']."</td>";
+						$list_order .= "</tr>";
+					}
+				?>
+				
+				<div class="btn-group" data-toggle="buttons" style="margin-bottom: 15px;">
+			        <button class="glow left large btn-report filter_status " type="submit" data-filter="active">
+			        	<i class="fa fa-sort-numeric-desc"></i>	
+			        </button>
+					<!--<input type="radio" name="report_type" value="summary" class="hidden">-->
+			        <button class="glow center large btn-report filter_status " type="submit" data-filter="complete">
+			        	<i class="fa fa-history"></i>	
+			        </button>
+			        <!--<input type="radio" name="report_type" value="detail" class="hidden">-->
+					<button class="glow right large btn-report filter_status active" type="submit" data-filter="all" checked="">
+			        	All<!--<i class="fa fa-history"></i>	-->
+			        </button>
+			        <!--<input type="radio" name="report_type" value="detail" class="hidden">-->
+			    </div>
+			    
+				
+				<table class="table table-hover table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th class="col-md-3">
+                                DATE
+                            </th>
+                            <th class="col-md-2">
+                                <span class="line"></span>
+                                ORDER#
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                ORDER TYPE
+                            </th>
+                            <th class="col-md-3">
+                                <span class="line"></span>
+                                CONTACT
+                            </th>
+                            <th class="col-md-3">
+                                <span class="line"></span>
+                                NOTES
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    	<?= $list_order; ?>
+					</tbody>
+				</table>
+			</div>
+			
 		</div>
 
         <div class="row">

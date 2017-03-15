@@ -6,6 +6,7 @@
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
