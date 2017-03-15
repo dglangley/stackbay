@@ -2,6 +2,7 @@
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
+	include_once 'inc/getAddresses.php';
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContacts.php';
 	include_once 'inc/getContact.php';
@@ -113,63 +114,83 @@
 
 			<!-- Materials pane -->
 			<div class="tab-pane active" id="addresses_tab">
-				<?php
-					$A = getAddress($companyid,'companyid');
-					$company_phone = getCompany($companyid,'id','phone');
-				?>
-				
-		            <!-- side address column -->
-	            <div class="col-md-4 col-xs-12 address pull-right">
-				<?php if ($A['address']) { ?>
-                	<iframe style="width:100%" height="200" scrolling="no" src="https://maps.google.com/maps?ie=UTF8&amp;t=m&amp;q=<?= urlencode($A['address']); ?>&amp;z=7&amp;output=embed"></iframe>
-				<?php } ?>
-	                <ul>
-	                    <li><?= $A['street']; ?></li>
-	                    <li><?= $A['city'].' '.$A['state'].' '.$A['postal_code']; ?></li>
-				<?php if ($company_phone) { ?>
-	                    <li class="ico-li">
-	                        <i class="ico-phone"></i>
-							<?= $company_phone; ?>
-	                    </li>
-				<?php } ?>
-	                </ul>
-	            </div>
-            
-				<div class="row">
-					<div class="col-md-12">
-						<input class="form-control required" name="na_name" id="add_name" placeholder="Address Name" type="text">
-					</div>
-				</div>
-				<br>
-				<div class="row">
-					<div class="col-md-12">
-						<input class="form-control required" name="na_line_1" id="add_line_1" placeholder="Line 1" type="text">
-					</div>
-				</div>
-				<br>
-				<div class="row">
-					<div class="col-md-12">
-						<input class="form-control" name="na_line2" id="add_line2" placeholder="Line 2" type="text">
-					</div>
-				</div>
-				<br>
-				<div class="row">
-					<div class="col-md-6">
-						<input class="form-control required" name="na_city" id="add_city" placeholder="City" type="text">
-					</div>
-					<div class="col-md-2">
-						<input class="form-control required" name="state" id="add_state" placeholder="State" type="text">
-					</div>
-					<div class="col-md-4">
-						<input class="form-control required" name="na" id="add_zip" placeholder="Zip" type="text">
-					</div>
-				</div>
-				<br>
-				<button type="submit" class="btn btn-default btn-submit btn-sm">Save</button>
+				<!-- recent orders table -->
+                <table class="table table-hover table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th class="col-md-2">
+                                Address Name
+                            </th>
+                            <th class="col-md-4">
+                                <span class="line"></span>
+                                Street
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                City
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                State
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Postal
+                            </th>
+                            <th class="col-md-3">
+                                <span class="line"></span>
+                                Notes
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+<?php
+$addresses = array();
+
+//Get the addressids associated with the companyid
+$query = "SELECT * FROM company_addresses ";
+$query .= "WHERE companyid = $companyid ";
+$query .= "ORDER BY addressid ASC;";
+
+$result = qdb($query) OR die(qe().' '.$query);
+						
+while ($r = mysqli_fetch_assoc($result)) {
+	$addresses[] = $r['addressid'];
+}
+
+foreach ($addresses as $addressid) {
+	$address_info = getAddresses($addressid);
+?>
+                        <tr>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_name[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['name']?>" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_street[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['street']?>" placeholder="Street"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_city[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['city']?>" placeholder="State"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_state[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['state']?>" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_postal[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['postal_code']?>" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_notes[<?= $contactid; ?>][<?= $addressid; ?>]" value="<?=$address_info['notes']?>" placeholder="Notes"></td>
+                        </tr>
+<?php
+}
+?>
+						<tr>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_name[<?= $contactid; ?>][0]" value="" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_street[<?= $contactid; ?>][0]" value="" placeholder="Street"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_city[<?= $contactid; ?>][0]" value="" placeholder="State"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_state[<?= $contactid; ?>][0]" value="" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_postal[<?= $contactid; ?>][0]" value="" placeholder="Address Name"></td>
+							<td><input type="text" class="form-control input-sm inline static-form" name="address_notes[<?= $contactid; ?>][0]" value="" placeholder="Notes"></td>
+                        </tr>
+						<tr>
+							<td colspan="5">
+								<button type="submit" class="btn btn-default btn-submit btn-sm" disabled>Save</button>
+							</td>
+						</tr>
+                    </tbody>
+                </table>
 			</div>
 			
 			<div class="tab-pane" id="contacts_tab">
-			    <div class="col-md-8 bio">
+			    <!--<div class="col-md-12 bio">-->
 	                <div class="profile-box">
 	
 	                    <!-- recent orders table -->
@@ -247,7 +268,7 @@
 	                        </tbody>
 	                    </table>
 	                </div>
-	            </div>
+	            <!--</div>-->
 			</div>
 			
 			<!-- Materials pane -->
