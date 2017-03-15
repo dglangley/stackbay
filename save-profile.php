@@ -3,7 +3,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
-$type = '';//for now
+		$type = '';//for now
+		
 		$query = "REPLACE ".$fieldname."s (".$fieldname.", type, contactid";
 		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES ('".$fieldvalue."',";
@@ -27,12 +28,13 @@ $type = '';//for now
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) {
 		$companyid = $_REQUEST['companyid'];
 	}
-	if (isset($_REQUEST['name'])) { $name = trim($_REQUEST['name']); }
+	
+	if (isset($_REQUEST['name'])) { $name = $_REQUEST['name']; }
 	if (isset($_REQUEST['title'])) { $title = trim($_REQUEST['title']); }
 	if (isset($_REQUEST['notes'])) { $notes = trim($_REQUEST['notes']); }
 	if (isset($_REQUEST['emails']) AND is_array($_REQUEST['emails'])) { $emails = $_REQUEST['emails']; }
 	if (isset($_REQUEST['phones']) AND is_array($_REQUEST['phones'])) { $phones = $_REQUEST['phones']; }
-
+	
 	$msg = 'Success';
 	if (! $companyid OR ! $name) {
 		$msg = 'Missing valid input data';
@@ -43,15 +45,33 @@ $type = '';//for now
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Contact does not exist';
 		}
-
-		$contactid = setContact($name,$companyid,$title,$notes,$ebayid);
-
-		foreach ($emails as $id => $email) {
-			$id = updateContact('email',$email,$contactid,$id);
+		
+		foreach($name as $contactid => $cname) {
+			$pointer;
+			//An id of 0 signifies a new contact being created so create the user using $contactid and create the userid
+			if($contactid == 0) {
+			 	$contactid = setContact($cname,$companyid,$title,$notes,$ebayid);
+			 	$pointer = 0;
+			} else {
+				$pointer = $contactid;
+			}
+			
+			//echo $contactid . " " . $cname . ' ';
+			//print_r($emails[$contactid]);
+			//print_r($phones[$contactid]);
+			
+			foreach ($emails[$pointer] as $id => $email) {
+				//echo '<br>Email: ' . $id . '  '. $email . '<br>';
+				$id = updateContact('email',$email,$contactid,$id);
+			}
+			
+			foreach ($phones[$pointer] as $id => $phone) {
+				//echo '<br>Number: ' . $id . '  '. $phone . '<br>';
+				$id = updateContact('phone',$phone,$contactid,$id);
+			}
+			// "<br><br>";
 		}
-		foreach ($phones as $id => $phone) {
-			$id = updateContact('phone',$phone,$contactid,$id);
-		}
+		//die;
 	}
 
 	header('Location: /profile.php?companyid='.$companyid);
