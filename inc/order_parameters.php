@@ -51,6 +51,19 @@
 			$info['url'] = "inventory_add";
             $info['color'] = '#f7fff0';
 		}
+		else if (strtolower($type) == "invoice"){
+			// Remember: RTV acts like a Sales Order
+			$info['type'] = "Invoice";
+			$info['order'] = "invoices";
+			$info['item'] = "invoice_items";
+			$info['tables'] = " invoices i, invoice_items ii WHERE i.invoice_no = ii.invoice_no ";
+			$info['short'] = "INV";
+			$info['id'] = "invoice_no";
+			$info['active'] = " AND i.status = 'Pending' ";
+			$info['inactive'] = " AND i.status = 'Completed' ";
+			$info['url'] = "invoice";
+            $info['color'] = '#94b4b5';
+		}
 		else{
 				$info['case'] = $type;
 		}

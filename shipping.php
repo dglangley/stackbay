@@ -31,6 +31,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -65,6 +66,7 @@
 		$selected_carrier = $result['freight_carrier_id'];
 		$selected_service = $result['freight_services_id'];
 		$selected_account = $result['freight_account_id'];
+		$status = $result['status'];
 	}
 	
 	function getItems($so_number = 0, $exchange) {
@@ -275,6 +277,9 @@
 					}
 					if ($order_number!='New'){
 						echo "#$order_number";
+					}
+					if (strtolower($status) == 'void'){
+						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
 					}
 					echo"</h2>";
 				?>

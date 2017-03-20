@@ -26,6 +26,7 @@
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/dropPop.php';
+		include_once $rootdir.'/inc/display_part.php';
 
 
 //------------------------------------------------------------------------------
@@ -77,71 +78,7 @@ function search_row(){
         //Warranty
         $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
 
-/*
-        $line = "
-            <tr id = 'totals_row' style='display:none;'>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td style='text-align:right;'>Total:</td>
-                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
-                <td></td>
-            </tr>
-            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
-        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
-		        <td id = 'search'>
-		            <div class='input-group'>
-		              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
-		              <span class='input-group-btn'>
-		                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
-		            </span>
-		            </div>
-		        </td>
-		        <td>			
-				    <div class='input-group date datetime-picker-line'>
-		                <input type='text' name='ni_date' class='form-control input-sm' value='$date' style = 'min-width:50px;'/>
-		                <span class='input-group-addon'>
-		                    <span class='fa fa-calendar'></span>
-					    </span>
-		            </div>
-		        </td>
-        		<td>".$condition_dropdown."</td>
-        		<td>".$warranty_dropdown."</td>
-        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-            	<td>
-	                <div class='input-group'>
-	                    <span class='input-group-addon'>$</span>
-	                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
-	                </div>
-	            </td>
-        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
-                <td colspan='2' id = 'check_collumn'> 
-                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
-                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
-                </td>
-			</tr>
-		    <!-- Adding load bar feature here -->
-	   	 	<tr class='search_loading'><td colspan='12'><span style='text-align:center; display: none; padding-top: 10px;'>Loading...</span></td></tr>
-    
-			<!-- dummy line for nothing found -->
-	   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
-		";
-    
-	    return $line;
-*/
-	    //The macro row will /NOT/ be stored, and will dissappear after each new item is added.
 }
-
-function format($parts){
-    $name = "<span class = 'descr-label'>".$parts['part']." &nbsp; ".$parts['heci']."</span>";
-    $name .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($parts['manf'])." &nbsp; ".dictionary($parts['system']).'</span> <span class="description-label">'.dictionary($parts['description']).'</span></div>';
-
-    return $name;
-}
-
 
 //==================== Build the individual version output ====================
 function sub_rows($search = ''){
@@ -195,6 +132,7 @@ function sub_rows($search = ''){
                 }
                 else{
                         $rows = "
+                        <!-- Created from $search -->
                         <tr class = 'items_label'>
                             <td></td>
                             <td></td>
@@ -246,12 +184,12 @@ function sub_rows($search = ''){
                             <td></td>
                             <td>";
             
-                        $rows .=(format($info));
+                        $rows .=(display_part($info));
                         $rows .= "</td>
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+                            <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
                             <td></td>
                             <td>$text</td>
                             <td></td>

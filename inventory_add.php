@@ -29,10 +29,11 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/locations.php';
-	
+	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
-	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
+	$order_number = grab('on');
 	$order_type = "Purchase";
 
 
@@ -89,25 +90,15 @@
 		
 		return $listSerials;
 	}
-	
-	function format($partid){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
-	    return $display;
-	}
-	
-	
 	$partsListing = getPOParts();
+	$status = getOrderStatus($order_type,$order_number);
 ?>
 
 <!DOCTYPE html>
 <html>
 	<head>
-		<?php 
-			include_once $rootdir.'/inc/scripts.php';
-		?>
+		<?php include_once $rootdir.'/inc/scripts.php';?>
 		<title>Outstanding PO <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
@@ -151,7 +142,11 @@
 					
 					</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
+					<h2>
+						<?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?>
+						<?=(strtolower($status) == 'void')?("<b><span style='color:red;'> [VOIDED]</span></b>") : "";?>
+					</h2>
+					
 				</div>
 				<div class="col-sm-4">
 				</div>
@@ -209,9 +204,7 @@
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
-										<?php 
-											echo format($part['partid']);
-										?>
+										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
 										<div class="row-fluid locations_tracker" data-serial="">
