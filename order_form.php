@@ -53,7 +53,9 @@
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-	}
+	 } elseif ($o['type'] == "invoice"){
+	 	
+	 }
 
 	
 ?>

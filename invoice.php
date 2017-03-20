@@ -41,24 +41,31 @@
 		}
 	}
 	function getInvoicePackages($in_no){
-		$shipped_packages = "SELECT * FROM "
+		$shipped_packages = "
+		SELECT * FROM invoice_shipments, packages, package_contents
+		WHERE invoice_shipments.invoice_no = '$in_no' 
+		AND packages.id = invoice_shipments.packageid
+		AND package_contents.packageid = packages.id;
+		";
+		
+		
 	}
-	
+
+//Grab order information
 	$order_number = grab('on');
 	$invoice_number = grab('in');
 	if ($order_number && !$invoice_number){
 		//Check here to ensure there is no invoice for this order already (to prevent refresh)
 		$invoice_number = create_invoice($order_number);
 	}
+	
+	//Variable Declarations
 	$order_number = $invoice_number;
-	
 	$o = o_params('invoice');
-	
-	
 	$macro = getInvoice($invoice_number);
-	
 	$status = $macro['status'];
 	$origin = $macro['so_number'];
+	
 	
 ?>
 
@@ -138,11 +145,11 @@
 					
 				?>
 				<div class="table-responsive">
-					<h3>PACKAGES</h3>
+					<h3>Description of Items</h3>
 					
-					<table class="table table-hover table-striped table-condensed" id="packages_table" style="margin-top:1.5%;">
-		
-				   </table>
+					<table class="table table-hover table-striped table-condensed" id="shipped_items" style="margin-top:1.5%;">
+						
+				   	</table>
 				</div>
 			</div>
 			<!--====================== End Right half ======================-->

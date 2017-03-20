@@ -5,67 +5,114 @@
 	include_once $rootdir.'/inc/format_date.php';
     include_once $rootdir.'/inc/form_handle.php';
     
-function create_invoice($so_number){
+function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
     //Function to be run to create an invoice
+    //Eventually Shipment Datetime will be a shipment ID whenever we make that table
+    //Type field accepts ['Sale','Repair' ]
     
-
-    $total_owed_calculation = "
-    SELECT SUM(price) owed
-    FROM (Select price FROM sales_items si WHERE so_number = ".prep($so_number)."
-    UNION 
-    SELECT freight_amount price FROM packages p WHERE order_number = ".prep($so_number).") as p; 
-    ";
-    
-    
-    $total_due = mysqli_fetch_assoc(qdb($total_owed_calculation));
-    $total = $total_due['owed'];
-    
-    $macro = "
-    SELECT `companyid`, `created`, `days`, `type`
-    FROM sales_orders, terms
-    WHERE sales_orders.so_number = ".prep($so_number)." AND
-    sales_orders.termsid = termsid;
-    ";
-    
+    if ($type == 'Sale'){
+        $macro = "
+        SELECT `companyid`, `created`, `days`, `type`
+        FROM sales_orders, terms
+        WHERE sales_orders.so_number = ".prep($order_number)." AND
+        sales_orders.termsid = termsid;
+        ";
+    }else{
+        echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; exit;
+    }
     $invoice_macro = mysqli_fetch_assoc(qdb($macro));
-    if ($invoice_macro['type'] == 'prepaid'){
-        $pay_day = $GLOBALS['today'];
+    if (strtolower($invoice_macro['type']) == 'prepaid'){
+        // $pay_day = $GLOBALS['today'];
         $status = 'Completed';
-        //THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR
-        $owed = '0.00';
+        //THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
     } else {
-        $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
+        // $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
         $status = 'Pending';
-        $owed = $total;
     }
     
     
-    $invoice_creation = "
-    INSERT INTO `invoices`(
-    `so_number`, `companyid`, `total_due`, `outstanding_amount`, `payment_due_date`, `date_invoiced`, `status`) 
-    VALUES ( ".prep($so_number).", ".$invoice_macro['companyid'].", $total, $owed, CAST('".$pay_day."' AS DATE), NOW(), '$status');";
-    // echo($invoice_creation);
+    $invoice_creation = "INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `status`) 
+    VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", NOW(), ".prep($shipment_datetime)." , '$status');";
+    
     $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
     
     $invoice_id =  qid();
     //Select associated package orders
 
 // Aaron's commented out super ultra mega join that will eventually be useful for inventory checks and such
-    // $package_select = "
-    // SELECT line_number, si.qty sold_qty, warranty, si.conditionid, i.id, i.notes, p.* 
-    // FROM sales_items si, inventory i, package_contents pc, packages p 
-    // WHERE si.id = ".prep($so_number)."
-    // AND i.sales_item_id = si.id 
-    // AND pc.serialid = i.id 
-    // AND packageid = p.id;
-    // ";
-    
-    $package_insert = "
-    INSERT INTO invoice_shipments(`packageid`, `invoice_no`)
-    SELECT id, $invoice_id AS inv_no FROM packages WHERE order_number = ".prep($so_number).";
+//     $mystical = "SELECT '$invoice_id' as invoice_no, i.partid, si.qty sold_qty, si.price price
+//     FROM sales_items si, inventory i, package_contents pc, packages p 
+//     WHERE si.so_number = ".prep($order_number)."
+//     AND p.datetime = ".prep($shipment_datetime)."
+//     AND i.sales_item_id = si.id 
+//     AND pc.serialid = i.id 
+//     AND packageid = p.id;";
+// exit($mystical); 
+// $items_insert = "
+// INSERT INTO invoice_items(`invoice_no`, `partid`, `qty`, `price`)
+// SELECT '$invoice_id' as invoice_no, i.partid, si.qty sold_qty, si.price price
+// FROM sales_items si, inventory i, package_contents pc, packages p 
+// WHERE si.so_number = ".prep($order_number)."
+// AND p.datetime = ".prep($shipment_datetime)."
+// AND i.sales_item_id = si.id 
+// AND pc.serialid = i.id 
+// AND packageid = p.id;
+// ";
+
+    // Select packages.id, serialid, sales_items.partid, price
+    $invoice_items_select = "
+        Select $invoice_id AS invoice_no, partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
+        FROM packages, package_contents, inventory_history, sales_items
+        WHERE package_contents.packageid = packages.id
+        AND package_contents.serialid = inventory_history.invid
+        AND inventory_history.field_changed = 'sales_item_id'
+        AND inventory_history.value = sales_items.id
+        AND order_number = $order_number
+        /*AND order_type = $type*/
+        GROUP BY sales_items.id;
     ";
-    
-    $result = qdb($package_insert) or die(qe().": ".$package_insert);
+    $invoice_items_prepped = qdb($invoice_items_select);
+    if (mysqli_num_rows($invoice_items_prepped) > 0){
+        foreach ($invoice_items_prepped as $row) {
+            $insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `price`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
+            VALUES (".$row['invoice_no'].
+                    ", ".$row['partid'].
+                    ", ".$row['qty'].
+                    ", ".$row['price'].
+                    ", ".prep($row['line_number']).
+                    ", ".prep($row['ref_1']).
+                    ", ".prep($row['ref_1_label']).
+                    ", ".prep($row['ref_2']).
+                    ", ".prep($row['ref_2_label']).
+                    ", ".prep($row['warranty']).");";
+            qdb($insert) or die(qe()." ".$insert);
+            $line = qid();
+            $package_insert = "
+                INSERT INTO `invoice_shipments` (`invoice_items_id`, `packageid`)
+                    SELECT $line AS line, packages.id
+                    FROM packages, package_contents, inventory_history, sales_items
+                    WHERE package_contents.packageid = packages.id
+                    AND package_contents.serialid = inventory_history.invid
+                    AND inventory_history.field_changed = 'sales_item_id'
+                    AND inventory_history.value = sales_items.id
+                    AND order_number = $order_number
+                    /*AND order_type = $type*/
+                    AND sales_items.id = ".$row['sales_item']."
+                    Group By packageid;
+            ";
+            qdb($package_insert) or die(qe()." ".$package_insert);
+        }
+    } 
+
+    // $package_insert = "
+    // Select 
+    //     FROM packages, package_contents, inventory_history, sales_items
+    //     WHERE package_contents.packageid = packages.id
+    //     AND package_contents.serialid = inventory_history.invid
+    //     AND inventory_history.field_changed = 'sales_item_id'
+    //     AND inventory_history.value = sales_items.id
+    //     AND order_number = $order_number;
+    // ";
     
     return $invoice_id;
 
