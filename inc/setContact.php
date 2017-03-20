@@ -17,4 +17,22 @@
 
 		return ($contactid);
 	}
+	
+	function updateContactName($name,$companyid,$title='',$notes='',$ebayid='', $contactid) {
+		$name = (string)$name;
+		$title = (string)$title;
+		$notes = (string)$notes;
+		$ebayid = (string)$ebayid;
+		$companyid = (int)$companyid;
+		
+		if ($title) { $title = "'".res($title)."'"; } else { $title = "NULL"; }
+		if ($notes) { $notes = "'".res($notes)."'"; } else { $notes = "NULL"; }
+		if ($ebayid) { $ebayid = "'".res($ebayid)."'"; } else { $ebayid = "NULL"; }
+		
+		$query = "UPDATE contacts SET name = '".res($name)."', title = $title, notes = $notes, ebayid = $ebayid, status = 'Active' WHERE id = $contactid;";
+
+		$result = qdb($query) OR die(qe().' '.$query);
+		
+		//return $query;
+	}
 ?>
