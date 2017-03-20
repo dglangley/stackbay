@@ -5,7 +5,6 @@
 	include_once 'inc/getAddresses.php';
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContacts.php';
-	include_once 'inc/getContact.php';
 	include_once 'inc/getPart.php';
 
 	//Includes one is broken
@@ -20,6 +19,19 @@
 		}
         
         return $freights;
+	}
+	
+	function getContact($id) {
+		$name;
+		
+		$select = "SELECT name FROM contacts WHERE id = '$id';";
+        $result = qdb($select) or die(qe());
+        if (mysqli_num_rows($result)>0) {
+        	$r = mysqli_fetch_assoc($result);
+			$name = $r['name'];
+        }
+        
+		return $name;
 	}
 	
 	function getAddress($searchid,$search_type='addressid') {
@@ -268,7 +280,7 @@ foreach ($addresses as $addressid) {
 										<?= $phones; ?>
 	                                </td>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="im" value="<?= $contact['im']; ?>">
+	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="im[<?= $contactid; ?>]" value="<?= $contact['ebayid']; ?>">
 	                                </td>
 	                                <td>
 	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="notes[<?= $contactid; ?>]" value="<?= $contact['notes']; ?>">
@@ -460,7 +472,7 @@ foreach ($freights as $freight) {
 					$rma_orders = getOrders($companyid, 'returns');
 					
 					foreach($p_orders as $r) {
-						$list_order .= "<tr class='pointer' onclick=\"location.href='order_form.php?ps=Purchase&on=".$r['po_number']."'\">";
+						$list_order .= "<tr class='pointer purchase_orders' onclick=\"location.href='order_form.php?ps=Purchase&on=".$r['po_number']."'\">";
 							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
 							$list_order .= "<td>".$r['po_number']."</td>";
 							$list_order .= "<td>PO</td>";
@@ -470,7 +482,7 @@ foreach ($freights as $freight) {
 					}
 					
 					foreach($s_orders as $r) {
-						$list_order .= "<tr class='pointer' onclick=\"location.href='order_form.php?on=".$r['so_number']."'\">";
+						$list_order .= "<tr class='pointer sales_orders' onclick=\"location.href='order_form.php?on=".$r['so_number']."'\">";
 							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
 							$list_order .= "<td>".$r['so_number']."</td>";
 							$list_order .= "<td>SO</td>";
@@ -480,7 +492,7 @@ foreach ($freights as $freight) {
 					}
 					
 					foreach($rma_orders as $r) {
-						$list_order .= "<tr class='pointer' onclick=\"location.href='rma.php?on=".$r['rma_number']."'\">";
+						$list_order .= "<tr class='pointer rma_orders' onclick=\"location.href='rma.php?rma=".$r['rma_number']."'\">";
 							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
 							$list_order .= "<td>".$r['rma_number']."</td>";
 							$list_order .= "<td>RMA</td>";
