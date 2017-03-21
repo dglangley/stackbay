@@ -10,13 +10,15 @@
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcRepairCost.php';
 
+	$PURCHASES = array();
 	function getSalesRecords($item_id,$startDate='',$endDate='') {
+		global $PURCHASES;
 		$entries = array();
 
-		$query = "SELECT serial_no, si.partid, si.qty, price, last_purchase, last_sale, last_return, ";
-		$query .= "so.created date, i.id invid, part, heci, c.name, '' ref, '' avg_cost ";
+		$query = "SELECT serial_no, si.partid, si.qty, price, purchase_item_id, sales_item_id, returns_item_id, ";
+		$query .= "si.so_number, so.created date, i.id invid, part, heci, c.name, '' ref ";
 		$query .= "FROM inventory i, inventory_history h, parts p, sales_items si, sales_orders so, companies c ";
-		$query .= "WHERE i.partid = p.id AND h.invid = i.id AND h.value = si.so_number ";
+		$query .= "WHERE i.partid = p.id AND h.invid = i.id AND h.value = si.id AND h.field_changed = 'sales_item_id' ";
 		$query .= "AND si.so_number = so.so_number AND so.companyid = c.id ";
 		if ($startDate) {
 			$dbStartDate = format_date($startDate, 'Y-m-d');
@@ -24,21 +26,28 @@
 			$query .= "AND so.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 		}
 		$query .= "ORDER BY so.created ASC, si.so_number ASC; ";
-echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['descr'] = trim($r['part'].' '.$r['heci']);
-			$r['order_id'] = $r['last_sale'];
+			$r['order_id'] = $r['so_number'];
 
 			$r['price'] = $r['price'];
 			$r['actual_cost'] = 0;
-			if ($r['last_purchase']) {
-				$query2 = "SELECT price FROM purchase_items WHERE po_number = '".$r['last_purchase']."'; ";
-echo $query2.'<BR>';
+			$r['avg_cost'] = 0;
+
+			if (isset($PURCHASES[$r['invid']])) {
+				$r['actual_cost'] = $PURCHASES[$r['invid']]['actual_cost'];
+				$r['avg_cost'] = $PURCHASES[$r['invid']]['avg_cost'];
+			} else {
+				$query2 = "SELECT SUM(actual) actual_cost, SUM(average) avg_cost ";
+				$query2 .= "FROM inventory_costs c ";
+				$query2 .= "WHERE c.inventoryid = '".$r['invid']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
-					$r['actual_cost'] = $r2['price'];
+					$r['actual_cost'] = $r2['actual_cost'];
+					$r['avg_cost'] = $r2['avg_cost'];
+					$PURCHASES[$r['invid']] = array('actual'=>$r['actual_cost'],'average'=>$r['avg_cost']);
 				}
 			}
 

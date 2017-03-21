@@ -235,8 +235,8 @@ include_once $rootdir.'/inc/packages.php';
 					</div>
 				</div>
 		";
-		 
-		 //This feature will be added later ***Upload  	
+		
+		//This feature will be added later ***Upload  	
 		 //$right .= "
 			// 	<div class='row'>
 			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>

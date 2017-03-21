@@ -96,9 +96,9 @@
 				    </td>
 		            <td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
-		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
-		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
+		            <td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
+		            <td><input class='form-control input-sm oto_price' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
+		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<div class='btn-group'>
 							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 7px 10px;'>

@@ -151,7 +151,7 @@
 						// auto-populate next line number to the search row line
 						$(".search_row").find('input[name="ni_line"]').val(line_number());
 						if($(".easy-output").length > 0){
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$("#order_total").val(updateTotal());
 							$('#totals_row').show();
 						}
 					},					
@@ -223,23 +223,11 @@
 				});
 			}
 			// This checks for a change in the company select2 on the sidebar and adds in the respective contacts to match the company
-			$(document).on("keyup","#search_input > tr > td > input, #search_input > tr.search_row > td:nth-child(7) > div > input",function() {
-				var qty = 0;
-				$.each($(".search_lines"),function(){
-					var s_qty = ($(this).find("input[name=ni_qty]").val());
-					if (s_qty){
-						qty += (parseInt($(this).find("input[name=ni_qty]").val()));
-					}
-				});
-				var price = parseFloat($(".search_row").find("input[name=ni_price]").val());
-				if (!isNaN(price) && !isNaN(qty)){
-					var display = price_format(qty * price);
-				}
-				else{
-					var display = '0.00';
-				}
-				$("tfoot").find("input[name=ni_ext]").val(display);
-				$("#search_input > tr.search_row > td:nth-child(6) > input").val(qty);
+			// #search_input > tr > td > input,
+			$(document).on("keyup"," #new_item_price",function() {
+				var result = sumSearchLines()
+				$("#new_item_total").val(result['price']);
+				$("#search_input > tr.search_row > td:nth-child(6) > input").val(result['qty']);
 			});
 			$(document).on("change","#order_selector",function() {
 				// alert(order_type);
@@ -521,9 +509,8 @@
 			$(document).on("change","#service",function() {
 				var days = parseInt($("#service :selected").attr("data-days"));
 				if (!isNaN(days)){
-					$("input[name=ni_date]").val(freight_date(days));
-					$('.line_date').text(freight_date(days));
-					$('.line_date').attr("data-date",freight_date(days));
+					new_date = freight_date(days);
+					$("#search_row").find("input[name=ni_date]").val(freight_date(days));
 				}
 			});
 
@@ -547,6 +534,7 @@
 						dataType: 'json',
 						success: function(result) {
 							$(".search_loading").hide();
+							//Remove all old search lines
 							$(".search_lines").html("").remove();
 							//$(".nothing_found").html("").remove();
 							
@@ -556,7 +544,7 @@
 								$('.nothing_found').hide();
 							}
 							
-							$("#search_input").append(result);
+							$("#search_row").after(result);
 							$(".search_lines input[name='ni_qty']:first").focus();
 						},
 						error: function(xhr, status, error) {
@@ -568,8 +556,12 @@
 			
 			//This allows you to use the up and down arrows on the Search lines in PO/SO
 			//Also on tab of qty it will go straight to the price
-			$(document).on("keydown","input[name='ni_qty']",function(e){
-				if (e.keyCode == 9) {
+			$(document).on("keyup",".search_lines input[name='ni_qty']",function(e){
+				var shifted = e.shiftKey
+				if(e.keyCode == 9 && shifted){
+					e.preventDefault();
+					$('#go_find_me').focus();
+				} else if (e.keyCode == 9) {
 					e.preventDefault();
 					$('input[name="ni_price"]').focus();
 				} else if (e.keyCode == 38) {
@@ -580,37 +572,59 @@
 					//Down Arrow
 					$(this).closest('.search_lines').next().find("input[name='ni_qty']").focus();
 				}
+				var qty = sumSearchLines();
+				$("#new_item_qty").val(qty['qty']);
+				$("#new_item_total").val(qty['price']);
 			});
 			
-			$(document).on("keydown","input[name='ni_price']",function(e){
-				if (e.keyCode == 9) {
+			$(document).on("change","#tax_rate",function(){
+				$("#order_total").val(updateTotal());
+			});
+			$(document).on("change","#new_item_price, #new_item_qty", function(){
+				var price = parseFloat($("#new_item_price").val());
+				var qty = parseFloat($("#new_item_qty").val());
+				
+				$("#new_item_total").val(price_format(price*qty));
+			});
+			$(document).on("keydown","#new_item_price",function(e){
+				var shifted = e.shiftKey
+				if(e.keyCode == 9 && shifted){
+					e.preventDefault();
+					$(".search_lines input[name='ni_qty']:first").focus();
+				} else if (e.keyCode == 9) {
 					e.preventDefault();
 				} else if (e.keyCode == 13) {
 					var isValid = nonFormCase($(this), e);
 					
+					$(".items_label").html("").remove();
 					if(isValid) {
 						var qty = 0;
 						console.log($(".search_lines"));
    		    			$(".search_lines").each(function() {
 							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						});
+						$(".items_label").html("").remove();
 						
 						if (qty == 0){
 							modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 						} else {
 							$(".search_lines").html("").remove();
-							$(".items_label").html("").remove();
 							$("#totals_row").show();
 							$(this).val("");
 							$("input[name='ni_qty']").val("");
 							//sub_row.find("input[name=ni_line]").val(line_number());
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
 					} 
 				}
 			});
-			
+			$(document).on("keyup", ".oto_price, .oto_qty",function(){
+				var price = parseFloat($(this).closest("tr").find(".oto_price").val());
+				var qty = parseFloat($(this).closest("tr").find(".oto_qty").val());
+				
+				$(this).closest("tr").find(".oto_ext").val(price_format(price*qty));
+			});
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
 				//Ajax Call the new paradigm
@@ -625,7 +639,7 @@
 					dataType: 'json',
 					success: function(result) {
 						$(".search_lines").html("").remove();
-						$("#search_input").append(result)
+						$("#search_row").after(result);
 					},
 					error: function(xhr, status, error) {
 					   	alert(error+" | "+status+" | "+xhr);
@@ -648,7 +662,8 @@
 					dataType: 'json',
 					success: function(result) {
 						$(".search_lines").html("").remove();
-						$("#search_input").append(result)
+						$(".items_label").html("").remove();
+						$("#search_row").after(result);
 					},
 					error: function(xhr, status, error) {
 					   	alert(error+" | "+status+" | "+xhr);
@@ -709,30 +724,32 @@
 			});
 
 			//Total Price output
-			$(document).on("keyup","input[name=ni_qty], input[name=ni_price]",function(){
-				var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
-			    var price = ($(this).closest("tr").find("input[name=ni_price]").val());
-			    var ext = qty*price;
-			    var display = price_format(ext);
-			    if (qty && price){
-					$(this).closest("tr").find("input[name=ni_ext]").val(display);
-			    }
-			    else{
-					$(this).closest("tr").find("input[name=ni_ext]").val("");
-			    }
-			});
+			//, .lazy_entry input[name=ni_price]
+			// $(document).on("keyup",".lazy_entry input[name=ni_qty]",function(){
+			// 	alert('blergh');
+			// 	var qty = ($(this).closest("tr").find("input[name=ni_qty]").val());
+			//     var price = ($(this).closest("tr").find("input[name=ni_price]").val());
+			//     var ext = qty*price;
+			//     var display = price_format(ext);
+			//     if (qty && price){
+			// 		$(this).closest("tr").find("input[name=ni_ext]").val(display);
+			//     }
+			//     else{
+			// 		$(this).closest("tr").find("input[name=ni_ext]").val("");
+			//     }
+			// });
 			
 			$(document).on("click",".line_item_submit",function() {
 				var qty = 0;
+				$(".items_label").html("").remove();
 				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
 				if (qty == 0){
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 				}else{
 							$(".search_lines").html("").remove();
-							$(".items_label").html("").remove();
 							$("#totals_row").show();
 							//sub_row.find("input[name=ni_line]").val(line_number());
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
 			});
@@ -756,6 +773,7 @@
 				if(isValid) {
 					var qty = 0;
 	    			$(".search_lines").each(function() {
+						$(".items_label").html("").remove();
 						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 						qty += $(this).find("input[name=ni_qty]").val();
 					});
@@ -768,7 +786,7 @@
 							$("input[name='ni_price']").val("");
 							$("input[name='ni_qty']").val("");
 							//sub_row.find("input[name=ni_line]").val(line_number());
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
 				} 
@@ -1203,7 +1221,8 @@
 				// save any pending rows before proceeding
 				$(".search_lines").each(function() {
 					// require callback variable so this doesn't release asynchronously before the entire process is complete
-					var completed_qty = 0;					
+					var completed_qty = 0;
+					$(".items_label").html("").remove();
 					completed_qty = populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
 					if (completed_qty == 0){
 						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
@@ -1213,7 +1232,7 @@
 							$(".items_label").html("").remove();
 							$("#totals_row").show();
 							//sub_row.find("input[name=ni_line]").val(line_number());
-							$('#totals_row').find("input[name='np_total']").val(updateTotal());
+							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
 				});
@@ -1625,19 +1644,19 @@
 //=========== END OF FUNCTION FOR THE SHIPPING DASHBOARD =======================
 
 		
-		$('body').on('change keyup paste', 'input[name="NewSerial"]', function(e) {
+		$(document).on('change keyup paste', 'input[name="NewSerial"]', function(e) {
 		     if( $( this ).val() != '' )
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 //This function also handles the functionality for the shipping page
-		$('body').on('keypress', 'input[name="NewSerial"]', function(e) {
+		$(document).on('keypress', 'input[name="NewSerial"]', function(e) {
 			if(e.which == 13) {
 				e.preventDefault();
 				callback($(this));
 			}
 		});
 		
-		$('body').on('click', '.updateSerialRow', function(e) {
+		$(document).on('click', '.updateSerialRow', function(e) {
 			callback($(this).closest('tr').find('input[name="NewSerial"]:first'));
 		});
 		
@@ -2501,16 +2520,6 @@
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
 
-
-
-
-
-
-
-
-
-
-
 			function package_delete(pack, serialid){
 				$.ajax({
 					type: "POST",
@@ -2531,8 +2540,6 @@
 				});
 			}
 
-
-			
 			function getWorkingDays(startDate, endDate){
 				var result = 0;
 				var currentDate = startDate;
@@ -2598,7 +2605,7 @@
 				}
 				// #right_side_main > tr.easy-output > td.line_line
 			}
-			function updateTotal(){
+			function subTotal(){
 				var total = 0.00;
 				// #right_side_main > tr.lazy-entry > td:nth-child(8) > input
 				$(".easy-output").each(function() {
@@ -2612,20 +2619,68 @@
 				    }
 				    total += cost * qty;
 				});
+				
 				//Get all the 
 				return price_format(total);
 			}
-			
-/*
-			$("#service").ready(function() {
-				var days = parseInt($('#service option:selected').attr('data-days'));
-				if (days != 4){
-					$("input[name=ni_date]").val(freight_date(days));
+			function updateTax(){
+				var tax = parseFloat($("#tax_rate").val());
+				if (tax >= 1){
+					tax = tax / 100;
 				}
-			});
-*/
+				var sub = $("#subtotal").val();
+				sub = Number(sub.replace(/[^0-9\.]+/g,""));
+				
+				if (isNaN(tax) || isNaN(sub)){
+					return 0.00;
+				}else{
+					return tax*sub;
+				}
+			}
+			function updateTotal(){
+				
+				var search = 0.00;
+				if($(".search_lines").length){
+					search = sumSearchLines();
+				}
+				var subtotal = subTotal();
+				$("#subtotal").val(subtotal)
+				// $("#subtotal").trigger("change");
+				var tax = updateTax();
+				$("#tax").val(tax);
+				// $("#tax").trigger("change");
+				var freight = parseFloat($("#freight").val());
+				var price = price_format(subtotal+tax+freight+search);
+
+				return price;
+			}
+			
+			function sumSearchLines(){
+				var sum = 0;
+				var total = 0.00;
+				$(".search_line_qty").each(function(){
+					if($(this).val()){
+						sum += parseInt($(this).val());	
+					}
+				});
+				var price = parseFloat($("#search_row").find('input[name="ni_price"]').val());
+				if(!isNaN(sum) && !isNaN(price)){
+					total = sum * price;	
+				}
+				var price = price_format(total);
+				var result = {
+					"price" : price,
+					"qty" : sum
+				}
+				return result;
+			}
 			
 			function price_format(ext){
+				if(isNaN(ext)){
+					ext = 0.00;
+				} else {
+					ext = parseFloat(ext);
+				}
 				var display = ext.toFixed(2);
 				display = display.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 			    display = '$'+(display);
@@ -2732,7 +2787,7 @@
 				success: function(row_out) {
 					if (mode=='update') {
 						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
-						$('#totals_row').find("input[name='np_total']").val(updateTotal());
+						$('#order_total').val(updateTotal());
 					} else if (mode=='append') {
 						$("#right_side_main").append(row_out);
 						
@@ -2754,16 +2809,14 @@
 						var lineNumber = parseInt(sub_row.find("input[name=ni_line]").val());
 						if (!lineNumber){lineNumber = 0;}
 						$("#go_find_me").val("");
-			   			// sub_row.find("input[name=ni_price]").val("");
-			   			// $("#search_input > tr.search_row > td:nth-child(7) > input").val("");
-			   			// $("#search_input > tr.search_row > td:nth-child(8) > input").val("");
+
 					}
 		      		// return qty;
 	   				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No entries found. <br><br> Please enter an item and try again.");
 				},
 			});
         } 
-
+		
 
 		function location_changer(type,limit,home,warehouse){
 			var finder = "."+type;

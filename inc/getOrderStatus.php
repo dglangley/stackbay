@@ -16,7 +16,7 @@
                 return($result['status']);
             }
             else{
-                return("Void");
+                return[$o['status_empty']];
             }
         }
     }

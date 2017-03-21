@@ -295,6 +295,7 @@
 		$vendor = grab("vendor");
 		$order = grab("order");
 		if ($search || $locationid || $conditionid || $order || ($start && $end) || $vendor){
+
 			$in = '';
 			//Get all the parts from the search
 			$initial = hecidb($search);
@@ -321,6 +322,7 @@
 			$query .= sFilter('pi.po_number',$order);
 			$query .= dFilter('i.date_created',$start, $end);
 			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
+			// echo $query; exit;
 			$result = qdb($query);
 			// echo ($query); exit;
 			if (mysqli_num_rows($result) > 0){

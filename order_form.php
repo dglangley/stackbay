@@ -53,6 +53,7 @@
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
+<<<<<<< HEAD
 	}
 	
 	if(!in_array("3", $USER_ROLES) && !in_array("1", $USER_ROLES)) {
@@ -67,6 +68,11 @@
 			exit;
 		}
 	} 
+=======
+	 } elseif ($o['type'] == "invoice"){
+	 	
+	 }
+>>>>>>> 4cd57f5318042afdbfada0ad1f00968debd911c6
 
 	
 ?>
@@ -96,10 +102,10 @@
 				
 				<div class="col-md-4">
 					<?php
-					if($order_number != "New"){
-						echo '<a href="/'.$o['url'].'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
-						echo '<a href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
-					}
+						if($order_number != "New"){
+							echo '<a href="/'.$o['url'].'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+							echo '<a href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+						}
 					?>
 					
 				</div>
@@ -117,7 +123,7 @@
 					if (strtolower($status) == 'void'){
 						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
 					}
-					echo"</h2>"
+					echo"</h2>";
 					?>
 				</div>
 				<div class="col-md-4">
@@ -222,17 +228,6 @@
 				        
 				        <?php if($o['type'] != 'RTV') { ?>
 							<tfoot id = "search_input">
-					            <tr id = 'totals_row' style='display:none;'>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td style='text-align:right;'>Total:</td>
-					                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='total' name='np_total' placeholder='0.00'></td>
-					                <td></td>
-					            </tr>
 					            
 								<?php
 								        //Default is ground aka 4 days
@@ -245,7 +240,7 @@
 								        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
 								?>
 								
-					            <tr class ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
+					            <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
 					        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
 							        <td id = 'search'>
 							            <div class='input-group'>
@@ -265,14 +260,14 @@
 							        </td>
 					        		<td><?php echo $condition_dropdown; ?></td>
 					        		<td><?php echo $warranty_dropdown; ?></td>
-					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' id = 'new_item_qty' placeholder='QTY' value = ''></td>
 					            	<td>
 						                <div class='input-group'>
 						                    <span class='input-group-addon'>$</span>
-						                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value=''>
+						                    <input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' id = 'new_item_price' value=''>
 						                </div>
 						            </td>
-					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' placeholder='0.00'></td>
+					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' id = 'new_item_total' placeholder='0.00'></td>
 					                <td colspan='2' id = 'check_collumn'> 
 					                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
 					                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
@@ -283,6 +278,61 @@
 					    
 								<!-- dummy line for nothing found -->
 						   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
+								<tr id = 'subtotal_row' style=''>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td style='text-align:right;'>Subtotal:</td>
+					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
+					                <td></td>
+					            </tr>
+					            <tr id = 'tax_rate' style=''>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td style='text-align:right;'>Tax Rate:</td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='tax_rate' name='np_tax_rate' placeholder='%0.0'></td>
+					                <td></td>
+					            </tr>
+					            <tr id = 'tax_row' style=''>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td style='text-align:right;'>Tax:</td>
+					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='tax' name='np_tax' placeholder='0.00'></td>
+					                <td></td>
+					            </tr>
+					            <tr id = 'freight_row' style=''>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td style='text-align:right;'>Freight:</td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' placeholder='0.00'></td>
+					                <td></td>
+					            </tr>
+					            <tr id = 'totals_row' style=''>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td></td>
+					                <td style='text-align:right;'>Total:</td>
+					                <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' id ='order_total' name='np_total' placeholder='0.00'></td>
+					                <td></td>
+					            </tr>
 							</tfoot>
 						<?php } ?>
 				   </table>

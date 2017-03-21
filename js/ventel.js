@@ -1604,6 +1604,8 @@
         }); // end ajax call
 	}
 	function loadOrders() {
+		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0) { return; }
+
 		// do the thing
 		refreshOrders();
 		// now load the thing on a schedule for every X mins
