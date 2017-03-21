@@ -7,6 +7,7 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -289,6 +290,7 @@ $tempfile = '/var/tmp/400004291.xls';
 
 		// now take the finished results and add to the db
 		$ln = 0;//line number, even tho it's not necessarily accurate to original list, it's still a good way to keep track
+		$csv_report = '';
 		$report = '';
 		$num_favs = 0;
 		$favs_report = '';
@@ -314,7 +316,11 @@ $tempfile = '/var/tmp/400004291.xls';
 			// assess favorites position by gathering all related partids
 			$favs = getFavorites($row['partids']);
 
-			$report .= '"'.$row['part'].'","'.$row['heci'].'","'.$row['qty'].'","'.$status.'"'.chr(10);
+			$csv_report .= '"'.$row['part'].'","'.$row['heci'].'","'.$row['qty'].'","'.$status.'"'.chr(10);
+
+			$report .= $row['qty'].'- ';
+			if ($row['heci']) { $report .= $row['heci'].' '; }
+			$report .= $row['part'].'<BR>'.chr(10);
 
 			if (count($favs)>0) {
 				$favs_report .= 'qty '.$qty.'- '.$row['part'].' '.$row['heci'].'<BR>';// ("'.$status.'")<BR>';
@@ -326,23 +332,36 @@ $tempfile = '/var/tmp/400004291.xls';
 			$ln++;
 		}
 
-		if ($report) {
-			$report = '"Part","HECI","Qty","Status"'.chr(10).$report;
+		if ($csv_report) {
+			$csv_report = '"Part","HECI","Qty","Status"'.chr(10).$csv_report;
 
 			// create temp file name in temp directory
 			$attachment = sys_get_temp_dir()."/inv-report-".date("ymdHis").".csv";
 			$handle = fopen($attachment, "w");
 			// add contents from file
-			fwrite($handle, $report);
+			fwrite($handle, $csv_report);
 			fclose($handle);
-
-			$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
 
 			// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
 			$bcc = '';
 			if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
 
-			$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc,'',$attachment);
+			// if fewer than 30 lines, send plain text email; otherwise, send csv attached report
+			if ($ln<=30) {
+				$mail_msg = 'I successfully imported your file upload, please see the result(s) below...<BR><BR>'.$report;
+
+				$mail_sbj = 'File Upload Report '.date("D n/j/y");
+				// if verizon telecom, always send $bcc to sales@, which includes david@ from above if $userid<>1
+				if ($companyid==870) {
+					$bcc = 'sales@ven-tel.com';
+					$mail_sbj = getCompany($companyid).' Upload Report '.date("D n/j/y");
+				}
+
+				$send_success = send_gmail($mail_msg,$mail_sbj,getContact($userid,'userid','email'),$bcc);
+			} else {
+				$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
+				$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc,'',$attachment);
+			}
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {
