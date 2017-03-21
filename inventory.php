@@ -193,7 +193,7 @@
 						<option value=''>Select a Company</option>
 					</select>
 					<span class="input-group-btn">
-						<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   
+						<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>   
 					</span>
 				</div>
 			</div>
@@ -223,8 +223,10 @@
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
 <!----------------------------------------------------------------------------->
-
+	<span class='loading_search' style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Loading Search Results...</span>
+	
 	<div class="loading_element_listing" style="display: none;">
+		
 		<div class='col-sm-12' style='padding-top: 20px'>
 			<select class='revisions' multiple>
 				
@@ -315,242 +317,266 @@
 					},
 					dataType: 'json',
 					success: function(part) {
-						// Add feature to auto update the URL without a refresh
-						if(search == '') {
-							window.history.replaceState(null, null, "/inventory.php");
-						} else {
-							window.history.replaceState(null, null, "/inventory.php?search=" + search);	
-						}
-						var headers = '<tr>';
-						if (!search){
-							headers +=	"<th>Items</th>";
-						}
-						if (place == 'null'){
-							headers +=	"<th>Location</th>";
-						}
-						headers +=	"<th>Qty</th>";
-						
-						headers +=	"<th>Condition</th>";
-
-						if(!order){
-							headers +=	"<th>Purchase Order</th>";
-						}
-						if(!vendor){
-							headers +=	"<th>Vendor</th>";
-						}
-						headers +=	"<th>Date Added</th>";
-						headers += "</tr>";
-						
-						$(".revisions").empty();
-						$(".headers").empty();
-						$(".parts").empty();
-						
-						$(".part-container").html("").remove();	
-						// var p = JSON.parse(part)
-						//console.log(part);
-						var revisions, parts;
-						var locations = $('.locations').clone();
-						
-						$('.conditions').find('label').remove();
-						var conditions = $('.conditions').clone();
-						
-						$('.status_select').find('label').remove();
-						var status = $('.status_select').clone();
-						
-						var counter = 1;
-						var rev_arr = [];
-						revisions = "<option value='' selected>All</option>";
-						//If there are multiple parts being returned, loop through them all
-						$.each(part, function(partid, macro){
-							console.log(macro);
-							if(macro == '') {
-								part = '';
-								return false; 
+						if(part != 'test') {
+							// Add feature to auto update the URL without a refresh
+							if(search == '') {
+								window.history.replaceState(null, null, "/inventory.php");
+							} else {
+								window.history.replaceState(null, null, "/inventory.php?search=" + search);	
 							}
-							//Add each part to the revisions page
-							counter++;
-							$.each(macro, function(key,info){
-								if (!(info.part_name in rev_arr)){
-									revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
-									rev_arr[info.part_name] = false;
+							var headers = '<tr>';
+							if (!search){
+								headers +=	"<th>Items</th>";
+							}
+							if (place == 'null'){
+								headers +=	"<th>Location</th>";
+							}
+							headers +=	"<th>Qty</th>";
+							
+							headers +=	"<th>Condition</th>";
+	
+							if(!order){
+								headers +=	"<th>Purchase Order</th>";
+							}
+							if(!vendor){
+								headers +=	"<th>Vendor</th>";
+							}
+							headers +=	"<th>Date Added</th>";
+							headers +=	"<th></th>"
+							headers += "</tr>";
+							
+							$(".revisions").empty();
+							$(".headers").empty();
+							$(".parts").empty();
+							
+							$(".part-container").html("").remove();	
+							// var p = JSON.parse(part)
+							//console.log(part);
+							var revisions, parts;
+							var locations = $('.locations').clone();
+							
+							$('.conditions').find('label').remove();
+							var conditions = $('.conditions').clone();
+							
+							$('.status_select').find('label').remove();
+							var status = $('.status_select').clone();
+							
+							var counter = 1;
+							var rev_arr = [];
+							revisions = "<option value='' selected>All</option>";
+							//If there are multiple parts being returned, loop through them all
+							$.each(part, function(partid, macro){
+								console.log(macro);
+								if(macro == '') {
+									part = '';
+									return false; 
 								}
-								// break apart key to get relevant data (PO)
-								var key = key.split("+");
-								console.log(key);
-								parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
-								if (!search){
-									parts += 	"<td>"+info.part_name+"</td>";
-								}
-								if (place == 'null'){
-									parts += 	"<td>"+info.location+"</td>";
-								}
-								
-								var counterqty = 0;
-								$.each(info.serials, function(i,s_string){
-									counterqty++;
-								});
-									parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
-								
-									parts += 	"<td>"+key[2]+"</td>";
-								if(!order){
-									parts += 	"<td>"+key[1]+"</td>";
-								}
-								if(!vendor){
-									parts += 	"<td>"+info.vendor+"</td>";
-								}
-									parts += 	"<td>"+key[3]+"</td>";
-									parts += "</tr>";
-
-									parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
-												<td colspan='12'>";
-												parts += "<table class='table serial table-hover table-condensed'>\
-															<thead>\
-																<tr>";
-												// parts += "			<th>Part</th>";
-												parts += "			<th class='serial_col col-md-2'>Serial Number</th>";
-												parts += "			<th class='qty_col col-md-1'>qty</th>";
-												parts += "			<th class='status_col col-md-1'>Status</th>";
-												parts += "			<th class='location_col col-md-2'>Location</th>";
-												parts += "			<th class='condition_col col-md-1'>Condition</th>";
-												parts += "			<th class='edit_col col-md-1'></th>";
-												parts += "		</tr>\
-															</thead>\
-															<tbody>";
-
-									$.each(info.serials, function(i,s_string){
-										var serial = s_string.split(", ");
-										//console.log(history);
-										parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status="+serial[3];
-										parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";										// parts += "	<td>"+"bleh"+"</td>";
-										parts += "	<td class='serial_col data pointer serial_original' style='color: #428bca; cursor: pointer;' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
-										parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
-										parts += "	<td class='status_col data status_original'>"+serial[3]+"</td>";
-										parts += "	<td class='location_col data '>"+info.location+"</td>";
-										parts += "	<td class='condition_col data '>"+key[2]+"</td>";
-										
-										parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
-										parts += "	<td class='qty_col edit'>1</td>";
-										parts += "	<td class='status_col edit'>"+serial[3]+"</td>";
-										parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
-										parts += "	<td class='condition_col edit condition_holder' data-condition='"+key[2]+"'></td>";
-										
-										//parts += "<td class='data'></td>";
-										
-										parts += "<td class='edit_col' style='text-align: right;'>\
-											<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
-											<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
-											<a class='edit save_button btn-sm btn-flat success pull-right multipart_sub'>\
-	                						<i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
-	                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i></td>";
-										parts += "</tr>";
-									}); //Serials loop end
-									parts += "</tbody>\
-											</table>\
-										</td>\
-									</tr>";
+								//Add each part to the revisions page
+								counter++;
+								$.each(macro, function(key,info){
+									if (!(info.part_name in rev_arr)){
+										revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+										rev_arr[info.part_name] = false;
+									}
+									// break apart key to get relevant data (PO)
+									var key = key.split("+");
+									console.log(key);
+									parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
+									if (!search){
+										parts += 	"<td>"+info.part_name+"</td>";
+									}
+									if (place == 'null'){
+										parts += 	"<td>"+info.location+"</td>";
+									}
 									
-							// 		// parts += "<tr>\
-							// 		// <td colspan='12'>\
-							// 		// </td>\
-							// 		// </tr>"
+									var counterqty = 0;
+									$.each(info.serials, function(i,s_string){
+										counterqty++;
+									});
+										parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
+									
+										parts += 	"<td>"+key[2]+"</td>";
+									if(!order){
+										parts += 	"<td>"+key[1]+"</td>";
+									}
+									if(!vendor){
+										parts += 	"<td>"+info.vendor+"</td>";
+									}
+										parts += 	"<td>"+key[3]+"</td>";
+										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right'><i class='fa fa-list'></i></button></td>";
+										parts += "</tr>";
+	
+										parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
+													<td colspan='12'>";
+													parts += "<table class='table serial table-hover table-condensed'>\
+																<thead>\
+																	<tr>";
+													// parts += "			<th>Part</th>";
+													parts += "			<th class='serial_col col-md-2'>Serial Number</th>";
+													parts += "			<th class='qty_col col-md-1'>qty</th>";
+													parts += "			<th class='status_col col-md-1'>Status</th>";
+													parts += "			<th class='location_col col-md-2'>Location</th>";
+													parts += "			<th class='condition_col col-md-1'>Condition</th>";
+													parts += "			<th class='notes_col col-md-2'>Notes</th>";
+													parts += "			<th class='actions_col col-md-1'></th>";
+													parts += "			<th class='edit_col col-md-1'></th>";
+													parts += "		</tr>\
+																</thead>\
+																<tbody>";
+	
+										$.each(info.serials, function(i,s_string){
+											var serial = s_string.split(", ");
+											//console.log(history);
+											
+											var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
+											    return letter.toUpperCase();
+											});
+											
+											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status="+serial[3];
+											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
+											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
+											parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
+											parts += "	<td class='status_col data status_original'>"+status+"</td>";
+											parts += "	<td class='location_col data '>"+info.location+"</td>";
+											parts += "	<td class='condition_col data '>"+key[2]+"</td>";
+											parts += "	<td class='notes_col data notes_original'>"
+											if (info.notes){
+												parts += info.notes;
+											}
+											parts += "</td>";
+
+											
+											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
+											parts += "	<td class='qty_col edit'>1</td>";
+											parts += "	<td class='status_col edit'>"+status+"</td>";
+											parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
+											parts += "	<td class='condition_col edit condition_holder' data-condition='"+info.conditionid+"'></td>";
+											parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+info.notes+"' data-serial='"+serial[1]+"'/></td>";
+											//parts += "<td class='data'></td>";
+											
+											parts += "<td class='edit_col' style='text-align: right;'>";
+											
+											if(serial[3] == 'in repair') {
+												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
+											} else {
+												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
+											}
+											
+											parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
+														<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>\
+														</td>";
+		                					parts +="<td>\
+												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
+		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i>\
+												<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
+		                						</td>";
+		                						
+											parts += "</tr>";
+										}); //Serials loop end
+										parts += "</tbody>\
+												</table>\
+											</td>\
+										</tr>";
+										
+								});
+								
+								$('.parts').append(parts);
+								parts = "";
+		
+							});
+							$('.revisions').append(revisions);
+							$('.headers').append(headers);
+							
+							$('.location_holder').append(locations);
+							$('.condition_holder').append(conditions);
+							$('.status_holder').append(status);
+							
+							//GO through each of the conditions and locations and set each one to the respective value
+							// $('.location_holder').each(function() {
+							// 	var actualPlace = $(this).data('place');
+							// 	var actualInstance = $(this).data('instance');
+								
+							// 	$(this).find('select').val(actualPlace);
+							// 	$(this).find('select:last').val(actualInstance);
+								
+							// 	//alert(actualPlace);
+							// });
+							
+							$('.condition_holder').each(function() {
+								var actualCondition = $(this).data('condition');
+								$(this).find('select').val(actualCondition);
 							});
 							
-							$('.parts').append(parts);
-							parts = "";
-	
-						});
-						$('.revisions').append(revisions);
-						$('.headers').append(headers);
-						
-						$('.location_holder').append(locations);
-						$('.condition_holder').append(conditions);
-						$('.status_holder').append(status);
-						
-						//GO through each of the conditions and locations and set each one to the respective value
-						// $('.location_holder').each(function() {
-						// 	var actualPlace = $(this).data('place');
-						// 	var actualInstance = $(this).data('instance');
+							$('.status_holder').each(function() {
+								var actualStatus = $(this).data('status');
+								$(this).find('select').val(actualStatus);
+							});
+							$(".location_holder").each(function() {
+								var place = $(this).data('place');
+								var instance = $(this).data('instance');
+								$(this).find(".place").val(place);
+								$(this).find(".instance option[data-place!='"+place+"']").hide();
+								$(this).find(".instance").val(instance);
+							});
 							
-						// 	$(this).find('select').val(actualPlace);
-						// 	$(this).find('select:last').val(actualInstance);
-							
-						// 	//alert(actualPlace);
-						// });
-						
-						$('.condition_holder').each(function() {
-							var actualCondition = $(this).data('condition');
-							$(this).find('select').val(actualCondition);
-						});
-						
-						$('.status_holder').each(function() {
-							var actualStatus = $(this).data('status');
-							$(this).find('select').val(actualStatus);
-						});
-						$(".location_holder").each(function() {
-							var place = $(this).data('place');
-							var instance = $(this).data('instance');
-							$(this).find(".place").val(place);
-							$(this).find(".instance option[data-place!='"+place+"']").hide();
-							$(this).find(".instance").val(instance);
-						});
-						
-						$(".loading_element_listing").show();
-						if(part != '') {
+							$(".loading_element_listing").show();
 						} else {
+							console.log("Nothing_found")
 							//$(".loading_element_listing").hide();
-					  		//alert("No Parts Found with those parameters");
+					  		alert("No Parts Found with those parameters");
 							$("#item-none").show();
 						}
 					},
 					error: function(xhr, status, error) {
 						//$(".loading_element_listing").hide();
-					   	alert("No Parts Found with those parameters: "+error);
+					   	alert("Error on the parts receipt: "+error);
 					},			
 			});
 		}
 		
-		$(document).on('click', '.edit_button', function(e) {
-			e.preventDefault();
-			
-			$(this).closest('tr').find('.edit').show();
-			$(this).closest('tr').find('.data').hide();
-			$(this).closest('table').find('th span.edit').show();
-			
-			$(this).closest('tr').find('.delete_button').hide();
-			$(this).hide();
-		});
 		
-		$(document).on('click', '.save_button', function(e) {
-			e.preventDefault();
+		//============================ Side buttons ============================
+		$(document).on('click','.repair_button, .save_button, .delete_button',function(){
+			//Variable Delcarations
 			var $save =$(this);
-			
-			var id = $save.closest('tr').find('.newQty').data('id');
+			var id = $save.closest('tr').data('invid');
 			var newSerial = $save.closest('tr').find('.newSerial').val();
-			// alert(newSerial);
-			var newQty = $save.closest('tr').find('.newQty').val();
-			var newStatus = $save.closest('tr').find('#status').val();
-			var newSales = $save.closest('tr').find('.newSO').val();
 			var newPlace = $save.closest('tr').find('.place').val();
 			var newInstance = $save.closest('tr').find('.instance').val();
 			var newCondition = $save.closest('tr').find('#conditionid').val();
-			
-			console.log(window.location.origin+'/json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&qty='+newQty+'&status='+newStatus+'&so='+newSales+'&place='+newPlace+'&instance='+newInstance+'&conditionid='+newCondition);
-			$.ajax({
+			var status = $save.closest('tr').find('.status_col').val();
+			var newNotes = $save.closest('tr').find('.new_notes').val(); 
+			var action = 'save';
+			var valid = true;
+			if($(this).hasClass("repair_button")){
+				action = 'repair';
+				status = $(this).data("status");
+			}else if($(this).hasClass("delete_button")){
+				action = 'delete';
+				valid = false;
+				if (window.confirm("Are you sure you want to delete this serial?")) {
+					valid = true;
+				}
+			}
+			console.log(window.location.origin+'/json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&place='+newPlace+'&instance='+newInstance+'&conditionid='+newCondition);
+			if (valid){
+				$.ajax({
 				type: "POST",
 				url: '/json/inventory-edit.php',
 				data: {
 					"id": id,
 					"serial_no": newSerial,
-					"qty": newQty,
-					"status": newStatus,
-					"so": newSales,
 					"place": newPlace,
 					"instance": newInstance,
-					"conditionid": newCondition
+					"conditionid": newCondition,
+					"notes" : newNotes,
+					"status": status,
+					"action": action
 				},
 				dataType: 'json',
 				success: function(result) {
-					if(result) {
+					console.log(result);
+					if(result && action == 'save') {
 						$save.closest('tr').find('.edit').hide();
 						$save.closest('tr').find('.data').show();
 						$save.closest('table').find('th span.edit').hide();
@@ -562,18 +588,41 @@
 						$('.alert-success').delay(6000).fadeOut('fast');
 						
 						$save.closest('tr').find('.serial_original').html(newSerial);
-						$save.closest('tr').find('.qty_original').html(newQty);
-						$save.closest('tr').find('.status_original').html(newStatus);
+						$save.closest('tr').find('.notes_original').text(newNotes);
+					} else if (action == 'repair') {
+						location.reload();
+						console.log(result);
+					} else{
+						$save.closest('tr').remove();
 					}
+					console.log('inv')
 				},
 				error: function(xhr, status, error) {
 					// $(".loading_element_listing").hide();
 				   	alert("No Parts Found with those parameters: "+error);
 				},
 			});
+			}
+
 		});
 		
-		//finish adding the filters
+
+		$(document).on('click', '.edit_button', function(e) {
+			e.preventDefault();
+			
+			$(this).closest('tr').find('.edit').show();
+			$(this).closest('tr').find('.data').hide();
+			$(this).closest('table').find('th span.edit').show();
+			
+			$(this).closest('tr').find('.delete_button').hide();
+			$(this).hide();
+		});
+		
+		
+		//One might expect the history button to be here, but it is not: Aaron
+		//figures it was something general purpose enough that it should be on
+		//operations.js; it might even need to be moved to ventel.js. Similarly 
+		//for the RM button, which has it's own independent processing method
 		
 		$(document).ready(function() {
 			//Triggering Aaron 2017
@@ -585,38 +634,18 @@
 					$("#part_search").val(phpStuff);
 				}
 				
-				inventory_history(search);
+				$.when( inventory_history(search) ).then(function() {
+					$('.loading_search').hide();
+				});
 			}
+			
+			$('.loading_search').hide();
 		});
 		
-		$(document).on('click', '.delete_button', function() {
-			var $delete = $(this);
-			if (window.confirm("Are you sure you want to delete this serial?")) {
-				var id = $delete.closest('tr').find('.newQty').data('id');
-				
-	            $.ajax({
-					type: "POST",
-					url: '/json/inventory-edit.php',
-					data: {
-						"id": id,
-						"delete": true
-					},
-					dataType: 'json',
-					success: function(result) {
-						//alert(result);
-						if(result) {
-							$delete.closest('tr').remove();
-						}
-					}
-				});
-	        }
-		});
 		
 		//This function show all the serial if the user clicks on the qty link
 		$(document).on('click', '.check_serials', function(e) {
 			e.preventDefault;
-//body > div.loading_element_listing > div:nth-child(2) > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > span
-//body > div.loading_element_listing > div:nth-child(2) > div > table > tbody > tr.serial_listing.serial_listing_5
 			var parent = $(this).closest('.parts-list').data('serial');
 			if ($("."+parent).is(":visible")){
 				$('.' + parent).hide();
@@ -632,7 +661,6 @@
 			inventory_history(search);
 		});
 
-		
 		$("#part_search").on("keyup",function(e){
 			if (e.keyCode == 13) {
 				var search = $("#part_search").val();

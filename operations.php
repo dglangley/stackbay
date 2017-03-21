@@ -6,6 +6,7 @@
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
@@ -26,46 +27,48 @@
 	
 	$filter = $_REQUEST['filter'];
 	
-	function params_array($type){
-		$info = array();
-		if($type == "p"){
-			$info['display'] = "Purchase";
-			$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
-			$info['short'] = "po";
-			$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
-			$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
-			$info['url'] = "inventory_add";
-		}
-		else if ($type == "s"){
-			$info['display'] = "Sales";
-			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "po";
-			$info['active'] = " AND i.ship_date IS NULL ";
-			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-			$info['url'] = "shipping";
-		}
-		else if ($type == "rma"){
-			$info['display'] = "RMA";
-			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "po";
-			$info['active'] = " AND i.ship_date IS NULL ";
-			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-			$info['url'] = "inventory_add";
-		}
-		else{
-				$info['case'] = $type;
-		}
-		return $info;
-	}
+	// function params_array($type){
+	// 	$info = array();
+	// 	if($type == "p"){
+	// 		$info['display'] = "Purchase";
+	// 		$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
+	// 		$info['short'] = "po";
+	// 		$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
+	// 		$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
+	// 		$info['url'] = "inventory_add";
+	// 	}
+	// 	else if ($type == "s"){
+	// 		$info['display'] = "Sales";
+	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+	// 		$info['short'] = "po";
+	// 		$info['active'] = " AND i.ship_date IS NULL ";
+	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+	// 		$info['url'] = "shipping";
+	// 	}
+	// 	else if ($type == "rma"){
+	// 		$info['display'] = "RMA";
+	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+	// 		$info['short'] = "po";
+	// 		$info['active'] = " AND i.ship_date IS NULL ";
+	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
+	// 		$info['url'] = "inventory_add";
+	// 	}
+	// 	else{
+	// 			$info['case'] = $type;
+	// 	}
+	// 	return $info;
+	// }
 	
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 	$levenshtein = false;
 	$nothingFound = false;
+	$found = false;
 	$serialDetection = false;
 	
 	function searchQuery($search, $type) {
+		global $found;
 		$trigger;
 		$triggerArray = array();
 		
@@ -91,16 +94,22 @@
         		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number;";
 		        break;
 		    //Holder for future RMA and RO
-		    // case 'rma':
-      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_rma = '".res(strtoupper($search))."';";
-		    //     break;
-		    // case 'ro':
-      //  		$query = "SELECT DISTINCT * FROM inventory WHERE last_ro = '".res(strtoupper($search))."';";
-		    //     break;
+		    case 'rma':
+        		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number;";
+		        break;
+		    case 'ro':
+        		$query = "";
+		        break;
 			default:
 				//Should rarely ever happen
-				break;
+				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
+		        break;
 		}
+		
+		if(empty($query)) {
+			return '';
+		}
+		
 		$result = qdb($query) OR die(qe());
 		
 		while ($row = $result->fetch_assoc()) {
@@ -150,16 +159,19 @@
 			    $initial[] = $row;
 			}
 		}
-		
 		//If the initial search is empty populate the data with close alternates
-		if(empty($initial))
+		if(empty($initial)) {
 			$initial = soundsLike($search, $type);
+		} else {
+			$found = true;
+		}
 		
+		//print_r($initial);
 		return $initial;
 	}
 	
 	function soundsLike($search, $type) {
-		global $levenshtein, $nothingFound;
+		global $levenshtein, $nothingFound, $found;
 		$arr = array();
 		$initial = array();
 		$query;
@@ -172,15 +184,18 @@
 			while ($row = $result->fetch_assoc()) {
 				$arr[] = $row['serial_no'];
 			}
-		} else {
-			$nothingFound = true;
+		} 
+		else {
+			if(!$found)
+				$nothingFound = true;
 		}
 		
 		//print_r($arr); die();
 		
 		if(!empty($arr)) {
 			//Something was found similar to the search
-			$levenshtein = true;
+			if(!$found)
+				$levenshtein = true;
 			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
@@ -234,7 +249,8 @@
 			$order_out = 'Purchase';
 		} else if($order =="s") {
 			$order_out = 'Sales';
-		} else if($order =="rma") {
+		} 
+		else if($order =="rma") {
 			$order_out = 'RMA';
 		} else {
 			$order_out = 'Repair';
@@ -300,29 +316,30 @@
 		$results;
 		$status;
 		
-		if($order != 'rma' && $order != 'ro') {
+		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
 				//Select a joint summary query of the order we are requesting
 				$query = "SELECT * FROM ";
-				if ($order == 'p'){
+				if ($order == 'p') {
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-				}
-				else{
+				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
-					$query .= "WHERE o.so_number = i.so_number ";
+					$query .= "WHERE o.so_number = i.so_number;";
+				} 
+				else if ($order == 'rma') {
+					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
 				}
 				
 				$results = qdb($query);
 			} else {
 				$results = searchQuery($search, $order);
-
+				//print_r($results); die;
 			}
-		
+			
 			//display only the first N rows, but output all of them
 			$count = 0;
-			
 			//Loop through the results.
 			if(!empty($results)) {
 				foreach ($results as $r){
@@ -332,21 +349,31 @@
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
 					}
-					else{
+					
+					else if ($order == 'p'){
 						$purchaseOrder = $r['po_number'];
 					}
+					
+					else if ($order == 'rma'){
+						$purchaseOrder = $r['rma_number'];
+					}
+					
 					$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$company = getCompany($r['companyid']);
 					$item = format($r['partid'], false);
 					$qty = $r['qty'];
-					if ($order != 's'){
+					
+					if ($order != 's' && $order != 'rma'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
-					} else {
+					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
+					}
+					else if($order == 'rma') {
+						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					}
 				
 					if($count<=10){
-						echo'	<tr class="filter_item '.$status." ".($status == "complete_item" ? "danger": "").'">';
+						echo'	<tr class="filter_item '.$status.'">';
 					}
 					else{
 						echo'	<tr class="show_more '.$status.'" style="display:none;">';
@@ -356,8 +383,10 @@
 						//Either go to inventory add or PO or shipping for SO
 						if($order == 'p')
 							echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else
+						else if($order == 's')
 							echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+						else if($order == 'rma')
+							echo'        <td><a href="/rma.php?rma='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 						echo'        <td>'.$item.'</td>';
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 						echo'    	<td class="status">
@@ -367,7 +396,7 @@
 					echo'	</tr>';
 				}
 			}
-		}
+		//}
 	}
 	
 	function format($partid, $desc = true){
@@ -528,6 +557,13 @@
 		</div>
 	</div>
 	
+	<?php //if($levenshtein || $nothingFound): ?>
+	<div id="item-warning-timer" class="alert alert-warning fade in text-center" style="display: none; position: fixed; width: 100%; z-index: 9999; top: 94px;">
+	    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+	    <strong><i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning </strong> <span class="warning-message"></span>
+	</div>
+	<?php //endif; ?>
+	
 	<?php if($po_updated || $so_updated): ?>
 		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
 		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
@@ -654,10 +690,15 @@
 			} else {
 				window.history.replaceState(null, null, "/operations.php?search=" + search);
 			}
+			
 			if(levenshtein) {
-				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
+				$('.warning-message').html("No items found for <b>" + search + "</b>. Listed are similar results.");
+				$('#item-warning-timer').show().delay(3000).fadeOut('fast');
+				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.<br><br> Listed are similar results.", false);
 			} else if(searched) {
-				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
+				$('.warning-message').html("No items found for <b>" + search + "</b>.");
+				$('#item-warning-timer').show().delay(3000).fadeOut('fast');
+				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
 			}
 		}
 		

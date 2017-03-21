@@ -178,17 +178,23 @@
 	$summary_yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$summary_lastweek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$summary_lastyear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
+	$summary_tomorrow = format_date(date("Y-m-d"),'Y-m-d',array('d'=>1));
+	$summary_nextweek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>7));
 	$this_month = substr($today,0,7).'-01';
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
+
 	function summarize_date($date) {
-		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month,$summary_past;
+		global $today,$summary_yesterday,$summary_lastweek,$summary_lastyear,$this_month,$summary_past,$summary_tomorrow,$summary_nextweek;
 		$date = substr($date,0,10);
 
 		if (strlen($date)==7) { $date .= '-01'; }
 
 		if ($date==$today) { $date = 'Today'; }
 		else if ($date==$summary_yesterday) { $date = 'Yesterday'; }
-		else if ($date>$summary_lastweek) { $date = format_date($date,'D'); }
+		else if ($date==$summary_tomorrow) { $date = 'Tomorrow' ; }
+		else if ($date>$summary_lastweek && $date < $summary_yesterday) { $date = format_date($date,'D'); }
+		else if ($date > $summary_tomorrow && $date < $summary_nextweek) { $date = format_date($date,'D, M j'); }
+		else if ($date > $summary_nextweek){$date = format_date($date, "n/j/y");}
 		else if ($date>=$summary_past) {
 //			$date = format_date($date,'M j');
 			// because $summary_past can change and is a floating point in time based on its particular usage,

@@ -28,33 +28,51 @@
 	include_once $rootdir.'/inc/locations.php';
 
 	
-	//, qty = $qty, conditionid = $conditionid, status = $status
-	function updateToDatabase($serial, $locationid, $qty, $conditionid, $status, $id) {
-		$query;
+	//Function Declarations
+	function updateToDatabase($id,$action) {
+		$query = '';
+		
+		//Grab all the line item parts from the inventory submission
+		$serial = $_REQUEST['serial_no'];
+		$place = $_REQUEST['place'];
+		$instance = $_REQUEST['instance'];
+		$conditionid = $_REQUEST['conditionid'];
+		$status = $_REQUEST['status'];
+		$notes = grab('notes');
+		
+		//Handle the repair toggle
+		if($action == 'repair' and $status == 'in repair'){
+			$status = "shelved";
+		} else if($status){
+			$status = "in repair";
+		}
+		
+		//Prep Query information
 		$serial = prep($serial);
 		$locationid = prep($locationid);
 		$qty = prep($qty);
 		$conditionid = prep($conditionid);
 		$status = prep($status);
+		$notes = prep($notes);
 		$id = prep($id);
 		
-	    if($id && $id != "" && $locationid != null) {
-		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, qty = $qty, conditionid = $conditionid, status = $status WHERE id = $id;";
-	    } else if($id && $id != "" && $locationid == null) {	  
-	    	$query  = "UPDATE inventory SET serial_no = $serial, qty = $qty, conditionid = $conditionid, status = $status WHERE id = $id;";
+		//Some reason, this was still updating with no id
+	    if($id) {
+		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes, ";
+			if($status){
+				$query .= " ,status = $status";
+			}
+			if($locationid){
+				$query .= " ,locationid = $locationid";
+			}
+		    $query .= " WHERE id = $id;";
 	    } else {
 	    	return 'Failed to Update';
 	    }
-	    // echo($query);exit;
-	    // else {
-	    //     $query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '". res($qty) ."', '". res($partid) ."', '". res($conditionid) ."', '". res($status) ."', '". res($locationid) ."', NULL, NULL, NULL, '1', '". res($date) ."', NULL);";
-	    // }
-	    
 		$result = qdb($query);
 		
 		return $result;
 	}
-	
 	function deleteToDatabase($id) {
 		$id = prep($id);
 		$query = "DELETE FROM inventory WHERE id = $id;";
@@ -63,42 +81,17 @@
 		return $result;
 	}
 	
-	function getLocationID($place, $instance) {
-		$location;
-		
-		if($instance != '') {
-			$query = "SELECT id FROM locations WHERE place ='".res($place)."' AND instance ='".res($instance)."';";
-		} else {
-			$query = "SELECT id FROM locations WHERE place ='".res($place)."' AND instance is NULL";
-		}
-		$result = qdb($query);
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$location = $result['id'];
-		}
-		
-		return $location;
-	}
 
-    $id = $_REQUEST['id'];
-	$serial = $_REQUEST['serial_no'];
-	$place = $_REQUEST['place'];
-	$instance = $_REQUEST['instance'];
-	$qty = $_REQUEST['qty'];
-	$conditionid = $_REQUEST['conditionid'];
-	$status = $_REQUEST['status'];
+//=========================== Main ===========================	
+	$result = '';
+	$id = grab('id');
+	$action = grab('action');
 	
-	// echo("id: $id | serial: $serial | place: $place | instance: $instance | qty: $qty | conditionid: $conditionid | status: $status");
-	// exit;
-	$delete = $_REQUEST['delete'];
-	
-	$result;
-	
-	if($delete == '') {
-		$result = updateToDatabase($serial, dropdown_processor($place, $instance), $qty, $conditionid, $status, $id);
-	} else {
+	if(action == 'delete') {
 		$result = deleteToDatabase($id);
+	} else {
+		// $result = updateToDatabase($serial, dropdown_processor($place, $instance), $qty, $conditionid, $status, $id, $notes);
+		$result = updateToDatabase($id,$action);
 	}
 	
     echo json_encode($result);

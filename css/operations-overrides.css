@@ -15,8 +15,13 @@ body.modal-open.accounts-body, #order_body.modal-open {
 	margin: 0;
 }
 
+.pad-wrapper {
+	height: 100%;
+}
+
 .remove-margin {
 	margin: 0;
+	height: 100%;
 }
 
 /*.left-side-main .container-fluid.pad-wrapper{*/
@@ -67,6 +72,10 @@ body.modal-open.accounts-body, #order_body.modal-open {
 
 .ui-select.addresses {		
 	width:320px;		
+}
+
+.left-side-main.col-md-3 {
+	background: #efefef;
 }
 
 .forms_dropdown select{ 
@@ -311,6 +320,15 @@ body.modal-open.accounts-body, #order_body.modal-open {
 }
 /*End shipping.php*/
 
+/*Warranty Display*/
+.in_warranty{
+	color: green;
+	font-weight: bold;
+}
+.expired_warranty{
+	color: red;
+	font-weight: bold;
+}
 
 /*Media Queries*/
 @media only screen and (max-width: 767px) {

@@ -18,12 +18,17 @@
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/operations_sidebar.php'; 
+
+
 
 	//Set initials to be used throughout the page
 	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
@@ -38,17 +43,26 @@
 	$instance = '';
 	$rmaArray = array();
 	
-	if(grab('rmaid') || (grab('invid') && grab('rmaid'))) {
+	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
 		$rmaid = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
+		
+		if($rmaid == '') {
+			$query = "SELECT serial_no FROM inventory WHERE id = ".res($invid).";";
+			$serial_find = qdb($query) or die(qe());
+			if (mysqli_num_rows($serial_find)>0) {
+				$serial_find = mysqli_fetch_assoc($serial_find);
+				$rmaid = $serial_find['serial_no'];
+			}
+		}
 		
 		$place = grab('place');
 		$instance = grab('instance');
 		
-		$itemLocation = getLocationID($place,$instance);
+		$itemLocation = dropdown_processor($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
-		$rmaArray = findRMAItems($rmaid);
+		$rmaArray = findRMAItems($rmaid, $order_number);
 			
 		if(empty($itemLocation)) {
 			$errorHandler = "Locations can not be empty.";
@@ -70,6 +84,26 @@
 			}
 			
 		}
+	} else if(grab('exchange_trigger')) {
+		$new_so;
+		
+		//Insertion of the values of from the exhange parameters
+		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`)
+		SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, `inventory`.`sales_item_id` AS `ref_1`, 'sales_item_id' AS `ref_1_label`, `warranty`, s.`conditionid`
+		FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
+		qdb($insert);
+		$exchangeid = qid();
+		
+		$query = "SELECT so_number FROM sales_items WHERE id = ".res($exchangeid).";";
+		
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$new_so = $result['so_number'];
+		}
+		
+		header("Location: /shipping.php?on=".$new_so."&exchange=true");
+		//print_r($exchangeid); die;
 	}
 	
 	//Check if the page has invoked a success in saving
@@ -100,10 +134,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitems($partid) {
+	function getRMAitems($partid, $order_number) {
 		$listSerial;
 		
-		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid;";
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($order_number).";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -173,37 +207,16 @@
 	    return $display;
 	}
 	
-	//This is saving the data selected
-	function getLocationID($place, $instance) {
-		$locationid;
-		$query;
-		
-		//Get the location ID based on the preset ones in the table
-		if($instance != '') {
-			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
-		} else {
-			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
-		}
-		
-		$locationResult = qdb($query);
-		
-		if (mysqli_num_rows($locationResult)>0) {
-			$locationResult = mysqli_fetch_assoc($locationResult);
-			$locationid = $locationResult['id'];
-		}
-		
-		return $locationid;
-	}
-	
+
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
-	function findRMAItems($search, $type = 'all'){
+	function findRMAItems($search, $order_number, $type = 'all'){
 		$rma_search = array();
 		$query = '';
 		
 		if($type == 'all')
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id;";
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
 		else
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL;";
+			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
 		
@@ -241,6 +254,34 @@
 		return $result;
 	}
 	
+	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
+	function getDisposition($id = '') {
+		$dispositions = array();
+		$disp_value;
+		
+		if($id == '') {
+			$query = "SELECT * FROM dispositions;";
+			$result = qdb($query) or die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				$dispositions[$row['id']] = $row['disposition'];
+			}
+		} else {
+			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+			$result = qdb($query) or die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$disp_value = $result['disposition'];
+			}
+			
+			return $disp_value;
+		}
+		
+		return $dispositions;
+	}
+	
+
 	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
 ?>
@@ -322,7 +363,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php<?= ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
 			</div>
@@ -339,32 +380,13 @@
 			</div>
 		<?php endif; ?>
 		
-		<form method="post">
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-					<div class="row">
-						<div class="col-md-12">
-							<b style="color: #526273;font-size: 14px;">RMA Order #<?= $order_number; ?></b><br>
-							<b style="color: #526273;font-size: 12px;"><?=getRep('1');?></b><br>
-							<?=getCreated($order_number);?><br><br>
-							
-	
-							<b style="color: #526273;font-size: 14px;">CUSTOMER:</b><br>
-							<span style="color: #aaa;"><?=getAddress($order_number);?></span><br><br>
-							
-							<b style="color: #526273;font-size: 14px;">SHIPPING ADDRESS:</b><br>
-							<span style="font-size: 14px;">Ventura Telephone<br>3037 Golf Course Drive <br>
-                        		Unit 2 <br>
-                       		 	Ventura, CA 93003
-                       		</span><br><br>
-							
-							<b style="color: #526273;font-size: 14px;">SHIPPING INSTRUCTIONS:</b><br>UPS Ground<br><br>
-						</div>
-					</div>
-				</div>
+						<?=sidebar_out($order_number,"RMA","RMA_display")?>
+			</div>
 				
-				<div class="col-sm-10">
-			
+			<div class="col-sm-10">
+				<form method="post">
 				<div class="row" style="margin: 20px 0;">
 					
 					
@@ -395,17 +417,26 @@
 					            <th class="col-sm-2">
 					            	PART	
 					            </th>
-					            <th class="text-center col-sm-2">
+					            <th class="text-center col-sm-1">
 									RMA Serial
 					        	</th>
-					        	<th class="col-sm-4">
+					        	<th class="text-center col-sm-1">
+									Warr Exp
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Disposition
+					        	</th>
+					        	<th class="col-sm-3">
 									Reason
 					        	</th>
 					        	<th class="text-center col-sm-2">
-									Disposition
-					        	</th>
-					        	<th class="text-center col-sm-2">
 									Location
+					        	</th>
+					        	<th class="text-center col-sm-1">
+									Vendor Warr Exp
+					        	</th>
+					        	<th class="text-right col-sm-1">
+					        		Receive
 					        	</th>
 					         </tr>
 						</thead>
@@ -415,7 +446,7 @@
 							//Grab all the parts from the specified PO #
 							if(!empty($partsListing)) {
 								foreach($partsListing as $part): 
-									$serials = getRMAitems($part['partid']);
+									$serials = getRMAitems($part['partid'],$order_number);
 
 						?>
 								<tr>
@@ -430,15 +461,43 @@
 												foreach($serials as $item) { 
 										?>
 												<div class="row">
-													<div class="input-group">
+													<!--<div class="input-group">-->
 														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
-														<span class="input-group-addon">
-															<input class="serial-check" type="checkbox" onClick="submit();" name='invid' value="<?=$item['inventoryid'];?>" <?=(($item['serial_no'] == $rmaid) && (count($rmaArray) == 1) ? 'checked' : '');?> <?=($item['returns_item_id'] ? 'checked disabled' : '');?>>
-														</span>
-													</div>
+														<!--<span class="input-group-addon">-->
+													
+														<!--</span>-->
+													<!--</div>-->
 												</div>
 										<?php 
 												} 
+											endif;
+										?>
+									</td>
+									
+									<td class="warranty">
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'sales');?></span>
+											</div>	
+										<?php 
+											} 
+											endif;
+										?>
+									</td>
+																		
+									<td class="disposition">
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? getDisposition($item['dispositionid']) : 'None' )?></span>
+											</div>	
+										<?php 
+											} 
 											endif;
 										?>
 									</td>
@@ -449,24 +508,10 @@
 												foreach($serials as $item) { 
 										?>
 												<div class="row">
-													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['reason']?></span>
+													<span class="truncate" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['reason']? $item['reason'] : 'No reason given'); ?></span>
 												</div>	
 										<?php 
 												} 
-											endif;
-										?>
-									</td>
-									
-									<td class="disposition">
-										<?php 
-											if(!empty($serials)):
-											foreach($serials as $item) { 
-										?>
-											<div class="row">
-												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['dispositionid'] ? 'Add Disposition Here' : 'None' )?></span>
-											</div>	
-										<?php 
-											} 
 											endif;
 										?>
 									</td>
@@ -484,6 +529,40 @@
 											endif;
 										?>
 									</td>
+									
+									<td class="vwarranty">
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+											<div class="row">
+												<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=calcWarranty($item['inventoryid'], 'purchase');?></span>
+											</div>	
+										<?php 
+											} 
+											endif;
+										?>
+									</td>
+									
+									<td>
+										<?php 
+											if(!empty($serials)):
+											foreach($serials as $item) { 
+										?>
+										<div class="row text-center">
+											
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button>
+											<!--</form>-->
+											
+											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
+												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
+											
+										</div>
+										<?php 
+											} 
+											endif;
+										?>
+									</td>
 								</tr>
 							<?php 
 									endforeach;
@@ -492,13 +571,13 @@
 						</tbody>
 					</table>
 				</div>
+				</form>
 			</div>
-			</form>
 		</div> 
 		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
-
+	
 	</body>
 </html>

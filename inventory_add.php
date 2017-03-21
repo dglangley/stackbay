@@ -22,36 +22,20 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
+	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
-	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
+	$order_number = grab('on');
 	$order_type = "Purchase";
-	
-	
-	//Get the ENUM values of the specified table and column (field)
-	function getEnumValue( $table = 'inventory', $field = 'conditionid' ) {
-		$statusVals;
-		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	    $result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$statusVals = $result;
-		}
-		
-		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
-		
-		$enum = explode("','", $matches[1]);
-		
-		return $enum;
-	}
-	
+
 
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
 	function getPOParts () {
@@ -94,37 +78,27 @@
 		global $order_number;
 		$listSerials;
 		
-		$query = "SELECT * FROM inventory WHERE purchase_item_id = ". res($order_number) ." AND partid = '". res($partid) ."';";
+		$query = "SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid FROM inventory i, purchase_items p WHERE po_number = ". res($order_number) ." AND p.partid = '". res($partid) ."' AND i.purchase_item_id = p.id;";
 		$result = qdb($query);
 	    
 	    if($result)
-	    if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$listSerials[] = $row;
+		    if (mysqli_num_rows($result)>0) {
+				while ($row = $result->fetch_assoc()) {
+					$listSerials[] = $row;
+				}
 			}
-		}
 		
 		return $listSerials;
 	}
-	
-	function format($partid){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
-	    return $display;
-	}
-	
-	
 	$partsListing = getPOParts();
+	$status = getOrderStatus($order_type,$order_number);
 ?>
 
 <!DOCTYPE html>
 <html>
 	<head>
-		<?php 
-			include_once $rootdir.'/inc/scripts.php';
-		?>
+		<?php include_once $rootdir.'/inc/scripts.php';?>
 		<title>Outstanding PO <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
@@ -154,31 +128,42 @@
 	</head>
 	
 	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+		
 	<!----------------------- Begin the header output  ----------------------->
-		<div class="container-fluid pad-wrapper">
+	<div class="pad-wrapper">
 		<?php include 'inc/navbar.php';?>
-		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a></div>
-			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?></h2>
-			</div>
-			<div class="col-sm-4">
-			</div>
-		</div>
 		
-		
-			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-			<?php if($order_number != '') { ?>
-				<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
-					<!-- Everything here is put out by the order creation ajax script -->
+		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
+			
+			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
+				<div class="col-sm-4">
+					<a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a>
+					<button type="submit" class="btn-flat btn-sm primary pull-left" id = "rtv_button" data-validation="left-side-main" style="margin-top:10px;display:none;">RTV</button>
+					
+					</div>
+				<div class="col-sm-4 text-center" style="padding-top: 5px;">
+					<h2>
+						<?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?>
+						<?=(strtolower($status) == 'void')?("<b><span style='color:red;'> [VOIDED]</span></b>") : "";?>
+					</h2>
+					
 				</div>
+				<div class="col-sm-4">
+				</div>
+			</div>
+			
+				<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
+				<?php if($order_number != '') { ?>
+					<div class="left-side-main col-md-2" data-page="addition" style="height: 100%;">
+						<?=sidebar_out($order_number, $order_type,'display')?>
+					</div>
+					
+					<div class="col-sm-10">
+				<?php } else { ?>
+					<div class="col-sm-12">
+				<?php } ?>
 				
-				<div class="col-sm-10">
-			<?php } else { ?>
-				<div class="col-sm-12">
-			<?php } ?>
-			
-			
+				
 				<div class="table-responsive">
 					<table class="inventory_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 						<thead>
@@ -198,8 +183,14 @@
 					            <th class="col-sm-1">
 									Remaining Qty
 					        	</th>
+					        	<th class="col-sm-1">
+									RTV
+					        	</th>
+					        	<th class="col-sm-1">
+									Vendor Warr
+					        	</th>
 					            <th class="col-sm-1">
-					            	Lot Inventory (No Serial)
+					            	<!--Lot Inventory (No Serial)-->
 					        	</th>
 					         </tr>
 						</thead>
@@ -213,9 +204,7 @@
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
-										<?php 
-											echo format($part['partid']);
-										?>
+										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
 										<div class="row-fluid locations_tracker" data-serial="">
@@ -246,18 +235,21 @@
 										    </span>
 							            </div>
 									</td>
+									
 									<td class="remaining_qty">
-										<input class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+										<input style="margin-bottom: 6px;" class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+										<div class='infiniteComments'>
+									    	<!--<input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial='' data-inv-id='' data-part="">-->
+										</div>
 									</td>
 									<td>
-										<!--<div class="input-group" style="margin-bottom: 6px;">-->
-											<div class="checkbox">
-												<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? 'disabled' : ''); ?>></label>
-											</div>
-											<!--<span class="input-group-addon">-->
-												<button class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>
-											<!--</span>-->
-										<!--</div>-->
+										<input class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+									</td>
+									<td>
+										<?=calcPOWarranty($part['id'], $part['warranty']);?>
+									</td>
+									<td>
+										<button type="button" class="btn-sm btn-flat white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style=""><i class="fa fa-list" aria-hidden="true"></i></button>
 									</td>
 								</tr>
 								<tr class='serial-<?=$part['id'] ?>' style='display:none;'>
@@ -279,7 +271,7 @@
 													<td><?= $serial['qty']; ?></td>
 													<td><?= $serial['status']; ?></td>
 													<td><?= display_location($serial['locationid']); ?></td>
-													<td><?= $serial['conditionid']; ?></td>
+													<td><?= getCondition($serial['conditionid']); ?></td>
 												</tr>
 											<?php endforeach; } ?>
 											</tbody>
@@ -298,5 +290,21 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
+		<script type="text/javascript">
+			$(document).on("click", ".RTV_check",function(){
+				var show_rtv_button = false;
+				$.each($(".RTV_check"), function(){
+					if ($(this).prop("checked")){
+						show_rtv_button = true;
+					}
+				});
+				if(show_rtv_button){
+					$("#rtv_button").show();
+				} else {
+					$("#rtv_button").hide();
+				}
+			});
+		</script>
+	</form>
 	</body>
 </html>

@@ -97,9 +97,6 @@
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
 
-
-
-    
     
     //Form Specifics
     $companyid = is_numeric($_REQUEST['companyid'])? trim($_REQUEST['companyid']) : trim(getCompany($_REQUEST['companyid'],'name','id'));
@@ -257,7 +254,6 @@
     }
     
 
-    $stupid = 0;
 
     //RIGHT HAND SUBMIT
     
@@ -267,7 +263,6 @@
 		}
 
         foreach ($form_rows as $r){
-            $stupid++;
             $line_number = prep($r['line_number']);
             $item_id = prep($r['part']);
             $record = $r['id'];
@@ -276,6 +271,8 @@
             $conditionid = prep($r['conditionid']);
             $qty = prep($r['qty']);
             $unitPrice = prep(format_price($r['price'],true,'',true));
+            $ref_1 = prep($r['ref_1']);
+            $ref_1_label = prep($r['ref_1_label']);
 
 			if ($r['line_number']) { $msg .= '<span style="color:#aaa">'.$r['line_number'].'.</span> '; }
 			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
@@ -298,7 +295,7 @@
                 $line_insert .=  " (`partid`, ";
                 $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
                 $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`, `id`) VALUES ";
-                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , NULL, NULL, NULL, NULL, $warranty , $conditionid, NULL);";
+                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , $ref_1, $ref_1_label, NULL, NULL, $warranty , $conditionid, NULL);";
                 
 				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
@@ -341,7 +338,6 @@
         'order' => $order_number,
         'line_insert' => $line_insert,
         'error' => qe(),
-        'stupid' => $stupid,
         'update' => $macro,
 		'message' => 'Success',
         'input' => $insert,

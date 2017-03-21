@@ -28,7 +28,10 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	
+	include_once $rootdir.'/inc/operations_sidebar.php';
+	include_once $rootdir.'/inc/packages.php';
+	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -38,8 +41,8 @@
 	
 	//If no order is selected then return to shipping home
 	if(empty($order_number)) {
-		header("Location: /shipping_home.php");
-		die();
+		//header("Location: /shipping_home.php");
+		//die();
 	}
 	
 	
@@ -49,6 +52,7 @@
 	$selected_carrier;
 	$selected_service;
 	$selected_account;
+	$exchange = false;
 	
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
@@ -62,11 +66,12 @@
 		$selected_carrier = $result['freight_carrier_id'];
 		$selected_service = $result['freight_services_id'];
 		$selected_account = $result['freight_account_id'];
+		$status = $result['status'];
 	}
 	
-	function getItems($so_number = 0) {
+	function getItems($so_number = 0, $exchange) {
 		$sales_items = array();
-		
+		$query;
 		//First run a check just in case the sales order was changed recently and reflect the changes (E.G. qty order was increase, if qty is less than order admin may need to intervene)
 		
 //david 2-28-17
@@ -74,11 +79,13 @@
 //		qdb($query);
 		
 		//Get all the items, including old items from the sales order.
-		$query = "SELECT * FROM sales_items WHERE so_number = ". res($so_number) ." ORDER BY ship_date ASC;";
-		$result = qdb($query) OR die(qe());
-				
-		while ($row = $result->fetch_assoc()) {
-			$sales_items[] = $row;
+		if($so_number != 0) {
+			$query = "SELECT * FROM sales_items WHERE so_number = ". prep($so_number) ." ORDER BY ship_date, ref_2 DESC;";
+			$result = qdb($query) OR die(qe());
+					
+			while ($row = $result->fetch_assoc()) {
+				$sales_items[] = $row;
+			}
 		}
 		
 		return $sales_items;
@@ -144,20 +151,6 @@
 		return $comment;
 	}
 	
-	function getWarranty($id) {
-		$warranty;
-		$id = prep($id);
-		$query = "SELECT * FROM warranties WHERE id = $id";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$warranty = $result['warranty'];
-		}
-		
-		return $warranty;
-	}
-	
 	function getDateStamp($order_number) {
 		$datestamp = '';
 		
@@ -172,15 +165,11 @@
 		return $datestamp;
 	}
 	
-	function format($partid){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
-
-	    return $display;
+	if (grab('exchange')){
+		$exchange = grab('exchange');
 	}
-
-	$items = getItems($sales_order);
+	
+	$items = getItems($sales_order, $exchange);
 ?>
 	
 
@@ -253,6 +242,14 @@
 				-webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.25);
 				box-shadow: inset 0 3px 5px rgba(0, 0, 0, .25);
 			}
+			
+			.order-exchange td {
+				background-color: #f5fafc !important;
+			}
+			
+			.master-package {
+				font-weight:bold;
+			}
 		</style>
 
 	</head>
@@ -267,13 +264,22 @@
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+				<a href="/rma.php?on=<?=$order_number;?>" class="btn-sm btn-flat gray pull-left rma-button" style="margin-right: 10px;">RMA</a>
 			</div>
+			
 			<div class="col-md-4 text-center">
 				<?php
 					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
-					echo " Shipping Order";
+					if(!$exchange) {
+						echo " Shipping Order ";
+					} else {
+						echo " Exchange for SO ";
+					}
 					if ($order_number!='New'){
-						echo " #$order_number";
+						echo "#$order_number";
+					}
+					if (strtolower($status) == 'void'){
+						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
 					}
 					echo"</h2>";
 				?>
@@ -286,7 +292,7 @@
 		<?php if($so_updated == 'true'): ?>
 			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
 			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-			    <strong>Success!</strong> <?php echo ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
+			    <strong>Success!</strong> <?= ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated.
 			</div>
 		<?php endif; ?>
 
@@ -294,7 +300,7 @@
 			<div class="row remove-margin">
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-sm-2">
-					<!-- Everything here is put out by the order creation ajax script -->
+					<?=sidebar_out($order_number, $order_type,'display')?>
 				</div>
 				<!--======================= End Left half ======================-->
 				
@@ -311,70 +317,70 @@
 									<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 								</button>
 								<?php
-									function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
-										$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
-										$results = qdb($select);
-										
-										$drop = '';
-										foreach ($results as $item) {
-											//print_r($item);
-											$it[$item['id']] = $item['datetime'];	
-											$drop .= "<option data-boxno='".$item['package_no']."' value='".$item['id']."'";
-											if ($selected == $item['id']){
-												$drop .= ' selected';
-											}
-											$drop .= ($item['datetime'] != '' ? ' disabled': '');
-											$drop .= ">Box ".$item['package_no']."</option>";
-										}
-										$drop .= "</select>";
-										$drop .= "</div>";
-										if ($first){
-												$f = "<div>
-					            				<select class='form-control input-sm active_box_selector' data-associated = '$associated' data-serial = '$serial'>";
-											}
-											else{
-												$f = "<div>
-					            					<select class='form-control box_drop input-sm' data-associated = '$associated' data-serial = '$serial' ".($it[$selected] != '' ? ' disabled ': '').">";
-											}
-											$f .= $drop;
-										return $f;
-									}
-									
+
 									$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 									$results = qdb($select);
+									
+									//Check for any open items to be shipped
+									$check = "SELECT * FROM `sales_items`  WHERE  `so_number` = '$order_number' AND qty_shipped < qty";
+									$open_items = qdb($check);
 	
 									if (mysqli_num_rows($results) > 0){
+										//Initialize
 										$init = true;
+										$package_no = 0;
+										
+										$masters = master_packages($order_number);
 										foreach($results as $b){
-											$box_button = "<button type='button' class='btn ".($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary') . (($b['datetime'] == '' && $init) ? ' active' : '') ." box_selector'";
+											$package_no = $b['package_no'];
+											$box_button = "<button type='button' class='btn ";
+											
+											//Build classes for the box buttons based off data-options
+											$box_button .= ($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary'); //If the button has been shipped
+											$box_button .= (($b['datetime'] == '' && $init) ? ' active' : ''); //If the box is active, indicate that
+											$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
+											$box_button .= " box_selector'";
+											
+											//Add Data tags for the future population of modals
 											$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
 											$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 											$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 											$box_button .= " data-row-freight = '".$b['freight_amount']."'";
 											$box_button .= " data-order-number='" . $order_number . "'";
-											$box_button .= " data-box-shipped ='".($b['datetime'] != '' ? 'completed' : '')."'>".$b['package_no']."</button>";
+											$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."'>".$b['package_no']."</button>";
 											echo($box_button);
 				                        	
 				                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
 				                        	if($b['datetime'] == '' && $init)
 				                        		$init = false;
 										}
+										
+										//There are still open items to be shipped
+										if (mysqli_num_rows($open_items) > 0){
+											//Check for any open boxes to be shipped
+											$check = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number' AND datetime IS NULL";
+											$open_boxes = qdb($check);
+											$package_no = $package_no + 1;
+											//echo mysqli_num_rows($open_boxes);
+											//There is no boxes open and there are items to be shipped
+											if (mysqli_num_rows($open_boxes) == 0){
+												$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, ".$package_no.");";
+												qdb($insert);
+												echo("<button type='button' class='btn btn-secondary active box_selector' data-row-id = '".qid()."'>$package_no</button>");
+											}
+										}
 									} else {
 										$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
 										qdb($insert);
-										echo("<button type='button' class='btn btn-grey box_selector' data-row-id = '".qid()."'>1</button>");
+										echo("<button type='button' class='btn btn-secondary active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 									}
-	
-									
-									
+		
 								?>
 								<button type="button" class="btn btn-primary box_addition" title = "">
 							  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
 						  		</button>
 							</div>
-							<button class="btn-sm btn-flat gray pull-right rma-button" style="margin-right: 10px;">
-						  		RMA
-					  		</button>
+
 						</div>
 					</div>
 				
@@ -397,6 +403,7 @@
 							<?php
 								//Grab a list of items from an associated sales order.
 								$serials = array();
+								if(!empty($items))
 								foreach($items as $item): 
 									$inventory = getInventory($item['partid']);
 									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
@@ -405,16 +412,16 @@
 									$parts = explode(' ',getPartName($item['partid']));
 									$part = $parts[0];
 							?>
-								<tr class="<?php echo (!empty($item['ship_date']) ? 'order-complete' : ''); ?>" style = "padding-bottom:6px;">
+								<tr class="<?= (!empty($item['ship_date']) ? 'order-complete' : ''); ?> <?= (!empty($item['ref_2']) ? 'order-exchange' : ''); ?>" style = "padding-bottom:6px;">
 									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
 										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
-										<div class="product-descr"><?= format($item['partid']); ?></div>
+										<div class="product-descr"><?= display_part(current(hecidb($item['partid'],'id'))) ?></div>
 									</td>
 								
 								<!-- Grab the old serial values from the database and display them-->
 									<td class="infiniteSerials" style="padding-top: 10px !important;">
 										<div class="input-group">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-item-id='<?=$item['id']?>' data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
@@ -425,7 +432,7 @@
 											foreach ($serials as $serial):
 										?>
 										<div class="input-group check-save" data-savable="true">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id =<?=$serial['id']?> data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id ='<?=$serial['id']?>' data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
@@ -461,10 +468,10 @@
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['cond'] ?>"><?php echo $item['cond'] ?></span>
+										<span class="condition_field" data-condition="<?php echo $item['conditionid'] ?>"><?php echo $item['conditionid'] ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty']); ?></span>
+										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty'],"warranty"); ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
 										<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
@@ -473,30 +480,6 @@
 										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 									</td>
 								</tr>
-								<?php $history = getHistory($item['id']); if($history != '') { ?>
-									<!--<tr class='nested_table serial-<?=$item['id'] ?>' style='display:none;'>-->
-									<!--	<td colspan='12'>-->
-									<!--		<table class='table serial table-hover table-condensed'>-->
-									<!--			<thead>-->
-									<!--				<tr>-->
-									<!--					<th>Serial Number</th>-->
-									<!--					<th>Box #</th>-->
-									<!--					<th>Comments</th>-->
-									<!--				</tr>-->
-									<!--			</thead>-->
-									<!--			<tbody>-->
-									<!--			<?php foreach($history as $serial): ?>-->
-									<!--				<tr>-->
-									<!--					<td><?= $serial['serial_no']; ?></td>-->
-									<!--					<td></td>-->
-									<!--					<td><?= getComments($serial['id']); ?></td>-->
-									<!--				</tr>-->
-									<!--			<?php endforeach; ?>-->
-									<!--			</tbody>-->
-									<!--		</table>-->
-									<!--	</td>-->
-									<!--</tr>-->
-								<?php } ?>
 								
 							<?php endforeach; ?>
 						</table>

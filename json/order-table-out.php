@@ -66,10 +66,11 @@
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
             <td class = 'line_date' data-date = '$date'>".$date."</td>
             <td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
-            <td class = 'line_war'  data-war = ".$row['warranty'].">".getWarranty($row['warranty'],'name')."</td>
+            <td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>
             <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
+            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
 			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";
@@ -95,9 +96,9 @@
 				    </td>
 		            <td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
 		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td><input class='form-control input-sm' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
-		            <td><input class='form-control input-sm' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
-		            <td><input class='form-control input-sm' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
+		            <td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
+		            <td><input class='form-control input-sm oto_price' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
+		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<div class='btn-group'>
 							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 7px 10px;'>
@@ -146,7 +147,7 @@
 	
 	//The initial table output method will call on the load of the page. It
 	//accesses the database and outputs the current rows of the database.
-	function initalTableOutput (){ 
+	function initialTableOutput ($mode){ 
 		
 		//Prep the initial 
 		$table = '';
@@ -176,33 +177,44 @@
 					'qty' => $r['qty'],
 					'uPrice' => $r['price'],
 					'warranty' => $r['warranty'],
-					'conditionid' => $r['conditionid']
+					'conditionid' => $r['conditionid'],
+					'ref_1' => $r['ref_1'],
+					'ref_1_label' => $r['ref_1_label'],
 					);
 					$table .= build_row($new_row);			
-					
 				}
+		} else if ($mode == 'rtv') {
+			$row_num = 0;
+			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
+				$row_num++;
+				$new_row = array(
+					'id' => 'new',
+					'line' => $row_num, 
+					'search' => current($item), //
+					'date' => date("n/j/Y"), 
+					'qty' => key($item), //This blows Andrew's Brain
+					'uPrice' => 0.00,
+					'ref_1' => $lineid,
+					'ref_1_label' => 'purchase_item_id',
+					'warranty' => 0,
+					'conditionid' => 2
+				);
+				$table .= build_row($new_row);
+				//$table .= key($item) . "<br>";
+			}
 		}
+		
 		echo json_encode($table); 
 		exit;
-		    	
-				
-			// 	$old = qdb($q_line);
-				
-	
-		 //   }
-			// echo json_encode($table);
-			// exit;
 	}
 //------------------------------------------------------------------------------
 //------------------------------------ Main ------------------------------------ 
 //------------------------------------------------------------------------------
 	if ($mode == "append" || $mode == "update"){
 		append_row($mode);
-	}
-	elseif ($mode == "load"){
-		initalTableOutput();
-	}
-	else{
+	} else if ($mode == "load" || $mode == "rtv") {
+		initialTableOutput($mode);
+	} else {
 		"Permanent";
 	}
 ?>
