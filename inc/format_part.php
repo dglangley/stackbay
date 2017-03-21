@@ -45,7 +45,7 @@
 
 			/* Alcatel-Lucent 410AA,494LA, 364A2 NOT 303RU39A*/
 			/*'(4([0-9]{2})[A-Z]{1,2})'.$aluRevs,*/
-			'([34]([0-9]{2})((?!(SC|RP|UA|UB|UR))[A-Z]){1,2}[0-9]?)'.$aluRevs,
+			'([34]([0-9]{2})((?!(SC|RP|UA|UB|UR|RU))[A-Z]){1,2}[0-9]?)'.$aluRevs,
 
 			/* Alcatel-Lucent 839B5, 739B5*/
 			'([1-9][0-9]{2}[A-Z][1-9])'.$aluRevs,
