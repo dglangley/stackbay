@@ -53,7 +53,6 @@
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-<<<<<<< HEAD
 	}
 	
 	if(!in_array("3", $USER_ROLES) && !in_array("1", $USER_ROLES)) {
@@ -68,11 +67,6 @@
 			exit;
 		}
 	} 
-=======
-	 } elseif ($o['type'] == "invoice"){
-	 	
-	 }
->>>>>>> 4cd57f5318042afdbfada0ad1f00968debd911c6
 
 	
 ?>
