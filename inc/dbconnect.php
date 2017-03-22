@@ -292,6 +292,7 @@
 	}
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
+	//Array 1 stand for admin in which they have permission to everything no matter what
 	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES) && !in_array("1", $USER_ROLES)) {
 		header('Location: /permission.php');
 		exit;
