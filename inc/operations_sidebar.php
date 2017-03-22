@@ -55,7 +55,7 @@ include_once $rootdir.'/inc/packages.php';
 	// $type = grab('type');
 	// //$mode = grab('page');
 	
-	
+
 	
 	function edit($order_number,$order_type, $mode=''){
 		global $rtv_items;

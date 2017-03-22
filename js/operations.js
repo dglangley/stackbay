@@ -2033,7 +2033,7 @@
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
 						
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-serial="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
+										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
 										<td>"+$(this).attr('data-part')+"</td>\
 										<td>"+$(this).attr('data-serial')+"</td>\
 										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\

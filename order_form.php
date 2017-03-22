@@ -31,6 +31,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/invoice.php';
 	
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
@@ -53,8 +54,9 @@
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-	 } elseif ($o['type'] == "invoice"){
-	 	
+	 } else if ($o['type'] == "Invoice"){
+	 	$inv_info = getInvoice($order_number);
+	 	$origin = $inv_info['order_number'];
 	 }
 
 	
@@ -86,8 +88,39 @@
 				<div class="col-md-4">
 					<?php
 						if($order_number != "New"){
-							echo '<a href="/'.$o['url'].'.php?on=' . $order_number . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+							if($o['type'] == 'Invoice'){
+								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
+							}
+							echo '<a href="/'.$o['url'].'.php?on=' . (($origin)? $origin : $order_number) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
 							echo '<a href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+						}
+						if($order_number != "New" && $o['type'] == 'Sales'){
+							$rows = get_assoc_invoices($order_number);
+							if($rows){
+							$output = '
+							<div class ="btn-group">
+								<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+	                              <i class="fa fa-credit-card"></i>
+	                              <span class="caret"></span>
+	                            </button>';
+	                            
+								$output .= '<ul class="dropdown-menu">';
+								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+								foreach ($rows as $invoice) {
+									$output .= '
+									<li>
+										<a href="/docs/INV'.$invoice['invoice_no'].'.pdf">
+										Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
+										</a>
+									</li>';
+								}
+	                            $output .= "</ul>";
+								$output .= "</div>";
+								echo $output;
+							}
+						}
+						elseif ($o['type'] == 'Invoice') {
+							
 						}
 					?>
 					
@@ -96,15 +129,20 @@
 				<div class="col-md-4 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
-					if ($order_number=='New'){
-						echo "$order_number ";
+					if($o['type'] != "Invoice"){
+						if ($order_number=='New'){
+							echo "$order_number ";
+						}
+						echo $o['type']." Order";
+						if ($order_number!='New'){
+							echo " #$order_number";
+						}
+					} else {
+						echo("Invoice #".$order_number);
+						
 					}
-					echo $o['type']." Order";
-					if ($order_number!='New'){
-						echo " #$order_number";
-					}
-					if (strtolower($status) == 'void'){
-						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
+					if (strtolower($status) == 'void' || strtolower($status) == 'voided'){
+						echo ("<b><span style='color:red;'> [".strtoupper($status)."]</span></b>");
 					}
 					echo"</h2>";
 					?>
@@ -124,7 +162,7 @@
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order">
 					<?php $order_number = ($origin)? $origin: $order_number;?>
 					<!-- Everything here is put out by the order creation ajax script -->
-					<?=sidebar_out($order_number,$o['type'])?>
+					<?=sidebar_out($order_number,$o['type'],$o['edit_mode'])?>
 				</div>
 				<!--======================= End Left half ======================-->
 			
@@ -134,7 +172,8 @@
 					
 					<!-- Output the sales-rep dropdown in the top right corner -->
 					<div class="forms_section">
-						<div style="float:right;padding-top:15px;">
+						<?php if($o['type']!="invoice"){?>
+							<div style="float:right;padding-top:15px;">
 							<div class="ui-select" style="width:125px; 'margin-bottom:0;">
 			                    <select id="sales-rep" data-creator = <?=$U['contactid']?>>
 	
@@ -176,27 +215,36 @@
 			                    </select>
 			                </div>
 						</div>
+						<?php };?>
 					</div> 
 					
 					<div class="table-responsive">
 						<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
 						<thead>
-							
+							<?php //if($o['type'] != 'invoice'){?>
 		    				<th style='min-width:30px;'>#</th>		
 		    				<th class='col-md-5'>Item Information</th>
 		    				<th class='col-md-2'>Delivery Date</th>
 		    				<th class='col-md-1'>
 			    				<?php
-			    					$rootdir = $_SERVER['ROOT_DIR'];
-			    					include_once($rootdir.'/inc/dropPop.php');
-			    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
+			    					if($o['type'] != 'Invoice' || $status == 'void'){
+				    					$rootdir = $_SERVER['ROOT_DIR'];
+				    					include_once($rootdir.'/inc/dropPop.php');
+				    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
+			    					} else {
+			    						echo "Condition";
+			    					}
 			    				?>
 		    				</th>
 		    				<th class='col-md-1'>
 		    					<?php
-			    					$rootdir = $_SERVER['ROOT_DIR'];
-			    					include_once($rootdir.'/inc/dropPop.php');
-			    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
+		    						if($o['type'] != 'Invoice' || $status =='void'){
+				    					$rootdir = $_SERVER['ROOT_DIR'];
+				    					include_once($rootdir.'/inc/dropPop.php');
+				    					echo(dropdown("warranty","","full_drop","",false,"warranty_global"));
+		    						} else {
+		    							echo "Warranty";
+		    						}
 		    					?>
 	    					</th>
 	    					<th class='col-md-1'>Qty</th>
@@ -204,12 +252,13 @@
 	    					<th class='col-md-1'>Ext. Price</th>
 	    					<th></th>
 	    					<th></th>
+	    					
 	    				</thead>
 	
 			        	<tbody id="right_side_main" <?=($o['type'] == 'RTV' ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
 			        	</tbody>
 				        
-				        <?php if($o['type'] != 'RTV') { ?>
+				        <?php if($o['type'] != 'RTV' && $o['type'] != 'Invoice'){ ?>
 							<tfoot id = "search_input">
 					            
 								<?php

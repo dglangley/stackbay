@@ -78,8 +78,17 @@
 		global $order_number;
 		$listSerials;
 		
-		$query = "SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid FROM inventory i, purchase_items p WHERE po_number = ". res($order_number) ." AND p.partid = '". res($partid) ."' AND i.purchase_item_id = p.id;";
+		$query = "
+			SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid 
+			FROM inventory i, purchase_items p 
+			WHERE po_number = ". prep($order_number) ." 
+			AND p.partid = ". prep($partid) ." 
+			AND p.partid = i.partid
+			AND i.purchase_item_id = p.id;
+		";
+
 		$result = qdb($query);
+
 	    
 	    if($result)
 		    if (mysqli_num_rows($result)>0) {
