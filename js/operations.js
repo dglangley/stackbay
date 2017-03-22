@@ -2879,8 +2879,16 @@
 	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		var result;
 	    		// alert(place+"-"+instance);
+	    		
 	    		if(place != 'null' && instance != 'null'){
+	    			result = true;
+	    		} else {
+	    			result = confirm("Location is empty. Confirm if you want no value for location.");
+	    		}
+	    		
+	    		if(result) {
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
@@ -2972,9 +2980,10 @@
 						},
 						
 					});
-	    		} else {
-	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		}
+	    		// } else {
+	    		// 	//modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
+	    		// }
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid+'&package_no='+package_no);
 				//Submit the data from the live scanned boxes

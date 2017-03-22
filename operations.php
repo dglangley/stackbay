@@ -312,7 +312,7 @@
 	//	- Status: Completed, Active
 	//	- Order: s, p, rma, ro
 	function output_rows($order = '', $search = ''){
-		global $serialDetection;
+		global $serialDetection, $USER_ROLES;
 		$results;
 		$status;
 		
@@ -381,18 +381,28 @@
 						echo'        <td>'.$date.'</td>';
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 						//Either go to inventory add or PO or shipping for SO
-						if($order == 'p')
-							echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else if($order == 's')
-							echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else if($order == 'rma')
+						if($order == 'p') {
+							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							} else {
+								echo'    <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							}
+						} else if($order == 's') {
+							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							} else {
+								echo'    <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							}
+						} else if($order == 'rma')
 							echo'        <td><a href="/rma.php?rma='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 						echo'        <td>'.$item.'</td>';
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
-						echo'    	<td class="status">
-										<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
-										<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
-									</td>'; 
+						echo'    	<td class="status">';
+						echo'			<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+							echo'		<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						}
+						echo'		</td>'; 
 					echo'	</tr>';
 				}
 			}
@@ -471,7 +481,6 @@
 </head>
 
 <body class="sub-nav accounts-body">
-	
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
 <!----------------------------------------------------------------------------->

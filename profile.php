@@ -336,7 +336,6 @@ foreach ($freights as $freight) {
 							<td><input type="text" class="form-control input-sm inline static-form" name="account_number[<?= $freight['id']; ?>]" value="<?=$freight['account_no'];?>" placeholder="Account Number"></td>
 							<td>
 								<select name="carrier[<?= $freight['id']; ?>]">
-									<option value=''>Select a Carrier</option>
 									<?php 
 										foreach($freight_info as $freightc) { 
 											echo '<option value="'.$freightc['freightid'].'" '.($freight['carrierid'] == $freightc['freightid'] ? 'selected' : '').'>'.$freightc['name'].'</option>';
@@ -352,7 +351,6 @@ foreach ($freights as $freight) {
 							<td><input type="text" class="form-control input-sm inline static-form" name="account_number[0]" value="" placeholder="Account Number"></td>
 							<td>
 								<select name="carrier[0]">
-									<option value=''>Select a Carrier</option>
 									<?php 
 										foreach($freight_info as $freight) { 
 											echo '<option value="'.$freight['freightid'].'">'.$freight['name'].'</option>';

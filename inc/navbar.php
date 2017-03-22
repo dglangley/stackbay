@@ -75,10 +75,10 @@
 //	$mode = str_replace('index.php','',$_SERVER["PHP_SELF"]);
 //	$mode_index = array_search($mode,$modes);
 	if (isset($_REQUEST['SEARCH_MODE']) AND $_REQUEST['SEARCH_MODE']) {
-		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_REQUEST['SEARCH_MODE']);
+		$SEARCH_MODE = preg_replace('/^(https?:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_REQUEST['SEARCH_MODE']);
 	} else if (isset($_COOKIE['SEARCH_MODE'])) {
 		//$SEARCH_MODE = $_COOKIE['SEARCH_MODE'];
-		$SEARCH_MODE = preg_replace('/^(http:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_COOKIE['SEARCH_MODE']);
+		$SEARCH_MODE = preg_replace('/^(https?:\/\/[[:alnum:]_.-]*)(\/[[:alnum:]_.-]*)(\?.*)?$/','$2',$_COOKIE['SEARCH_MODE']);
 	} else {
 		$SEARCH_MODE = '/';//default
 		// if the current page is one of the allowable $modes, set it to the global variable so we use it as our submit page

@@ -54,10 +54,26 @@
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
+
 	 } else if ($o['type'] == "Invoice"){
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
 	 }
+
+	
+	if(!in_array("3", $USER_ROLES) && !in_array("1", $USER_ROLES)) {
+		if ($order_number!='New' && $o['type'] == "Purchase"){
+			header('Location: /inventory_add.php?on='.$order_number);
+			exit;
+		} else if ($order_number!='New') {
+			header('Location: /shipping.php?on='.$order_number);
+			exit;
+		} else {
+			header('Location: /operations.php');
+			exit;
+		}
+	} 
+
 
 	
 ?>

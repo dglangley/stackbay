@@ -3,7 +3,6 @@
 	if (isset($_SERVER["ROOT_DIR"])) { $root_dir = $_SERVER["ROOT_DIR"]; }
 	include_once $root_dir.'/inc/dbconnect.php';
 	include_once $root_dir.'/inc/format_date.php';
-	include_once $root_dir.'/inc/call_remote.php';
 	include_once $root_dir.'/inc/getPartId.php';
 	include_once $root_dir.'/inc/insertMarket.php';
 	include_once $root_dir.'/inc/getCompany.php';
@@ -11,32 +10,46 @@
 	include_once $root_dir.'/inc/logSearchMeta.php';
 	include_once $root_dir.'/inc/send_gmail.php';
 	include_once $root_dir.'/inc/logRemotes.php';
-
-	setGoogleAccessToken(5);
+	include_once $root_dir.'/inc/download_ngt.php';
 
 	// use today's date as the initial search date for most recent inventory additions
-	$search_date = date("m-d-Y");
-	$search_time = date("H:i:s");
-	$url = "http://www.ngtinc.com/pub_find_item.cgi";
-	
-	//If there no results, look back through the older dates
+	$start_time = time();
+	$search_date = '';
+
+	// initialize session to keep connection open
+	$NGT_CH = curl_init($ngt_url);
+
+	libxml_use_internal_errors(true); //prevent errors from displaying when loading html dom
+	$results = '';
+	// loop for up to 7 days worth of results to check against their site, but one day at a time
 	for ($i=0; $i<7; $i++) {
-		// set search date back, if after the initial date
-		if ($i>0) {
-			$search_date = format_date($today,'m-d-Y',array('d'=>-$i));
+		$search_time = $start_time-($i*(60*60*24));//subtract $i days number of seconds
+		$days = floor(($search_time - strtotime("2000-01-01")) / (60*60*24));
+		$search_date = format_date('2000-01-01','M j, Y',array('d'=>floor($days)));
+		echo 'Capturing NGT '.$search_date.' ('.$days.' of '.$search_time.')...<BR>'.chr(10);
+
+		$res = download_ngt($search_time,$NGT_CH);
+		// get DOM to load and evaluate potential results
+		if ($res) {
+			$dom = new domDocument;
+			$dom->loadHTML($res);
+			$dom->preserveWhiteSpace = false;
+
+			// if there's content on the page in this grid, we have all we need
+			if ($dom->getElementById('GridViewInventorySearch')) {
+				$results = $dom->getElementById('GridViewInventorySearch');
+				break;//stop looping now that we have results
+			}
 		}
-		echo 'Capturing NGT '.$search_date.' at '.$url.'...<BR>'.chr(10);
-		
-		//Set the html to the result of the htmlDOM document.
-		//If we want to pull the full day's database, we can pass in junk data
-		$ngt_html = call_remote($url,"?startDate=$search_date",$cookiejar,$cookiejarfile,'GET');
-
-		// if there's content on the page and it's content that doesn't say "No results found", we have all we need
-		if ($ngt_html and ! strstr($ngt_html,'No results found.')) { break; }
 	}
-	if ($i>0) { $search_time = '08:00:00'; }//default to 8am the date of search if prior to today
 
-	if ($i>=7) { die("No results found."); }
+	curl_close($NGT_CH);
+
+	if (! $results) {
+		die("No results found.");
+	}
+
+	setGoogleAccessToken(5);
 
 	echo 'Initializing at '.$now.', searching date '.$search_date.'<BR>'.chr(10);
 
@@ -45,29 +58,23 @@
 	echo 'Found companyid '.$companyid.' in db for NGT<BR>';
 	$metaid = logSearchMeta($companyid,false,'','ngt');
 
-//	echo $ngt_html;
+//	echo $results;
 	$favs_report = '';
 	$num_favs = 0;
-	libxml_use_internal_errors(true); //prevent errors from displaying
-	$newDom = new domDocument;
-	$newDom->loadHTML($ngt_html);
-	$newDom->preserveWhiteSpace = false;
-	$inv = $newDom->getElementsByTagName('form')->item(0)->getElementsByTagName('table')->item(0);
-	$rows = $inv->getElementsByTagName('tr');
+	$rows = $results->getElementsByTagName('tr');
 	$n = $rows->length;
-	// start after <th> row
+	// start at 1 so that we start after <th> row
 	for ($i=1; $i<($n-1); $i++) {
 		$cols = $rows->item($i)->getElementsByTagName('td');
-		$part = $cols->item(2)->nodeValue;
-		$heci = trim($cols->item(5)->nodeValue);
-		if (! $part) { $part = $heci; }
-		else { $part = trim($part.' '.$cols->item(3)->nodeValue); }
-		if (! $part) { continue; }
+		$part = $cols->item(0)->nodeValue;
+		$part = trim(str_replace(chr(194).chr(160),'',str_replace("'","",str_replace('"','',$part))));
 
-		$part = trim(str_replace("'","",str_replace('"','',$part)));
-		$qty = trim($cols->item(6)->nodeValue);
-		$descr = trim($cols->item(1)->nodeValue.' '.$cols->item(4)->nodeValue);
-		$descr = str_replace("'","",str_replace('"','',$descr));
+		$heci = trim(str_replace(chr(194).chr(160),'',$cols->item(2)->nodeValue));
+
+		$qty = trim(str_replace(chr(194).chr(160),'',$cols->item(3)->nodeValue));
+		// currently not used
+		$manf = trim($cols->item(1)->nodeValue);
+		$manf = str_replace("'","",str_replace('"','',$manf));
 
 		// get all related partids for favorites but use only the first result for capturing consolidated results
 		$partids = getPartId($part,$heci,0,true);
