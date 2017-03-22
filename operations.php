@@ -26,39 +26,6 @@
 	$so_updated = $_REQUEST['so'];
 	
 	$filter = $_REQUEST['filter'];
-	
-	// function params_array($type){
-	// 	$info = array();
-	// 	if($type == "p"){
-	// 		$info['display'] = "Purchase";
-	// 		$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
-	// 		$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
-	// 		$info['url'] = "inventory_add";
-	// 	}
-	// 	else if ($type == "s"){
-	// 		$info['display'] = "Sales";
-	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND i.ship_date IS NULL ";
-	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-	// 		$info['url'] = "shipping";
-	// 	}
-	// 	else if ($type == "rma"){
-	// 		$info['display'] = "RMA";
-	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND i.ship_date IS NULL ";
-	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-	// 		$info['url'] = "inventory_add";
-	// 	}
-	// 	else{
-	// 			$info['case'] = $type;
-	// 	}
-	// 	return $info;
-	// }
-	
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
