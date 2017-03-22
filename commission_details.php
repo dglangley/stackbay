@@ -3,6 +3,20 @@
     //Must have db file otherwise site will break
     require_once 'inc/dbconnect.php';
     
+    function getSalesOrders() {
+        $query = '';
+        $sales = array();
+        
+        $query = "SELECT * FROM sales_orders;";
+        $result = qdb($query) OR die(qe().' '.$query);
+        
+        while ($row = $result->fetch_assoc()) {
+		  $sales[] = $row;
+		}
+        
+        return $sales;
+    }
+    
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
