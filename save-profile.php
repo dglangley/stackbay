@@ -223,4 +223,3 @@
 
 	header('Location: /profile.php?companyid='.$companyid);
 	exit;
-?>

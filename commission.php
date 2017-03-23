@@ -164,7 +164,7 @@
                         <div style="display: inline-block; width: 100%;">
                             <h2>User - Commissions</h2>
                             
-                            <button type="submit" class="btn btn-success btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission" style="margin-left: 10px;">Save</button>
+                            <button name='submit' type="submit" class="btn btn-success btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission" style="margin-left: 10px;">Save</button>
                             <a href="/commission_details.php?user=All" class="btn btn-default btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission">Show All</a>
                         </div>
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
@@ -173,8 +173,8 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Username</th>
                                     <th>Name</th>
+                                    <th>Username</th>
                                     <th>Email</th>
                                     <th>Position</th>
                                     <th>Commission Rate</th>
@@ -185,8 +185,8 @@
                                 $privNames = $venEdit->getPrivilegeTitle($user['userid']);
                             ?>
                                 <tr>
-                                    <td class='username'><a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
                                     <td><?=$user['name']; ?></td>
+                                    <td class='username'><a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
                                     <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                     <td>
                                         <?php if(in_array('Administration', $privNames)) {

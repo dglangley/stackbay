@@ -2,40 +2,26 @@
 
     //Must have db file otherwise site will break
     require_once 'inc/dbconnect.php';
-    require_once 'inc/user_access.php';
-    require_once 'inc/user_edit.php';
-
-    $edited = false;
     
-    //Form Invoking self with POST method doing very surface validation to make sure email is valid and required fields are set
-    //This is a quick screen that will probably be built into the class soon
-    //These variables are specifically for User Registration
-    $registered = false;
-    $error = false;
-    $registerErr = '';
-    $userErr = '';
-    $firstErr = '';
-    $lastErr = '';
-    $passwordErr = '';
-    $emailErr = '';
-    $phoneErr = '';
-    //End User Reg variables
+    function getSalesOrders() {
+        $query = '';
+        $sales = array();
+        
+        $query = "SELECT * FROM sales_orders;";
+        $result = qdb($query) OR die(qe().' '.$query);
+        
+        while ($row = $result->fetch_assoc()) {
+		  $sales[] = $row;
+		}
+        
+        return $sales;
+    }
     
-    $editedrErr = '';
-    $password = '';
-    $updatedUser = false;
-
-    //Create new object for instance to class Ven Reg that extends Ven Priveleges
-    $venEdit = new VenEdit;
-
-    //Get all the company names from the database
-    $companies = $venEdit->getCompanyNames();
-    $usernames = $venEdit->getAllSalesUsers();
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
 <head>
-	<title>Admin - User Commissions</title>
+	<title>Admin - User Commission Details</title>
     <?php
         include_once 'inc/scripts.php';
     ?>
@@ -162,9 +148,8 @@
                 <div class="col-md-10">
                     <form class="form-inline" method="POST" action="/save-commission.php">
                         <div style="display: inline-block; width: 100%;">
-                            <h2>User - Commissions</h2>
+                            <h2>Commissions Details</h2>
                             
-                            <button type="submit" class="btn btn-success btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission" style="margin-left: 10px;">Save</button>
                             <a href="#" class="btn btn-default btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission">Show All</a>
                         </div>
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
@@ -181,29 +166,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            <?php foreach($usernames as $user) { 
-                                $privNames = $venEdit->getPrivilegeTitle($user['userid']);
-                            ?>
-                                <tr>
-                                    <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
-                                    <td><?=$user['name']; ?></td>
-                                    <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
-                                    <td>
-                                        <?php if(in_array('Administration', $privNames)) {
-                                            echo 'Administrator';
-                                        } else {
-                                            echo 'Sales Rep';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control input-sm inline static-form" name="commission[<?= $user['contactid']; ?>]" value="<?=$user['commission_rate'];?>" placeholder="0.0">
-                                            <span class="input-group-addon">%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php } ?>
+                            
                             </tbody>
                         </table>
                     </form>
