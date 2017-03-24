@@ -2033,7 +2033,7 @@
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
 						
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-serial="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
+										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
 										<td>"+$(this).attr('data-part')+"</td>\
 										<td>"+$(this).attr('data-serial')+"</td>\
 										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
@@ -2879,8 +2879,16 @@
 	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		var result;
 	    		// alert(place+"-"+instance);
+	    		
 	    		if(place != 'null' && instance != 'null'){
+	    			result = true;
+	    		} else {
+	    			result = confirm("Location is empty. Confirm if you want no value for location.");
+	    		}
+	    		
+	    		if(result) {
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
@@ -2944,7 +2952,7 @@
 								$serial.closest('tr').find('.infiniteLocations').prepend($locationClone);
 								$serial.closest('.infiniteSerials').find('input:first').focus();
 								
-								$serial.closest('tr').find('.infiniteComments').append('<input style="margin-bottom: 10px;" class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial="'+serial+'" data-inv-id="'+item_id+'" data-part="'+partid+'">');
+								$serial.closest('tr').find('.infiniteComments').append('<input style="margin-bottom: 6px;" class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial="'+serial+'" data-inv-id="'+item_id+'" data-part="'+partid+'">');
 
 								if(qty == 0) {
 							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
@@ -2972,9 +2980,10 @@
 						},
 						
 					});
-	    		} else {
-	    			modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		}
+	    		// } else {
+	    		// 	//modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
+	    		// }
 		    } else if(serial != '' && page == 'shipping') {
 				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid+'&package_no='+package_no);
 				//Submit the data from the live scanned boxes

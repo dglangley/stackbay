@@ -19,6 +19,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/invoice.php';
 
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
@@ -49,7 +50,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				$result['timestamp'] = $date;
 				$result['on'] = $so_number;
+				
+				//Invoice Creation based off shipping
 		}
+		create_invoice($so_number, $date, "Sale");
 		
 		return $result;
 	}

@@ -6,7 +6,7 @@
 	include_once $rootdir.'/inc/renderOrder.php';
 
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(SO|PO||RMA)([0-9]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|SO|PO||RMA)([0-9]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];

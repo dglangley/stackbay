@@ -202,6 +202,25 @@
 				$table .= build_row($new_row);
 				//$table .= key($item) . "<br>";
 			}
+		} else if ($mode == 'invoice') {
+			$row_num = 0;
+			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
+				$row_num++;
+				$new_row = array(
+					'id' => 'new',
+					'line' => $row_num, 
+					'search' => current($item), //
+					'date' => date("n/j/Y"), 
+					'qty' => key($item), //This blows Andrew's Brain
+					'uPrice' => 0.00,
+					'ref_1' => $lineid,
+					'ref_1_label' => 'purchase_item_id',
+					'warranty' => 0,
+					'conditionid' => 2
+				);
+				$table .= build_row($new_row);
+				//$table .= key($item) . "<br>";
+			}
 		}
 		
 		echo json_encode($table); 

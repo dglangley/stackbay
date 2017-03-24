@@ -56,7 +56,7 @@
 	//Declaring all Globally used elements
 	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'');
 	$USER_ROLES = array();
-	$PAGE_ROLES = array();
+		$PAGE_ROLES = array();
 	$ROLES = array();
 	$ALERTS = array();//global errors array for output to alert modal (see inc/footer.php)
 	
@@ -74,7 +74,7 @@
 	$pageName = basename($_SERVER['PHP_SELF']);
 
 	function is_loggedin($force_userid=0,$force_usertoken='') {
-		global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
+			global $U, $ROLES, $PAGE_ROLES, $USER_ROLES, $pageName;
 
 		$now = time();
 		$userid = 0;
@@ -177,7 +177,7 @@
 			}
 */
 
-			//Create a global array of all the current logged in users privileges
+			//Create a global array of all the current logged in user privileges
 			$query2 = "SELECT * FROM user_roles WHERE userid = '" . res($userid) . "'";
 			$result2 = qdb($query2);
 
@@ -203,7 +203,7 @@
 
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
-				  $PAGE_ROLES[] = $row['privilegeid'];
+					  $PAGE_ROLES[] = $row['privilegeid'];
 				}
 			}
 
@@ -292,8 +292,9 @@
 	}
 
 	//Check if any of the permissions intersect and make sure page roles are not empty, if user has no permission then redirect to the no access page
-	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES)) {
-		header('Location: '.$_SERVER["ROOT_DIR"].'/permission.php');
+	//Array 1 stand for admin in which they have permission to everything no matter what
+	if(!empty($PAGE_ROLES) && !array_intersect($USER_ROLES, $PAGE_ROLES) && !in_array("1", $USER_ROLES)) {
+		header('Location: /permission.php');
 		exit;
 	}
 

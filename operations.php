@@ -26,39 +26,6 @@
 	$so_updated = $_REQUEST['so'];
 	
 	$filter = $_REQUEST['filter'];
-	
-	// function params_array($type){
-	// 	$info = array();
-	// 	if($type == "p"){
-	// 		$info['display'] = "Purchase";
-	// 		$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
-	// 		$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
-	// 		$info['url'] = "inventory_add";
-	// 	}
-	// 	else if ($type == "s"){
-	// 		$info['display'] = "Sales";
-	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND i.ship_date IS NULL ";
-	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-	// 		$info['url'] = "shipping";
-	// 	}
-	// 	else if ($type == "rma"){
-	// 		$info['display'] = "RMA";
-	// 		$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-	// 		$info['short'] = "po";
-	// 		$info['active'] = " AND i.ship_date IS NULL ";
-	// 		$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
-	// 		$info['url'] = "inventory_add";
-	// 	}
-	// 	else{
-	// 			$info['case'] = $type;
-	// 	}
-	// 	return $info;
-	// }
-	
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
@@ -312,7 +279,7 @@
 	//	- Status: Completed, Active
 	//	- Order: s, p, rma, ro
 	function output_rows($order = '', $search = ''){
-		global $serialDetection;
+		global $serialDetection, $USER_ROLES;
 		$results;
 		$status;
 		
@@ -381,18 +348,28 @@
 						echo'        <td>'.$date.'</td>';
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 						//Either go to inventory add or PO or shipping for SO
-						if($order == 'p')
-							echo'        <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else if($order == 's')
-							echo'        <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-						else if($order == 'rma')
+						if($order == 'p') {
+							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							} else {
+								echo'    <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							}
+						} else if($order == 's') {
+							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							} else {
+								echo'    <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
+							}
+						} else if($order == 'rma')
 							echo'        <td><a href="/rma.php?rma='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
 						echo'        <td>'.$item.'</td>';
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
-						echo'    	<td class="status">
-										<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>
-										<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
-									</td>'; 
+						echo'    	<td class="status">';
+						echo'			<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+							echo'		<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						}
+						echo'		</td>'; 
 					echo'	</tr>';
 				}
 			}
@@ -471,7 +448,6 @@
 </head>
 
 <body class="sub-nav accounts-body">
-	
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
 <!----------------------------------------------------------------------------->

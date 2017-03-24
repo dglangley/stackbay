@@ -20,6 +20,14 @@
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
 			$result = qdb($query) OR die(qe().' '.$query);
+			// $query = "REPLACE ".$fieldname."s (".$fieldname.", type, contactid, status";
+			// $query .= ", id";
+			// $query .= ") VALUES ('".$fieldvalue."',";
+			// if ($type) { $query .= "'".$type."',"; } else { $query .= "NULL,"; }
+			// $query .= "'".$contactid."','Inactive'";
+			// $query .= ",'".$id."'";
+			// $query .= "); ";
+			// $result = qdb($query) OR die(qe().' '.$query);
 		}
 
 		return ($id);
@@ -215,4 +223,3 @@
 
 	header('Location: /profile.php?companyid='.$companyid);
 	exit;
-?>

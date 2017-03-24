@@ -27,7 +27,21 @@
 		//This function is to grab all usernames
 	    function getAllUsers() {
 	    	$username = array();
-	    	$query = "SELECT usernames.username, usernames.emailid, usernames.userid, users.contactid, contacts.status from usernames JOIN users ON usernames.userid = users.id JOIN contacts ON contacts.id = users.contactid ORDER BY contacts.status ASC, usernames.id ASC";
+	    	$query = "SELECT usernames.username, usernames.emailid, usernames.userid, users.contactid, contacts.status FROM usernames JOIN users ON usernames.userid = users.id JOIN contacts ON contacts.id = users.contactid ORDER BY contacts.status ASC, usernames.id ASC";
+	    	$result = qdb($query);
+
+	    	//Check is any rows exists then populate all the results into an array
+			while ($row = $result->fetch_assoc()) {
+			  $usernames[] = $row;
+			}
+
+			return $usernames;
+	    }
+	    
+	    function getAllSalesUsers() {
+	    	$username = array();
+	    	//This is dirty and seriously needs cleaning its horrific and will burn your eyes out...
+	    	$query = "SELECT usernames.username, usernames.emailid, usernames.userid, users.contactid, user_privileges.privilege, contacts.name,contacts.commission_rate FROM usernames JOIN users ON usernames.userid = users.id JOIN contacts ON contacts.id = users.contactid JOIN user_roles ON usernames.userid = user_roles.userid JOIN user_privileges ON user_roles.privilegeid = user_privileges.id WHERE user_privileges.privilege = 'Administration' OR user_privileges.privilege = 'Sales' ORDER BY contacts.status ASC, usernames.id ASC";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
