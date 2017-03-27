@@ -129,7 +129,7 @@
 	
 	
 	$msg = 'Success';
-	if (!$companyid OR (!$name AND !$address_name AND !$accountids)) {
+	if (!$companyid OR (!$name AND !$address_name)) {// AND !$accountids)) {
 		$msg = 'Missing valid input data';
 	//We are saving contacts here
 	} else if($submit_type == 'contact') {
