@@ -50,30 +50,15 @@
 	
 	
 	 if(strtolower($o['type']) == 'rtv'){
+	 	$status = 'Active';
 		$origin = $order_number;
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-
 	 } else if ($o['type'] == "Invoice"){
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
 	 }
-
-	
-	if(!in_array("3", $USER_ROLES) && !in_array("1", $USER_ROLES)) {
-		if ($order_number!='New' && $o['type'] == "Purchase"){
-			header('Location: /inventory_add.php?on='.$order_number);
-			exit;
-		} else if ($order_number!='New') {
-			header('Location: /shipping.php?on='.$order_number);
-			exit;
-		} else {
-			header('Location: /operations.php');
-			exit;
-		}
-	} 
-
 
 	
 ?>
@@ -124,17 +109,49 @@
 								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 								foreach ($rows as $invoice) {
 									$output .= '
-									<li>
-										<a href="/docs/INV'.$invoice['invoice_no'].'.pdf">
-										Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
-										</a>
-									</li>';
+										<li>
+											<a href="/docs/INV'.$invoice['invoice_no'].'.pdf">
+											Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
+											</a>
+										</li>';
 								}
 	                            $output .= "</ul>";
 								$output .= "</div>";
 								echo $output;
 							}
 						}
+						if($order_number != "New" && $o['type'] == 'Purchase'){
+							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
+							$rows = qdb($bills_selector);
+							$output = '
+							<div class ="btn-group">
+								<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+	                              <i class="fa fa-credit-card"></i>
+	                              <span class="caret"></span>
+	                            </button>';
+	                            
+								$output .= '<ul class="dropdown-menu">';
+								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+								if(mysqli_num_rows($rows) > 0){
+									foreach ($rows as $invoice) {
+										$output .= '
+											<li>
+												<a href="/bill.php?on='.$order_number.'">
+												Bill #'.$invoice['bill_no'].' ('.format_date($invoice['date_created'],'n/j/Y').') 
+												</a>
+											</li>';
+									}
+								}
+								$output .= '<li>
+									<a href="/bill.php?on='.$order_number.'&bill=new">
+										<i class="fa fa-plus"></i> Add New Bill
+									</a>
+									</li>';
+	                            $output .= "</ul>";
+								$output .= "</div>";
+								echo $output;
+						}
+
 						elseif ($o['type'] == 'Invoice') {
 							
 						}

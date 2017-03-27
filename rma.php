@@ -542,6 +542,9 @@
 														}
 													}
 												}
+												if ($hist_count == 0){
+													echo "&nbsp;<br>";
+												}
 												if ($hist_count <= 3){
 													echo"&nbsp;";
 												}
