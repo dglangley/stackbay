@@ -152,6 +152,15 @@
                 margin-top: 0;
             }
         }
+        
+        .navbar-nav.pull-right > li > .dropdown-menu:after {
+            left: auto !important;
+            right: 13px !important;
+        }
+        .navbar-nav.pull-right > li > .dropdown-menu {
+            left: auto !important;
+            right: 0 !important;
+        }
     </style>
 </head>
 <body class="sub-nav">
