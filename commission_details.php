@@ -238,6 +238,8 @@
                                                 if(!empty($userid)) {
                                                     if($user['contactid'] == $userid && $user['contactid'] == $order['sales_rep_id']) {
                                                         //echo $user['contactid'] . ' ' . $order['sales_rep_id'] . '<br>';
+                                                    } else if(in_array('Administration', $privNames) && $user['contactid'] == $userid) {
+                                                        //User is admin
                                                     } else {
                                                         continue;
                                                     }
