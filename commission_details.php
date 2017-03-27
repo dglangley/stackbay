@@ -144,6 +144,10 @@
             color: #999;
         }
         
+        .table {
+            margin-bottom: 0;
+        }
+        
         .row {
             margin: 0;
         }
@@ -192,7 +196,7 @@
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                         
                         <!-- This table creates a list of all the users on file in the system that way the admin can pick and choose which user to update/edit -->
-                        <table class="table table-hover">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
