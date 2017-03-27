@@ -42,20 +42,20 @@
 		global $order_number;
 		
 		$listParts = array();
+		if($order_number){
+			$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty != qty_received;";
+			$result = qdb($query);
+			while ($row = $result->fetch_assoc()) {
+				$listParts[] = $row;
+			}
 		
-		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty != qty_received;";
-		$result = qdb($query);
-		while ($row = $result->fetch_assoc()) {
-			$listParts[] = $row;
-		}
-		
-		$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty = qty_received;";
-		$result = qdb($query);
+			$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty = qty_received;";
+			$result = qdb($query);
 	    
-		while ($row = $result->fetch_assoc()) {
-			$listParts[] = $row;
+			while ($row = $result->fetch_assoc()) {
+				$listParts[] = $row;
+			}
 		}
-		
 		return $listParts;
 	}
 	

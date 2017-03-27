@@ -45,10 +45,10 @@
     function package_edit($action,$id='',$order ='',$name =''){
     
     if ($action == 'addition'){
-        $order_number = prep($order_number);
+        $order_number = prep($order);
         $name = prep($name);
         $insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, $name);";
-        qdb($insert) OR die(qe());
+        qdb($insert) OR die(qe().": $insert");
         
         return qid();
         
