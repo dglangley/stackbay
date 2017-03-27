@@ -21,7 +21,7 @@
 //=============================================================================
 //---------------------------Connect to ALU's server---------------------------
 //=============================================================================
-	
+
 	//Store the cookies into the ALU text temporary file
 	$temp_dir = sys_get_temp_dir();
 	
@@ -203,17 +203,17 @@ while ($friday){
 			if ($heci) {
 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
 				// if not stored in our db, create the entry so we have record of their exact match
-				if (! $SIDS[$heci7]) {
+				if (! isset($SEARCH_IDS[$heci7]) OR ! $SEARCH_IDS[$heci7]) {
 					logRemotes($heci7,'000000');
 				}
-				$searchid = $SIDS[$heci7];
+				$searchid = $SEARCH_IDS[$heci7];
 			} else {
 				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 				// if not stored in our db, create the entry so we have record of their exact match
-				if (! $SIDS[$fpart]) {
+				if (! isset($SEARCH_IDS[$fpart]) OR ! $SEARCH_IDS[$fpart]) {
 					logRemotes($fpart,'000000');
 				}
-				$searchid = $SIDS[$fpart];
+				$searchid = $SEARCH_IDS[$fpart];
 			}
             
             insertMarket($partid, $quantity, $price, false, false, $metaid, 'availability',$searchid);
