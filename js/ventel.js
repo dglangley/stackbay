@@ -700,8 +700,11 @@
 					$("#advanced-search-options").toggleClass('hidden');
 					$("#s").val($("#s2").val().replace(/\r\n|\r|\n/g," "));
 				} else {
+					
 				}
 			});
+		} else {
+			$(".auto-focus").first().focus();
 		}
 		$("#s").change(function() {
 			$("#s2").val("");

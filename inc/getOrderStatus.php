@@ -16,7 +16,7 @@
                 return($result['status']);
             }
             else{
-                return[$o['status_empty']];
+                return($o['status_empty']);
             }
         }
     }

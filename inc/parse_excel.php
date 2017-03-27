@@ -21,7 +21,6 @@
 	function parse_excel($res,$return_type='db') {
 		$F = $GLOBALS['et_cols'];
 		$cid = $GLOBALS['et_cid'];
-		$SIDS = $GLOBALS['SEARCH_IDS'];
 
 		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
@@ -75,17 +74,17 @@
 			if ($heci) {
 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
 				// if not stored in our db, create the entry so we have record of their exact match
-				if (! $SIDS[$heci7]) {
+				if (! isset($GLOBALS['SEARCH_IDS'][$heci7]) OR ! $GLOBALS['SEARCH_IDS'][$heci7]) {
 					logRemotes($heci7,'000000');
 				}
-				$searchid = $SIDS[$heci7];
+				$searchid = $GLOBALS['SEARCH_IDS'][$heci7];
 			} else {
 				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 				// if not stored in our db, create the entry so we have record of their exact match
-				if (! $SIDS[$fpart]) {
+				if (! isset($GLOBALS['SEARCH_IDS'][$fpart]) OR ! $GLOBALS['SEARCH_IDS'][$fpart]) {
 					logRemotes($fpart,'000000');
 				}
-				$searchid = $SIDS[$fpart];
+				$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
 			}
 
 			//must return a variable so this function doesn't happen asynchronously

@@ -2339,6 +2339,7 @@
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
 					console.log("JSON package addition packages.php: Error");
+					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc);
 				}
 			});
 			

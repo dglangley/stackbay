@@ -124,6 +124,7 @@
                             <br>
                             <ul>';
                                 if ($serials){
+                                    //Add Serials label
                                     foreach($serials as $serial){
                                         $item_rows .= "<li>".$serial['serial_no']."</li>";       
                                     }

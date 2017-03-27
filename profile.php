@@ -61,9 +61,11 @@
 		include_once 'inc/scripts.php';
 	?>
 	<style>
+/*
 		.select2 {
 			width: auto !important;
 		}
+*/
 		
 		.pointer {
 			cursor: pointer;
@@ -85,7 +87,7 @@
 			</td>
 			<td class="text-center col-md-6">
 			</td>
-			<td class="col-md-3">
+			<td class="col-md-4">
 				<div class="pull-right form-group">
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
@@ -547,7 +549,7 @@ foreach ($freights as $freight) {
 			</div>
 			
 		</div>
-		<?php } /* end (!$companyid) */ ?>
+<?php } /* end (!$companyid) */ ?>
 	</div>
     <!-- end main container -->
 

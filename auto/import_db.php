@@ -1,4 +1,7 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+
 	if (! isset($_SERVER["RDS_HOSTNAME"])) {
 		$_SERVER["RDS_HOSTNAME"] = 'localhost';
 		$_SERVER["RDS_USERNAME"] = 'root';
@@ -117,6 +120,14 @@ echo $query2.'<BR>'.chr(10);
 		}
 	}
 
+
+	$DISPOSITIONS = array(
+		3=>1,/*credit*/
+		4=>1,/*credit and refund*/
+		1=>2,/*replace/exchange*/
+		2=>3,/*repair*/
+		5=>0,/*tbd*/
+	);
 	$COUNTRY_MAPS = array(
 		'' => 'US',
 		'USA' => 'US',
@@ -266,15 +277,15 @@ echo $query2.'<BR>'.chr(10);
 		// one or two duplicate times, but EVERY time, resulting in duplicate nonsense garbage that
 		// we can't have in the new system
 		if ($serial=='000') {
-			if ($order_type AND isset($SERIALS[$order_type][$order])) {
-				if (isset($SERIALS[$order_type][$order][$id])) {
-					$serial = $SERIALS[$order_type][$order][$id];
-				} else {
-					$serial = $SERIALS[$order_type][$order];
-				}
+			if ($order_type AND isset($SERIALS[$order_type][$order]) AND $id AND isset($SERIALS[$order_type][$order][$id])) {
+echo 'Re-using serial '.$serial.' for '.$order_type.' order# '.$order.', item id '.$id.' = ';
+				$serial = $SERIALS[$order_type][$order][$id];
+echo '"'.$serial.'"<BR>';
 			} else {
 				$serial = 'VTL'.($bogus_serial++);
-				if ($order_type) {
+				if ($order_type AND $id) {
+					if (! isset($SERIALS[$order_type])) { $SERIALS[$order_type] = array(); }
+					if (! isset($SERIALS[$order_type][$order])) { $SERIALS[$order_type][$order] = array(); }
 					$SERIALS[$order_type][$order][$id] = $serial;
 				}
 			}
@@ -282,13 +293,13 @@ echo $query2.'<BR>'.chr(10);
 		return ($serial);
 	}
 
-	function setPackage($so,$n,&$freight,$trk_no='',$date='') {
-		$so_number = prep($so);
+	function setPackage($order_num,$n,&$freight,$trk_no='',$date='') {
+		$order = prep($order_num);
 		$n = prep($n);
 		$trk = prep(trim($trk_no));
 		$date = prep($date);
 
-		$query3 = "SELECT id FROM packages WHERE order_number = $so_number AND package_no = $n; ";
+		$query3 = "SELECT id FROM packages WHERE order_number = $order AND package_no = $n; ";
 		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 		if (mysqli_num_rows($result3)>0) {
 			$r3 = mysqli_fetch_assoc($result3);
@@ -298,14 +309,14 @@ echo $query2.'<BR>'.chr(10);
 
 			$query3 = "REPLACE packages (weight, length, width, height, order_number, package_no, ";
 			$query3 .= "tracking_no, datetime, freight_amount) ";
-			$query3 .= "VALUES (NULL, NULL, NULL, NULL, $so_number, $n, ";
+			$query3 .= "VALUES (NULL, NULL, NULL, NULL, $order, $n, ";
 			$query3 .= "$trk, $date, $freight); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
 			$pkgid = qid();
 
 			// apply all freight on one package, then reset for all ensuing packages
-			$freight = 'NULL';
+			$freight = '';
 		}
 
 		return ($pkgid);
@@ -313,7 +324,7 @@ echo $query3.'<BR>'.chr(10);
 
 	$new_po = array();
 	function importPurchase($r) {
-		global $new_po,$packages,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS;
+		global $new_po,$packages,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS,$SERIALS;
 
 		$companyid = dbTranslate($r['company_id']);
 		$cid = prep($companyid);
@@ -408,30 +419,16 @@ echo $query2.'<BR>'.chr(10);
 			$note = trim($r2['note']);
 
 			$packages['PO'.$r['quote_id']][$r2['id']] = true;//group packages on purchase invoice id
-			$n = prep(count($packages['PO'.$r['quote_id']]));
+			$n = count($packages['PO'.$r['quote_id']]);
 
-			$query3 = "SELECT id FROM packages WHERE order_number = $po_number AND package_no = $n; ";
-			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-			if (mysqli_num_rows($result3)>0) {
-				$r3 = mysqli_fetch_assoc($result3);
-				$pkgid = $r3['id'];
-			} else {
-				$freight = 'NULL';
-				if ($r2['freight_cogs']>0) { $freight = prep($r2['freight_cogs']); }
-
-				$query3 = "REPLACE packages (weight, length, width, height, order_number, package_no, ";
-				$query3 .= "tracking_no, datetime, freight_amount) ";
-				$query3 .= "VALUES (NULL, NULL, NULL, NULL, $po_number, $n, ";
-				$query3 .= "'".res(trim($r2['tracking_no']))."', '".$r2['date']." 10:00:00', $freight); ";
-echo $query3.'<BR>'.chr(10);
-				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-				$pkgid = qid();
-			}
+			$freight = '';
+			if ($r2['freight_cogs']>0) { $freight = $r2['freight_cogs']; }
+			$pkgid = setPackage($new_po[$r['quote_id']],$n,$freight,$r2['tracking_no'],$r2['date'].' 10:00:00');
 
 			$serials = explode(chr(10),$r2['serials']);
 			$recd_qty += count($serials);
 			foreach ($serials as $serial) {
-				$serial = trim($serial);
+				$serial = strtoupper(trim($serial));
 				if (! $serial) { continue; }
 
 				// get stock date based on rep exp date
@@ -454,12 +451,13 @@ echo $query3.'<BR>'.chr(10);
 		if ($recd_qty<>$qty) {
 			$query2 = "UPDATE purchase_items SET qty_received = $recd_qty WHERE id = $po_item_id; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+echo $query2.'<BR>'.chr(10);
 		}
 	}
 
 	$new_so = array();
 	function importSale($r) {
-		global $new_so,$packages,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS;
+		global $new_so,$packages,$ITEMS,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS,$SERIALS;
 
 		$companyid = dbTranslate($r['company_id']);
 		$cid = prep($companyid);
@@ -555,7 +553,7 @@ echo $query2.'<BR>'.chr(10);
 		// add notes from quote to prices table
 		setNotes($partid,$r['notes'],$created_by,$date);
 
-		$freight = 'NULL';
+		$freight = '';
 		if ($r['freight_charge']>0) {
 			$freight = $r['freight_charge'];
 		}
@@ -572,10 +570,11 @@ echo $query2.'<BR>'.chr(10);
 
 			$pkgid = setPackage($r['quote_id'],$n,$freight,$r2['tracking_no'],$r2['date'].' 16:00:00');
 
+			$used_items = array();//prevent usage of duplicates
 			$serials = explode(chr(10),$r2['serials']);
 			$qty_shipped += count($serials);
 			foreach ($serials as $serial) {
-				$serial = trim($serial);
+				$serial = strtoupper(trim($serial));
 				if (! $serial) { continue; }
 
 				$ser = prep($serial);
@@ -584,8 +583,13 @@ echo $query2.'<BR>'.chr(10);
 				$stock_date = $r['so_date'];
 				$cost = 0;
 				$avg_cost = 0;
-				$query3 = "SELECT rep_exp_date, cost, avg_cost FROM inventory_solditem ";
+				$itemid = 0;
+				// this will be previously-set if serial is generic like '000'
+				if (! isset($used_items[$serial])) { $used_items[$serial] = ''; }
+
+				$query3 = "SELECT rep_exp_date, cost, avg_cost, po, iq_id, id FROM inventory_solditem ";
 				$query3 .= "WHERE serial = $ser ";
+				if ($used_items[$serial]<>'') { $query3 .= "AND id NOT IN (".$used_items[$serial].") "; }
 				$query3 .= "AND inventory_id = '".$r2['inventory_id']."' AND so_id = '".$r['quote_id']."'; ";
 				//$query3 .= "AND rep_exp_date IS NOT NULL AND rep_exp_date <> ''; ";
 				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
@@ -596,10 +600,21 @@ echo $query2.'<BR>'.chr(10);
 					}
 					if ($r3['avg_cost']>0) { $avg_cost = $r3['avg_cost']; }
 					if ($r3['cost']>0) { $cost = $r3['cost']; }
+					$itemid = $r3['id'];
+					if ($used_items[$serial]) { $used_items[$serial] .= ','; }
+					$used_items[$serial] .= $r3['id'];
+
+					if ($serial=='000') {
+						// if this non-descript serial has a PO and if we can determine its iq_id source, then
+						// get the serial from our previously-stored SERIALS
+						if ($r3['po'] AND isset($SERIALS['purchase']) AND isset($SERIALS['purchase'][$r3['po']]) AND isset($SERIALS['purchase'][$r3['po']][$r['iq_id']])) {
+							$serial = $SERIALS['purchase'][$r3['po']][$r['iq_id']];
+						}
+					}
 				}
 
 				// validates serial format and sequencing
-				$serial = setSerial($serial,'sale',$r['quote_id'],$r['oqid']);
+				$serial = setSerial($serial,'sale',$r['quote_id'],$itemid);//$r['oqid']);
 				$ser = prep($serial);//re-prep after new bogus serial has been generated
 
 				$serialid = setInventory($ser,$partid,$so_item_id,'sales_item_id','manifest',$stock_date." 10:00:00",0);
@@ -651,7 +666,7 @@ echo '<BR>'.chr(10);
 
 	$new_rma = array();
 	function importReturn($r) {
-		global $new_rma,$packages,$bogus_serial,$ITEMS,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS;
+		global $new_rma,$packages,$bogus_serial,$ITEMS,$SERVICE_MAPS,$CARRIER_MAPS,$WARRANTY_MAPS,$TERMS_MAPS,$SERIALS,$DISPOSITIONS;
 
 //		print "<pre>".print_r($r,true)."</pre>";
 
@@ -663,7 +678,7 @@ echo '<BR>'.chr(10);
 		//$contactid = prep(mapContact($r['contact_id'],$companyid));
 		$created_by = prep(mapUser($r['created_by_id']));
 		//$po_number = prep($r['po_number']);
-		$serial = $r['serial'];
+		$serial = strtoupper($r['serial']);
 
 		if ($r['clei']) { $r['heci'] = $r['clei']; }
 		else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
@@ -685,31 +700,54 @@ echo '<BR>'.chr(10);
 echo $query2.'<BR>'.chr(10);
 		}
 
-		$serial = setSerial($serial);
+		// if serial is already set by the SO serial auto-generation process, use that serial now; otherwise, create our own
+		if ($serial=='000' AND isset($SERIALS['sale']) AND isset($SERIALS['sale'][$r['so_id']]) AND isset($SERIALS['sale'][$r['so_id']][$r['solditem_id']])) {
+			$serial = $SERIALS['sale'][$r['so_id']][$r['solditem_id']];
+echo 'Found existing serial '.$serial.' for "000" on SO '.$r['so_id'].' for item id '.$r['solditem_id'].'<BR>';
+		} else {
+			$serial = setSerial($serial);
+		}
 		$ser = prep($serial);//re-prep after new bogus serial has been generated
 
 		$query2 = "SELECT id FROM inventory WHERE serial_no = $ser AND partid = $partid; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-		if (mysqli_num_rows($result2)>0) {
+		if (mysqli_num_rows($result2)==0) {
+			// if the serial doesn't already exist from a purchase, it's likely a '000' that was audited in by Brian,
+			// so add it to stock 
+			$serialid = setInventory($ser,$partid,false,false,'shelved',$r['date']." 12:00:00",1);
+
+			// now sell it using the SO OQ ID info, to prep it for being re-shelved on RMA below
+			if ($r['so_id'] AND $r['oq_id']) {
+				$serialid = setInventory($ser,$partid,$r['oq_id'],'sales_item_id','manifest',$r['date']." 12:00:00",0);
+			} else {
+//repair scenario
+			}
+		} else {
 			$r2 = mysqli_fetch_assoc($result2);
 			$serialid = $r2['id'];
+		}
 
-			$query2 = "REPLACE return_items (partid, inventoryid, rma_number, line_number, reason, dispositionid, qty) ";
-			$query2 .= "VALUES ($partid, $serialid, $rma, NULL, ".prep($r['reason']).", 0, 1); ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		$dispositionid = $DISPOSITIONS[$r['action_id']];
+		$query2 = "REPLACE return_items (partid, inventoryid, rma_number, line_number, reason, dispositionid, qty) ";
+		$query2 .= "VALUES ($partid, $serialid, $rma, NULL, ".prep($r['reason']).", $dispositionid, 1); ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 echo $query2.'<BR>'.chr(10);
-			$rma_item_id = qid();
+		$rma_item_id = qid();
 
-			$serialid = setInventory($ser,$partid,$rma_item_id,'returns_item_id','shelved',$r['date']." 12:00:00",1);
+		$serialid = setInventory($ser,$partid,$rma_item_id,'returns_item_id','shelved',$r['date']." 12:00:00",1);
+/* replaced this with ==0 code above
 		} else {
 echo 'Missing serialid for serial "'.$serial.'":<BR>'.$query2.'<BR>'.chr(10);
+exit;
 		}
+*/
 
 		// unit was replaced if there is a new_item_id, so all code below is to handle a replacement order
 		if (! $r['new_item_id']) { return; }
 
-		$query2 = "SELECT part_number, heci, m.name, i.short_description description ";
-		$query2 .= "FROM inventory_solditem si, inventory_inventory i, inventory_manufacturer ";
+		// REPLACEMENT ORDER
+		$query2 = "SELECT part_number, heci, m.name, i.short_description description, si.cost actual_cost, si.avg_cost ";
+		$query2 .= "FROM inventory_solditem si, inventory_inventory i, inventory_manufacturer m ";
 		$query2 .= "WHERE si.id = '".$r['new_item_id']."' AND si.inventory_id = i.id AND i.manufacturer_id_id = m.id; ";
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
@@ -719,33 +757,44 @@ echo 'Missing serialid for serial "'.$serial.'":<BR>'.$query2.'<BR>'.chr(10);
 				$partid = setPart(array('part'=>$r2['part_number'],'heci'=>$r2['heci'],'manf'=>$r2['manf'],'descr'=>$r2['description']));
 			}
 
-			// validates serial format and sequencing
-			$serial = setSerial($serial,'sale',$r['so_id'],$r['oqid']);
-			$ser = prep($serial);//re-prep after new bogus serial has been generated
+			$warranty = 'NULL';//$WARRANTY_MAPS[$r2['warranty_period_id']];
+			$orig_so = prep($r['so_id']);
+			if ($r['shipped_date']) { $ship_date = $r['shipped_date']; }
+			else { $ship_date = $r['date']; }
 
-			$serialid = setInventory($ser,$partid,$so_item_id,'sales_item_id','manifest',$stock_date." 10:00:00",0);
-
+			// add a new sales item record to original sales order, but as a replacement line item to the original
 			$query3 = "REPLACE sales_items (partid, so_number, line_number, qty, qty_shipped, price, delivery_date, ship_date, ";
 			$query3 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, conditionid) ";
-			$query3 .= "VALUES ($partid, $min_so, NULL, 1, 1, '0.00', NULL, '".$r['shipped_date']." 16:00:00', ";
-			$query3 .= "'".$ITEMS[$serialid]."', 'sales_item_id', NULL, NULL, $warranty, 2); ";
+			$query3 .= "VALUES ($partid, $orig_so, NULL, 1, 1, '0.00', NULL, '".$ship_date." 16:00:00', ";
+			$query3 .= "NULL, NULL, '".$ITEMS[$serialid]."', 'sales_item_id', $warranty, 2); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
 			$so_item_id = qid();
 
-			$freight = 'NULL';
-			$pkgid = setPackage($min_so,1,$freight,$r['outbound_tracking_no'],$r['shipped_date'].' 16:00:00');
+			// validates serial format and sequencing
+			$serial = setSerial($serial,'sale',$r['so_id'],$r['new_item_id']);//$r['oqid']);
+			$ser = prep($serial);//re-prep after new bogus serial has been generated
+
+			$serialid = setInventory($ser,$partid,$so_item_id,'sales_item_id','manifest',$r['date']." 16:00:00",0);
+
+			// get count of boxes on this sales order, and increment by 1 because this will have been shipped in a new shipment
+			$query3 = "SELECT id FROM packages WHERE order_number = $orig_so; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			$n = mysqli_num_rows($result3)+1;
+
+			$freight = '';
+			$pkgid = setPackage($r['so_id'],$n,$freight,$r['outbound_tracking_no'],$ship_date.' 16:00:00');
 
 			$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average, notes) ";
-			$query3 .= "VALUES ($serialid, '".$stock_date." 10:00:00', '".$cost."', '".$avg_cost."', 'Imported'); ";
+			$query3 .= "VALUES ($serialid, '".$r['date']." 10:00:00', '".$r2['actual_cost']."', '".$r2['avg_cost']."', 'Imported'); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
 
 			$query3 = "REPLACE package_contents (packageid, serialid) VALUES ($pkgid, $serialid); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
-//DAVID finish query above and then add shipped item (inventory, package, package_contents, etc)
 		}
+echo '<BR>'.chr(10);
 	}
 
 	function setInventory($ser,$partid,$item_id,$id_field,$status,$stock_date,$qty=false) {
@@ -791,7 +840,6 @@ echo $query3.'<BR>'.chr(10);
 		return ($serialid);
 	}
 
-/*
 	$query = "DELETE FROM purchase_orders; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM purchase_items; ";
@@ -808,21 +856,24 @@ echo $query3.'<BR>'.chr(10);
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM inventory_history; ";
 	$result = qdb($query) OR die(qe().' '.$query);
+	$query = "DELETE FROM inventory_costs; ";
+	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM returns; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM return_items; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM iso; ";
 	$result = qdb($query) OR die(qe().' '.$query);
-*/
+/*
 	$query = "DELETE FROM sales_orders WHERE so_number = 15559; ";
 	$result = qdb($query) OR die(qe().' '.$query);
 	$query = "DELETE FROM sales_items WHERE so_number = 15559; ";
 	$result = qdb($query) OR die(qe().' '.$query);
+*/
 
-	$purchStart = '2015-01-01';
-	$startDate = '2015-01-01';
-	$endDate = '2015-01-15';
+	$purchStart = '2012-01-01';
+	$startDate = '2012-01-01';
+	$endDate = '2018-01-15';
 	$packages = array();
 
 	/*************************************/
@@ -830,7 +881,6 @@ echo $query3.'<BR>'.chr(10);
 	/*************************************/
 
 	$records = array();
-/*
 	$query = "SELECT po.po_date, po.bill_from_id, po.po_terms_id, po.delivery_due, po.drop_ship_to, po.freight_carrier_id, ";
 	$query .= "po.memo, po.freight_charge, po.canceled_by_id, po.ext_memo, po.freight_charge_billed, ";//po.contact_id,
 	$query .= "iq.company_id, iq.quote_id, iq.id iqid, iq.quantity, iq.price, iq.notes, iq.creator_id, iq.pn_override, iq.contact_id, ";
@@ -845,11 +895,11 @@ echo $query3.'<BR>'.chr(10);
 		$query .= "AND po.po_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY po.po_date ASC; ";
+echo $query.'<BR>';
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['po_date']][] = array('type'=>'purchase','data'=>$r);
 	}
-*/
 
 	$query = "SELECT oq.company_id, oq.quote_id, oq.id oqid, so.so_date, canceled_by_id, oq.contact_id, oq.creator_id, ";
 	$query .= "so.po_number, so.po_file, so.ext_memo, so.memo, so.bill_to_id, so.ship_to_id, oq.notes, ";
@@ -860,13 +910,14 @@ echo $query3.'<BR>'.chr(10);
 	$query .= "iso_po_special_req_id, iso_ship_correct_id, iso_transit_req_id ";
 	$query .= "FROM inventory_salesorder so, inventory_outgoing_quote oq, inventory_company c, inventory_inventory i, inventory_manufacturer m ";
 	$query .= "WHERE so.quote_ptr_id = oq.quote_id AND oq.company_id = c.id AND oq.inventory_id = i.id AND m.id = i.manufacturer_id_id ";
-$query .= "AND oq.quote_id = 15559 ";
+//$query .= "AND oq.quote_id = 15559 ";
 	if ($startDate) {
 		$dbStartDate = format_date($startDate, 'Y-m-d');
 		$dbEndDate = format_date($endDate, 'Y-m-d');
 		$query .= "AND so.so_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY so.so_date ASC; ";
+echo $query.'<BR>';
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['so_date']][] = array('type'=>'sale','data'=>$r);
