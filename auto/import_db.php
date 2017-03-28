@@ -451,6 +451,7 @@ echo $query3.'<BR>'.chr(10);
 		if ($recd_qty<>$qty) {
 			$query2 = "UPDATE purchase_items SET qty_received = $recd_qty WHERE id = $po_item_id; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+echo $query2.'<BR>'.chr(10);
 		}
 	}
 
