@@ -133,11 +133,11 @@
 								$output .= '<ul class="dropdown-menu">';
 								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 								if(mysqli_num_rows($rows) > 0){
-									foreach ($rows as $invoice) {
+									foreach ($rows as $bill) {
 										$output .= '
 											<li>
-												<a href="/bill.php?on='.$order_number.'">
-												Bill #'.$invoice['bill_no'].' ('.format_date($invoice['date_created'],'n/j/Y').') 
+												<a href="/bill.php?bill='.$bill['bill_no'].'">
+												Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
 												</a>
 											</li>';
 									}

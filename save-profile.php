@@ -204,7 +204,6 @@
 		
 		//Get the carrier ids
 		if (isset($_REQUEST['carrier']) AND is_array($_REQUEST['carrier'])) { $carrierids = $_REQUEST['carrier']; }
-		print_r($carrierids);
 		//Checks if the company exists
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 		$result = qdb($query);
@@ -215,8 +214,7 @@
 				if(!$accountid == 0) {
 					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);
 				} else if(!empty($name)) {
-					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);
-				}
+					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);				}
 			}
 		}
 	}
