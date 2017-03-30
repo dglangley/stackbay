@@ -150,9 +150,7 @@
 	                            $output .= "</ul>";
 								$output .= "</div>";
 								echo $output;
-						}
-
-						elseif ($o['type'] == 'Invoice') {
+						} elseif ($o['type'] == 'Invoice') {
 							
 						}
 					?>
