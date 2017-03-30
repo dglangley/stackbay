@@ -171,7 +171,7 @@
                 <div class="col-md-10">
                     <form class="form-inline" method="POST" action="/save-commission.php">
                         <div style="display: inline-block; width: 100%;">
-                            <h2>User - Commissions</h2>
+                            <h2>Commissions</h2>
                             
                             <button name='submit' type="submit" class="btn btn-success btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission" style="margin-left: 10px;">Save</button>
                             <a href="/commission_details.php" class="btn btn-default btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission">Show All</a>
