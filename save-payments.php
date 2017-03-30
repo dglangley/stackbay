@@ -1,10 +1,13 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	function updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid) {
+		$payment_date = prep(format_date($payment_date, 'Y-m-d'));
 		if(!empty($payment_ID)) {
-			$query = "UPDATE contacts SET commission_rate = $rate WHERE id = $contactid;";
+			$query = "REPLACE payments (companyid, date, number, amount) VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount).");";
 			qdb($query) OR die(qe().' '.$query);
 		} 
 	}
