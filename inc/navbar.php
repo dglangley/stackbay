@@ -193,7 +193,7 @@
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
 	                <?php if($USER_ROLES[array_search(array_search('Administration', $ROLES), $USER_ROLES)] == array_search('Administration', $ROLES)) { ?>
 		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
-		                <li><a class="<?php echo ($pageName == 'commission.php' ? 'active' : ''); ?>" href="commission.php">Commissions</a></li>
+                        <li><a class="<?php echo ($pageName == 'commission.php' || $pageName == 'commission_details.php' ? 'active' : ''); ?>" href="commission.php">Commissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>

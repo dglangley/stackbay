@@ -369,7 +369,6 @@ include_once $rootdir.'/inc/packages.php';
 			$rma_notes = $rma_macro['notes'];
 		}
 		
-		
 		//Navigation changer
 		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		// if ($page == "RMA"){
@@ -409,7 +408,7 @@ include_once $rootdir.'/inc/packages.php';
 				$terms = $row['termsid'];
 			}
 			
-			if($page != "RMA"){
+			if($page != "RMA" && $mode != 'bill'){
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;'>						
@@ -427,7 +426,7 @@ include_once $rootdir.'/inc/packages.php';
 								</div>
 							</div>
 						</div>";
-			}else{
+			}else if ($mode != 'bill'){
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
@@ -436,7 +435,16 @@ include_once $rootdir.'/inc/packages.php';
 						</div>";
 			}
 		}
-		
+		if($mode == 'bill'){
+			$right.="
+					<div class='row'>
+						<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
+							<label for='associated_invoice'>Customer Invoice #:</label>";
+							
+								$right .= "<input name = 'associated_invoice' id='customer_invoice' class = 'form-control'>";
+			$right .="</div>
+			</div>";
+		}
 		if($results) {
 			//Contact Output
 			$right .= "<div class='row'>";
