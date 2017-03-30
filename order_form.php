@@ -83,6 +83,7 @@
 				include_once $rootdir.'/modal/accounts.php';
 				include_once $rootdir.'/modal/alert.php';
 				include_once $rootdir.'/modal/contact.php';
+				include_once $rootdir.'/modal/payments.php';
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:<?=$o['color']?>;">
 				
@@ -156,6 +157,10 @@
 							
 						}
 					?>
+					
+					<button type="button" class="btn-flat" data-toggle="modal" data-target="#modal-payment">
+						<i class="fa fa-usd" aria-hidden="true"></i>
+					</button>
 					
 				</div>
 				
