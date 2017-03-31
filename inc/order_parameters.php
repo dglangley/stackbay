@@ -20,7 +20,7 @@
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'receive_date';
 		}
-		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales"){
+		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so"){
 			$info['type'] = "Sales";
 			$info['order'] = "sales_orders";
 			$info['header'] = "Sales Order";

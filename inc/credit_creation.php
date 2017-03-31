@@ -37,14 +37,14 @@
         $rma_meta = array();
         if ($rma){
             $rma_o = o_params('rma');
-            $rma = "
+            $rma_select = "
             SELECT r.*, GROUP_CONCAT(ri.id) items_ids
             FROM `returns` r, `return_items` ri
             WHERE r.rma_number = ".prep($rma)."
             AND r.rma_number = ri.rma_number
             GROUP BY r.rma_number
             ;";
-            $rma_results = qdb($rma) or die(qe()." | $rma | ");
+            $rma_results = qdb($rma_select) or die(qe()." | $rma_select | ");
             $rma_meta = mysqli_fetch_assoc($rma_results);
         }
         $meta_insert = 
@@ -73,5 +73,34 @@
 
     }
     //Grab the order origin and 
-    
+    function all_credit_recieved($rma_number){
+        $received_select = "
+            SELECT ri.id
+            FROM  return_items ri, inventory_history ih, dispositions
+            WHERE rma_number = ".prep($rma_number)."
+            AND dispositions.id = dispositionid
+            AND disposition = 'Credit'
+            AND ih.field_changed = 'returns_item_id'
+            AND ih.value = ri.id;
+            ";
+        
+        $total_select = "
+            SELECT ri.id
+            FROM  return_items ri, dispositions
+            WHERE rma_number = ".prep($rma_number)."
+            AND dispositions.id = dispositionid
+            AND disposition = 'Credit'
+        ";
+        
+        //Eventual Spot to check (Maybe in query) that there has been no similar credit applied
+        
+        
+        $received = qdb($received_select);
+        $total = qdb($total_select);
+        $result = true;
+        if (mysqli_num_rows($received) < mysqli_num_rows($total)){
+            $result = false;
+        }
+        return $result;
+    }
 ?>
