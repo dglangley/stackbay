@@ -23,16 +23,16 @@
 					<br>
 					<div class="row">
 					    <div class="col-md-6">
-					        <input class="form-control input-sm" type="text" name="journal_entry" placeholder="Journal Entry #">
+					        <input class="form-control input-sm" type="text" name="payment_amount" placeholder="Amount">
 					    </div>
 					    <div class="col-md-6">
-					        <input class="form-control input-sm" type="text" name="payment_amount" placeholder="Amount">
+					        <!--<input class="form-control input-sm" type="text" name="companyid" value="">-->
 					    </div>
 					</div>
 					<!--Hidden Required Fields-->
 					<div class="row" style="display: none;">
 					    <div class="col-md-6">
-					        <input class="form-control input-sm" type="text" name="companyid" value="">
+					        <!--<input class="form-control input-sm" type="text" name="companyid" value="">-->
 					    </div>
 					    <div class="col-md-6">
 					        <input class="form-control input-sm" type="text" name="<?=($o['type'] == 'Purchase' ? "po" : "so");?>_order" value="<?=$order_number;?>">

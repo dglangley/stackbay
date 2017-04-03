@@ -7,9 +7,50 @@
 	function updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid) {
 		$payment_date = prep(format_date($payment_date, 'Y-m-d'));
 		if(!empty($payment_ID)) {
-			$query = "REPLACE payments (companyid, date, number, amount) VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount).");";
+			$id = 0;
+			//This section checks if the payment id or number is already in the table
+			//If so update and sum the amounts together with the new payment
+			$query = "SELECT amount, id FROM payments WHERE number = ".res($payment_ID).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			
+			if (mysqli_num_rows($result)>0) {
+	        	$r = mysqli_fetch_assoc($result);
+				$payment_amount += $r['amount'];
+				$id = $r['id'];
+	        }
+	        
+			$query = "REPLACE payments (companyid, date, number, amount";
+			if ($id) { $query .= ", id"; }
+			$query .= ") VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount);
+			if ($id) { $query .= ",'".$id."'"; }
+			$query .= ");";
 			qdb($query) OR die(qe().' '.$query);
+			//Get the payment id
+			if (! $id) { $id = qid(); }
+			
+			return $id;
 		} 
+	}
+	
+	function updatePaymentDetails($order, $type, $ref_num = 'null', $ref_type = 'null', $check_amount, $id) {
+		//get the amount of the specific PO or SO
+		$order_amount = 0;
+		$query = '';
+		if($type == 'po') {
+			$query = "SELECT SUM(qty * price) AS item_total FROM purchase_items WHERE po_number = ".res($order).";";
+		} else {
+			$query = "SELECT SUM(qty * price) AS item_total FROM sales_items WHERE so_number = ".res($order).";";	
+		}
+		
+		$result = qdb($query) OR die(qe().' '.$query);
+		
+		if (mysqli_num_rows($result)>0) {
+        	$r = mysqli_fetch_assoc($result);
+			$order_amount += $r['item_total'];
+        }
+        
+		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', ".res($ref_num).", ".res($ref_type).", $order_amount, ".res($id).");";
+			qdb($query) OR die(qe().' '.$query);
 	}
 	
 	// Get the CompanyID from Order
@@ -42,9 +83,18 @@
 	if (!$payment_ID) {
 		$msg = 'Missing valid input data';
 	} else {
+		$order_no = (!empty($so_order) ?  $so_order : $po_order );
+		$order_type = (!empty($so_order) ?  'so' : 'po' );
+		
 		$companyid = (!empty($so_order) ? getCompanyID($so_order,'sales_orders') : getCompanyID($po_order,'purchase_orders'));
 
-		updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid);
+		$pid = updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid);
+		
+		//Insert into the details table
+		if($pid) {
+			//Ref_Num and Ref_Type = the 2 empty parameters for future dev
+			updatePaymentDetails($order_no, $order_type, 'null', 'null', $payment_amount, $pid);
+		}
 		
 		$payment = 'true';
 	}
