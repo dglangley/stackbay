@@ -4,7 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid) {
+	function updatePayments($payment_type, $payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid, $notes = '') {
 		$payment_date = prep(format_date($payment_date, 'Y-m-d'));
 		if(!empty($payment_ID)) {
 			$id = 0;
@@ -94,9 +94,20 @@
 		return $companyid;
 	}
 	
+	//Declare variables
 	$payment = 'false';
+	$payment_ID;
+	$payment_date;
+	$journal_entry;
+	$payment_amount;
 	
+	$so_order;
+	$po_order;
 	
+	$payment_type;
+	$notes;
+	
+	if (isset($_REQUEST['payment_type'])) { $payment_type = $_REQUEST['payment_type']; }
 	if (isset($_REQUEST['payment_ID'])) { $payment_ID = $_REQUEST['payment_ID']; }
 	if (isset($_REQUEST['payment_date'])) { $payment_date = $_REQUEST['payment_date']; }
 	if (isset($_REQUEST['journal_entry'])) { $journal_entry = $_REQUEST['journal_entry']; }
@@ -106,6 +117,8 @@
 	if (isset($_REQUEST['so_order'])) { $so_order = $_REQUEST['so_order']; }
 	if (isset($_REQUEST['po_order'])) { $po_order = $_REQUEST['po_order']; }
 	
+	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
+	
 	if (!$payment_ID) {
 		$msg = 'Missing valid input data';
 	} else {
@@ -114,7 +127,7 @@
 		
 		$companyid = (!empty($so_order) ? getCompanyID($so_order,'sales_orders') : getCompanyID($po_order,'purchase_orders'));
 
-		$pid = updatePayments($payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid);
+		$pid = updatePayments($payment_type, $payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid, $notes);
 		
 		//Insert into the details table
 		if($pid) {
