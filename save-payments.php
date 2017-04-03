@@ -35,21 +35,47 @@
 	function updatePaymentDetails($order, $type, $ref_num = 'null', $ref_type = 'null', $check_amount, $id) {
 		//get the amount of the specific PO or SO
 		$order_amount = 0;
+		$paid = 0;
+		//$paidTotal = 0;
 		$query = '';
+		
+		//This query is mainly to get the total amount of cost for the order
 		if($type == 'po') {
 			$query = "SELECT SUM(qty * price) AS item_total FROM purchase_items WHERE po_number = ".res($order).";";
 		} else {
-			$query = "SELECT SUM(qty * price) AS item_total FROM sales_items WHERE so_number = ".res($order).";";	
+			$query = "SELECT SUM(qty * price) AS item_total FROM sales_items WHERE so_number = ".res($order).";";
 		}
 		
 		$result = qdb($query) OR die(qe().' '.$query);
-		
 		if (mysqli_num_rows($result)>0) {
         	$r = mysqli_fetch_assoc($result);
 			$order_amount += $r['item_total'];
         }
         
-		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', ".res($ref_num).", ".res($ref_type).", $order_amount, ".res($id).");";
+        //Find the amount paid so far for this order on this payment number
+        //In most cases I do not believe the user will pay recursively with the same check# (this is most likely a fall back that will never be used)
+		$query_details = "SELECT amount FROM payment_details WHERE order_number = ".res($order)." AND order_type = '".res($type)."' AND paymentid = ".res($id).";";
+		
+		$result = qdb($query_details) OR die(qe().' '.$query_details);
+		if (mysqli_num_rows($result)>0) {
+        	$r = mysqli_fetch_assoc($result);
+			$paid += $r['amount'];
+        }
+        
+        //Sum the new payment with the old payment amount for the payment ID on the details level
+        $check_amount += $paid;
+
+        //Find the total amount paid so far for this order (UNUSED)
+		$query_details = "SELECT SUM(amount) AS item_total FROM payment_details WHERE order_number = ".res($order)." AND order_type = '".res($type)."';";
+		
+		//Just used to update the total amount paid for the current order amongst all payments given
+		// $result = qdb($query_details) OR die(qe().' '.$query_details);
+		// if (mysqli_num_rows($result)>0) {
+  //      	$r = mysqli_fetch_assoc($result);
+		// 	$paidTotal += $r['item_total'];
+  //      }
+        
+		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', ".res($ref_num).", ".res($ref_type).", $check_amount, ".res($id).");";
 			qdb($query) OR die(qe().' '.$query);
 	}
 	
