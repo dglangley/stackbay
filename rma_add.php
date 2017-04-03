@@ -29,7 +29,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
-
+	include_once $rootdir.'/inc/credit_creation.php';
 
 
 	//Set initials to be used throughout the page
@@ -41,10 +41,11 @@
 	$invid = '';
 	$itemLocation = '';
 	$errorHandler = '';
+	$errorHandler = '';
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
-	print_r($_REQUEST);exit;
+	// print_r($_REQUEST);
 	
 	//If this is a form which sumbits upon itself
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
@@ -52,13 +53,31 @@
 		$invid = grab('invid');
 		
 		if($rmaid == '') {
-			$query = "SELECT serial_no, sales_item_id FROM inventory WHERE id = ".res($invid).";";
+			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".res($invid).";";
 			$serial_find = qdb($query) or die(qe());
 			if (mysqli_num_rows($serial_find)>0) {
 				$serial_find = mysqli_fetch_assoc($serial_find);
 				$rmaid = $serial_find['serial_no'];
+				$sales_item_id = $serial_find['sales_item_id'];
+				
+				if($sales_item_id){
+					$si_line = "
+					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
+					";
+					$si_result = qdb($si_line);
+					if (mysqli_num_rows($si_result) > 0){
+						$si_result = mysqli_fetch_assoc($si_result);
+						$so_number = $si_result['so_number'];
+						if(all_credit_recieved($order_number)){
+							credit_creation($so_number, "sales",$order_number);
+						}
+					}
+				}else{
+					exit('This part was never sold');
+				}
 			}
 		}
+		
 		
 		$place = grab('place');
 		$instance = grab('instance');
@@ -67,7 +86,8 @@
 		
 		//Find the items pertaining to the RMA number and the serial searched
 		$rmaArray = findRMAItems($rmaid, $order_number);
-			
+	
+		// print_r($rmaArray);
 		if(empty($itemLocation)) {
 			$errorHandler = "Locations can not be empty.";
 		} else {
@@ -172,16 +192,17 @@
 	}
 	
 	
-
+	
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
 	function findRMAItems($search, $order_number, $type = 'all'){
 		$rma_search = array();
 		$query = '';
 		
-		if($type == 'all')
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
-		else
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+		if($type == 'all'){
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
+		} else {
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+		}
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
 		
