@@ -491,7 +491,26 @@
 						}
 					});
 				});
+				
+				$(document).on("change", ".payment-type", function() {
+					var placeholder = '';
+					
+					if($(this).val() == "Check") {
+						placeholder = "Check #";
+					} else if($(this).val() == "Wire Transfer") {
+						placeholder = "Ref #";
+					} else if($(this).val() == "Credit Card") {
+						placeholder = "Appr Code";
+					} else if($(this).val() == "Paypal") {
+						placeholder = "Transaction #";
+					} else {
+						placeholder = "Other";
+					}
+					
+		            $('.payment-placeholder').attr('placeholder', placeholder);
+		        });
 			})(jQuery);
+
 		</script>
 
 	</body>

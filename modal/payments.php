@@ -52,7 +52,7 @@
                 <div class="modal-body payment-modal" id="payment-modal-body" data-origin ="payment_info" data-oldid = "false">
 					<div class="row">
 					    <div class="col-md-3">
-					        <select class="form-control input-sm" name="payment_type">
+					        <select class="form-control input-sm payment-type" name="payment_type">
 					            <option value="Wire Transfer">Wire Transfer</option>
 					            <option value="Check">Check</option>
 					            <option value="Credit Card">Credit Card</option>
@@ -61,7 +61,7 @@
 					        </select>
 					    </div>
 					    <div class="col-md-3">
-					        <input class="form-control input-sm" type="text" name="payment_ID" placeholder="Check #">
+					        <input class="form-control input-sm payment-placeholder" type="text" name="payment_ID" placeholder="Ref #">
 					    </div>
 					    <div class="col-md-3">
 					        <div class="input-group date datetime-picker-line">
