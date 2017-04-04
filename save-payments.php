@@ -32,7 +32,7 @@
 		} 
 	}
 	
-	function updatePaymentDetails($order, $type, $ref_num = 'null', $ref_type = 'null', $check_amount, $id) {
+	function updatePaymentDetails($order, $type, $ref_type = 'null', $ref_num = 'null', $check_amount, $id) {
 		//get the amount of the specific PO or SO
 		$order_amount = 0;
 		$paid = 0;
@@ -75,7 +75,7 @@
 		// 	$paidTotal += $r['item_total'];
   //      }
         
-		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', ".res($ref_num).", ".res($ref_type).", $check_amount, ".res($id).");";
+		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', '".res($ref_num)."', '".res($ref_type)."', $check_amount, ".res($id).");";
 			qdb($query) OR die(qe().' '.$query);
 	}
 	
@@ -101,6 +101,10 @@
 	$journal_entry;
 	$payment_amount;
 	
+	$ref_grab;
+	$ref_type;
+	$ref_num;
+	
 	$so_order;
 	$po_order;
 	
@@ -112,6 +116,10 @@
 	if (isset($_REQUEST['payment_date'])) { $payment_date = $_REQUEST['payment_date']; }
 	if (isset($_REQUEST['journal_entry'])) { $journal_entry = $_REQUEST['journal_entry']; }
 	if (isset($_REQUEST['payment_amount'])) { $payment_amount = $_REQUEST['payment_amount']; }
+	
+	if (isset($_REQUEST['reference_button'])) { $ref_grab = explode(" ",$_REQUEST['reference_button']); }
+	$ref_type = $ref_grab[0];
+	$ref_num = $ref_grab[1];
 	
 	//Determine if this is an so or po
 	if (isset($_REQUEST['so_order'])) { $so_order = $_REQUEST['so_order']; }
@@ -132,7 +140,7 @@
 		//Insert into the details table
 		if($pid) {
 			//Ref_Num and Ref_Type = the 2 empty parameters for future dev
-			updatePaymentDetails($order_no, $order_type, 'null', 'null', $payment_amount, $pid);
+			updatePaymentDetails($order_no, $order_type, $ref_type, $ref_num, $payment_amount, $pid);
 		}
 		
 		$payment = 'true';

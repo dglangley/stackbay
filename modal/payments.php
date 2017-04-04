@@ -88,14 +88,38 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach($invoice_items as $radio_item): ?>
-                                    <tr>
-                                        <td><input type="radio" name="reference_button" value="<?=$radio_item['invoice_no'];?>"></td>
-                                        <td>Invoice</td>
-                                        <td><?=$radio_item['invoice_no'];?></td>
-                                        <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
+                                    <?php if(!empty($invoice_items)) { ?>
+                                        <?php foreach($invoice_items as $radio_item): ?>
+                                        <tr>
+                                            <td><input type="radio" name="reference_button" value="invoice <?=$radio_item['invoice_no'];?>"></td>
+                                            <td>Invoice</td>
+                                            <td><?=$radio_item['invoice_no'];?></td>
+                                            <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php } ?>
+                                    
+                                    <?php if(!empty($bill_items)) { ?>
+                                        <?php foreach($bill_items as $radio_item): ?>
+                                        <tr>
+                                            <td><input type="radio" name="reference_button" value="bill <?=$radio_item['bill_no'];?>"></td>
+                                            <td>Bill</td>
+                                            <td><?=$radio_item['bill_no'];?></td>
+                                            <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php } ?>
+                                    
+                                    <?php if(!empty($credit_items)) { ?>
+                                        <?php foreach($credit_items as $radio_item): ?>
+                                        <tr>
+                                            <td><input type="radio" name="reference_button" value="credit <?=$radio_item['order_num'];?>"></td>
+                                            <td>Credit</td>
+                                            <td><?=$radio_item['order_num'];?></td>
+                                            <td>-<?=$radio_item['qty'] * $radio_item['amount'];?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php } ?>
     					        </tbody>
     					    </table>
 					    </div>
