@@ -337,7 +337,7 @@ include_once $rootdir.'/inc/packages.php';
 		//Output the void button to the bottom left side of the collumn
 		if ($order_number != 'New' && $status == 'Active') {
 			$right .= "
-				<div class='row' style='padding-bottom: 10px;position:absolute;bottom:0px;'>
+				<div class='row'>
 					<div class='col-sm-12'>
 						<div class='btn btn-sm btn-danger' id = 'order_void'>Void</div>
 					</div>

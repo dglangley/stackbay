@@ -158,9 +158,9 @@
 					
 					<?php
 					
-						if($order_number != "New" && $o['type'] == 'Purchase'){
-							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
-							$rows = qdb($bills_selector);
+						if($order_number != "New"){
+							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sales' ? 'so' : 'po').'";';
+							$rows = qdb($query);
 							$output = '
 							<div class ="btn-group">
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
@@ -169,13 +169,24 @@
 	                            </button>';
 	                            
 								$output .= '<ul class="dropdown-menu">';
-								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 								if(mysqli_num_rows($rows) > 0){
-									foreach ($rows as $bill) {
+									foreach ($rows as $payment) {
+										$number = 0;
+										$amount = 0;
+										
+										$query = 'SELECT * FROM payments WHERE id = '.$payment['paymentid'].';';
+										$result = qdb($query) OR die(qe().' '.$query);
+		
+										if (mysqli_num_rows($result)>0) {
+								        	$r = mysqli_fetch_assoc($result);
+											$number = $r['number'];
+											$amount = $r['amount'];
+								        }
+										
 										$output .= '
 											<li>
-												<a href="/bill.php?bill='.$bill['bill_no'].'">
-												Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
+												<a style="cursor: pointer" data-number="'.$number.'" data-amount="'.$amount.'" data-toggle="modal" data-target="#modal-payment">
+													Payment #'.$payment['paymentid'].'
 												</a>
 											</li>';
 									}
