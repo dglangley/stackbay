@@ -9,7 +9,7 @@
     $credit_items = array();
     
     if($o['type'] == 'Purchase') {
-        $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = ".res($order_number).";";
+        $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($order_number)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
@@ -18,7 +18,7 @@
     	    $bill_items[] = $rows;
     	}
     } else if($o['type'] == 'Sales') {
-        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = ".res($order_number).";";
+        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
@@ -27,7 +27,7 @@
     	    $invoice_items[] = $rows;
     	}
     	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = ".res($order_number).";";
+    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($order_number)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
@@ -52,7 +52,7 @@
                 <div class="modal-body payment-modal" id="payment-modal-body" data-origin ="payment_info" data-oldid = "false">
 					<div class="row">
 					    <div class="col-md-3">
-					        <select class="form-control input-sm" name="payment_type">
+					        <select class="form-control input-sm payment-type" name="payment_type">
 					            <option value="Wire Transfer">Wire Transfer</option>
 					            <option value="Check">Check</option>
 					            <option value="Credit Card">Credit Card</option>
@@ -61,7 +61,7 @@
 					        </select>
 					    </div>
 					    <div class="col-md-3">
-					        <input class="form-control input-sm" type="text" name="payment_ID" placeholder="Check #">
+					        <input class="form-control input-sm payment-placeholder" type="text" name="payment_ID" placeholder="Ref #">
 					    </div>
 					    <div class="col-md-3">
 					        <div class="input-group date datetime-picker-line">
