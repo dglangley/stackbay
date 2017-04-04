@@ -19,9 +19,9 @@
 				$id = $r['id'];
 	        }
 	        
-			$query = "REPLACE payments (companyid, date, number, amount";
+			$query = "REPLACE payments (companyid, date, number, amount, payment_type, notes";
 			if ($id) { $query .= ", id"; }
-			$query .= ") VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount);
+			$query .= ") VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount).", '".res($payment_type)."', '".res($notes)."'";
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= ");";
 			qdb($query) OR die(qe().' '.$query);

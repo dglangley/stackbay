@@ -1,3 +1,46 @@
+<?php
+    //This is just in case nothing was declared
+    //Variables we will be using in this modal
+    //$o['type'];
+    
+    $query = "";
+    $invoice_items = array();
+    $bill_items = array();
+    $credit_items = array();
+    
+    if($o['type'] == 'Purchase') {
+        $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = ".res($order_number).";";
+        
+        $result = qdb($query) OR die(qe().' '.$query);
+    
+        if(mysqli_num_rows($result) > 0){
+            $rows = mysqli_fetch_assoc($result);
+    	    $bill_items[] = $rows;
+    	}
+    } else if($o['type'] == 'Sales') {
+        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = ".res($order_number).";";
+        
+        $result = qdb($query) OR die(qe().' '.$query);
+    
+        if(mysqli_num_rows($result) > 0){
+            $rows = mysqli_fetch_assoc($result);
+    	    $invoice_items[] = $rows;
+    	}
+    	
+    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = ".res($order_number).";";
+        
+        $result = qdb($query) OR die(qe().' '.$query);
+    
+        if(mysqli_num_rows($result) > 0){
+            $rows = mysqli_fetch_assoc($result);
+    	    $credit_items[] = $rows;
+    	}
+    } else {
+        //Future space for Returns or other forms
+    }
+    
+?>
+
 <div class="modal modal-alert fade" id="modal-payment" tabindex="-1" role="dialog" aria-labelledby="modalpaymentTitle">
     <div class="modal-dialog" role="document">
         <form action="/save-payments.php" method="post" style="padding: 7px;">
@@ -45,12 +88,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php foreach($invoice_items as $radio_item): ?>
                                     <tr>
-                                        <td><input type="radio" name="reference_button"></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                        <td><input type="radio" name="reference_button" value="<?=$radio_item['invoice_no'];?>"></td>
+                                        <td>Invoice</td>
+                                        <td><?=$radio_item['invoice_no'];?></td>
+                                        <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
                                     </tr>
+                                    <?php endforeach; ?>
     					        </tbody>
     					    </table>
 					    </div>
