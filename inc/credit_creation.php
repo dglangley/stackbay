@@ -103,4 +103,9 @@
         }
         return $result;
     }
+    function get_assoc_credit($rma_number){
+        $rma_number = prep($rma_number);
+        $select = "SELECT * FROM sales_credits WHERE rma = $rma_number;";
+        return qdb($select);
+    }
 ?>

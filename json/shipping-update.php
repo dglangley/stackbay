@@ -29,6 +29,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
+		$productItems = $productItems;
 		$result = [];
 		
 		//This is splitting each product from mass of items

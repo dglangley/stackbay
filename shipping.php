@@ -266,8 +266,53 @@
 				<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
 				<?php } ?>
-				
-				<a href="/rma.php?on=<?=$order_number;?>" class="btn-sm btn-flat gray pull-left rma-button" style="margin-right: 10px;">RMA</a>
+<?php
+				if(is_numeric($order_number)){
+					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+					// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+					$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+					$rows = qdb($rma_select);
+						$output = '
+						<div class ="btn-group">
+							<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+                              <i class="fa fa-shopping-cart"></i>
+                              <span class="caret"></span>
+                            </button>';
+                        
+						$output .= '<ul class="dropdown-menu">';
+						// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+						if(mysqli_num_rows($rows)>0){
+							foreach ($rows as $rma) {
+								$output .= '
+									<li>
+										<div class = "row rma-list-items">
+											<div class = "col-md-3">
+												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+													<i class="fa fa-list"></i>
+												</a>
+											</div>
+											<div class = "col-md-6">
+												RMA #'.$rma['rma_number'].'
+											</div>
+											<div class = "col-md-3 pull-left">
+												<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
+													<i class="fa fa-truck"></i>
+												</a>
+											</div>
+										</div>
+									</li>';
+							}
+						}
+						$output .= '<li>
+										<a href="/rma.php?on='.$order_number.'">
+											ADD RMA <i class ="fa fa-plus"></i>
+										</a>
+									</li>';
+                        $output .= "</ul>";
+						$output .= "</div>";
+						echo $output;
+				}
+?>
 			</div>
 			
 			<div class="col-md-4 text-center">

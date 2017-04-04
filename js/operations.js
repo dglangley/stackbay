@@ -1997,6 +1997,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.log("JSON shipping-update.php: ERROR " + error);
+					console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
 				},	
 			});
 		});

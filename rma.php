@@ -30,7 +30,8 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
-
+	include_once $rootdir.'/inc/credit_creation.php';
+	include_once $rootdir.'/inc/getDisposition.php';
 
 	//Declarations
 	$mode = '';
@@ -48,6 +49,17 @@
 	$mode = grab("mode");
 	$so_number = grab("on");
 	$rma_number = grab("rma",'');
+	
+	if ($rma_number && !$so_number){
+		$query = "SELECT order_number FROM `returns` WHERE rma_number = ".prep($rma_number)." AND order_type = 'Sale';";
+		// echo($query);
+		$result = qdb($query);
+		// exit;
+		if (mysqli_num_rows($result)){
+			$result = mysqli_fetch_assoc($result);
+			$so_number = $result['order_number'];
+		}
+	}
 	
 	//Check for any post data from save
 	//Array = [counter] = invid
@@ -74,7 +86,7 @@
 		$disposition;
 		
 		//New RMA
-		if ($rma_number == ""){
+		if (!$rma_number){
 			
 	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
 	        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).",".prep($rma_notes).");";
@@ -107,7 +119,7 @@
 				}
 	        }
 	    //Tis an RMA Update or Delete
-		} else if($rma_number != '') { 
+		} else { 
         	foreach($checkedItems as $invid) {
 	        	$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
 	        	$rmaSave = qdb($partidQuery) or die(qe());
@@ -268,32 +280,32 @@
 	// echo"</pre>";
 	// exit;
 	
-	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
-	function getDisposition($id = '') {
-		$dispositions = array();
-		$disp_value;
+	// //parameter id if left blank will pull everything else if id is specified then it will give the disposition value
+	// function getDisposition($id = '') {
+	// 	$dispositions = array();
+	// 	$disp_value;
 		
-		if($id == '') {
-			$query = "SELECT * FROM dispositions;";
-			$result = qdb($query) or die(qe());
+	// 	if($id == '') {
+	// 		$query = "SELECT * FROM dispositions;";
+	// 		$result = qdb($query) or die(qe());
 			
-			while ($row = $result->fetch_assoc()) {
-				$dispositions[$row['id']] = $row['disposition'];
-			}
-		} else {
-			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
-			$result = qdb($query) or die(qe());
+	// 		while ($row = $result->fetch_assoc()) {
+	// 			$dispositions[$row['id']] = $row['disposition'];
+	// 		}
+	// 	} else {
+	// 		$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+	// 		$result = qdb($query) or die(qe());
 			
-			if (mysqli_num_rows($result)>0) {
-				$result = mysqli_fetch_assoc($result);
-				$disp_value = $result['disposition'];
-			}
+	// 		if (mysqli_num_rows($result)>0) {
+	// 			$result = mysqli_fetch_assoc($result);
+	// 			$disp_value = $result['disposition'];
+	// 		}
 			
-			return $disp_value;
-		}
+	// 		return $disp_value;
+	// 	}
 		
-		return $dispositions;
-	}
+	// 	return $dispositions;
+	// }
 	
 ?>
 
@@ -342,11 +354,34 @@
 				
 				<div class="col-md-4">
 					<?php
-	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $order_number . '" | href="/docs/'.$order_type[0].'O'.$order_number.'.pdf"
+	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$order_type[0].'O'.$rma_number.'.pdf"
 						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO #'.$so_number.')</a>';
 						if($rma_number){
 							echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 							echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+							$rows = get_assoc_credit($rma_number);
+							if(mysqli_num_rows($rows)>0){
+								$output = '
+								<div class ="btn-group">
+									<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+		                              <i class="fa fa-credit-card"></i>
+		                              <span class="caret"></span>
+		                            </button>';
+	                            
+								$output .= '<ul class="dropdown-menu">';
+								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+								foreach ($rows as $cm) {
+									$output .= '
+										<li>
+											<a href="/docs/CM'.$cm['id'].'.pdf">
+											Credit Memo #'.$cm['id'].'
+											</a>
+										</li>';
+								}
+	                            $output .= "</ul>";
+								$output .= "</div>";
+								echo $output;
+							}
 						}
 					?>
 					
@@ -357,8 +392,8 @@
 				</div>
 				
 				<div class="col-md-4">
-					<button class="btn-flat btn-sm  <?=($order_number=="New")?'success':'success'?> pull-right" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
-						<?=($order_number=="New") ? 'Create' :'Save'?>
+					<button class="btn-flat btn-sm  <?=($rma_number=="New")?'success':'success'?> pull-right" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
+						<?=($rma_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>
 			</div>
