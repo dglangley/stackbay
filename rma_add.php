@@ -53,6 +53,7 @@
 		$invid = grab('invid');
 		
 		if($rma_serial == '') {
+			//Get the initial Sales Item 
 			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".res($invid).";";
 			$serial_find = qdb($query) or die(qe());
 			if (mysqli_num_rows($serial_find)) {
@@ -60,21 +61,6 @@
 				$rma_serial = $serial_find['serial_no'];
 				$sales_item_id = $serial_find['sales_item_id'];
 				
-				if($sales_item_id){
-					$si_line = "
-					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
-					";
-					$si_result = qdb($si_line);
-					if (mysqli_num_rows($si_result)){
-						$si_result = mysqli_fetch_assoc($si_result);
-						$so_number = $si_result['so_number'];
-						if(all_credit_recieved($order_number)){
-							credit_creation($so_number, "sales",$order_number);
-						}
-					}
-				}else{
-					exit('This part was never sold');
-				}
 			}
 		}
 		
@@ -94,6 +80,21 @@
 			//Check if there is 1, multiple, or none found
 			if(count($rmaArray) == 1 || $invid != '') {
 				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
+				if($sales_item_id){
+					$si_line = "
+					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
+					";
+					$si_result = qdb($si_line);
+					if (mysqli_num_rows($si_result)){
+						$si_result = mysqli_fetch_assoc($si_result);
+						$so_number = $si_result['so_number'];
+						if(all_credit_recieved($order_number)){
+							credit_creation($so_number, "sales",$order_number);
+						}
+					}
+				}else{
+					exit('This part was never sold');
+				}
 				
 				//Clear values after save
 				if($errorHandler == '') {

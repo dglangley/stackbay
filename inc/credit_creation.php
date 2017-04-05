@@ -62,7 +62,7 @@
         FROM `".$o["item"]."`".(($rma_meta['items_ids'])?" LEFT JOIN `inventory` ON `sales_item_id` ":"")."
         WHERE ".$o['id']." = ".prep($origin_number).(($item_number)?" AND id = ".prep($item_number):"")."
         ".(($rma_meta['items_ids'])?"AND `sales_item_id` in (".$rma_meta['items_ids'].")":"").";";
-        exit($line_item_select);
+        // exit($line_item_select);
         $line_items = qdb($line_item_select) or die(qe()."| ".$line_item_select);
 
         foreach($line_items as $row){
@@ -82,9 +82,10 @@
             WHERE rma_number = ".prep($rma_number)."
             AND dispositions.id = dispositionid
             AND disposition = 'Credit'
+            AND invid = inventoryid
+            AND ih.value = ri.id
             AND ih.field_changed = 'returns_item_id'
-            AND ih.value = ri.id;
-            ";
+            ;";
         
         //Total
         $total_select = "
@@ -94,7 +95,7 @@
             AND dispositions.id = dispositionid
             AND disposition = 'Credit'
         ";
-        exit($received_select."<br>".$total_select);
+        // exit($received_select."<br>".$total_select);
         //Eventual Spot to check (Maybe in query) that there has been no similar credit applied
         
         
