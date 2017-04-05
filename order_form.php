@@ -244,7 +244,7 @@
 			
 			
 			<!-- Row declaration for splitting the two "halves of the page  -->
-			<div class="row remove-margin">
+			<div class="row order-data remove-margin">
 			
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order">

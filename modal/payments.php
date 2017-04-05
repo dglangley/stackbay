@@ -71,7 +71,7 @@
                             </div>
 					    </div>
 					    <div class="col-md-3" style="padding: 0 5px">
-					        <input class="form-control input-sm" type="text" name="payment_amount" placeholder="Amount">
+					        <input class="form-control input-sm" type="text" name="payment_amount" placeholder="Amount" style="text-align: right;">
 					    </div>
 					</div>
 					<br>
