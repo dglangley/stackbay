@@ -37,7 +37,7 @@
 	$order_type = "rma";
 	
 	//Variables used for the post save
-	$rmaid = '';
+	$rma_serial = '';
 	$invid = '';
 	$itemLocation = '';
 	$errorHandler = '';
@@ -49,15 +49,15 @@
 	
 	//If this is a form which sumbits upon itself
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
-		$rmaid = strtoupper(grab('rmaid'));
+		$rma_serial = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
 		
-		if($rmaid == '') {
+		if($rma_serial == '') {
 			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".res($invid).";";
 			$serial_find = qdb($query) or die(qe());
-			if (mysqli_num_rows($serial_find)>0) {
+			if (mysqli_num_rows($serial_find)) {
 				$serial_find = mysqli_fetch_assoc($serial_find);
-				$rmaid = $serial_find['serial_no'];
+				$rma_serial = $serial_find['serial_no'];
 				$sales_item_id = $serial_find['sales_item_id'];
 				
 				if($sales_item_id){
@@ -65,7 +65,7 @@
 					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
 					";
 					$si_result = qdb($si_line);
-					if (mysqli_num_rows($si_result) > 0){
+					if (mysqli_num_rows($si_result)){
 						$si_result = mysqli_fetch_assoc($si_result);
 						$so_number = $si_result['so_number'];
 						if(all_credit_recieved($order_number)){
@@ -85,7 +85,7 @@
 		$itemLocation = dropdown_processor($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
-		$rmaArray = findRMAItems($rmaid, $order_number);
+		$rmaArray = findRMAItems($rma_serial, $order_number);
 	
 		// print_r($rmaArray);
 		if(empty($itemLocation)) {
@@ -97,14 +97,14 @@
 				
 				//Clear values after save
 				if($errorHandler == '') {
-					$rmaid = '';
+					$rma_serial = '';
 					$invid = '';
 					//$itemLocation = '';
 				}
 			} else if(count($rmaArray) > 1) {
-				$errorHandler = "Multiple items found for serial: " . $rmaid . ". Please select the correct one using the list below.";
+				$errorHandler = "Multiple items found for serial: " . $rma_serial . ". Please select the correct one using the list below.";
 			} else {
-				$errorHandler = "No items found for serial: " . $rmaid;
+				$errorHandler = "No items found for serial: " . $rma_serial;
 			}
 			
 		}
@@ -366,7 +366,7 @@
 							</div>
 							
 							<div class="col-md-6" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rmaid ? $rmaid : '');?>" autofocus>
+							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
 				            </div>
 			            </div>
 				</div>

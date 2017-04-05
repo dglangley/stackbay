@@ -62,7 +62,7 @@
         FROM `".$o["item"]."`".(($rma_meta['items_ids'])?" LEFT JOIN `inventory` ON `sales_item_id` ":"")."
         WHERE ".$o['id']." = ".prep($origin_number).(($item_number)?" AND id = ".prep($item_number):"")."
         ".(($rma_meta['items_ids'])?"AND `sales_item_id` in (".$rma_meta['items_ids'].")":"").";";
-
+        exit($line_item_select);
         $line_items = qdb($line_item_select) or die(qe()."| ".$line_item_select);
 
         foreach($line_items as $row){
@@ -74,6 +74,8 @@
     }
     //Grab the order origin and 
     function all_credit_recieved($rma_number){
+        
+        //Reciece
         $received_select = "
             SELECT ri.id
             FROM  return_items ri, inventory_history ih, dispositions
@@ -84,6 +86,7 @@
             AND ih.value = ri.id;
             ";
         
+        //Total
         $total_select = "
             SELECT ri.id
             FROM  return_items ri, dispositions
@@ -91,7 +94,7 @@
             AND dispositions.id = dispositionid
             AND disposition = 'Credit'
         ";
-        
+        exit($received_select."<br>".$total_select);
         //Eventual Spot to check (Maybe in query) that there has been no similar credit applied
         
         
