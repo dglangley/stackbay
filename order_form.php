@@ -173,26 +173,33 @@
 									foreach ($rows as $payment) {
 										$number = 0;
 										$amount = 0;
+										$type = '';
+										$notes = '';
+										$date = '';
 										
-										$query = 'SELECT * FROM payments WHERE id = '.$payment['paymentid'].';';
+										$query = 'SELECT * FROM payments p, payment_details d WHERE id = '.$payment['paymentid'].' AND paymentid = p.id;';
 										$result = qdb($query) OR die(qe().' '.$query);
 		
 										if (mysqli_num_rows($result)>0) {
 								        	$r = mysqli_fetch_assoc($result);
 											$number = $r['number'];
 											$amount = $r['amount'];
+											$type = $r['payment_type'];
+											$notes = $r['notes'];
+											$ref = $r['ref_type'].' '.$r['ref_number'];
+											$date = format_date($r['date']);
 								        }
 										
 										$output .= '
 											<li>
-												<a style="cursor: pointer" data-number="'.$number.'" data-amount="'.$amount.'" data-toggle="modal" data-target="#modal-payment">
+												<a style="cursor: pointer" class="paid-data" data-date="'.$date.'" data-ref="'.$ref.'" data-notes="'.$notes.'" data-type="'.$type.'" data-number="'.$number.'" data-amount="'.$amount.'" data-toggle="modal" data-target="#modal-payment">
 													Payment #'.$payment['paymentid'].'
 												</a>
 											</li>';
 									}
 								}
 								$output .= '<li>
-									<a style="cursor: pointer" data-toggle="modal" data-target="#modal-payment">
+									<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
 										<i class="fa fa-plus"></i> Add New Payment
 									</a>
 									
@@ -508,6 +515,35 @@
 					}
 					
 		            $('.payment-placeholder').attr('placeholder', placeholder);
+		        });
+		        
+		        $(document).on("click", ".paid-data", function() {
+					var number = $(this).data('number');
+					var amount = $(this).data('amount');
+					var type = $(this).data('type');
+					var ref = $(this).data('ref');
+					var notes = $(this).data('notes');
+					var date = $(this).data('date');
+					
+					$('select[name="payment_type"]').val(type);
+					$('input[name="payment_ID"]').val(number);
+					$('input[name="payment_amount"]').val(amount);
+					$('input[name="payment_date"]').val(date);
+					
+					$('textarea[name="notes"]').val(notes);
+					
+					$('input[name="reference_button"][value="' + ref + '"]').prop('checked', true);
+		        });
+		        
+		        $(document).on("click", ".new-payment", function() {
+					$('select[name="payment_type"]').val('Wire Transfer');
+					$('input[name="payment_ID"]').val('');
+					$('input[name="payment_amount"]').val('');
+					$('input[name="payment_date"]').val($('input[name="payment_date"]').data('date'));
+					
+					$('textarea[name="notes"]').val('');
+					
+					$('input[name="reference_button"]').prop('checked', false);
 		        });
 			})(jQuery);
 

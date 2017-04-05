@@ -21,20 +21,19 @@
         $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
-    
-        if(mysqli_num_rows($result) > 0){
-            $rows = mysqli_fetch_assoc($result);
-    	    $invoice_items[] = $rows;
-    	}
     	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($order_number)."';";
+    	while ($rows = mysqli_fetch_assoc($result)) {
+        	$invoice_items[] = $rows;
+        }
+    	
+    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.companyid = '".res(25)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
-        if(mysqli_num_rows($result) > 0){
-            $rows = mysqli_fetch_assoc($result);
-    	    $credit_items[] = $rows;
-    	}
+        while ($rows = mysqli_fetch_assoc($result)) {
+        	$credit_items[] = $rows;
+        }
+        
     } else {
         //Future space for Returns or other forms
     }
@@ -51,7 +50,7 @@
                 </div>
                 <div class="modal-body payment-modal" id="payment-modal-body" data-origin ="payment_info" data-oldid = "false">
 					<div class="row">
-					    <div class="col-md-3">
+					    <div class="col-md-3" style="padding: 0 5px">
 					        <select class="form-control input-sm payment-type" name="payment_type">
 					            <option value="Wire Transfer">Wire Transfer</option>
 					            <option value="Check">Check</option>
@@ -60,18 +59,18 @@
 					            <option value="Other">Other</option>
 					        </select>
 					    </div>
-					    <div class="col-md-3">
+					    <div class="col-md-3" style="padding: 0 5px">
 					        <input class="form-control input-sm payment-placeholder" type="text" name="payment_ID" placeholder="Ref #">
 					    </div>
-					    <div class="col-md-3">
+					    <div class="col-md-3" style="padding: 0 5px">
 					        <div class="input-group date datetime-picker-line">
-                                <input type="text" name="payment_date" class="form-control input-sm" value="<?=date("m/d/Y")?>" style="min-width:50px;">
+                                <input type="text" name="payment_date" class="form-control input-sm" data-date="<?=date("m/d/Y")?>" value="<?=date("m/d/Y")?>" style="min-width:50px;">
                                 <span class="input-group-addon">
                                     <span class="fa fa-calendar"></span>
                                 </span>
                             </div>
 					    </div>
-					    <div class="col-md-3">
+					    <div class="col-md-3" style="padding: 0 5px">
 					        <input class="form-control input-sm" type="text" name="payment_amount" placeholder="Amount">
 					    </div>
 					</div>
@@ -94,7 +93,7 @@
                                             <td><input type="radio" name="reference_button" value="invoice <?=$radio_item['invoice_no'];?>"></td>
                                             <td>Invoice</td>
                                             <td><?=$radio_item['invoice_no'];?></td>
-                                            <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
+                                            <td><?=format_price($radio_item['qty'] * $radio_item['price']);?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>
@@ -105,7 +104,7 @@
                                             <td><input type="radio" name="reference_button" value="bill <?=$radio_item['bill_no'];?>"></td>
                                             <td>Bill</td>
                                             <td><?=$radio_item['bill_no'];?></td>
-                                            <td><?=$radio_item['qty'] * $radio_item['price'];?></td>
+                                            <td><?=format_price($radio_item['qty'] * $radio_item['price']);?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>
@@ -116,7 +115,7 @@
                                             <td><input type="radio" name="reference_button" value="credit <?=$radio_item['order_num'];?>"></td>
                                             <td>Credit</td>
                                             <td><?=$radio_item['order_num'];?></td>
-                                            <td>-<?=$radio_item['qty'] * $radio_item['amount'];?></td>
+                                            <td>-<?=format_price($radio_item['qty'] * $radio_item['amount']);?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>
