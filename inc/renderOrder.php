@@ -76,7 +76,7 @@
 		$freight_terms = ($oi["freight_account_id"])?getFreight('account','',$oi['freight_account_id'],'account_no') : 'Prepaid';
 
 		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number;";
-		if($o['type'] == "Credit"){
+		if($o['type'] == "Credit" && is_numeric($order_number)){
 		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
 		    FROM inventory_history ih, inventory i, '.$o['tables'].' 
 		    AND sc.`'.$o['id'].'` = '.$order_number.' 
