@@ -458,7 +458,7 @@
 			 $serial = 'null';
 			 
 			if ($row['serial_no']){
-				$r[$partid][$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'];
+				$r[$partid][$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'].", ".$row['notes'];
 			}
 			else{
 				$r[$partid][$key]['null'][] = $serial;
