@@ -1423,6 +1423,9 @@
 									ps = 's';
 								}
 							
+								if(!$('.oto_price').is(':visible')) {
+									window.onbeforeunload = null;
+								} 
 								
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
@@ -1644,7 +1647,7 @@
 //=========== END OF FUNCTION FOR THE SHIPPING DASHBOARD =======================
 
 		
-		$(document).on('change keyup paste', 'input[name="NewSerial"]', function(e) {
+		$(document).on('change keyup paste', 'input[name="NewSerial"], #order_body .order-data input, #order_body .order-data select', function(e) {
 		     if( $( this ).val() != '' )
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
