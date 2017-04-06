@@ -46,20 +46,20 @@
 		} else if($status){
 			$status = "in repair";
 		}
-		
+		$locationid = dropdown_processor($place, $instance);
 		//Prep Query information
 		$serial = prep($serial);
 		$locationid = prep($locationid);
 		$qty = prep($qty);
 		$conditionid = prep($conditionid);
-		$status = prep($status);
 		$notes = prep($notes);
 		$id = prep($id);
 		
 		//Some reason, this was still updating with no id
 	    if($id) {
-		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes, ";
+		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes";
 			if($status){
+				$status = prep($status, '');
 				$query .= " ,status = $status";
 			}
 			if($locationid){
@@ -69,8 +69,8 @@
 	    } else {
 	    	return 'Failed to Update';
 	    }
-		$result = qdb($query);
-		
+		$result = qdb($query) or die(qe()."$query");
+		// echo $query;exit;
 		return $result;
 	}
 	function deleteToDatabase($id) {
