@@ -96,6 +96,21 @@
     }
 }
 	
+	//Get the freight total for a shipment returned as a float
+	function shipment_freight($order_number,$datetime){
+	    $on = prep($order_number);
+	    $date = prep($datetime);
+	    $select = "SELECT SUM(freight_amount) total FROM `packages` where `order_number` = $order_number AND `datetime` = $date;";
+	    $result = qdb($select) or die(qe()." | $select");
+	    if (mysqli_num_rows($result)){
+	        $result = mysqli_fetch_assoc($result);
+	        $return = $result['total'];
+	    } else {
+	        $return = 0.00;
+	    }
+	    return $return;
+	}
+	
 	//Take as an input the box number and the order number and pass back the identifier
     function package_id($order_number, $package_number) {
         $package_items;
