@@ -1,11 +1,11 @@
 <?php
 
-//=============================================================================
-//======================== Order Form General Template ========================
-//=============================================================================
-//  																		  |
-//																			  |
-//=============================================================================
+//==============================================================================
+//============================ RMA ADDITION SCREEN  ============================
+//==============================================================================
+//	This screen works with the handling of rma items once they have been 	   |
+//	recorded as return items. Originally created by Andrew in early January '17|
+//==============================================================================
 
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
@@ -27,34 +27,43 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
-
+	include_once $rootdir.'/inc/display_part.php'; 
+	include_once $rootdir.'/inc/getDisposition.php';
+	include_once $rootdir.'/inc/credit_creation.php';
 
 
 	//Set initials to be used throughout the page
-	$order_number = isset($_REQUEST['on']) ? $_REQUEST['on'] : "";
+	$order_number = grab('on');
 	$order_type = "rma";
 	
 	//Variables used for the post save
-	$rmaid = '';
+	$rma_serial = '';
 	$invid = '';
 	$itemLocation = '';
+	$errorHandler = '';
 	$errorHandler = '';
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
+	// print_r($_REQUEST);
 	
+	//If this is a form which sumbits upon itself
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
-		$rmaid = strtoupper(grab('rmaid'));
+		$rma_serial = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
 		
-		if($rmaid == '') {
-			$query = "SELECT serial_no FROM inventory WHERE id = ".res($invid).";";
+		if($rma_serial == '') {
+			//Get the initial Sales Item 
+			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".res($invid).";";
 			$serial_find = qdb($query) or die(qe());
-			if (mysqli_num_rows($serial_find)>0) {
+			if (mysqli_num_rows($serial_find)) {
 				$serial_find = mysqli_fetch_assoc($serial_find);
-				$rmaid = $serial_find['serial_no'];
+				$rma_serial = $serial_find['serial_no'];
+				$sales_item_id = $serial_find['sales_item_id'];
+				
 			}
 		}
+		
 		
 		$place = grab('place');
 		$instance = grab('instance');
@@ -62,25 +71,41 @@
 		$itemLocation = dropdown_processor($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
-		$rmaArray = findRMAItems($rmaid, $order_number);
-			
+		$rmaArray = findRMAItems($rma_serial, $order_number);
+	
+		// print_r($rmaArray);
 		if(empty($itemLocation)) {
 			$errorHandler = "Locations can not be empty.";
 		} else {
 			//Check if there is 1, multiple, or none found
 			if(count($rmaArray) == 1 || $invid != '') {
 				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
+				if($sales_item_id){
+					$si_line = "
+					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
+					";
+					$si_result = qdb($si_line);
+					if (mysqli_num_rows($si_result)){
+						$si_result = mysqli_fetch_assoc($si_result);
+						$so_number = $si_result['so_number'];
+						if(all_credit_recieved($order_number)){
+							credit_creation($so_number, "sales",$order_number);
+						}
+					}
+				}else{
+					exit('This part was never sold');
+				}
 				
 				//Clear values after save
 				if($errorHandler == '') {
-					$rmaid = '';
+					$rma_serial = '';
 					$invid = '';
 					//$itemLocation = '';
 				}
 			} else if(count($rmaArray) > 1) {
-				$errorHandler = "Multiple items found for serial: " . $rmaid . ". Please select the correct one using the list below.";
+				$errorHandler = "Multiple items found for serial: " . $rma_serial . ". Please select the correct one using the list below.";
 			} else {
-				$errorHandler = "No items found for serial: " . $rmaid;
+				$errorHandler = "No items found for serial: " . $rma_serial;
 			}
 			
 		}
@@ -150,38 +175,7 @@
 		return $listSerial;
 	}
 	
-	//Using inventory ID this function grabs the serial_no, locationid, invid and last_return values to be used in the tables
-	function getSerial($invid) {
-		$serial;
-		
-		$query = "SELECT locationid, serial_no, returns_item_id, id FROM inventory WHERE id = ". res($invid) .";";
-		$result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$serial = $result;
-		}
-		
-		return $serial;
-	}
 
-	
-	//This with conjunction with address out creates the standard format for printing addresses in the sidebar
-	function getAddress($order_number) {
-		$address;
-		$query = "SELECT * FROM returns AS r, sales_orders AS s WHERE r.rma_number = ".res($order_number)." AND r.order_number = s.so_number;";
-		$result = qdb($query) or die(qe());
-		
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$address = $result['bill_to_id'];
-		}
-		
-		$address = address_out($address);
-		
-		return $address;
-	}
-	
 	//This is solely used to grab the date the order was created "RMA" for sidebar usage
 	function getCreated($order_number) {
 		$date;
@@ -198,25 +192,18 @@
 		return $date;
 	}
 	
-	//This formats the part information to the standard form of part heci desc with dictionary
-	function format($partid){
-		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
-
-	    return $display;
-	}
 	
-
+	
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
 	function findRMAItems($search, $order_number, $type = 'all'){
 		$rma_search = array();
 		$query = '';
 		
-		if($type == 'all')
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
-		else
-			$query = "SELECT r.id as rmaid, r.inventoryid FROM inventory as i, return_items as r WHERE i.serial_no = '".res($search)."' AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+		if($type == 'all'){
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
+		} else {
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+		}
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
 		
@@ -255,31 +242,6 @@
 	}
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
-	function getDisposition($id = '') {
-		$dispositions = array();
-		$disp_value;
-		
-		if($id == '') {
-			$query = "SELECT * FROM dispositions;";
-			$result = qdb($query) or die(qe());
-			
-			while ($row = $result->fetch_assoc()) {
-				$dispositions[$row['id']] = $row['disposition'];
-			}
-		} else {
-			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
-			$result = qdb($query) or die(qe());
-			
-			if (mysqli_num_rows($result)>0) {
-				$result = mysqli_fetch_assoc($result);
-				$disp_value = $result['disposition'];
-			}
-			
-			return $disp_value;
-		}
-		
-		return $dispositions;
-	}
 	
 
 	//Grab all parts of the RMA
@@ -405,7 +367,7 @@
 							</div>
 							
 							<div class="col-md-6" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rmaid ? $rmaid : '');?>" autofocus>
+							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
 				            </div>
 			            </div>
 				</div>
@@ -452,7 +414,7 @@
 								<tr>
 									<td>
 										<?php 
-											echo format($part['partid']);
+											echo display_part(current(hecidb($part['partid'],'id')));
 										?>
 									</td>
 									<td class="serialsExpected">

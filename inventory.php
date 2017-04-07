@@ -432,17 +432,15 @@
 											    return letter.toUpperCase();
 											});
 											
-											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status="+serial[3];
+											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
 											parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
 											parts += "	<td class='status_col data status_original'>"+status+"</td>";
 											parts += "	<td class='location_col data '>"+info.location+"</td>";
 											parts += "	<td class='condition_col data '>"+key[2]+"</td>";
-											parts += "	<td class='notes_col data notes_original'>"
-											if (info.notes){
-												parts += info.notes;
-											}
+											parts += "	<td class='notes_col data notes_original'>";
+											parts += serial[4];
 											parts += "</td>";
 
 											
@@ -451,7 +449,7 @@
 											parts += "	<td class='status_col edit'>"+status+"</td>";
 											parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
 											parts += "	<td class='condition_col edit condition_holder' data-condition='"+info.conditionid+"'></td>";
-											parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+info.notes+"' data-serial='"+serial[1]+"'/></td>";
+											parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+serial[4]+"' data-serial='"+serial[1]+"'/></td>";
 											//parts += "<td class='data'></td>";
 											
 											parts += "<td class='edit_col' style='text-align: right;'>";

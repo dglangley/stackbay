@@ -255,7 +255,7 @@
                                                 }
                                             ?>
                                                 <tr>
-                                                    <td class="col-md-4"><?= ($user['contactid'] == $order['sales_rep_id'] ? $user['name'] ." (Rep)" : $user['name']); ?></td>
+                                                    <td class="col-md-4"><?= ($user['contactid'] == $order['sales_rep_id'] ? $user['name'] ." <b>(Rep)</b>" : $user['name']); ?></td>
                                                     <td class="col-md-4">
                                                         <?php if(in_array('Administration', $privNames)) {
                                                             echo 'Administrator';

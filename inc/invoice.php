@@ -8,7 +8,23 @@
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
     //Function to be run to create an invoice
     //Eventually Shipment Datetime will be a shipment ID whenever we make that table
+
+    //Check to see there are actually invoice-able items on the order
+    $invoice_items_select = "
+        Select partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
+        FROM packages, package_contents, inventory_history, sales_items
+        WHERE package_contents.packageid = packages.id
+        AND package_contents.serialid = inventory_history.invid
+        AND inventory_history.field_changed = 'sales_item_id'
+        AND inventory_history.value = sales_items.id
+        AND order_number = $order_number
+        /*AND order_type = $type*/
+        AND price > 0.00
+        GROUP BY sales_items.id;
+    ";
     //Type field accepts ['Sale','Repair' ]
+    $invoice_items_prepped = qdb($invoice_items_select);
+    if (mysqli_num_rows($invoice_items_prepped) > 0){
     
     if ($type == 'Sale'){
         $macro = "
@@ -60,22 +76,9 @@
 // ";
 
     // Select packages.id, serialid, sales_items.partid, price
-    $invoice_items_select = "
-        Select $invoice_id AS invoice_no, partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
-        FROM packages, package_contents, inventory_history, sales_items
-        WHERE package_contents.packageid = packages.id
-        AND package_contents.serialid = inventory_history.invid
-        AND inventory_history.field_changed = 'sales_item_id'
-        AND inventory_history.value = sales_items.id
-        AND order_number = $order_number
-        /*AND order_type = $type*/
-        GROUP BY sales_items.id;
-    ";
-    $invoice_items_prepped = qdb($invoice_items_select);
-    if (mysqli_num_rows($invoice_items_prepped) > 0){
         foreach ($invoice_items_prepped as $row) {
             $insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `price`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
-            VALUES (".$row['invoice_no'].
+            VALUES (".$invoice_id.
                     ", ".$row['partid'].
                     ", ".$row['qty'].
                     ", ".$row['price'].
@@ -102,7 +105,9 @@
             ";
             qdb($package_insert) or die(qe()." ".$package_insert);
         }
-    } 
+    } else {
+        return null;
+    }
 
     // $package_insert = "
     // Select 
