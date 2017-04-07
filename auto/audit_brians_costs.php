@@ -43,11 +43,11 @@
 			else { return 0; }
 		}
 
+		$freight_cogs = 0;
 		if (isset($PURCHASES[$r['iq_id']])) {
 			$cost = $PURCHASES[$r['iq_id']];
 		} else {
 			$cost = 0;
-			$freight_cogs = 0;
 			$query2 = "SELECT iq.price, iq.quantity, iq.id iq_id, po.purchasequote_ptr_id po_id ";
 			$query2 .= "FROM inventory_incoming_quote iq, inventory_purchasequote pq, inventory_purchaseorder po ";
 			$query2 .= "WHERE iq.id = '".$r['iq_id']."' AND iq.quote_id = pq.id AND pq.id = po.purchasequote_ptr_id; ";
@@ -186,7 +186,7 @@ echo $query.'<BR>';
 	$query .= "AND inventory_id <> 234134 ";
 	// excluding 1400422-0019's which seem to be an old consigned item or something
 	$query .= "AND inventory_id <> 234601 ";
-	$query .= "ORDER BY si.id DESC LIMIT 800,200 ";
+	$query .= "ORDER BY si.id DESC LIMIT 1400,200 ";
 	$query .= "; ";
 echo $query.'<BR><BR>';
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);

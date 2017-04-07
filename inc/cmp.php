@@ -14,4 +14,12 @@
 		}
 		return ($a['n'] < $b['n']) ? 1 : -1;
 	}
+
+	// sort by count of $b results
+	function cmp_count($a, $b) {
+		if (count($a) == count($b)) {
+			return 0;
+		}
+		return (count($a) < count($b)) ? 1 : -1;
+	}
 ?>

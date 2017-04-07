@@ -536,6 +536,7 @@
 							$(".search_loading").hide();
 							//Remove all old search lines
 							$(".search_lines").html("").remove();
+							$(".items_label").html("").remove();
 							//$(".nothing_found").html("").remove();
 							
 							if(result == "") {

@@ -572,10 +572,12 @@ echo $query2.'<BR>'.chr(10);
 
 			$used_items = array();//prevent usage of duplicates
 			$serials = explode(chr(10),$r2['serials']);
-			$qty_shipped += count($serials);
+//			$qty_shipped += count($serials);
 			foreach ($serials as $serial) {
 				$serial = strtoupper(trim($serial));
 				if (! $serial) { continue; }
+				// count serial as long as it's not blank (some records have empty rows, thanks brian)
+				$qty_shipped++;
 
 				$ser = prep($serial);
 
@@ -590,8 +592,11 @@ echo $query2.'<BR>'.chr(10);
 				$query3 = "SELECT rep_exp_date, cost, avg_cost, po, iq_id, id FROM inventory_solditem ";
 				$query3 .= "WHERE serial = $ser ";
 				if ($used_items[$serial]<>'') { $query3 .= "AND id NOT IN (".$used_items[$serial].") "; }
-				$query3 .= "AND inventory_id = '".$r2['inventory_id']."' AND so_id = '".$r['quote_id']."'; ";
+				//3-31-17
+				//$query3 .= "AND inventory_id = '".$r2['inventory_id']."' AND so_id = '".$r['quote_id']."' ";
+				$query3 .= "AND so_id = '".$r['quote_id']."' ";
 				//$query3 .= "AND rep_exp_date IS NOT NULL AND rep_exp_date <> ''; ";
+				$query3 .= "ORDER BY IF (inventory_id = '".$r2['inventory_id']."',0,1); ";
 				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
@@ -746,12 +751,17 @@ exit;
 		if (! $r['new_item_id']) { return; }
 
 		// REPLACEMENT ORDER
-		$query2 = "SELECT part_number, heci, m.name, i.short_description description, si.cost actual_cost, si.avg_cost ";
+		$query2 = "SELECT part_number, clei, heci, m.name, i.short_description description, si.cost actual_cost, si.avg_cost ";
 		$query2 .= "FROM inventory_solditem si, inventory_inventory i, inventory_manufacturer m ";
 		$query2 .= "WHERE si.id = '".$r['new_item_id']."' AND si.inventory_id = i.id AND i.manufacturer_id_id = m.id; ";
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
+
+			if ($r2['clei']) { $r2['heci'] = $r2['clei']; }
+			else if (strlen($r2['heci'])<>7 OR is_numeric($r2['heci']) OR preg_match('/[^[:alnum:]]+/',$r2['heci'])) { $r2['heci'] = ''; }
+			else { $r2['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
+
 			$partid = getPartId($r2['part_number'],$r2['heci']);
 			if (! $partid) {
 				$partid = setPart(array('part'=>$r2['part_number'],'heci'=>$r2['heci'],'manf'=>$r2['manf'],'descr'=>$r2['description']));
@@ -922,6 +932,7 @@ echo $query.'<BR>';
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['so_date']][] = array('type'=>'sale','data'=>$r);
 	}
+//DAVID: Also need to import so_id IS NULL from sold items
 
 	$query = "SELECT tm.id rma, tm.company_id, t.item_id solditem_id, t.new_item_id, t.date, t.repair_id, t.status_id, ";
 	$query .= "t.action_id, t.received_date, t.vendor_shipped_date, t.vendorout_tracking_no, t.shipped_date, ";
