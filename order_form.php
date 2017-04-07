@@ -74,7 +74,7 @@
 
 	</head>
 	<!---->
-	<body class="sub-nav forms" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
 		<div class="pad-wrapper">
 
 			<?php 
@@ -236,7 +236,7 @@
 					?>
 				</div>
 				<div class="col-md-4">
-					<button class="btn-flat btn-sm  <?=($order_number=="New")?'success':'success'?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
+					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>
@@ -409,17 +409,6 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
-					            <tr id = 'tax_rate' style=''>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td style='text-align:right;'>Tax Rate:</td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='tax_rate' name='np_tax_rate' placeholder='%0.0'></td>
-					                <td></td>
-					            </tr>
 					            <tr id = 'tax_row' style=''>
 					                <td></td>
 					                <td></td>
@@ -439,7 +428,7 @@
 					                <td></td>
 					                <td></td>
 					                <td style='text-align:right;'>Freight:</td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' placeholder='0.00'></td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' placeholder='0.00' readonly></td>
 					                <td></td>
 					            </tr>
 					            <tr id = 'totals_row' style=''>
@@ -469,10 +458,10 @@
 			$('#order_void').click(function(){
 				var number = $("body").data("order-number");
 				var type = $("body").data("order-type");
-				if(confirm("Are you sure you want to void this order?")){
+				if(confirm("Are you sure you want to void/unvoid this order?")){
 			    	$.post('/json/void-order.php',{"number" : number,"type" : type}, function(data) {
-							location.reload();
-							console.log("Order Voided: /json/void-order.php?"+"number="+number+"&type="+type); 
+			    		//alert(data);
+							window.location.href=window.location.href;
 						}
 					);
 				}
@@ -545,6 +534,21 @@
 					
 					$('input[name="reference_button"]').prop('checked', false);
 		        });
+		        
+		        //$(document).load(function(){
+		        if($('body').hasClass('void-order')) {
+		        	//Has a void
+		        	$('.order-data input').prop('readonly', 'true');
+		        	$('.order-data select').prop('disabled', 'true');
+		        	$('.order-data textarea').prop('disabled', 'true');
+		        	$('.order-data #mismo').prop('disabled', 'true');
+		        	
+		        	//Can use php if statment in the button creation
+		        	$('.table-header button').prop('disabled', 'true');
+		        	$('.table-header button').addClass('gray');
+		        	$('.table-header button').removeClass('success');
+		        }
+		        //});
 			})(jQuery);
 
 		</script>

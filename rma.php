@@ -390,9 +390,9 @@
 				    <?=($rma_number)? "RMA #$rma_number" :'New RMA';?>
 				    </h2>
 				</div>
-				
+				<!--<?=($rma_number=="New")?'success':'success'?>-->
 				<div class="col-md-4">
-					<button class="btn-flat btn-sm  <?=($rma_number=="New")?'success':'success'?> pull-right" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
+					<button class="btn-flat btn-sm gray pull-right" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;" disabled>
 						<?=($rma_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>
@@ -626,6 +626,22 @@
 	<?php include_once 'inc/footer.php';?>
 	<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 
+	<script>
+		(function($){
+			$(document).on("change", "input[name='inventory[]']", function(){
+				$('#rma_save_button').removeClass('gray');
+				$('#rma_save_button').addClass('success');
+				$('#rma_save_button').prop('disabled', false);
+				
+				var rmaCheck = $("input[name='inventory[]']:checked").length;
+    			if (!rmaCheck){
+    				$('#rma_save_button').addClass('gray');
+					$('#rma_save_button').removeClass('success');
+					$('#rma_save_button').prop('disabled', true);
+    			};
+			});
+		})(jQuery);
+	</script>
 
 	</body>
 </html>

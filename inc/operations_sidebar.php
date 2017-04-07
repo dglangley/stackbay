@@ -345,6 +345,17 @@ include_once $rootdir.'/inc/packages.php';
 			";
 		}
 		
+		//Output the void button to the bottom left side of the collumn
+		if ($order_number != 'New' && $status == 'Void') {
+			$right .= "
+				<div class='row'>
+					<div class='col-sm-12'>
+						<div class='btn btn-sm btn-warning' id = 'order_void'>Unvoid</div>
+					</div>
+				</div>
+			";
+		}
+		
 		$right .= "</div>"; //Close the sidebar
 		
 		
