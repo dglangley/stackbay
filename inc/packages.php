@@ -97,10 +97,13 @@
 }
 	
 	//Get the freight total for a shipment returned as a float
-	function shipment_freight($order_number,$datetime){
+	function shipment_freight($order_number,$datetime = ''){
 	    $on = prep($order_number);
-	    $date = prep($datetime);
-	    $select = "SELECT SUM(freight_amount) total FROM `packages` where `order_number` = $order_number AND `datetime` = $date;";
+	    prep($datetime);
+	    $select = "SELECT SUM(freight_amount) total FROM `packages` 
+	    WHERE `order_number` = $order_number 
+	    ".($datetime? "AND `datetime` = ".prep($datetime) : "")."
+	    ;";
 	    $result = qdb($select) or die(qe()." | $select");
 	    if (mysqli_num_rows($result)){
 	        $result = mysqli_fetch_assoc($result);
