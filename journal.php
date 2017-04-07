@@ -408,15 +408,6 @@
 </script>
 </body>
 
-<!--<button class="glow left large btn-radio"  id = "complete-toggle" data-toggle="tooltip" data-placement="bottom"  title="" data-original-title="Completed">-->
-<!--	<i class="fa fa-check-circle"></i>	-->
-<!--</button>-->
-<!--<button class="glow large btn-radio" id = "all-toggle" data-toggle="tooltip" data-placement="bottom"  title="" data-original-title="All">-->
-<!--	<i class="fa fa-globe"></i>	-->
-<!--</button>-->
-<!--<button class="glow right large btn-radio active" id = "pending-toggle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Incomplete">-->
-<!--	<i class="fa fa-times-circle"></i>	-->
-<!--</button>-->
 </html>
 
 

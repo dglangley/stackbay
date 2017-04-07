@@ -110,10 +110,10 @@
             //Takes in the location ID and returns the 
     	    if ($results){
         	    foreach($results as $row){
-        	        $output .= "<option ";
-        	        $output .= " data-place = '".$row['place']."' ";
-        	        if ($row['instance'] == $selected && $row['instance']){$output .= ' selected ';}
-        	        $output .= "value = '".strtoupper($row['instance'])."'> ".strtoupper($row['instance'])."</option>";
+        	        $output .= "<option data-place = '".$row['place']."' 
+        	        ".(($row['instance'] == $selected && $row['instance'])? " selected" : "")."
+        	        ".(($limit != $row['place'])? "style='display:none;'" : "")."
+        	        value = '".strtoupper($row['instance'])."'> ".strtoupper($row['instance'])."</option>";
         	    }
     	    }
     	    $output .= "
