@@ -19,6 +19,7 @@
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/filter.php';
 	
 	// Get Pages function determines how many pages the inventory should output.
 	// function getPages($show_num = '5') {
@@ -243,36 +244,7 @@
 			
 		}
 	}
-	function sFilter($field, $value){
-		if ($value){
-			$value = prep($value);
-			$string = " AND $field = $value ";
-		}
-		else{
-			$string = '';
-		}
-		return $string;
-	}
-	
-	function dFilter($field, $start = '', $end = ''){
-		if ($start and $end){
-	   		$start = prep(format_date($start, 'Y-m-d'));
-	   		$end = prep(format_date($end, 'Y-m-d'));
-	   		$string = " AND $field between CAST($start AS DATE) and CAST($end AS DATE) ";
-		}
-		else if($start){
-			$start = prep(format_date($start, 'Y-m-d'));
-			$string = " AND CAST($field AS DATE) >= CAST($start AS DATE) ";
-		}
-		else if($end){
-			$end = prep(format_date($end, 'Y-m-d'));
-			$string = " AND CAST($field AS DATE) <= CAST($end AS DATE) ";
-		}
-		else{
-			$string = '';
-		}
-		return $string;
-	}
+
 	
 	function search($search = ''){
 		$return = array();
