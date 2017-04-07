@@ -8,6 +8,7 @@
 	$query = "SELECT serial, clei, heci, part_number, cost, inventory_id, item.avg_cost ";
 	$query .= "FROM inventory_solditem item, inventory_inventory i ";
 	$query .= "WHERE serial IS NOT NULL AND serial <> '' AND serial <> '000' ";
+$query .= "AND so_id IS NOT NULL ";
 	$query .= "AND inventory_id = i.id; ";
 echo $query.'<BR>';
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
