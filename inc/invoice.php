@@ -4,6 +4,7 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
     include_once $rootdir.'/inc/form_handle.php';
+    include_once $rootdir.'/inc/packages.php';
     
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
     //Function to be run to create an invoice
@@ -39,17 +40,17 @@
     $invoice_macro = mysqli_fetch_assoc(qdb($macro));
     if (strtolower($invoice_macro['type']) == 'prepaid'){
         // $pay_day = $GLOBALS['today'];
-        $status = 'Completed';
+        $status = 'Paid';
         //THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
     } else {
         // $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
         $status = 'Pending';
     }
+    $freight = prep(shipment_freight($order_number, $shipment_datetime));
     
-    
-    $invoice_creation = "INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `status`) 
-    VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", NOW(), ".prep($shipment_datetime)." , '$status');";
-    
+    $invoice_creation = "INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
+    VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", NOW(), ".prep($shipment_datetime)." , $freight , '$status');";
+    echo $invoice_creation; exit;
     $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
     
     $invoice_id =  qid();

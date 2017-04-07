@@ -274,7 +274,7 @@
 					$rows = qdb($rma_select);
 						$output = '
 						<div class ="btn-group">
-							<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
                               <i class="fa fa-shopping-cart"></i>
                               <span class="caret"></span>
                             </button>';

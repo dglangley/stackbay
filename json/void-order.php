@@ -11,8 +11,23 @@
     $o = o_params($type);
     $result = false;
     
+    $status;
+    
     if($number && $type){
-        $update = "UPDATE ".$o['order']." SET `status` = 'Void' WHERE ".$o['id']." = $number;";
+        $query = "SELECT status FROM ".$o['order']." WHERE ".$o['id']." = $number;";
+        $result = qdb($query);
+        
+        if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$status = $result['status'];
+		}
+    }
+    
+    //echo $status; die;
+    $status = ($status == 'Void' ? 'Active' : 'Void');
+    
+    if($number && $type){
+        $update = "UPDATE ".$o['order']." SET `status` = '$status' WHERE ".$o['id']." = $number;";
         $result = qdb($update);
     }
     
