@@ -2043,7 +2043,7 @@
 										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
 									</tr>";
 						$('.iso_broken_parts').append(element);
-						
+						$('.btn_iso_req').show();
 						$('.btn_update').show();
 						$('.btn_iso_parts').show();
 						$('.btn_iso_parts_continue').hide();
@@ -2067,6 +2067,7 @@
 									</tr>";
 						$('.iso_broken_parts').append(element);
 					});
+					$('.btn_iso_req').hide();
 					$('.btn_update').hide();
 					$('.btn_iso_parts').hide()
 					$('.btn_iso_parts_continue').hide();
@@ -2626,7 +2627,7 @@
 				});
 				
 				//Get all the 
-				return price_format(total);
+				return total;
 			}
 			function updateTax(){
 				var tax = parseFloat($("#tax_rate").val());
@@ -2646,16 +2647,19 @@
 				
 				var search = 0.00;
 				if($(".search_lines").length){
-					search = sumSearchLines();
+					search = parseFloat(sumSearchLines());
 				}
-				var subtotal = subTotal();
-				$("#subtotal").val(subtotal)
+				var subtotal = parseFloat(subTotal());
+				$("#subtotal").val(price_format(subtotal));
 				// $("#subtotal").trigger("change");
-				var tax = updateTax();
+				var tax = parseFloat(updateTax());
 				$("#tax").val(tax);
 				// $("#tax").trigger("change");
 				var freight = parseFloat($("#freight").val());
-				var price = price_format(subtotal+tax+freight+search);
+				if(isNaN(freight)) {
+					freight = 0;
+				}
+				var price = price_format(subtotal+freight+tax+search);
 
 				return price;
 			}
