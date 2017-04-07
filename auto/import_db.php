@@ -751,7 +751,7 @@ exit;
 		if (! $r['new_item_id']) { return; }
 
 		// REPLACEMENT ORDER
-		$query2 = "SELECT part_number, clei, heci, m.name, i.short_description description, si.cost actual_cost, si.avg_cost ";
+		$query2 = "SELECT serial, part_number, clei, heci, m.name, i.short_description description, si.cost actual_cost, si.avg_cost ";
 		$query2 .= "FROM inventory_solditem si, inventory_inventory i, inventory_manufacturer m ";
 		$query2 .= "WHERE si.id = '".$r['new_item_id']."' AND si.inventory_id = i.id AND i.manufacturer_id_id = m.id; ";
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
@@ -775,15 +775,15 @@ exit;
 			// add a new sales item record to original sales order, but as a replacement line item to the original
 			$query3 = "REPLACE sales_items (partid, so_number, line_number, qty, qty_shipped, price, delivery_date, ship_date, ";
 			$query3 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, conditionid) ";
-			$query3 .= "VALUES ($partid, $orig_so, NULL, 1, 1, '0.00', NULL, '".$ship_date." 16:00:00', ";
+			$query3 .= "VALUES ($partid, $orig_so, NULL, 1, 1, '0.00', '".$ship_date."', '".$ship_date."', ";
 			$query3 .= "NULL, NULL, '".$ITEMS[$serialid]."', 'sales_item_id', $warranty, 2); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
 			$so_item_id = qid();
 
 			// validates serial format and sequencing
-			$serial = setSerial($serial,'sale',$r['so_id'],$r['new_item_id']);//$r['oqid']);
-			$ser = prep($serial);//re-prep after new bogus serial has been generated
+			$repl_serial = setSerial($r2['serial'],'sale',$r['so_id'],$r['new_item_id']);//$r['oqid']);
+			$ser = prep($repl_serial);//re-prep after new bogus serial has been generated
 
 			$serialid = setInventory($ser,$partid,$so_item_id,'sales_item_id','manifest',$r['date']." 16:00:00",0);
 
@@ -826,7 +826,7 @@ echo '<BR>'.chr(10);
 echo $query3.'<BR>'.chr(10);
 
 			$query3 = "UPDATE inventory_history SET date_changed = '".$stock_date."' ";
-			$query3 .= "WHERE invid = $serialid AND field_changed = 'sales_item_id' AND value = $item_id; ";
+			$query3 .= "WHERE invid = $serialid AND field_changed = '".$id_field."' AND value = $item_id; ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
 		} else {
