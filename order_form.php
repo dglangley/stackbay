@@ -59,6 +59,21 @@
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
 	 }
+	 
+	 function getFreightTotal($order_number) {
+	 	$total = 0;
+	 	
+	 	$query = "SELECT SUM(freight_amount) AS total FROM packages WHERE order_number = '".res($order_number)."';";
+	 	
+	 	$result = qdb($query) OR die(qe());
+			
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$total = $result['total'];
+		}
+	 	
+	 	return $total;
+	 }
 
 	
 ?>
@@ -428,7 +443,7 @@
 					                <td></td>
 					                <td></td>
 					                <td style='text-align:right;'>Freight:</td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' placeholder='0.00' readonly></td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' value='<?=format_price(getFreightTotal($order_number));?>' placeholder='0.00' readonly></td>
 					                <td></td>
 					            </tr>
 					            <tr id = 'totals_row' style=''>
