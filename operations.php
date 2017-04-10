@@ -29,13 +29,13 @@
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
-	$levenshtein = false;
-	$nothingFound = false;
+	$levenshtein = true;
+	$nothingFound = true;
 	$found = false;
-	$serialDetection = false;
+	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false');
 	
 	function searchQuery($search, $type) {
-		global $found;
+		global $found, $levenshtein, $nothingFound;
 		$trigger;
 		$triggerArray = array();
 		
@@ -92,6 +92,9 @@
 			    case 'p':
 	        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.po_number = i.po_number;";
 			        break;
+			    case 'rma':
+	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number;";
+			        break;
 			    default:
 					//Should rarely ever happen
 					break;
@@ -113,6 +116,10 @@
 		    	$query = "SELECT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
 				$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
 		        break;
+		    case 'rma':
+		    	$query = "SELECT * FROM inventory inv, return_items i, returns o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND inv.returns_item_id = i.id AND o.rma_number = i.rma_number;";
+		        break;
 		    default:
 				//Should rarely ever happen
 				break;
@@ -127,13 +134,17 @@
 			}
 		}
 		//If the initial search is empty populate the data with close alternates
-		if(empty($initial)) {
+		if(empty($initial) && $type != 'rma') {
 			$initial = soundsLike($search, $type);
-		} else {
+		} else if (!empty($initial)) {
+			//Items were found so remove any warning messages ever
 			$found = true;
+			$nothingFound = false;
+			$levenshtein = false;
+		} else {
+			$levenshtein = false;
 		}
-		
-		//print_r($initial);
+
 		return $initial;
 	}
 	
@@ -152,17 +163,17 @@
 				$arr[] = $row['serial_no'];
 			}
 		} 
-		else {
-			if(!$found)
-				$nothingFound = true;
-		}
+		// else {
+		// 	if(!$found)
+		// 		$nothingFound = true;
+		// }
 		
 		//print_r($arr); die();
 		
 		if(!empty($arr)) {
 			//Something was found similar to the search
-			if(!$found)
-				$levenshtein = true;
+			if($found && $levenshtein)
+				$levenshtein = false;
 			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
@@ -233,7 +244,7 @@
 		echo	'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed">';
-		            output_header();
+		            output_header($order);
 		echo	'<tbody>';
         			output_rows($order, $search);
 		echo '	</tbody>
@@ -246,7 +257,7 @@
         </div>';
 	}
 	
-	function output_header(){
+	function output_header($order){
 			echo'<thead>';
 			echo'<tr>';
 			echo'	<th class="col-md-1">';
@@ -264,7 +275,7 @@
             echo'   	<span class="line"></span>';
             echo'       Item';
             echo'	</th>';
-            echo'   <th class="col-md-1 qty_col">';
+            echo'   <th class="col-md-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
@@ -282,7 +293,7 @@
 		global $serialDetection, $USER_ROLES;
 		$results;
 		$status;
-		
+		$type = '';
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
 				//Select a joint summary query of the order we are requesting
@@ -291,12 +302,17 @@
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
+					$type = 'po';
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number;";
+					$type = 'so';
 				} 
 				else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
+					$type = 'rma';
+				} else {
+					$type = 'ro';
 				}
 				
 				$results = qdb($query);
@@ -311,7 +327,7 @@
 			if(!empty($results)) {
 				foreach ($results as $r){
 					//set if a serial is present or not
-					$serialDetection = ($r['serial_no'] != '' ? true : false);
+					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
 					$count++;
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
@@ -436,6 +452,11 @@
 			padding-bottom: 15px;
 		    position: absolute;
 		    bottom: 0px;
+		}
+		
+		.descr-label {
+			white-space:nowrap;
+    		overflow:hidden;
 		}
 		
 		@media screen and (max-width: 991px){
@@ -641,6 +662,7 @@
 			output_module("ro",$search);
 		?>
     </div> 
+    <?php //print_r($serialDetection);?>
 
 <?php include_once 'inc/footer.php'; ?>
 <script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
@@ -654,8 +676,8 @@
 		
 		var levenshtein = "<?=$levenshtein;?>";
 		var searched = "<?=$nothingFound;?>";
-		var serialDetection = "<?=$serialDetection;?>";
-		
+		var serialDetection = <?= json_encode($serialDetection) ?>;
+
 		//Load in the objects after the page is loaded for less jumpy frenziness
 		$('.data-load').fadeIn();
 		
@@ -678,13 +700,21 @@
 			}
 		}
 		
+		//console.log(serialDetection);
+		
 		//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
-		if(serialDetection) {
-			$('.qty_col').text('Serial');
+		// if(serialDetection) {
+		// 	$('.qty_col').text('Serial');
 			$('.qty_col').addClass('col-md-2');
 			$('.qty_col').removeClass('col-md-1');
 			$('.company_col').addClass('col-md-3');
 			$('.company_col').removeClass('col-md-4');
+		// }
+		
+		for (var key in serialDetection) {
+		    if(serialDetection[key] == 'true') {
+		    	$('.'+key+'-column').text('Serial');
+		    }
 		}
 		
 		//Prefilter if loaded with a parameter in url
