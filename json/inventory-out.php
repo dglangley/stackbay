@@ -271,36 +271,65 @@
 			$in = '';
 			//Get all the parts from the search
 			$initial = hecidb($search);
-			if ($initial){
+			if (count($initial)>0){
 				foreach($initial as $id =>$info){
 					$in .= "'$id', ";
 				}
 				$in = trim($in, ", ");
+				$query  = "SELECT i.*, p.*, i.id invid ";
+				if ($order || $vendor) { $query .= ", pi.po_number "; }
+				if ($vendor) { $query .= ", o.companyid "; }
+				$query .= "FROM inventory i, parts p ";
+				if ($order || $vendor) { $query .= ", purchase_items pi "; }
+				if ($vendor) { $query .= ", purchase_orders o "; }
+				$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+				if ($in) { $query .= "AND i.partid IN (".$in.") "; }
+				if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
+				if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
+				$query .= sFilter('i.locationid', $locationid);
+				$query .= sFilter('i.conditionid',$conditionid);
+				$query .= sFilter('o.companyid', $vendor);
+				$query .= sFilter('pi.po_number',$order);
+				$query .= dFilter('i.date_created',$start, $end);
+				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
+				// echo $query; exit;
+				$result = qdb($query) or die(qe());
+				if (mysqli_num_rows($result) > 0){
+					$result1 = query_first($result);
+				} 
 			}
+			if (!$search && ($locationid || $conditionid || $order || ($start && $end) || $vendor)){
 
-			$query  = "SELECT i.*, p.*, i.id invid ";
-			if ($order || $vendor) { $query .= ", pi.po_number "; }
-			if ($vendor) { $query .= ", o.companyid "; }
-			$query .= "FROM inventory i, parts p ";
-			if ($order || $vendor) { $query .= ", purchase_items pi "; }
-			if ($vendor) { $query .= ", purchase_orders o "; }
-			$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
-			if ($in) { $query .= "AND i.partid IN (".$in.") "; }
-			if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
-			if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
-			$query .= sFilter('i.locationid', $locationid);
-			$query .= sFilter('i.conditionid',$conditionid);
-			$query .= sFilter('o.companyid', $vendor);
-			$query .= sFilter('pi.po_number',$order);
-			$query .= dFilter('i.date_created',$start, $end);
-			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
-			// echo $query; exit;
-			$result = qdb($query);
-			// echo ($query); exit;
-			if (mysqli_num_rows($result) > 0){
-				$result1 = query_first($result);
-			} 
-			
+			$in = '';
+			//Get all the parts from the search
+			$initial = hecidb($search);
+			if (count($initial)>0){
+				foreach($initial as $id =>$info){
+					$in .= "'$id', ";
+				}
+				$in = trim($in, ", ");
+				$query  = "SELECT i.*, p.*, i.id invid ";
+				if ($order || $vendor) { $query .= ", pi.po_number "; }
+				if ($vendor) { $query .= ", o.companyid "; }
+				$query .= "FROM inventory i, parts p ";
+				if ($order || $vendor) { $query .= ", purchase_items pi "; }
+				if ($vendor) { $query .= ", purchase_orders o "; }
+				$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+				if ($in) { $query .= "AND i.partid IN (".$in.") "; }
+				if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
+				if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
+				$query .= sFilter('i.locationid', $locationid);
+				$query .= sFilter('i.conditionid',$conditionid);
+				$query .= sFilter('o.companyid', $vendor);
+				$query .= sFilter('pi.po_number',$order);
+				$query .= dFilter('i.date_created',$start, $end);
+				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
+				// echo $query; exit;
+				$result = qdb($query) or die(qe());
+				if (mysqli_num_rows($result) > 0){
+					$result1 = query_first($result);
+				} 
+			}
 /*
 				if(mysqli_num_rows($result)>0){
 					//Loop through the results
@@ -330,10 +359,11 @@
 					$query .= sFilter('pi.po_number',$order);
 					$query .= dFilter('i.date_created',$start, $end);
 					$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
-					$result = qdb($query);
+					$result = qdb($query) or die(qe());
 					if (mysqli_num_rows($result) > 0){
 						$result2 = query_first($result);
 					}
+					// exit($query);
 			}
 /*
 			if (mysqli_num_rows($result) > 0){
