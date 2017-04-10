@@ -36,4 +36,25 @@
 		}
 		return $string;
 	}
+		
+	function pFilter($field, $min = '', $max = '', $first = false){
+		$andwhere = ($first)?" WHERE ":" AND ";
+		if ($min and $max){
+	   		$min = prep(format_price($min,'','',true));
+	   		$max = prep(format_price($max,'','',true));
+	   		$string = " $andwhere $field between CAST($min AS FLOAT) and CAST($max AS FLOAT) ";
+		}
+		else if($min){
+			$min = prep(format_price($min,'','',true));
+			$string = " $andwhere CAST($field AS FLOAT) >= CAST($min AS FLOAT) ";
+		}
+		else if($max){
+			$max = prep(format_price($max,'','',true));
+			$string = " $andwhere CAST($field AS FLOAT) <= CAST($max AS FLOAT) ";
+		}
+		else{
+			$string = '';
+		}
+		return $string;
+	}
 ?>
