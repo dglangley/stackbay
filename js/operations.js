@@ -2656,7 +2656,7 @@
 				var tax = parseFloat(updateTax());
 				$("#tax").val(tax);
 				// $("#tax").trigger("change");
-				var freight = parseFloat($("#freight").val());
+				var freight = parseFloat($("#freight").val().replace('$',''));
 				if(isNaN(freight)) {
 					freight = 0;
 				}
