@@ -29,7 +29,7 @@
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
-	$levenshtein = true;
+	$levenshtein = false;
 	$nothingFound = true;
 	$found = false;
 	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false');
@@ -142,7 +142,7 @@
 			$nothingFound = false;
 			$levenshtein = false;
 		} else {
-			$levenshtein = false;
+			//$levenshtein = false;
 		}
 
 		return $initial;
@@ -163,17 +163,27 @@
 				$arr[] = $row['serial_no'];
 			}
 		} 
-		// else {
-		// 	if(!$found)
-		// 		$nothingFound = true;
-		// }
+		else {
+			$query = 'SELECT * 
+						FROM parts p, inventory i
+						WHERE SOUNDEX( part ) LIKE SOUNDEX(  "'.res(strtoupper($search)).'" ) AND p.id = i.partid';
+						
+			$result = qdb($query) OR die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				while ($row = $result->fetch_assoc()) {
+					$arr[] = $row['serial_no'];
+				}
+			} 
+		}
 		
-		//print_r($arr); die();
+		// echo "<br><br><br><br><br><br><br><br> HI";
+		// print_r($arr);
 		
 		if(!empty($arr)) {
 			//Something was found similar to the search
-			if($found && $levenshtein)
-				$levenshtein = false;
+			if(!$levenshtein)
+				$levenshtein = true;
 			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
@@ -189,21 +199,24 @@
 			    $sorted_arr[] = $arr[$k];
 			}
 			
-			$closest_arr = join(', ', array_slice($sorted_arr, 0, 3));
+			//$closest_arr = join(', ', array_slice($sorted_arr, 0, 3));
+			
+			$closest_arr = "'" . implode("','", array_slice($sorted_arr, 0, 3)) . "'";
 			
 			switch ($type) {
 			    case 's':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN (" . $closest_arr . ") ";
 					$query .= "AND inv.sales_item_id = i.id AND o.so_number = i.so_number;";
 			        break;
 			    case 'p':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN (" . $closest_arr . ") ";
 					$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
 			        break;
 			    default:
 					//Should rarely ever happen
 					break;
 			}
+			//echo $query;
 			//print_r($query); die();
 			// $query = "SELECT DISTINCT * FROM inventory WHERE serial_no IN (" . implode(',', array_map('intval', $closest_arr)) . ");";
 			$result = qdb($query) OR die(qe());
@@ -214,6 +227,7 @@
 				    $initial[] = $row;
 				}
 			}
+			
 		}
 		
 		return $initial;
