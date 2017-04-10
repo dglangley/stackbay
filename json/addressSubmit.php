@@ -37,7 +37,8 @@
             $name = prep(grab('name'));
 			$line_1 = grab('line_1');
 			$line2 = grab('line2');
-			$street = prep($line_1.' '.$line2);
+			$street = prep($line_1);
+			$street2 = prep($line2);
 			$city = prep(grab('city'));
 			$state = prep(grab('state'));
 			$zip = prep(grab('zip'));
@@ -54,6 +55,7 @@
 			$update = "UPDATE `addresses` SET
 						`name` = $name,
 						`street` = $street,
+						`addr2` = $street2,
 						`city` = $city,
 						`state` = $state,
 						`postal_code` = $zip,
@@ -65,8 +67,8 @@
 		}	
 		else{
             
-	        $insert = "INSERT INTO `addresses` (`name`, `street`, `city`, `state`, `postal_code`, `country`)  
-	        VALUES ($name,$street,$city,$state,$zip,'US')";
+	        $insert = "INSERT INTO `addresses` (`name`, `street`, `addr2`, `city`, `state`, `postal_code`, `country`)  
+	        VALUES ($name,$street,$street2,$city,$state,$zip,'US')";
 	        
 
 	        qdb($insert);
