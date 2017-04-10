@@ -61,11 +61,11 @@
 		include_once 'inc/scripts.php';
 	?>
 	<style>
-/*
-		.select2 {
+
+		.terms-section .select2 {
 			width: auto !important;
 		}
-*/
+
 		
 		.pointer {
 			cursor: pointer;
