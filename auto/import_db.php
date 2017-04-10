@@ -708,7 +708,7 @@ echo $query2.'<BR>'.chr(10);
 		// if serial is already set by the SO serial auto-generation process, use that serial now; otherwise, create our own
 		if ($serial=='000' AND isset($SERIALS['sale']) AND isset($SERIALS['sale'][$r['so_id']]) AND isset($SERIALS['sale'][$r['so_id']][$r['solditem_id']])) {
 			$serial = $SERIALS['sale'][$r['so_id']][$r['solditem_id']];
-echo 'Found existing serial '.$serial.' for "000" on SO '.$r['so_id'].' for item id '.$r['solditem_id'].'<BR>';
+echo 'Found existing serial '.$serial.' for "000" on SO '.$r['so_id'].' for item id '.$r['solditem_id'].'<BR>'.chr(10);
 		} else {
 			$serial = setSerial($serial);
 		}
@@ -905,7 +905,7 @@ echo $query3.'<BR>'.chr(10);
 		$query .= "AND po.po_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY po.po_date ASC; ";
-echo $query.'<BR>';
+echo $query.'<BR>'.chr(10);
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['po_date']][] = array('type'=>'purchase','data'=>$r);
@@ -927,7 +927,7 @@ echo $query.'<BR>';
 		$query .= "AND so.so_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY so.so_date ASC; ";
-echo $query.'<BR>';
+echo $query.'<BR>'.chr(10);
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['so_date']][] = array('type'=>'sale','data'=>$r);
@@ -948,7 +948,7 @@ echo $query.'<BR>';
 		$query .= "AND t.date between CAST('".$dbStartDate."' AS DATE) AND '2015-05-31' ";//CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY t.date ASC; ";
-echo $query.'<BR>';
+echo $query.'<BR>'.chr(10);
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$records[$r['date']][] = array('type'=>'return','data'=>$r);
