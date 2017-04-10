@@ -247,6 +247,14 @@
 
 	
 	function search($search = ''){
+		$f = array(
+			"search" =>  $search,
+			"start" => grab("start"),
+			"end" => grab("end", format_date($GLOBALS['Today'],"n/j/Y")),
+			"conditionid" => grab("conditionid"),
+			"vendor" => grab("vendor"),
+			"order" => grab("order")
+			);
 		$return = array();
 		$parts = array();
 		$result1 = array();
@@ -254,43 +262,44 @@
 		
 		$place = grab("place");
 		$location = grab("location");
-		$locationid = ($place)? dropdown_processor($place,$location) : '';
+		$f["locationid"] = ($place)? dropdown_processor($place,$location) : '';
 		
-		$start = grab("start");
-		$end = grab("end");
-		$conditionid = grab("conditionid");
+		// $f['start'] = grab("start");
+		// $f['end'] = grab("end");
 /*david 3-2-17
-		if ($conditionid == ""){
-			$conditionid = '';
+		if ($f['conditionid'] == ""){
+			$f['conditionid'] = '';
 		}
 */
-		$vendor = grab("vendor");
-		$order = grab("order");
-		if ($search || $locationid || $conditionid || $order || ($start && $end) || $vendor){
+
+		
+		$filter_count = count(array_filter($f));
+		if ($f['search']){
+
 
 			$in = '';
 			//Get all the parts from the search
-			$initial = hecidb($search);
+			$initial = hecidb($f['search']);
 			if (count($initial)>0){
 				foreach($initial as $id =>$info){
 					$in .= "'$id', ";
 				}
 				$in = trim($in, ", ");
 				$query  = "SELECT i.*, p.*, i.id invid ";
-				if ($order || $vendor) { $query .= ", pi.po_number "; }
-				if ($vendor) { $query .= ", o.companyid "; }
+				if ($f['order'] || $f['vendor']) { $query .= ", pi.po_number "; }
+				if ($f['vendor']) { $query .= ", o.companyid "; }
 				$query .= "FROM inventory i, parts p ";
-				if ($order || $vendor) { $query .= ", purchase_items pi "; }
-				if ($vendor) { $query .= ", purchase_orders o "; }
+				if ($f['order'] || $f['vendor']) { $query .= ", purchase_items pi "; }
+				if ($f['vendor']) { $query .= ", purchase_orders o "; }
 				$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
 				if ($in) { $query .= "AND i.partid IN (".$in.") "; }
-				if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
-				if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
+				if ($f['order'] || $f['vendor']) { $query .= "AND pi.id = i.purchase_item_id "; }
+				if ($f['vendor']) {$query .= "AND o.po_number = pi.po_number"; }
 				$query .= sFilter('i.locationid', $locationid);
-				$query .= sFilter('i.conditionid',$conditionid);
-				$query .= sFilter('o.companyid', $vendor);
-				$query .= sFilter('pi.po_number',$order);
-				$query .= dFilter('i.date_created',$start, $end);
+				$query .= sFilter('i.conditionid',$f['conditionid']);
+				$query .= sFilter('o.companyid', $f['vendor']);
+				$query .= sFilter('pi.po_number',$f['order']);
+				$query .= dFilter('i.date_created',$f['start'], $f['end']);
 				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
 				// echo $query; exit;
 				$result = qdb($query) or die(qe());
@@ -298,103 +307,69 @@
 					$result1 = query_first($result);
 				} 
 			}
-			if (!$search && ($locationid || $conditionid || $order || ($start && $end) || $vendor)){
-
-			$in = '';
-			//Get all the parts from the search
-			$initial = hecidb($search);
-			if (count($initial)>0){
-				foreach($initial as $id =>$info){
-					$in .= "'$id', ";
-				}
-				$in = trim($in, ", ");
+			$search = prep($search);
 				$query  = "SELECT i.*, p.*, i.id invid ";
-				if ($order || $vendor) { $query .= ", pi.po_number "; }
-				if ($vendor) { $query .= ", o.companyid "; }
+				if ($f['order'] || $f['vendor']) { $query .= ", pi.po_number "; }
+				if ($f['vendor']) { $query .= ", o.companyid "; }
 				$query .= "FROM inventory i, parts p ";
-				if ($order || $vendor) { $query .= ", purchase_items pi "; }
-				if ($vendor) { $query .= ", purchase_orders o "; }
-				$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+				if ($f['order'] || $f['vendor']) { $query .= ", purchase_items pi "; }
+				if ($f['vendor']) { $query .= ", purchase_orders o "; }
+				$query .= "WHERE serial_no = ".$search." AND i.partid = p.id AND i.qty > 0 ";
 				if ($in) { $query .= "AND i.partid IN (".$in.") "; }
-				if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
-				if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
+				if ($f['order'] || $f['vendor']) { $query .= "AND pi.id = i.purchase_item_id "; }
+				if ($f['vendor']) {$query .= "AND o.po_number = pi.po_number"; }
 				$query .= sFilter('i.locationid', $locationid);
-				$query .= sFilter('i.conditionid',$conditionid);
-				$query .= sFilter('o.companyid', $vendor);
-				$query .= sFilter('pi.po_number',$order);
-				$query .= dFilter('i.date_created',$start, $end);
+				$query .= sFilter('i.conditionid',$f['conditionid']);
+				$query .= sFilter('o.companyid', $f['vendor']);
+				$query .= sFilter('pi.po_number',$f['order']);
+				$query .= dFilter('i.date_created',$f['start'], $f['end']);
 				$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
-				// echo $query; exit;
 				$result = qdb($query) or die(qe());
 				if (mysqli_num_rows($result) > 0){
-					$result1 = query_first($result);
-				} 
-			}
-/*
-				if(mysqli_num_rows($result)>0){
-					//Loop through the results
-					foreach($result as $inv){
-						$parts[$inv['partid']] = $initial[$inv['partid']];
-					}
+					$result2 = query_first($result);
 				}
-*/
-			
+		}
+		else if (!$f['search'] && $filter_count > 1){ 
+			//&& ($locationid || $f['conditionid'] || $f['order'] || ($f['start'] && $f['end']) || $f['vendor'])){
+
+			/*If there is no search to limit the parameters by, check for the 
+			following conditions in order of specificity:
+				-Search
+				-Order
+				-LocationID
+				-Vendor
+				-Date Range
+				-Condition
+				*/
+				
+			//Get all the parts from the search
+
+			$query  = "SELECT i.*, p.*, i.id invid ";
+			if ($f['order'] || $f['vendor']) { $query .= ", pi.po_number "; }
+			if ($f['vendor']) { $query .= ", o.companyid "; }
+			$query .= "FROM inventory i, parts p ";
+			if ($f['order'] || $f['vendor']) { $query .= ", purchase_items pi "; }
+			if ($f['vendor']) { $query .= ", purchase_orders o "; }
+			$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+			if ($in) { $query .= "AND i.partid IN (".$in.") "; }
+			if ($f['order'] || $f['vendor']) { $query .= "AND pi.id = i.purchase_item_id "; }
+			if ($f['vendor']) {$query .= "AND o.po_number = pi.po_number"; }
+			$query .= sFilter('i.locationid', $locationid);
+			$query .= sFilter('i.conditionid',$f['conditionid']);
+			$query .= sFilter('o.companyid', $f['vendor']);
+			$query .= sFilter('pi.po_number',$f['order']);
+			$query .= dFilter('i.date_created',$f['start'], $f['end']);
+			$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
+			// echo $query; exit;
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result) > 0){
+				$result1 = query_first($result);
+			} 
+
+
 			//This portion searches by serial number and appends the values of all the partids by serial
  
-			if ($search) {
-				$search = prep($search);
-					$query  = "SELECT i.*, p.*, i.id invid ";
-					if ($order || $vendor) { $query .= ", pi.po_number "; }
-					if ($vendor) { $query .= ", o.companyid "; }
-					$query .= "FROM inventory i, parts p ";
-					if ($order || $vendor) { $query .= ", purchase_items pi "; }
-					if ($vendor) { $query .= ", purchase_orders o "; }
-					$query .= "WHERE serial_no = $search AND i.partid = p.id AND i.qty > 0 ";
-					if ($in) { $query .= "AND i.partid IN (".$in.") "; }
-					if ($order || $vendor) { $query .= "AND pi.id = i.purchase_item_id "; }
-					if ($vendor) {$query .= "AND o.po_number = pi.po_number"; }
-					$query .= sFilter('i.locationid', $locationid);
-					$query .= sFilter('i.conditionid',$conditionid);
-					$query .= sFilter('o.companyid', $vendor);
-					$query .= sFilter('pi.po_number',$order);
-					$query .= dFilter('i.date_created',$start, $end);
-					$query .= " ORDER BY i.locationid, i.purchase_item_id, i.conditionid, i.date_created;";
-					$result = qdb($query) or die(qe());
-					if (mysqli_num_rows($result) > 0){
-						$result2 = query_first($result);
-					}
-					// exit($query);
-			}
-/*
-			if (mysqli_num_rows($result) > 0){
-				foreach ($result as $part){
-			    	$p = hecidb($part['partid'],'id');
-			    	foreach($p as $id => $info){
-			    		if(!isset($parts[$id])){
-			        		$parts[$id] = $info;
-			    		}
-			    	}
-				}
-			}
-		}
 
-			$query  = "SELECT DISTINCT i.partid FROM inventory i ";
-			if ($order) { $query .= ", purchase_items pi "; }
-			$query .= "WHERE i.qty > 0 ";
-			if ($order) { $query .= "pi.id = i.purchase_item_id "; }
-			$query .= sFilter('i.locationid', $locationid);
-			$query .= sFilter('i.conditionid',$conditionid);
-			if ($order) { $query .= sFilter('pi.po_number',$order); }
-			$query .= dFilter('i.date_created',$start, $end);
-			$query .= ";";
-			$result = qdb($query);
-			foreach ($result as $part){
-		    	$p = hecidb($part['partid'],'id');
-		    	foreach($p as $id => $info){
-		        	$parts[$id] = $info;
-		    	}
-			}
-*/
 		}else{
 			$return = "Please enter a search parameter";
 		}
@@ -471,7 +446,7 @@
 
 
 $search = grab('search');
-$filters = grab('filters');
+$f = grab('filters');
 
 
 $return = (search($search));
