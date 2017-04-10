@@ -578,10 +578,10 @@
 													}
 												}
 												if ($hist_count == 0){
-													echo "&nbsp;<br>";
+													echo "&nbsp;<br>&nbsp;";
 												}
 												if ($hist_count <= 3){
-													echo"&nbsp;";
+													echo"&nbsp;<br>&nbsp;";
 												}
 	
 											?>

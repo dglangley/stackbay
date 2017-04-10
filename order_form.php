@@ -562,6 +562,8 @@
 		        	$('.table-header button').prop('disabled', 'true');
 		        	$('.table-header button').addClass('gray');
 		        	$('.table-header button').removeClass('success');
+		        	$('.forms_edit').find(".fa").hide();
+		        	$('.forms_delete').find(".fa").hide();
 		        }
 		        //});
 			})(jQuery);
