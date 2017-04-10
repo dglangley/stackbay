@@ -177,9 +177,6 @@
 			} 
 		}
 		
-		// echo "<br><br><br><br><br><br><br><br> HI";
-		// print_r($arr);
-		
 		if(!empty($arr)) {
 			//Something was found similar to the search
 			if(!$levenshtein)
@@ -308,6 +305,16 @@
 		$results;
 		$status;
 		$type = '';
+		if ($order == 'p') {
+			$type = 'po';
+		} else if ($order == 's') {
+			$type = 'so';
+		} 
+		else if ($order == 'rma') {
+			$type = 'rma';
+		} else {
+			$type = 'ro';
+		}
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
 				//Select a joint summary query of the order we are requesting
@@ -316,17 +323,14 @@
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-					$type = 'po';
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number;";
-					$type = 'so';
 				} 
 				else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
-					$type = 'rma';
 				} else {
-					$type = 'ro';
+					//RO Future stuff goes here
 				}
 				
 				$results = qdb($query);
@@ -339,9 +343,13 @@
 			$count = 0;
 			//Loop through the results.
 			if(!empty($results)) {
+				//print_r($results);
 				foreach ($results as $r){
 					//set if a serial is present or not
 					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
+					
+					//echo $type . " " .($r['serial_no'] != '' ? 'true' : 'false');
+					
 					$count++;
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
