@@ -29,7 +29,7 @@
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
-	$levenshtein = true;
+	$levenshtein = false;
 	$nothingFound = true;
 	$found = false;
 	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false');
@@ -142,7 +142,7 @@
 			$nothingFound = false;
 			$levenshtein = false;
 		} else {
-			$levenshtein = false;
+			//$levenshtein = false;
 		}
 
 		return $initial;
@@ -163,17 +163,24 @@
 				$arr[] = $row['serial_no'];
 			}
 		} 
-		// else {
-		// 	if(!$found)
-		// 		$nothingFound = true;
-		// }
-		
-		//print_r($arr); die();
+		else {
+			$query = 'SELECT * 
+						FROM parts p, inventory i
+						WHERE SOUNDEX( part ) LIKE SOUNDEX(  "'.res(strtoupper($search)).'" ) AND p.id = i.partid';
+						
+			$result = qdb($query) OR die(qe());
+			
+			if (mysqli_num_rows($result)>0) {
+				while ($row = $result->fetch_assoc()) {
+					$arr[] = $row['serial_no'];
+				}
+			} 
+		}
 		
 		if(!empty($arr)) {
 			//Something was found similar to the search
-			if($found && $levenshtein)
-				$levenshtein = false;
+			if(!$levenshtein)
+				$levenshtein = true;
 			
 			//This prevents duplicate entries of similar results
 			$arr = array_values(array_unique($arr));
@@ -189,21 +196,24 @@
 			    $sorted_arr[] = $arr[$k];
 			}
 			
-			$closest_arr = join(', ', array_slice($sorted_arr, 0, 3));
+			//$closest_arr = join(', ', array_slice($sorted_arr, 0, 3));
+			
+			$closest_arr = "'" . implode("','", array_slice($sorted_arr, 0, 3)) . "'";
 			
 			switch ($type) {
 			    case 's':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no IN (" . $closest_arr . ") ";
 					$query .= "AND inv.sales_item_id = i.id AND o.so_number = i.so_number;";
 			        break;
 			    case 'p':
-			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN ('" . $closest_arr . "') ";
+			    	$query = "SELECT DISTINCT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no IN (" . $closest_arr . ") ";
 					$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
 			        break;
 			    default:
 					//Should rarely ever happen
 					break;
 			}
+			//echo $query;
 			//print_r($query); die();
 			// $query = "SELECT DISTINCT * FROM inventory WHERE serial_no IN (" . implode(',', array_map('intval', $closest_arr)) . ");";
 			$result = qdb($query) OR die(qe());
@@ -214,6 +224,7 @@
 				    $initial[] = $row;
 				}
 			}
+			
 		}
 		
 		return $initial;
@@ -294,6 +305,16 @@
 		$results;
 		$status;
 		$type = '';
+		if ($order == 'p') {
+			$type = 'po';
+		} else if ($order == 's') {
+			$type = 'so';
+		} 
+		else if ($order == 'rma') {
+			$type = 'rma';
+		} else {
+			$type = 'ro';
+		}
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
 				//Select a joint summary query of the order we are requesting
@@ -302,17 +323,14 @@
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
-					$type = 'po';
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number;";
-					$type = 'so';
 				} 
 				else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
-					$type = 'rma';
 				} else {
-					$type = 'ro';
+					//RO Future stuff goes here
 				}
 				
 				$results = qdb($query);
@@ -325,9 +343,13 @@
 			$count = 0;
 			//Loop through the results.
 			if(!empty($results)) {
+				//print_r($results);
 				foreach ($results as $r){
 					//set if a serial is present or not
 					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
+					
+					//echo $type . " " .($r['serial_no'] != '' ? 'true' : 'false');
+					
 					$count++;
 					if ($order == 's'){
 						$purchaseOrder = $r['so_number'];
