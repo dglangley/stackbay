@@ -1,3 +1,8 @@
+.table tr th,
+.table tr td {
+	font-size:12px;
+}
+
 /*** NAVBAR ***/
 .navbar {
 	position:fixed;
@@ -59,10 +64,6 @@
 }
 div.table-filter div {
 	margin-top:8px;
-}
-.table tr th,
-.table tr td {
-	font-size:12px;
 }
 
 .input-xs {

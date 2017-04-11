@@ -31,30 +31,12 @@
 	//Grab any submitted value
 		if (isset($_POST['id'])){
 			$ids = implode(",",$_POST['id']);
-			$update = "UPDATE `journal_entries` SET `complete` = 1 WHERE `id` IN ($ids)";
+			$update = "UPDATE `journal_entries` SET `confirmed_datetime` = '".$now."', `confirmed_by` = '".$U['id']."' WHERE `id` IN ($ids)";
 			qedb($update);
 		}
 		
 	$company = 'NO COMPANY SELECTED THIS IS PROBABLY NOT AN ORDER';
 	$order_type = '';
-	$associated_trans = grab('associated_trans');
-	if ($associated_trans){
-		$meta_info = getTransactionInfo($associated_trans);
-		$company = $meta_info['companyid'];
-		$order_type = $meta_info['type'];
-		$amount = $meta_info['total'];
-	    $quickbook_id = grab('quickbook_id');
-		if($quickbook_id){
-	        $quickbook_id = prep(strtoupper($quickbook_id));
-	        $trans_number = prep($associated_trans);
-			$associated_trans = '';
-	        // $amount = prep(grab('amount'));
-	        $order_type = prep($order_type);
-	        $insert = "INSERT INTO `journal_entries`(`qbid`, `trans_number`, `trans_type`) 
-	        VALUES ($quickbook_id,$trans_number,$order_type);";
-	        qdb($insert) or die(qe().": $insert");
-		}
-	}
 	$select = "
 	SELECT * FROM `journal_entries` ";
 	$select .= " ORDER BY `journal_entries`.`id` DESC LIMIT 0,300 ";
@@ -140,8 +122,8 @@
 			<td class="col-md-2">
 				<div class="btn-group">
 					<button class="btn btn-success btn-sm left" type="button" id="complete-toggle" data-toggle="tooltip" data-placement="bottom" title="Complete"><i class="fa fa-check-square"></i></button>
-					<button class="btn btn-warning btn-sm middle active" type="button" id="pending-toggle" data-toggle="tooltip" data-placement="bottom" title="Open/Incomplete"><i class="fa fa-folder-open"></i></button>
-					<button class="btn btn-info btn-sm right" type="button" id="all-toggle" data-toggle="tooltip" data-placement="bottom" title="All"><i class="fa fa-square"></i></button>
+					<button class="btn btn-warning btn-sm middle" type="button" id="pending-toggle" data-toggle="tooltip" data-placement="bottom" title="Open/Incomplete"><i class="fa fa-folder-open"></i></button>
+					<button class="btn btn-info btn-sm right active" type="button" id="all-toggle" data-toggle="tooltip" data-placement="bottom" title="All"><i class="fa fa-square"></i></button>
 <!--
 			        <button class="glow left large btn-radio"  type="button" id = "complete-toggle" data-toggle="tooltip" data-placement="bottom"  title="" data-original-title="Completed">
 			        	<i class="fa fa-check-circle"></i>	
