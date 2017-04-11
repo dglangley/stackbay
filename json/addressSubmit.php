@@ -43,13 +43,6 @@
 			$state = prep(grab('state'));
 			$zip = prep(grab('zip'));
 			$id = grab('id');
-            			
-            
-            
-            
-            
-            
-            
 
 		if($id != 'false' && $id){
 			$update = "UPDATE `addresses` SET
