@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_phone.php';
 	//include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
 	//Temp array to hold Brian's data
@@ -83,6 +84,15 @@
 		if($companyaliases) {
 			print_r($companyaliases);
 			echo '<br>';
+		}
+		
+		if(strtolower($value['website']) == 'none' || strtolower($value['website']) == 'n/a' || strtolower($value['website']) == 'mailbot generated') {
+			$value['website'] = '';
+		}
+		
+		//Phone format here (If phone >14 then do not run the format... else run David's regex format)
+		if(strlen($value['phone']) <= 14) {
+			$value['phone'] = format_phone($value['phone']);
 		}
 		
 		$companyID = setCompany($value['name'], $value['website'], $value['phone'], $coporateid = null, $value['email'], $value['notes'], $rootCompanyID);
