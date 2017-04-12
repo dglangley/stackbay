@@ -171,6 +171,6 @@
 		$result = qdb($query) OR die(qe().' '.$query);
 		$emailid = qid();
 
-		return ($query);
+		return ($emailid);
 	}
 ?>
