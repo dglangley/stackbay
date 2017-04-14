@@ -348,7 +348,7 @@
 		include_once $rootdir.'/modal/contact.php';
 		?>
 		
-		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" method="post" style="height: 100%;">
+		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				
@@ -640,7 +640,16 @@
 					$('#rma_save_button').prop('disabled', true);
     			};
 			});
+			
 		})(jQuery);
+		
+		function validateForm() {
+		    // var x = "";
+		    // if (x == "") {
+		    //     modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Disposition can not be empty. <br><br> Please select a dispostion and re-submit the form.");
+		    //     return false;
+		    // }
+		}
 	</script>
 
 	</body>
