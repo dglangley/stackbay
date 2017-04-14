@@ -1,19 +1,28 @@
 <?php
-	function setContact($name,$companyid=0,$title='',$notes='',$ebayid='') {
+	function setContact($name,$companyid=0,$title='',$notes='',$ebayid='',$aim='',$status='Active', $contactid = 0) {
 		$name = (string)$name;
+		$name = trim($name);
 		$title = (string)$title;
+		$title = trim($title);
 		$notes = (string)$notes;
+		$notes = trim($notes);
 		$ebayid = (string)$ebayid;
+		$aim = (string)$aim;
 		$companyid = (int)$companyid;
 
-		$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid) ";
-		$query .= "VALUES ('".res($name)."',";
+		$query = "REPLACE contacts (name, companyid, title, notes, ebayid, aim, status";
+		if ($contactid) { $query .= ", id"; }
+		$query .= ") VALUES ('".res($name)."',";
+		if ($companyid) { $query .= "'".res($companyid)."',"; } else { $query .= "NULL,"; }
 		if ($title) { $query .= "'".res($title)."',"; } else { $query .= "NULL,"; }
 		if ($notes) { $query .= "'".res($notes)."',"; } else { $query .= "NULL,"; }
 		if ($ebayid) { $query .= "'".res($ebayid)."',"; } else { $query .= "NULL,"; }
-		$query .= "'Active','".res($companyid)."'); ";
+		if ($aim) { $query .= "'".res($aim)."',"; } else { $query .= "NULL,"; }
+		if ($status=='Inactive') { $query .= "'Inactive'"; } else { $query .= "'Active'"; }
+		if ($contactid) { $query .= ",'".res($contactid)."'"; }
+		$query .= "); ";
 		$result = qdb($query) OR die(qe().' '.$query);
-		$contactid = qid();
+		if(!$contactid) {$contactid = qid();}
 
 		return ($contactid);
 	}

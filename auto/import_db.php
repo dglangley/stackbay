@@ -26,6 +26,16 @@
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/form_handle.php';
 
+
+/*DELETED THESE RECORDS:
+
+INSERT INTO `inventory_solditem` (`id`, `serial`, `cost`, `inventory_id`, `rep_comm_id`, `so_id`, `price`, `returnrequest`, `returned`, `returned_to_vendor`, `returned_from_vendor`, `returnreason`, `vendor_warr_exp`, `customer_warr_exp`, `project_id`, `rep_id`, `rep_exp_date`, `repair_rep_id`, `freight_cost`, `po`, `avg_cost`, `repair`, `rep_override`, `repair_rep_override`, `invoice_id`, `rep_comm_override`, `clei_override`, `orig_cost`, `ci_id`, `ci_bill_id`, `location_id`, `test_status_id`, `orig_inv_id`, `iq_id`, `oq_id`, `repair_id`)
+VALUES
+	(3563, 'H32712', 350.0000, 206640, NULL, 13150, 900.0000, 0, 0, 0, 0, NULL, NULL, '2014-05-21', NULL, 3, '2014-05-21', NULL, 0.0000, 12306, 350.0000, 0, 0.0000, 0.0000, 14022, NULL, NULL, 0.0000, NULL, NULL, NULL, NULL, 206640, NULL, 3214, NULL);
+
+
+*/
+
 	$USER_MAPS = array(
 		1=>1398,/*brian*/
 		2=>2,/*sam*/
@@ -273,10 +283,10 @@ echo $query2.'<BR>'.chr(10);
 	function setSerial($serial,$order_type='',$order=0,$id=0) {
 		global $bogus_serial,$SERIALS;
 
-		// create new order of serials if '000' because Brian re-used this generic serial not just in
+		// create new order of serials if '0','000' because Brian re-used this generic serial not just in
 		// one or two duplicate times, but EVERY time, resulting in duplicate nonsense garbage that
 		// we can't have in the new system
-		if ($serial=='000') {
+		if ($serial=='0' OR $serial=='000') {
 			if ($order_type AND isset($SERIALS[$order_type][$order]) AND $id AND isset($SERIALS[$order_type][$order][$id])) {
 echo 'Re-using serial '.$serial.' for '.$order_type.' order# '.$order.', item id '.$id.' = ';
 				$serial = $SERIALS[$order_type][$order][$id];
@@ -609,7 +619,7 @@ echo $query2.'<BR>'.chr(10);
 					if ($used_items[$serial]) { $used_items[$serial] .= ','; }
 					$used_items[$serial] .= $r3['id'];
 
-					if ($serial=='000') {
+					if ($serial=='0' OR $serial=='000') {
 						// if this non-descript serial has a PO and if we can determine its iq_id source, then
 						// get the serial from our previously-stored SERIALS
 						if ($r3['po'] AND isset($SERIALS['purchase']) AND isset($SERIALS['purchase'][$r3['po']]) AND isset($SERIALS['purchase'][$r3['po']][$r['iq_id']])) {
@@ -706,9 +716,9 @@ echo $query2.'<BR>'.chr(10);
 		}
 
 		// if serial is already set by the SO serial auto-generation process, use that serial now; otherwise, create our own
-		if ($serial=='000' AND isset($SERIALS['sale']) AND isset($SERIALS['sale'][$r['so_id']]) AND isset($SERIALS['sale'][$r['so_id']][$r['solditem_id']])) {
+		if (($serial=='0' OR $serial=='000') AND isset($SERIALS['sale']) AND isset($SERIALS['sale'][$r['so_id']]) AND isset($SERIALS['sale'][$r['so_id']][$r['solditem_id']])) {
 			$serial = $SERIALS['sale'][$r['so_id']][$r['solditem_id']];
-echo 'Found existing serial '.$serial.' for "000" on SO '.$r['so_id'].' for item id '.$r['solditem_id'].'<BR>'.chr(10);
+echo 'Found existing serial '.$serial.' for "0"/"000" on SO '.$r['so_id'].' for item id '.$r['solditem_id'].'<BR>'.chr(10);
 		} else {
 			$serial = setSerial($serial);
 		}
@@ -945,7 +955,7 @@ echo $query.'<BR>'.chr(10);
 	if ($startDate) {
 		$dbStartDate = format_date($startDate, 'Y-m-d');
 		$dbEndDate = format_date($endDate, 'Y-m-d');
-		$query .= "AND t.date between CAST('".$dbStartDate."' AS DATE) AND '2015-05-31' ";//CAST('".$dbEndDate."' AS DATE) ";
+		$query .= "AND t.date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY t.date ASC; ";
 echo $query.'<BR>'.chr(10);
