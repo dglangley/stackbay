@@ -81,6 +81,8 @@
 	);
 
     //Pre-everything prep
+    
+    //Optional limiter to run as an update instead of a full import: will check to endure no values have been duplicated.
     $initial_invoices = "SELECT DISTINCT `invoice_no` FROM `invoices`;";
     $invoice_results = qdb($initial_invoices) or die(qe()." $initial_invoices :|:");
     $not_in = "";
@@ -94,12 +96,15 @@
         $not_in = rtrim($not_in,", ");
         $not_in .= ")";
     }
+    
+    //Parameter where, if true, then all the values have been properly import 
     $import_complete = false;
     $query = "SELECT id, date as date_invoiced, customer_id as companyid, memo, sent, ext_memo, amount,
     lump_id, voided, voided_by_id, voided_date, voided_reason, paid, paid_date, postfix, ref_no
     FROM inventory_invoice
-    ".(($not_in)? "WHERE `id` NOT IN ".$not_in : "")."
-    limit 50;";
+    ".(($not_in)? "WHERE `id` NOT IN ".$not_in : "").";";
+    
+    
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
     $lump_builder = array();
@@ -503,13 +508,13 @@ if(mysqli_num_rows($result)){
     
 ?>
 
-<script>
+<!--<script>-->
     <?php 
-        if(!$grand_failed){
-            echo("setTimeout(location.reload.bind(location),1000);");
-        } 
-        if ($import_complete){
-            echo("alert('Import Complete)';");
-        }
+        // if(!$grand_failed){
+        //     echo("setTimeout(location.reload.bind(location),1000);");
+        // } 
+        // if ($import_complete){
+        //     echo("alert('Import Complete)';");
+        // }
     ?>
-</script>
+<!--</script>-->
