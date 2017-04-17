@@ -149,7 +149,7 @@
 						$(".datetime-picker-line").initDatetimePicker("MM/DD/YYYY");
 						// var lineNumber = parseInt($(".multipart_sub").closest("tr").find("input[name=ni_line]").val());
 						// auto-populate next line number to the search row line
-						$(".search_row").find('input[name="ni_line"]').val(line_number());
+						$("#search_row").find('input[name="ni_line"]').val(line_number());
 						if($(".easy-output").length > 0){
 							$("#order_total").val(updateTotal());
 							$('#totals_row').show();
@@ -613,7 +613,7 @@
 							$("#totals_row").show();
 							$(this).val("");
 							$("input[name='ni_qty']").val("");
-							//sub_row.find("input[name=ni_line]").val(line_number());
+							sub_row.find("input[name=ni_line]").val(line_number());
 							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
@@ -749,7 +749,7 @@
 				}else{
 							$(".search_lines").html("").remove();
 							$("#totals_row").show();
-							//sub_row.find("input[name=ni_line]").val(line_number());
+							$("#search_row").find("input[name=ni_line]").val(line_number());
 							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
@@ -786,7 +786,7 @@
 							$("#totals_row").show();
 							$("input[name='ni_price']").val("");
 							$("input[name='ni_qty']").val("");
-							//sub_row.find("input[name=ni_line]").val(line_number());
+							$("#search_row").find("input[name=ni_line]").val(line_number());
 							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
@@ -1232,7 +1232,7 @@
 							$(".search_lines").html("").remove();
 							$(".items_label").html("").remove();
 							$("#totals_row").show();
-							//sub_row.find("input[name=ni_line]").val(line_number());
+							$("#search_row").find("input[name=ni_line]").val(line_number());
 							$("#order_total").val(updateTotal());
 							$('#go_find_me').focus();
 						}
@@ -2603,13 +2603,14 @@
 			// old information from the database
 		
 			function line_number(){
-				var last = $("#right_side_main").find(".line_line:last").attr("data-line-number");
-				if(last){
-					return parseInt(last)+1
+				var last = $("#right_side_main").find(".line_line:last");
+				
+				var result = 1;
+				if(last.length > 0){
+					result = last.data("line-number") + 1;
 				}
-				else{
-					return 1;
-				}
+				return result;
+				
 				// #right_side_main > tr.easy-output > td.line_line
 			}
 			function subTotal(){
