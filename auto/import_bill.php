@@ -1,5 +1,9 @@
 <?php
-    $start_time = microtime();
+    
+  
+    $start_time = microtime(); //Time per row check
+    
+//Standard includes section
 	$rootdir = $_SERVER["ROOT_DIR"];
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
@@ -15,467 +19,304 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/filter.php';
 
-	
-		function part_process($r){
-			//Function takes in a row from Brian's inventory table, checks to 
-			//see if it exists in our system, and sets part if it doesn't
-			//Requires the inclusion of both getPartID.php and setPartId.php
-			if ($r['clei']) { $r['heci'] = $r['clei']; }
-			else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
-			else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
-	
-			$partid = getPartId($r['part_number'],$r['heci']);
-			if (! $partid) {
-				$partid = setPart(array('part'=>$r['part_number'],'heci'=>$r['heci'],'manf'=>$r['manf'],'descr'=>$r['short_description']));
-			}
-			return $partid;
+//Function Declarations
+    $INVENTORY_IDS = array();
+	function translateID($inventory_id){
+	    global $INVENTORY_IDS;
+	    if (!isset($INVENTORY_IDS[$inventory_id])){
+	        $query = "SELECT i.heci, i.clei, i.short_description, im.name manf
+	        FROM inventory_inventory i, inventory_manufacturer im 
+	        WHERE i.id = ".prep($inventory_id)." AND i.manufacturer_id_id = im.id;";
+	        $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
+	        $r = mysqli_fetch_assoc($result);
+	        $INVENTORY_IDS[$inventory_id] = part_process($r);
+	    }
+	    return($INVENTORY_IDS[$inventory_id]);
+	}
+	function part_process($r){
+		//Function takes in a row from Brian's inventory table, checks to 
+		//see if it exists in our system, and sets part if it doesn't
+		//Requires the inclusion of both getPartID.php and setPartId.php
+		if ($r['clei']) { $r['heci'] = $r['clei']; }
+		else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
+		else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
+
+		$partid = getPartId($r['part_number'],$r['heci']);
+		if (! $partid) {
+			$partid = setPart(array('part'=>$r['part_number'],'heci'=>$r['heci'],'manf'=>$r['manf'],'descr'=>$r['short_description']));
 		}
-    	function memo_walk($memo){
+		return $partid;
+	}
+   	function memo_walk($memo){
         //Brian has Item/Description values parsing through his memo collumn
             $result = array();
             $desc = explode(";",$memo);
+            if (!$desc[1]){
+                $desc = explode("\n",$memo);
+            }
             foreach($desc as $label){
             	$instance = explode(":", $label);
-            	$result[trim(strtolower($instance[0]))] = trim($instance[1]);
+            	if ($instance[1]){
+	            	$result[trim(strtolower($instance[0]))] = trim($instance[1]);
+            	} else {
+            		$result['note'] = $instance[0];
+            	}
             }
-            return $result;
-	    }
-
-        function splitDesc($data, $start, $end){
-            $data = ' ' . $data;
-            $initial = strpos($data, $start);
-            if ($initial == 0)
-                return '';                
-            $initial += strlen($start);
-            $length = strpos($data, $end, $initial) - $initial;
-            return substr($data, $initial, $length);
-        }
-        function desc_weight_value($desc,$inv){
-            $weight = 0;
-            $desc = explode(" ",$desc);
-            $inv = explode(" ",$inv);
-            foreach($desc as $d){
-                foreach($inv as $i){
-                    if($i == $d){
-                        $weight++;
-                    }
+        return $result;
+    }
+    function splitDesc($data, $start, $end){
+        //Function which splits apart a space separated description field
+        $data = ' ' . $data;
+        $initial = strpos($data, $start);
+        if ($initial == 0)
+            return '';                
+        $initial += strlen($start);
+        $length = strpos($data, $end, $initial) - $initial;
+        return substr($data, $initial, $length);
+    }
+    function desc_weight_value($desc,$inv){
+        //Function which wanders to find the most similar item to a description
+        $weight = 0;
+        $desc = explode(" ",$desc);
+        $inv = explode(" ",$inv);
+        foreach($desc as $d){
+            foreach($inv as $i){
+                if($i == $d){
+                    $weight++;
                 }
             }
-            return $weight;
         }
-    	$WARRANTY_MAPS = array(
-    		0 =>0,
-    		1 =>4,/*30 days*/
-    		2 =>1,/*AS IS*/
-    		3 =>2,/*5 days*/
-    		4 =>5,/*45 days*/
-    		5 =>7,/*90 days*/
-    		6 =>8,/*120 days*/
-    		7 =>10,/*1 year*/
-    		8 =>11,/*2 years*/
-    		9 =>12,/*3 years*/
-    		10 =>13,/*lifetime*/
-    		11 =>9,/*6 months*/
-    		12 =>6,/*60 days*/
-    		13 =>3,/*14 days*/
-    		14 =>9,/*180 days*/
-    	);
-
-    //Pre-everything prep
-    
-    //Optional limiter to run as an update instead of a full import: will check to endure no values have been duplicated.
-    $initial_bills = "SELECT DISTINCT `bill_no` FROM `bills`;";
-    $bills_results = qdb($initial_billss) or die(qe()." $initial_billss :|:");
-    $not_in = "";
-    $already_imported = "";
-    $already_imported = mysqli_num_rows($bill_results);
-    if ($already_imported){
-        $not_in = "(";
-        foreach($bill_results as $bill_no){
-            $not_in .= "'".$bill_no['bill_no']."', ";
-        }
-        $not_in = rtrim($not_in,", ");
-        $not_in .= ")";
+        return $weight;
     }
+
+	
+	$WARRANTY_MAPS = array(
+		0 =>0,
+		1 =>4,/*30 days*/
+		2 =>1,/*AS IS*/
+		3 =>2,/*5 days*/
+		4 =>5,/*45 days*/
+		5 =>7,/*90 days*/
+		6 =>8,/*120 days*/
+		7 =>10,/*1 year*/
+		8 =>11,/*2 years*/
+		9 =>12,/*3 years*/
+		10 =>13,/*lifetime*/
+		11 =>9,/*6 months*/
+		12 =>6,/*60 days*/
+		13 =>3,/*14 days*/
+		14 =>9,/*180 days*/
+	);
+
+
     
-    //Parameter where, if true, then all the values have been properly import 
+    //Parameter where, if true, then all the values have been properly imported
     $import_complete = false;
+    
     $query = "SELECT id, date as date_created, vendor_id as companyid, memo, sent, amount,
-    voided, voided_by_id, voided_date, voided_reason, paid, paid_date, postfix, ref_no
-    FROM inventory_invoice
-    ".(($not_in)? "WHERE `id` NOT IN ".$not_in : "").";";
-    
-    
+    voided, voided_by_id, voided_date, voided_reason, paid, due_date, postfix, ref_no
+    FROM inventory_bill;";
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
-    echo"
-    <style>
-        table, tr, td, th{
-            border: thin black solid;
-            padding:5px;
-        }
-        table{
-            margin:auto;
-            width:99%;
-        }
-    </style>
-    <table class='table table-bordered'>
-    <tr>
-        <th>Pulled</th>
-        <th>Prepped</th>
-        <th>Payment Macro</th>
-        <th>Payment Details</th>
-    </tr>
-    ";
-    $grand_failed = false;
     $count = 0;
-if(mysqli_num_rows($result)){
-    foreach($result as $meta){
-        $failed = false;
-        $debug = false;
-        $failed_message = "";
-        $insert_row = array();
-        $payment_info = array();
-        $payment_details = array();
-        //Notes are assumed null, but appended with potentially multiple fields
-        $insert_row['notes'] = '';
-        
-        
-        // echo"<br><br>";
-        // print_r($meta);
-        
-        //ID
-        $insert_row['bill_no'] = $meta['id'];
-        // if(!$meta['id']){$failed=true;}
-        
-        //Contact
-        $companyid = dbTranslate($meta['companyid']);
-        $insert_row['companyid'] = $companyid;
-        
-        //Date
-        $insert_row['date_created'] = $meta['date_created'];
-        
-        //======================= Order Type Processing =======================
-        
-        //This portion of the process will probably vary drastically between the
-        //value
-        $insert_row['po_number'] = null;
-        $insert_row['freight'] = null;
-        
-        if($meta['memo'] && $meta['memo'][0] == "S" || $meta['memo'][0] == "R"){
-            //If the row is of the type SO or RO, explode and move on
-            $order_info = explode("#",$meta['memo']);
+    $repair_records = array();
+    
 
-            $insert_row['po_number'] = trim($order_info[1]);
-            
-            //Catch for when the memo carries an extra line-broken parameter
-            if(!is_numeric($insert_row['po_number'])){
-                $more_parse = explode("\n" , $insert_row['po_number']);
-                $insert_row['po_number'] = trim($more_parse[0]);
-            }
-            if(!is_numeric($insert_row['po_number'])){
-                $failed_message .= "| Not a a valid RO/SO number: ".$insert_row['po_number']." ";
-            }
-        } 
-        
-        $insert_row['assoc_invoice'] = $meta['ref_no'];
-        
-        //========================= Status processing =========================
-        if($meta['sent']){
-            $insert_row['status'] = "Completed";
-        } else {
-            $insert_row['status'] = "Voided";
-            $insert_row['notes'] .= " Voided by ".$meta['voided_by_id']." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
-        }
-        
-        //=============================== Notes ===============================
-        $insert_row['notes'] .= $meta["memo"];
-  
-        
-        
-        //========================== LINE PROCESSING ==========================
-        $lines = "SELECT id, amount, quantity, memo, item, oqi_id, repair_id, it_id
-        FROM inventory_invoiceli 
-        WHERE invoice_id = ".$meta['id'].";";
-        
-        $line_results = qdb($lines,"PIPE") or die(qe("PIPE")." ".$lines);
-        
-        //Prep the sum for each of the line totals to do the SUM audit
-        $lines_sum = 0.00;
-        
-        if(!mysqli_num_rows($line_results)){
-            // $failed_message = "| No Rows ";
-        } else {
-            foreach($line_results as $line){
-            
+
+foreach($result as $meta){
+    $p_line = array();
+    $failed_message = "";
+    $insert_row = array();
+    $payment_info = array();
+    $payment_details = array();
+    //Notes are assumed null, but appended with potentially multiple fields
+    $insert_row['notes'] = '';
+    
+    //ID
+    $insert_row['bill_no'] = $meta['id'];
+    
+    //Contact
+    $companyid = dbTranslate($meta['companyid']);
+    $insert_row['companyid'] = $companyid;
+    
+    //Date
+    $insert_row['date_created'] = $meta['date_created'];
+    //======================= Order Type Processing =======================
+    
+    //This portion of the process will probably vary drastically between the
+    //value
+    $insert_row['po_number'] = null;
+    $insert_row['freight'] = null;
+    
+
+    $insert_row['invoice_no'] = $meta['ref_no'];
+    
+    //========================= Status processing =========================
+    if($meta['sent']){
+        $insert_row['status'] = "Active";
+    } else if($meta['voided_by_id']) {
+        $insert_row['status'] = "Void";
+        $insert_row['notes'] .= " Voided by ".$meta['voided_by_id']." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
+    } else {
+        $insert_row['note'] .= " (Not Sent, Not Voided)";
+    }
+    
+    //=============================== Notes ===============================
+    $insert_row['notes'] .= $meta["memo"];
+
+    
+    
+    //========================== LINE PROCESSING ==========================
+    $lines = "SELECT bli.id,  bli.memo memo, iqi_id, iiqi.iq_id, iiqi.quantity, iiq.company_id, iiq.price as amount, creator_id,  i.heci, i.clei, i.short_description, im.name manf, ipi.po_id po_number
+    FROM inventory_billli bli, inventory_incoming_quote_invoice iiqi, inventory_incoming_quote iiq, inventory_inventory i, inventory_manufacturer im, inventory_purchaseinvoice ipi
+    WHERE bill_id = ".prep($insert_row['bill_no'])." AND iqi_id > '' AND iqi_id = iiqi.id AND iiqi.iq_id = iiq.id and iiq.inventory_id = i.id and i.manufacturer_id_id = im.id AND iiqi.purchase_invoice_id = ipi.id;"; //http://stackoverflow.com/questions/2327029/checking-for-an-empty-field-with-mysql
+    // exit($lines);
+    $line_results = qdb($lines,"PIPE") or die(qe("PIPE")." ".$lines);
+    
+    //Prep the sum for each of the line totals to do the SUM audit
+    $lines_sum = 0.00;
+    
+    // if(!mysqli_num_rows($line_results)){
+    //     // $failed_message = "| No Rows ";
+    //     $p_line["bill_no"] = $meta["id"];
+    //     $p_line["memo"] = "Not an original line: added to fix amount";
+    //     $p_line["amount"] = $meta['amount'];
+    //     $p_line["quantity"] = 1;
+    //     if ($meta['memo']){
+    //         $memo_parts = memo_walk($line['memo']);
+    //         if($memo_parts["po#"]){
+    //             $insert_row['po_number'] = $memo_parts["po#"];
+    //         }
+    //     }
+    //     if(!$insert_row['po_number']){
+    //         $insert_row = array();
+    //         continue;
+    //     }
+
+    //     $lines_sum = $meta["amount"];
+    //     $insert_row['lines'][] = $p_line;
+    // } else {
+        foreach($line_results as $line){
             //Naive Line Pricing information to audit the amount 
             $lines_sum += $line['amount'] * $line['quantity'];
-            
             //The following acts as a switch would to process different types of
+            $partid = part_process($line);
             
-            if($line['oqi_id']){
-                
-                $part_collection = "SELECT ioq.line_number, ioq.ref_no, ioq.quantity , ioq.clei_override , i.heci, i.clei, i.short_description, im.name manf, iq.warranty_period_id warr
-                    FROM inventory_outgoing_quote_invoice ioqi, inventory_outgoing_quote ioq, inventory_inventory i, inventory_manufacturer im, inventory_quote iq
-                    WHERE ioqi.id = ".$line['oqi_id']." AND ioqi.oq_id = ioq.id AND ioq.inventory_id = i.id AND i.manufacturer_id_id = im.id AND ioq.quote_id = iq.id;";
-                $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
-                
-                $part_row = mysqli_fetch_assoc($parts_results);
-                $partid = part_process($part_row);
-                
-                //Prep the array line
-                $p_line["bill_no"] = $meta['id'];
-                $p_line["partid"] = $partid;
-                $p_line["qty"] = $line['quantity'];
-                $p_line["price"] = $line['amount'];
-                $p_line["line_number"] = ($part_row['line_number']? $part_row['line_number'] : "");
-                $p_line["ref_1"] = $part_row['ref_no'];
-                $p_line["ref_1_label"] = "";
-                $p_line["ref_2"] = $part_row['clei_override'];
-                $p_line["ref_2_label"] = ($part_row['clei_override']? "CLEI" : "");
-                $p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
-
-                //Append the line information
-                $insert_row['lines'][] = $p_line;
-                continue;
-            } else if($line['repair_id'] /*|| substr($line['memo'], 0, 6) == "Repair"*/){
-                
-                
-                $p_line["bill_no"] =  $meta['id'];
-                
-                $part_collection = "SELECT ir.serials, ir.price_per_unit, i.heci, i.clei, i.short_description , im.name manf, ir.warranty_id warr
-                    FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im, inventory_quote iq
-                    WHERE ir.ticket_number = ".$line['repair_id']." AND ir.inventory_id = i.id AND i.manufacturer_id_id = im.id;";
-                $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
-                
-
-                $part_row = mysqli_fetch_assoc($parts_results);
-                $partid = part_process($part_row);
-                $quantity = count(explode("\n",$part_row['serials']));
-                
-                
-                $p_line["partid"] = $partid;
-                $p_line["qty"] = $quantity;
-                $p_line["price"] = $part_row['price_per_unit'];
-                $p_line["line_number"] = null;
-                $p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
-                //Run an audit check to see if there are any invoice records where 
-                $insert_row['lines'][] = $p_line;
-                continue;
-            } else if($line['item'] == "Freight Charge" || $line['memo'] == "Freight"){
-                $insert_row['freight'] = $line['amount'];
-                $insert_row['notes'] .= " (Freight)";
-                continue;
-            } else if ($line['it_id'] || $line['item'] == "IT Service" || $line['item'] == "IT Contract"){
-                $insert_row['amount'] = 0.00;
-                $insert_row['notes'] .= $line['memo'];
-                continue;
-            // } else if (){
-            //     $insert_row['repair_lines'][] = $line;
-            } else {
-                $part_info = '';
-                //Secondary Item Processor, outputs a similar row to the item processor, but takes extra steps to parse memo
-                if (substr($line['memo'], 0, 4) == "Item"){
-                    $memo_params = array();
-                    $memo_params = memo_walk($line['memo']);
-                    $part_search = "
-                    SELECT i.heci, i.clei, i.short_description, im.name manf 
-                    FROM `inventory_inventory` i, `inventory_manufacturer` im 
-                    WHERE i.manufacturer_id_id = im.id ";
-                    $part_search .= sFilter("part_number", $memo_params['item']);
-                    // $part_search .= sFilter("short_description", $memo_params['description']);
-                    $part_search .= sFilter("heci",$memo_params['heci']);
-                    $part_search .= ";";
-                    $part_result = qdb($part_search,"PIPE") or die(qe("PIPE")." ".$part_search);
-                    if (mysqli_num_rows($part_result)){
-                        $closest = mysqli_fetch_assoc($part_result);
-                        if (mysqli_num_rows($part_result)>1){
-                            $beginning = 0;
-                            foreach($part_result as $i => $row){
-                                $row_weight = desc_weight_value($memo_params['description'],$row['short_description']);
-                                if ($row_weight > $beginning){
-                                    $closest = $row;
-                                }
-                            }
-                        } 
-                        $partid = part_process($closest);
-                        
-                        $p_line["bill_no"] = $meta['id'];
-                        $p_line["partid"] = $partid;
-                        $p_line["qty"] = $line['quantity'];
-                        $p_line["price"] = $line['amount'];
-                        $insert_row['lines'][] = $p_line;
-                    } else {
-                        $result = explode(" ",$memo_params['item']);
-                        $part_search = "
-                        SELECT i.heci, i.clei, i.short_description, im.name manf 
-                        FROM `inventory_inventory` i, `inventory_manufacturer` im 
-                        WHERE i.manufacturer_id_id = im.id AND `part_number` LIKE '".$result[0];
-                        $part_search .= "';";
-                        $part_result = qdb($part_search,"PIPE") or die(qe("PIPE")." ".$part_search);
-                    
-                        // $failed_message .= print_r($memo_params,true);
-                        // $failed_message .= print_r($part_result,true);
+            //Grab any associated PO_number, including the ones which he hides in his memo if there is none linked
+            $insert_row['po_number'] = $line['po_number'];
+            if(!$insert_row['po_number']){
+                if(!mysqli_num_rows($line_results)){
+                    $memo_parts = memo_walk($line['memo']);
+                    if($memo_parts["po#"]){
+                        $insert_row['po_number'] = $memo_parts["po#"];
                     }
-                    // These will take extra care to handle beyond the OQI id
-                } else {
-                // $failed_message .= "| Unprocessable Line Type ".print_r($line,true);
-                $p_line["bill_no"] = $meta["id"];
-                $p_line["memo"] = $line['memo'];
-                $insert_row['lines'][] = $p_line;
                 }
-            }
-        }
-        }
-        
-        // Method | Line audit
-        // Since the cents audit seems to be invalid despite extensive type casting efforts,
-        // Parse both values down to integers and compare them
-        $double = intval($meta['amount']);
-        $lines_sum = intval($lines_sum);
-        //Ignores
-        if($lines_sum != $double){
-            if(!$insert_row['status'] == "Voided"){
-                $failed_message .= "| Sum Mismatch: I Count ".floatval($lines_sum)." (".gettype($lines_sum)."), he says ".floatval($double)." (".gettype($double).") ";
-            }
-        }
-
-
-        
-        //Payment Processing
-        if($meta['paid']){
-            $payment_info['companyid'] = $companyid;
-            $payment_info['date'] = $meta['paid_date'];
-            $payment_info['payment_type'] = "Other";
-            $payment_info['number'] = "Invoice".$insert_row['bill_no'];
-            $payment_info['amount'] = $lines_sum; //This amount will equal the audited amount on the line items, assuming no discrepency
-            $payment_info['notes'] = "Imported";
-            $payment_details['order_number'] = $insert_row['bill_no'];
-            $payment_details['order_type'] = "Invoice";
-            $payment_details['ref_number'] = "";
-            $payment_details['ref_type'] = "";
-            $payment_details['amount'] = $lines_sum;
-        }else{
-            // $failed_message .= "| Not Paid For ";
-        }
-        
-
-        if ($debug || $failed_message){
-        $grand_failed = true;
-        echo"
-            <tr>
-                <td>
-                    $failed_message<br>
-                    <pre>";
-                        print_r($meta);
-        echo"       </pre>
-                </td>
-                <td>
-                    <pre>";
-                        print_r($insert_row);
-        echo"       </pre>
-                </td>
-                <td>
-                    <pre>";
-                        print_r($payment_info);
-        echo"       </pre>
-                </td>
-                <td>
-                    <pre>";
-                        print_r($payment_details);
-        echo"       </pre>
-                </td>
-            </tr>
-
-        ";
-        } else {
-            $insert = "
-            INSERT INTO `bills`(`bill_no`, `assoc_invoice`, `date_created`, 
-            `po_number`, `companyid`, `notes`, `status`) 
-            VALUES (".$insert_row['bill_no'].",
-            ".prep($insert_row['assoc_invoice']).",
-            ".prep($insert_row['companyid']).",
-            ".prep($insert_row['date_created']).",
-            ".prep($insert_row['po_number']).",
-            ".prep($insert_row['notes']).",
-            ".prep($insert_row['status']).");
-            ";
-            qdb($insert) or die(qe()." | $insert");
+            } 
+            //Prep the array line
+            $p_line["bill_no"] = $meta['id'];
+            $p_line["partid"] = $partid;
+            $p_line["qty"] = $line['quantity'];
+            $p_line["amount"] = $line['amount'];
+            $p_line["line_number"] = null;
+            $p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
             
-            if (count($insert_row['lines'])){
-                foreach($insert_row['lines'] as $line){
-                    $line_insert = "INSERT INTO `invoice_items`(`bill_no`, `partid`, `qty`, `price`, `line_number`, `warranty`, `memo`) VALUES (
-                    ".prep($line['bill_no']).",
-                    ".prep($line['partid']).",
-                    ".prep($line['qty']).",
-                    ".prep($line['price']).",
-                    ".prep($line['line_number']).",
-                    ".prep($line['warranty']).",
-                    ".prep($line['memo']).");";
-                    qdb($line_insert) or die(qe()." | $line_insert");
-                }
-            }
-            if ($meta['paid']){
-                $payment_insert = "
-                INSERT INTO `payments`(`companyid`, `date`, `payment_type`, `number`, `amount`, `notes`) VALUES (
-                ".prep($payment_info['companyid']).",
-                ".prep($payment_info['date']).",
-                ".prep($payment_info['payment_type']).",
-                ".prep($payment_info['number']).",
-                ".prep($payment_info['amount']).",
-                ".prep($payment_info['notes']).");";
-                
-                qdb($payment_insert) or die(qe()." | $payment_insert");
-                $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`, `ref_type`, `amount`, `paymentid`) 
-                VALUES (
-                ".prep($payment_details['order_number']).",
-                ".prep($payment_details['order_type']).",
-                ".prep($payment_details['ref_number']).",
-                ".prep($payment_details['ref_type']).",
-                ".prep($payment_details['amount']).",
-                ".prep(qid()).")";
-                qdb($p_details_insert) or die(qe()." | $p_details_insert");
+            //Append the line information
+            $insert_row['lines'][] = $p_line;
+        }
+    // }
+    if(!$insert_row['po_number']){
+            $insert_row = array();
+            continue;
+    }
+    // Method | Line audit
+    // Since the cents audit seems to be invalid despite extensive type casting efforts,
+    // Parse both values down to integers and compare them
+    // $double = intval($meta['amount']);
+    // $lines_sum = intval($lines_sum);
+    //Ignores
+    // if($lines_sum != $double && ($meta['amount'] != floatval($lines_sum))){
+    //     if(!$meta['voided'] == "Voided"){
+    //         // $failed_message .= "| Sum Mismatch: I Count ".floatval($lines_sum)." (".gettype($lines_sum)."), he says ".floatval($double)." (".gettype($double).") ";
+    //     }
+    // }
+
+
+
+    //Payment Processing
+    if($meta['paid']){
+        $payment_info['companyid'] = $companyid;
+        $payment_info['date'] = $meta['due_date'];
+        $payment_info['payment_type'] = "Other";
+        $payment_info['number'] = "Bill".$insert_row['bill_no'];
+        $payment_info['amount'] = $lines_sum; //This amount will equal the audited amount on the line items, assuming no discrepency
+        $payment_info['notes'] = "Imported";
+        $payment_details['order_number'] = $insert_row['bill_no'];
+        $payment_details['order_type'] = "Bill";
+        $payment_details['ref_number'] = "";
+        $payment_details['ref_type'] = "";
+        $payment_details['amount'] = $lines_sum;
+    }
+    
+        $insert = "
+        INSERT INTO `bills` (`bill_no`,`invoice_no`,`date_created`,`due_date`,`po_number`,`companyid`,`notes`,`status`) VALUES (
+        ".prep($insert_row['bill_no']).",
+        ".prep($insert_row['invoice_no']).",
+        ".prep($insert_row['date_created']." 12:00:00").",
+        ".prep($meta['due_date']).",
+        ".prep($insert_row['po_number']).",
+        ".prep($insert_row['companyid']).",
+        ".prep($insert_row['notes']).",
+        ".prep($insert_row['status']).");
+        ";
+ 
+        qdb($insert) or die(qe()."<br>".$count);//"<br>".$previous_query."<br>Count".$count."<br><pre>".print_r(get_defined_vars(),true)."</pre>");
+        
+        
+        if (count($insert_row['lines'])){
+            foreach($insert_row['lines'] as $line){
+                $line_insert = "INSERT INTO `bill_items`(`bill_no`, `partid`, `qty`, `amount`, `memo`) VALUES (
+                ".prep($insert_row['bill_no']).",
+                ".prep($line['partid']).",
+                ".prep($line['qty']).",
+                ".prep($line['amount']).",
+                ".prep($line['memo']).");";
+                qdb($line_insert) or die(qe()." | $line_insert");
             }
         }
-        
-        $count++;
+        if ($meta['paid']){
+            $payment_insert = "
+            INSERT INTO `payments`(`companyid`, `date`, `payment_type`, `number`, `amount`, `notes`) VALUES (
+            ".prep($payment_info['companyid']).",
+            ".prep($payment_info['date']).",
+            ".prep($payment_info['payment_type']).",
+            ".prep($payment_info['number']).",
+            ".prep($payment_info['amount']).",
+            ".prep($payment_info['notes']).");";
+            
+            qdb($payment_insert) or die(qe()." | $payment_insert");
+            $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`, `ref_type`, `amount`, `paymentid`) 
+            VALUES (
+            ".prep($payment_details['order_number']).",
+            ".prep($payment_details['order_type']).",
+            ".prep($payment_details['ref_number']).",
+            ".prep($payment_details['ref_type']).",
+            ".prep($payment_details['amount']).",
+            ".prep(qid()).")";
+            qdb($p_details_insert) or die(qe()." | $p_details_insert");
+        }
+    $count++;
     }
-}  else {
-    $insert[] = "none";
-    $import_complete = true;
-}
-
     if(!$grand_failed){
-        //INSERT STATEMENT HERE!!
+        $import_complete = true;
         echo"<tr><td colspan='5'>".$count." rows successfully added ($already_imported Already Added)</td></tr>";
         echo (($import_complete)? "<tr><td colspan='5'><b>IMPORT COMPLETE</b></td></tr>" : "");
     }
 
-    echo"
-        </table>
-    ";
-    echo($query);
+
+    //Prints the average time to process a row (For the sake of efficiency)
     $end_time = microtime();
     $st_a = explode(" ",$start_time);
     $en_a = explode(" ",$end_time);
-    
-    // echo("Start: $start_time <br> End: $end_time<br>");
     echo("Time Per Row: ".((($en_a[1] - $st_a[1])+($en_a[0]-$st_a[0]))/$count)." s");
-    // echo"
-    // <pre>
-    // ".print_r($insert,true)."
-    // </pre>
-    // ";
-    
 ?>
 
-<!--<script>-->
-    <?php 
-        // if(!$grand_failed){
-        //     echo("setTimeout(location.reload.bind(location),1000);");
-        // } 
-        // if ($import_complete){
-        //     echo("alert('Import Complete)';");
-        // }
-    ?>
-<!--</script>-->

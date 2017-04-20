@@ -80,6 +80,25 @@
 		14 =>9,/*180 days*/
 	);
 
+	$USER_MAPS = array(
+		1=>1398,/*brian*/
+		2=>2,/*sam*/
+		3=>3,/*chris*/
+		5=>3,/*accounting => chris*/
+		9=>1401,/*mike*/
+		11=>3,/*sabedra*/
+		13=>1399,/*vicky*/
+		18=>1,/*david*/
+		21=>3,/*juan*/
+	);
+	function mapUser($id) {
+		global $USER_MAPS;
+
+		if (! $id) { return false; }
+
+		return ($USER_MAPS[$id]);
+	}
+
     //Pre-everything prep
     
     //Optional limiter to run as an update instead of a full import: will check to endure no values have been duplicated.
@@ -195,7 +214,7 @@ if(mysqli_num_rows($result)){
             $insert_row['status'] = "Completed";
         } else {
             $insert_row['status'] = "Voided";
-            $insert_row['notes'] .= " Voided by ".$meta['voided_by_id']." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
+            $insert_row['notes'] .= " Voided by ".getUser(mapUser($meta['voided_by_id']))." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
         }
         
         //=============================== Notes ===============================
@@ -204,9 +223,7 @@ if(mysqli_num_rows($result)){
         
         //========================== LINE PROCESSING ==========================
         $lines = "SELECT id, amount, quantity, memo, item, oqi_id, repair_id, it_id
-        FROM inventory_invoiceli 
-        WHERE invoice_id = ".$meta['id']."
-        ;";
+        FROM inventory_invoiceli WHERE invoice_id = ".$meta['id'].";";
         $line_results = qdb($lines,"PIPE") or die(qe("PIPE")." ".$lines);
         
         //Prep the sum for each of the line totals to do the SUM audit
@@ -252,7 +269,7 @@ if(mysqli_num_rows($result)){
                 $p_line["invoice_no"] =  $meta['id'];
                 
                 $part_collection = "SELECT ir.serials, ir.price_per_unit, i.heci, i.clei, i.short_description , im.name manf, ir.warranty_id warr
-                    FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im, inventory_quote iq
+                    FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im
                     WHERE ir.ticket_number = ".$line['repair_id']." AND ir.inventory_id = i.id AND i.manufacturer_id_id = im.id;";
                 $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
                 
