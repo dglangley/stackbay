@@ -12,12 +12,10 @@
     	return $output;
     }
     
-    function updateNull($field,$var){
-        if ($var){
-            $return = " `$field`= '".res($var)."',";
-        }
-        else{
-            $return = " `$field`= NULL,";
+    function updateNull($field,$var,$last=false,$default="NULL"){
+        $return = " `$field`= ".prep($var,$default).",";
+        if($last){
+            $return = rtrim($return,",");
         }
         return $return;
     }
