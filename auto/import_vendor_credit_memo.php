@@ -286,8 +286,8 @@
 		$notes = (string)$notes;
 		$notes = trim($notes);
 		
-		$notes = (string)$rmaid;
-		$notes = trim($rmaid);
+		$rmaid = (string)$rmaid;
+		$rmaid = trim($rmaid);
 
 		$query = "REPLACE purchase_credits (rma_number, companyid, date_created, rma_no, status, notes";
 		if ($id) { $query .= ", id"; }
