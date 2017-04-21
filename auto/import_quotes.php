@@ -34,7 +34,7 @@
     function import_quotes($type = 'outgoing'){
         //Expects Quotes/Supply
         //Query to grab the incoming_quote
-        echo("REMEMBER TO SET PRICES TO NULL BEFORE RUNNING ON THE DB");
+        echo("REMEMBER TO SET PRICES TO NULL BEFORE RUNNING ON THE DB<br>");
         $query = "";
         $incoming_fix = "";
         
@@ -46,6 +46,7 @@
             $in_table = "demand";
             $price_field = '`quote_price`';
             $qtyprice = " `request_qty`, `quote_price`";
+            $vendorprice = "nothing";
         } else {
             $incoming_fix = "null AS";
             $table = "incoming";
@@ -55,6 +56,9 @@
             $price_field = '`avail_price`';
             $qtyprice = " `avail_qty`, `avail_price`";
         }
+        
+        // $query = "SELECT inventory, 0 as user, 1 as qty, null as line_number, null as threshold FROM `inventory_vendorprice`;";
+
         $query = "
         SELECT company_id as company, date, q.threshold, creator_id as user, inventory_id invid, 
         price, quantity, $incoming_fix line_number, q.notes, i.part_number, i.heci, i.clei, i.short_description, im.name manf
@@ -65,7 +69,15 @@
         price, quantity, null AS line_number, ur.notes, i.part_number, i.heci, i.clei, i.short_description, im.name manf
         FROM inventory_userrequest ur, inventory_inventory i, inventory_manufacturer im 
         WHERE incoming = '$incoming_flag' AND $ur_ignore IS NULL AND ur.inventory_id = i.id  AND i.manufacturer_id_id = im.id
-        ;";
+        ";
+        if($type != "outgoing"){
+            $query .= "
+            UNION
+            SELECT vendor_id as company, date, null as threshold, '0' as user, inventory_id invid, 
+            price, '1' as quantity, null as line_number, null as notes, i.part_number, i.heci, i.clei, i.short_description, im.name manf
+            FROM inventory_vendorprice vp, inventory_inventory i, inventory_manufacturer im 
+            WHERE vp.inventory_id = i.id  AND i.manufacturer_id_id = im.id";
+        }
         
         
         $results = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
@@ -152,11 +164,11 @@
         
     }
 
-    exit('Import Complete');
+    exit('<br><b>'.$type.' Import Complete</b>');
 
 }
 
-    import_quotes();
+    import_quotes("as");
 ?>
 
 
