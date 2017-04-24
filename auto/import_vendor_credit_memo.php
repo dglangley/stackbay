@@ -14,7 +14,7 @@
 	$payment_details = array();
 	
 	//For testing purposes and compile time adding LIMIT 30
-	$query = "SELECT * FROM inventory_vendorcredit ORDER BY rma_id DESC LIMIT 50;";
+	$query = "SELECT * FROM inventory_vendorcredit ORDER BY rma_id DESC;";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$vendorCreditHolder[] = $r;
