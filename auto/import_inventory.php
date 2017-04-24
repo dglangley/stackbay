@@ -16,7 +16,7 @@
 	
 	//Query Grab inventory data
 	//For now we will ignore items without a clei, but will later incoporate the anomalies
-	$query = "SELECT id, clei, manufacturer_id_id, part_number, short_description, heci FROM inventory_inventory ORDER BY id ASC LIMIT 1000; ";
+	$query = "SELECT id, clei, manufacturer_id_id, part_number, short_description, heci FROM inventory_inventory ORDER BY id ASC LIMIT 300; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$inventory[] = $r;
@@ -59,14 +59,17 @@
 		
 		//Exists in our database or not
 		$existing = false;
+		$aliasSwap = false;
 		
 		//This variable is used to see if we need to edit it 'false' or no edit is required 'true'
 		$no_edit = false;
-		
 		$partid = 0;
-		
 		$check = '';
 		$part = '';
+		$manfid = null;
+		
+		//Store an alias if it is prefound already
+		$aliasSwap_part = '';
 		
 		//Special case for when no HECI or CLEI exists that we will create a part with the aliases preappended
 		$formatRequired = false;
@@ -113,6 +116,9 @@
 			$part_number = format_part($part_number);
 			$formatRequired = true;
 			
+			//Clear previous data
+			$aliasSwap_part = '';
+			
 			//Query to check if the part already exists in the database
 			$query = "SELECT id, part FROM parts WHERE LOWER(part) LIKE '%".res(strtolower($part_number))."%'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -123,7 +129,32 @@
 				$no_edit = true;
 			//This item wasn't found so try and see if any aliases exists in the db
 			} else {
+				//This item wasn't found so try and see if any aliases exists in the db
+				foreach($inventoryalias as $alias) {
+					$query = "SELECT id, part FROM parts WHERE LOWER(part) LIKE '%".res(strtolower($alias))."%'; ";
+					$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+					if (mysqli_num_rows($result)>0) {
+						$existing = true;
+						$aliasSwap = true;
+						$aliasSwap_part = $r['part'];
+						$partid = $r['id'];
+					}
+				}
+			}
+			
+			if($aliasSwap) {
+				//Remove the alias name from inventory alias
+				if(($key = array_search($aliasSwap_part, $inventoryalias)) !== false) {
+				    unset($inventoryalias[$key]);
+				}
 				
+				//Create the part alias string from this item
+				$aliasSwap_part .= ' ' . $part_number;
+				
+				foreach($inventoryalias as $alias) {
+					$aliasSwap_part .= ' ' . $alias;
+				}
 			}
 		}
 		
@@ -163,7 +194,7 @@
 		echo '<b>Part Number</b>: ' . $part_number . ' <b>HECI</b>: ' . $heci . '<br>';
 		
 		//This signifies that the part exists but the the part name does not exist so we need to alias
-		if($existing && !$no_edit) {
+		if($existing && !$no_edit && !$aliasSwap) {
 			//add a space then add the alias as the new part name
 			foreach($confirmedAlias as $alias) {
 				echo '<b>Current Part: </b>'.$part.' <b>Missing Alias:</b> '.$alias.'<br>';
@@ -173,9 +204,16 @@
 			mergePart($part, $partid, $existing);
 			echo '<b>New Part Number: </b> '.$part.'<br>';
 			echo '<b>ALIAS DOES NOT EXIST, ADDING ALIAS</b><br>';
-		//Item does not exist at all in our database so lets add the new part
+		
+		//Main item was not found but the alias exists in the database (Just update the partname with the alias concatenated name)
+		} else if($aliasSwap) {
+			echo '<b>ALIAS Swap Occured!</b><br>';
+			mergePart($aliasSwap_part, $partid, $existing);
+		//Item does not exist at all in our database so lets add the new part	
 		} else if (!$existing) {
-			mergePart($part_number, $partid, $existing, $heci, $desc);
+			//Convert to our manf id as a last resort from brian's database as we do not have this information
+			$manfid = dbTranslateManf($value['manufacturer_id_id']);
+			mergePart($part_number, $partid, $existing, $heci, $desc, $manfid);
 			echo '<b>ITEM DOES NOT EXIST ADDED TO DB</b><br>';
 			echo '<b>Adding Part: </b>'.$part_number.'<br>';
 		//This is just here to signify non of the above conditions are met so do nothing, most likely because part exists and the alias/part name already exists in the database	
@@ -185,18 +223,6 @@
 		
 		echo '<br><br>';
 		
-		// foreach($inventoryalias as $alias) {
-		// 	//We have clean or 'unclean' part number
-		// 	$alias['clean_part_number'];
-			
-		// 	$aliasid = 0;
-			
-		// 	//Query to check if the alias already exists and populate the alias id
-		// 	$query = ";";
-			
-		// 	//function to query a replace to insert or update the alias for specific part (merge)
-		// 	$aliasid = mergePartAlias($alias['clean_part_number'], $partid, $aliasid);
-		// }
 		
 		//empty the alias for this inventory id to make room for the next inventory id item aliases
 		unset($inventoryalias);
@@ -207,88 +233,26 @@
 	}
 	
 	//Function to add in or update parts from Brian's inventory table to our parts table
-	function mergePart($part, $id = 0, $existing,$heci = null, $description = null) {
+	function mergePart($part, $id = 0, $existing,$heci = null, $description = null, $manfid = null) {
 		
 		//Query to update the alias if the part exists
 		if($existing) {
-			$query = "UPDATE parts SET part = '".res($part)." WHERE id = ".res($id)."';";
+			$query = "UPDATE parts SET part = '".res($part)."' WHERE id = '".res($id)."';";
 			$result = qdb($query) OR die(qe().' '.$query);
 		//Query to add a new part with HECI, Description	
 		} else if(!$existing) {
-			
+			$query = "INSERT parts (part, heci, manfid, description) VALUES ('".res($part)."', '".res($heci)."', '".res($manfid)."', '".res($description)."');";
+			$result = qdb($query) OR die(qe().' '.$query);
 		}
-		//Short little check to make sure the variables are trimmed and correctly formatted
-		// $manfid = (int)$manfid;
-		
-		// $part = (string)$part;
-		// $part = trim($part);
-
-		//Write some query to insert or update the partid / new partid of the inventory item
-		$query = ";";
-
-		return ($id);
 	}
-	
-	// //Function to add in or update part aliases from Brian's inventory alias table to our part aliases table
-	// function mergePartAlias($part, $inventoryid,$id) {
-	// 	//Write some query to insert or update the partid's aliases of some assumed alias table to be created in the future
-	// 	$query = ";";
-	// }
-	
-	// //Create a function that maps the system id in brian's system to our systemid by using the system name and looking for something similar
-	// function getSystemID($system) {
-	// 	$systemid;
-		
-	// 	//Query to link the system id brian has to the system name in brian's database
-	// 	//From there use a function to query and map the system name to our systemid
-	// 	$query = "SELECT s.name FROM inventory_inventory_system i, inventory_inventorysystem s WHERE inventory_id = ".res($value['id'])." AND inventorysystem_id = s.id; ";
-	// 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-	// 	if (mysqli_num_rows($result)>0) {
-	// 		$r = mysqli_fetch_assoc($result);
-	// 		//create a function to map the system name to our systemid
-	// 		$systemid = getSystemID($r['name']);
-	// 	}
-		
-	// 	return $systemid;
-	// }
-	
-	// //Precreated functions that will be useful in this program
-	// //This precreated function gets the part in Brian's system and translate it to the partid for our database
-	// function translateID($inventory_id){
- //       global $INVENTORY_IDS;
- //       if (!isset($INVENTORY_IDS[$inventory_id])){
- //           $query = "SELECT i.heci, i.clei, i.short_description, im.name manf
- //           FROM inventory_inventory i, inventory_manufacturer im 
- //           WHERE i.id = ".prep($inventory_id)." AND i.manufacturer_id_id = im.id;";
- //           $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
- //           $r = mysqli_fetch_assoc($result);
- //           $INVENTORY_IDS[$inventory_id] = part_process($r);
- //       }
- //       return($INVENTORY_IDS[$inventory_id]);
- //   }
     
- //   function part_process($r){
- //       //Function takes in a row from Brian's inventory table, checks to 
- //       //see if it exists in our system, and sets part if it doesn't
- //       //Requires the inclusion of both getPartID.php and setPartId.php
- //       if ($r['clei']) { $r['heci'] = $r['clei']; }
- //       else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
- //       else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
-
- //       $partid = getPartId($r['part_number'],$r['heci']);
- //       if (! $partid) {
- //           $partid = setPart(array('part'=>$r['part_number'],'heci'=>$r['heci'],'manf'=>$r['manf'],'descr'=>$r['short_description']));
- //       }
- //       return $partid;
- //   }
-    
-    function dbTranslateManf($manfid) {
+    function dbTranslateManf($manfidog) {
 
 		$manfid = 0;
 		$manf = '';
 	
 		//This query grabs the manfid name
-		$query = "SELECT * FROM inventory_manufacturer WHERE id = '".res($value['manufacturer_id_id'])."'; ";
+		$query = "SELECT * FROM inventory_manufacturer WHERE id = '".res($manfidog)."'; ";
 		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
@@ -296,7 +260,7 @@
 		}
 	
 		//Attempt to get the manf id from our system
-		$query = "SELECT item_id FROM manf WHERE LOWER(name) = '".res(strtolower($manf))."'; ";
+		$query = "SELECT id FROM manfs WHERE LOWER(name) = '".res(strtolower($manf))."'; ";
 		$result = qdb($query) OR die($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
