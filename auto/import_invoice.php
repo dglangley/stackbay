@@ -14,9 +14,6 @@
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/filter.php';
-    include_once $rootdir.'/inc/import_aid.php'
-	
-
 
     //Pre-everything prep
     
