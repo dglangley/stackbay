@@ -118,9 +118,12 @@
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			//Checking if the result is 1 otherwise multiple items found
 			//If this item exists then nothing needs to be done as this part has no HECI to match aliases
-			if (mysqli_num_rows($result)==1) {
+			if (mysqli_num_rows($result)>0) {
 				$existing = true;
 				$no_edit = true;
+			//This item wasn't found so try and see if any aliases exists in the db
+			} else {
+				
 			}
 		}
 		
@@ -167,12 +170,12 @@
 				$part .= ' ' . $alias;
 			}
 			
-			mergePart($part, $partid);
+			mergePart($part, $partid, $existing);
 			echo '<b>New Part Number: </b> '.$part.'<br>';
 			echo '<b>ALIAS DOES NOT EXIST, ADDING ALIAS</b><br>';
 		//Item does not exist at all in our database so lets add the new part
 		} else if (!$existing) {
-			mergePart($part_number, $partid, $heci, $desc);
+			mergePart($part_number, $partid, $existing, $heci, $desc);
 			echo '<b>ITEM DOES NOT EXIST ADDED TO DB</b><br>';
 			echo '<b>Adding Part: </b>'.$part_number.'<br>';
 		//This is just here to signify non of the above conditions are met so do nothing, most likely because part exists and the alias/part name already exists in the database	
@@ -204,8 +207,16 @@
 	}
 	
 	//Function to add in or update parts from Brian's inventory table to our parts table
-	function mergePart($part, $id = 0, $heci = null, $description = null) {
+	function mergePart($part, $id = 0, $existing,$heci = null, $description = null) {
 		
+		//Query to update the alias if the part exists
+		if($existing) {
+			$query = "UPDATE parts SET part = '".res($part)." WHERE id = ".res($id)."';";
+			$result = qdb($query) OR die(qe().' '.$query);
+		//Query to add a new part with HECI, Description	
+		} else if(!$existing) {
+			
+		}
 		//Short little check to make sure the variables are trimmed and correctly formatted
 		// $manfid = (int)$manfid;
 		
