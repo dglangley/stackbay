@@ -49,9 +49,11 @@
 				if (! $subquery) { $subquery .= "1 = 2 "; }
 				$query .= $subquery.") LIMIT 0,20; ";
 
-				$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-				while ($r = mysqli_fetch_assoc($result)) {
-					$results[] = $r;
+				$result = qdb($query,'PIPE');// OR die(qe('PIPE'));
+				if (mysqli_num_rows($result)>0) {
+					while ($r = mysqli_fetch_assoc($result)) {
+						$results[] = $r;
+					}
 				}
 
 				// get ids from aliases
@@ -60,9 +62,11 @@
 					$query .= "FROM inventory_inventory, inventory_inventoryalias ";
 					$query .= "WHERE inventory_inventoryalias.clean_part_number LIKE '".res($search,'PIPE')."%' ";
 					$query .= "AND inventory_inventory.id = inventory_inventoryalias.inventory_id LIMIT 0,20; ";
-					$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-					while ($r = mysqli_fetch_assoc($result)) {
-						$results[] = $r;
+					$result = qdb($query,'PIPE');// OR die(qe('PIPE'));
+					if (mysqli_num_rows($result)>0) {
+						while ($r = mysqli_fetch_assoc($result)) {
+							$results[] = $r;
+						}
 					}
 				}
 

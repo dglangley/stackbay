@@ -7,13 +7,13 @@
 	$query = "SELECT inventory_company.id, TRIM(name) name FROM inventory_company, inventory_outgoing_quote ";
 	$query .= "WHERE company_id = inventory_company.id AND name NOT LIKE 'AAATEST%' ";
 	$query .= "GROUP BY inventory_company.id ORDER BY name ASC; ";
-	$result = qdb($query,'PIPE') OR die(qe().' '.$query);
+	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$companies[$r['id']] = array($r['name']);
 		$query2 = "SELECT TRIM(alias) name FROM inventory_companyalias ";
 		$query2 .= "WHERE company_id = '".$r['id']."' ";
 		$query2 .= "GROUP BY name HAVING name <> '".res($r['name'],'PIPE')."'; ";
-		$result2 = qdb($query2,'PIPE') OR die(qe().' '.$query2);
+		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$companies[$r['id']][] = $r2['name'];
 		}
