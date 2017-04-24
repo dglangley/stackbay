@@ -16,7 +16,7 @@
 	
 	//Query Grab inventory data
 	//For now we will ignore items without a clei, but will later incoporate the anomalies
-	$query = "SELECT id, clei, manufacturer_id_id, part_number, short_description, heci FROM inventory_inventory ORDER BY id ASC LIMIT 300; ";
+	$query = "SELECT id, clei, manufacturer_id_id, part_number, short_description, heci FROM inventory_inventory ORDER BY id ASC LIMIT 500; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$inventory[] = $r;

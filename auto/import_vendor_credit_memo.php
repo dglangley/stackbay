@@ -178,7 +178,7 @@
 		    $payment_info['amount'] = $qty * $amount; //This amount will equal the audited amount on the line items, assuming no discrepency
 		    $payment_info['notes'] = "Imported";
 		    $payment_details['order_number'] = $insert_row['bill_no'];
-		    $payment_details['order_type'] = "Bill";
+		    $payment_details['order_type'] = "Purchase Credit";
 		    $payment_details['ref_number'] = "";
 		    $payment_details['ref_type'] = "";
 		    $payment_details['amount'] = $qty * $amount;
