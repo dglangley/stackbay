@@ -57,7 +57,6 @@
             $qtyprice = " `avail_qty`, `avail_price`";
         }
         
-        // $query = "SELECT inventory, 0 as user, 1 as qty, null as line_number, null as threshold FROM `inventory_vendorprice`;";
 
         $query = "
         SELECT company_id as company, date, q.threshold, creator_id as user, inventory_id invid, 
@@ -71,6 +70,7 @@
         WHERE incoming = '$incoming_flag' AND $ur_ignore IS NULL AND ur.inventory_id = i.id  AND i.manufacturer_id_id = im.id
         ";
         if($type != "outgoing"){
+            //Add in the vendor process as an id
             $query .= "
             UNION
             SELECT vendor_id as company, date, null as threshold, '0' as user, inventory_id invid, 
@@ -163,7 +163,6 @@
         }
         
     }
-
     exit('<br><b>'.$type.' Import Complete</b>');
 
 }

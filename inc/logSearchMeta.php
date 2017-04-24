@@ -10,6 +10,7 @@
 		//global var to help us know when this function creates a new record or calls the old id
 		$META_EXISTS = false;
 		
+		//Added for the sake of clean imports
 		if(!$userid){
 			$userid = $GLOBALS['U']['id'];
 		}
