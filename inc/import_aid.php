@@ -1,4 +1,5 @@
 <?php
+	$rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getPartId.php';
 	include_once $rootdir.'/inc/setPart.php';
