@@ -136,17 +136,26 @@
 		$notes = (string)$notes;
 		$notes = trim($notes);
 
-		$query = "REPLACE companies (name, website, phone, corporateid, default_email, notes";
+		$query = "REPLACE companies (name";
+		
+		//Maddness to check if null or not otherwise do no insert it
+		if ($website) { $query .= ", website"; }
+		if ($phone) { $query .= ", phone"; }
+		// if ($coporateid) { $query .= ", corporateid"; }
+		if ($default_email) { $query .= ", default_email"; }
+		if ($notes) { $query .= ", notes"; }
 		if ($id) { $query .= ", id"; }
+		
 		$query .= ") VALUES ('".res($name)."',";
-		$query .= " '".res($website)."'";
-		$query .= ", '".res($phone)."'";
-		$query .= ", NULL";
-		$query .= ", '".res($default_email)."'";
-		$query .= ", '".res($notes)."'";
+		if ($website) { $query .= " '".res($website)."'";}
+		if ($phone) { $query .= ", '".res($phone)."'";}
+		// $query .= ", NULL";
+		if ($default_email) { $query .= ", '".res($default_email)."'";}
+		if ($notes) { $query .= ", '".res($notes)."'"; }
+		
 		if ($id) { $query .= ",'".res($id)."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qdb($query);
 		if (!$id) {$id = qid();}
 
 		return ($id);

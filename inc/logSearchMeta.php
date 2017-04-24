@@ -1,6 +1,6 @@
 <?php
 	$META_EXISTS = false;
-	function logSearchMeta($companyid,$searchlistid=false,$metadatetime='',$source='') {
+	function logSearchMeta($companyid,$searchlistid=false,$metadatetime='',$source='', $userid = '') {
 		global $now,$META_EXISTS;
 
 		if (! $companyid) { return false; }
@@ -9,8 +9,11 @@
 
 		//global var to help us know when this function creates a new record or calls the old id
 		$META_EXISTS = false;
-
-		$userid = $GLOBALS['U']['id'];
+		
+		//Added for the sake of clean imports
+		if(!$userid){
+			$userid = $GLOBALS['U']['id'];
+		}
 
 		$metaid = 0;
 		// have we already posted this page? replace instead of create

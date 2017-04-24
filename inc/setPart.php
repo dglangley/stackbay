@@ -7,6 +7,7 @@
 		if (isset($P['part'])) { $part = strtoupper(trim($P['part'])); }
 		if (! $part) { return false; }
 
+
 		$heci = '';
 		if (isset($P['heci'])) { $heci = strtoupper(trim($P['heci'])); }
 
@@ -15,7 +16,6 @@
 		$manfid = 0;
 		if (isset($P['manfid']) AND is_numeric($P['manfid']) AND $P['manfid']>0) { $manfid = $P['manfid']; }
 		else if ($manf) { $manfid = goManf($manf); }
-
 		$sys = '';
 		if (isset($P['sys'])) { $sys = strtoupper(trim($P['sys'])); }
 		$sysid = 0;
@@ -96,7 +96,6 @@
 
 //2/24/16
 		indexer($partid,'id');
-
 		return ($partid);
 	}
 
