@@ -195,7 +195,7 @@
                             ?>
                                 <tr>
                                     <td><?=$user['name']; ?></td>
-                                    <td class='username'><a href="/commission_details.php?user=<?php echo $user['contactid']; ?>"><?php echo $user['username']; ?></a></td>
+                                    <td class='username'><a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
                                     <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                     <td>
                                         <?php if(in_array('Administration', $privNames)) {
@@ -207,7 +207,7 @@
                                     </td>
                                     <td>
                                         <div class="input-group">
-                                            <input type="text" class="form-control input-sm inline static-form" name="commission[<?= $user['contactid']; ?>]" value="<?=$user['commission_rate'];?>" placeholder="0.0">
+                                            <input type="text" class="form-control input-sm inline static-form" name="commission[<?= $user['userid']; ?>]" value="<?=$user['commission_rate'];?>" placeholder="0.0">
                                             <span class="input-group-addon">%</span>
                                         </div>
                                     </td>

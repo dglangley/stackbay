@@ -41,7 +41,14 @@
 	    function getAllSalesUsers() {
 	    	$username = array();
 	    	//This is dirty and seriously needs cleaning its horrific and will burn your eyes out...
-	    	$query = "SELECT usernames.username, usernames.emailid, usernames.userid, users.contactid, user_privileges.privilege, contacts.name,contacts.commission_rate FROM usernames JOIN users ON usernames.userid = users.id JOIN contacts ON contacts.id = users.contactid JOIN user_roles ON usernames.userid = user_roles.userid JOIN user_privileges ON user_roles.privilegeid = user_privileges.id WHERE user_privileges.privilege = 'Administration' OR user_privileges.privilege = 'Sales' ORDER BY contacts.status ASC, usernames.id ASC";
+	    	$query = "SELECT usernames.username, usernames.emailid, usernames.userid, users.contactid, user_privileges.privilege, contacts.name, users.commission_rate ";
+			$query .= "FROM usernames ";
+			$query .= "JOIN users ON usernames.userid = users.id ";
+			$query .= "JOIN contacts ON contacts.id = users.contactid ";
+			$query .= "JOIN user_roles ON usernames.userid = user_roles.userid ";
+			$query .= "JOIN user_privileges ON user_roles.privilegeid = user_privileges.id ";
+			$query .= "WHERE user_privileges.privilege = 'Administration' OR user_privileges.privilege = 'Sales' ";
+			$query .= "ORDER BY contacts.status ASC, usernames.id ASC; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array

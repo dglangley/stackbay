@@ -606,7 +606,7 @@ echo $query2.'<BR>'.chr(10);
 				//$query3 .= "AND inventory_id = '".$r2['inventory_id']."' AND so_id = '".$r['quote_id']."' ";
 				$query3 .= "AND so_id = '".$r['quote_id']."' ";
 				//$query3 .= "AND rep_exp_date IS NOT NULL AND rep_exp_date <> ''; ";
-				$query3 .= "ORDER BY IF (inventory_id = '".$r2['inventory_id']."',0,1); ";
+				$query3 .= "ORDER BY IF (inventory_id = '".$r2['inventory_id']."',0,1), id ASC; ";
 				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
@@ -694,6 +694,7 @@ echo '<BR>'.chr(10);
 		$created_by = prep(mapUser($r['created_by_id']));
 		//$po_number = prep($r['po_number']);
 		$serial = strtoupper($r['serial']);
+		$orig_so = prep($r['so_id']);
 
 		if ($r['clei']) { $r['heci'] = $r['clei']; }
 		else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
@@ -710,7 +711,7 @@ echo '<BR>'.chr(10);
 
 		if (! isset($new_rma[$r['rma']])) {
 			$query2 = "REPLACE returns (rma_number, created, created_by, companyid, order_number, order_type, contactid, notes, status) ";
-			$query2 .= "VALUES ($rma, $date, $created_by, $cid, NULL, NULL, NULL, $notes, $status); ";
+			$query2 .= "VALUES ($rma, $date, $created_by, $cid, $orig_so, 'Sale', NULL, $notes, $status); ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 echo $query2.'<BR>'.chr(10);
 		}
@@ -778,7 +779,6 @@ exit;
 			}
 
 			$warranty = 'NULL';//$WARRANTY_MAPS[$r2['warranty_period_id']];
-			$orig_so = prep($r['so_id']);
 			if ($r['shipped_date']) { $ship_date = $r['shipped_date']; }
 			else { $ship_date = $r['date']; }
 

@@ -13,7 +13,8 @@
 		if (isset($ALERTS)) {
 			$ALERTS[] = "Failed to connect to the PIPE!";
 		} else {
-			die( "Failed to connect to MySQL: " . mysqli_connect_error() );
+			//die( "Failed to connect to MySQL: " . mysqli_connect_error() );
+			echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
 		}
 	}
 
