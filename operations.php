@@ -466,7 +466,7 @@
 		}
 		
 		.shipping-dash {
-			min-height: 410px;
+			min-height: 510px;
 		}
 		
 		.shipping_section_foot_lock {

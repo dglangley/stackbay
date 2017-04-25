@@ -1534,7 +1534,7 @@
 					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
 					
 					//Hide all elements over the count of 10
-					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').hide();
+					$('.show_more').hide();
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 					$("#filter-title").text('Operations Dashboard');
