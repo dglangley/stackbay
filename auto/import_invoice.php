@@ -14,7 +14,7 @@
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/filter.php';
-    include_once $rootdir.'/inc/import_aid.php'
+    include_once $rootdir.'/inc/import_aid.php';
 	
 
 
@@ -183,7 +183,7 @@ if(mysqli_num_rows($result)){
                 $insert_row['lines'][] = $p_line;
                 continue;
             } else if($line['repair_id'] /*|| substr($line['memo'], 0, 6) == "Repair"*/){
-                
+                //These are being processed later.
                 
                 $p_line["invoice_no"] =  $meta['id'];
                 

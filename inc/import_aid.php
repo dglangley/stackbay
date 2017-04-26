@@ -41,6 +41,24 @@
             }
             return $result;
 	    }
+	    function desc_walk($desc){
+	    	$first = explode("\n", $desc);
+	    	$return = array();
+	    	foreach($first as $line){
+	    		$ex = array();
+	    		if(strpos($line, ":") > 0){
+	    			$ex = explode(":",$line);
+	    		} else if (strpos($line,"#")){
+	    			$ex = explode("#",$line);
+	    		}
+	    		$return[strtolower(trim($ex[0]))] = trim($ex[1]);
+	    	}
+			if(!is_numeric($return["item"])){
+				$return['part_number'] = $return['item'];
+				unset($return['item']);
+			}
+	    	return $return;
+	    }
         function splitDesc($data, $start, $end){
             $data = ' ' . $data;
             $initial = strpos($data, $start);
