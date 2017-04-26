@@ -18,7 +18,6 @@
     include_once $rootdir.'/inc/getUser.php';
 	
 
-
     //Pre-everything prep
     
     //Optional limiter to run as an update instead of a full import: will check to endure no values have been duplicated.

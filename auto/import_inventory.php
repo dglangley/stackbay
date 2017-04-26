@@ -1,4 +1,7 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '5000M');
+	
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
@@ -130,17 +133,17 @@
 			//This item wasn't found so try and see if any aliases exists in the db
 			} else {
 				//This item wasn't found so try and see if any aliases exists in the db
-				foreach($inventoryalias as $alias) {
-					$query = "SELECT id, part FROM parts WHERE LOWER(part) LIKE '%".res(strtolower($alias))."%'; ";
-					$result = qdb($query) OR die(qe().'<BR>'.$query);
+				// foreach($inventoryalias as $alias) {
+				// 	$query = "SELECT id, part FROM parts WHERE LOWER(part) LIKE '%".res(strtolower($alias))."%'; ";
+				// 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-					if (mysqli_num_rows($result)>0) {
-						$existing = true;
-						$aliasSwap = true;
-						$aliasSwap_part = $r['part'];
-						$partid = $r['id'];
-					}
-				}
+				// 	if (mysqli_num_rows($result)>0) {
+				// 		$existing = true;
+				// 		$aliasSwap = true;
+				// 		$aliasSwap_part = $r['part'];
+				// 		$partid = $r['id'];
+				// 	}
+				// }
 			}
 			
 			if($aliasSwap) {
