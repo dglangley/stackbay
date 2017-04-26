@@ -39,8 +39,8 @@
     $import_complete = false;
     $query = "SELECT id, date as date_invoiced, customer_id as companyid, memo, sent, ext_memo, amount,
     lump_id, voided, voided_by_id, voided_date, voided_reason, paid, paid_date, postfix, ref_no
-    FROM inventory_invoice
-    WHERE `id` LIKE 13007;";
+    FROM inventory_invoice; ";
+//    WHERE `id` LIKE 13007;";
     
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     $lump_builder = array();
@@ -141,7 +141,8 @@
             $insert_row['status'] = "Completed";
         } else {
             $insert_row['status'] = "Voided";
-            $insert_row['notes'] .= " Voided by ".getUser(mapUser($meta['voided_by_id']))." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
+			if ($insert_row['notes']) { $insert_row['notes'] .= ' '; }
+            $insert_row['notes'] .= "Voided by ".getUser(mapUser($meta['voided_by_id']))." ".$meta['voided_date']."; Reason: ".$meta['voided_reason'];
         }
         
         //=============================== Notes ===============================
@@ -158,7 +159,6 @@
         $lines_sum = 0.00;
         if(mysqli_num_rows($line_results)){
             foreach($line_results as $line){
-            
                 //Native Line Pricing information to audit the amount 
                 $lines_sum += $line['amount'] * $line['quantity'];
                 
@@ -206,7 +206,7 @@
     					$p_line["ref_2"] = $part_row['clei_override'];
     					$p_line["ref_2_label"] = ($part_row['clei_override']? "CLEI" : "");
     					$p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
-    				} else if($line['repair_id'] /*|| substr($line['memo'], 0, 6) == "Repair"*/){
+    				} else if($line['repair_id']) {
     					$part_collection = "SELECT ir.serials, ir.price_per_unit, i.part_number, i.heci, i.clei, ";
     					$part_collection .= "i.short_description , im.name manf, ir.warranty_id warr ";
     					$part_collection .= "FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im ";
@@ -233,8 +233,9 @@
     				//Append the line information
     				$insert_row['lines'][] = $p_line;
     			}//End the if NOT freight charge
-            }/* END LINE FOREACH */
-        }//End check to see if there are are lines
+            }// END LINE FOREACH
+        }//End $line_results (check to see if there are are lines)
+
         $double = intval($meta['amount']);
         $lines_sum = intval($lines_sum);
         //Ignores
@@ -267,8 +268,8 @@
             if(!isset($lump_builder[$lump])){
                 $lump_select = "SELECT `date` FROM inventory_invoicelump WHERE id = '$lump';";
                 $lump_result = qdb($lump_select,"PIPE") or die(qe("PIPE")." ".$lump_select);
-                $lump_result = mysqli_fetch_assoc($lump_result);
-                $lump_builder[$lump]['date'] = '';
+                $lump_row = mysqli_fetch_assoc($lump_result);
+                $lump_builder[$lump]['date'] = $lump_row['date'];
                 $lump_builder[$lump]['companyid'] = $companyid;
             }
             $lump_builder[$lump]['items'][] = $meta['id'];
@@ -324,17 +325,11 @@
             $insert = "
             INSERT INTO `invoices`(`invoice_no`, `companyid`, `date_invoiced`, 
             `order_number`, `order_type`, `shipmentid`, `freight`, `notes`, `status`) 
-            VALUES (".$insert_row['invoice_no'].",
-            ".prep($insert_row['companyid']).",
-            ".prep($insert_row['date_invoiced']).",
-            ".prep($insert_row['order_number']).",
-            ".prep($insert_row['order_type']).",
-            NULL,
-            ".prep($insert_row['freight']).",
-            ".prep(substr($insert_row['notes'],0,255)).",
-            ".prep($insert_row['status']).");
+            VALUES (".$insert_row['invoice_no'].", ".prep($insert_row['companyid']).", ".prep($insert_row['date_invoiced']).",
+            ".prep($insert_row['order_number']).", ".prep($insert_row['order_type']).", NULL, ".prep($insert_row['freight']).", ".prep(substr($insert_row['notes'],0,255)).", ".prep($insert_row['status']).");
             ";
             qdb($insert) or die(qe()." | $insert");
+echo $insert.'<BR>';
             
             // echo("Meta Insert: <br>");
             // print_r($insert_row);
@@ -342,42 +337,33 @@
             if ($insert_row['lines']){
                 foreach($insert_row['lines'] as $i_line){
 
-                    $i_line_insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, 
-                    `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `memo`) VALUES (
-                    ".prep($i_line['invoice_no']).",
-                    ".prep($i_line['partid']).",
-                    ".prep($i_line['qty']).",
-                    ".prep($i_line['amount']).",
-                    ".prep($i_line['line_number']).",
-                    ".prep($i_line['ref_1']).",
-                    ".prep($i_line['ref_1_label']).",
-                    ".prep(trim($i_line['ref_2'])).",
-                    ".prep($i_line['ref_2_label']).",
-                    ".prep($i_line['warranty']).",
-                    ".prep($i_line['memo']).")";
+                    $i_line_insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, 
+					`ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `memo`) 
+					VALUES (".prep($i_line['invoice_no']).", ".prep($i_line['partid']).", ".prep($i_line['qty']).", ".prep($i_line['amount']).", ".prep($i_line['line_number']).",
+                    ".prep($i_line['ref_1']).", ".prep($i_line['ref_1_label']).", ".prep(trim($i_line['ref_2'])).", ".prep($i_line['ref_2_label']).", ".prep($i_line['warranty']).", ".prep($i_line['memo']).");
+					";
                     qdb($i_line_insert) or die(qe()." | $i_line_insert");
+echo $i_line_insert.'<BR>';
                 }
             }
             if ($meta['paid']){
                 $payment_insert = "
-                INSERT INTO `payments`(`companyid`, `date`, `payment_type`, `number`, `amount`, `notes`) VALUES (
-                ".prep($payment_info['companyid']).",
-                ".prep($payment_info['date']).",
-                ".prep($payment_info['payment_type']).",
-                ".prep($payment_info['number']).",
-                ".prep($payment_info['amount']).",
-                ".prep($payment_info['notes']).");";
-                
+                INSERT INTO `payments`(`companyid`, `date`, `payment_type`, 
+				`number`, `amount`, `notes`) 
+				VALUES (".prep($payment_info['companyid']).", ".prep($payment_info['date']).", ".prep($payment_info['payment_type']).",
+                ".prep($payment_info['number']).", ".prep($payment_info['amount']).", ".prep($payment_info['notes']).");
+				";
                 qdb($payment_insert) or die(qe()." | $payment_insert");
-                $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`, `ref_type`, `amount`, `paymentid`) 
-                VALUES (
-                ".prep($payment_details['order_number']).",
-                ".prep($payment_details['order_type']).",
-                ".prep($payment_details['ref_number']).",
-                ".prep($payment_details['ref_type']).",
-                ".prep($payment_details['amount']).",
-                ".prep(qid()).")";
+echo $payment_insert.'<BR>';
+				$paymentid = qid();
+
+                $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`,
+				`ref_type`, `amount`, `paymentid`) 
+                VALUES (".prep($payment_details['order_number']).", ".prep($payment_details['order_type']).", ".prep($payment_details['ref_number']).",
+                ".prep($payment_details['ref_type']).", ".prep($payment_details['amount']).", ".prep($paymentid).");
+				";
                 qdb($p_details_insert) or die(qe()." | $p_details_insert");
+echo $p_details_insert.'<BR>';
             }
         } //End Else which checks for a fail condition
         
@@ -389,12 +375,14 @@
         
         // echo("Start: $start_time <br> End: $end_time<br>");
         $row_time = ((($en_a[1] - $st_a[1])+($en_a[0]-$st_a[0])));
+/*
         if($row_time > 0.7){
             print_r($insert_row);
             print_r($meta);
             echo("<br>$insert<br>");
             exit("Row Takes ".$row_time." seconds");
         }
+*/
             unset($insert_row);
             echo("</pre>");
         
@@ -402,11 +390,11 @@
 
     //Lump Builder
     foreach($lump_builder as $lump_meta){
-        $lump_insert = "INSERT INTO `invoice_lumps` VALUES (".$lump_meta['date'].");";
+        $lump_insert = "INSERT INTO `invoice_lumps` (date) VALUES ('".$lump_meta['date']."');";
         qdb($lump_insert) or die(qe()." | ".$lump_insert);
         $lump_id = qid();
         foreach($lump_meta['items'] as $inv_id){
-            $lump_insert = "INSERT INTO `invoice_lump_items` VALUES ('$invid', '$lump_id');";
+            $lump_insert = "INSERT INTO `invoice_lump_items` VALUES ('$inv_id', '$lump_id');";
             qdb($lump_insert) or die(qe()." | ".$lump_insert);
         }
     }
