@@ -14,7 +14,7 @@
 	$payment_details = array();
 	
 	//For testing purposes and compile time adding LIMIT 30
-	$query = "SELECT * FROM inventory_vendorcredit ORDER BY rma_id DESC LIMIT 50;";
+	$query = "SELECT * FROM inventory_vendorcredit ORDER BY rma_id DESC;";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$vendorCreditHolder[] = $r;
@@ -117,56 +117,61 @@
 			$creditInfo[] = $r;
 		}
 		
+		$itemid = 0;
+		$inventoryid = 0;
+
+		//RMA ID exists on the meta level so try to find the part ID and data from RMA Ticket table from Brian's DB
+		if($value['rma_id']) {
+			
+			//Get the item_id to be used in solditems table from the RMATICKETS using rma_id
+			$query = "SELECT item_id FROM inventory_rmaticket WHERE id = '".res($value['rma_id'])."'; ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$itemid = $r['item_id'];
+				echo "<b>RMA Exists</b> Item id: $itemid<br>";
+			}
+			
+			//Get more info from the solditems table using the item_id
+			$query = "SELECT inventory_id FROM inventory_solditem WHERE id = '".res($itemid)."'; ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$inventoryid = $r['inventory_id'];
+				echo "<b>Inventory ID Exists</b> Inventory id: $inventoryid<br>";
+			}
+			
+			$partid = translateID($inventoryid);
+			
+			if($partid) {
+				echo "<b>Part ID Exists</b> Part id: $partid<br>";
+			} 
+
+			if($creditid){
+				echo "<b>Purchase Credit ID</b> id: $creditid<br>";
+			}
+		}
+
 		foreach($creditInfo as $item) {
 			//Declare used variables
-			$itemid = 0;
-			$inventoryid = 0;
-			$vcreditid = 0;
+			
+			// $vcreditid = 0;
 				
 			$memo = $item['desc'];
 			$qty = $item['quantity'];
 			$amount = $item['amount'];
 			
-			//RMA ID exists on the meta level so try to find the part ID and data from RMA Ticket table from Brian's DB
-			if($value['rma_id']) {
-				
-				//Get the item_id to be used in solditems table from the RMATICKETS using rma_id
-				$query = "SELECT item_id FROM inventory_rmaticket WHERE id = '".res($value['rma_id'])."'; ";
-				$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$itemid = $r['item_id'];
-				}
-				
-				echo "<b>RMA Exists</b> Item id: $itemid<br>";
-				
-				//Get more info from the solditems table using the item_id
-				$query = "SELECT inventory_id FROM inventory_solditem WHERE id = '".res($itemid)."'; ";
-				$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$inventoryid = $r['inventory_id'];
-				}
-				
-				echo "<b>Inventory ID Exists</b> Inventory id: $inventoryid<br>";
-				
-				$partid = translateID($inventoryid);
-				
-				echo "<b>Part ID Exists</b> Part id: $partid<br>";
-				echo "<b>Purchase Credit ID</b> id: $creditid<br>";
-			}
-			
-			//Check for Sales Credit Lines
-			$query = "SELECT * FROM purchase_credit_items WHERE purchase_credit_no = '".res($creditid)."';";
-			$result = qdb($query) OR die(qe().' '.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$vcreditid = $r['id'];
-			}
+			// //Check for Sales Credit Lines
+			// $query = "SELECT * FROM purchase_credit_items WHERE purchase_credit_no = '".res($creditid)."';";
+			// $result = qdb($query) OR die(qe().' '.$query);
+			// if (mysqli_num_rows($result)>0) {
+			// 	$r = mysqli_fetch_assoc($result);
+			// 	$vcreditid = $r['id'];
+			// }
 			
 			//if(!$vcreditid)
 			//setCreditItems($purchase_id, $partid, $qty, $amount, $memo, $id = 0)
-			setCreditItems($creditid, $partid, $qty, $amount, $memo, $vcreditid);
+			setCreditItems($creditid, $partid, $qty, $amount, $memo);
 		}
 		
 		//Item was paid for so translate this data into the payments / payment_details database
@@ -178,7 +183,7 @@
 		    $payment_info['amount'] = $qty * $amount; //This amount will equal the audited amount on the line items, assuming no discrepency
 		    $payment_info['notes'] = "Imported";
 		    $payment_details['order_number'] = $insert_row['bill_no'];
-		    $payment_details['order_type'] = "Bill";
+		    $payment_details['order_type'] = "Purchase Credit";
 		    $payment_details['ref_number'] = "";
 		    $payment_details['ref_type'] = "";
 		    $payment_details['amount'] = $qty * $amount;
@@ -196,6 +201,7 @@
 		
 		unset($payment_info);
 		unset($payment_details);
+		unset($creditInfo);
 		
 		print_r($value);
 		echo '<br>';
@@ -306,7 +312,7 @@
 		return ($id);
 	}
 	
-	function setCreditItems($purchase_id, $partid, $qty, $amount, $memo, $id = 0) {
+	function setCreditItems($purchase_id, $partid = null, $qty, $amount, $memo, $id = 0) {
 		$cid = (int)$cid;
 		$sales_item_id = (int)$sales_item_id;
 		$return_item_id = (int)$return_item_id;
@@ -316,7 +322,7 @@
 		$query = "REPLACE purchase_credit_items (purchase_credit_no, partid, qty, amount, memo";
 		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES (".res($purchase_id).",";
-		$query .= " ".res($partid)."";
+		$query .= " '".res($partid)."'";
 		$query .= ", ".res($qty)."";
 		$query .= ", '".res($amount)."'";
 		$query .= ", '".res($memo)."'";

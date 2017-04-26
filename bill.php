@@ -109,7 +109,7 @@
             $grouped[$row['bill_id']]['qty'] = $row['qty'];
             $grouped[$row['bill_id']]['purchid'] = $po_number;
             $grouped[$row['bill_id']]['warranty'] = $row['warranty'];
-            $grouped[$row['bill_id']]['price'] = $row['price'];
+            $grouped[$row['bill_id']]['price'] = $row['amount'];
             // $grouped[$row['bill_id']]['id'] = $row['id'];
 			$grouped[$row['bill_id']]['serials'][$row['inventoryid']] = getSerial($row['inventoryid']);
 		}

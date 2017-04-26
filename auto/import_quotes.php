@@ -79,11 +79,11 @@
             WHERE vp.inventory_id = i.id  AND i.manufacturer_id_id = im.id";
         }
         
-        
         $results = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
         $quotes = array();
         foreach($results as $row){
+			$row['date'] = trim($row['date']);
             $notes = "";
             //partid is occasionally zero, please advise
             $partid = part_process($row);
@@ -113,7 +113,8 @@
     //Part Processing
     foreach($quotes as $date => $company){
         $in = array();
-        if($row['date'] == format_date('n/j/y',$row['date'])){
+//        if($date == format_date($date,'Y-m-d')){
+		if (strlen($date)==10) {
                 $in['datetime'] = $date." 12:00:00";
             } else {
                 $in['datetime'] = $date;
@@ -167,7 +168,8 @@
 
 }
 
-    import_quotes("as");
+    //import_quotes("incoming");
+    import_quotes("outgoing");
 ?>
 
 

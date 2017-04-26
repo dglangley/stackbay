@@ -365,7 +365,6 @@ include_once $rootdir.'/inc/packages.php';
 	function display($order_number = '',$page = 'Purchase',$mode = ''){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
-		
 		$company_name;
 		$public;
 		$s_carrier_name;
@@ -376,17 +375,17 @@ include_once $rootdir.'/inc/packages.php';
 			$rma_macro_results = qdb($rma_macro_select);
 			$rma_macro = mysqli_fetch_assoc($rma_macro_results);
 			$rma_number = $order_number;
-			$order_number = $rma_macro['order_number'];
+			//$order_number = $rma_macro['order_number'];
 			$rma_notes = $rma_macro['notes'];
 		}
 		
 		//Navigation changer
-		$right =  "	<div class='row  company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
+		$right =  "	<div class='row company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
 		// if ($page == "RMA"){
 		// 	$right = "";
 		// }
 		$right .= "		<div class='sidebar-container'>";
-		
+
 		if ($order_number) {
 			
 			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';

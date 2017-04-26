@@ -68,7 +68,7 @@
                     `partid`,
                     `qty`,
                     `warranty`,
-                    `price`,
+                    `amount`,
                     `line_number`
                     ) VALUES (
                     $bill_number,

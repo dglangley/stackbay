@@ -61,16 +61,16 @@
         		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number;";
 		        break;
 		    //Holder for future RMA and RO
-		    case 'rma':
+			case 'rma':
         		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number;";
 		        break;
-		    case 'ro':
+			case 'ro':
         		$query = "";
 		        break;
 			default:
 				//Should rarely ever happen
 				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
-		        break;
+				break;
 		}
 		
 		if(empty($query)) {
@@ -235,13 +235,16 @@
 		 $order_out;
 		
 		if($order =="p") {
+			$type = 'PO';
 			$order_out = 'Purchase';
 		} else if($order =="s") {
+			$type = 'SO';
 			$order_out = 'Sales';
-		} 
-		else if($order =="rma") {
+		} else if($order =="rma") {
 			$order_out = 'RMA';
+			$type = 'RMA';
 		} else {
+			$type = 'RO';
 			$order_out = 'Repair';
 		}
 		echo"
@@ -255,43 +258,44 @@
 		echo	'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed">';
-		            output_header($order);
+		            output_header($order,$type);
 		echo	'<tbody>';
         			output_rows($order, $search);
 		echo '	</tbody>
 		            </table>
 		    	</div>
-		    	<div class="col-md-12 text-center shipping_section_foot shipping_section_foot_lock more" style="padding-bottom: 15px;">
+		    	<div class="col-sm-12 text-center shipping_section_foot shipping_section_foot_lock more" style="padding:0px !important; vertical-align:bottom !important">
 	            	<a href="#">Show more</a>
 	            </div>
             </div>
         </div>';
 	}
 	
-	function output_header($order){
+	function output_header($order,$type='Order'){
 			echo'<thead>';
 			echo'<tr>';
-			echo'	<th class="col-md-1">';
+			echo'	<th class="col-sm-1">';
 			echo'		Date';
 			echo'	</th>';
-			echo'	<th class="col-md-4 company_col">';
+			echo'	<th class="col-sm-3 company_col">';
 			echo'	<span class="line"></span>';
 			echo'		Company';
 			echo'	</th>';
-            echo'	<th class="col-md-1">';
+            echo'	<th class="col-sm-1">';
             echo'		<span class="line"></span>';
-            echo'		Order#';
+            echo'		'.$type.'#';
             echo'	</th>';
-        	echo'   <th class="col-md-4">';
+        	echo'   <th class="col-sm-5 item_col">';
             echo'   	<span class="line"></span>';
             echo'       Item';
             echo'	</th>';
-            echo'   <th class="col-md-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
+            echo'   <th class="col-sm-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
-			echo'  	<th class="col-md-2">';
-            echo'  		&nbsp;';
+			echo'  	<th class="col-sm-1">';
+            echo'   	<span class="line"></span>';
+            echo'  		Action';
             echo'  	</th>';
             echo'</tr>';
 			echo'</thead>';
@@ -325,10 +329,11 @@
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
-					$query .= "WHERE o.so_number = i.so_number;";
-				} 
-				else if ($order == 'rma') {
-					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id;";
+					$query .= "WHERE o.so_number = i.so_number ";
+					$query .= "ORDER BY o.so_number DESC LIMIT 0, 100; ";
+				} else if ($order == 'rma') {
+					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
+					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 100; ";
 				} else {
 					//RO Future stuff goes here
 				}
@@ -351,74 +356,68 @@
 					//echo $type . " " .($r['serial_no'] != '' ? 'true' : 'false');
 					
 					$count++;
-					if ($order == 's'){
-						$purchaseOrder = $r['so_number'];
-					}
+					if ($order == 's'){ $order_num = $r['so_number']; }
+					else if ($order == 'p'){ $order_num = $r['po_number']; }
+					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
 					
-					else if ($order == 'p'){
-						$purchaseOrder = $r['po_number'];
-					}
-					
-					else if ($order == 'rma'){
-						$purchaseOrder = $r['rma_number'];
-					}
-					
-					$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
+					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
+					$date = date("m/d/Y", strtotime($r['created']));
 					$company = getCompany($r['companyid']);
-					$item = format($r['partid'], false);
+					$item = format($r['partid'], true);
 					$qty = $r['qty'];
 					
 					if ($order != 's' && $order != 'rma'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
-					}
-					else if($order == 'rma') {
+					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					}
 				
 					if($count<=10){
 						echo'	<tr class="filter_item '.$status.'">';
-					}
-					else{
+					} else{
 						echo'	<tr class="show_more '.$status.'" style="display:none;">';
 					}
-						echo'        <td>'.$date.'</td>';
-						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
-						//Either go to inventory add or PO or shipping for SO
-						if($order == 'p') {
-							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
-								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-							} else {
-								echo'    <td><a href="/inventory_add.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-							}
-						} else if($order == 's') {
-							if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
-								echo'    <td><a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-							} else {
-								echo'    <td><a href="/shipping.php?on='.$purchaseOrder.'&ps='.$order.'">'.$purchaseOrder.'</a></td>';
-							}
-						} else if($order == 'rma')
-							echo'        <td><a href="/rma.php?rma='.$purchaseOrder.'">'.$purchaseOrder.'</a></td>';
-						echo'        <td>'.$item.'</td>';
-						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
-						echo'    	<td class="status">';
-						echo'			<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+
+					echo'        <td>'.$date.'</td>';
+					echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+					//Either go to inventory add or PO or shipping for SO
+					if($order == 'p') {
+						$base = 'inventory_add.php';
 						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
-							echo'		<a href="/order_form.php?on='.$purchaseOrder.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+							$base = 'order_form.php';
 						}
-						echo'		</td>'; 
+						echo'    <td><a href="/'.$base.'?on='.$order_num.'&ps='.$order.'">'.$order_num.'</a></td>';
+					} else if($order == 's') {
+						$base = 'shipping.php';
+						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+							$base = 'order_form.php';
+						}
+						echo'    <td><a href="/'.$base.'?on='.$order_num.'&ps='.$order.'">'.$order_num.'</a></td>';
+					} else if($order == 'rma') {
+						echo'        <td><a href="/rma.php?rma='.$order_num.'">'.$order_num.'</a></td>';
+					}
+					echo'        <td>'.$item.'</td>';
+					echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
+					echo'    	<td class="status text-right">';
+					echo'			<a href="/'.($order == p ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+					if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+						echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+					}
+					echo'		</td>'; 
 					echo'	</tr>';
 				}
-			}
-		//}
+		}
 	}
 	
 	function format($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
-	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+		$parts = explode(' ',$r['part']);
+	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
 	    if($desc)
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf'])." &nbsp; ".dictionary($r['system']).'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
+				'</span> <span class="description-label">'.dictionary(substr($r['description'],0,30)).'</span></div>';
 
 	    return $display;
 	}
@@ -467,7 +466,7 @@
 		}
 		
 		.shipping-dash {
-			min-height: 410px;
+			min-height: 510px;
 		}
 		
 		.shipping_section_foot_lock {
@@ -481,6 +480,8 @@
     		overflow:hidden;
 		}
 		
+		.table tbody > tr > td { vertical-align:top !important; }
+
 		@media screen and (max-width: 991px){
 			.date-options {
 				position: relative;
@@ -503,49 +504,16 @@
 			        <button class="glow left large btn-report filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-					<!--<input type="radio" name="report_type" value="summary" class="hidden">-->
 			        <button class="glow center large btn-report filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-			        <!--<input type="radio" name="report_type" value="detail" class="hidden">-->
 					<button class="glow right large btn-report filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all" checked>
-			        	All<!--<i class="fa fa-history"></i>	-->
+			        	All
 			        </button>
-			        <!--<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>-->
 			    </div>
 
 			</div>
 			<div class = "col-md-3">
-				<!--<div class="form-group col-md-4 nopadding">-->
-				<!--	<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">-->
-			 <!--           <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">-->
-			 <!--           <span class="input-group-addon">-->
-			 <!--               <span class="fa fa-calendar"></span>-->
-			 <!--           </span>-->
-			 <!--       </div>-->
-				<!--</div>-->
-				<!--<div class="form-group col-md-4 nopadding">-->
-				<!--	<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">-->
-			 <!--           <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">-->
-			 <!--           <span class="input-group-addon">-->
-			 <!--               <span class="fa fa-calendar"></span>-->
-			 <!--           </span>-->
-				<!--    </div>-->
-				<!--</div>-->
-				<!--<div class="form-group col-md-4 nopadding">-->
-				<!--	<div class="btn-group" id="dateRanges">-->
-				<!--		<div id="btn-range-options">-->
-				<!--			<button class="btn btn-default btn-sm">&gt;</button>-->
-				<!--			<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>-->
-				<!--		        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>-->
-				<!--    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>-->
-				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>-->
-				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>-->
-				<!--				<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>-->
-				<!--			</div><!-- animated fadeIn -->
-				<!--		</div><!-- btn-range-options -->
-				<!--	</div><!-- btn-group -->
-				<!--</div><!-- form-group -->
 			</div>
 			<div class="col-md-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
@@ -554,24 +522,10 @@
 			<!--This Handles the Search Bar-->
 
 			<div class="col-md-2 col-sm-2">
-				<!--<div class="input-group">-->
-	   <!--           <input type="text" class="form-control input-sm" id="part_search" placeholder="Filter By Part/Serial" value="<?=$searched;?>">-->
-    <!--          		<span class="input-group-btn">-->
-	   <!--             	<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>              -->
-	   <!--         	</span>-->
-	   <!--         </div>-->
 			</div>
 			
 
 			<div class="col-md-2 col-sm-2">
-				<!--<div class="company input-group">-->
-				<!--	<select name='companyid' id='companyid' class='form-control input-xs company-selector required' >-->
-				<!--		<option value=''>Select a Company</option>-->
-				<!--	</select>-->
-				<!--	<span class="input-group-btn">-->
-				<!--		<button class="btn btn-sm btn-primary inventory_filter"><i class="fa fa-filter"></i></button>   -->
-				<!--	</span>-->
-				<!--</div>-->
 			</div>
 		</div>
 	</div>
@@ -721,21 +675,13 @@
 				// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No items found for <b>" + search + "</b>.", false);
 			}
 		}
-		
-		//console.log(serialDetection);
-		
-		//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
-		// if(serialDetection) {
-		// 	$('.qty_col').text('Serial');
-			$('.qty_col').addClass('col-md-2');
-			$('.qty_col').removeClass('col-md-1');
-			$('.company_col').addClass('col-md-3');
-			$('.company_col').removeClass('col-md-4');
-		// }
-		
+
 		for (var key in serialDetection) {
 		    if(serialDetection[key] == 'true') {
-		    	$('.'+key+'-column').text('Serial');
+				$('.'+key+'-column').html('<span class="line"></span> Serial');
+				//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
+				$('.'+key+'-column').closest(".qty_col").addClass('col-sm-2').removeClass('col-sm-1');
+				$('.'+key+'-column').closest(".item_col").addClass('col-sm-4').removeClass('col-sm-5');
 		    }
 		}
 		

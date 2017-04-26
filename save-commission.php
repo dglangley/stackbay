@@ -2,9 +2,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
-	function updateCommission($rate,$contactid) {
+	function updateCommission($rate,$userid) {
 		if(!empty($rate)) {
-			$query = "UPDATE contacts SET commission_rate = $rate WHERE id = $contactid;";
+			$query = "UPDATE users SET commission_rate = $rate WHERE id = userid;";
 			qdb($query) OR die(qe().' '.$query);
 		} 
 	}
@@ -27,8 +27,8 @@
 		$msg = 'Missing valid input data';
 	//We are saving contacts here
 	} else {
-		foreach($commission as $contactid => $rate) {
-			updateCommission($rate, $contactid);
+		foreach($commission as $userid => $rate) {
+			updateCommission($rate, $userid);
 		}
 	}
 

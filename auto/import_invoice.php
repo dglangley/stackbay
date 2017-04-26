@@ -15,8 +15,9 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/filter.php';
     include_once $rootdir.'/inc/import_aid.php';
-	
+    include_once $rootdir.'/inc/getUser.php';
 
+	
 
     //Pre-everything prep
     
@@ -41,7 +42,6 @@
     lump_id, voided, voided_by_id, voided_date, voided_reason, paid, paid_date, postfix, ref_no
     FROM inventory_invoice
     ".(($not_in)? "WHERE `id` NOT IN ".$not_in : "").";";
-    
     
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
@@ -73,7 +73,7 @@ if(mysqli_num_rows($result)){
         $failed = false;
         $debug = false;
         $failed_message = "";
-        $insert_row = array();
+        $insert_row = array('lines'=>array());
         $payment_info = array();
         $payment_details = array();
         //Notes are assumed null, but appended with potentially multiple fields
@@ -115,7 +115,7 @@ if(mysqli_num_rows($result)){
                 $insert_row['order_number'] = trim($more_parse[0]);
             }
             if(!is_numeric($insert_row['order_number'])){
-                $failed_message .= "| Not a a valid RO/SO number: ".$insert_row['order_number']." ";
+                $failed_message .= "| Not a valid RO/SO number: ".$insert_row['order_number']." ";
             }
             
         } else if($meta['postfix'] == "IT"){
@@ -125,6 +125,8 @@ if(mysqli_num_rows($result)){
         } else {
             //Otherwise just build notes
             $insert_row['notes'] .= $meta["memo"].($meta['ref_no']? " (".$meta['ref_no'].")" : "");
+
+            $failed_message .= "| Not a valid RO/SO number: ".$meta['id']." / ".$insert_row['notes']." ";
         }
 
         
@@ -152,132 +154,80 @@ if(mysqli_num_rows($result)){
         } else {
             foreach($line_results as $line){
             
-            //Naive Line Pricing information to audit the amount 
+            //Native Line Pricing information to audit the amount 
             $lines_sum += $line['amount'] * $line['quantity'];
             
             //The following acts as a switch would to process different types of
             
-            if($line['oqi_id']){
-                
-                $part_collection = "SELECT ioq.line_number, ioq.ref_no, ioq.quantity , ioq.clei_override , i.heci, i.clei, i.short_description, im.name manf, iq.warranty_period_id warr
-                    FROM inventory_outgoing_quote_invoice ioqi, inventory_outgoing_quote ioq, inventory_inventory i, inventory_manufacturer im, inventory_quote iq
-                    WHERE ioqi.id = ".$line['oqi_id']." AND ioqi.oq_id = ioq.id AND ioq.inventory_id = i.id AND i.manufacturer_id_id = im.id AND ioq.quote_id = iq.id;";
-                $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
-                
-                $part_row = mysqli_fetch_assoc($parts_results);
-                $partid = part_process($part_row);
-                
-                //Prep the array line
-                $p_line["invoice_no"] = $meta['id'];
-                $p_line["partid"] = $partid;
-                $p_line["qty"] = $line['quantity'];
-                $p_line["price"] = $line['amount'];
-                $p_line["line_number"] = ($part_row['line_number']? $part_row['line_number'] : "");
-                $p_line["ref_1"] = $part_row['ref_no'];
-                $p_line["ref_1_label"] = "";
-                $p_line["ref_2"] = $part_row['clei_override'];
-                $p_line["ref_2_label"] = ($part_row['clei_override']? "CLEI" : "");
-                $p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
-
-                //Append the line information
-                $insert_row['lines'][] = $p_line;
-                continue;
-            } else if($line['repair_id'] /*|| substr($line['memo'], 0, 6) == "Repair"*/){
-                //These are being processed later.
-                
-                $p_line["invoice_no"] =  $meta['id'];
-                
-                $part_collection = "SELECT ir.serials, ir.price_per_unit, i.heci, i.clei, i.short_description , im.name manf, ir.warranty_id warr
-                    FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im
-                    WHERE ir.ticket_number = ".$line['repair_id']." AND ir.inventory_id = i.id AND i.manufacturer_id_id = im.id;";
-                $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
-                
-
-                $part_row = mysqli_fetch_assoc($parts_results);
-                $partid = part_process($part_row);
-                $quantity = count(explode("\n",$part_row['serials']));
-                
-                
-                $p_line["partid"] = $partid;
-                $p_line["qty"] = $quantity;
-                $p_line["price"] = $part_row['price_per_unit'];
-                $p_line["line_number"] = null;
-                $p_line["ref_1"] = "";
-                $p_line["ref_1_label"] = "";
-                $p_line["ref_2"] = "";
-                $p_line["ref_2_label"] = "";
-                $p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
-                //Run an audit check to see if there are any invoice records where 
-                $insert_row['lines'][] = $p_line;
-                continue;
-            } else if($line['item'] == "Freight Charge" || $line['memo'] == "Freight"){
+            if ($line['item'] == "Freight Charge" || $line['memo'] == "Freight"){
                 $insert_row['freight'] = $line['amount'];
                 $insert_row['notes'] .= " (Freight)";
                 continue;
-            } else if ($line['it_id'] || $line['item'] == "IT Service" || $line['item'] == "IT Contract"){
-                $insert_row['amount'] = 0.00;
-                $insert_row['notes'] .= $line['memo'];
-                continue;
-            // } else if (){
-            //     $insert_row['repair_lines'][] = $line;
-            } else {
-                $part_info = '';
-                //Secondary Item Processor, outputs a similar row to the item processor, but takes extra steps to parse memo
-                if (substr($line['memo'], 0, 4) == "Item"){
-                    $memo_params = array();
-                    $memo_params = memo_walk($line['memo']);
-                    $part_search = "
-                    SELECT i.heci, i.clei, i.short_description, im.name manf 
-                    FROM `inventory_inventory` i, `inventory_manufacturer` im 
-                    WHERE i.manufacturer_id_id = im.id ";
-                    $part_search .= sFilter("part_number", $memo_params['item']);
-                    // $part_search .= sFilter("short_description", $memo_params['description']);
-                    $part_search .= sFilter("heci",$memo_params['heci']);
-                    $part_search .= ";";
-                    $part_result = qdb($part_search,"PIPE") or die(qe("PIPE")." ".$part_search);
-                    if (mysqli_num_rows($part_result)){
-                        $closest = mysqli_fetch_assoc($part_result);
-                        if (mysqli_num_rows($part_result)>1){
-                            $beginning = 0;
-                            foreach($part_result as $i => $row){
-                                $row_weight = desc_weight_value($memo_params['description'],$row['short_description']);
-                                if ($row_weight > $beginning){
-                                    $closest = $row;
-                                }
-                            }
-                        } 
-                        $partid = part_process($closest);
-                        
-                        $p_line["invoice_no"] = $meta['id'];
-                        $p_line["partid"] = $partid;
-                        $p_line["qty"] = $line['quantity'];
-                        $p_line["price"] = $line['amount'];
-                        $insert_row['lines'][] = $p_line;
-                    } else {
-                        $result = explode(" ",$memo_params['item']);
-                        $part_search = "
-                        SELECT i.heci, i.clei, i.short_description, im.name manf 
-                        FROM `inventory_inventory` i, `inventory_manufacturer` im 
-                        WHERE i.manufacturer_id_id = im.id AND `part_number` LIKE '".$result[0];
-                        $part_search .= "';";
-                        $part_result = qdb($part_search,"PIPE") or die(qe("PIPE")." ".$part_search);
-                    
-                        // $failed_message .= print_r($memo_params,true);
-                        // $failed_message .= print_r($part_result,true);
-                    }
-                    // These will take extra care to handle beyond the OQI id
-                } elseif (substr($line['memo'], 0, strlen("Freight")) == "Freight"){
-                    $insert_row['freight'] = $line['amount'];
-                    $insert_row['notes'] .= " (Freight)";
-                } else {
-                // $failed_message .= "| Unprocessable Line Type ".print_r($line,true);
-                $p_line["invoice_no"] = $meta["id"];
-                // $p_line["warranty"] = "";
-                $p_line["memo"] = $line['memo'];
-                $insert_row['lines'][] = $p_line;
-                }
-            }
-        }
+
+
+			} else {
+				$p_line = array(
+					'invoice_no' => $meta['id'],
+					'partid' => null,
+					'qty' => $line['quantity'],
+					'amount' => $line['amount'],
+					'line_number' => null,
+					'ref_1' => null,
+					'ref_1_label' => null,
+					'ref_2' => null,
+					'ref_2_label' => null,
+					'warranty' => null,
+					'memo' => substr($line['memo'],0,255),
+				);
+
+				if ($line['oqi_id']){
+					$part_collection = "SELECT ioq.line_number, ioq.ref_no, ioq.quantity , ioq.clei_override, ";
+					$part_collection .= "i.part_number, i.heci, i.clei, i.short_description, im.name manf, iq.warranty_period_id warr ";
+					$part_collection .= "FROM inventory_outgoing_quote_invoice ioqi, inventory_outgoing_quote ioq, inventory_inventory i, ";
+					$part_collection .= "inventory_manufacturer im, inventory_quote iq ";
+					$part_collection .= "WHERE ioqi.id = ".$line['oqi_id']." AND ioqi.oq_id = ioq.id AND ioq.inventory_id = i.id ";
+					$part_collection .= "AND i.manufacturer_id_id = im.id AND ioq.quote_id = iq.id; ";
+					$parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
+                
+					$part_row = mysqli_fetch_assoc($parts_results);
+					$partid = part_process($part_row);
+
+                
+					//Prep the array line
+					$p_line["partid"] = $partid;
+					$p_line["line_number"] = ($part_row['line_number']? $part_row['line_number'] : "");
+					$p_line["ref_1"] = $part_row['ref_no'];
+					$p_line["ref_2"] = $part_row['clei_override'];
+					$p_line["ref_2_label"] = ($part_row['clei_override']? "CLEI" : "");
+					$p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
+				} else if($line['repair_id'] /*|| substr($line['memo'], 0, 6) == "Repair"*/){
+					$part_collection = "SELECT ir.serials, ir.price_per_unit, i.part_number, i.heci, i.clei, ";
+					$part_collection .= "i.short_description , im.name manf, ir.warranty_id warr ";
+					$part_collection .= "FROM `inventory_repair` ir, inventory_inventory i, inventory_manufacturer im ";
+					$part_collection .= "WHERE ir.ticket_number = ".$line['repair_id']." AND ir.inventory_id = i.id AND i.manufacturer_id_id = im.id;";
+					$parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
+                
+					$part_row = mysqli_fetch_assoc($parts_results);
+					$partid = part_process($part_row);
+					$quantity = count(explode("\n",$part_row['serials']));
+                
+					$p_line["partid"] = $partid;
+					//Aaron, check this out DAVID
+					//$p_line["qty"] = $quantity;
+					//$p_line["amount"] = $part_row['price_per_unit'];
+					$p_line["warranty"] = $WARRANTY_MAPS[$part_row['warr']];
+				} else if ($line['it_id'] || $line['item'] == "IT Service" || $line['item'] == "IT Contract"){
+					//Aaron do we want to dig out IT data here? DAVID
+					//$insert_row['amount'] = 0.00;
+					//$insert_row['notes'] .= $line['memo'];
+				} else {
+					$insert_row['notes'] = $line['memo'];
+				}
+
+				//Append the line information
+				$insert_row['lines'][] = $p_line;
+			}
+        }/* END FOREACH */
         }
         $double = intval($meta['amount']);
         $lines_sum = intval($lines_sum);
@@ -319,40 +269,40 @@ if(mysqli_num_rows($result)){
             $lump_builder[$lump]['items'][] = $meta['id'];
         }
         if ($debug || $failed_message){
-        $grand_failed = true;
-        echo"
+			$grand_failed = true;
+			echo"
             <tr>
                 <td>
                     $failed_message<br>
                     <pre>";
                         print_r($meta);
-        echo"       </pre>
+			echo"       </pre>
                 </td>
                 <td>
                     <pre>";
                         print_r($insert_row);
-        echo"       </pre>
+			echo"       </pre>
                 </td>
                 <td>
                     <pre>";
                         print_r($payment_info);
-        echo"       </pre>
+			echo"       </pre>
                 </td>
                 <td>
                     <pre>";
                         print_r($payment_details);
-        echo"       </pre>
+			echo"       </pre>
                 </td>
                 <td>
                     <pre>";
                         if($meta['lump_id']){
                             print_r($lump_builder[$meta['lump_id']]);
                         }
-        echo"       </pre>
+			echo"       </pre>
                 </td>
             </tr>
 
-        ";
+			";
         } else {
             $insert = "
             INSERT INTO `invoices`(`invoice_no`, `companyid`, `date_invoiced`, 
@@ -362,25 +312,25 @@ if(mysqli_num_rows($result)){
             ".prep($insert_row['date_invoiced']).",
             ".prep($insert_row['order_number']).",
             ".prep($insert_row['order_type']).",
-            ".prep($insert_row['shipmentid']).",
+            NULL,
             ".prep($insert_row['freight']).",
-            ".prep($insert_row['notes']).",
+            ".prep(substr($insert_row['notes'],0,255)).",
             ".prep($insert_row['status']).");
             ";
             qdb($insert) or die(qe()." | $insert");
             
             if (count($insert_row['lines'])){
                 foreach($insert_row['lines'] as $line){
-                    $line_insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `price`, `line_number`, `ref_1`, 
+                    $line_insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, 
                     `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `memo`) VALUES (
                     ".prep($line['invoice_no']).",
                     ".prep($line['partid']).",
                     ".prep($line['qty']).",
-                    ".prep($line['price']).",
+                    ".prep($line['amount']).",
                     ".prep($line['line_number']).",
                     ".prep($line['ref_1']).",
                     ".prep($line['ref_1_label']).",
-                    ".prep($line['ref_2']).",
+                    ".prep(trim($line['ref_2'])).",
                     ".prep($line['ref_2_label']).",
                     ".prep($line['warranty']).",
                     ".prep($line['memo']).")";

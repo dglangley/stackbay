@@ -403,7 +403,7 @@
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
 					<!--'RMA'/$rma_number OR 'Sales'/$so_number-->
-					<?=sidebar_out($sidebar_number,"RMA",$sidebar_mode)?>
+					<?=sidebar_out($so_number,"RMA",$sidebar_mode)?>
 				</div>
 			
 				<!--======================= End Left half ======================-->
@@ -523,7 +523,7 @@
 															$action = "Sold";
 															break;
 														case 'returns_item_id':
-															$select = "SELECT `id` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
+															$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
 															$link = "/rma.php?rma=";
 															$action = "Returned";
 															break;

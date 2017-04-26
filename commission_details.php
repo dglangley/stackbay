@@ -240,9 +240,9 @@
                                                 
                                                 //For single user only show commission for sales rep for sales order they took care of
                                                 if(!empty($userid)) {
-                                                    if($user['contactid'] == $userid && $user['contactid'] == $order['sales_rep_id']) {
-                                                        //echo $user['contactid'] . ' ' . $order['sales_rep_id'] . '<br>';
-                                                    } else if(in_array('Administration', $privNames) && $user['contactid'] == $userid) {
+                                                    if($user['userid'] == $userid && $user['userid'] == $order['sales_rep_id']) {
+                                                        //echo $user['userid'] . ' ' . $order['sales_rep_id'] . '<br>';
+                                                    } else if(in_array('Administration', $privNames) && $user['userid'] == $userid) {
                                                         //User is admin
                                                     } else {
                                                         continue;
@@ -250,12 +250,12 @@
                                                 }
                                                 
                                                 //For Sales rep (Commission given only if they are the sales rep)
-                                                if(!in_array('Administration', $privNames) && $user['contactid'] != $order['sales_rep_id']) {
+                                                if(!in_array('Administration', $privNames) && $user['userid'] != $order['sales_rep_id']) {
                                                     continue;
                                                 }
                                             ?>
                                                 <tr>
-                                                    <td class="col-md-4"><?= ($user['contactid'] == $order['sales_rep_id'] ? $user['name'] ." <b>(Rep)</b>" : $user['name']); ?></td>
+                                                    <td class="col-md-4"><?= ($user['userid'] == $order['sales_rep_id'] ? $user['name'] ." <b>(Rep)</b>" : $user['name']); ?></td>
                                                     <td class="col-md-4">
                                                         <?php if(in_array('Administration', $privNames)) {
                                                             echo 'Administrator';
