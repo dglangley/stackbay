@@ -78,7 +78,7 @@
 
     // Select packages.id, serialid, sales_items.partid, price
         foreach ($invoice_items_prepped as $row) {
-            $insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `price`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
+            $insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
             VALUES (".$invoice_id.
                     ", ".$row['partid'].
                     ", ".$row['qty'].

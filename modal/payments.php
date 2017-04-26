@@ -93,7 +93,7 @@
                                             <td><input type="radio" name="reference_button" value="invoice <?=$radio_item['invoice_no'];?>"></td>
                                             <td>Invoice</td>
                                             <td><?=$radio_item['invoice_no'];?></td>
-                                            <td><?=format_price($radio_item['qty'] * $radio_item['price']);?></td>
+                                            <td><?=format_price($radio_item['qty'] * $radio_item['amount']);?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>
@@ -104,7 +104,7 @@
                                             <td><input type="radio" name="reference_button" value="bill <?=$radio_item['bill_no'];?>"></td>
                                             <td>Bill</td>
                                             <td><?=$radio_item['bill_no'];?></td>
-                                            <td><?=format_price($radio_item['qty'] * $radio_item['price']);?></td>
+                                            <td><?=format_price($radio_item['qty'] * $radio_item['amount']);?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>

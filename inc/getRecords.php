@@ -67,7 +67,7 @@
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
-				$unsorted = get_coldata($search_str,'demand');
+				//$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
@@ -107,7 +107,8 @@
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";;
-				$unsorted = get_coldata($search_str,'supply');
+
+				//$unsorted = get_coldata($search_str,'supply');
 				break;
 
 			default:
@@ -195,17 +196,15 @@
 		}
 
 		if ($coldata=='demand') {
-/*
 			$unsorted = get_details($id_csv,'outgoing_quote',$unsorted);
 			$unsorted = get_details($id_csv,'outgoing_request',$unsorted);
 			$unsorted = get_details($id_csv,'userrequest',$unsorted);
-*/
 		} else if ($coldata=='sales') {
 			$unsorted = get_details($id_csv,'sales',$unsorted);
 		} else if ($coldata=='purchases') {
 			$unsorted = get_details($id_csv,'purchases',$unsorted);
 		} else if ($coldata=='supply') {
-//			$unsorted = get_details($id_csv,'incoming_quote',$unsorted);
+			$unsorted = get_details($id_csv,'incoming_quote',$unsorted);
 		}
 		return ($unsorted);
 	}

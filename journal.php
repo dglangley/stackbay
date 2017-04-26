@@ -15,7 +15,7 @@
 	
 	function getTransactionInfo($number){
 		$number = prep($number);
-		$select = "Select * , SUM(price) as total, 'Invoice ' as `display` FROM `invoices`, `invoice_items` WHERE invoices.invoice_no = $number AND `invoices`.`invoice_no` = `invoice_items`.invoice_no;";
+		$select = "Select * , SUM(amount) as total, 'Invoice ' as `display` FROM `invoices`, `invoice_items` WHERE invoices.invoice_no = $number AND `invoices`.`invoice_no` = `invoice_items`.invoice_no;";
 		$result = qdb($select) or die(qe().": $select");
 		$result = mysqli_fetch_assoc($result);
 		$result['type'] = 'Invoices';
