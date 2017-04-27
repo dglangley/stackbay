@@ -12,6 +12,7 @@
 	$creditInfo = array();
 	$payment_info = array();
 	$payment_details = array();
+	$brokenItems = array();
 	
 	//For testing purposes and compile time adding LIMIT 30
 	$query = "SELECT * FROM inventory_vendorcredit ORDER BY rma_id DESC;";
@@ -24,10 +25,13 @@
 	foreach ($vendorCreditHolder as $key => $value) {
 		//Declare Variables
 		$contact = '';
-		$id;
+		$id = 0;
 		
 		$creditParts = array();
 		$creditSerials = array();
+
+		//trim the entire array
+		$value = array_map('trim', $value);
 		
 		//unset unused items
 		unset($value['entered_by_id']);
@@ -50,20 +54,6 @@
 		
 		//Convert voided into the correct statment
 		$value['voided'] = ($value['voided'] ? 'Active' : 'Void');
-		
-		//Get the RMA number
-		//$rma_no = trim(substr($value['ref_no'], strpos($value['ref_no'], "#") + 1));
-		// $invoice_no = null;
-		// //Strip and trim the ref_no of unneeded words in the database 'RMA TICKET #XX'
-		// if(is_numeric($rma_no)) {
-		// 	//Get the invoice number from the RMA Tickets Table on Brian's DB
-		// 	$query = "SELECT * FROM inventory_rmaticket WHERE id = '".res($rma_no)."'; ";
-		// 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-		// 	if (mysqli_num_rows($result)>0) {
-		// 		$r = mysqli_fetch_assoc($result);
-		// 		$invoice_no = $r['name'];
-		// 	}
-		// }
 		
 		$value['invoice_no'] = '';
 		
@@ -98,14 +88,17 @@
 		}
 		
 		$value['notes'] .= ' ' . $value['voided_info'];
-		
-		//This piece checks if the vendor credit meta line already exists
-		// $query = "SELECT * FROM purchase_credits WHERE purchase_credits_no = '".res($creditid)."';";
-		// $result = qdb($query) OR die(qe().' '.$query);
-		// if (mysqli_num_rows($result)>0) {
-		// 	$r = mysqli_fetch_assoc($result);
-		// 	$vcreditid = $r['id'];
-		// }
+
+		//Check for Sales Credit Lines
+		$query = "SELECT * FROM purchase_credits WHERE rma_no = '".res($value['rma_no'])."' AND rma_number = '".res($value['rma_id'])."' AND companyid = '".res($value['companyid'])."' AND status = '".res($value['voided'])."' AND date_created = '".res($value['date'])."';";
+		$result = qdb($query) OR die(qe().' '.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$id = $r['id'];
+			// echo '<b>Repeated item found</b><br>';
+			// print_r($r);
+			// echo '<br>';
+		}
 		
 		//setVendorCredit($rma_no, $date_created, $invoice_no, $companyid, $notes, $status, $order_num = 0)
 		$creditid = setVendorCredit($value['rma_no'], $value['date'], $value['rma_id'], $value['companyid'], $value['notes'], $value['voided'], $id);
@@ -115,7 +108,14 @@
 		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$creditInfo[] = $r;
-		}
+		} 
+
+		$query = "SELECT * FROM inventory_vendorcreditli WHERE vc_id = ".res($value['id'])." AND item IS NULL;";
+		
+		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$brokenItems[] = $r;
+		} 
 		
 		$itemid = 0;
 		$inventoryid = 0;
@@ -129,7 +129,9 @@
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$itemid = $r['item_id'];
-				echo "<b>RMA Exists</b> Item id: $itemid<br>";
+				// echo "<b>RMA Exists</b> Item id: $itemid<br>";
+			} else {
+				echo "<b>Failed to find the RMA Ticket</b> RMA ID: ".$value['rma_id']."<br>";
 			}
 			
 			//Get more info from the solditems table using the item_id
@@ -138,56 +140,83 @@
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$inventoryid = $r['inventory_id'];
-				echo "<b>Inventory ID Exists</b> Inventory id: $inventoryid<br>";
+				// echo "<b>Inventory ID Exists</b> Inventory id: $inventoryid<br>";
+			} else {
+				echo "<b>Failed to find Inventory ID</b> itemid (Brian's DB ID for inventory_solditem): $itemid<br>";
 			}
 			
-			$partid = translateID($inventoryid);
+			$partid = (translateID($inventoryid) == 0 ? null : translateID($inventoryid));
 			
-			if($partid) {
-				echo "<b>Part ID Exists</b> Part id: $partid<br>";
-			} 
+			if(!$partid) {
 
-			if($creditid){
-				echo "<b>Purchase Credit ID</b> id: $creditid<br>";
-			}
+				echo '<br><b>Search Query:</b> ' . $query . "<br>";
+				print_r($value);
+				echo "<b>ERROR Part ID Can't be Found</b> Part id: $partid<br><br>";
+				if(!$creditid){
+					echo "<b>ERROR Purchase Credit ID Can't be Found</b> id: $creditid<br><br>";
+				}
+			} 
 		}
+
+		$total_amount = 0;
 
 		foreach($creditInfo as $item) {
 			//Declare used variables
 			
-			// $vcreditid = 0;
+			$vcreditid = 0;
 				
 			$memo = $item['desc'];
 			$qty = $item['quantity'];
 			$amount = $item['amount'];
 			
-			// //Check for Sales Credit Lines
-			// $query = "SELECT * FROM purchase_credit_items WHERE purchase_credit_no = '".res($creditid)."';";
-			// $result = qdb($query) OR die(qe().' '.$query);
-			// if (mysqli_num_rows($result)>0) {
-			// 	$r = mysqli_fetch_assoc($result);
-			// 	$vcreditid = $r['id'];
-			// }
+			//Check for Purchase Credit Lines
+			$query = "SELECT * FROM purchase_credit_items WHERE purchase_credit_no = '".res($creditid)."' AND memo = '".res($memo)."';";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$vcreditid = $r['id'];
+			}
 			
 			//if(!$vcreditid)
 			//setCreditItems($purchase_id, $partid, $qty, $amount, $memo, $id = 0)
-			setCreditItems($creditid, $partid, $qty, $amount, $memo);
+			setCreditItems($creditid, $partid, $qty, $amount, $memo, $vcreditid);
 		}
 		
+		//Stealing Aarons Bill code
 		//Item was paid for so translate this data into the payments / payment_details database
 		if($value['paid']) {
 			$payment_info['companyid'] = $value['companyid'];
 		    $payment_info['date'] = $value['date'];
 		    $payment_info['payment_type'] = "Other";
 		    $payment_info['number'] = "PO".$creditid;
-		    $payment_info['amount'] = $qty * $amount; //This amount will equal the audited amount on the line items, assuming no discrepency
+		    $payment_info['amount'] = $total_amount; //This amount will equal the audited amount on the line items, assuming no discrepency
 		    $payment_info['notes'] = "Imported";
-		    $payment_details['order_number'] = $insert_row['bill_no'];
+		    $payment_details['order_number'] = $value['rma_id'];
 		    $payment_details['order_type'] = "Purchase Credit";
 		    $payment_details['ref_number'] = "";
 		    $payment_details['ref_type'] = "";
-		    $payment_details['amount'] = $qty * $amount;
-		}
+		    $payment_details['amount'] = $total_amount;
+
+            $payment_insert = "
+            INSERT INTO `payments`(`companyid`, `date`, `payment_type`, `number`, `amount`, `notes`) VALUES (
+            ".prep($payment_info['companyid']).",
+            ".prep($payment_info['date']).",
+            ".prep($payment_info['payment_type']).",
+            ".prep($payment_info['number']).",
+            ".prep($payment_info['amount']).",
+            ".prep($payment_info['notes']).");";
+            
+            qdb($payment_insert) or die(qe()." | $payment_insert");
+            $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`, `ref_type`, `amount`, `paymentid`) 
+            VALUES (
+            ".prep($payment_details['order_number']).",
+            ".prep($payment_details['order_type']).",
+            ".prep($payment_details['ref_number']).",
+            ".prep($payment_details['ref_type']).",
+            ".prep($payment_details['amount']).",
+            ".prep(qid()).")";
+            qdb($p_details_insert) or die(qe()." | $p_details_insert");
+        }
 		
 		//garbage collection
 		unset($value['voided_by_id']);
@@ -203,13 +232,15 @@
 		unset($payment_details);
 		unset($creditInfo);
 		
-		print_r($value);
-		echo '<br>';
-		print_r($creditSerials);
+		//print_r($value);
+		//echo '<br>';
+		//print_r($creditSerials);
 	
-		echo "<br><br>";
+		//echo "<br><br>";
 		
 	}
+	echo "<br><br><b>Items that need to be fixed due to null items or manual entry</b>";
+	print_r($brokenItems);
 	
 	function translateID($inventory_id){
         global $INVENTORY_IDS;
