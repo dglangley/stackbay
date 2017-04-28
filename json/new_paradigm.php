@@ -119,7 +119,9 @@ function sub_rows($search = ''){
                 $incoming = qdb($purchased);
                 if (mysqli_num_rows($incoming) > 0){
                     foreach ($incoming as $i){
-                        $inc[$i['partid']] = $i['total'];
+                        if($i['total'] > 0){
+                            $inc[$i['partid']] = $i['total'];
+                        }
                     }
                 }
                 
