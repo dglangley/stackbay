@@ -113,9 +113,9 @@ function sub_rows($search = ''){
 
                 // Get all the ordered quantities
                 
-                $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_recieved)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
+                $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
                 //Use an inventory join method here at some point
-                exit($purchased);
+                
                 $incoming = qdb($purchased);
                 if (mysqli_num_rows($incoming) > 0){
                     foreach ($incoming as $i){
