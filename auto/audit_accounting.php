@@ -8,12 +8,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
-    $lazy_parse = 0;
+    
     $b_query = "SELECT * FROM inventory_qblog 
-    WHERE error = '0' 
-    AND `source` = 'generate_bill' 
-    AND `date` < '2017-04-16' 
-    order by date desc LIMIT $lazy_parse,200;";
+                WHERE error = '0' 
+                AND `source` = 'generate_bill' 
+                order by date desc
+                LIMIT 200;";
     $b_result = qdb($b_query, "PIPE") or die(qe()." | $b_query");
 	
 	$old = array();
@@ -43,21 +43,24 @@
                 WHERE ioqi.id = ".prep($type["oqi_id"])." AND ioqi.oq_id = ioq.id AND ioq.inventory_id = i.id AND i.manufacturer_id_id = im.id AND ioq.quote_id = iq.id;";
             }
         } else if ($table == "bill"){
-            $type_query = "SELECT id, iqi_id, co_id, repair_id FROM inventory_billli where memo = ".prep($desc).";";
+            $type_query = "SELECT id, iqi_id, co_id, repair_id FROM inventory_billli where memo = ".prep($desc)." AND iqi_id > '';";
             $type_result = qdb($type_query,"PIPE") or die(qe("PIPE")." ".$type_query);
             $type = mysqli_fetch_assoc($type_result);
             if($type['iqi_id']){
                 $part_collection = "SELECT i.part_number, i.heci, i.clei, i.short_description, im.name manf, ipi.po_id po_number
                 FROM inventory_incoming_quote_invoice iiqi, inventory_incoming_quote iiq, inventory_inventory i, inventory_manufacturer im, inventory_purchaseinvoice ipi
-                WHERE AND iiqi.id = ".prep($type['iqi_id'])." AND iiqi.iq_id = iiq.id and iiq.inventory_id = i.id and i.manufacturer_id_id = im.id AND iiqi.purchase_invoice_id = ipi.id;";
+                WHERE iiqi.id = ".prep($type['iqi_id'])." AND iiqi.iq_id = iiq.id and iiq.inventory_id = i.id and i.manufacturer_id_id = im.id AND iiqi.purchase_invoice_id = ipi.id;";
             }
-            exit($part_collection);
         }
         $partid = '';
         $id = $type['id'];
-        $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
-        $res = mysqli_fetch_assoc($parts_results);
-        $partid = part_process($res);
+        if($part_collection){
+            $parts_results = qdb($part_collection,"PIPE") or die(qe("PIPE")." ".$part_collection);
+            $res = mysqli_fetch_assoc($parts_results);
+            $partid = part_process($res);
+        } else {
+            // echo("Described as ".$desc);
+        }
         return(array($id => $partid));
     }
     
@@ -254,6 +257,7 @@
                     print_r($old);
                     echo("-----------<br>");
                     print_r($row);
+                    echo("_____________<br>");
                     // exit;
                 } else {
                     // echo("Invoice No $id Imported Correctly! <br>------------<br><br>");
@@ -270,18 +274,19 @@
 		}
 		else if($brow['source'] == "generate_bill"){
 				$id = current(current($assoc->QBXMLMsgsRq->BillAddRq->attributes()));
+				$old['bill_no'] = $id;
 				
 				// Redundant on ID??
                 // $memo = (explode("#",current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->Memo)));
 				// $number = trim($memo[1]);
 				$list_id = (current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->VendorRef->ListID));
                 if($list_id){
-                    $old['company'] = db_company_name($cust_ref);
+                    $old['company'] = db_company_name($list_id);
+    				
                 } else {
                     $old['company'] = rtrim(current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->VendorRef->FullName)," V");
                 }
 				
-				$old['bill_no'] = $id;
                 $old['date_created'] = current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->TxnDate);
                 $old['due_date'] = current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->DueDate);
                 $old['invoice_no'] = current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->RefNumber);;
@@ -295,64 +300,66 @@
                 $row['date_created'] = format_date($row['date_created'],"Y-m-d");
                 $row['company'] = trim(getCompany($row['company']));
                 
-		        print_r($row);
-                continue;
                 //Line Item Parse
                 if($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->ItemLineAdd){
                     $old_lines = array();
+                    if(current($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->ItemLineAdd->ItemRef->FullName)!="Inventory Purchase"){
+                        continue;
+                    }
                     foreach($assoc->QBXMLMsgsRq->BillAddRq->BillAdd->ItemLineAdd as $item){
                         // print_r($item);
-                        if($item->Desc == "Freight Charge" || trim($item->Desc) == "Freight"){
-                            //Add freight to old row
-                            $old['freight'] += $item->Rate;
-                        } else {
-                            // print_r(current($item->Desc));
-                            // $ds = desc_walk($desc);
-                            $desc = current($item->Desc); 
-                            $line_info = find_line_item_inv($desc, "bill");
-                            $partid = current($line_info);
-                            if(!$partid){
-                                // echo("Not an item sale: No Part Id <br>-----------<br>");
-                                continue(2);
-                            } else {
-                    		  //  echo("<br>------------<br>".$brow['source']." - Invoice #$id<br>");
-                            }
-                            $qty = $item->Quantity;
-                            $amount = round($item->Rate,2);
-                            $key = "$qty+$partid";
-                            $old_lines[$key] = $amount;
-                            // echo($amount);
+                        // print_r(current($item->Desc));
+                        // $ds = desc_walk($desc);
+                        $desc = current($item->Desc);
+                        if(!$desc){
+                            print_r($line);
                         }
+                        $line_info = find_line_item_inv($desc, "bill");
+                        $partid = current($line_info);
+                        if($part){continue;}
+                        if(!$partid){
+                            // echo("Not an item sale: No Part Id <br>-----------<br>");
+                            // continue(2);
+                        } else {
+                		    //echo("<br>------------<br>".$brow['source']." - Bill #$id<br>");
+                        }
+                        $qty = $item->Quantity;
+                        $amount = round($item->Cost,2);
+                        $key = "$qty+$partid";
+                        $old_lines[$key] = $amount;
+                        // echo($amount);
                     }
-                    $old['freight'] = floor($old['freight']);
-                    $item_query = "Select `partid`,`qty`,`price` FROM invoice_items WHERE `invoice_no` = $id;";
+                    
+                    $item_query = "Select `partid`,`qty`,`amount` FROM bill_items WHERE `bill_no` = $id;";
                     $item_results = qdb($item_query) or die(qe()." | ".$item_query);
-                    foreach($item_results as $line){
-                        $test = array();
-                        $l_amount = trim(floor($line['price']));
-                        $l_qty = trim($line['qty']);
-                        $key = $l_qty."+".$line['partid'];
-                        
-                        $test[$key] = $l_amount;
-                        if(isset($old_lines[$key])){
-                            if($old_lines[$key] == $l_amount){
-                                // echo("<br>Line Clear!<br>");
-                            }
-                            else{
-                                echo("--------------<br>Invoice No $id mismatches on lines:<br>");
+                    if(mysqli_num_rows($item_results)){
+                        foreach($item_results as $line){
+                            $test = array();
+                            $l_amount = trim(floor($line['amount']));
+                            $l_qty = trim($line['qty']);
+                            $key = $l_qty."+".$line['partid'];
+                            
+                            $test[$key] = $l_amount;
+                            if(isset($old_lines[$key])){
+                                if($old_lines[$key] == $l_amount){
+                                    echo("<br>Line Clear!<br>");
+                                }
+                                else{
+                                    echo("--------------<br>Bill No $id mismatches on lines:<br>");
+                                    print_r($old_lines);
+                                    print_r($line);
+                                    // exit;
+                                }
+                            } else {
+                                echo("--------------<br>Bill No $id mismatches on lines:<br>");
                                 print_r($old_lines);
                                 print_r($line);
-                                exit;
+                                // exit;
                             }
-                        } else {
-                            echo("--------------<br>Invoice No $id mismatches on lines:<br>");
-                            print_r($old_lines);
-                            print_r($line);
-                            exit;
                         }
                     }
                 } else {
-                    // echo($brow['source']." - Invoice Proper: No Rows<br><br>");
+                    // echo($brow['source']." - Bill Proper: No Rows<br><br>");
                 }
                 if($old != $row){
                     print_r($old);
@@ -360,7 +367,7 @@
                     print_r($row);
                     // exit;
                 } else {
-                    // echo("Invoice No $id Imported Correctly! <br>------------<br><br>");
+                    // echo("Bill No $id Imported Correctly! <br>------------<br><br>");
                 }
 
 		}

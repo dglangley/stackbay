@@ -151,12 +151,12 @@
                                 ".prep($row['ln'])."
                                 );";
                             qdb($insert) or die(qe()." ".$insert);
+						}
                                 
-                            if ($row['notes']){
-                                $prices_insert = "INSERT INTO `prices`(`partid`, `price`, `datetime`, `note`, `userid`) 
-                                VALUES (".$partid.",'-99.99',".prep($in['datetime']).",".$row['notes'].","."null".")";
-                                qdb($prices_insert) or die(qe()." ".$prices_insert);
-                            }
+                        if ($row['notes']){
+                            $prices_insert = "INSERT INTO `prices`(`partid`, `price`, `datetime`, `note`, `userid`) 
+                            VALUES (".$partid.",'-99.99',".prep($in['datetime']).",".$row['notes'].","."null".")";
+                            qdb($prices_insert) or die(qe()." ".$prices_insert);
                         }
                     }
                 }
@@ -168,8 +168,8 @@
 
 }
 
-    //import_quotes("incoming");
-    import_quotes("outgoing");
+    import_quotes("incoming");
+    //import_quotes("outgoing");
 ?>
 
 
