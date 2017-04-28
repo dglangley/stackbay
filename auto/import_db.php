@@ -635,10 +635,16 @@ echo $query2.'<BR>'.chr(10);
 				$serialid = setInventory($ser,$partid,$so_item_id,'sales_item_id','manifest',$stock_date." 10:00:00",0);
 				$ITEMS[$serialid] = $so_item_id;
 
-				$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average, notes) ";
-				$query3 .= "VALUES ($serialid, '".$stock_date." 10:00:00', '".$cost."', '".$avg_cost."', 'Imported'); ";
+				// check for inventory costs to already be imported - this should be a one-time event no matter if this is a second sale
+				$query3 = "SELECT * FROM inventory_costs WHERE inventoryid = $serialid AND datetime = '".$stock_date." 10:00:00' ";
+				$query3 .= "AND actual = '".$cost."' AND average = '".$avg_cost."' AND notes = 'Imported'; ";
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				if (mysqli_num_rows($result3)==0) {
+					$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average, notes) ";
+					$query3 .= "VALUES ($serialid, '".$stock_date." 10:00:00', '".$cost."', '".$avg_cost."', 'Imported'); ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
+				}
 
 				$query3 = "REPLACE package_contents (packageid, serialid) VALUES ($pkgid, $serialid); ";
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
@@ -745,7 +751,7 @@ echo 'Found existing serial '.$serial.' for "0"/"000" on SO '.$r['so_id'].' for 
 
 		$dispositionid = $DISPOSITIONS[$r['action_id']];
 		$query2 = "REPLACE return_items (partid, inventoryid, rma_number, line_number, reason, dispositionid, qty) ";
-		$query2 .= "VALUES ($partid, $serialid, $rma, NULL, ".prep($r['reason']).", $dispositionid, 1); ";
+		$query2 .= "VALUES ($partid, $serialid, $rma, NULL, ".prep(trim(substr($r['reason'],0,255))).", $dispositionid, 1); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 echo $query2.'<BR>'.chr(10);
 		$rma_item_id = qid();
@@ -805,10 +811,16 @@ echo $query3.'<BR>'.chr(10);
 			$freight = '';
 			$pkgid = setPackage($r['so_id'],$n,$freight,$r['outbound_tracking_no'],$ship_date.' 16:00:00');
 
-			$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average, notes) ";
-			$query3 .= "VALUES ($serialid, '".$r['date']." 10:00:00', '".$r2['actual_cost']."', '".$r2['avg_cost']."', 'Imported'); ";
+			// check for inventory costs to already be imported - this should be a one-time event no matter if this is a second sale
+			$query3 = "SELECT * FROM inventory_costs WHERE inventoryid = $serialid AND datetime = '".$r['date']." 10:00:00' ";
+			$query3 .= "AND actual = '".$r2['actual_cost']."' AND average = '".$r2['avg_cost']."' AND notes = 'Imported'; ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if (mysqli_num_rows($result3)==0) {
+				$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average, notes) ";
+				$query3 .= "VALUES ($serialid, '".$r['date']." 10:00:00', '".$r2['actual_cost']."', '".$r2['avg_cost']."', 'Imported'); ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>'.chr(10);
+			}
 
 			$query3 = "REPLACE package_contents (packageid, serialid) VALUES ($pkgid, $serialid); ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);

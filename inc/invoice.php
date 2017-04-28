@@ -92,7 +92,7 @@
             qdb($insert) or die(qe()." ".$insert);
             $line = qid();
             $package_insert = "
-                INSERT INTO `invoice_shipments` (`invoice_items_id`, `packageid`)
+                INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`)
                     SELECT $line AS line, packages.id
                     FROM packages, package_contents, inventory_history, sales_items
                     WHERE package_contents.packageid = packages.id
@@ -155,7 +155,7 @@
 	    SELECT $selector
 	    FROM `invoice_items`, `invoice_shipments`, `package_contents`, inventory
 	    WHERE `invoice_no` = $in_no
-	    AND `invoice_items`.`id` = `invoice_shipments`.invoice_items_id
+	    AND `invoice_items`.`id` = `invoice_shipments`.invoice_item_id
 	    AND `invoice_shipments`.`packageid` = `package_contents`.`packageid`
 	    AND `package_contents`.`serialid` = `inventory`.`id`
 	    ;";

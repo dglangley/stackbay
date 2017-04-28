@@ -932,13 +932,13 @@
 			
 			$email_body_html = "Greetings " . $this->user_firstName . " " . $this->user_lastName .",<br><br>";
 			$email_body_html .= "Welcome to Stackbay! Here's how to log in:<br><br>";
-			$email_body_html .= "Link: <a target='_blank' href ='" . $_SERVER['HTTP_HOST'] . "'>Stackbay</a><br>";
+			$email_body_html .= "Link: <a href ='https://www.stackbay.com'>Stackbay</a><br>";
 			$email_body_html .= "Username: " . $this->getUsername() . "<br>";
 			$email_body_html .= "Password: " . ($this->generated_pass == '1' ? htmlspecialchars($this->getTempPass()) : "User Preset") . "<br><br>";
 			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
 			$email_subject = 'Stackbay Registration';
 			$recipients = $this->getEmail();
-			$bcc = 'andrew@ven-tel.com';
+			$bcc = 'dev@ven-tel.com';
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
@@ -965,7 +965,7 @@
 			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
 			$email_subject = 'Stackbay Recovery';
 			$recipients = $this->getEmail();
-			$bcc = 'andrew@ven-tel.com';
+			$bcc = 'dev@ven-tel.com';
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {

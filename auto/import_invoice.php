@@ -215,6 +215,7 @@
                     
     					$part_row = mysqli_fetch_assoc($parts_results);
     					$partid = part_process($part_row);
+						//Aaron, using quantity this way is bogus due to empty line breaks in Brian's code DAVID
     					$quantity = count(explode("\n",$part_row['serials']));
                     
     					$p_line["partid"] = $partid;

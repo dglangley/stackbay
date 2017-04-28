@@ -123,7 +123,7 @@
 		//This is a reference to setContact() Function
 		//setContact($name,$companyid=0,$title='',$notes='',$ebayid='',$aim='',$status='Active')
 		//Set contact gives us the contactid
-		// $contactid = setContact($value['name'],$value['companyid'],$value['title'],$value['notes'],$value['ebayid'],$value['aim'],$value['status']);
+		$contactid = setContact($value['name'],$value['companyid'],$value['title'],$value['notes'],$value['ebayid'],$value['aim'],$value['status'],$contactid);
 		
 		// //Set the phone with contactid and type
 		if($value['phone'] != '') {
