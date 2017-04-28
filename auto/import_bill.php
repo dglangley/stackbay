@@ -25,23 +25,25 @@
     
     $query = "SELECT id, date as date_created, vendor_id as companyid, memo, sent, amount,
     voided, voided_by_id, voided_date, voided_reason, paid, due_date, postfix, ref_no
-    FROM inventory_bill;";
+    FROM inventory_bill LIMIT 2500,500;";
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
     $count = 0;
     $repair_records = array();
-    
+    $inserted = "";
+echo("<br>".$query);
 
 
 foreach($result as $meta){
-    $p_line = array();
     $failed_message = "";
     $insert_row = array();
     $payment_info = array();
     $payment_details = array();
+    $insert = "";
+
     //Notes are assumed null, but appended with potentially multiple fields
     $insert_row['notes'] = '';
-    
+    $insert_row['lines'] = array();
     //ID
     $insert_row['bill_no'] = $meta['id'];
     
@@ -77,10 +79,13 @@ foreach($result as $meta){
     
     
     //========================== LINE PROCESSING ==========================
-    $lines = "SELECT bli.id,  bli.memo memo, iqi_id, iiqi.iq_id, iiqi.quantity, iiq.company_id, iiq.price as amount, creator_id,  i.heci, i.clei, i.short_description, im.name manf, ipi.po_id po_number
+    $lines = "
+    SELECT bli.id,  bli.memo memo, iqi_id, iiqi.iq_id, iiqi.quantity, 
+        iiq.company_id, iiq.price as amount, creator_id, i.part_number,  i.heci, 
+        i.clei, i.short_description, im.name manf, ipi.po_id po_number
     FROM inventory_billli bli, inventory_incoming_quote_invoice iiqi, inventory_incoming_quote iiq, inventory_inventory i, inventory_manufacturer im, inventory_purchaseinvoice ipi
     WHERE bill_id = ".prep($insert_row['bill_no'])." AND iqi_id > '' AND iqi_id = iiqi.id AND iiqi.iq_id = iiq.id and iiq.inventory_id = i.id and i.manufacturer_id_id = im.id AND iiqi.purchase_invoice_id = ipi.id;"; //http://stackoverflow.com/questions/2327029/checking-for-an-empty-field-with-mysql
-    // exit($lines);
+echo("<br>".$lines);
     $line_results = qdb($lines,"PIPE") or die(qe("PIPE")." ".$lines);
     
     //Prep the sum for each of the line totals to do the SUM audit
@@ -106,7 +111,9 @@ foreach($result as $meta){
     //     $lines_sum = $meta["amount"];
     //     $insert_row['lines'][] = $p_line;
     // } else {
+    if(mysqli_num_rows($line_results) > 0){
         foreach($line_results as $line){
+            $p_line = array();
             //Naive Line Pricing information to audit the amount 
             $lines_sum += $line['amount'] * $line['quantity'];
             //The following acts as a switch would to process different types of
@@ -133,10 +140,11 @@ foreach($result as $meta){
             //Append the line information
             $insert_row['lines'][] = $p_line;
         }
+    }
     // }
     if(!$insert_row['po_number']){
-            $insert_row = array();
-            continue;
+        $insert_row = array();
+        continue;
     }
     // Method | Line audit
     // Since the cents audit seems to be invalid despite extensive type casting efforts,
@@ -152,20 +160,20 @@ foreach($result as $meta){
 
 
 
-    //Payment Processing
-    if($meta['paid']){
-        $payment_info['companyid'] = $companyid;
-        $payment_info['date'] = $meta['due_date'];
-        $payment_info['payment_type'] = "Other";
-        $payment_info['number'] = "Bill".$insert_row['bill_no'];
-        $payment_info['amount'] = $lines_sum; //This amount will equal the audited amount on the line items, assuming no discrepency
-        $payment_info['notes'] = "Imported";
-        $payment_details['order_number'] = $insert_row['bill_no'];
-        $payment_details['order_type'] = "Bill";
-        $payment_details['ref_number'] = "";
-        $payment_details['ref_type'] = "";
-        $payment_details['amount'] = $lines_sum;
-    }
+        //Payment Processing
+        if($meta['paid']){
+            $payment_info['companyid'] = $companyid;
+            $payment_info['date'] = $meta['due_date'];
+            $payment_info['payment_type'] = "Other";
+            $payment_info['number'] = "Bill".$insert_row['bill_no'];
+            $payment_info['amount'] = $lines_sum; //This amount will equal the audited amount on the line items, assuming no discrepency
+            $payment_info['notes'] = "Imported";
+            $payment_details['order_number'] = $insert_row['bill_no'];
+            $payment_details['order_type'] = "Bill";
+            $payment_details['ref_number'] = "";
+            $payment_details['ref_type'] = "";
+            $payment_details['amount'] = $lines_sum;
+        }
     
         $insert = "
         INSERT INTO `bills` (`bill_no`,`invoice_no`,`date_created`,`due_date`,`po_number`,`companyid`,`notes`,`status`) VALUES (
@@ -178,18 +186,19 @@ foreach($result as $meta){
         ".prep($insert_row['notes']).",
         ".prep($insert_row['status']).");
         ";
- 
-        qdb($insert) or die(qe()."<br>".$count);//"<br>".$previous_query."<br>Count".$count."<br><pre>".print_r(get_defined_vars(),true)."</pre>");
-        
-        
-        if (count($insert_row['lines'])){
-            foreach($insert_row['lines'] as $line){
+echo($insert."<br>");
+        $inserted .= $meta['id'].", ";
+        qdb($insert) or die(qe()."<br>".$count."<br>".$inserted);//"<br>".$previous_query."<br>Count".$count."<br><pre>".print_r(get_defined_vars(),true)."</pre>");
+
+        if ($insert_row['lines']){
+            foreach($insert_row['lines'] as $i_line){
+echo($line_insert."<br>");
                 $line_insert = "INSERT INTO `bill_items`(`bill_no`, `partid`, `qty`, `amount`, `memo`) VALUES (
                 ".prep($insert_row['bill_no']).",
-                ".prep($line['partid']).",
-                ".prep($line['qty']).",
-                ".prep($line['amount']).",
-                ".prep($line['memo']).");";
+                ".prep($i_line['partid']).",
+                ".prep($i_line['qty']).",
+                ".prep($i_line['amount']).",
+                ".prep($i_line['memo']).");";
                 qdb($line_insert) or die(qe()." | $line_insert");
             }
         }
@@ -202,6 +211,7 @@ foreach($result as $meta){
             ".prep($payment_info['number']).",
             ".prep($payment_info['amount']).",
             ".prep($payment_info['notes']).");";
+echo($payment_insert."<br>");
             
             qdb($payment_insert) or die(qe()." | $payment_insert");
             $p_details_insert = "INSERT INTO `payment_details`(`order_number`, `order_type`, `ref_number`, `ref_type`, `amount`, `paymentid`) 
@@ -211,10 +221,15 @@ foreach($result as $meta){
             ".prep($payment_details['ref_number']).",
             ".prep($payment_details['ref_type']).",
             ".prep($payment_details['amount']).",
-            ".prep(qid()).")";
+            ".prep(qid()).");";
+echo($p_details_insert."<br>");
             qdb($p_details_insert) or die(qe()." | $p_details_insert");
         }
-    $count++;
+        $count++;
+        unset($insert_row);
+        unset($payment_info);
+        unset($payment_details);
+        unset($line_insert);
     }
     if(!$grand_failed){
         $import_complete = true;

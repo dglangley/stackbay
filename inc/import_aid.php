@@ -14,7 +14,10 @@
     	        WHERE i.id = ".prep($inventory_id)." AND i.manufacturer_id_id = im.id;";
     	        $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     	        $r = mysqli_fetch_assoc($result);
-    	        $INVENTORY_IDS[$inventory_id] = part_process($r);
+    	        $proc = part_process($r);
+    	        if($proc){
+    	        	$INVENTORY_IDS[$inventory_id] = $proc;
+    	        }
     	    }
     	    return($INVENTORY_IDS[$inventory_id]);
     	}

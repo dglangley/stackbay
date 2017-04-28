@@ -109,6 +109,9 @@
     } else {
         return null;
     }
+    
+    
+    //Email here (if)
 
     // $package_insert = "
     // Select 
@@ -119,7 +122,6 @@
     //     AND inventory_history.value = sales_items.id
     //     AND order_number = $order_number;
     // ";
-    
     return $invoice_id;
 
     
