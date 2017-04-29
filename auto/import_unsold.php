@@ -35,7 +35,7 @@
 	}
 	
 	//For testing purposes and compile time adding LIMIT 30
-	$query = "SELECT * FROM inventory_itemlocation WHERE ci_id IS NOT NULL AND po_id IS NOT NULL ORDER BY id ASC LIMIT 2; ";
+	$query = "SELECT * FROM inventory_itemlocation ORDER BY id ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$items[] = $r;
