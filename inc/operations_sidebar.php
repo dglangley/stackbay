@@ -545,7 +545,7 @@ include_once $rootdir.'/inc/packages.php';
 			// $query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
 			if($page == 'Sales') {
 				// Grab the list of packages grouped by shipment datetime
-				$query = "SELECT GROUP_CONCAT(package_no ORDER BY package_no ASC) boxes, datetime FROM packages WHERE order_number = ".prep($order_number)." and datetime IS NOT NULL GROUP BY datetime;";
+				$query = "SELECT GROUP_CONCAT(package_no ORDER BY package_no ASC) boxes, datetime, tracking_no FROM packages WHERE order_number = ".prep($order_number)." and datetime IS NOT NULL GROUP BY datetime;";
 				$result = qdb($query) OR die(qe().' '.$query);
 				
 				//If there are any existing packages, print them out on this list
@@ -559,6 +559,8 @@ include_once $rootdir.'/inc/packages.php';
 						// Append to right the packing slip options
 						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$slip['datetime'].'"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
 						$right .= '<b>Box #  ' . $slip['boxes']. '</b></a> ' . date_format($dateF, "N/j/y g:ia") . '<br>';
+						if($slip['tracking_no'])
+							$right .= 'Tracking # ' . $slip['tracking_no'] . '<br>';
 					}
 				}
 			} //end of the sales specific section

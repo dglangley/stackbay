@@ -19,6 +19,7 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
@@ -516,7 +517,7 @@
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['conditionid'] ?>"><?php echo $item['conditionid'] ?></span>
+										<span class="condition_field" data-condition="<?php echo $item['conditionid'] ?>"><?php echo getCondition($item['conditionid']) ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
 										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty'],"warranty"); ?></span>
