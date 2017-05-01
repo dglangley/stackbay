@@ -42,7 +42,8 @@
 		$value = array_map('trim', $value);
 
 		//Function to grab all data that is needed in the parts table 
-		$jeid = setJournalEntry($entry_no, $datetime, $debit_account, $credit_account, $memo, $trans_number, $trans_type, $amount, $confirmed_datetime, $confirmed_by, $entry$jeid);
+		$jeid = setJournalEntry($entry_no, $datetime, $debit_account, $credit_account, $memo, $trans_number
+		, $trans_type, $amount, $confirmed_datetime, $confirmed_by);
 		
 		//Grab journal entry lines
 		$query = ";";

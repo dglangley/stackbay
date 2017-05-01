@@ -516,7 +516,7 @@
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
 									</td>
 									<td style="padding-top: 15px !important;">
-										<span class="condition_field" data-condition="<?php echo $item['conditionid'] ?>"><?php echo $item['conditionid'] ?></span>
+										<span class="condition_field" data-condition="<?php echo getCondition($item['conditionid']) ?>"><?php echo $item['conditionid'] ?></span>
 									</td>
 									<td style="padding-top: 15px !important;">
 										<span class="condition_field" data-condition="<?php echo $item['warranty'] ?>"><?php echo getWarranty($item['warranty'],"warranty"); ?></span>
