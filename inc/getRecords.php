@@ -80,7 +80,7 @@
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
-				$unsorted = get_coldata($search_str,'purchases');
+				//$unsorted = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
@@ -93,7 +93,7 @@
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
-				$unsorted = get_coldata($search_str,'sales');
+				//$unsorted = get_coldata($search_str,'sales');
 				break;
 
 			case 'supply':

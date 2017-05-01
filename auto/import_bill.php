@@ -25,7 +25,7 @@
     
     $query = "SELECT id, date as date_created, vendor_id as companyid, memo, sent, amount,
     voided, voided_by_id, voided_date, voided_reason, paid, due_date, postfix, ref_no
-    FROM inventory_bill LIMIT 2500,500;";
+    FROM inventory_bill; ";// LIMIT 2500,500;";
     $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
     
     $count = 0;
@@ -64,10 +64,11 @@ foreach($result as $meta){
     $insert_row['invoice_no'] = $meta['ref_no'];
     
     //========================= Status processing =========================
+    $insert_row['status'] = "Completed";
     if($meta['sent']){
-        $insert_row['status'] = "Active";
+        $insert_row['status'] = "Completed";
     } else if($meta['voided_by_id']) {
-        $insert_row['status'] = "Void";
+        $insert_row['status'] = "Voided";
         $insert_row['notes'] .= " Voided by ".$meta['voided_by_id']." ".$meta['voided_date']." Reason: ".$meta['voided_reason'];
     } else {
         $insert_row['note'] .= " (Not Sent, Not Voided)";
