@@ -166,6 +166,19 @@
         }
         return $display;
     }
-
-
+    
+    $LOCATION_MAP = array();
+    function convert_locations($location_id, $old_to_new = true){
+        global $LOCATION_MAP;
+        
+        $pipe_select = "SELECT `id`,`location` FROM `inventory_location` where `id` = $location_id;";
+        $result = qdb($pipe_select, "PIPE") or die(qe()." | ".$pipe_select);
+        $row = mysqli_fetch_assoc($result);
+        $parsed = explode("-",$row['location']);
+        
+        $select = "SELECT * FROM location WHERE `place` LIKE ".prep($parsed[0]);
+        $select = ($parsed[1] ? " AND `instance` LIKE ".prep($parsed[1]): "");
+        $select .= ";";
+        
+    }
 ?>

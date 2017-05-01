@@ -316,7 +316,7 @@ include_once $rootdir.'/inc/packages.php';
 					</div>
 				</div>
 		";
-		if ($order_number == 'New' AND $order_type == "Sales") {
+		if ($order_type == "Sales") {
 			$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
@@ -339,7 +339,7 @@ include_once $rootdir.'/inc/packages.php';
 			$right .= "
 				<div class='row'>
 					<div class='col-sm-12'>
-						<div class='btn btn-sm btn-danger' id = 'order_void'>Void</div>
+						<div class='btn btn-sm btn-danger' id = 'order_void'>Void</div><br/><br/>
 					</div>
 				</div>
 			";

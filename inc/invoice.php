@@ -11,7 +11,7 @@
     //Eventually Shipment Datetime will be a shipment ID whenever we make that table
 
     //Check to see there are actually invoice-able items on the order
-    $invoice_items_select = "
+    $invoice_item_select = "
         Select partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
         FROM packages, package_contents, inventory_history, sales_items
         WHERE package_contents.packageid = packages.id
@@ -24,8 +24,8 @@
         GROUP BY sales_items.id;
     ";
     //Type field accepts ['Sale','Repair' ]
-    $invoice_items_prepped = qdb($invoice_items_select);
-    if (mysqli_num_rows($invoice_items_prepped) > 0){
+    $invoice_item_prepped = qdb($invoice_item_select);
+    if (mysqli_num_rows($invoice_item_prepped) > 0){
     
     if ($type == 'Sale'){
         $macro = "
@@ -77,7 +77,7 @@
 // ";
 
     // Select packages.id, serialid, sales_items.partid, price
-        foreach ($invoice_items_prepped as $row) {
+        foreach ($invoice_item_prepped as $row) {
             $insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
             VALUES (".$invoice_id.
                     ", ".$row['partid'].

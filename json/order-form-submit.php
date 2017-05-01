@@ -80,7 +80,7 @@
 					}
 				} else {
 	                $upload = $s3->upload($bucket, $filename, fopen($file['tmp_name'], 'rb'), 'public-read');
-					$files = "s3://".$bucket."/".$filename;
+					$files = "https://s3-us-west-2.amazonaws.com/".$bucket."/".$filename;
 				}
 			}
        	} catch(Exception $e) {
@@ -115,9 +115,12 @@
     $created_by = grab('created_by');
     $email_to = grab('email_to');
     $email_confirmation = grab('email_confirmation');
+	$addl_recp_name = "";
 	if ($email_confirmation) {
-		$addl_recp = getContact($email_to,'id','email');
-		if (! $addl_recp) {
+		$addl_recp_email = getContact($email_to,'id','email');
+		if ($addl_recp_email) {
+			$addl_recp_name = getContact($email_to,'id','name');
+		} else {
 			jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
 		}
 	}
@@ -183,9 +186,9 @@
         //If this is a new entry, save the value, insert the row, and return the
         //new-fangled ID from the mega-sketch qid function
         $cid = prep($companyid);
-        $rep = prep($rep);
+        $save_rep = prep($rep);
         $created_by = prep($created_by);
-        $contact = prep($contact);
+        $save_contact = prep($contact);
         $carrier = prep($carrier);
         $terms = prep($terms);
         $ship = prep($ship);
@@ -201,7 +204,7 @@
         if($order_type=="Purchase"){
             $insert = "INSERT INTO `purchase_orders` (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
             `remit_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $cid, $rep, $contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+            ($created_by, $cid, $save_rep, $save_contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
         else{
     		$filename = grab('filename');
@@ -209,7 +212,7 @@
 
             $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
             `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $rep, $cid, $contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+            ($created_by, $save_rep, $cid, $save_contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
 
     //Run the update
@@ -321,7 +324,25 @@
 
 	// send order confirmation
 	if ($email_confirmation AND ! $DEV_ENV) {
-		$send_success = send_gmail($msg,$sbj,array('david@ven-tel.com'));
+		$recps = array();
+		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
+		if ($contact) {
+			$contact_email = getContact($contact,'id','email');
+			if ($contact_email) {
+				$recps[] = array($contact_email,getContact($contact,'id','name'));
+			}
+			if ($addl_recp_email) {
+				$recps[] = array($addl_recp_email,$addl_recp_name);
+			}
+		}
+
+		$bcc = false;
+		if ($rep) {
+			$rep_contactid = getRep($rep,'id','contactid');
+			$rep_email = getContact($rep_contactid,'id','email');
+			$bcc = $rep_email;
+		}
+		$send_success = send_gmail($msg,$sbj,$recps,$bcc);
 		if ($send_success) {
 //			jsonDie('Success');
 		} else {

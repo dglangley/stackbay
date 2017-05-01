@@ -16,6 +16,7 @@
 			$info['header'] = "Purchase Order";
 			$info['item'] = "purchase_items";
 			$info['client'] = "Vendor";
+			$info['address_type'] = '';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Purchase";
@@ -50,6 +51,7 @@
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
 			$info['client'] = "Vendor";
+			$info['address_type'] = '';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Purchase";
@@ -85,6 +87,8 @@
 			$info['header'] = "Invoice ";
 			$info['item'] = "invoice_items";
 			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['contact_col'] = 'SO #';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";
@@ -120,6 +124,7 @@
 			$info['header'] = "RTV Order";
 			$info['item'] = "";
 			$info['client'] = "Vendor";
+			$info['address_type'] = '';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Purchase";
@@ -156,6 +161,8 @@
 			$info['header'] = "RMA";
 			$info['item'] = "return_items";
 			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['contact_col'] = '';
 			$info['price'] = 'Reason';
 			$info['ext'] = 'Ext Price';
 			
@@ -194,6 +201,8 @@
 			$info['header'] = "Credit Memo ";
 			$info['item'] = "sales_credit_items";
 			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['contact_col'] = '';
 			$info['price'] = 'Amount Ea.';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";

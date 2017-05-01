@@ -661,6 +661,9 @@ if (! $r['partid']) { return ($results); }
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
+			$results[$partid]['notes'] = '';
+			$results[$partid]['pipeids_str'] = '';//$PIPEIDS_STR;
+/*
 			if ($P['pipe_id']) {//exact 10-digit heci match from pipe
 				$itemqty = getQty($P['pipe_id'],'PIPE');
 			}
@@ -674,9 +677,10 @@ if (! $r['partid']) { return ($results); }
 			$PIPE_NOTES = '';
 			$results[$partid]['pipeids_str'] = $PIPEIDS_STR;
 			$PIPEIDS_STR = '';
+*/
 
 			// change to this after migration, remove ~7-10 lines above
-			//$itemqty = getQty($partid);
+			$itemqty = getQty($partid);
 			$lineqty += $itemqty;
 			$results[$partid]['qty'] = $itemqty;
 		}

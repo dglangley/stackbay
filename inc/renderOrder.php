@@ -34,7 +34,14 @@
             return "None";
         }
     }
-    
+    function getCompanyAddress($companyid){
+        $select = "SELECT * FROM company_addresses WHERE companyid LIKE ".prep($companyid).";";
+        $company_address_result = qdb($select) or die(qe()." | $select");
+        if(mysqli_num_rows($results)){
+            $results = mysqli_fetch_assoc($company_address_result);
+        }
+        
+    }
     // Grab the order number
 //    $order_number = grab('on');
 //	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
@@ -98,8 +105,15 @@
 		    if($o['type'] == "Credit"){
                 $serials = explode(",",$item['serials']); 
             }
+            
+            $price = 0.00;
+            if ($item['price']){
+                $price = $item['price'];
+            } else if ($item['amount']){
+                $price = $item['amount'];
+            }
 			$part_details = current(hecidb($item['partid'],'id'));
-			$lineTotal = $item['price']*$item['qty'];
+			$lineTotal = $price*$item['qty'];
 			$total += $lineTotal;
 			
 			//FREIGHT CALCULATION HERE FOR INVOICE (based off the payment type/shipping account)
@@ -133,7 +147,7 @@
                     }
                     $item_rows .= '
                     <td class="text-center '.($o['rma'] ? 'remove' : '').'">'.$item['qty'].'</td>
-                    <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($item['price']).'</td>
+                    <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($price).'</td>
                     <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($lineTotal).'</td>
                     <td class="'.($o['rma'] ? '' : 'remove').'">Insert some reason here based on DB</td>
                     <td class="'.($o['rma'] ? '' : 'remove').'">Text here</td>
@@ -369,9 +383,9 @@ $html_page_str .='
                 '.(($o['invoice'])? "<th>Payment Due Date </th>" : '').'
                 <th>'.$o['contact_col'].'</th>
                 <th class="'.($o['rma'] ? 'remove' : '').'">Terms</th>
-                <th class="'.($o['rma'] || $o['invoice'] ? 'remove' : '').'">Shipping</th>
+                <th class="'.($o['rma'] ? 'remove' : '').'">Shipping</th>
+                <th class="'.($o['rma']  ? 'remove' : '').'">Freight Terms</th>
                 '.(($o['invoice'])? "<th>PO # </th>" : '').'
-                <th class="'.($o['rma'] || $o['invoice'] ? 'remove' : '').'">Freight Terms</th>
             </tr>
             <tr>
                 <td>
@@ -401,9 +415,9 @@ $html_page_str .= '<td class="text-center '.($o['rma'] ? 'remove' : '').'">
                     '.display_terms($oi['termsid']).'
                 </td>';
 $html_page_str .='
-                <td class="text-center '.(($o['rma'] || $o['invoice']) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
+                <td class="text-center '.(($o['rma']) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
 					'.$freight_services.'</td>
-                <td class="'.(($o['rma'] || $o['invoice']) ? 'remove' : '').'">'.$freight_terms.'</td>
+                <td class="'.(($o['rma']) ? 'remove' : '').'">'.$freight_terms.'</td>
                 '.(($o['invoice'])? "<td>".$oi['cust_ref']."</td>" : '').'
             </tr>
         </table>';
