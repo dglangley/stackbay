@@ -81,6 +81,10 @@
 		$mail->Subject = $email_subject;
 		$mail->SetFrom($useremail,$username);
 
+		if ($cc AND filter_var($cc, FILTER_VALIDATE_EMAIL)) {
+			$mail->addCC($cc);
+		}
+
 		if ($bcc AND filter_var($bcc, FILTER_VALIDATE_EMAIL)) {
 			$mail->addBCC($bcc);
 		}
