@@ -72,7 +72,18 @@
 				</ul>
 					',
 				),
-				array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i>','title'=>'Accounts','aliases'=>array(),'sub'=>'',),
+				/*array('action'=>'/accounts.php','image'=>'<i class="fa fa-building-o"></i>','title'=>'Accounts','aliases'=>array(),'sub'=>'',),*/
+				array(
+					'action'=>'/accounts.php',
+					'image'=>'<i class="fa fa-building-o"></i>',
+					'title'=>'Accounts',
+					'aliases'=>array('/order_form.php'),
+					'sub' => '
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                    <li><a href="/transactions.php"><i class="fa fa-list-alt"></i> Transactions</a></li>
+				</ul>
+					',
+				),
 			),
 	);
 

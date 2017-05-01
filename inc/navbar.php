@@ -147,7 +147,7 @@
                     <span>Reports</span>
                     <b class="caret"></b>
                 </a>
-                <ul class="dropdown-menu text-left">
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
                     <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
                     <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
                     <li><a href="/commission_details.php"><i class="fa fa-percent"></i> Commissions</a></li>
