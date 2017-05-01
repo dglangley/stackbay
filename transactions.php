@@ -41,13 +41,13 @@
 	SELECT * FROM `journal_entries` ";
 	$select .= " ORDER BY `journal_entries`.`id` DESC LIMIT 0,300 ";
 	$select .= ";";
-	$journal_entries = qdb($select);
+	$je_results = qdb($select);
 	
-	$rows_string = '';
-	if(mysqli_num_rows($journal_entries) > 0){
-	    foreach($journal_entries as $row){
+	$journal_entries = '';
+	if(mysqli_num_rows($je_results) > 0){
+	    foreach($je_results as $row){
             $company_id = get_invoiced_company_id($row['invoice_no']);
-            $rows_string .=
+            $journal_entries .=
             "<tr class = '".($row['confirmed_datetime']? "complete" : "pending" )."'>
                 <td>".format_date($row['datetime']) ."</td>
                 <td>".$row['id']."</td>
@@ -63,7 +63,7 @@
             ";
             //, SUM(price) as 
 	    }
-	    $rows_string .="
+	    $journal_entries .="
 		    <tr>
 		    	<td colspan='8'>
 		    	</td>
@@ -73,7 +73,7 @@
 		    </tr>
 	    ";
     } else {
-        $rows_string = "
+        $journal_entries = "
             <tr>
                 <td colspan = '9' class='text-center'>
                     - No Journal Entries -
@@ -81,8 +81,22 @@
             </tr>
         ";
     }
+    $invoices = "
+            <tr>
+                <td colspan = '9' class='text-center'>
+                    - No Invoices -
+                </td>
+            </tr>
+    ";
+    $bills = "
+            <tr>
+                <td colspan = '9' class='text-center'>
+                    - No Bills -
+                </td>
+            </tr>
+    ";
 	
-    $order_types = getEnumValue("journal_entries","trans_type");
+    $order_types = getEnumValue("je_results","trans_type");
     
     //Build the type dropdown
     $type_dropdown = "<select class = 'form-control input-sm' name ='order_type' disabled>";
@@ -98,7 +112,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VMM Journal</title>
+	<title>VMM Transactions</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -112,7 +126,7 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
-    <form class="form-inline" method="get" action="/journal.php">
+    <form class="form-inline" method="get" action="/transactions.php">
 
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -179,7 +193,7 @@
 
 			<!-- TITLE -->
 			<td class="col-md-2 text-center">
-            	<h2 class="minimal">Journal Entries</h2>
+            	<h2 class="minimal">Transactions</h2>
 			</td>
 			
 			<!--This Handles the Search Bar-->
@@ -223,24 +237,89 @@
 
 <div id="pad-wrapper">
 
-	<form class="form-inline" action='/journal.php' method='POST'>
-	<div class='table-responsive'>
-		<table class='table table-hover table-striped table-condensed'>
-			<tr>
-				<th class = 'col-sm-1'>Date</th>
-				<th class = 'col-sm-1'>Entry No.</th>
-				<th class = 'col-sm-2'>Debit Account</th>
-				<th class = 'col-sm-2'>Credit Account</th>
-				<th class = 'col-sm-2'>Memo</th>
-				<th class = 'col-sm-1 info'>Name</th>
-				<th class = 'col-sm-1 info'>Billable?</th>
-				<th class = 'col-sm-1 text-center'>Amount</th>
-				<th class = 'col-sm-1 text-center'>Confirm</th>
-			</tr>
-           	<?=$rows_string?>
-		</table>
-	</div>
-	</form>
+			<!-- Nav tabs -->
+			<ul class="nav nav-tabs nav-tabs-ar">
+				<li class="active"><a href="#journal-entries" data-toggle="tab"><i class="fa fa-square"></i> Journal Entries (<?=mysqli_num_rows($je_results)?>)</a></li>
+<!--
+				<li><a href="#customers" data-toggle="tab"><i class="fa fa-book"></i> Customers</a></li>
+-->
+				<li><a href="#invoices" data-toggle="tab"><i class="fa fa-file-text"></i> Invoices</a></li>
+<!--
+				<li><a href="#vendors" data-toggle="tab"><i class="fa fa-book"></i> Vendors</a></li>
+-->
+				<li><a href="#bills" data-toggle="tab"><i class="fa fa-file-text-o"></i> Bills</a></li>
+			</ul>
+ 
+			<!-- Tab panes -->
+			<div class="tab-content">
+
+				<!-- Journal Entries pane -->
+				<div class="tab-pane active" id="journal-entries">
+					<form class="form-inline" action='/transactions.php' method='POST'>
+					<div class='table-responsive'>
+						<table class='table table-hover table-striped table-condensed'>
+							<tr>
+								<th class = 'col-sm-1'>Date</th>
+								<th class = 'col-sm-1'>Entry No.</th>
+								<th class = 'col-sm-2'>Debit Account</th>
+								<th class = 'col-sm-2'>Credit Account</th>
+								<th class = 'col-sm-2'>Memo</th>
+								<th class = 'col-sm-1 info'>Name</th>
+								<th class = 'col-sm-1 info'>Billable?</th>
+								<th class = 'col-sm-1 text-center'>Amount</th>
+								<th class = 'col-sm-1 text-center'>Confirm</th>
+							</tr>
+							<?=$journal_entries?>
+						</table>
+					</div>
+					</form>
+				</div><!-- journal-entries -->
+
+				<!-- Invoices pane -->
+				<div class="tab-pane" id="invoices">
+					<form class="form-inline" action='/transactions.php' method='POST'>
+					<div class='table-responsive'>
+						<table class='table table-hover table-striped table-condensed'>
+							<tr>
+								<th class = 'col-sm-2'>Customer</th>
+								<th class = 'col-sm-2'>Address</th>
+								<th class = 'col-sm-1'>Date</th>
+								<th class = 'col-sm-1'>PO No</th>
+								<th class = 'col-sm-1'>Terms</th>
+								<th class = 'col-sm-2'>Memo</th>
+								<th class = 'col-sm-1'>Bill Due</th>
+								<th class = 'col-sm-1 text-right'>Amount</th>
+								<th class = 'col-sm-1 text-center'>Confirm</th>
+							</tr>
+							<?=$invoices?>
+						</table>
+					</div>
+					</form>
+				</div><!-- invoices -->
+
+				<!-- Bills pane -->
+				<div class="tab-pane" id="bills">
+					<form class="form-inline" action='/transactions.php' method='POST'>
+					<div class='table-responsive'>
+						<table class='table table-hover table-striped table-condensed'>
+							<tr>
+								<th class = 'col-sm-2'>Vendor</th>
+								<th class = 'col-sm-2'>Address</th>
+								<th class = 'col-sm-1'>Date</th>
+								<th class = 'col-sm-1'>Ref No</th>
+								<th class = 'col-sm-1'>Terms</th>
+								<th class = 'col-sm-2'>Memo</th>
+								<th class = 'col-sm-1'>Bill Due</th>
+								<th class = 'col-sm-1 text-right'>Amount</th>
+								<th class = 'col-sm-1 text-center'>Confirm</th>
+							</tr>
+							<?=$bills?>
+						</table>
+					</div>
+					</form>
+				</div><!-- bills -->
+
+			</div><!-- tab-content -->
 
 </div>
 
