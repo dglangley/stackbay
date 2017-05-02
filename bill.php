@@ -60,7 +60,7 @@
 	$sidebar_mode ='bill';
 	$associated_order = '';
 	
-	if(strtolower($bill_number) == 'new' || (is_numeric($bill_number)&&$mode=='edit')){
+	if(strtolower($bill_number) == 'new' || (is_numeric($bill_number))&&$mode=="edit"){
 		//Get all the information from the previously purchased items with associated inventory
 		$po_select = "
 		SELECT pi.line_number ln, pi.partid, pi.qty, serial_no, pi.id purchid, pi.warranty, price, i.id
@@ -90,8 +90,14 @@
 			
 		}
 		// print_r($grouped);exit;
-	}
-	else if(is_numeric($bill_number)){
+		$due_select = "
+		SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
+		$due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
+		$due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
+		$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+	}	
+	
+	if(is_numeric($bill_number)){
 		$bill_select = "
 		SELECT *, bill_items.id as bill_id
 		FROM bills, bill_items 
@@ -99,12 +105,12 @@
 		WHERE bills.bill_no = ".prep($bill_number)." 
 		AND bills.bill_no = bill_items.bill_no
 		;";
-		
 		$rows = qdb($bill_select) or die(qe().": ".$bill_select);
 		
 		foreach($rows as $row){
 			$po_number = $row['po_number'];
-			$associated_order = $row['assoc_invoice'];
+			$associated_order = $row['invoice_no'];
+			$due_date = format_date($row['due_date'],"n/j/Y");
 			$grouped[$row['bill_id']]['partid'] = $row['partid'];
             $grouped[$row['bill_id']]['qty'] = $row['qty'];
             $grouped[$row['bill_id']]['purchid'] = $po_number;
@@ -117,7 +123,7 @@
 		// print_r($grouped);
 		// echo("</pre>");
 		// exit;
-	}
+	} 
 ?>
 
 
@@ -171,9 +177,9 @@
 				</div>
 				
 				<div class="col-md-4">
-					<?php if(strtolower($bill_number)=="new"){?>
+					<?php if(strtolower($bill_number)=="new" || $mode == "edit"){?>
 					<button class="btn-flat btn-sm  <?=($order_number=="New")?'success':'success'?> pull-right" id = "bill_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
-						<?=(strtolower($bill_number)=="new") ? 'Create' :'Save'?>
+						<?=(strtolower($bill_number)=="new") ? 'Create' :'Update'?>
 					</button>
 					<?php } ?>
 				</div>
@@ -212,7 +218,7 @@
 											<td>".$li['ln']."</td>
 											<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
 											<td>".getWarranty($li['warranty'],"warranty")."</td>
-											<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number)?"readonly" : "")."/>"."</td>
+											<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
 											<td>".format_price($li['price'])."</td>
 										</tr>
 										";
@@ -222,7 +228,6 @@
 												$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
 													$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
 													$output .= "<td colspan = '2'>".$serial."</td>";
-													
 													$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
 													$output .= "<td></td>";
 												$output .= "</tr>";
@@ -298,8 +303,8 @@
 			});
 			meta_submission = {
 				'bill_no' : bill_no,
-				'assoc_invoice' : $("#customer_invoice").val(),
-				'due_date': 'Null',
+				'invoice_no' : $("#customer_invoice").val(),
+				'due_date': $("#due_date").val(),
 				'po_number':'<?=$po_number?>',
 				'lines': line_sub
 			};
@@ -309,7 +314,7 @@
 				type: "POST",
 				url: '/json/bill_process.php',
 				data: {
-					"submission": meta_submission
+					"submission": JSON.stringify(meta_submission)
 				},
 				dataType: 'json',
 				success: function(result) {
@@ -323,11 +328,17 @@
 			});
 
 		});
+		var date = null;
 		if(!(isNaN(parseInt('<?=$bill_number?>')))){
 			var assoc = '<?=$associated_order?>';
 				$('#customer_invoice').val(assoc)
 				.prop('readonly', true);
+			date = '<?=$due_date?>';
+		}else{
+			date = '<?=$due_estimate?>';
 		}
+		$('#due_date').val(date);
+		
 	});
 	</script>
 
