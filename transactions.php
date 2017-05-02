@@ -6,12 +6,56 @@
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getPart.php';
+	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
+
+	$completed_Invoice = $_REQUEST['invoice_checkbox'];
+	$completed_Bills = $_REQUEST['bills_checkbox'];
+
+	if($completed_Invoice) {
+		foreach($completed_Invoice as $invoice) {
+			insertQBLog($invoice, 'Invoice');
+		}
+	}
+
+	if($completed_Bills) {
+		foreach($completed_Bills as $bill) {
+			insertQBLog($bill, 'Bill');
+		}
+	}
+
+	function insertQBLog($order_number, $order_type) {
+		global $U;
+		$order_number = prep($order_number);
+		$order_type = prep($order_type);
+
+		//Current current date and prep it
+		$date_completed = date('Y-m-d H:i:s');
+		$date_completed = prep($date_completed);
+
+		//Get userid
+		$userid = prep($U['id']);
+
+		$query = "SELECT * FROM qb_log WHERE order_number = $order_number; ";
+		$result = qdb($query) OR die(qe().' '.$query);
+		if (mysqli_num_rows($result)==0) {
+			$query = "INSERT INTO `qb_log` (order_number, order_type, date_completed, userid";
+			$query .= ") VALUES (";
+			$query .= " $order_number,";
+			$query .= " $order_type,";
+			$query .= " $date_completed,";
+			$query .= " $userid";
+			$query .= ");";
+
+			$result = qdb($query) or die(qe().": $query");
+		}
+	}
 	
 	function getTransactionInfo($number){
 		$number = prep($number);
@@ -21,6 +65,12 @@
 		$result['type'] = 'Invoices';
 		return $result;
 	}
+
+	function formatAddedDate($date,$days){
+		//$date = format_date($date);
+	    $date = date('Y-m-d\\TH:i:s\\Z', strtotime("+".$days." days", strtotime($date)));
+	    return format_date($date);
+	}
 	
 	function get_invoiced_company_id($invoice_no){
 			$select = "Select companyid FROM `invoices` WHERE invoice_no = ".prep($invoice).";";
@@ -28,12 +78,13 @@
 			$result = mysqli_fetch_assoc($result);
 			return $result['companyid'];
 	}
+
 	//Grab any submitted value
-		if (isset($_POST['id'])){
-			$ids = implode(",",$_POST['id']);
-			$update = "UPDATE `journal_entries` SET `confirmed_datetime` = '".$now."', `confirmed_by` = '".$U['id']."' WHERE `id` IN ($ids)";
-			qedb($update);
-		}
+	if (isset($_POST['id'])){
+		$ids = implode(",",$_POST['id']);
+		$update = "UPDATE `journal_entries` SET `confirmed_datetime` = '".$now."', `confirmed_by` = '".$U['id']."' WHERE `id` IN ($ids)";
+		qedb($update);
+	}
 		
 	$company = 'NO COMPANY SELECTED THIS IS PROBABLY NOT AN ORDER';
 	$order_type = '';
@@ -81,20 +132,158 @@
             </tr>
         ";
     }
-    $invoices = "
-            <tr>
-                <td colspan = '9' class='text-center'>
-                    - No Invoices -
-                </td>
-            </tr>
-    ";
-    $bills = "
-            <tr>
-                <td colspan = '9' class='text-center'>
-                    - No Bills -
-                </td>
-            </tr>
-    ";
+
+    //Invoices population
+ //    $select = "
+	// SELECT i.order_number, i.companyid, i.date_invoiced, i.invoice_no, q.date_completed FROM `invoices` as i, `qb_log` as q WHERE i.order_type = 'Sale' AND i.invoice_no = q.order_number";
+	// $select .= " ORDER BY i.invoice_no DESC LIMIT 0,50 ";
+	// $select .= ";";
+
+    $select = "
+	SELECT * FROM `invoices` WHERE order_type = 'Sale'";
+	$select .= " ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300 ";
+	$select .= ";";
+	$invoices_results = qdb($select);
+
+	$invoice_info = array();
+
+	$invoices = '';
+	if(mysqli_num_rows($invoices_results) > 0){
+	    foreach($invoices_results as $row){
+	    	//Grab Order Information
+	    	if($row['order_type'] == 'Sale') {
+				$query = "SELECT * FROM sales_orders WHERE so_number = ".prep($row['order_number'])."; ";
+				$result = qdb($query) OR die(qe().' '.$query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$invoice_info = $r;
+				}
+			} else {
+				// $query = "SELECT * FROM returns WHERE so_number = ".prep($row['order_number'])."; ";
+				// $result = qdb($query) OR die(qe().' '.$query);
+				// if (mysqli_num_rows($result)>0) {
+				// 	$r = mysqli_fetch_assoc($result);
+				// 	$invoice_info = $r;
+				// }
+			}
+
+			$address = getAddresses($invoice_info['bill_to_id']);
+
+			$term = '';
+			$amount = 0.00;
+			$completed = '';
+
+			$query = "SELECT terms FROM terms WHERE id = ".prep($invoice_info['termsid']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$term = $r['terms'];
+			}
+
+			$query = "SELECT SUM(price) * qty as amount FROM sales_items WHERE so_number = ".prep($row['order_number']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$amount = $r['amount'];
+			}
+
+			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['invoice_no']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$completed = $r['date_completed'];
+			}
+
+	    	$invoices .= "
+	            <tr>
+                    <td>".getCompany($row['companyid'])."</td>
+                    <td>".$address['street']."</td>
+                    <td>".format_date($row['date_invoiced'])."</td>
+                    <td>".$row['order_number']."</td>
+                    <td>".$term."</td>
+                    <td>".$row['notes']."</td>
+                    <td>".formatAddedDate($row['date_invoiced'], '30')."</td>
+                    <td class='text-right'>".format_price($amount)."</td>
+                    <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='invoice_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
+	            </tr>
+            ";
+	    }
+	} else {
+	    $invoices = "
+	            <tr>
+	                <td colspan = '9' class='text-center'>
+	                    - No Invoices -
+	                </td>
+	            </tr>
+	    ";
+	}
+
+	//Bills population
+    $select = "
+	SELECT * FROM `bills`";
+	$select .= " ORDER BY `bills`.`bill_no` DESC LIMIT 0,300 ";
+	$select .= ";";
+	$bills_results = qdb($select);
+	if(mysqli_num_rows($bills_results) > 0){
+	    foreach($bills_results as $row){
+	    	//Grab Order Information
+			$query = "SELECT * FROM purchase_orders WHERE po_number = ".prep($row['po_number'])."; ";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$invoice_info = $r;
+			}
+
+			$address = getAddresses($invoice_info['remit_to_id']);
+
+			$term = '';
+			$amount = 0.00;
+			$completed = '';
+
+			$query = "SELECT terms FROM terms WHERE id = ".prep($invoice_info['termsid']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$term = $r['terms'];
+			}
+
+			$query = "SELECT SUM(price) * qty as amount FROM purchase_items WHERE po_number = ".prep($row['po_number']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$amount = $r['amount'];
+			}
+
+			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['bill_no']).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$completed = $r['date_completed'];
+			}
+
+	    	$bills .= "
+	            <tr>
+                    <td>".getCompany($row['companyid'])."</td>
+                    <td>".$address['street']."</td>
+                    <td>".format_date($row['date_created'])."</td>
+                    <td>".$row['order_number']."</td>
+                    <td>".$term."</td>
+                    <td>".$row['notes']."</td>
+                    <td>".formatAddedDate($row['date_invoiced'], '30')."</td>
+                    <td class='text-right'>".format_price($amount)."</td>
+                    <td class='text-center'><input type='checkbox' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
+	            </tr>
+            ";
+	    }
+	} else {
+	    $bills = "
+	            <tr>
+	                <td colspan = '9' class='text-center'>
+	                    - No Bills -
+	                </td>
+	            </tr>
+	    ";
+	}
 	
     $order_types = getEnumValue("journal_entries","trans_type");
     
@@ -119,7 +308,6 @@
 	?>
 </head>
 <body>
-
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
 <!----------------------------------------------------------------------------->
@@ -278,6 +466,7 @@
 				<!-- Invoices pane -->
 				<div class="tab-pane" id="invoices">
 					<form class="form-inline" action='/transactions.php' method='POST'>
+					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
@@ -300,6 +489,7 @@
 				<!-- Bills pane -->
 				<div class="tab-pane" id="bills">
 					<form class="form-inline" action='/transactions.php' method='POST'>
+					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
