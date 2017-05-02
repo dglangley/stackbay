@@ -72,7 +72,7 @@
 
 			case 'purchases':
 				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
-				$query .= "sales_rep_id userid, parts, heci FROM purchase_items, purchase_orders, companies, parts ";
+				$query .= "sales_rep_id userid, part, heci FROM purchase_items, purchase_orders, companies, parts ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				$query .= "AND parts.id = purchase_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
