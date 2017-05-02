@@ -16,6 +16,7 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getFreight.php';
     include_once $rootdir.'/inc/getWarranty.php';
+    include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
@@ -135,9 +136,10 @@
                             $item_rows .='</ul>
                         </div>
                     </td>
-                    <td class="text-center '.(($o['due_date'])? '' : 'remove' ).'">'.format_date($item[$date_field],'m/d/y').'</td>
+                    <td class="text-center '.(($o['due_date'])? '' : 'remove' ).'">'.format_date($item[$o['date_field']],'m/d/y').'</td>
                     <td class="text-center '.($o['warranty'] ? '' : 'remove').'">'.getWarranty($item['warranty'],'name').'</td> 
                     ';
+                    $item_rows .= ($o['purchase']? '<td>'.getCondition($item['conditionid']).'</td>' : "");
                     if($o['credit']){
                         $item_rows .= "<td>";
                         foreach($serials as $serial){
@@ -237,6 +239,9 @@
             }
             body{
                 /*margin:0.5in;*/
+            }
+            td{
+                text-align:center;
             }
             #ps_bold{
 				float:right;
@@ -431,9 +436,10 @@ $html_page_str .= '
                 <th>Ln#</th>
                 <th>Description</th>
                 <th class="'.(($o['due_date'])? '' : 'remove' ).'">Due Date</th>
-                <th class="'.($o['warranty']? '' : 'remove').'">Warranty</th>'.
-                ($o['credit']? '<th>Serials</th>' : "").
-                '<th class="'.($o['rma'] ? 'remove' : '').'">Qty</th>'.'
+                <th class="'.($o['warranty']? '' : 'remove').'">Warranty</th>
+                '.($o['credit']? '<th>Serials</th>' : "").'
+                '.($o['purchase']? '<th>Cond</th>' : "").'
+                <th class="'.($o['rma'] ? 'remove' : '').'">Qty</th>
                 <th>'.$o['price'].'</th>
                 <th>'.($o['rma'] ? 'Disposition' : 'Ext Price').'</th>
                 <th class="'.($o['rma'] ? '' : 'remove').'">Qty</th>

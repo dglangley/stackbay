@@ -13,6 +13,7 @@
 			
 			
 			$info['order'] = "purchase_orders";
+			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Purchase Order";
 			$info['item'] = "purchase_items";
 			$info['client'] = "Vendor";
@@ -202,7 +203,7 @@
 			$info['item'] = "sales_credit_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
-			$info['contact_col'] = '';
+			$info['contact_col'] = 'Sales Rep';
 			$info['price'] = 'Amount Ea.';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";

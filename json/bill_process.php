@@ -21,7 +21,7 @@
             $data = json_decode(grab('submission'),true);
             
             $bill_number = $data['bill_no'];
-            $due_date = format_date($GLOBALS['today'],"Y-m-d");
+            $due_date = format_date($data['due_date'], "Y-m-d");
             
             if ($bill_number == 'new'){
                 $company_id = '';
@@ -36,19 +36,19 @@
                 if (mysqli_num_rows($po_results)>0){
                     $po_results = mysqli_fetch_assoc($po_results);
                     $company_id = $po_results['company'];
-                    if($po_results['days'] > 0){
-                        $due_date = format_date($due_date, "Y-m-d",array("d" => $po_results['days']));
-                    }
+                    // if($po_results['days'] > 0){
+                    //     $due_date = format_date($due_date, "Y-m-d",array("d" => $po_results['days']));
+                    // }
                 }
 
                 $bill_insert = "
                 INSERT INTO `bills`(
-                `assoc_invoice`,
+                `invoice_no`,
                 `date_created`,
                 `due_date`,
                 `po_number`,
                 `companyid`) VALUES (
-                ".prep($data['assoc_invoice']).",
+                ".prep($data['invoice_no']).",
                 NOW(),
                 ".prep($due_date,'NULL').",
                 ".prep($data['po_number']).",

@@ -539,6 +539,7 @@
 															break;
 															
 													}
+													
 													if($select){
 														$result = qdb($select);
 														$result = mysqli_fetch_assoc($result);
@@ -555,12 +556,10 @@
 															echo  "<br>";
 															echo  $action.": ".format_date($history['date'],"n/j/y");
 															$hist_count++;
-														}
-														else if ($hist_count == 4){
+														} else if ($hist_count == 4){
 															echo "<a class = 'lonk'>Show more</a>";
 															break;
-														}
-														else{
+														} else {
 															echo  $action.": ".format_date($history['date'],"n/j/y");
 															$hist_count++;
 														}
