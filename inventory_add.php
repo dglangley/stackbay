@@ -218,11 +218,11 @@
 										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
-										<div class="row-fluid locations_tracker" data-serial="">
-											<div class="col-md-6 location" style="padding: 0 0 0 5px;">
+										<div class="row locations_tracker" data-serial="">
+											<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
-											<div class="col-md-6 instance" style="padding: 0 0 0 5px">
+											<div class="col-md-6 instances" style="padding: 0 0 0 5px">
 												<?=loc_dropdowns('instance')?>
 											</div>
 										</div>
