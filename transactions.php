@@ -266,12 +266,12 @@
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_created'])."</td>
-                    <td>".$row['order_number']."</td>
+                    <td>".$row['invoice_no']."</td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
                     <td>".formatAddedDate($row['date_invoiced'], '30')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
-                    <td class='text-center'><input type='checkbox' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
+                    <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>
             ";
 	    }
