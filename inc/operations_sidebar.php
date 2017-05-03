@@ -446,10 +446,23 @@ include_once $rootdir.'/inc/packages.php';
 			}
 		}
 		if($mode == 'bill'){
-			$bill_meta_select = "SELECT * FROM bills WHERE `bill_no` = ".prep($order_number).";";
-			$bill_meta_result = qdb($bill_meta_select) or die(qe()." | ".$bill_meta_select);
-			$bill_meta_arr = mysqli_fetch_assoc($bill_meta_result);
-			$vendor = getCompany($bill_meta_arr['companyid']);
+			$po = grab('on');
+			$bill = grab('bill');
+			if($bill != 'new'){
+				$bill_meta_select = "SELECT * FROM bills WHERE `bill_no` = ".prep($order_number).";";
+				$bill_meta_result = qdb($bill_meta_select) or die(qe()." | ".$bill_meta_select);
+				$bill_meta_arr = mysqli_fetch_assoc($bill_meta_result);
+				$vendor = getCompany($bill_meta_arr['companyid']);
+				$customer_invoice = $bill_meta_arr['invoice_no'];
+				$date = format_date($bill_meta_arr['due_date'],"n/j/Y");
+			} else {
+				//Otherwise the value is a purchase order and we need to perform some calculations
+				$due_select = "SELECT created, companyid, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po).";";
+				$due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
+				$due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
+				$date = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+				$vendor = getCompany($due_estimate_arr['companyid']);
+			}
 			
 			$right.="
 					<div class='row'>
