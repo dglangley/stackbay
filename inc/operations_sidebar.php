@@ -57,7 +57,7 @@ include_once $rootdir.'/inc/packages.php';
 	
 
 	
-	function edit($order_number,$order_type, $mode=''){
+	function edit($order_number,$order_type, $mode='',$current_no = ''){
 		global $rtv_items;
 	//======================= DECLARE VARIABLE DEFAULTS ======================= 
 		//This will have the reference order number(s) and associated files attached to it
@@ -386,7 +386,7 @@ include_once $rootdir.'/inc/packages.php';
 		// }
 		$right .= "		<div class='sidebar-container'>";
 
-		if ($order_number) {
+		if ($order_number && !($page == "bill")) {
 			
 			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
 			$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
@@ -446,6 +446,11 @@ include_once $rootdir.'/inc/packages.php';
 			}
 		}
 		if($mode == 'bill'){
+			$bill_meta_select = "SELECT * FROM bills WHERE `bill_no` = ".prep($order_number).";";
+			$bill_meta_result = qdb($bill_meta_select) or die(qe()." | ".$bill_meta_select);
+			$bill_meta_arr = mysqli_fetch_assoc($bill_meta_result);
+			$vendor = getCompany($bill_meta_arr['companyid']);
+			
 			$right.="
 					<div class='row'>
 						<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
@@ -454,8 +459,31 @@ include_once $rootdir.'/inc/packages.php';
 								$right .= "<input name = 'associated_invoice' id='customer_invoice' class = 'form-control'>";
 			$right .="</div>
 			</div>";
+			
+			//Estimate the Due date based off payment terms/date purchased
+			
+			$right.='
+					<div class="row">
+						<div class="col-sm-12" style="padding-bottom: 10px;font-size:14pt; ">
+							<label for="associated_invoice">Payment Due:</label>
+							<div class="form-group">
+								<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+						            <input type="text" id = "due_date" name="due_date" class="form-control" value="">
+						            <span class="input-group-addon">
+						                <span class="fa fa-calendar"></span>
+						            </span>
+						        </div>
+							</div>
+						</div>
+					</div>';
+			$right.='
+				<div class="row">
+					<div class="col-sm-12" style="padding-bottom: 10px;font-size:12pt; ">
+						VENDOR: '.$vendor.'
+					</div>
+				</div>';
 		}
-		if($results) {
+		if($results && !($mode == "bill")) {
 			//Contact Output
 			$right .= "<div class='row'>";
 			$right .= "<div class='col-md-12'>";

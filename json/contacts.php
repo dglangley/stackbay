@@ -15,7 +15,7 @@
     
     $output = array();
     
-    $query = "SELECT DISTINCT * FROM `contacts` WHERE ";
+    $query = "SELECT DISTINCT * FROM `contacts` WHERE status = 'Active' AND ";
 	if ($companyid AND ! $q) {//showing all company-specific results without user search string
         $query .= "`companyid` = $cid ";
 	} else {

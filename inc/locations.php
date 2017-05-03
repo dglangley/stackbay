@@ -167,6 +167,16 @@
         return $display;
     }
     
+    function run_through_old($inventory_id){
+        $new = "SELECT * FROM `inventory`";
+        
+        foreach($results as $row){
+            $old = "SELECT * FROM `inventory_inventory` WHERE `serial_no` ;";
+            $row['serial_no'] = $row[''];
+        }
+        
+    }
+    
     $LOCATION_MAP = array();
     function convert_locations($location_id, $old_to_new = true){
         global $LOCATION_MAP;
@@ -179,6 +189,5 @@
         $select = "SELECT * FROM location WHERE `place` LIKE ".prep($parsed[0]);
         $select = ($parsed[1] ? " AND `instance` LIKE ".prep($parsed[1]): "");
         $select .= ";";
-        
     }
 ?>

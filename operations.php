@@ -265,7 +265,7 @@
 		            </table>
 		    	</div>
 		    	<div class="col-sm-12 text-center shipping_section_foot shipping_section_foot_lock more" style="padding:0px !important; vertical-align:bottom !important">
-	            	<a href="#">Show more</a>
+	            	<a class="show_more_link" href="#">Show more</a>
 	            </div>
             </div>
         </div>';
@@ -693,27 +693,37 @@
 
 			if(type == 'complete') {
 				$('.complete_item').show();
+				$('.show_more').hide();
 			} else if(type == 'active') {
 				$('.active_item ').show();	
+				$('.show_more').hide();
 			} else {
 				$('.filter_item').show();
+				$('.show_more').hide();
 			}
 		}
 		
 		$(document).on("click onload", ".filter_status", function(){
 			var type = $(this).data('filter');
+			//alert($('.show_more_link:first').text() == "Show more");
 			
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
 			
 			if(type == 'complete') {
 				$('.complete_item').show();
+				if($('.show_more_link:first').text() == "Show more") 
+					$('.show_more').hide();
 				$(this).addClass('active');
 			} else if(type == 'active') {
-				$('.active_item ').show();	
+				$('.active_item ').show();
+				if($('.show_more_link:first').text() == "Show more") 
+					$('.show_more').hide();	
 				$(this).addClass('active');
 			} else {
 				$('.filter_item').show();
+				if($('.show_more_link:first').text() == "Show more") 
+					$('.show_more').hide();
 				$(this).addClass('active');
 			}
 			

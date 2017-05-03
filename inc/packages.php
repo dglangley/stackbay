@@ -184,4 +184,14 @@
 		$result = qdb($query);
 		return $result;
 	}
+	
+	//When one has a package ID, output the relevant package information
+	function getPackageInfo($package_id, $info = 'name'){
+	    if($info == "name"){
+	        $select = "Select package_no as name FROM packages WHERE id = ".prep($package_id).";";
+	    }
+	    $result = qdb($select) or die(qe()." | ".$select);
+	    $result = mysqli_fetch_assoc($result);
+	    return $result[$info];
+	}
 ?>

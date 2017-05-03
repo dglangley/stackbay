@@ -504,7 +504,7 @@
 											foreach ($serials as $serial):
 										?>
 	
-									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= $serial['packageid']; ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+									    <input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" data-package = "<?= getPackageInfo($serial['packageid']); ?>" value="<?= getComments($serial['id']); ?>" placeholder="Comments" data-serial='<?=$serial['serial_no']?>' data-inv-id='<?=$serial['id']?>' data-part="<?php echo getPartName($item['partid']); ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
 	
 										<?php endforeach; ?>
 										</div>
