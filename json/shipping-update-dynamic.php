@@ -70,7 +70,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$match = qdb($query) or die(qe());
 					
 					//Pair the package to the line item of the inventory number we changed.
-					$package_query = "INSERT INTO package_contents VALUES ('$package','$inventory_id');";
+					$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$package','$inventory_id');";
 					$result['package'] = qdb($package_query) OR die(qe());
 					
 					if (mysqli_num_rows($match)>0) {
