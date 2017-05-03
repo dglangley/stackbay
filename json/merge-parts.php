@@ -150,8 +150,8 @@
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE inventory SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
+//	$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+//	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE return_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
