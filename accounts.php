@@ -59,7 +59,14 @@
 	}
 	// if no start date passed in, or invalid, set to beginning of previous month
 	if (! $startDate) {
-		$startDate = format_date($today,'m/01/Y',array('m'=>-1));
+		$y = date("Y");
+		// set date to beginning of the first month of the *previous* quarter
+		$q = ceil(date("m")/3);
+		$last_q = $q-1;
+		if ($last_q==0) { $last_q = 4; $y -= 1; }
+		$start_m = ($last_q*3)-2;
+		//$startDate = format_date($today,'m/01/Y',array('m'=>-3));
+		$startDate = format_date($y.'-'.$start_m.'-01','m/01/Y');
 	}
 
 	$endDate = date('m/d/Y');
@@ -166,7 +173,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-            <h2 class="minimal"><?php echo ('Accounts'); if($company_filter){ echo ': '; echo getCompany($company_filter); } ?></h2>
+			<h2 class="minimal">Accounts</h2>
 		</td>
 		<td class="col-md-2 text-center">
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
@@ -192,11 +199,13 @@
 	</table>
 	<!-- If the summary button is pressed, inform the page and depress the button -->
 	
-	
 <!------------------------------------------------------------------------------------>
 <!---------------------------------- FILTERS OUTPUT ---------------------------------->
 <!------------------------------------------------------------------------------------>
     <div id="pad-wrapper">
+	
+		<?php if ($company_filter) { echo '<h3 class="text-center minimal">'.getCompany($company_filter).'</h3>'; } ?>
+
 		<div class="row filter-block">
 
 		<br>
@@ -209,7 +218,7 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($company_filter) {
-		$footer_span2 = 1;
+		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 2;
 			$widths = array(3,3,2,2);
@@ -285,7 +294,7 @@
 	$summary_rows = array();
 	if($report_type == 'summary'){
 	    foreach ($result as $row){
-            $id = $row['quote_id'];
+            $id = $row['order_num'];
 			if ($order AND $order<>$id) { continue; }
 
 			$r['price'] = format_price($r['price'],true,'',true);
@@ -321,7 +330,7 @@
         }
 	} else if ($report_type=='detail') {
 		foreach ($result as $r){
-			if ($order AND $order<>$r['quote_id']) { continue; }
+			if ($order AND $order<>$r['order_num']) { continue; }
 
 			$r['price'] = format_price($r['price'],true,'',true);
 
@@ -356,18 +365,20 @@
 			';
 
 			// legacy (pipe) support
-			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
-			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
+//			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
+//			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
 
-			$descr = $r['part'].' &nbsp; '.$r['heci'];
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['quote_id'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+			$part = $r['part'];
+			if (strlen($part)>40) { $part = substr($r['part'],0,38).'...'; }
+			$descr = $part.' &nbsp; '.$r['heci'];
+			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['order_num'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
 			$results[] = $row;
 		}
 
 		foreach ($results as $r) {
 			$ln = '#';
-			if ($orders_table=='sales') { $ln = 'https://db.ven-tel.com:10086/ventel/company/view_so/'.$r['id']; }
-			else if ($orders_table=='purchases') { $ln = 'https://db.ven-tel.com:10086/ventel/company/view_po/'.$r['id']; }
+			if ($orders_table=='sales') { $ln = '/SO'.$r['id']; }
+			else if ($orders_table=='purchases') { $ln = 'PO'.$r['id']; }
 			$rows .= '
                             <!-- row -->
                             <tr>

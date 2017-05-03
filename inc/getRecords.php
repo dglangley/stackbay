@@ -71,8 +71,10 @@
 				break;
 
 			case 'purchases':
-				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number, qty, price, partid, sales_rep_id userid FROM purchase_items, purchase_orders, companies ";
+				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
+				$query .= "sales_rep_id userid, part, heci FROM purchase_items, purchase_orders, companies, parts ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
+				$query .= "AND parts.id = purchase_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
@@ -84,8 +86,10 @@
 				break;
 
 			case 'sales':
-				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number, qty, price, partid, sales_rep_id userid FROM sales_items, sales_orders, companies ";
+				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
+				$query .= "sales_rep_id userid, part, heci FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
+				$query .= "AND parts.id = sales_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
