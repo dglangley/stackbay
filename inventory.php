@@ -24,7 +24,7 @@
 <html>
 <!-- Declaration of the standard head with Accounts home set as title -->
 <head>
-	<title>VMM Inventory</title>
+	<title>Inventory</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -521,7 +521,7 @@
 						} else {
 							console.log("Nothing_found")
 							//$(".loading_element_listing").hide();
-					  		alert("No Parts Found with those parameters");
+					  		//alert("No Parts Found with those parameters");
 							$("#item-none").show();
 						}
 					},
