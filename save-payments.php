@@ -10,7 +10,7 @@
 			$id = 0;
 			//This section checks if the payment id or number is already in the table
 			//If so update and sum the amounts together with the new payment
-			$query = "SELECT amount, id FROM payments WHERE number = ".res($payment_ID).";";
+			$query = "SELECT amount, id FROM payments WHERE number = ".prep($payment_ID).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 			
 			if (mysqli_num_rows($result)>0) {
@@ -21,8 +21,8 @@
 	        
 			$query = "REPLACE payments (companyid, date, number, amount, payment_type, notes";
 			if ($id) { $query .= ", id"; }
-			$query .= ") VALUES (".res($companyid).", ".$payment_date.", ".res($payment_ID).", ".res($payment_amount).", '".res($payment_type)."', '".res($notes)."'";
-			if ($id) { $query .= ",'".$id."'"; }
+			$query .= ") VALUES (".prep($companyid).", ".$payment_date.", ".prep($payment_ID).", ".prep($payment_amount).", ".prep($payment_type).", ".prep($notes)."";
+			if ($id) { $query .= ",".prep($id); }
 			$query .= ");";
 			qdb($query) OR die(qe().' '.$query);
 			//Get the payment id
@@ -41,9 +41,9 @@
 		
 		//This query is mainly to get the total amount of cost for the order
 		if($type == 'po') {
-			$query = "SELECT SUM(qty * price) AS item_total FROM purchase_items WHERE po_number = ".res($order).";";
+			$query = "SELECT SUM(qty * price) AS item_total FROM purchase_items WHERE po_number = ".prep($order).";";
 		} else {
-			$query = "SELECT SUM(qty * price) AS item_total FROM sales_items WHERE so_number = ".res($order).";";
+			$query = "SELECT SUM(qty * price) AS item_total FROM sales_items WHERE so_number = ".prep($order).";";
 		}
 		
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -54,7 +54,7 @@
         
         //Find the amount paid so far for this order on this payment number
         //In most cases I do not believe the user will pay recursively with the same check# (this is most likely a fall back that will never be used)
-		$query_details = "SELECT amount FROM payment_details WHERE order_number = ".res($order)." AND order_type = '".res($type)."' AND paymentid = ".res($id).";";
+		$query_details = "SELECT amount FROM payment_details WHERE order_number = ".prep($order)." AND order_type = ".prep($type)." AND paymentid = ".prep($id).";";
 		
 		$result = qdb($query_details) OR die(qe().' '.$query_details);
 		if (mysqli_num_rows($result)>0) {
@@ -66,7 +66,7 @@
         $check_amount += $paid;
 
         //Find the total amount paid so far for this order (UNUSED)
-		$query_details = "SELECT SUM(amount) AS item_total FROM payment_details WHERE order_number = ".res($order)." AND order_type = '".res($type)."';";
+		$query_details = "SELECT SUM(amount) AS item_total FROM payment_details WHERE order_number = ".prep($order)." AND order_type = ".prep($type).";";
 		
 		//Just used to update the total amount paid for the current order amongst all payments given
 		// $result = qdb($query_details) OR die(qe().' '.$query_details);
@@ -75,7 +75,7 @@
 		// 	$paidTotal += $r['item_total'];
   //      }
         
-		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".res($order).", '".res($type)."', '".res($ref_num)."', '".res($ref_type)."', $check_amount, ".res($id).");";
+		$query = "REPLACE payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".prep($order).", ".prep($type).", ".prep($ref_num).", ".prep($ref_type).", $check_amount, ".prep($id).");";
 			qdb($query) OR die(qe().' '.$query);
 	}
 	

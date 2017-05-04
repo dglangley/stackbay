@@ -98,3 +98,4 @@
             echo json_encode($bill_number);
             exit;
 ?>
+
