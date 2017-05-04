@@ -66,7 +66,7 @@
 		return $result;
 	}
 
-	function formatAddedDate($date,$days){
+	function transaction_date($date,$days){
 		//$date = format_date($date);
 	    $date = date('Y-m-d\\TH:i:s\\Z', strtotime("+".$days." days", strtotime($date)));
 	    return format_date($date);
@@ -202,7 +202,7 @@
                     <td>".$row['order_number']."</td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
-                    <td>".formatAddedDate($row['date_invoiced'], '30')."</td>
+                    <td>".summarize_date($row['date_invoiced'], '30')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
                     <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='invoice_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>
@@ -269,7 +269,7 @@
                     <td>".$row['invoice_no']."</td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
-                    <td>".formatAddedDate($row['date_invoiced'], '30')."</td>
+                    <td>".summarize_date($row['date_invoiced'], '30')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
                     <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>
@@ -540,3 +540,5 @@
 
 </body>
 </html>
+
+
