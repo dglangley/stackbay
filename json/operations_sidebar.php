@@ -349,6 +349,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
 			$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
 			$contact = $row['contactid'];
+			$ref_ln = '';
 			if($page == 'Purchase'){
 				$b_add = $row['remit_to_id'];
 			}

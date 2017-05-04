@@ -301,7 +301,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>VMM Transactions</title>
+	<title>Transactions</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
