@@ -10,6 +10,26 @@
 	$bogus = array();
 
 	$bogus_serial = 0;
+	
+	//Find the largest Bogus Serial
+	$query = "SELECT MAX(serial_no) sn FROM inventory WHERE serial_no LIKE 'VTL%'; ";// ORDER BY id DESC; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	$r = mysqli_fetch_assoc($result);
+	$bogus_serial = (int)str_replace("VTL","",$r['sn']);
+die($bogus_serial);
+/*
+		$bogus[] = $r['serial_no'];
+	}
+
+	foreach($bogus as $serial) {
+		$new_serial = (int)str_replace("VTL", "", $serial);
+
+		if($bogus_serial < $new_serial) {
+			$bogus_serial = $new_serial;
+			$bogus_serial++;
+		}
+	}
+*/
 
 	function setSerial($serial,$order_type='',$order=0,$id=0) {
 		global $bogus_serial,$SERIALS;
@@ -35,26 +55,16 @@
 	}
 	
 	//For testing purposes and compile time adding LIMIT 30
-	$query = "SELECT * FROM inventory_itemlocation ORDER BY id ASC; ";
+//	$query = "SELECT * FROM inventory_itemlocation ORDER BY id ASC; ";
+	$query = "SELECT i.id, cost, serial, location_id, freight_cost, orig_cost, part_number,
+   short_description, heci, clei, modified_date as date,
+   count(*) groupcount, sum(quantity_stock) tqs, count(il.id) tcount
+   FROM inventory_itemlocation il, inventory_inventory i
+   where il.inventory_id = i.id and (serial = '000' or serial = '0')
+   GROUP BY part_number, heci order by cost desc;";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$items[] = $r;
-	}
-	
-	//Find the largest Bogus Serial
-	$query = "SELECT serial_no FROM inventory WHERE serial_no LIKE 'VTL%' ORDER BY id DESC; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$bogus[] = $r['serial_no'];
-	}
-
-	foreach($bogus as $serial) {
-		$new_serial = (int)str_replace("VTL", "", $serial);
-
-		if($bogus_serial < $new_serial) {
-			$bogus_serial = $new_serial;
-			$bogus_serial++;
-		}
 	}
 
 
@@ -62,7 +72,6 @@
 	//print_r($bogus);
 
 	foreach ($items as $key => $value) {
-		$partnumber = '';
 		$inventoryid = 0;
 		$poid = '';
 		$date_created = '';
@@ -71,6 +80,7 @@
 		$serial =  setSerial($value['serial']);
 		echo $serial . '<br>';
 
+/* dgl 5-4-17 for 000 fix
 		//Check to see if the serial already exists
 		$query = "SELECT id FROM inventory WHERE serial_no = ".prep($serial).";";
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -80,9 +90,10 @@
 			echo '<br><br>';
 			continue;
 		}
+*/
 
 		//Map location id here
-		$locationid = mapLocationID($value['location_id']);
+		$locationid = $value['location_id'];//mapLocationID($value['location_id']);
 
 		//Check for a valid po_id here
 		if($value['po_id']) {
@@ -92,16 +103,25 @@
 		} 
 
 		//Map Inventoryid here (serialid)
-		//Get the partnumber for use in getPartID
-		$query = "SELECT part_number, modified_date FROM inventory_inventory WHERE id = ".prep($value['inventory_id']).";";
+		//Get the partnumber for use in getPartId
+		$query = "SELECT part_number, clei, heci, modified_date FROM inventory_inventory WHERE id = ".prep($value['inventory_id']).";";
 		$result = qdb($query, 'PIPE') OR die(qe('PIPE').' '.$query);
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$partnumber = $r['part_number'];
-			$date_created = $r['modified_date'];
+		if (mysqli_num_rows($result)==0) {
+			die("What happened here?<BR>".$query);
 		}
+		$r = mysqli_fetch_assoc($result);
+		$date_created = $r['modified_date'];
 
-		$partid = getPartID($partnumber);
+		if ($r['clei']) { $r['heci'] = $r['clei']; }
+		else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
+		else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
+
+		$partid = getPartId($r['part_number'],$r['heci']);
+echo 'partid: '.$partid.'<BR>';
+continue;
+		if (! $partid) {
+			$partid = setPart(array('part'=>$r['part_number'],'heci'=>$r['heci']));//,'manf'=>$r['manf'],'descr'=>$r['description']));
+		}
 		echo 'Translated Partid: ' .$partid. '<br>';
 
 		$status = prep('shelved');
