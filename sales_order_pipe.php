@@ -1,6 +1,6 @@
 <html>
     <head>
-    	<title>VMM Accounts Home</title>
+    	<title>Accounts Home</title>
     	<?php
     		include_once $rootdir.'inc/scripts.php';
     	?>
