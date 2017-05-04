@@ -16,7 +16,6 @@
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	$r = mysqli_fetch_assoc($result);
 	$bogus_serial = (int)str_replace("VTL","",$r['sn']);
-die($bogus_serial);
 /*
 		$bogus[] = $r['serial_no'];
 	}
@@ -57,11 +56,12 @@ die($bogus_serial);
 	//For testing purposes and compile time adding LIMIT 30
 //	$query = "SELECT * FROM inventory_itemlocation ORDER BY id ASC; ";
 	$query = "SELECT i.id, cost, serial, location_id, freight_cost, orig_cost, part_number,
-   short_description, heci, clei, modified_date as date,
-   count(*) groupcount, sum(quantity_stock) tqs, count(il.id) tcount
+   short_description, heci, clei, modified_date as date, inventory_id /*,
+   count(*) groupcount, sum(quantity_stock) tqs, count(il.id) tcount*/
    FROM inventory_itemlocation il, inventory_inventory i
    where il.inventory_id = i.id and (serial = '000' or serial = '0')
-   GROUP BY part_number, heci order by cost desc;";
+   /*GROUP BY inventory_id*/ order by cost desc;";
+echo $query.'<BR><BR>';
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$items[] = $r;
@@ -71,6 +71,7 @@ die($bogus_serial);
 	echo 'Starting Serial for Bogus: ' . $bogus_serial . '<br><br>';
 	//print_r($bogus);
 
+	$i = 0;
 	foreach ($items as $key => $value) {
 		$inventoryid = 0;
 		$poid = '';
@@ -78,7 +79,7 @@ die($bogus_serial);
 
 		// if($serial = '000') {
 		$serial =  setSerial($value['serial']);
-		echo $serial . '<br>';
+		//echo $serial . '<br>';
 
 /* dgl 5-4-17 for 000 fix
 		//Check to see if the serial already exists
@@ -95,15 +96,9 @@ die($bogus_serial);
 		//Map location id here
 		$locationid = $value['location_id'];//mapLocationID($value['location_id']);
 
-		//Check for a valid po_id here
-		if($value['po_id']) {
-			$poid = $value['po_id'];
-		//Else if a quote exists for this item then try to find it through quotes
-		//Found that there are no cases where iq_id exists when po is null
-		} 
-
 		//Map Inventoryid here (serialid)
 		//Get the partnumber for use in getPartId
+/*
 		$query = "SELECT part_number, clei, heci, modified_date FROM inventory_inventory WHERE id = ".prep($value['inventory_id']).";";
 		$result = qdb($query, 'PIPE') OR die(qe('PIPE').' '.$query);
 		if (mysqli_num_rows($result)==0) {
@@ -111,18 +106,31 @@ die($bogus_serial);
 		}
 		$r = mysqli_fetch_assoc($result);
 		$date_created = $r['modified_date'];
+*/
+		$date_created = $value['date'];
 
-		if ($r['clei']) { $r['heci'] = $r['clei']; }
-		else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
-		else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
+		if ($value['clei']) { $value['heci'] = $value['clei']; }
+		else if (strlen($value['heci'])<>7 OR is_numeric($value['heci']) OR preg_match('/[^[:alnum:]]+/',$value['heci'])) { $value['heci'] = ''; }
+		else { $value['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string
 
-		$partid = getPartId($r['part_number'],$r['heci']);
-echo 'partid: '.$partid.'<BR>';
-continue;
+		$partid = getPartId($value['part_number']);//,$value['heci']);
+		if ($partid) { continue; }
+
+		$partid = getPartId($value['part_number'],$value['heci']);
 		if (! $partid) {
-			$partid = setPart(array('part'=>$r['part_number'],'heci'=>$r['heci']));//,'manf'=>$r['manf'],'descr'=>$r['description']));
+			$partid = setPart(array('part'=>$value['part_number'],'heci'=>$value['heci']));//,'manf'=>$value['manf'],'descr'=>$value['description']));
 		}
 		echo 'Translated Partid: ' .$partid. '<br>';
+
+		//Check for a valid po_id here
+		if($value['po_id']) {
+			$query2 = "SELECT id FROM purchase_items WHERE partid = '".$partid."' AND po_number = '".$value['po_id']."'; ";
+			$result2 = qdb($query2) OR die(qe().' '.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$poid = $r2['id'];
+			}
+		} 
 
 		$status = prep('shelved');
 		$qty = prep('1');
@@ -131,7 +139,11 @@ continue;
 		//$inventoryid = setInventory($serial,$partid,$item_id,$id_field,$status,$stock_date,$qty=false);
 		$rmaid = '';
 
-		$inventoryid = insertSerialItem($serial, $partid, $locationid, $poid, $rmaid, $date_created, $inventoryid);
+		$i++;
+echo 'Brian: '.$value['serial'].' serial, '.$value['inventory_id'].' inventory_id, '.$value['location_id'].' locid, '.$value['po_id'].' po_id, '.$value['date'].'<BR>';
+echo 'Stackbay: '.$serial.' serial, '.$partid.' partid, '.$locationid.' locationid, '.$poid.' po id, '.$rmaid.' rmaid, '.$date_created.'<BR><BR>';
+continue;
+		$inventoryid = insertSerialItem($serial, $partid, $locationid, $poid, $rmaid, $date_created);
 		echo 'Added Serial ID: ' . $inventoryid . '<br>';
 
 		//Run stuff for the inventory_cost log
@@ -171,6 +183,7 @@ continue;
 
 		echo '<br><br>';
 	}
+echo $i.' items imported<BR>';
 
 // 	function setInventory($ser,$partid,$item_id,$id_field,$status,$stock_date,$qty=false) {
 // 		$status = prep($status);
