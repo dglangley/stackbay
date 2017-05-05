@@ -93,6 +93,25 @@
                             if(in_array($item['serial_no'], $BDB_serials)) {
                                 echo '<b>YES</b><br>';
 
+                                $BDB_location = 0;
+
+                                //Find the location of the matching item and update it on the item.
+                                $query = "SELECT location_id FROM inventory_itemlocation WHERE serial = ".prep($item['serial_no']).";";
+                                //echo '<b>Location Find Query</b>: ' . $query . '<br>';
+                                $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+                                if (mysqli_num_rows($result)==1) {
+                                    $r = mysqli_fetch_assoc($result);
+                                    $BDB_location = $r['location_id'];
+                                }
+
+                                echo 'BDB Location to update: ' . $BDB_location . '<br>';
+
+                                if($BDB_location) {
+                                    $query = "UPDATE inventory SET locationid = ".prep($BDB_location)." WHERE serial_no = ".prep($item['serial_no'])." AND partid = ".prep($item['partid']) .";";
+                                    echo '<b>Location Update Query</b>: ' . $query . '<br>';
+                                    //qdb($query) OR die(qe().'<BR>'.$query);
+                                }
+
                                 //Query our Database for this serial and delete all the serial entries that do not pertain to serial_no matched to part
                                 $query = "DELETE FROM inventory WHERE serial_no = ".prep($item['serial_no'])." AND partid <> ".prep($item['partid']) ." AND qty = 1;";
                                 echo '<b>DELETE Query</b>: ' . $query . '<br>';
@@ -105,7 +124,7 @@
                                 //Quickly check BDB if the serial was sold
                                 $query = "SELECT inventory_id FROM inventory_solditem WHERE serial = ".prep($item['serial_no']).";";
                                 $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-                                if (mysqli_num_rows($result)==1) {
+                                if (mysqli_num_rows($result)>1) {
                                     $r = mysqli_fetch_assoc($result);
                                     $soldinvid = $r['inventory_id'];
                                 }
@@ -126,6 +145,9 @@
                                     } else {
                                         echo 'Something went horribly wrong...<br>';
                                     }
+                                //Strain it one more time if sold items fail back to itemlocation (840501083, 841148934)
+                                } else {
+                                    //Not used yet
                                 }
                             }
                         ?></td>
