@@ -8,19 +8,23 @@
     $bill_items = array();
     $credit_items = array();
     
-    if($o['type'] == 'Purchase') {
+    if($o['purchase']) {
         $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($order_number)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
         if(mysqli_num_rows($result) > 0){
-            $rows = mysqli_fetch_assoc($result);
-    	    $bill_items[] = $rows;
+            foreach ($result as $row) {
+                if(!$bill_items[$row['bill_no']]){
+                    $bill_items[$row['bill_no']] = 0.00;
+                }
+        	    $bill_items[$row['bill_no']] += $row['amount'] * $row['qty'];
+            }
     	}
-    } else if($o['type'] == 'Sales') {
+    } else if($o['sales']) {
         $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."';";
         
-        $result = qdb($query) OR die(qe().' '.$query);
+        $result = qdb($query) OR die(qe ().' '.$query);
     	
     	while ($rows = mysqli_fetch_assoc($result)) {
         	$invoice_items[] = $rows;
@@ -99,12 +103,12 @@
                                     <?php } ?>
                                     
                                     <?php if(!empty($bill_items)) { ?>
-                                        <?php foreach($bill_items as $radio_item): ?>
+                                        <?php foreach($bill_items as $bill_no => $total): ?>
                                         <tr>
-                                            <td><input type="radio" name="reference_button" value="bill <?=$radio_item['bill_no'];?>"></td>
+                                            <td><input type="radio" name="reference_button" value="bill <?=$bill_no?>" <?=((count($bill_items)==1)?" CHECKED":"");?>> </td>
                                             <td>Bill</td>
-                                            <td><?=$radio_item['bill_no'];?></td>
-                                            <td><?=format_price($radio_item['qty'] * $radio_item['amount']);?></td>
+                                            <td><?=$bill_no?></td>
+                                            <td><?=format_price($total)?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php } ?>

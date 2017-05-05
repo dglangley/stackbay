@@ -30,7 +30,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
-
+	include_once $rootdir.'/inc/order_parameters.php'; 
 
 	//Declarations
 	$mode = '';
@@ -53,12 +53,46 @@
 		return $serial;
 	}
 	
+	function outstanding_amount($order, $type){
+		//Calculates the amount outstanding for an SO/PO
+		$o = o_params($type);
+		$order = prep($order);
+		$money = array(
+			"paid" => 0.00,
+			"order_total" => 0.00,
+			"remaining" => 0.00
+			);
+		if($o['purchase']){
+			//This grabs all the payments made on a purchase order
+			$recorded = "
+			SELECT SUM(`amount`) paid FROM payment_details
+			WHERE order_type = 'Bill'
+			AND order_number in (SELECT `bill_no` FROM `bills` where po_number = $order);";
+			
+			$paid_results = qdb($recorded) or die(qe()." | $recorded");
+			if(mysqli_num_rows($paid_results)){
+				$paid_item = mysqli_fetch_assoc($paid_results);
+				$money['paid'] = $paid_item['paid'];
+			}
+			
+			$total = "SELECT SUM(`qty` * `price`) total FROM purchase_items where po_number = $order;";
+			$total_results = qdb($total) or die(qe()." | $total");
+			if(mysqli_num_rows($total_results)){
+				$total_item = mysqli_fetch_assoc($total_results);
+				$money['order_total'] = $total_item['total'];
+			}
+		}
+		$money['remaining'] = $money['order_total'] - $money['paid'];
+		return($money);
+	}
+	
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
 	$po_number = grab("on");
 	$bill_number = grab("bill");
 	$sidebar_mode ='bill';
 	$associated_order = '';
+	$subtotal = 0.00;
 	
 	if(strtolower($bill_number) == 'new' || (is_numeric($bill_number))&&$mode=="edit"){
 		//Get all the information from the previously purchased items with associated inventory
@@ -87,6 +121,7 @@
             $grouped[$row['purchid']]['price'] = $row['price'];
             // $grouped[$row['purchid']]['id'] = $row['id'];
 			$grouped[$row['purchid']]['serials'][$row['id']] = $row['serial_no'];
+			$subtotal += $row['qty'] * $row['amount'];
 			
 		}
 		// print_r($grouped);exit;
@@ -95,6 +130,11 @@
 		$due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
 		$due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
 		$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+		
+		// $billable = "SELECT SUM(`amount` * `qty`) FROM `bills` b, `bill_items` bi where b.bill_no = bi.bill_no AND po_number = ".prep($po_number).";";
+		
+		
+		
 	}	
 	
 	if(is_numeric($bill_number)){
@@ -106,7 +146,6 @@
 		AND bills.bill_no = bill_items.bill_no
 		;";
 		$rows = qdb($bill_select) or die(qe().": ".$bill_select);
-		
 		foreach($rows as $row){
 			$po_number = $row['po_number'];
 			$associated_order = $row['invoice_no'];
@@ -118,6 +157,7 @@
             $grouped[$row['bill_id']]['price'] = $row['amount'];
             // $grouped[$row['bill_id']]['id'] = $row['id'];
 			$grouped[$row['bill_id']]['serials'][$row['inventoryid']] = getSerial($row['inventoryid']);
+			$subtotal += $row['qty'] * $row['amount'];
 		}
 		// echo("<pre>");
 		// print_r($grouped);
@@ -209,36 +249,71 @@
 							<tbody>
 							<?php
 							$output = '';
-								if(isset($grouped)){
-									foreach($grouped as $meta => $li){
-										$output .= "
-										<tr class ='meta-line meta-$meta' data-line-number='$meta' data-og-qty='".$li['qty']."' 
-										data-partid='".$li['partid']."' data-warranty='".$li['warranty']." data-ln='".$li['ln']."'
-										data-price='".$li['price']."'>
-											<td>".$li['ln']."</td>
-											<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
-											<td>".getWarranty($li['warranty'],"warranty")."</td>
-											<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
-											<td>".format_price($li['price'])."</td>
-										</tr>
-										";
-										if(current($li['serials'])){
-											$first = true;
-											foreach ($li['serials'] as $inv => $serial){
-												$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
-													$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
-													$output .= "<td colspan = '2'>".$serial."</td>";
-													$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
-													$output .= "<td></td>";
-												$output .= "</tr>";
-												$first = false;
-											}
-											$output.="<tr style='border:0;opacity:0;'><td colspan='6'>&nbsp;</td></tr>";
+							$total = 0.00;
+							if(isset($grouped)){
+								foreach($grouped as $meta => $li){
+									$total += $li['price'] * $li['qty'];
+									$output .= "
+									<tr class ='meta-line meta-$meta' data-line-number='$meta' data-og-qty='".$li['qty']."' 
+									data-partid='".$li['partid']."' data-warranty='".$li['warranty']." data-ln='".$li['ln']."'
+									data-price='".$li['price']."'>
+										<td>".$li['ln']."</td>
+										<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
+										<td>".getWarranty($li['warranty'],"warranty")."</td>
+										<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
+										<td>".format_price($li['price'])."</td>
+									</tr>
+									";
+									if(current($li['serials'])){
+										$first = true;
+										foreach ($li['serials'] as $inv => $serial){
+											$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
+												$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
+												$output .= "<td colspan = '2'>".$serial."</td>";
+												$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
+												$output .= "<td></td>";
+											$output .= "</tr>";
+											$first = false;
 										}
+										$output.="<tr style='border:0;opacity:0;'><td colspan='6'>&nbsp;</td></tr>";
 									}
 								}
+							}
+							if(strtolower($bill_number)=="new" || $mode == "edit"){
+								$money = outstanding_amount($po_number,"po");
+								$output .= "<tr class='amount_remaining'>";
+								$output .= "<td colspan = '5' style='text-align:right;'>Outstanding Amount Due:</td>";
+								$output .= "<td><input type='text'class='form-control input-sm' value='".format_price($money['total'])."' readonly/></td>";
+								$output .= "</tr>";
+							}
+							$output .= "<tr class='total'>";
+							$output .= "<td colspan = '5' style='text-align:right;'>Total:</td>";
+							$output .= "<td><input type='text'class='form-control input-sm' value='".format_price($total)."' readonly/></td>";
+							$output .= "</tr>";
+								// $output .= "
+								// 		<tr class ='new_line'>
+								// 			<td>"."<input type='text' name='new_ln' class='form-control input-sm' placeholder = 'LN' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
+								// 			<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
+								// 			<td>".getWarranty($li['warranty'],"warranty")."</td>
+								// 			<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
+								// 			<td>".format_price($li['price'])."</td>
+								// 		</tr>
+								// 		";
+								// 		if(current($li['serials'])){
+								// 			$first = true;
+								// 			foreach ($li['serials'] as $inv => $serial){
+								// 				$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
+								// 					$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
+								// 					$output .= "<td colspan = '2'>".$serial."</td>";
+								// 					$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
+								// 					$output .= "<td></td>";
+								// 				$output .= "</tr>";
+								// 				$first = false;
+								// 			}
+								// 			$output.="<tr style='border:0;opacity:0;'><td colspan='6'>&nbsp;</td></tr>";
+								// 		}
+									
 								echo($output);
-						
 							?>
 						</table>
 						</tbody>
