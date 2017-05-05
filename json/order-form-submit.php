@@ -285,7 +285,9 @@
 				if ($r2['heci']) {
 					$msg .= substr($r2['heci'],0,7).' ';
 				}
-				$msg .= $r2['part'];
+				//$msg .= $r2['part'];
+				$part_strs = explode(' ',$r2['part']);
+				$msg .= $part_strs[0];
 			}
 			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
 			$msg .= '<br/>';

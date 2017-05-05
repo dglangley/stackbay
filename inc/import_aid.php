@@ -9,7 +9,7 @@
     	function translateID($inventory_id){
             global $INVENTORY_IDS;
     	    if (!isset($INVENTORY_IDS[$inventory_id])){
-    	        $query = "SELECT i.heci, i.clei, i.short_description, im.name manf
+    	        $query = "SELECT i.heci, i.clei, i.part_number, i.short_description, im.name manf
     	        FROM inventory_inventory i, inventory_manufacturer im 
     	        WHERE i.id = ".prep($inventory_id)." AND i.manufacturer_id_id = im.id;";
     	        $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
@@ -23,7 +23,7 @@
     	}
         function part_process($r){
 			//Function takes in a row from Brian's inventory, checks to see if it exists in our system, and sets part if it doesn't
-			//Requires the inclusion of both getPartID.php and setPartId.php
+			//Requires the inclusion of both getPartId.php and setPartId.php
 			if ($r['clei']) { $r['heci'] = $r['clei']; }
 			else if (strlen($r['heci'])<>7 OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) { $r['heci'] = ''; }
 			else { $r['heci'] .= 'VTL'; }//append fake ending to make the 7-digit a 10-digit string

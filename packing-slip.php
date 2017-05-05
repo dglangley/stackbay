@@ -222,7 +222,7 @@
         <tr>
             <td>".$box[0]."</td>
             <td>".$box[1]."</td>
-            <td>".format_date($box[2],"N/j/y g:ia")."</td>
+            <td>".format_date($box[2],"n/j/y g:ia")."</td>
         </tr>    
         ";
     }
