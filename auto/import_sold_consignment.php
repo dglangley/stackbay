@@ -36,7 +36,7 @@
 		//Run the code here to insert a row into the consignment table
 		if($value['ci_id']) {
 			//Get consignment in Brian's system both the order and the item
-			$query = "SELECT creator_id as rep_id, price, o.company_id, order_id, o.date, percentage as pct, exp_date, memo FROM inventory_consignmentitem i, inventory_consignmentorder o WHERE i.id = ".prep($value['ci_id'])." AND o.id = i.order_id;";
+			$query = "SELECT creator_id as rep_id, price, o.company_id, order_id, i.date, percentage as pct, exp_date, memo FROM inventory_consignmentitem i, inventory_consignmentorder o WHERE i.id = ".prep($value['ci_id'])." AND o.id = i.order_id;";
 			$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -53,8 +53,9 @@
 				echo 'Consignment Item Already Exists!';
 			} else {
 				//insertTableConsignment($inventoryid, $repid, $price, $companyid, $order_id, $date, $pct, $exp_date, $memo)
-				if(insertTableConsignment($inventoryid, $rep_id, $consignment['price'], dbTranslate($consignment['company_id']), $consignment['order_id'], $consignment['date'], $consignment['pct'], $consignment['exp_date'], $consignment['memo'])){
+				if(insertTableConsignment($inventoryid, $rep_id, $consignment['price'], dbTranslate($consignment['company_id']), $consignment['order_id'], $consignment['date'] . " 10:00:00", $consignment['pct'], $consignment['exp_date'] . " 23:59:59", $consignment['memo'])){
 					echo 'Consignment Added Successfully<br>';
+					echo $consignment['date'] . '<BR><BR>';
 				} else {
 					echo 'Consignment Failed<br>';
 				}
@@ -75,8 +76,6 @@
 		$pct = prep($pct);
 		$exp_date = prep($exp_date);
 		$memo = prep($memo);
-
-		$date = prep($date." 10:00:00");
 
 		//Function to create the insert script
 		$query = "INSERT INTO consignment (inventoryid, rep_id, price, companyid, order_id, date, pct, exp_date, memo) VALUES ($inventoryid, $repid, $price, $companyid, $order_id, $date, $pct, $exp_date, $memo)";

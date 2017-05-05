@@ -272,12 +272,10 @@ echo $i.' items imported<BR>';
 		$price = prep($price);
 		$companyid = prep($companyid);
 		$order_id = prep($order_id);
-		$date = prep($date);
-		$pct = prep($pct);
-		$exp_date = prep($exp_date);
-		$memo = prep($memo);
-
 		$date = prep($date." 10:00:00");
+		$pct = prep($pct);
+		$exp_date = prep($exp_date. " 23:59:59");
+		$memo = prep($memo);
 
 		//Function to create the insert script
 		$query = "INSERT INTO consignment (inventoryid, rep_id, price, companyid, order_id, date, pct, exp_date, memo) VALUES ($inventoryid, $repid, $price, $companyid, $order_id, $date, $pct, $exp_date, $memo)";
