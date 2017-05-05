@@ -9,7 +9,7 @@
     	function translateID($inventory_id){
             global $INVENTORY_IDS;
     	    if (!isset($INVENTORY_IDS[$inventory_id])){
-    	        $query = "SELECT i.heci, i.clei, i.short_description, im.name manf
+    	        $query = "SELECT i.heci, i.clei, i.part_number, i.short_description, im.name manf
     	        FROM inventory_inventory i, inventory_manufacturer im 
     	        WHERE i.id = ".prep($inventory_id)." AND i.manufacturer_id_id = im.id;";
     	        $result = qdb($query,"PIPE") or die(qe("PIPE")." ".$query);
