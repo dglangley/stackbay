@@ -75,8 +75,18 @@
 		if($clei && !is_numeric($clei) && strlen ($clei) == 10) {
 			//Make clei the 10 digit the new heci
 			$heci = $clei;
+			$pheci = prep($heci);
 
-			$partid = getPartId($part_number, $heci);
+			$query = "SELECT id FROM parts WHERE heci = $pheci;";
+            $result = qdb($query) OR die(qe().'<BR>'.$query);
+            if (mysqli_num_rows($result)>0) {
+                $r = mysqli_fetch_assoc($result);
+                $partid = $r['id'];
+            } else {
+            	$partid = 0;
+            }
+
+			//$partid = getPartId($part_number, $heci);
 			echo '<b>Using PartID:</b>' . ($partid ? $partid : "NULL") . "<br>";
 
 			if($partid) {
@@ -92,6 +102,7 @@
 					//If a partid is found then break out of the foreach loop
 					if($partid) {
 						echo "<br><b>Alias Part Found!</b> ".$partid."<br>";
+						$existing = true;
 						break;
 					}
 				}
@@ -103,7 +114,16 @@
 			//Add in and make the Heci a 10 digit
 			$heci .= 'VTL';
 
-			$partid = getPartId($part_number, $heci);
+			$query = "SELECT id FROM parts WHERE heci = $pheci;";
+            $result = qdb($query) OR die(qe().'<BR>'.$query);
+            if (mysqli_num_rows($result)>0) {
+                $r = mysqli_fetch_assoc($result);
+                $partid = $r['id'];
+            } else {
+            	$partid = 0;
+            }
+
+			//$partid = getPartId($part_number, $heci);
 			echo '<b>Using PartID:</b>' . ($partid ? $partid : "NULL") . "<br>";
 
 			if($partid) {
@@ -119,6 +139,7 @@
 					//If a partid is found then break out of the foreach loop
 					if($partid) {
 						echo "<br><b>Alias Part Found!</b> ".$partid."<br>";
+						$existing = true;
 						break;
 					}
 				}
