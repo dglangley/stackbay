@@ -52,9 +52,10 @@
 					<div class="row">
 					    <div class="col-md-3" style="padding: 0 5px">
 					        <select class="form-control input-sm payment-type" name="payment_type">
-					            <option value="Wire Transfer">Wire Transfer</option>
 					            <option value="Check">Check</option>
 					            <option value="Credit Card">Credit Card</option>
+					            <option value="Wire Transfer">Wire Transfer</option>
+					            <option value="ACH">ACH</option>
 					            <option value="Paypal">Paypal</option>
 					            <option value="Other">Other</option>
 					        </select>
