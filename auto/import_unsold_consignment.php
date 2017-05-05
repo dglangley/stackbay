@@ -9,7 +9,7 @@
 	$items = array();
 	
 	//For testing purposes and compile time adding LIMIT 30
-	$query = "SELECT * FROM inventory_solditem WHERE ci_id IS NOT NULL ORDER BY id ASC; ";
+	$query = "SELECT * FROM inventory_itemlocation WHERE ci_id IS NOT NULL ORDER BY id ASC; ";
 	$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$items[] = $r;
@@ -34,7 +34,7 @@
 		$consignment = array();
 
 		//Run the code here to insert a row into the consignment table
-		if($value['ci_id']) {
+		if($value['ci_id'] && $inventoryid) {
 			//Get consignment in Brian's system both the order and the item
 			$query = "SELECT creator_id as rep_id, price, o.company_id, order_id, i.date, percentage as pct, exp_date, memo FROM inventory_consignmentitem i, inventory_consignmentorder o WHERE i.id = ".prep($value['ci_id'])." AND o.id = i.order_id;";
 			$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
