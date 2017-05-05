@@ -178,7 +178,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
-		<title>Bill</title>
+		<title>Bill <?=(($bill_number == "new")?:"#$bill_number")?></title>
 		<style type="text/css">
 			.serial_box{
 				padding-bottom:10px;

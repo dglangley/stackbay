@@ -32,7 +32,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$result = [];
 		
 		//This is splitting each product from mass of items
-		$item_split = array_chunk($productItems, 7);
+		$item_split = array_chunk($productItems,7);
 		
 		foreach($item_split as $product) {
 			//This query updates and saves the box as closed only if there are no errors in the order
@@ -53,6 +53,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				//Invoice Creation based off shipping
 		}
+		
 		create_invoice($so_number, $date, "Sale");
 		
 		return $result;
