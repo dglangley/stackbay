@@ -596,11 +596,9 @@ include_once $rootdir.'/inc/packages.php';
 					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
 					foreach($result as $slip) {
 						//Create a date_time object
-						$dateF = date_create($slip['datetime']);
-						
 						// Append to right the packing slip options
 						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$slip['datetime'].'"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
-						$right .= '<b>Box #  ' . $slip['boxes']. '</b></a> ' . date_format($dateF, "N/j/y g:ia") . '<br>';
+						$right .= '<b>Box #  ' . $slip['boxes']. '</b></a> ' .format_date($slip['datetime'], "n/j/y g:ia") . '<br>';
 						if($slip['tracking_no'])
 							$right .= 'Tracking # ' . $slip['tracking_no'] . '<br>';
 					}

@@ -196,10 +196,11 @@
 
 	    	$invoices .= "
 	            <tr>
+	            	<td><a href='docs/INV".$row['invoice_no'].".pdf'>".$row['invoice_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_invoiced'])."</td>
-                    <td>".$row['order_number']."</td>
+                    <td><a href='/SO".$row['order_number']."'>".$row['order_number']."</a></td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
                     <td>".summarize_date($row['date_invoiced'], '30')."</td>
@@ -263,13 +264,15 @@
 
 	    	$bills .= "
 	            <tr>
+	            	<td><a href='bill.php?bill=".$row['bill_no']."'>".$row['bill_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_created'])."</td>
                     <td>".$row['invoice_no']."</td>
+                    <td><a href='/PO".$row['po_number']."'>".$row['po_number']."</td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
-                    <td>".summarize_date($row['date_invoiced'], '30')."</td>
+                    <td>".summarize_date($row['date_due'])."</td>
                     <td class='text-right'>".format_price($amount)."</td>
                     <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>
@@ -470,15 +473,16 @@
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
+								<th class = 'col-sm-1'>Invoice #</th>
 								<th class = 'col-sm-2'>Customer</th>
 								<th class = 'col-sm-2'>Address</th>
 								<th class = 'col-sm-1'>Date</th>
-								<th class = 'col-sm-1'>PO No</th>
+								<th class = 'col-sm-1'>SO No</th>
 								<th class = 'col-sm-1'>Terms</th>
 								<th class = 'col-sm-2'>Memo</th>
 								<th class = 'col-sm-1'>Bill Due</th>
 								<th class = 'col-sm-1 text-right'>Amount</th>
-								<th class = 'col-sm-1 text-center'>Confirm</th>
+								<th class = 'text-center'>Confirm</th>
 							</tr>
 							<?=$invoices?>
 						</table>
@@ -493,13 +497,15 @@
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
+								<th class = 'col-sm-1'>Bill #</th>
 								<th class = 'col-sm-2'>Vendor</th>
 								<th class = 'col-sm-2'>Address</th>
-								<th class = 'col-sm-1'>Date</th>
+								<th class = 'col-sm-1'>Date Created</th>
 								<th class = 'col-sm-1'>Ref No</th>
+								<th class = 'col-sm-1'>PO NO</th>
 								<th class = 'col-sm-1'>Terms</th>
 								<th class = 'col-sm-2'>Memo</th>
-								<th class = 'col-sm-1'>Bill Due</th>
+								<th class = 'col-sm-1'>Date Due</th>
 								<th class = 'col-sm-1 text-right'>Amount</th>
 								<th class = 'col-sm-1 text-center'>Confirm</th>
 							</tr>

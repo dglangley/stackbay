@@ -1,7 +1,7 @@
 <?php
     function o_params($type){
 		$info = array();
-		if($type == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases"){
+		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po"){
 			$info['type'] = "Purchase";
 			//convenient type check
 			$info['purchase'] = true;

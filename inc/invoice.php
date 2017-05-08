@@ -50,7 +50,7 @@
     
     $invoice_creation = "INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
     VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", NOW(), ".prep($shipment_datetime)." , $freight , '$status');";
-    echo $invoice_creation; exit;
+    
     $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
     
     $invoice_id =  qid();
