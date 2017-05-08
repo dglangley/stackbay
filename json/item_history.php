@@ -42,6 +42,7 @@
     	//Things to eventually consider: record splitting the history
     	
     	if(mysqli_num_rows($history)>0){
+			$i = 0;
 	    	//Loop through the history results
 	    	foreach ($history as $r){
 				$string = '';
@@ -97,11 +98,11 @@
 						break;
 
 				}
-				$string .= "on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
+				//$string .= "on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
 				if($r['userid']){
 					$string .= " by ".getContact($r['userid']);
 				}
-				$output[] = $string;
+				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = $string;
 	    	}
     	}
     	else{
