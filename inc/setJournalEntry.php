@@ -42,7 +42,7 @@
 	// 	if($check['rows']){return('Already Set JE for this '.$type);}
 		
 	// 	$in['type'] = $type;
-	// 	$in['datetime'] = "NOW()"; //Eventual if statement if I choose to do the import script
+	// 	$in['datetime'] = $now; //Eventual if statement if I choose to do the import script
 	// 	if($type == "invoice"){
 	// 		$in['debit_account'] = "Inventory Sale COGS";
 	// 		$in['credit_account'] = "Inventory Asset";
