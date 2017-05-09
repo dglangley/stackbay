@@ -166,26 +166,29 @@
 					            <th class="col-sm-3">
 					            	PART	
 					            </th>
-					            <th class="col-sm-3">
+					            <th class="col-sm-2">
 									Location
 								</th>
 			                    <th class="col-sm-1">
 									Condition
 					        	</th>
-								<th class="col-sm-3">
-					            	Serial	(*Scan or Press Enter on Input for More)
+								<th class="col-sm-2">
+					            	Serial
 					            </th>
-					            <th class="col-sm-1">
-									Remaining Qty
+					            <th class="col-sm-1 text-center">
+									Ordered
 					        	</th>
 					        	<th class="col-sm-1">
+									Outstanding
+					        	</th>
+					        	<th class="col-sm-1 text-center">
 									RTV
 					        	</th>
 					        	<th class="col-sm-1">
 									Vendor Warr
 					        	</th>
 					            <th class="col-sm-1">
-					            	<!--Lot Inventory (No Serial)-->
+					            	
 					        	</th>
 					         </tr>
 						</thead>
@@ -202,7 +205,7 @@
 										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
-										<div class="row locations_tracker" data-serial="">
+										<div class="locations_tracker" data-serial="">
 											<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
@@ -230,15 +233,18 @@
 										    </span>
 							            </div>
 									</td>
-									
+									<td class="text-center" style="padding-top: 15px !important;">
+										<?=$part['qty'];?>
+									</td>
 									<td class="remaining_qty">
 										<input style="margin-bottom: 6px;" class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+							
 										<div class='infiniteComments'>
 									    	<!--<input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial='' data-inv-id='' data-part="">-->
 										</div>
 									</td>
 									<td>
-										<input class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
 									</td>
 									<td>
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>

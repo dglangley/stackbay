@@ -109,14 +109,15 @@
 	}
 	
 	function getInventory($partid) {
-		$inventory;
+		$inventory = array();
 		$partid = prep($partid);
-		$query = "SELECT * FROM inventory WHERE partid = $partid AND `qty` > 1;";
+		$query = "SELECT DISTINCT place, instance FROM inventory i, locations l WHERE partid = $partid AND `qty` > 0 AND i.locationid = l.id;";
 		$result = qdb($query) OR die(qe());
 	
 		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$inventory = $result;
+			while ($row = $result->fetch_assoc()) {
+				$inventory[] = $row;
+			}
 		}
 		
 		return $inventory;
@@ -440,7 +441,7 @@
 									<th>Item</th>
 									<th>SERIAL</th>
 									<th>Box #</th>
-									<th>Components</th>
+									<th>Locations</th>
 									<th>Ordered</th>
 									<th>Outstanding</th>
 									<th>Condition</th>
@@ -457,7 +458,7 @@
 									$inventory = getInventory($item['partid']);
 									$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
 									$serials = qdb($select);
-									// print_r($inventory);
+									//print_r($inventory);
 									$parts = explode(' ',getPartName($item['partid']));
 									$part = $parts[0];
 							?>
@@ -495,8 +496,19 @@
 										<?php endforeach; ?>
 									</td>
 									<td style="padding-top: 10px !important;">
-										<div class="checkbox">
-											<label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label>
+										<div style="text-align: center; margin-top: 5px; margin-bottom: 15px; height: 20px; max-height: 20px; overflow: hidden;">
+											<!-- <label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label> -->
+											<?php 
+												if($inventory) {
+													$init = true;
+													foreach ($inventory as $location) {
+														if(!$init){ echo ', ';}
+														echo $location['place'];
+														if($location['instance']){ echo ' - ' . $location['instance']; }
+														$init = false; 
+													}
+												}
+											?>
 										</div>
 										
 										<div class='infiniteComments'>
