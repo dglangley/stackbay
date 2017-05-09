@@ -109,7 +109,7 @@
     $account = grab('account');
     $tracking = grab('tracking');
     $private = (trim($_REQUEST['pri_notes']));
-    $public = (trim($_REQUEST['pub_notes']));
+    $public_notes = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
@@ -198,7 +198,7 @@
         $bill = prep($bill); 
         $service = prep($service);
     	$account = prep($account);
-        $public = prep($public);
+        $public = prep($public_notes);
         $private = prep($private);
         $assoc_order = prep($assoc_order);
         
@@ -248,7 +248,7 @@
         $macro .= updateNull('freight_services_id',$service);
         $macro .= updateNull('freight_account_id',$account);
         $macro .= updateNull('termsid',$terms);
-        $macro .= updateNull('public_notes',$public);
+        $macro .= updateNull('public_notes',$public_notes);
         $macro .= rtrim(updateNull('private_notes',$private),',');
         $macro .= " WHERE ";
         $macro .= ($order_type == "Purchase")? "`po_number`" :"`so_number`";
@@ -263,6 +263,7 @@
 
     //RIGHT HAND SUBMIT
     
+	$rows = array();
     if(isset($form_rows)){
 		if (count($form_rows)>0) {
 			$msg .= "<p><strong>Item Details:</strong><br/>";
@@ -280,20 +281,24 @@
             $ref_1 = prep($r['ref_1']);
             $ref_1_label = prep($r['ref_1_label']);
 
-			if ($r['line_number']) { $msg .= '<span style="color:#aaa">'.$r['line_number'].'.</span> '; }
 			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
 			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				if ($r2['heci']) {
-					$msg .= substr($r2['heci'],0,7).' ';
-				}
-				//$msg .= $r2['part'];
 				$part_strs = explode(' ',$r2['part']);
-				$msg .= $part_strs[0];
+
+				$partkey = '';
+				if ($r['line_number']) { $partkey = $r['line_number']; }
+				$heci = '';
+				if ($r2['heci']) {
+					$heci = substr($r2['heci'],0,7);
+					$partkey .= '.'.$heci;
+				} else {
+					$partkey .= '.'.$part_strs[0];
+				}
+				if (! isset($rows[$partkey])) { $rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$r['line_number']); }
+				$rows[$partkey]['qty'] += $r['qty'];
 			}
-			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
-			$msg .= '<br/>';
 
             if ($record == 'new'){
                 
@@ -329,6 +334,13 @@
 
 	// send order confirmation
 	if ($email_confirmation AND ! $DEV_ENV) {
+		foreach ($rows as $partkey => $r) {
+			if ($r['ln']) { $msg .= '<span style="color:#aaa">'.$r['ln'].'.</span> '; }
+			if ($r['heci']) { $msg .= $r['heci'].' '; }
+			$msg .= $r['part'];
+			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
+			$msg .= '<br/>';
+		}
 		$recps = array();
 		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 		if ($contact) {
@@ -347,6 +359,11 @@
 			$rep_email = getContact($rep_contactid,'id','email');
 			$bcc = $rep_email;
 		}
+
+		if ($public_notes) {
+			$msg .= '<br/>'.str_replace(chr(10),'<BR/>',$public_notes).'<br/>';
+		}
+
 		$send_success = send_gmail($msg,$sbj,$recps,$bcc);
 		if ($send_success) {
 //			jsonDie('Success');
