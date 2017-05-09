@@ -437,9 +437,10 @@
 
 			$(document).on("change","#carrier",function() {
 				var limit = $(this).val();
-				$("#modal_carrier").val(limit);
+
 				$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":limit});
-				
+				$("#modal_carrier").val(limit);
+
 				console.log(window.location.origin+"/json/account-default.php?"+"company="+receiver_companyid+"&carrier="+limit);
 				$.ajax({
 					type: "POST",
@@ -1316,12 +1317,12 @@
 							error: function(data, textStatus, errorThrown) {
 								console.log("Order-upload: Failure");
 								alert(errorThrown);
-								console.log(window.location.origin+"/json/order-form-submit.php?"+JSON.stringify(data));
 								return;
 							},
 						});
 					}
-					alert(filename);
+	
+	
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
 					var submit = [];
@@ -1365,26 +1366,23 @@
 					console.log(submit);
 					console.log(order_number+" | "+order_type);
 					console.log("/json/order-form-submit.php?"+
-							"sales-rep="+repid+"&"+
-							"created_by="+created_by+"&"+
+							"sales-rep="+ repid+"&"+
+							"created_by="+ created_by+"&"+
 							"companyid="+company+"&"+
 							"order_type="+order_type+"&"+
-							"order_number="+order_number+"&"+
-							"contact="+contact+"&"+
-							"assoc="+assoc+"&"+
-							"tracking="+tracking+"&"+
-							"ship_to="+ship_to+"&"+
-							"bill_to="+bill_to+"&"+
-							"carrier="+carrier+"&"+
-							"account="+account+"&"+
-							"terms="+terms+"&"+
-							"service="+service+"&"+
-							"pri_notes="+pri_notes+"&"+
-							"pub_notes="+pub_notes+"&"+
-							"table_rows="+submit+"&"+
-							"filename="+JSON.stringify(filename)+"&"+
-							"email_confirmation="+email_confirmation+"&"+
-							"email_to="+email_to);
+			   		    	"order_number="+order_number+"&"+
+							"contact="+ contact+"&"+
+							"assoc="+ assoc+"&"+
+							"tracking="+ tracking+"&"+
+							"ship_to="+ ship_to+"&"+
+							"bill_to="+ bill_to+"&"+
+							"carrier="+ carrier+"&"+
+							"account="+ account+"&"+
+							"terms=" + terms+"&"+
+							"service=" + service+"&"+
+							"pri_notes="+ pri_notes+"&"+
+							"pub_notes="+ pub_notes+"&"+
+							"table_rows"+ submit);
 					//Submit all rows and meta data for unpacking later
 					// alert(account);
 					$.ajax({
@@ -1407,8 +1405,8 @@
 							"service" : service,
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
-							"table_rows":JSON.stringify(submit),
-							"filename":JSON.stringify(filename),
+							"table_rows":submit,
+							"filename":filename,
 							"email_confirmation":email_confirmation,
 							"email_to":email_to,
 						}, // serializes the form's elements.
