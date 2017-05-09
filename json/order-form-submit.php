@@ -343,16 +343,16 @@
 			$msg .= '<br/>';
 		}
 		$recps = array();
-		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 		if ($contact) {
 			$contact_email = getContact($contact,'id','email');
 			if ($contact_email) {
 				$recps[] = array($contact_email,getContact($contact,'id','name'));
 			}
-			if ($addl_recp_email) {
-				$recps[] = array($addl_recp_email,$addl_recp_name);
-			}
 		}
+		if ($addl_recp_email) {
+			$recps[] = array($addl_recp_email,$addl_recp_name);
+		}
+		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 
 		$bcc = false;
 		if ($rep) {
