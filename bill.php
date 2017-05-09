@@ -31,13 +31,14 @@
 	include_once $rootdir.'/inc/item_history.php';
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/order_parameters.php'; 
-
+	include_once $rootdir.'/inc/terms.php';
+	
 	//Declarations
 	$mode = '';
 	$po_number = '';
 	$grouped = array();
 	
-	
+
 	//Helper functions
 	function getSerial($invid) {
 		$serial = "";
@@ -125,11 +126,12 @@
 			
 		}
 		// print_r($grouped);exit;
-		$due_select = "
-		SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
-		$due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
-		$due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
-		$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+		$due_estimate = terms_calc("po",$po_number)
+		// $due_select = "
+		// SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
+		// $due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
+		// $due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
+		// $due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
 		
 		// $billable = "SELECT SUM(`amount` * `qty`) FROM `bills` b, `bill_items` bi where b.bill_no = bi.bill_no AND po_number = ".prep($po_number).";";
 		
