@@ -203,7 +203,7 @@
 				<div class="col-md-4">
 					<?php
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $order_number . '" | href="/docs/'.$order_type[0].'O'.$order_number.'.pdf"
-						echo '<a class="btn-flat pull-left" href="/order_form.php?ps=p&on='.$po_number.'"><i class="fa fa-truck"></i> PO #'.$po_number.'</a>';
+						echo '<a class="btn-flat pull-left" href="/PO'.$po_number.'"><i class="fa fa-truck"></i> PO #'.$po_number.'</a>';
 						// if($bill_number){
 						// 	echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 						// 	echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$bill_number.'">Receive</a>';

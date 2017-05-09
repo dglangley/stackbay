@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function calcCost($partid,$purchase_item_id=0) {
+	function calcCost($partid,$cost_basis='average',$purchase_item_id=0) {
 		$partid = trim($partid);
 		if (! $partid OR ! is_numeric($partid)) { return false; }
 
@@ -25,6 +25,12 @@
 			}
 		}
 		$actual_cost = $actual_sum/$qty_sum;
-		$average_cost = $average_cost/$qty_sum;
+		$average_cost = $average_sum/$qty_sum;
+
+		if ($cost_basis=='average' AND (! $actual_cost OR $average_cost>0)) {
+			return ($average_cost);
+		} else {
+			return ($actual_cost);
+		}
 	}
 ?>

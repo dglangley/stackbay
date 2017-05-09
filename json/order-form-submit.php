@@ -115,13 +115,16 @@
     $created_by = grab('created_by');
     $email_to = grab('email_to');
     $email_confirmation = grab('email_confirmation');
+	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation) {
-		$addl_recp_email = getContact($email_to,'id','email');
-		if ($addl_recp_email) {
-			$addl_recp_name = getContact($email_to,'id','name');
-		} else {
-			jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
+		if ($email_to) {
+			$addl_recp_email = getContact($email_to,'id','email');
+			if ($addl_recp_email) {
+				$addl_recp_name = getContact($email_to,'id','name');
+			} else {
+				jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
+			}
 		}
 	}
 
