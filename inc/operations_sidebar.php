@@ -317,10 +317,13 @@ include_once $rootdir.'/inc/packages.php';
 				</div>
 		";
 		if ($order_type == "Sales") {
+			$chkd = '';
+			if ($order_number == 'New') { $chkd = 'checked'; }
+
 			$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>
-						<input type='checkbox' name='email_confirmation' id = 'email_confirmation' value='1' checked />
+						<input type='checkbox' name='email_confirmation' id = 'email_confirmation' value='1' ".$chkd."/>
 						<label for='email_confirmation'>Send Order Confirmation</label>
 						<p><strong>TO</strong> <em>Contact above already included</em></p>
 						<select name='email_to' id='email_to' class='form-control input-xs contact-selector' style = 'width:100%;'>

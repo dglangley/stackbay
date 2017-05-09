@@ -27,7 +27,7 @@
 	    $d_bill = "Select count(`$id`) mode, max(`created`) recent, `$id`, a.`name`, 
 			a.`street`, a.`city`, a.`state`,a.`postal_code`
     	    FROM $order $short, addresses a
-    	    WHERE $short.`$id` = a.`id` /*AND `companyid` = $companyid*/
+    	    WHERE $short.`$id` = a.`id` AND `companyid` = $companyid
     	    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
     	    GROUP BY `$id` 
     	    ORDER BY mode,recent 
@@ -36,7 +36,7 @@
 	    foreach ($default as $row){
 	        $line = array(
                 'id' => $row[$id], 
-                'text' => $row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'].' <br> '.$row['name'],
+                'text' => $row['street'].'<br>'.$row['city'].' '.$row['state'].' '.$row['postal_code'],/*.' <br> '.$row['name'],*/
                 );
 	        $output[] = $line;
 	    }
@@ -49,7 +49,7 @@
         foreach($results as $id => $row){
             $line = array(
                 'id' => $row['id'], 
-                'text' => $row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'].' <br> '.$row['name'],
+                'text' => $row['street'].'<br>'.$row['city'].' '.$row['state'].' '.$row['postal_code'],/*.' <br> '.$row['name'],*/
                 );
             if (strpos(strtolower($line['text']),strtolower($q)) !== false){
                 $output[] = $line;

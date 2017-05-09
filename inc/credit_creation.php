@@ -49,7 +49,7 @@
         }
         $meta_insert = 
         "INSERT INTO `sales_credits`(`companyid`, `date_created`, `order_num`, `order_type`, `rma`, `repid`, `contactid`) 
-        VALUES ($company,NOW(),".prep($origin_number).",'".$o['type']."',".prep($rma).",".$GLOBALS['U']['id'].",$contact);";
+        VALUES ($company,".prep($now).",".prep($origin_number).",'".$o['type']."',".prep($rma).",".$GLOBALS['U']['id'].",$contact);";
         
         qedb($meta_insert);
         $scid = qid();

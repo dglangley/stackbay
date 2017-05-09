@@ -6,9 +6,9 @@
         <h4 class="modal-title" id="modalHistoryTitle">Item History</h4>
 	  </div>
       <div class="modal-body" id="modalHistoryBody">
-          <ul id = "history_items">
+          <div id = "history_items">
               
-          </ul>
+          </div>
       </div>
       <div class="modal-footer text-center">
    		<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Close</button>

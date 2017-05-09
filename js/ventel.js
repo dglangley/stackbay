@@ -1087,6 +1087,18 @@
 			} 
 		});	
 
+		/* clicking in these fields made the dropdown-menu toggle away for some reason, so prevent it */
+		$(".order-search").on("click",function(e) {
+			e.preventDefault();
+			return false;
+		});
+		$(".order-search").on("keypress",function(e) {
+			if (e.keyCode == 13) {
+				e.preventDefault();
+				document.location.href = '/'+$(this).data('type')+$(this).val();
+			}
+		});
+
     });/* close $(document).ready */
 
 	
