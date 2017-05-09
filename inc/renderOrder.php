@@ -288,7 +288,8 @@ $html_page_str .='
 				</tr>
 				<tr>
 					<td class="half">
-						'.address_out($oi["remit_to_id"]).'
+                        '.(getContact($oi['contactid']) ? getContact($oi['contactid']) . '<br>' : "").'
+						'.(address_out($oi["bill_to_id"]) ? address_out($oi["bill_to_id"]) : address_out($oi["remit_to_id"])).'
 					</td>
 				</tr>
 			</table>
@@ -338,8 +339,8 @@ $html_page_str .='
 					<a href="mailto:accounting@ven-tel.com">accounting@ven-tel.com</a>
 				';
 } else{
-    $html_page_str .= getContact($oi['contactid'])."<br>";
-    $html_page_str .= address_out($oi['bill_to_id']);
+    //$html_page_str .= getContact($oi['contactid'])."<br>";
+    $html_page_str .= address_out($oi['bill_to_id'], 'street');
 }
 
 $html_page_str.='</td>';

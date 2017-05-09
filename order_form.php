@@ -109,14 +109,14 @@
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
 							echo '<a href="/'.$o['url'].'.php?on=' . (($origin)? $origin : $order_number) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
-							echo '<a href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 						}
 						if($order_number != "New" && $o['type'] == 'Sales'){
 							$rows = get_assoc_invoices($order_number);
 							if($rows){
 							$output = '
 							<div class ="btn-group">
-								<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-credit-card"></i>
 	                              <span class="caret"></span>
 	                            </button>';
@@ -126,7 +126,7 @@
 								foreach ($rows as $invoice) {
 									$output .= '
 										<li>
-											<a href="/docs/INV'.$invoice['invoice_no'].'.pdf">
+											<a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf">
 											Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
 											</a>
 										</li>';
