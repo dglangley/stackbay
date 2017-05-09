@@ -198,21 +198,22 @@
         $public = prep($public);
         $private = prep($private);
         $assoc_order = prep($assoc_order);
+        $created = prep($now);
         
         
         
         if($order_type=="Purchase"){
-            $insert = "INSERT INTO `purchase_orders` (`created_by`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
+            $insert = "INSERT INTO `purchase_orders` (`created_by`, `created`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
             `remit_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $cid, $save_rep, $save_contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+            ($created_by, $created, $cid, $save_rep, $save_contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
         else{
     		$filename = grab('filename');
     		$filename = prep($filename);
 
-            $insert = "INSERT INTO `sales_orders`(`created_by`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
+            $insert = "INSERT INTO `sales_orders`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
             `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $save_rep, $cid, $save_contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+            ($created_by, $created, $save_rep, $cid, $save_contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
         }
 
     //Run the update
