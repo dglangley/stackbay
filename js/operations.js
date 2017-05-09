@@ -439,6 +439,7 @@
 				var limit = $(this).val();
 
 				$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":limit});
+				$("#modal_carrier").val(limit);
 
 				console.log(window.location.origin+"/json/account-default.php?"+"company="+receiver_companyid+"&carrier="+limit);
 				$.ajax({
@@ -1093,7 +1094,7 @@
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
-					var acct = ($(this).val().slice(5));
+					var acct = ($(this).val().slice(4));
 					
 					//If the first number is the address, assume the user is searching by an address name
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
@@ -2458,6 +2459,7 @@
 		$(document).on("click",".history_button",function() {
 			
 			var invid = $(this).attr('data-id');
+			$("#history_items").html("");
 			//Call the AJAX
 			$.ajax({
 					type: "POST",
@@ -2473,7 +2475,8 @@
 						console.log(lines);
 						//Populate the modal
 						$.each(lines, function(i, phrase){
-							$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
+							//$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
+							$("#history_items").append("<div class='row'><div class='col-sm-4'>"+i+"</div><div class='col-sm-8'>"+phrase+"</div></div>");
 						});
 						//Show the modal
 						$("#modal-history").modal("show");

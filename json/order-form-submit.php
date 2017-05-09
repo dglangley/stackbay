@@ -42,7 +42,7 @@
 	// those file names but does not upload the files themselves, so this sub-script gets handled only once
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		require($rootdir.'/vendor/autoload.php');
-
+		$DEV_ENV = false;
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 		if (!$DEV_ENV) {
 			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
@@ -95,7 +95,7 @@
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
-    $form_rows = $_REQUEST['table_rows'];
+    $form_rows = json_decode($_REQUEST['table_rows'],true);
 
     
     //Form Specifics
@@ -109,19 +109,22 @@
     $account = grab('account');
     $tracking = grab('tracking');
     $private = (trim($_REQUEST['pri_notes']));
-    $public = (trim($_REQUEST['pub_notes']));
+    $public_notes = (trim($_REQUEST['pub_notes']));
     $terms = grab('terms');
     $rep = grab('sales-rep');
     $created_by = grab('created_by');
     $email_to = grab('email_to');
     $email_confirmation = grab('email_confirmation');
+	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation) {
-		$addl_recp_email = getContact($email_to,'id','email');
-		if ($addl_recp_email) {
-			$addl_recp_name = getContact($email_to,'id','name');
-		} else {
-			jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
+		if ($email_to) {
+			$addl_recp_email = getContact($email_to,'id','email');
+			if ($addl_recp_email) {
+				$addl_recp_name = getContact($email_to,'id','name');
+			} else {
+				jsonDie('"'.getContact($email_to).'" does not have an email! Please update their profile first, or remove them from Order Confirmation in order to continue.');
+			}
 		}
 	}
 
@@ -195,7 +198,7 @@
         $bill = prep($bill); 
         $service = prep($service);
     	$account = prep($account);
-        $public = prep($public);
+        $public = prep($public_notes);
         $private = prep($private);
         $assoc_order = prep($assoc_order);
         $created = prep($now);
@@ -246,7 +249,7 @@
         $macro .= updateNull('freight_services_id',$service);
         $macro .= updateNull('freight_account_id',$account);
         $macro .= updateNull('termsid',$terms);
-        $macro .= updateNull('public_notes',$public);
+        $macro .= updateNull('public_notes',$public_notes);
         $macro .= rtrim(updateNull('private_notes',$private),',');
         $macro .= " WHERE ";
         $macro .= ($order_type == "Purchase")? "`po_number`" :"`so_number`";
@@ -261,6 +264,7 @@
 
     //RIGHT HAND SUBMIT
     
+	$rows = array();
     if(isset($form_rows)){
 		if (count($form_rows)>0) {
 			$msg .= "<p><strong>Item Details:</strong><br/>";
@@ -278,20 +282,24 @@
             $ref_1 = prep($r['ref_1']);
             $ref_1_label = prep($r['ref_1_label']);
 
-			if ($r['line_number']) { $msg .= '<span style="color:#aaa">'.$r['line_number'].'.</span> '; }
 			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
 			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				if ($r2['heci']) {
-					$msg .= substr($r2['heci'],0,7).' ';
-				}
-				//$msg .= $r2['part'];
 				$part_strs = explode(' ',$r2['part']);
-				$msg .= $part_strs[0];
+
+				$partkey = '';
+				if ($r['line_number']) { $partkey = $r['line_number']; }
+				$heci = '';
+				if ($r2['heci']) {
+					$heci = substr($r2['heci'],0,7);
+					$partkey .= '.'.$heci;
+				} else {
+					$partkey .= '.'.$part_strs[0];
+				}
+				if (! isset($rows[$partkey])) { $rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$r['line_number']); }
+				$rows[$partkey]['qty'] += $r['qty'];
 			}
-			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
-			$msg .= '<br/>';
 
             if ($record == 'new'){
                 
@@ -327,6 +335,13 @@
 
 	// send order confirmation
 	if ($email_confirmation AND ! $DEV_ENV) {
+		foreach ($rows as $partkey => $r) {
+			if ($r['ln']) { $msg .= '<span style="color:#aaa">'.$r['ln'].'.</span> '; }
+			if ($r['heci']) { $msg .= $r['heci'].' '; }
+			$msg .= $r['part'];
+			if ($r['qty']) { $msg .= ' qty '.$r['qty']; }
+			$msg .= '<br/>';
+		}
 		$recps = array();
 		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 		if ($contact) {
@@ -345,6 +360,11 @@
 			$rep_email = getContact($rep_contactid,'id','email');
 			$bcc = $rep_email;
 		}
+
+		if ($public_notes) {
+			$msg .= '<br/>'.str_replace(chr(10),'<BR/>',$public_notes).'<br/>';
+		}
+
 		$send_success = send_gmail($msg,$sbj,$recps,$bcc);
 		if ($send_success) {
 //			jsonDie('Success');
