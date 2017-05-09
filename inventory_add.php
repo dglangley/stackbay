@@ -59,32 +59,16 @@
 		return $listParts;
 	}
 	
-	//Get the part name from the part id
-	function getPartName($partid) {
-		$part;
-		
-		$query = "SELECT parts.part, parts.heci, parts.description, systems.system FROM parts LEFT JOIN systems ON systems.id = parts.systemid WHERE parts.id = ". res($partid) .";";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$part[] = $result;
-		}
-	
-		return $part[0];
-	}
-	
-	function getHistory($partid) {
-		global $order_number;
+	function getHistory($partid, $order_number) {
 		$listSerials;
 		
 		$query = "
 			SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid 
-			FROM inventory i, purchase_items p 
-			WHERE po_number = ". prep($order_number) ." 
+			FROM inventory_history ih, purchase_items p, inventory i 
+			WHERE po_number = ". prep($order_number) ."
 			AND p.partid = ". prep($partid) ." 
-			AND p.partid = i.partid
-			AND i.purchase_item_id = p.id;
+			AND ih.field_changed = 'purchase_item_id'
+			AND ih.value = p.id AND ih.invid = i.id;
 		";
 
 		$result = qdb($query);
@@ -92,7 +76,7 @@
 	    
 	    if($result)
 		    if (mysqli_num_rows($result)>0) {
-				while ($row = $result->fetch_assoc()) {
+				foreach($result as $row) {
 					$listSerials[] = $row;
 				}
 			}
@@ -182,26 +166,29 @@
 					            <th class="col-sm-3">
 					            	PART	
 					            </th>
-					            <th class="col-sm-3">
+					            <th class="col-sm-2">
 									Location
 								</th>
 			                    <th class="col-sm-1">
 									Condition
 					        	</th>
-								<th class="col-sm-3">
-					            	Serial	(*Scan or Press Enter on Input for More)
+								<th class="col-sm-2">
+					            	Serial
 					            </th>
-					            <th class="col-sm-1">
-									Remaining Qty
+					            <th class="col-sm-1 text-center">
+									Ordered
 					        	</th>
 					        	<th class="col-sm-1">
+									Outstanding
+					        	</th>
+					        	<th class="col-sm-1 text-center">
 									RTV
 					        	</th>
 					        	<th class="col-sm-1">
 									Vendor Warr
 					        	</th>
 					            <th class="col-sm-1">
-					            	<!--Lot Inventory (No Serial)-->
+					            	
 					        	</th>
 					         </tr>
 						</thead>
@@ -211,14 +198,14 @@
 							//Grab all the parts from the specified PO #
 							if($partsListing) {
 								foreach($partsListing as $part): 
-									$item = getPartName($part['partid']);
+									$item = getPart($part['partid'],'part');
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
-									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?php echo $item['part']; ?>">
+									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?=$item?>">
 										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
-										<div class="row locations_tracker" data-serial="">
+										<div class="locations_tracker" data-serial="">
 											<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
 												<?=loc_dropdowns('place')?>
 											</div>
@@ -246,15 +233,18 @@
 										    </span>
 							            </div>
 									</td>
-									
+									<td class="text-center" style="padding-top: 15px !important;">
+										<?=$part['qty'];?>
+									</td>
 									<td class="remaining_qty">
 										<input style="margin-bottom: 6px;" class="form-control input-sm" data-qty="" name="qty" placeholder="LOT QTY" value="<?php echo($part['qty'] - $part['qty_received'] <= 0 ? 0 : $part['qty'] - $part['qty_received']); ?>" readonly>
+							
 										<div class='infiniteComments'>
 									    	<!--<input style='margin-bottom: 10px;' class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial='' data-inv-id='' data-part="">-->
 										</div>
 									</td>
 									<td>
-										<input class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
 									</td>
 									<td>
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
@@ -276,7 +266,10 @@
 												</tr>
 											</thead>
 											<tbody>
-											<?php $history = getHistory($part['partid']); if($history != '') { foreach($history as $serial): ?>
+											<?php 
+												$history = getHistory($part['partid'],$order_number); 
+												if($history) { 
+													foreach($history as $serial): ?>
 												<tr>
 													<td><?= $serial['serial_no']; ?></td>
 													<td><?= $serial['qty']; ?></td>
@@ -284,7 +277,10 @@
 													<td><?= display_location($serial['locationid']); ?></td>
 													<td><?= getCondition($serial['conditionid']); ?></td>
 												</tr>
-											<?php endforeach; } ?>
+											<?php 
+													endforeach; 
+												} 
+											?>
 											</tbody>
 										</table>
 									</td>

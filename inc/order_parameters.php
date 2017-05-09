@@ -11,7 +11,8 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			
-			
+			$info['bill'] = 'remit_to_id';
+			$info['ship'] = 'ship_to_id';
 			$info['order'] = "purchase_orders";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Purchase Order";
@@ -49,6 +50,8 @@
 			$info['credit'] = false;
 			
 			$info['order'] = "sales_orders";
+			$info['bill'] = 'bill_to_id';
+			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
 			$info['client'] = "Vendor";
@@ -84,6 +87,7 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			
+
 			$info['order'] = "invoices";
 			$info['header'] = "Invoice ";
 			$info['item'] = "invoice_items";

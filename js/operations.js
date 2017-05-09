@@ -23,6 +23,7 @@
 		        maxDate: maxDate,
 		    });
 		}
+//$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":$(this).attr("id")});
 		jQuery.fn.initSelect2 = function(load_url,holder,args,active){ 
 			console.log("init initSelect2: "+load_url);
 			$(this).select2({
@@ -198,9 +199,9 @@
 
 					//Initialize each of the select2 fields when the left side loads.
 					$("#companyid").initSelect2("/json/companies.php", "Select Company",{"scope":order_type});
-					$("#bill_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
+					$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":"bill"});
 					$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":$("#carrier").val()});
-					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", receiver_companyid);
+					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":"ship"});
 					if($("#ship_to").val() == $("#bill_to").val()){
 						$("#mismo").prop("checked",true);
 
@@ -280,9 +281,9 @@
 				// alert(id);
 				$(".contact-selector").initSelect2("/json/contacts.php","Select Contact",company);
 				
-				$("#bill_to").initSelect2("/json/address-picker.php",'Select Address',company);
-				$("#ship_to").initSelect2("/json/address-picker.php",'Select Address',company);
-
+				//$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":$(this).attr("id")});
+				$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":company,"page":order_type,"id":"bill"});
+				$("#ship_to").initSelect2("/json/address-picker.php","Select Address", {"limit":company,"page":order_type,"id":"ship"});
 				
 				//Default selector for the addresses
 	    		console.log('/json/address-default.php?company='+company+'&order='+order_type);
@@ -697,16 +698,16 @@
 				lazy_row.show();
 			});
 
-			$(document).on("dblclick",".easy-output td",function() {
-				var click_row = $(this).closest("tr");
-				click_row.hide();
-				var lazy_row = click_row.next();
-				lazy_row.show();
-				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
-				var ext = click_row.find(".line_linext").text();
-				lazy_row.find("input[name='ni_ext']").val(ext);
-			});
+			// $(document).on("dblclick",".easy-output td",function() {
+			// 	var click_row = $(this).closest("tr");
+			// 	click_row.hide();
+			// 	var lazy_row = click_row.next();
+			// 	lazy_row.show();
+			// 	lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
+			// 	lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+			// 	var ext = click_row.find(".line_linext").text();
+			// 	lazy_row.find("input[name='ni_ext']").val(ext);
+			// });
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
 		    //$(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));

@@ -510,7 +510,7 @@ include_once $rootdir.'/inc/packages.php';
 				
 			//Order Number
 			if($ref_ln != '') {
-				$right .= "<a href='".$ref_ln."'><i class='fa fa-file fa-4' aria-hidden='true'></i></a> " . $orderNumber . "<br><br>";
+				$right .= "<a href='".$ref_ln."'><i class='fa fa-file fa-4' aria-hidden='true'></i> " . $orderNumber . "</a><br><br>";
 			} else {
 				$right .=  $orderNumber . "<br><br>";
 			}

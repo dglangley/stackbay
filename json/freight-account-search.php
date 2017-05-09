@@ -1,33 +1,39 @@
 <?php
-
-	include_once '../inc/dbconnect.php';
-	include_once '../inc/format_date.php';
-	include_once '../inc/keywords.php';
-	include_once '../inc/getContact.php';
-	include_once '../inc/getContacts.php';
-	include_once '../inc/getCompany.php';
-	include_once '../inc/form_handle.php';
+	$rootdir = $_SERVER['ROOT_DIR'];
+	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/format_date.php';
+	include_once $rootdir.'/inc/keywords.php';
+	include_once $rootdir.'/inc/getContact.php';
+	include_once $rootdir.'/inc/getContacts.php';
+	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/form_handle.php';
 
     $q = grab('q');
 
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
     $companyid = grab('limit');
-    $cid = prep($companyid,"'0'"); 
-    $carrierid = prep(grab('carrierid'),"'0'"); 
+    $cid = prep($companyid); 
+    $carrierid = prep(grab('carrierid')); 
+    
     $output = array();
     
-    $query = "SELECT * FROM `freight_accounts` WHERE `account_no` LIKE '".res($q)."%' ";
-	if ($carrierid) { $query .= "AND `carrierid` = $carrierid "; }
-	$query .= "ORDER BY IF(`companyid`=$cid,0,1), `account_no`;";
-    $results = qdb($query);
     
-    if (isset($results)){
+    $query = "SELECT * FROM `freight_accounts` WHERE ";
+    $query .= (($q) ? " `account_no` LIKE ".prep($q."%")." OR " : "");
+	$query .= "`companyid` = $cid ";
+	$query .= "AND `carrierid` = $carrierid ";
+	$query .= "GROUP BY `account_no` ";
+	$query .= "ORDER BY IF(`companyid`=$cid,0,1), `account_no`;";
+    $results = qdb($query) or die(qe()." $query");
+    
+    if (mysqli_num_rows($results)){
         foreach($results as $row){
-			$account = $row['account_no'];
+			$account = "";
 			if ($row['companyid']<>$companyid) {
-				$account .= ' '.getCompany($row['companyid']);
+				$account .= "<b>".getCompany($row['companyid']).":</b> ";
 			}
+			$account .= $row['account_no'];
             $line = array(
                 'id' => $row['id'], 
                 'text' => $account,
@@ -36,56 +42,19 @@
         }
     }
 
-    
-    
-/*
-    //Then append the rest of the contacts ordered by alphabetical
-    $secondary = " SELECT DISTINCT * FROM `freight_accounts`
-    WHERE `account_no` LIKE '$q%' 
-    ORDER BY `account_no`;";
-    $second = qdb($secondary);
-    // $output[] = array(
-    //     'id' => 'NULL', 
-    //     'text' => $secondary
-    // );
-
-    if (isset($second)){
-        foreach($second as $id => $row){
-            $line = array(
-                'id' => $row['id'], 
-                'text' => $row['name']
-            );
-            $output[] = $line;
-        }
-    }
-*/
+	// always add Prepaid option
+	$output[] = array(
+        'id' => "null",
+        'text' => "PREPAID"
+    );
     if (strlen($q) > 1){
         $output[] = array(
             'id' => "Add $q",
             'text' => "Add $q"
         );
-    } else if (! $q) {
-		// always add Prepaid option when the user is not specifically typing something
-		$output[] = array(
-            'id' => "null",
-            'text' => "PREPAID"
-        );
-	}
+    } 
     
-//	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
-/*    
-    $items = array();
-    if (strlen($q) > 1){
-         $results = (hecidb($qlower));
-         foreach($results as $id=> $row){
-             $name = $row['part']." &nbsp; ".$row['heci'].' &nbsp; '.$row['Manf'].' '.$row['system'].' '.$row['Descr'];
-             $items[] = array('id' => $id, 'text' => $name);
-         }
-    }
-*/    
 
-
-    
-	echo json_encode($output);//array('results'=>$companies,'more'=>false));
+	echo json_encode($output);
 	exit;
 ?>

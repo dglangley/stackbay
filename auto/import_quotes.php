@@ -171,11 +171,3 @@
     import_quotes("incoming");
     //import_quotes("outgoing");
 ?>
-
-
-
-
-
-
-
-
