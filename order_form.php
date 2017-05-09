@@ -60,7 +60,7 @@
 	 	$origin = $inv_info['order_number'];
 	 }
 	 
-	 function getFreightTotal($order_number) {
+	function getFreightTotal($order_number) {
 	 	$total = 0;
 	 	
 	 	$query = "SELECT SUM(freight_amount) AS total FROM packages WHERE order_number = '".res($order_number)."';";
@@ -74,8 +74,20 @@
 	 	
 	 	return $total;
 	 }
-
-	
+	function getOrderCreated($order_type, $order_number){
+		$o = o_params($order_type);
+		$order_number = prep($order_number);
+		$table = $o['order'];
+		$id = $o['id'];
+		$q = "SELECT `created` FROM `$table` where $id = $order_number;";
+		$result = qdb($q) or die(qe()." | $q");
+		if (mysqli_num_rows($result)){
+			$result = mysqli_fetch_assoc($result);
+			return format_date($result['created'],"D n/j/y g:ia");
+		} else {
+			return "This has never been created!";
+		}
+	}
 ?>
 
 <!DOCTYPE html>
@@ -239,6 +251,7 @@
 						echo $o['type']." Order";
 						if ($order_number!='New'){
 							echo " #$order_number";
+							echo("<br><span style = 'font-size:14px;'>".getOrderCreated($o['type'],$order_number)."</span>");
 						}
 					} else {
 						echo("Invoice #".$order_number);

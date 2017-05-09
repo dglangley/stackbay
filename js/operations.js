@@ -698,16 +698,16 @@
 				lazy_row.show();
 			});
 
-			$(document).on("dblclick",".easy-output td",function() {
-				var click_row = $(this).closest("tr");
-				click_row.hide();
-				var lazy_row = click_row.next();
-				lazy_row.show();
-				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
-				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
-				var ext = click_row.find(".line_linext").text();
-				lazy_row.find("input[name='ni_ext']").val(ext);
-			});
+			// $(document).on("dblclick",".easy-output td",function() {
+			// 	var click_row = $(this).closest("tr");
+			// 	click_row.hide();
+			// 	var lazy_row = click_row.next();
+			// 	lazy_row.show();
+			// 	lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
+			// 	lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
+			// 	var ext = click_row.find(".line_linext").text();
+			// 	lazy_row.find("input[name='ni_ext']").val(ext);
+			// });
 	
 //No idea what this does, but when something breaks, uncomment this and it will magically fix it, probably.
 		    //$(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
