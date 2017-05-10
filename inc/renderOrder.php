@@ -114,6 +114,7 @@
                 $price = $item['amount'];
             }
 			$part_details = current(hecidb($item['partid'],'id'));
+			$part_strs = explode(' ',$part_details['Part']);
 			$lineTotal = $price*$item['qty'];
 			$total += $lineTotal;
 			
@@ -122,7 +123,7 @@
                 <tr>
                     <td class="text-center">'.($o['credit']? ++$i : $item['line_number']).'</td>
                     <td>
-        	            '.$part_details['Part'].' &nbsp; '.$part_details['HECI'].'
+        	            '.$part_strs[0].' &nbsp; '.$part_details['HECI'].'
                         <div class="description '.$part_details['manf'].' '.$part_details['system'].' '.$part_details['description'].'</div>
                         <div class="'.($o['rma'] || $o['invoice'] ? '' : 'remove').'" style = "padding-left:5em;">
                             <br>
