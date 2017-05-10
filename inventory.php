@@ -255,7 +255,7 @@
 	</div>
 
 	<div style='display: none;'>
-		<div class="locations row">
+		<div class="locations_main row">
 			<div class="col-md-6" style="padding-right: 5px;">
 				<?=loc_dropdowns('place')?>
 			</div>
@@ -264,17 +264,17 @@
 			</div>
 		</div>
 		
-		<div class="conditions row">
+		<div class="conditions_main row">
 			<div class="col-md-12">
-				<?=dropdown('conditionid')?>
+				<?=dropdown('conditionid','','','',false)?>
 			</div>
 		</div>
 		
-		<div class="status_select row">
-			<div class="col-md-12">
-				<?=dropdown('status')?>
-			</div>
-		</div>
+		<!--<div class="status_select row">-->
+		<!--	<div class="col-md-12">-->
+		<!--		<?=dropdown('status')?>-->
+		<!--	</div>-->
+		<!--</div>-->
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
@@ -613,12 +613,19 @@
 			e.preventDefault();
 			var loc_col = $(this).closest('tr').find('.edit.location_col');
 			if (loc_col.find('.locations').length === 0){
-				$('.locations').clone().appendTo(loc_col);
+				$('.locations_main').clone().appendTo(loc_col).removeClass("locations_main").addClass('locations');
 				var actualInstance = loc_col.data('instance');
 				var actualPlace = loc_col.data('place');
 				loc_col.find('.instance').val(actualInstance);
 				loc_col.find('.place').val(actualPlace);
 			}
+			var con_col = $(this).closest('tr').find('.edit.condition_col');
+			if (con_col.find('.conditions_main').length === 0){
+				$('.conditions_main').clone().appendTo(con_col).removeClass("conditions_main").addClass('conditions');
+				var actualCon = con_col.data('condition');
+				con_col.find('.conditionid').val(actualCon);
+			}
+			
 			
 			$(this).closest('tr').find('.edit').show();
 			$(this).closest('tr').find('.data').hide();
