@@ -1098,6 +1098,10 @@
 				document.location.href = '/'+$(this).data('type')+$(this).val();
 			}
 		});
+		$(".order-search-button").on("click",function(e) {
+			e.preventDefault();
+			document.location.href = '/'+$(this).closest(".input-group").find("input[type='text']").val();
+		});
 
     });/* close $(document).ready */
 

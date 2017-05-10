@@ -123,16 +123,18 @@
 			<div class="col-md-2 col-sm-2" style='padding-right:0px;'>
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
 				<div class="row" style = 'padding-right:0px;'>
-					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
-					<div class='col-md-2 nopadding'><?= loc_dropdowns('instance')?></div>
+					<div class='col-md-4' style = 'padding-right:0px; max-width:120px;'><?= loc_dropdowns('place')?></div>
+					<div class='col-md-4 nopadding'>
+						<div class="input-group">
+							<?= loc_dropdowns('instance')?>
+							<div class="input-group-btn">
+								<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>   
+							</div>
+						</div>
+					</div>
 					
 					<div class="col-md-4" style  = 'padding-right:5px;padding-left:5px;'>
-						<div class="input-group">
-      						<span class="input-group-btn">
-								<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>   
-							</span>
-			              	<input type="text" class="form-control input-sm" style='padding-right:0px;padding-left:3px;' id="po_filter" placeholder="PO">
-			            </div>
+		              	<input type="text" class="form-control input-sm" style='padding-right:0px;padding-left:3px;' id="po_filter" placeholder="PO">
 					</div>
 				</div>
 			</div>
@@ -226,7 +228,9 @@
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
 <!----------------------------------------------------------------------------->
+<!--
 	<span class='loading_search' style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Loading Search Results...</span>
+-->
 	
 	<div class="loading_element_listing" style="display: none;">
 		
@@ -234,7 +238,7 @@
 			<select class='revisions' multiple>
 				
 			</select>
-			<img class='img-responsive' src='http://placehold.it/125x75' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
+			<img class='img-responsive' src='/img/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
 		</div>
 		<div class='col-sm-12'>
 			<div class='table-responsive'>
@@ -303,6 +307,7 @@
 			var conditionid = $("#condition_global").val();
 			var vendor = $("#companyid").val();
 			var order = $("#po_filter").val();
+			$('#loader').show();
 
 			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&conditionid="+conditionid+"&vendor="+vendor);
 			$.ajax({
@@ -319,8 +324,16 @@
 						"order" : order
 					},
 					dataType: 'json',
+					complete: function() { $('#loader').hide(); },
 					success: function(part) {
-						if(part != 'test') {
+						if (part=='test') {
+							console.log("Nothing_found")
+							//$(".loading_element_listing").hide();
+					  		//alert("No Parts Found with those parameters");
+							$("#item-none").show();
+							return;
+						}
+
 							// Add feature to auto update the URL without a refresh
 							if(search == '') {
 								window.history.replaceState(null, null, "/inventory.php");
@@ -352,7 +365,9 @@
 							$(".headers").empty();
 							$(".parts").empty();
 							
-							$(".part-container").html("").remove();	
+							//dgl 5-9-17
+							//$(".part-container").html("").remove();	
+
 							// var p = JSON.parse(part)
 							//console.log(part);
 							var revisions, parts;
@@ -382,7 +397,7 @@
 										rev_arr[info.part_name] = false;
 									}
 									// break apart key to get relevant data (PO)
-									var key = key.split("+");
+									var key = key.split(".");
 									console.log(key);
 									parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
 									if (!search){
@@ -392,19 +407,25 @@
 										parts += 	"<td>"+info.location+"</td>";
 									}
 									
-									var counterqty = 0;
+									var counterqty = info.serials.length;
+/*
 									$.each(info.serials, function(i,s_string){
 										counterqty++;
 									});
+*/
 										// parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
-										parts +=	"<td><button class = 'check_serials btn-sm btn-flat gray pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
+										parts +=	"<td><button class = 'check_serials btn btn-sm btn-default pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
 									
 										parts += 	"<td>"+key[2]+"</td>";
+									var ofill = '';
 									if(!order){
-										parts += 	"<td>"+key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-external-link' aria-hidden='true'></i></a></td>";
+										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										parts += 	"<td>"+ofill+"</td>";
 									}
+									var vfill = '';
 									if(!vendor){
-										parts += 	"<td>"+info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-external-link' aria-hidden='true'></i></a></td>";
+										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										parts += 	"<td>"+vfill+"</td>";
 									}
 										parts += 	"<td>"+key[3]+"</td>";
 										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
@@ -417,7 +438,6 @@
 	
 										$.each(info.serials, function(i,s_string){
 											var serial = s_string.split(", ");
-											//console.log(history);
 											
 											var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
 											    return letter.toUpperCase();
@@ -426,15 +446,10 @@
 											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
-											// parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
-											// parts += "	<td class='status_col data status_original'>"+status+"</td>";
-											// parts += "	<td class='location_col data '>"+info.location+"</td>";
-											// parts += "	<td class='condition_col data '>"+key[2]+"</td>";
 											parts += "	<td class='notes_col data notes_original'>";
 											parts += serial[4];
 											parts += "</td>";
 
-											
 											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											parts += "	<td class='qty_col edit'>1</td>";
 											parts += "	<td class='status_col edit'>"+status+"</td>";
@@ -451,8 +466,6 @@
 											parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
 														<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>\
 														</td>";
-											//parts += "<td class='data'></td>";
-											
 											
 		                					parts +="<td>\
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
@@ -509,12 +522,6 @@
 							});*/
 							
 							$(".loading_element_listing").show();
-						} else {
-							console.log("Nothing_found")
-							//$(".loading_element_listing").hide();
-					  		//alert("No Parts Found with those parameters");
-							$("#item-none").show();
-						}
 					},
 					error: function(xhr, status, error) {
 						//$(".loading_element_listing").hide();
@@ -628,6 +635,9 @@
 		//for the RM button, which has it's own independent processing method
 		
 		$(document).ready(function() {
+			$('#loader-message').html('Please wait for Inventory results to load...');
+			$('#loader').show();
+
 			//Triggering Aaron 2017
 			var phpStuff = "<?=$_REQUEST['s']; ?>";
 			if($("#part_search").val() || phpStuff != ''){
@@ -637,12 +647,18 @@
 					$("#part_search").val(phpStuff);
 				}
 				
+				$('#loader').hide();
+/*
 				$.when( inventory_history(search) ).then(function() {
 					$('.loading_search').hide();
 				});
+*/
 			}
 			
+/*
 			$('.loading_search').hide();
+*/
+			$('#loader').hide();
 		});
 		
 		

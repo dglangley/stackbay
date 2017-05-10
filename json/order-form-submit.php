@@ -95,7 +95,7 @@
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
-    $form_rows = json_decode($_REQUEST['table_rows'],true);
+    $form_rows = $_REQUEST['table_rows'];
 
     
     //Form Specifics
@@ -343,16 +343,16 @@
 			$msg .= '<br/>';
 		}
 		$recps = array();
-		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 		if ($contact) {
 			$contact_email = getContact($contact,'id','email');
 			if ($contact_email) {
 				$recps[] = array($contact_email,getContact($contact,'id','name'));
 			}
-			if ($addl_recp_email) {
-				$recps[] = array($addl_recp_email,$addl_recp_name);
-			}
 		}
+		if ($addl_recp_email) {
+			$recps[] = array($addl_recp_email,$addl_recp_name);
+		}
+		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 
 		$bcc = false;
 		if ($rep) {

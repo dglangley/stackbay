@@ -1316,6 +1316,9 @@
 										alert(data.message);
 										return;
 									}
+								} else {
+									alert(data.error);
+									return;
 								}
 								console.log("Order-upload:Success");
 							},
@@ -1326,7 +1329,11 @@
 							},
 						});
 					}
-	filename = "https://s3-us-west-2.amazonaws.com/ventel.stackbay.com-order-uploads/20170508_PO-5227-from-United-TelSupply-Inc.-10940.pdf";
+
+					if (! filename) {
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","File could not be uploaded, or the upload is orphaned. Please stay here and call for help immediately.", false);
+						return;
+					}
 	
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page

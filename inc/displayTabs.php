@@ -62,7 +62,7 @@
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Sales..." data-type="SO">
 											<span class="input-group-btn">
-												<button class="btn btn-primary btn-xs" type="button"><i class="fa fa-search"></i></button>
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
 											</span>
 										</div>
 										<!-- <a href="/accounts.php?orders_table=sales" class="mode-tab"><i class="fa fa-money"></i> Sales</a> -->
@@ -85,7 +85,7 @@
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Purchases..." data-type="PO">
 											<span class="input-group-btn">
-												<button class="btn btn-primary btn-xs" type="button"><i class="fa fa-search"></i></button>
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
 											</span>
 										</div>
 									  </div>
