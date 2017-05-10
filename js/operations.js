@@ -1330,7 +1330,7 @@
 						});
 					}
 
-					if (! filename) {
+					if (! filename && order_type=='Sales') {
 						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","File could not be uploaded, or the upload is orphaned. Please stay here and call for help immediately.", false);
 						return;
 					}
