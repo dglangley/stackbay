@@ -259,6 +259,9 @@
 
 				// change icon on upload button as additional indicator of successful selection
 				$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
+				console.log(orderUploadFiles);
+				console.log(order_label);
+				console.log(upload_file);
 			});
 	
 		
@@ -439,6 +442,7 @@
 				var limit = $(this).val();
 
 				$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":limit});
+				$("#modal_carrier").val(limit);
 
 				console.log(window.location.origin+"/json/account-default.php?"+"company="+receiver_companyid+"&carrier="+limit);
 				$.ajax({
@@ -1093,7 +1097,7 @@
 				if($(this).val().indexOf("Add") > -1){
 					
 					//Gather the address from the select2 field
-					var acct = ($(this).val().slice(5));
+					var acct = ($(this).val().slice(4));
 					
 					//If the first number is the address, assume the user is searching by an address name
 					$("#account-modal-body").find("input[name='na_account']").val(acct);
@@ -1306,6 +1310,8 @@
 								if (typeof data.error==='undefined') {
 									if (data.filename!='') {
 										filename = data.filename;
+										console.log("Returned Data from the function")
+										console.log(data);
 									} else if (data.message) {
 										alert(data.message);
 										return;
@@ -1384,11 +1390,14 @@
 							"bill_to="+ bill_to+"&"+
 							"carrier="+ carrier+"&"+
 							"account="+ account+"&"+
-							"terms=" + terms+"&"+
-							"service=" + service+"&"+
+							"terms="+ terms+"&"+
+							"service="+ service+"&"+
 							"pri_notes="+ pri_notes+"&"+
 							"pub_notes="+ pub_notes+"&"+
-							"table_rows"+ submit);
+							"table_rows="+JSON.stringify(submit)+"&"+
+							"filename="+JSON.stringify(filename)+"&"+
+							"email_confirmation="+email_confirmation+"&"+
+							"email_to="+email_to);
 					//Submit all rows and meta data for unpacking later
 					// alert(account);
 					$.ajax({

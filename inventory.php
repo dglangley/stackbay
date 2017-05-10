@@ -120,16 +120,21 @@
 <!----------------------------------------------------------------------------->
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
-
-			<div class="col-md-2 col-sm-2">
+			<div class="col-md-2 col-sm-2" style='padding-right:0px;'>
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
-				<div class="row">
-					<div class='col-md-6' style = 'padding-right:0px;'><?= loc_dropdowns('place')?></div>
-					<div class='col-md-3 nopadding'><?= loc_dropdowns('instance')?></div>
-					<div class="col-md-3" style  = 'padding-right:0px;padding-left:5px;'>
+				<div class="row" style = 'padding-right:0px;'>
+					<div class='col-md-4' style = 'padding-right:0px; max-width:120px;'><?= loc_dropdowns('place')?></div>
+					<div class='col-md-4 nopadding'>
 						<div class="input-group">
-			              <input type="text" class="form-control input-sm" id="po_filter" placeholder="PO">
-			            </div>
+							<?= loc_dropdowns('instance')?>
+							<div class="input-group-btn">
+								<button class="btn btn-sm btn-primary part_filter"><i class="fa fa-filter"></i></button>   
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-md-4" style  = 'padding-right:5px;padding-left:5px;'>
+		              	<input type="text" class="form-control input-sm" style='padding-right:0px;padding-left:3px;' id="po_filter" placeholder="PO">
 					</div>
 				</div>
 			</div>
@@ -233,7 +238,7 @@
 			<select class='revisions' multiple>
 				
 			</select>
-			<img class='img-responsive' src='/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
+			<img class='img-responsive' src='/img/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
 		</div>
 		<div class='col-sm-12'>
 			<div class='table-responsive'>
@@ -353,7 +358,7 @@
 								headers +=	"<th>Vendor</th>";
 							}
 							headers +=	"<th>Date Added</th>";
-							headers +=	"<th></th>"
+							headers +=	"<th><button class = 'all_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></th>"
 							headers += "</tr>";
 							
 							$(".revisions").empty();
@@ -392,7 +397,7 @@
 										rev_arr[info.part_name] = false;
 									}
 									// break apart key to get relevant data (PO)
-									var key = key.split("+");
+									var key = key.split(".");
 									console.log(key);
 									parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
 									if (!search){
@@ -402,44 +407,37 @@
 										parts += 	"<td>"+info.location+"</td>";
 									}
 									
-									var counterqty = 0;
+									var counterqty = info.serials.length;
+/*
 									$.each(info.serials, function(i,s_string){
 										counterqty++;
 									});
-										parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
+*/
+										// parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
+										parts +=	"<td><button class = 'check_serials btn btn-sm btn-default pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
 									
 										parts += 	"<td>"+key[2]+"</td>";
+									var ofill = '';
 									if(!order){
-										parts += 	"<td>"+key[1]+"</td>";
+										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										parts += 	"<td>"+ofill+"</td>";
 									}
+									var vfill = '';
 									if(!vendor){
-										parts += 	"<td>"+info.vendor+"</td>";
+										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										parts += 	"<td>"+vfill+"</td>";
 									}
 										parts += 	"<td>"+key[3]+"</td>";
-										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right'><i class='fa fa-list'></i></button></td>";
+										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
 										parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
 													<td colspan='12'>";
 													parts += "<table class='table serial table-hover table-condensed'>\
-																<thead>\
-																	<tr>";
-													// parts += "			<th>Part</th>";
-													parts += "			<th class='serial_col col-md-2'>Serial Number</th>";
-													parts += "			<th class='qty_col col-md-1'>qty</th>";
-													parts += "			<th class='status_col col-md-1'>Status</th>";
-													parts += "			<th class='location_col col-md-2'>Location</th>";
-													parts += "			<th class='condition_col col-md-1'>Condition</th>";
-													parts += "			<th class='notes_col col-md-2'>Notes</th>";
-													parts += "			<th class='actions_col col-md-1'></th>";
-													parts += "			<th class='edit_col col-md-1'></th>";
-													parts += "		</tr>\
-																</thead>\
 																<tbody>";
 	
 										$.each(info.serials, function(i,s_string){
 											var serial = s_string.split(", ");
-											//console.log(history);
 											
 											var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
 											    return letter.toUpperCase();
@@ -448,25 +446,17 @@
 											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
-											parts += "	<td class='qty_col data qty_original'>"+serial[2]+"</td>";
-											parts += "	<td class='status_col data status_original'>"+status+"</td>";
-											parts += "	<td class='location_col data '>"+info.location+"</td>";
-											parts += "	<td class='condition_col data '>"+key[2]+"</td>";
 											parts += "	<td class='notes_col data notes_original'>";
 											parts += serial[4];
 											parts += "</td>";
 
-											
 											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											parts += "	<td class='qty_col edit'>1</td>";
 											parts += "	<td class='status_col edit'>"+status+"</td>";
 											parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
 											parts += "	<td class='condition_col edit condition_holder' data-condition='"+info.conditionid+"'></td>";
 											parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+serial[4]+"' data-serial='"+serial[1]+"'/></td>";
-											//parts += "<td class='data'></td>";
-											
-											parts += "<td class='edit_col' style='text-align: right;'>";
-											
+											parts += "	<td class='edit_col' style='text-align: right;'>";
 											if(serial[3] == 'in repair') {
 												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
 											} else {
@@ -476,6 +466,7 @@
 											parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
 														<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>\
 														</td>";
+											
 		                					parts +="<td>\
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i>\
@@ -669,7 +660,14 @@
 			
 			
 		});
-		
+		$(document).on('click', '.all_serials', function(e) {
+			e.preventDefault;
+	        if ($(".serial_listing:visible").length){
+	        	$(".serial_listing").hide();
+	        }else{
+	        	$("[class^=serial_listing]").show();
+			}
+		});
 		$(document).on("click",".part_filter",function(){
 			var search = $("#part_search").val();
 			inventory_history(search);

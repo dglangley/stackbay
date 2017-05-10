@@ -353,10 +353,9 @@
 
 		foreach ($rows as $row){
 			// print_r($row);
-			//$date = format_date($row['date_created'],"m/d/Y");
+			$date = format_date($row['date_created'],"m/d/Y");
 			$po = getPO($row['purchase_item_id']);
-			//$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date;
-			$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$row['date_created'];
+			$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date;
 			$partid = $row['partid'];
 
 			if (! isset($r[$partid])) {
