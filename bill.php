@@ -126,7 +126,7 @@
 			
 		}
 		// print_r($grouped);exit;
-		$due_estimate = terms_calc("po",$po_number)
+		$due_estimate = terms_calc($po_number,"po");
 		// $due_select = "
 		// SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
 		// $due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
