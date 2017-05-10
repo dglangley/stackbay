@@ -43,7 +43,21 @@
 //      - Output the sub-rows
 //  Output the search row.
 
-    
+function search_as_heci($search_str){
+		$heci7_search = false;
+		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
+		}
+
+		if ($heci7_search) {
+			$results = hecidb(substr($search_str,0,7));
+		} else {
+			$results = hecidb(format_part($search_str));
+		}
+		return $results;
+}
 
 //Output Header Row
 function head_out(){
@@ -85,7 +99,7 @@ function sub_rows($search = ''){
     $page = grab('page');
     $show = grab('show');
     //On Click of the "GO!" Button, populate a dropped down list of each of the parameters.
-    
+    $any_hidden = false;
     //Declare general collection variables
     $row = '';
     $stock = array();
@@ -97,19 +111,25 @@ function sub_rows($search = ''){
         $multi = explode(' ',$search);
         $items = array();
         foreach($multi as $search_s){
-            $items = hecidb(trim($search_s));
+            $items = search_as_heci(trim($search_s));
             foreach ($items as $id => $data){
                 // Grab all the matches from whatever search was passed in.
-                $matches[$id] = $id;
+                $matches[$id] += 1;
             }
         }
             if($matches){
-                $match_string = implode(", ",$matches);
+                arsort($matches);
+                // $match_string = implode(", ",$matches);
+                $match_string = '';
+                foreach($matches as $match => $weight){
+                    $match_string .= prep($match).", ";
+                }
+                $match_string = rtrim($match_string, ", ");
             
                 //Get all the currently in hand
                 $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
                 $in_stock  = qdb($inventory);
-                if (mysqli_num_rows($in_stock) > 0){
+                if (mysqli_num_rows($in_stock)){
                     foreach ($in_stock as $r){
                         $stock[$r['partid']] = $r['total'];
                     }
@@ -122,7 +142,7 @@ function sub_rows($search = ''){
                 //Use an inventory join method here at some point
                 
                 $incoming = qdb($purchased);
-                if (mysqli_num_rows($incoming) > 0){
+                if (mysqli_num_rows($incoming)){
                     foreach ($incoming as $i){
                         if($i['total'] > 0){
                             $inc[$i['partid']] = $i['total'];
@@ -130,18 +150,8 @@ function sub_rows($search = ''){
                     }
                 }
                 
-                
-                
-                if (mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0 && ($page == 'Sales' || $page == 's') && !$show){
-                    $rows = "
-                        <tr class = 'items_label'>
-                            <td></td>
-                            <td colspan='6' style=''>No parts in stock. <span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show all</span></td>
-                            <td style=''></td>
-                        </tr>
-                    ";
-                }
-                else{
+                if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming)){
+                    //build the results rows
                         $rows = "
                         <!-- Created from $search -->
                         <tr class = 'items_label'>
@@ -188,6 +198,7 @@ function sub_rows($search = ''){
                         $text .= "</div>";
                         if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
                             $text = '';
+                            $any_hidden = true;
                             continue;
                         }
                         $rows .= "
@@ -214,18 +225,29 @@ function sub_rows($search = ''){
                     //Qty | Each of the qty inputs had supplimental inventory information
                     //Price 
                     //EXT price
-                    }
+                    }//END foreach item allowed
                 }
-        }//End the "If there are matches" check
-            // else{
-            //     $rows .= "
-            //         <tr class = '' data-line-id = $id>
-            //             <td></td>
-            //             <td colspan='6' style=''>Nothing Found</td>
-            //             <td style=''></td>
-            //         </tr>
-            //     ";
-            // }
+                if (($page == 'Sales' || $page == 's') && !$show && $any_hidden){
+                    $rows .= "
+                        <tr class = 'items_label'>
+                            <td></td>
+                            <td colspan='6' style=''>";
+                            $rows .= ((mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0) ? "No parts in stock." : "");
+                            $rows .= "<span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show more</span></td>
+                            <td style=''></td>
+                        </tr>
+                    ";
+                }
+        } //End the "If there are matches" check
+        else{
+            $rows .= "
+                <tr class = '' data-line-id = $id>
+                    <td></td>
+                    <td colspan='6' style=''>No Matches</td>
+                    <td style=''></td>
+                </tr>
+            ";
+        }
     return $rows;
 }
 
