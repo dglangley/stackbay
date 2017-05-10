@@ -200,7 +200,7 @@
    			        $init = true;
    			    }
     			    
-   				if($conditionid == $selected || ($selected == '' && $cond == 'Used' && !$init)){
+   				if($conditionid == $selected || ($selected == '' && $conditionid == '2' && !$init)){
    					$cond_list .= "<option selected value=$conditionid>".$cond."</option>";
    				}
    				else{

@@ -255,9 +255,8 @@
 		</style>
 
 	</head>
-	
+
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
-	<!----------------------- Begin the header output  ----------------------->
 		<?php 
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
@@ -267,7 +266,14 @@
 			<div class="col-md-4">
 				<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
 				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
-				<?php } ?>
+				<?php
+						$isoq = "SELECT * FROM iso WHERE so_number = ".prep($order_number).";";
+						$isor = qdb($isoq) OR die(qe() . ' ' . $isoq);
+
+						 if (mysqli_num_rows($isor)>0) {
+					?>
+				<a target="_blank" href="/iso-form.php?on=<?=$order_number;?>" class="btn-flat pull-left">QC</a>
+				<?php }} ?>
 <?php
 				if(is_numeric($order_number)){
 					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';

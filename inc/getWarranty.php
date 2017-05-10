@@ -78,7 +78,13 @@
 		
 		return $warranty_lines;
 	}
-	
+	function getWarrByDays($days){
+		//Function returns a warrantyId by days of warr length
+		$query = "SELECT id FROM warranties where days like ".prep($days).";";
+		$result = qdb($query) or die(qe()." | Couldn't get warranties by days | ".$query);
+		$result = mysqli_fetch_assoc($result);
+		return $result['id'];
+	}
 	//Temporary function to calculate Purchase Receive (Inventory Add) Vendor Warranty
 	function calcPOWarranty($orderid, $warranty) {
 		$date;
