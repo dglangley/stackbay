@@ -255,7 +255,7 @@
 	</div>
 
 	<div style='display: none;'>
-		<div class="locations row">
+		<div class="locations_main row">
 			<div class="col-md-6" style="padding-right: 5px;">
 				<?=loc_dropdowns('place')?>
 			</div>
@@ -264,17 +264,17 @@
 			</div>
 		</div>
 		
-		<div class="conditions row">
+		<div class="conditions_main row">
 			<div class="col-md-12">
-				<?=dropdown('conditionid')?>
+				<?=dropdown('conditionid','','','',false)?>
 			</div>
 		</div>
 		
-		<div class="status_select row">
-			<div class="col-md-12">
-				<?=dropdown('status')?>
-			</div>
-		</div>
+		<!--<div class="status_select row">-->
+		<!--	<div class="col-md-12">-->
+		<!--		<?=dropdown('status')?>-->
+		<!--	</div>-->
+		<!--</div>-->
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
@@ -371,13 +371,13 @@
 							// var p = JSON.parse(part)
 							//console.log(part);
 							var revisions, parts;
-							var locations = $('.locations').clone();
+
 							
 							$('.conditions').find('label').remove();
-							var conditions = $('.conditions').clone();
+							// var conditions = $('.conditions').clone();
 							
 							$('.status_select').find('label').remove();
-							var status = $('.status_select').clone();
+							// var status = $('.status_select').clone();
 							
 							var counter = 1;
 							var rev_arr = [];
@@ -419,12 +419,12 @@
 										parts += 	"<td>"+key[2]+"</td>";
 									var ofill = '';
 									if(!order){
-										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>"; }
 										parts += 	"<td>"+ofill+"</td>";
 									}
 									var vfill = '';
 									if(!vendor){
-										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>"; }
 										parts += 	"<td>"+vfill+"</td>";
 									}
 										parts += 	"<td>"+key[3]+"</td>";
@@ -489,9 +489,9 @@
 							$('.revisions').append(revisions);
 							$('.headers').append(headers);
 							
-							$('.location_holder').append(locations);
-							$('.condition_holder').append(conditions);
-							$('.status_holder').append(status);
+							// $('.location_holder').append(locations);
+							// $('.condition_holder').append(conditions);
+							// $('.status_holder').append(status);
 							
 							//GO through each of the conditions and locations and set each one to the respective value
 							// $('.location_holder').each(function() {
@@ -504,22 +504,22 @@
 							// 	//alert(actualPlace);
 							// });
 							
-							$('.condition_holder').each(function() {
-								var actualCondition = $(this).data('condition');
-								$(this).find('select').val(actualCondition);
-							});
+							// $('.condition_holder').each(function() {
+							// 	var actualCondition = $(this).data('condition');
+							// 	$(this).find('select').val(actualCondition);
+							// });
 							
 							$('.status_holder').each(function() {
 								var actualStatus = $(this).data('status');
 								$(this).find('select').val(actualStatus);
 							});
-							$(".location_holder").each(function() {
+							/*$(".location_holder").each(function() {
 								var place = $(this).data('place');
 								var instance = $(this).data('instance');
 								$(this).find(".place").val(place);
 								$(this).find(".instance option[data-place!='"+place+"']").hide();
 								$(this).find(".instance").val(instance);
-							});
+							});*/
 							
 							$(".loading_element_listing").show();
 					},
@@ -602,9 +602,30 @@
 
 		});
 		
-
+		// parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
+		// parts += "	<td class='qty_col edit'>1</td>";
+		// parts += "	<td class='status_col edit'>"+status+"</td>";
+		// parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
+		// parts += "	<td class='condition_col edit condition_holder' data-condition='"+info.conditionid+"'></td>";
+		// parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+serial[4]+"' data-serial='"+serial[1]+"'/></td>";
+		// parts += "	<td class='edit_col' style='text-align: right;'>";
 		$(document).on('click', '.edit_button', function(e) {
 			e.preventDefault();
+			var loc_col = $(this).closest('tr').find('.edit.location_col');
+			if (loc_col.find('.locations').length === 0){
+				$('.locations_main').clone().appendTo(loc_col).removeClass("locations_main").addClass('locations');
+				var actualInstance = loc_col.data('instance');
+				var actualPlace = loc_col.data('place');
+				loc_col.find('.instance').val(actualInstance);
+				loc_col.find('.place').val(actualPlace);
+			}
+			var con_col = $(this).closest('tr').find('.edit.condition_col');
+			if (con_col.find('.conditions_main').length === 0){
+				$('.conditions_main').clone().appendTo(con_col).removeClass("conditions_main").addClass('conditions');
+				var actualCon = con_col.data('condition');
+				con_col.find('.conditionid').val(actualCon);
+			}
+			
 			
 			$(this).closest('tr').find('.edit').show();
 			$(this).closest('tr').find('.data').hide();

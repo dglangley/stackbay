@@ -375,6 +375,7 @@
 				 $r[$partid][$key]['location'] = display_location($row['locationid']);
 				 $r[$partid][$key]['place'] = display_location($row['locationid'], 'place');
 				 $r[$partid][$key]['instance'] = display_location($row['locationid'], 'instance');
+				 $r[$partid][$key]['vendorid'] = $vendorid;
 				 $r[$partid][$key]['vendor'] = getCompany($vendorid);
 				 $r[$partid][$key]['conditionid'] = $row['conditionid'];
 				 $r[$partid][$key]['notes'] = $row['notes'];

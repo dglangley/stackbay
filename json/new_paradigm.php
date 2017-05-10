@@ -90,14 +90,19 @@ function sub_rows($search = ''){
     $row = '';
     $stock = array();
     $inc = array();
-    
+    $matches = array();
     //General Collumn information
         //Item information
-        $items = hecidb($search);
+        
+        $multi = explode(' ',$search);
+        $items = array();
+        foreach($multi as $search_s){
+            $items = hecidb(trim($search_s));
             foreach ($items as $id => $data){
                 // Grab all the matches from whatever search was passed in.
-                $matches[] = $id;
+                $matches[$id] = $id;
             }
+        }
             if($matches){
                 $match_string = implode(", ",$matches);
             
