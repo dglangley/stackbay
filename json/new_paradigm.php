@@ -49,7 +49,16 @@ function search_as_heci($search_str){
 			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
+		} else {
+		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)) { 
+			    $result = mysqli_fetch_assoc($result);
+			    $search_str = $result['heci'];
+			    $heci7_search = true;
+			}
 		}
+		
 
 		if ($heci7_search) {
 			$results = hecidb(substr($search_str,0,7));
@@ -117,129 +126,128 @@ function sub_rows($search = ''){
                 $matches[$id] += 1;
             }
         }
-            if($matches){
-                arsort($matches);
-                // $match_string = implode(", ",$matches);
-                $match_string = '';
-                foreach($matches as $match => $weight){
-                    $match_string .= prep($match).", ";
-                }
-                $match_string = rtrim($match_string, ", ");
-            
-                //Get all the currently in hand
-                $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
-                $in_stock  = qdb($inventory);
-                if (mysqli_num_rows($in_stock)){
-                    foreach ($in_stock as $r){
-                        $stock[$r['partid']] = $r['total'];
-                    }
-                }
-                
-
-                // Get all the ordered quantities
-                
-                $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
-                //Use an inventory join method here at some point
-                
-                $incoming = qdb($purchased);
-                if (mysqli_num_rows($incoming)){
-                    foreach ($incoming as $i){
-                        if($i['total'] > 0){
-                            $inc[$i['partid']] = $i['total'];
-                        }
-                    }
-                }
-                
-                if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming)){
-                    //build the results rows
-                        $rows = "
-                        <!-- Created from $search -->
-                        <tr class = 'items_label'>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>
-                                <div class='row-fluid'>
-                                    <div class='col-md-6' style='padding:0%;text-align:center;'>Stock</div>
-                                    <div class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
-                                </div>
-                            </td>
-                            <td></td>
-                        </tr>";
+        if($matches){
+            arsort($matches);
+            // $match_string = implode(", ",$matches);
+            $match_string = '';
+            foreach($matches as $match => $weight){
+                $match_string .= prep($match).", ";
+            }
+            $match_string = rtrim($match_string, ", ");
         
-                    foreach ($items as $id => $info){
-                        $sellable = false;
-                    
-                        $text = "<div class='row-flud'>";
-                        $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;padding:0%;'><b>";
-                        //Output the quantity of items sellable
-                        if(array_key_exists($id, $stock)){
-                            $sellable = true;
-                            $text .= $stock[$id];
-                        }
-                        else{
-                            $text .= "&nbsp;";
-                        }
-                        $text .= "</b></div>";
-                        
-                        $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;padding-left:0%;padding-right:0%;'>";
-                        if(array_key_exists($id, $inc)){
-                            $sellable = true;
-                            $text .= $inc[$id];
-                        }
-                        else{
-                            $text .= "&nbsp;";
-                        }
-                        $text .= "</div>";
-                        $text .= "</div>";
-                        if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
-                            $text = '';
-                            $any_hidden = true;
-                            continue;
-                        }
-                        $rows .= "
-                        <tr class = 'search_lines' data-line-id = $id>
-                            <td></td>
-                            <td>";
+            //Get all the currently in hand
+            $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
+            $in_stock  = qdb($inventory);
+            if (mysqli_num_rows($in_stock)){
+                foreach ($in_stock as $r){
+                    $stock[$r['partid']] = $r['total'];
+                }
+            }
             
-                        $rows .=(display_part($info));
-                        $rows .= "</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-                            <td></td>
-                            <td>$text</td>
-                            <td></td>
-                        </tr>
-                        ";
-                    //Ask David about the line-level control with each of these.
-                    //Delivery Date
+
+            // Get all the ordered quantities
+            
+            $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
+            //Use an inventory join method here at some point
+                
+            $incoming = qdb($purchased);
+            if (mysqli_num_rows($incoming)){
+                foreach ($incoming as $i){
+                    if($i['total'] > 0){
+                        $inc[$i['partid']] = $i['total'];
+                    }
+                }
+            }
+                
+            if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming)){
+                //build the results rows
+                    $rows = "
+                    <!-- Created from $search -->
+                    <tr class = 'items_label'>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <div class='row-fluid'>
+                                <div class='col-md-6' style='padding:0%;text-align:center;'>Stock</div>
+                                <div class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
+                            </div>
+                        </td>
+                        <td></td>
+                    </tr>";
+    
+                foreach ($items as $id => $info){
+                    $sellable = false;
+                
+                    $text = "<div class='row-flud'>";
+                    $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;padding:0%;'><b>";
+                    //Output the quantity of items sellable
+                    if(array_key_exists($id, $stock)){
+                        $sellable = true;
+                        $text .= $stock[$id];
+                    }
+                    else{
+                        $text .= "&nbsp;";
+                    }
+                    $text .= "</b></div>";
                     
-                    //Condition | conditionid can be set per each part. Will play around with the tactile
-                    //Warranty    
-                    //Qty | Each of the qty inputs had supplimental inventory information
-                    //Price 
-                    //EXT price
-                    }//END foreach item allowed
-                }
-                if (($page == 'Sales' || $page == 's') && !$show && $any_hidden){
+                    $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;padding-left:0%;padding-right:0%;'>";
+                    if(array_key_exists($id, $inc)){
+                        $sellable = true;
+                        $text .= $inc[$id];
+                    }
+                    else{
+                        $text .= "&nbsp;";
+                    }
+                    $text .= "</div>";
+                    $text .= "</div>";
+                    if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
+                        $text = '';
+                        $any_hidden = true;
+                        continue;
+                    }
                     $rows .= "
-                        <tr class = 'items_label'>
-                            <td></td>
-                            <td colspan='6' style=''>";
-                            $rows .= ((mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0) ? "No parts in stock." : "");
-                            $rows .= "<span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show more</span></td>
-                            <td style=''></td>
-                        </tr>
+                    <tr class = 'search_lines' data-line-id = $id>
+                        <td></td>
+                        <td>";
+        
+                    $rows .=(display_part($info));
+                    $rows .= "</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
+                        <td></td>
+                        <td>$text</td>
+                        <td></td>
+                    </tr>
                     ";
-                }
-        } //End the "If there are matches" check
-        else{
+                //Ask David about the line-level control with each of these.
+                //Delivery Date
+                
+                //Condition | conditionid can be set per each part. Will play around with the tactile
+                //Warranty    
+                //Qty | Each of the qty inputs had supplimental inventory information
+                //Price 
+                //EXT price
+                }//END foreach item allowed
+            }
+            if (($page == 'Sales' || $page == 's') && !$show && $any_hidden){
+                $rows .= "
+                    <tr class = 'items_label'>
+                        <td></td>
+                        <td colspan='6' style=''>";
+                        $rows .= ((mysqli_num_rows($in_stock) == 0 && mysqli_num_rows($incoming) == 0) ? "No parts in stock." : "");
+                        $rows .= "<span id='show_more' style='color: #428bca; cursor: pointer;'>Click here to show more</span></td>
+                        <td style=''></td>
+                    </tr>
+                ";
+            }
+        } else {
             $rows .= "
                 <tr class = '' data-line-id = $id>
                     <td></td>
