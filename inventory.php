@@ -419,12 +419,12 @@
 										parts += 	"<td>"+key[2]+"</td>";
 									var ofill = '';
 									if(!order){
-										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										if (key[1]!='') { ofill = key[1]+"&nbsp;&nbsp;<a href='/PO"+key[1]+"'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>"; }
 										parts += 	"<td>"+ofill+"</td>";
 									}
 									var vfill = '';
 									if(!vendor){
-										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-external-link' aria-hidden='true'></i></a>"; }
+										if (info.vendor!='') { vfill = info.vendor+"&nbsp;&nbsp;<a href='/profile.php?companyid="+info.vendorid+"'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>"; }
 										parts += 	"<td>"+vfill+"</td>";
 									}
 										parts += 	"<td>"+key[3]+"</td>";

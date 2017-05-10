@@ -134,11 +134,11 @@
         </div>
         
          <ul class="nav nav-tabs nav-tabs-ar">
-         	<li class="active"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
+			<li class="active"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
 			<li class=""><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
-			<li class=""><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
-			<li class=""><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
+         	<li class=""><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
 			<li class=""><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+			<li class=""><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
 		</ul>
 		
 		<div class="tab-content">
@@ -220,7 +220,7 @@ foreach ($addresses as $addressid) {
                 </table>
 			</div>
 			
-			<div class="tab-pane" id="contacts_tab">
+			<div class="tab-pane active" id="contacts_tab">
 			    <!--<div class="col-md-12 bio">-->
 	                <div class="profile-box">
 	
@@ -440,7 +440,7 @@ foreach ($freights as $freight) {
 				</div>
 			</div>
 			
-			<div class="tab-pane active" id="orders">
+			<div class="tab-pane" id="orders">
 				<?php
 					$p_orders = array();
 					$s_orders = array();
