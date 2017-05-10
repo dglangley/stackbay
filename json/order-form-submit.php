@@ -42,7 +42,7 @@
 	// those file names but does not upload the files themselves, so this sub-script gets handled only once
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		require($rootdir.'/vendor/autoload.php');
-		$DEV_ENV = false;
+
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 		if (!$DEV_ENV) {
 			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
@@ -95,7 +95,7 @@
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
-    $form_rows = json_decode($_REQUEST['table_rows'],true);
+    $form_rows = $_REQUEST['table_rows'];
 
     
     //Form Specifics
@@ -343,16 +343,16 @@
 			$msg .= '<br/>';
 		}
 		$recps = array();
-		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 		if ($contact) {
 			$contact_email = getContact($contact,'id','email');
 			if ($contact_email) {
 				$recps[] = array($contact_email,getContact($contact,'id','name'));
 			}
-			if ($addl_recp_email) {
-				$recps[] = array($addl_recp_email,$addl_recp_name);
-			}
 		}
+		if ($addl_recp_email) {
+			$recps[] = array($addl_recp_email,$addl_recp_name);
+		}
+		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
 
 		$bcc = false;
 		if ($rep) {
