@@ -1100,7 +1100,8 @@
 		});
 		$(".order-search-button").on("click",function(e) {
 			e.preventDefault();
-			document.location.href = '/'+$(this).closest(".input-group").find("input[type='text']").val();
+			var search_field = $(this).closest(".input-group").find("input[type='text']");
+			document.location.href = '/'+search_field.data('type')+search_field.val();
 		});
 
     });/* close $(document).ready */
