@@ -76,7 +76,7 @@
 
 						<div class='row'>
 							<div class="col-md-12">
-								<button class="btn-flat primary btn-sm pull-right btn_update" data-form="" data-callback="" data-element="" data-print="print">Save & Print</button>
+								<!-- <button class="btn-flat primary btn-sm pull-right btn_update" data-form="" data-callback="" data-element="" data-print="print">Save & Print</button> -->
 								<button class="btn-flat success btn-sm pull-right btn_update" data-form="" data-callback="" data-print="" data-element="" style='margin-right: 10px;'>Save</button>
 							</div>
 						</div>
