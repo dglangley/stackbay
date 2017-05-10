@@ -345,7 +345,7 @@
 								headers +=	"<th>Vendor</th>";
 							}
 							headers +=	"<th>Date Added</th>";
-							headers +=	"<th><button class='btn btn-sm pull-right all_serials'>Show All Serials</button></th>"
+							headers +=	"<th><button class = 'all_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></th>"
 							headers += "</tr>";
 							
 							$(".revisions").empty();
