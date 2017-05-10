@@ -42,7 +42,7 @@
 	// those file names but does not upload the files themselves, so this sub-script gets handled only once
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		require($rootdir.'/vendor/autoload.php');
-		$DEV_ENV = false;
+
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 		if (!$DEV_ENV) {
 			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));

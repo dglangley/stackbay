@@ -103,7 +103,7 @@
             
             $output .= "<select name='$type' class='form-control input-sm $type' style='padding-left:0px;'>";
             if(!$selected and !$default and !$locations){
-                    $output .= "<option selected value = 'null'>Shelf</option>";
+                    $output .= "<option selected value = 'null'> </option>";
     	        }  else if($locations) {
     	            $output .= "<option selected value = 'null'></option>";
     	        }

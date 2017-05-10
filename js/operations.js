@@ -259,6 +259,9 @@
 
 				// change icon on upload button as additional indicator of successful selection
 				$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
+				console.log(orderUploadFiles);
+				console.log(order_label);
+				console.log(upload_file);
 			});
 	
 		
@@ -1307,6 +1310,8 @@
 								if (typeof data.error==='undefined') {
 									if (data.filename!='') {
 										filename = data.filename;
+										console.log("Returned Data from the function")
+										console.log(data);
 									} else if (data.message) {
 										alert(data.message);
 										return;
@@ -1321,7 +1326,7 @@
 							},
 						});
 					}
-	
+	filename = "https://s3-us-west-2.amazonaws.com/ventel.stackbay.com-order-uploads/20170508_PO-5227-from-United-TelSupply-Inc.-10940.pdf";
 	
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
@@ -1378,11 +1383,14 @@
 							"bill_to="+ bill_to+"&"+
 							"carrier="+ carrier+"&"+
 							"account="+ account+"&"+
-							"terms=" + terms+"&"+
-							"service=" + service+"&"+
+							"terms="+ terms+"&"+
+							"service="+ service+"&"+
 							"pri_notes="+ pri_notes+"&"+
 							"pub_notes="+ pub_notes+"&"+
-							"table_rows"+ submit);
+							"table_rows="+JSON.stringify(submit)+"&"+
+							"filename="+JSON.stringify(filename)+"&"+
+							"email_confirmation="+email_confirmation+"&"+
+							"email_to="+email_to);
 					//Submit all rows and meta data for unpacking later
 					// alert(account);
 					$.ajax({
