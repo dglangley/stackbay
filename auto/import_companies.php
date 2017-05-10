@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_phone.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	//include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
 	//Temp array to hold Brian's data
@@ -120,7 +121,7 @@
 	}
 	
 	//Creating another setCompany so we can update data to the latest
-	function setCompany($name, $website, $phone, $coporateid = null, $default_email, $notes, $id = 0) {
+	function setCompany($name, $website = null, $phone = null, $coporateid = null, $default_email, $notes, $id = 0) {
 		$name = (string)$name;
 		$name = trim($name);
 		
@@ -146,17 +147,21 @@
 		if ($notes) { $query .= ", notes"; }
 		if ($id) { $query .= ", id"; }
 		
-		$query .= ") VALUES ('".res($name)."',";
-		if ($website) { $query .= " '".res($website)."'";}
-		if ($phone) { $query .= ", '".res($phone)."'";}
+		$query .= ") VALUES (".prep($name)."";
+		if ($website) { $query .= ", ".prep($website)."";}
+		if ($phone) { $query .= ", ".prep($phone)."";}
 		// $query .= ", NULL";
-		if ($default_email) { $query .= ", '".res($default_email)."'";}
-		if ($notes) { $query .= ", '".res($notes)."'"; }
+		if ($default_email) { $query .= ", ".prep($default_email)."";}
+		if ($notes) { $query .= ", ".prep($notes).""; }
 		
-		if ($id) { $query .= ",'".res($id)."'"; }
+		if ($id) { $query .= ",".prep($id).""; }
 		$query .= "); ";
 		$result = qdb($query);
 		if (!$id) {$id = qid();}
+
+		//if(!$id) {
+			echo $query . '<br>';
+		//}
 
 		return ($id);
 	}
@@ -170,9 +175,9 @@
 
 		$query = "REPLACE company_aliases (name, companyid";
 		if ($id) { $query .= ", id"; }
-		$query .= ") VALUES ('".res($name)."',";
-		$query .= res($companyid);
-		if ($id) { $query .= ",'".res($id)."'"; }
+		$query .= ") VALUES (".prep($name).",";
+		$query .= prep($companyid);
+		if ($id) { $query .= ",".prep($id); }
 		$query .= "); ";
 		$result = qdb($query) OR die(qe().' '.$query);
 		if (!$id) {$id = qid();}

@@ -13,7 +13,12 @@
 		SELECT created, days FROM ".$o['order'].", terms WHERE termsid = terms.id and ".$o['id']." = ".prep($order_number).";";
 		$due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
 		$due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
-		$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+		if($due_estimate_arr['days'] > 0){
+			$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
+		} else {
+			$due_estimate = format_date($due_estimate_arr['created'], "n/j/Y");
+		}
+
 		return($due_estimate);
 	}
 

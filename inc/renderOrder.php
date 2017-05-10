@@ -21,6 +21,29 @@
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
 	
+    function getPackageTracking($so_number) {
+        $tracking = array();
+        $html = '';
+
+        $packages = "SELECT package_no, tracking_no FROM packages WHERE order_number = ".prep($so_number).";";
+        $result = qdb($packages) OR die(qe().'<BR>'.$packages);
+        while ($r = mysqli_fetch_assoc($result)) {
+            $tracking[] = $r;
+        }
+
+        foreach($tracking as $item) {
+            $html .= "<tr>";
+                $html .= "<td>";
+                    $html .= $item['package_no'];
+                $html .= "</td>";
+                $html .= "<td>";
+                    $html .= $item['tracking_no'];
+                $html .= "</td>";
+            $html .= "</tr>";
+        }
+
+        return $html;
+    }
 
     function display_terms($id){
         if($id){
@@ -476,8 +499,19 @@ $html_page_str .= '
                     <b>'.format_price($total).'</b>
                 </td>
             </tr>
-        </table>
-        <div id="footer">
+        </table>';
+$package_list = getPackageTracking($oi['so_number']);
+if($o['type'] == 'Invoice'){
+        $html_page_str .='  <table class="table-full table-striped table-condensed">
+                    <tr>
+                        <th>Package #</th>
+                       <th>Tracking</th>
+                    </tr>'
+                    .$package_list.
+                '</table>';
+}
+
+        $html_page_str .=' <div id="footer">
             <p class="'.(!$o['rma'] && !$o['credit'] ? '' : 'remove').'">
                 Terms and Conditions:<br><br>
                 Acceptance: Accept this order only in accordance with the prices, terms, delivery method and specifications

@@ -291,20 +291,22 @@
 						<?php if($o['type']!="invoice"){?>
 							<div style="float:right;padding-top:15px;">
 							<div class="ui-select" style="width:125px; 'margin-bottom:0;">
-			                    <select id="sales-rep" data-creator = <?=$U['contactid']?>>
+								<?php
+									$old_rep = "Select `sales_rep_id` from ".$o['order']." WHERE `".$o['id']."` = $order_number";
+	                        		$rep_res = qdb($old_rep);
+
+									if ($order_number != 'New'){
+		                        		$rep_row = mysqli_fetch_assoc($rep_res);
+		                        		$set_rep = $rep_row['sales_rep_id'];
+		                        		//echo("<option>".$old_rep."</option>");
+		                        	}
+								?>
+			                    <select id="sales-rep" data-creator = <?=$U['contactid']?> <?=($set_rep ? 'disabled' : '');?>>
 	
 			                        <?php
 			                        	//REP OUTPUT
 										$get_reps = "SELECT users.id userid, contacts.name name, contacts.id contactid FROM users, contacts ";
-										$get_reps .= "WHERE users.contactid = contacts.id; ";
-										
-			                        		$old_rep = "Select `sales_rep_id` from ".$o['table']." WHERE `".$o['id']."` = $order_number";
-			                        		$rep_res = qdb($old_rep);
-										if ($order_number != 'New'){
-			                        		$rep_row = mysqli_fetch_assoc($rep_res);
-			                        		$set_rep = $rep_row['sales_rep_id'];
-			                        		// echo("<option>$old_rep</option>");
-			                        	}
+										$get_reps .= "WHERE users.contactid = contacts.id; ";		               
 			                        	
 			                        	$all_reps = qdb($get_reps);
 			                        	foreach ($all_reps as $rep) {
