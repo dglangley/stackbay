@@ -344,6 +344,27 @@
 					},
 				});
 
+// WARRANTY CHANGE
+				$.ajax({
+					type: "POST",
+					url: '/json/warranty-default.php',
+					data: {
+						"company": company,
+						"order_type" : order_type
+						},
+					dataType: 'json',
+					success: function(right) {
+						console.log(right);
+						$("#new_warranty").val(right.value);
+						console.log("JSON warranty-default.php: Success");
+					},					
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON warranty-default.php: Error");
+	    				console.log('/json/warranty-default.php?company='+company+'&order_type='+order_type);
+					},
+				});
+//
 
 				//Account default picker on update of the company
 
