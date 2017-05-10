@@ -223,7 +223,9 @@
 <!----------------------------------------------------------------------------->
 <!---------------------------------- Body Out --------------------------------->
 <!----------------------------------------------------------------------------->
+<!--
 	<span class='loading_search' style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Loading Search Results...</span>
+-->
 	
 	<div class="loading_element_listing" style="display: none;">
 		
@@ -231,7 +233,7 @@
 			<select class='revisions' multiple>
 				
 			</select>
-			<img class='img-responsive' src='http://placehold.it/125x75' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
+			<img class='img-responsive' src='/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
 		</div>
 		<div class='col-sm-12'>
 			<div class='table-responsive'>
@@ -300,6 +302,7 @@
 			var conditionid = $("#condition_global").val();
 			var vendor = $("#companyid").val();
 			var order = $("#po_filter").val();
+			$('#loader').show();
 
 			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&conditionid="+conditionid+"&vendor="+vendor);
 			$.ajax({
@@ -316,8 +319,16 @@
 						"order" : order
 					},
 					dataType: 'json',
+					complete: function() { $('#loader').hide(); },
 					success: function(part) {
-						if(part != 'test') {
+						if (part=='test') {
+							console.log("Nothing_found")
+							//$(".loading_element_listing").hide();
+					  		//alert("No Parts Found with those parameters");
+							$("#item-none").show();
+							return;
+						}
+
 							// Add feature to auto update the URL without a refresh
 							if(search == '') {
 								window.history.replaceState(null, null, "/inventory.php");
@@ -349,7 +360,9 @@
 							$(".headers").empty();
 							$(".parts").empty();
 							
-							$(".part-container").html("").remove();	
+							//dgl 5-9-17
+							//$(".part-container").html("").remove();	
+
 							// var p = JSON.parse(part)
 							//console.log(part);
 							var revisions, parts;
@@ -518,12 +531,6 @@
 							});
 							
 							$(".loading_element_listing").show();
-						} else {
-							console.log("Nothing_found")
-							//$(".loading_element_listing").hide();
-					  		//alert("No Parts Found with those parameters");
-							$("#item-none").show();
-						}
 					},
 					error: function(xhr, status, error) {
 						//$(".loading_element_listing").hide();
@@ -623,6 +630,9 @@
 		//for the RM button, which has it's own independent processing method
 		
 		$(document).ready(function() {
+			$('#loader-message').html('Please wait for Inventory results to load...');
+			$('#loader').show();
+
 			//Triggering Aaron 2017
 			var phpStuff = "<?=$_REQUEST['s']; ?>";
 			if($("#part_search").val() || phpStuff != ''){
@@ -632,12 +642,18 @@
 					$("#part_search").val(phpStuff);
 				}
 				
+				$('#loader').hide();
+/*
 				$.when( inventory_history(search) ).then(function() {
 					$('.loading_search').hide();
 				});
+*/
 			}
 			
+/*
 			$('.loading_search').hide();
+*/
+			$('#loader').hide();
 		});
 		
 		

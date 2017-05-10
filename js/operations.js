@@ -1310,6 +1310,9 @@
 										alert(data.message);
 										return;
 									}
+								} else {
+									alert(data.error);
+									return;
 								}
 								console.log("Order-upload:Success");
 							},
@@ -1320,7 +1323,11 @@
 							},
 						});
 					}
-	
+
+					if (! filename) {
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","File could not be uploaded, or the upload is orphaned. Please stay here and call for help immediately.", false);
+						return;
+					}
 	
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
