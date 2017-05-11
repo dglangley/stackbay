@@ -12,7 +12,7 @@
 
 		//Check to see there are actually invoice-able items on the order
 		$invoice_item_select = "
-			Select partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
+			Select partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
 			FROM packages, package_contents, inventory_history, sales_items
 			WHERE package_contents.packageid = packages.id
 			AND package_contents.serialid = inventory_history.invid

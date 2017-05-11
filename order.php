@@ -34,5 +34,14 @@
 
 	if ($type=='SO') { $_REQUEST['ps'] = 'Sale'; }
 	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
-	include 'order_form.php';
+
+	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+		include 'order_form.php';
+	} else {
+		if ($type=='PO') {
+			include 'inventory_add.php';
+		} else {
+			include 'shipping.php';
+		}
+	}
 ?>
