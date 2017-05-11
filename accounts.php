@@ -2,6 +2,8 @@
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/keywords.php';
+	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
@@ -9,6 +11,8 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
+	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/terms.php';
 	
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -20,13 +24,14 @@
 		$company_filter = $_REQUEST['companyid']; 
 	}
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
-	$report_type = 'detail';
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
-	
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
-	
+	//$report_type = 'detail';
+
+	$report_type = $_GET['report_type'];
+
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$report_type = 'detail';
@@ -41,8 +46,9 @@
 	}
 */
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
-		$repot_type = 'detail';
+		$report_type = 'detail';
 		$keyword = $_REQUEST['s'];
+		$order = $keyword;
 	}
 
 	if ($keyword) {
@@ -52,13 +58,13 @@
     	}
     	$part_string = rtrim($part_string, ",");
 	}
-	
+
 	$startDate = '';
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	// if no start date passed in, or invalid, set to beginning of previous month
-	if (! $startDate) {
+	//if no start date passed in, or invalid, set to beginning of previous month
+	if (!$startDate) {
 		$y = date("Y");
 		// set date to beginning of the first month of the *previous* quarter
 		$q = ceil(date("m")/3);
@@ -96,6 +102,7 @@
 	
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'inc/getRecords.php'; ?>
+	<?php require_once 'modal/payments_account.php';  ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
@@ -103,7 +110,7 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-
+		<?php //echo '<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR>' . $report_type . '<br>';?>
 		    <div class="btn-group">
 		        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
 		        <i class="fa fa-ticket"></i>	
@@ -114,12 +121,12 @@
 	        	</button>
 				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
 		    </div>
-			<div class="btn-group">
+<!-- 			<div class="btn-group">
 			        <button class="glow left large btn-radio <?php if ($orders_table=='sales') { echo ' active'; } ?>" type="submit" data-value="sales">Sales</button>
 					<input type="radio" name="orders_table" value="sales" class="hidden"<?php if ($orders_table=='sales') { echo ' checked'; } ?>>
 			        <button class="glow right large btn-radio<?php if ($orders_table=='purchases') { echo ' active'; } ?>" type="submit" data-value="purchases">Purchases</button>
 			        <input type="radio" name="orders_table" value="purchases" class="hidden"<?php if ($orders_table=='purchases') { echo ' checked'; } ?>>
-		    </div>
+		    </div> -->
 		</td>
 
 		<td class = "col-md-3">
@@ -173,7 +180,8 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-			<h2 class="minimal">Accounts</h2>
+			<h2 class="minimal"><?=ucwords($orders_table);?> Accounts</h2>
+			<a href="/accounts.php?report_type=summary&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
 		</td>
 		<td class="col-md-2 text-center">
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
@@ -221,19 +229,19 @@
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 2;
-			$widths = array(3,3,2,2);
+			$widths = array(1,3,3,1,1,1,1,1);
 		} else {
 			$footer_span1 = 3;
-			$widths = array(2,2,4,1,1,1);
+			$widths = array(1,3,3,1,1,1,1,1);
 		}
 	} else {
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 3;
-			$widths = array(1,4,4,2,1);
+			$widths = array(1,3,3,1,1,1,1,1);
 		} else {
 			$footer_span1 = 4;
-			$widths = array(1,4,1,3,1,1,1);
+			$widths = array(1,3,3,1,1,1,1,1);
 		}
 	}
 	$c = 0;
@@ -291,8 +299,10 @@
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
-	$summary_rows = array();
-	if($report_type == 'summary'){
+	//$summary_rows = array();
+
+	//print_r($result);
+	//if($report_type == 'summary'){
 	    foreach ($result as $row){
             $id = $row['order_num'];
 			if ($order AND $order<>$id) { continue; }
@@ -310,98 +320,259 @@
                     'summed' => ''
                     );
             }
+
+            //Query to get the credit per item
+            //test for sales first
+            $item_id = 0;
+            if($orders_table == 'sales') {
+	            $query = "SELECT id FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
+	            $result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $query_row = mysqli_fetch_assoc($result);
+                    $item_id = $query_row['id'];
+                }
+	        }
+
+	        $credit = 0;
+	        $credit_total = 0;
+	        if($item_id && $orders_table == 'sales') {
+	            $query = "SELECT amount, SUM(amount) as total FROM sales_credit_items WHERE sales_item_id = ".prep($id).";";
+	            $result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $query_row = mysqli_fetch_assoc($result);
+                    $credit = $query_row['amount'];
+                    $credit_total = $query_row['total'];
+                }
+	        } else if($orders_table == 'purchases') {
+				// $query = "SELECT i.amount FROM bills b, bill_items i WHERE po_number = ".prep($id)." AND b.bill_no = i.bill_no AND i.partid = ".prep($row['partid']).";";
+				// echo $query; 
+	   //          $result = qdb($query) OR die(qe().'<BR>'.$query);
+    //             if (mysqli_num_rows($result)>0) {
+    //                 $query_row = mysqli_fetch_assoc($result);
+    //                 $credit = $query_row['amount'];
+    //                 //$credit_total = $query_row['total'];
+    //             }
+	        }
+
 			$summary_rows[$id]['date'] = $row['datetime'];
+			$summary_rows[$id]['cid'] = $row['cid'];
             $summary_rows[$id]['items'] += $row['qty'];
             $summary_rows[$id]['summed'] += $ext_amt;
             $summary_rows[$id]['company'] = $row['name'];
+            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
+            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'credit' => ($credit == '' ? 0 : $credit)];
         }
+
+        //print_r($summary_rows);
+
         foreach ($summary_rows as $id => $info) {
+        	$invoice_no = 0;
+	    	$paymentTotal = 0;
+
+	    	if($item_id && $orders_table == 'sales') {
+	         	//Grab the invoice number using the order number
+				$query = "SELECT invoice_no FROM invoices WHERE order_number = ".prep($id).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+	            if (mysqli_num_rows($result)>0) {
+	                $row = mysqli_fetch_assoc($result);
+	                $invoice_no = $row['invoice_no'];
+	            }
+	        } else {
+	        	//Grab the invoice number using the order number
+				$query = "SELECT bill_no FROM bills WHERE po_number = ".prep($id).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+	            if (mysqli_num_rows($result)>0) {
+	                $row = mysqli_fetch_assoc($result);
+	                $invoice_no = $row['bill_no'];
+	            }
+	        }
+
+            if($invoice_no && $orders_table == 'sales') {
+            	$query = "SELECT amount FROM payments WHERE number = ".prep("Invoice" . $invoice_no).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $row = mysqli_fetch_assoc($result);
+                    $payments = $row['amount'];
+                }
+            } else if($invoice_no) {
+            	$query = "SELECT amount FROM payments WHERE number = ".prep("Bill" . $invoice_no).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $row = mysqli_fetch_assoc($result);
+                    $payments = $row['amount'];
+                }
+            }
+
+            $query = 'SELECT * FROM payment_details WHERE order_number = '.prep($id).' AND order_type = "'.($orders_table == 'sales' ? 'so' : 'po').'";';
+            //echo $query;
+				$prows = qdb($query);
+				$output = '
+				<div class ="btn-group">
+					<button type="button" class="dropdown-toggle" data-toggle="dropdown">
+                      <span class="caret"></span>
+                    </button>';
+                    
+					$output .= '<ul class="dropdown-menu">';
+					if(mysqli_num_rows($prows) > 0){
+						//echo $query;
+						foreach ($prows as $payment) {
+							$p_number = 0;
+							$p_amount = 0;
+							$p_type = '';
+							$p_notes = '';
+							$p_date = '';
+							
+							$query = 'SELECT * FROM payments p, payment_details d WHERE id = '.$payment['paymentid'].' AND paymentid = p.id;';
+							$result = qdb($query) OR die(qe().' '.$query);
+
+							if (mysqli_num_rows($result)>0) {
+					        	$r = mysqli_fetch_assoc($result);
+								$p_number = $r['number'];
+								$p_amount = $r['amount'];
+								$paymentTotal += $r['amount'];
+								$p_type = $r['payment_type'];
+								$p_notes = $r['notes'];
+								$p_ref = $r['ref_type'].' '.$r['ref_number'];
+								$p_date = format_date($r['date']);
+					        }
+							
+							$output .= '
+								<li>
+									<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-toggle="modal" data-target="#modal-payment">
+										Payment #'.$payment['paymentid'].'
+									</a>
+								</li>';
+						}
+					}
+					$output .= '<li>
+						<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
+							<i class="fa fa-plus"></i> Add New Payment
+						</a>
+						
+						</li>';
+                    $output .= "</ul>";
+					$output .= "</div>";
+					//echo $output;
+
+					//Remove output for live
+					$output = '';
 
         	$rows .= '
                 <tr>
                     <td>'.format_date($info['date'], 'M j, Y').'</td>';
-                    if(!$company_filter){$rows .= '<td>'.$info['company'].'</td>';}
+                    if(!$company_filter){$rows .= '<td><a href="/profile.php?companyid='.$info['cid'].'">'.$info['company'].'</a></td>';}
             $rows .='
             		<td>'.$id.'</td>
-                    <td>'.$info['items'].'</td>
                     <td class="text-right">'.format_price($info['summed']).'</td>
+                    <td class="text-right">-'.format_price($info['credit']).'</td>
+                    <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
+                    <td>'.terms_calc($id, $orders_table).'</td>
+                    <td class="text-right">'.format_price($info['summed'] - $info['credit'] - $paymentTotal).'</td>
                 </tr>
             ';
+
+            //Add in the dropdown element into the accounts page
+            $rows .= '<tr style="'.($report_type=='summary' ? 'display: none;' : '').'">
+                <td colspan="12">
+                <table class="table table-condensed commission-table">
+                    <tbody>
+                        <tr>
+                            <th class="col-md-4">Part Description</th>
+                            <th class="col-md-2">Qty</th>
+                            <th class="col-md-2 text-right">Price (ea)</th>
+                            <th class="col-md-2 text-right">Ext Price</th>
+                            <th class="col-md-2 text-right">Credits</th>
+               			</tr>';
+
+            foreach($info['partids'] as $part) {
+            	$rows .= '<tr>
+            		<td>'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
+            		<td>'.$part['qty'].'</td>
+            		<td class="text-right">'.format_price($part['price']).'</td>
+            		<td class="text-right">'.format_price($part['price'] * $part['qty']).'</td>
+            		<td class="text-right">-'.format_price($part['credit']).'</td>
+            	</tr>';
+            }
+
+            $rows .= '</tbody>
+                </table>
+                </td>
+            </tr>';
         }
-	} else if ($report_type=='detail') {
-		foreach ($result as $r){
-			if ($order AND $order<>$r['order_num']) { continue; }
+// 	} else if ($report_type=='detail') {
+// 		foreach ($result as $r){
+// 			if ($order AND $order<>$r['order_num']) { continue; }
 
-			$r['price'] = format_price($r['price'],true,'',true);
+// 			$r['price'] = format_price($r['price'],true,'',true);
 
-			//Set the amount to zero for the number of items and the total price
-			$amt = 0;
-			$num_items = 0;
+// 			//Set the amount to zero for the number of items and the total price
+// 			$amt = 0;
+// 			$num_items = 0;
 		
-			//Set the value of the company to the individual row if there is no company ID preset
-			if (! $company_filter) {
-				$company_col = '
-                                <td>
-	                                    <a href="#">'.$r['name'].'</a>
-                                </td>
-				';
-			}
-			$this_amt = $r['qty']*$r['price'];
-			$amt += $this_amt;
-			$num_items += $r['qty'];
+// 			//Set the value of the company to the individual row if there is no company ID preset
+// 			if (! $company_filter) {
+// 				$company_col = '
+//                                 <td>
+// 	                                    <a href="#">'.$r['name'].'</a>
+//                                 </td>
+// 				';
+// 			}
+// 			$this_amt = $r['qty']*$r['price'];
+// 			$amt += $this_amt;
+// 			$num_items += $r['qty'];
 
-			$total_pcs += $r['qty'];
-			$total_amt += $amt;
+// 			$total_pcs += $r['qty'];
+// 			$total_amt += $amt;
 
-			$qty_col = '
-                            <td>
-                                '.$r['qty'].'
-                            </td>
-			';
-			$price_col = '
-                            <td class="text-right">
-                                '.format_price($r['price']).'
-                            </td>
-			';
+// 			$qty_col = '
+//                             <td>
+//                                 '.$r['qty'].'
+//                             </td>
+// 			';
+// 			$price_col = '
+//                             <td class="text-right">
+//                                 '.format_price($r['price']).'
+//                             </td>
+// 			';
 
-			// legacy (pipe) support
-//			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
-//			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
+// 			// legacy (pipe) support
+// //			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
+// //			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
 
-			$part = $r['part'];
-			if (strlen($part)>40) { $part = substr($r['part'],0,38).'...'; }
-			$descr = $part.' &nbsp; '.$r['heci'];
-			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['order_num'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
-			$results[] = $row;
-		}
+// 			$part = $r['part'];
+// 			if (strlen($part)>40) { $part = substr($r['part'],0,38).'...'; }
+// 			$descr = $part.' &nbsp; '.$r['heci'];
+// 			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['order_num'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
+// 			$results[] = $row;
+// 		}
 
-		foreach ($results as $r) {
-			$ln = '#';
-			if ($orders_table=='sales') { $ln = '/SO'.$r['id']; }
-			else if ($orders_table=='purchases') { $ln = 'PO'.$r['id']; }
-			$rows .= '
-                            <!-- row -->
-                            <tr>
-                                <td>
-                                    '.format_date($r['datetime'],'M j, Y').'
-                                </td>
-								'.$r['company_col'].'
-                                <td>
-                                    <a href="'.$ln.'" target="_new">'.$r['id'].'</a>
-                                </td>
-                                <td>
-                                    '.$r['detail'].'
-                                </td>
-								'.$r['qty_col'].'
-								'.$r['price_col'].'
-                                <td class="text-right">
-                                    '.format_price($r['amt'],true,' ').'
-                                </td>
+		// foreach ($results as $r) {
+		// 	$ln = '#';
+		// 	if ($orders_table=='sales') { $ln = '/SO'.$r['id']; }
+		// 	else if ($orders_table=='purchases') { $ln = 'PO'.$r['id']; }
+		// 	$rows .= '
+  //                           <!-- row -->
+  //                           <tr>
+  //                               <td>
+  //                                   '.format_date($r['datetime'],'M j, Y').'
+  //                               </td>
+		// 						'.$r['company_col'].'
+  //                               <td>
+  //                                   <a href="'.$ln.'" target="_new">'.$r['id'].'</a>
+  //                               </td>
+  //                               <td>
+  //                                   '.$r['detail'].'
+  //                               </td>
+		// 						'.$r['qty_col'].'
+		// 						'.$r['price_col'].'
+  //                               <td class="text-right">
+  //                                   '.format_price($r['amt'],true,' ').'
+  //                               </td>
 
-                            </tr>
-			';
-		}
-	}/* end $report_type=='detail' */
+  //                           </tr>
+		// 	';
+		// }
+// 	}/* end $report_type=='detail' */
 
 	if ($keyword) {
 		echo '
@@ -434,30 +605,25 @@
                                     <span class="line"></span>
                                     Order#
                                 </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    <?php if($report_type == 'summary'){
-                                    	echo ('Pieces');
-                                    }
-                                    else{
-                                    	echo ('Items');
-                                    }
-                                    ?>
+                                <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
+                                	<span class="line"></span>
+                                    Subtotal
                                 </th>
-<?php if ($report_type=='detail') { ?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Qty
+                                <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
+                                	<span class="line"></span>
+                                    Credits
+                                </th>
+                                <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
+                                	<span class="line"></span>
+                                    Payments
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Price ( ea)
+                                	<span class="line"></span>
+                                    Due Date
                                 </th>
-<?php } ?>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Total Amount
-									<br>
+                                <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
+                                	<span class="line"></span>
+                                    Amount Due
                                 </th>
                             </tr>
                         </thead>
@@ -465,7 +631,7 @@
                         	<?php echo $rows; ?>
 							<?php if ($rows) { ?>
                             <!-- row -->
-                            <tr class="warning nohover">
+                            <tr class="nohover" style="background: #EEE;">
                                 <td colspan="<?php echo $footer_span1; ?>"> </td>
                                 <td><strong><?php echo $total_pcs; ?></td></strong>
                                 <td class="text-right" colspan="<?php echo $footer_span2; ?>">
@@ -485,6 +651,56 @@
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
+
+    (function($){
+    	$(document).on("change", ".payment-type", function() {
+			var placeholder = '';
+			
+			if($(this).val() == "Check") {
+				placeholder = "Check #";
+			} else if($(this).val() == "Wire Transfer") {
+				placeholder = "Ref #";
+			} else if($(this).val() == "Credit Card") {
+				placeholder = "Appr Code";
+			} else if($(this).val() == "Paypal") {
+				placeholder = "Transaction #";
+			} else {
+				placeholder = "Other";
+			}
+			
+            $('.payment-placeholder').attr('placeholder', placeholder);
+        });
+        
+        $(document).on("click", ".paid-data", function() {
+			var number = $(this).data('number');
+			var amount = $(this).data('amount');
+			var type = $(this).data('type');
+			var ref = $(this).data('ref');
+			var notes = $(this).data('notes');
+			var date = $(this).data('date');
+			
+			$('select[name="payment_type"]').val(type);
+			$('input[name="payment_ID"]').val(number);
+			$('input[name="payment_amount"]').val(amount);
+			$('input[name="payment_date"]').val(date);
+			
+			$('textarea[name="notes"]').val(notes);
+			
+			$('input[name="reference_button"][value="' + ref + '"]').prop('checked', true);
+        });
+        
+        $(document).on("click", ".new-payment", function() {
+			$('select[name="payment_type"]').val('Wire Transfer');
+			$('input[name="payment_ID"]').val('');
+			$('input[name="payment_amount"]').val('');
+			$('input[name="payment_date"]').val($('input[name="payment_date"]').data('date'));
+			
+			$('textarea[name="notes"]').val('');
+			
+			$('input[name="reference_button"]').prop('checked', false);
+        });
+        
+    })(jQuery);
 /*
 
         $(document).ready(function() {

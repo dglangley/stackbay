@@ -515,7 +515,7 @@
 													foreach ($inventory as $location) {
 														if(!$init){ echo ', ';}
 														echo $location['place'];
-														if($location['instance']){ echo ' - ' . $location['instance']; }
+														if($location['instance']){ echo '-' . $location['instance']; }
 														$init = false; 
 													}
 												}
