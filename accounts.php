@@ -299,7 +299,7 @@
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
-	//$summary_rows = array();
+	$summary_rows = array();
 
 	//print_r($result);
 	//if($report_type == 'summary'){
