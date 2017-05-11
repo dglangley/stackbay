@@ -81,7 +81,7 @@
 	}
 
 	$orders_table = 'sales';
-	if (isset($_REQUEST['orders_table']) AND $_REQUEST['orders_table']=='purchases') { $orders_table = 'purchases'; }
+	if (isset($_GET['orders_table']) AND $_GET['orders_table']=='purchases') { $orders_table = 'purchases'; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -182,6 +182,7 @@
 		<td class="col-md-2 text-center">
 			<h2 class="minimal"><?=ucwords($orders_table);?> Accounts</h2>
 			<a href="/accounts.php?report_type=summary&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
+			<input type="radio" name="orders_table" value="<?=$orders_table;?>" class="hidden" checked>
 		</td>
 		<td class="col-md-2 text-center">
 			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
