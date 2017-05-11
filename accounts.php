@@ -30,8 +30,6 @@
 	setcookie('report_type',$report_type);
 	//$report_type = 'detail';
 
-	$report_type = $_GET['report_type'];
-
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$report_type = 'detail';
