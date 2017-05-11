@@ -49,7 +49,8 @@
 	$mode = grab("mode");
 	$so_number = grab("on");
 	$rma_number = grab("rma",'');
-	
+
+	//If this record has a rma number, find the RMA
 	if ($rma_number && !$so_number){
 		$query = "SELECT order_number FROM `returns` WHERE rma_number = ".prep($rma_number)." AND order_type = 'Sale';";
 		// echo($query);
@@ -205,6 +206,7 @@
 			
 			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i, sales_items si WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
 			$rma_micro = qdb($rma_mic);
+			
 			$receive_check = '';
 			foreach($rma_micro as $line_item){
 				$receive_check = $line_item['id'].", ";
@@ -235,13 +237,17 @@
 		
 		$limit_result = qdb($limiter);
 		$limit = '';
+		$limit_arr = array();
 		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+		
+		//here is where I take out the results of the serials I have already RMA'ed
 		if (mysqli_num_rows($limit_result) > 0){
 			foreach ($limit_result as $invid){
-				$limit .= $invid['inventoryid'].", ";
+				// $limit .= $invid['inventoryid'].", ";
+				$limit_arr[$invid['inventoryid']] = true;
 			}
-			$limit = trim($limit,", ");
-			$sales_micro .= " AND i.id NOT IN ($limit)";
+			// $limit = trim($limit,", ");
+			// $sales_micro .= " AND i.id NOT IN ($limit)";
 		}
 		$sales_micro .= ";";
 		// echo($sales_micro);
@@ -261,8 +267,15 @@
 				$rma_items[$partid][$invid]['qty'] = '';
 				$rma_items[$partid][$invid]['id'] = '';
 				$rma_items[$partid][$invid]['history'] = getItemHistory($invid,"exchange");
+				if($limit_arr[$invid]){
+					$rma_items[$partid][$invid]['already'] = true;
+				} 
 			}
 		}
+		
+
+		
+		
 	}
 ?>
 
@@ -303,6 +316,7 @@
 		include_once $rootdir.'/modal/accounts.php';
 		include_once $rootdir.'/modal/alert.php';
 		include_once $rootdir.'/modal/contact.php';
+		include_once $rootdir.'/modal/history.php';
 		?>
 		
 		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
@@ -397,14 +411,16 @@
 											<?php //$i++; ?>
 											
 											<div class="input-group serial_box">
-											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?>" readonly>
+											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?><?=($inf['already'])? "&nbsp;(RMA'ed)" : ''?>" readonly>
 
 												<!--Array Version-->
 												<input type="text" name="return[<?=$inf['inventoryid']?>]" style="display:none;" value = "<?=$inf['id']?>"/>
 												
 											    <?php if($mode!="view"){ ?>
 											    <span class="input-group-addon">
-											    	<input type="checkbox" class ='brow-<?=$i?>' name="inventory[]" value="<?=$inf['inventoryid']?>" <?=($inf['id'])? "checked" : ''?>/>
+											    	<input type="checkbox" class ='brow-<?=$i?>' name="inventory[]" value="<?=$inf['inventoryid']?>" 
+											    	<?=($inf['id'] || $inf['already'])? "checked" : ''?>
+											    	<?=($inf['already'])? "disabled" : ''?>/>
 											    </span>
 											    <?php } ?>
 								            </div>
@@ -433,7 +449,7 @@
 											    <?php if($mode=='view'){?>
 											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=getDisposition($inf['dispositionid']); ?></div>
 											    <?php }else{?>
-											    <select class="form-control disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]'>
+											    <select class="form-control disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]' <?=($inf['already'])? "disabled" : ''?>>
 											    	<option value = "null">- Select Disposition -</option>
 											    	<?php foreach($dispositionoptions as $key => $value): ?>
 											    		<option value ="<?=$key?>" <?=($inf['dispositionid'] == $key ? 'selected' : '');?>><?=$value?></option>
@@ -453,7 +469,7 @@
 											    <?php if($mode=='view'){?>
 											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=$inf['reason']?></div>
 											    <?php }else{?>
-											    <input class="form-control infinite brow-<?=$i?> input-sm" type="text" name="reason[<?=$inf['inventoryid']?>]" value="<?=$inf['reason']?>" placeholder="Reason" data-row='<?=$inf['id']?>' data-part="">
+											    <input class="form-control reason_input infinite brow-<?=$i?> input-sm" type="text" name="reason[<?=$inf['inventoryid']?>]" value="<?=$inf['reason']?>" placeholder="Reason" data-row='<?=$inf['id']?>' data-part="" <?=($inf['already'])? "disabled" : ''?>>
 											    <?php }?>
 											</div>
 											<?php $line++; ?>
@@ -506,21 +522,20 @@
 													if($first_war && $war_text){
 														//Print out the $warranty text
 														$printable[] = $war_text;
-														$printable[] = "";
 														//We only care about the most recent warranty
 														$first_war = false;
 													}
 												}
 												if ($printable){
-													foreach ($printable as $i => $text) {
+													foreach ($printable as $o => $text) {
 														echo($text);
-														if ($i != 2){
+														if ($o != 1){
 															echo " | ";
 														} else {
 															echo "<br>";
 														}
-														if($i == 4){
-															echo "<a class = 'lonk'>Show more</a>";
+														if($o == 3){
+															echo "<a class = 'lonk history_button' data-id='".$inf['inventoryid']."'>Show more</a>";
 															break;
 														}
 													}
@@ -536,9 +551,9 @@
 									<td>
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
-											<div class = "infinite" style="line-height:30px;">
-												<i class='fa fa-pencil fa-4' aria-hidden='true'></i>
-											</div>
+											<!--<div class = "infinite" style="line-height:30px;">-->
+											<!--	<i class='fa fa-pencil fa-4' aria-hidden='true'></i>-->
+											<!--</div>-->
 											<?php $line++; ?>
 										<?php endforeach; ?>
 									</td>
@@ -546,9 +561,9 @@
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
 										
-											<div class = "infinite" style="line-height:30px;">
-												<i class='fa fa-trash fa-4' aria-hidden='true'></i>
-											</div>
+											<!--<div class = "infinite" style="line-height:30px;">-->
+											<!--	<i class='fa fa-trash fa-4' aria-hidden='true'></i>-->
+											<!--</div>-->
 										<?php $line++; ?>
 										<?php endforeach; ?>
 									</td>
@@ -585,6 +600,13 @@
     			}
 			});
 			$(document).on("change", ".disposition_drop", function(){
+				$('#rma_save_button').removeClass('gray');
+				$('#rma_save_button').addClass('success');
+				$('#rma_save_button').prop('disabled', false);
+				var row = $(this).data('row');
+				$(this).closest("tr").find(".serials-col").find(".brow-"+row).attr('checked', 'checked');
+			});
+			$(document).on("keyup", ".reason_input", function(){
 				$('#rma_save_button').removeClass('gray');
 				$('#rma_save_button').addClass('success');
 				$('#rma_save_button').prop('disabled', false);
