@@ -365,7 +365,7 @@ include_once $rootdir.'/inc/packages.php';
 		return ($right);
 	}
 	
-	function display($order_number = '',$page = 'Purchase',$mode = ''){
+	function display($order_number = '',$page = 'Purchase',$mode = '',$rma_number = ''){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
 		$company_name;
@@ -374,10 +374,13 @@ include_once $rootdir.'/inc/packages.php';
 		
 		// Aquire macro level information about the RMA Item
 		if (substr($mode,0,3) == 'RMA' && $page =='RMA'){
-			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
+			//$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
+			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE order_number = ".prep($order_number)." ";
+			if ($rma_number AND $rma_number<>'New') { $rma_macro_select .= "AND rma_number = ".$rma_number." "; }
+			$rma_macro_select .= "; ";
 			$rma_macro_results = qdb($rma_macro_select);
 			$rma_macro = mysqli_fetch_assoc($rma_macro_results);
-			$rma_number = $order_number;
+			//$rma_number = $order_number;
 			//$order_number = $rma_macro['order_number'];
 			$rma_notes = $rma_macro['notes'];
 		}
@@ -578,7 +581,7 @@ include_once $rootdir.'/inc/packages.php';
 						<div class='row' style='padding-bottom: 10px;'>
 							<div class='col-sm-12'>
 								<label for='rma_notes'>RMA Notes</label>
-								<textarea id='rma_notes' class='form-control textarea' name='rma_notes' rows='3' style=''>$rma_notes</textarea>
+								<textarea id='rma_notes' class='form-control textarea' name='rma_notes' rows='3' style=''>".$rma_notes."</textarea>
 							</div>
 						</div>	
 					";

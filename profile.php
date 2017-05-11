@@ -4,6 +4,7 @@
 	include_once 'inc/format_price.php';
 	include_once 'inc/getAddresses.php';
 	include_once 'inc/getCompany.php';
+	include_once 'inc/getContact.php';
 	include_once 'inc/getContacts.php';
 	include_once 'inc/getPart.php';
 
@@ -21,6 +22,7 @@
         return $freights;
 	}
 	
+/*
 	function getContact($id) {
 		$name;
 		
@@ -33,6 +35,7 @@
         
 		return $name;
 	}
+*/
 	
 	function getAddress($searchid,$search_type='addressid') {
 		$A = array('name'=>'','street'=>'','city'=>'','state'=>'','postal_code'=>'','country'=>'','id'=>0);
