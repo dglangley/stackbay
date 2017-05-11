@@ -7,6 +7,7 @@
 	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
+	include_once 'inc/calcCost.php';
 	include_once 'inc/array_stristr.php';
 
 	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST) {
@@ -564,7 +565,7 @@ if (! $r['partid']) { return ($results); }
 		}
 
 		// gather all partid's first
-		$partid_csv = "";//comma-separated for data-partids tag
+		$partid_csv = "";//comma-separated for data-partids tag and avg_cost
 		$search_strs = array();
 
 		// if favorites is NOT set, we're counting rows based on global results and don't need to waste pre-processing in first loop below
@@ -597,6 +598,7 @@ if (! $r['partid']) { return ($results); }
 
 //			print "<pre>".print_r($P,true)."</pre>";
 //                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
+/*
 			$results[$partid]['pipe_id'] = 0;
 			if ($P['heci']) {
 				// get all ids based on 7-digit heci code
@@ -621,6 +623,7 @@ if (! $r['partid']) { return ($results); }
 				// add to pipe id results so long as not associated with 10-digit heci match
 				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
 			}
+*/
 
 			// check favorites
 			$favs[$partid] = 'star-o';
@@ -657,13 +660,15 @@ if (! $r['partid']) { return ($results); }
 			}
 		}
 
+		$avg_cost = calcCost($partid_csv);
+
 		// now pre-process to get grouped qtys, but it needs to be a separate foreach loop since we're now gathering
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
 			$results[$partid]['notes'] = '';
-			$results[$partid]['pipeids_str'] = '';//$PIPEIDS_STR;
 /*
+			$results[$partid]['pipeids_str'] = '';//$PIPEIDS_STR;
 			if ($P['pipe_id']) {//exact 10-digit heci match from pipe
 				$itemqty = getQty($P['pipe_id'],'PIPE');
 			}
@@ -700,22 +705,23 @@ if (! $r['partid']) { return ($results); }
 		}
 
 		$id_array = "";//pass in comma-separated values for getShelflife()
+/*
 		foreach ($pipe_id_assoc as $pipe_id => $partid) {
 			if ($id_array) { $id_array .= ','; }
 			$id_array .= $pipe_id;
 		}
+*/
 		$shelflife = getShelflife($id_array);
 
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
 
-		$avg_cost = '';
 		$results_rows = '';
 		$k = 0;
 		foreach ($results as $partid => $P) {
 			$itemqty = $P['qty'];
 			$notes = $P['notes'];
-			$pipeids_str = $P['pipeids_str'];
+			$pipeids_str = '';//$P['pipeids_str'];
 
 			// if no notes through pipe, check new db (this is just for the notes flag)
 			if (! $notes) {

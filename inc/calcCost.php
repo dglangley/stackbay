@@ -3,15 +3,32 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	function calcCost($partid,$cost_basis='average',$purchase_item_id=0) {
-		$partid = trim($partid);
-		if (! $partid OR ! is_numeric($partid)) { return false; }
+		$partids = array();
+		$csv_partids = '';
+		if (is_array($partid)) {
+			$partids = $partid;
+		} else if (strstr($partid,',')) {
+			$csv_partids = $partid;
+		} else {
+			$partids[] = trim($partid);
+		}
 
-		$pid = prep($partid);
+		// $csv_partids can be passed in as $partid so only do the following if an array or variable has been passed in
+		if (! $csv_partids) {
+			foreach ($partids as $partid) {
+				if (! $partid OR ! is_numeric($partid)) { continue; }
+
+				if ($csv_partids) { $csv_partids .= ','; }
+				$csv_partids .= $partid;
+			}
+		}
+
+		if (! $csv_partids) { return false; }
 
 		$actual_sum = 0;
 		$average_sum = 0;
 		$qty_sum = 0;
-		$query = "SELECT * FROM inventory WHERE partid = $pid AND qty > 0; ";
+		$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND qty > 0; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$qty_sum += $r['qty'];
