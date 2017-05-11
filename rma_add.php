@@ -51,16 +51,15 @@
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
 		$rma_serial = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
-		
+		// exit($invid);
 		if($rma_serial == '') {
 			//Get the initial Sales Item 
-			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".res($invid).";";
+			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".prep($invid).";";
 			$serial_find = qdb($query) or die(qe());
 			if (mysqli_num_rows($serial_find)) {
 				$serial_find = mysqli_fetch_assoc($serial_find);
 				$rma_serial = $serial_find['serial_no'];
 				$sales_item_id = $serial_find['sales_item_id'];
-				
 			}
 		}
 		

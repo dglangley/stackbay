@@ -64,11 +64,8 @@
 	//Check for any post data from save
 	//Array = [counter] = invid
 	$checkedItems = $_POST["inventory"];
-	//Array = [inventoryid] = "String for Reason"
 	$reason = $_POST["reason"];
-	//Array = [inventoryid] = return_id
 	$dispositionArray = $_POST["disposition"];
-	//Array = [inventoryid] = return_id
 	$rma_notes = $_POST["rma_notes"];
 	$return = $_POST["return"];
 	
@@ -267,46 +264,6 @@
 			}
 		}
 	}
-	
-	foreach ($rma_items as $part => $serial){
-		$history = array();
-		foreach($serial as $invid => $info){
-			$info['test'] = 'test';
-		}
-	}
-	$i = 0;
-	// echo"<pre>";
-	// print_r($rma_items);
-	// echo"</pre>";
-	// exit;
-	
-	// //parameter id if left blank will pull everything else if id is specified then it will give the disposition value
-	// function getDisposition($id = '') {
-	// 	$dispositions = array();
-	// 	$disp_value;
-		
-	// 	if($id == '') {
-	// 		$query = "SELECT * FROM dispositions;";
-	// 		$result = qdb($query) or die(qe());
-			
-	// 		while ($row = $result->fetch_assoc()) {
-	// 			$dispositions[$row['id']] = $row['disposition'];
-	// 		}
-	// 	} else {
-	// 		$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
-	// 		$result = qdb($query) or die(qe());
-			
-	// 		if (mysqli_num_rows($result)>0) {
-	// 			$result = mysqli_fetch_assoc($result);
-	// 			$disp_value = $result['disposition'];
-	// 		}
-			
-	// 		return $disp_value;
-	// 	}
-		
-	// 	return $dispositions;
-	// }
-	
 ?>
 
 
@@ -357,7 +314,7 @@
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$order_type[0].'O'.$rma_number.'.pdf"
 						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO #'.$so_number.')</a>';
 						if($rma_number){
-							echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							echo '<a class="btn-flat pull-left" target="_new" href="/docs/RMA'.$rma_number.'.pdf"><i class="fa fa-file-pdf-o"></i></a>';
 							echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
 							$rows = get_assoc_credit($rma_number);
 							if(mysqli_num_rows($rows)>0){
@@ -437,7 +394,7 @@
 										<?php $initial = $i; ?>
 										<?php $line = $initial;?>
 										<?php foreach ($row as $i => $inf): ?>
-											<?php $i++; ?>
+											<?php //$i++; ?>
 											
 											<div class="input-group serial_box">
 											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?>" readonly>
@@ -447,7 +404,7 @@
 												
 											    <?php if($mode!="view"){ ?>
 											    <span class="input-group-addon">
-											    	<input type="checkbox" name="inventory[]" value="<?=$inf['inventoryid']?>" <?=($inf['id'])? "checked" : ''?>/>
+											    	<input type="checkbox" class ='brow-<?=$i?>' name="inventory[]" value="<?=$inf['inventoryid']?>" <?=($inf['id'])? "checked" : ''?>/>
 											    </span>
 											    <?php } ?>
 								            </div>
@@ -459,7 +416,7 @@
 										<?php	$line = $initial;?>
 										<?php foreach ($row as $i => $inf):?>
 											<div class='war-disp'>
-											    <div class="infinite" style="line-height:30px;"><?=calcWarranty($inf['inventoryid'])?></div>
+											    <div class="infinite warranty_col brow-<?=$i?>" style="line-height:30px;"><?=calcWarranty($inf['inventoryid'])?></div>
 											</div>
 											<?php $line++; ?>
 										<?php endforeach; ?>
@@ -474,10 +431,10 @@
 													$dispositionoptions = getDisposition('');
 												?>
 											    <?php if($mode=='view'){?>
-											    <div class="infinite" style="line-height:30px;"><?=getDisposition($inf['dispositionid']); ?></div>
+											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=getDisposition($inf['dispositionid']); ?></div>
 											    <?php }else{?>
-											    <select class="form-control infinite input-sm" name='disposition[<?=$inf['inventoryid']?>]'>
-											    	<option value = "null">Disposition</option>
+											    <select class="form-control disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]'>
+											    	<option value = "null">- Select Disposition -</option>
 											    	<?php foreach($dispositionoptions as $key => $value): ?>
 											    		<option value ="<?=$key?>" <?=($inf['dispositionid'] == $key ? 'selected' : '');?>><?=$value?></option>
 											    	<?php endforeach; ?>
@@ -494,9 +451,9 @@
 										
 											<div class='line-reason'>
 											    <?php if($mode=='view'){?>
-											    <div class="infinite" style="line-height:30px;"><?=$inf['reason']?></div>
+											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=$inf['reason']?></div>
 											    <?php }else{?>
-											    <input class="form-control infinite input-sm" type="text" name="reason[<?=$inf['inventoryid']?>]" value="<?=$inf['reason']?>" placeholder="Reason" data-row='<?=$inf['id']?>' data-part="">
+											    <input class="form-control infinite brow-<?=$i?> input-sm" type="text" name="reason[<?=$inf['inventoryid']?>]" value="<?=$inf['reason']?>" placeholder="Reason" data-row='<?=$inf['id']?>' data-part="">
 											    <?php }?>
 											</div>
 											<?php $line++; ?>
@@ -509,17 +466,17 @@
 											<?php 
 												$history_text ='';
 												$first_war = true;
-												$war_text = "";
 												$hist_count = 0;
-												foreach ($inf['history'] as $history){
-													$link = "";
+												$printable = array();
+												$war_text = "";
+												foreach ($inf['history'] as $i => $history){
 													$select = "";
+													$link = "";
 													$action = "";
-													if($hist_count > 0 && $hist_count != 3){echo(" | ");}
 													switch ($history['field']) {
 														case 'sales_item_id':
 															$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
-															$link = "/order_form.php?ps=s&on=";
+															$link = "/SO";
 															$action = "Sold";
 															break;
 														case 'returns_item_id':
@@ -530,14 +487,13 @@
 														case 'purchase_item_id':
 															$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
 															$action = "Purchased";
+															$link = "/PO";
 															if($first_war){
 																$war_text = "Vendor War Exp: ";
 																// $most_recent_war = $history['value'];
-																$link = "/order_form.php?ps=s&on=";
 																$war_text .= calcWarranty($history['value'],"history");
 															}
 															break;
-															
 													}
 													
 													if($select){
@@ -545,42 +501,31 @@
 														$result = mysqli_fetch_assoc($result);
 														$action .= "<a class = 'lonk' href='$link".$result['o']."'> #".$result['o']."</a>";
 													}
+													$printable[] = $action.": ".format_date($history['date'],"n/j/y");
+													
 													if($first_war && $war_text){
 														//Print out the $warranty text
-														echo $war_text." | ";
+														$printable[] = $war_text;
+														$printable[] = "";
 														//We only care about the most recent warranty
 														$first_war = false;
-														$hist_count++;
-														//Then print out the Purchased warranty according to the existing standard of warranty
-														if ($hist_count == 2){
-															echo  "<br>";
-															echo  $action.": ".format_date($history['date'],"n/j/y");
-															$hist_count++;
-														} else if ($hist_count == 4){
-															echo "<a class = 'lonk'>Show more</a>";
-															break;
+													}
+												}
+												if ($printable){
+													foreach ($printable as $i => $text) {
+														echo($text);
+														if ($i != 2){
+															echo " | ";
 														} else {
-															echo  $action.": ".format_date($history['date'],"n/j/y");
-															$hist_count++;
+															echo "<br>";
 														}
-													}else{
-														//Otherwise, ignore the warranty text  and just follow the normal rules
-														echo  $action.": ".format_date($history['date'], "n/j/y");
-														$hist_count++;
-														if ($hist_count == 2){
-															echo  "<br>";
-														}
-														else if ($hist_count == 4){
+														if($i == 4){
 															echo "<a class = 'lonk'>Show more</a>";
 															break;
 														}
 													}
-												}
-												if ($hist_count == 0){
+												} else {
 													echo "&nbsp;<br>&nbsp;";
-												}
-												if ($hist_count <= 2){
-													echo"&nbsp;<br>&nbsp;";
 												}
 	
 											?>
@@ -637,7 +582,14 @@
     				$('#rma_save_button').addClass('gray');
 					$('#rma_save_button').removeClass('success');
 					$('#rma_save_button').prop('disabled', true);
-    			};
+    			}
+			});
+			$(document).on("change", ".disposition_drop", function(){
+				$('#rma_save_button').removeClass('gray');
+				$('#rma_save_button').addClass('success');
+				$('#rma_save_button').prop('disabled', false);
+				var row = $(this).data('row');
+				$(this).closest("tr").find(".serials-col").find(".brow-"+row).attr('checked', 'checked');
 			});
 			
 		})(jQuery);

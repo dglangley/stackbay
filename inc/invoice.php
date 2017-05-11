@@ -9,7 +9,7 @@
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
     //Function to be run to create an invoice
     //Eventually Shipment Datetime will be a shipment ID whenever we make that table
-
+    global $GLOBALS;
     //Check to see there are actually invoice-able items on the order
     $invoice_item_select = "
         Select partid, count(serialid) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
@@ -49,7 +49,7 @@
     $freight = prep(shipment_freight($order_number, $shipment_datetime));
     
     $invoice_creation = "INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-    VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", ".prep($now).", ".prep($shipment_datetime)." , $freight , '$status');";
+    VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');";
     
     $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
     

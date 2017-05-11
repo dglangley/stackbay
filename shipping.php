@@ -299,8 +299,10 @@
 													<i class="fa fa-list"></i>
 												</a>
 											</div>
-											<div class = "col-md-6">
-												RMA #'.$rma['rma_number'].'
+											<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
+												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+													RMA #'.$rma['rma_number'].'
+												</a>	
 											</div>
 											<div class = "col-md-3 pull-left">
 												<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">

@@ -175,7 +175,7 @@
 			$info['date_label'] = "RMA";
 // 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
 			$info['short'] = "po";
-			$info['id'] = "po";
+			$info['id'] = "rma_number";
 			$info['item_id'] = $info['id'];
 // 			$info['active'] = " AND i.ship_date IS NULL ";
 // 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";

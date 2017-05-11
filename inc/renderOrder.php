@@ -20,6 +20,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
+	include_once $rootdir.'/inc/getDisposition.php';
 	
     function getPackageTracking($so_number) {
         $tracking = array();
@@ -144,7 +145,7 @@
 			//FREIGHT CALCULATION HERE FOR INVOICE (based off the payment type/shipping account)
 			$item_rows .= '
                 <tr>
-                    <td class="text-center">'.($o['credit']? ++$i : $item['line_number']).'</td>
+                    <td class="text-center">'.(($o['credit'] || $o['rma']) ? ++$i : $item['line_number']).'</td>
                     <td>
         	            '.$part_strs[0].' &nbsp; '.$part_details['HECI'].'
                         <div class="description '.$part_details['manf'].' '.$part_details['system'].' '.$part_details['description'].'</div>
@@ -175,8 +176,8 @@
                     <td class="text-center '.($o['rma'] ? 'remove' : '').'">'.$item['qty'].'</td>
                     <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($price).'</td>
                     <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($lineTotal).'</td>
-                    <td class="'.($o['rma'] ? '' : 'remove').'">Insert some reason here based on DB</td>
-                    <td class="'.($o['rma'] ? '' : 'remove').'">Text here</td>
+                    <td class="'.($o['rma'] ? '' : 'remove').'">'.$item['reason'].'</td>
+                    <td class="'.($o['rma'] ? '' : 'remove').'">'.getDisposition($item['dispositionid']).'</td>
                     <td class="'.($o['rma'] ? '' : 'remove').' text-center">'.$item['qty'].'</td>
 				</tr>
 			';
@@ -416,6 +417,7 @@ $html_page_str .='
                 <th class="'.($o['rma'] ? 'remove' : '').'">Shipping</th>
                 <th class="'.($o['rma']  ? 'remove' : '').'">Freight Terms</th>
                 '.(($o['invoice'])? "<th>PO # </th>" : '').'
+                '.(($o['rma'])? "<th>PO # </th>" : '').'
             </tr>
             <tr>
                 <td>
