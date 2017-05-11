@@ -515,7 +515,7 @@
 													$link = "";
 													$select = "";
 													$action = "";
-													if($hist_count > 0 && $hist_count != 2){echo(" | ");}
+													if($hist_count > 0 && $hist_count != 3){echo(" | ");}
 													switch ($history['field']) {
 														case 'sales_item_id':
 															$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
@@ -552,7 +552,7 @@
 														$first_war = false;
 														$hist_count++;
 														//Then print out the Purchased warranty according to the existing standard of warranty
-														if ($hist_count == 1){
+														if ($hist_count == 2){
 															echo  "<br>";
 															echo  $action.": ".format_date($history['date'],"n/j/y");
 															$hist_count++;
@@ -567,7 +567,7 @@
 														//Otherwise, ignore the warranty text  and just follow the normal rules
 														echo  $action.": ".format_date($history['date'], "n/j/y");
 														$hist_count++;
-														if ($hist_count == 1){
+														if ($hist_count == 2){
 															echo  "<br>";
 														}
 														else if ($hist_count == 4){
