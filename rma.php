@@ -135,7 +135,7 @@
 	        	// print_r($return);
 	        	// die;
 	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
-	        	$rma_macro_update = "UPDATE `returns` SET `notes` = ".prep($rma_notes).";";
+	        	$rma_macro_update = "UPDATE `returns` SET `notes` = ".prep($rma_notes)." WHERE rma_number = '".$rma_number."';";
 	        	qdb($rma_macro_update) OR die();
 	        	if ($return[$invid] != ''){
 		            $rmaQuery = "
@@ -360,7 +360,7 @@
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
 					<!--'RMA'/$rma_number OR 'Sales'/$so_number-->
-					<?=sidebar_out($so_number,"RMA",$sidebar_mode)?>
+					<?=sidebar_out($so_number,"RMA",$sidebar_mode,$rma_number)?>
 				</div>
 			
 				<!--======================= End Left half ======================-->

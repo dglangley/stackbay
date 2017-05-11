@@ -25,8 +25,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
 	
-	// $date = $now;
-	
+
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
 		$result = [];

@@ -117,6 +117,7 @@ function sub_rows($search = ''){
     //General Collumn information
         //Item information
         
+		$rows = "";
         $multi = explode(' ',$search);
         $items = array();
         foreach($multi as $search_s){
@@ -159,9 +160,9 @@ function sub_rows($search = ''){
                 }
             }
                 
-            if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming)){
+            if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming) || (! mysqli_num_rows($in_stock) && ! mysqli_num_rows($in_stock))){
                 //build the results rows
-                    $rows = "
+                $rows = "
                     <!-- Created from $search -->
                     <tr class = 'items_label'>
                         <td></td>
@@ -228,7 +229,7 @@ function sub_rows($search = ''){
                     ";
                 //Ask David about the line-level control with each of these.
                 //Delivery Date
-                
+
                 //Condition | conditionid can be set per each part. Will play around with the tactile
                 //Warranty    
                 //Qty | Each of the qty inputs had supplimental inventory information

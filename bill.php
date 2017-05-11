@@ -127,6 +127,7 @@
 		}
 		// print_r($grouped);exit;
 		$due_estimate = terms_calc($po_number,"po");
+
 		// $due_select = "
 		// SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
 		// $due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
@@ -134,9 +135,6 @@
 		// $due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
 		
 		// $billable = "SELECT SUM(`amount` * `qty`) FROM `bills` b, `bill_items` bi where b.bill_no = bi.bill_no AND po_number = ".prep($po_number).";";
-		
-		
-		
 	}	
 	
 	if(is_numeric($bill_number)){

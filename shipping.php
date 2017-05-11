@@ -447,10 +447,10 @@
 							<thead>
 								<tr>
 									<th>Item</th>
+									<th>SO Qty</th>
 									<th>SERIAL</th>
 									<th>Box #</th>
 									<th>Locations</th>
-									<th>Ordered</th>
 									<th>Outstanding</th>
 									<th>Condition</th>
 									<th>Warranty</th>
@@ -474,6 +474,9 @@
 									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
 										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
 										<div class="product-descr"><?= display_part(current(hecidb($item['partid'],'id'))) ?></div>
+									</td>
+									<td class="text-center" style="padding-top: 15px !important;">
+										<span class="qty_field"><?php echo $item['qty'] ?></span>
 									</td>
 								
 								<!-- Grab the old serial values from the database and display them-->
@@ -504,7 +507,7 @@
 										<?php endforeach; ?>
 									</td>
 									<td style="padding-top: 10px !important;">
-										<div style="text-align: center; margin-top: 5px; margin-bottom: 15px; height: 20px; max-height: 20px; overflow: hidden;">
+										<div style="margin-top: 5px; margin-bottom: 15px; margin-left:5px; height: 20px; max-height: 20px; overflow: hidden;">
 											<!-- <label><input class="lot_inventory" style="margin: 0 !important" type="checkbox" <?php echo (!empty($item['ship_date']) ? 'disabled' : ''); ?>></label> -->
 											<?php 
 												if($inventory) {
@@ -529,9 +532,6 @@
 										<?php endforeach; ?>
 										</div>
 										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
-									</td>
-									<td style="padding-top: 15px !important;">
-										<span class="qty_field"><?php echo $item['qty'] ?></span>
 									</td>
 									<td class="remaining_qty" style="padding-top: 15px !important;" data-qty="<?php echo $item['qty'] - $item['qty_shipped']; ?>">
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
