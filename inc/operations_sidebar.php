@@ -365,7 +365,7 @@ include_once $rootdir.'/inc/packages.php';
 		return ($right);
 	}
 	
-	function display($order_number = '',$page = 'Purchase',$mode = ''){
+	function display($order_number = '',$page = 'Purchase',$mode = '',$rma_number = ''){
 		//Opens the sidebar
 		// $file = basename(__FILE__);
 		$company_name;
@@ -374,10 +374,13 @@ include_once $rootdir.'/inc/packages.php';
 		
 		// Aquire macro level information about the RMA Item
 		if (substr($mode,0,3) == 'RMA' && $page =='RMA'){
-			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
+			//$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
+			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE order_number = ".prep($order_number)." ";
+			if ($rma_number AND $rma_number<>'New') { $rma_macro_select .= "AND rma_number = ".$rma_number." "; }
+			$rma_macro_select .= "; ";
 			$rma_macro_results = qdb($rma_macro_select);
 			$rma_macro = mysqli_fetch_assoc($rma_macro_results);
-			$rma_number = $order_number;
+			//$rma_number = $order_number;
 			//$order_number = $rma_macro['order_number'];
 			$rma_notes = $rma_macro['notes'];
 		}
@@ -518,19 +521,19 @@ include_once $rootdir.'/inc/packages.php';
 			if($page != "RMA"){
 				//Addresses
 				if($page != 'Purchase') {
-					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS:</b><br>";
+					$right .= "<b style='color: #526273;font-size: 14px;'>BILLING ADDRESS</b><br>";
 					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
 				} else {
-					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO:</b><br>";
+					$right .= "<b style='color: #526273;font-size: 14px;'>REMIT TO</b><br>";
 					//address function needs to be edited to take in remit to column insead of bill to
 					$right .= "<span style='color: #aaa;'>" .address_out($b_add). "</span>";
 				}
 				
-				$right .= "<br><br><b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS:</b><br>";
+				$right .= "<br><br><b style='color: #526273;font-size: 14px;'>SHIPPING ADDRESS</b><br>";
 				$right .= "<span style='font-size: 14px;'>" .address_out($s_add). "</span>";
 				$right .= "<br><br>";
 				//Shipping inforamtions
-				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS:</b><br>";
+				$right .= "<b style='color: #526273;font-size: 14px;'>SHIPPING INSTRUCTIONS</b><br>";
 				
 				if($selected_carrier){
 					$right .= getFreight('carrier',$selected_carrier,'','name');
@@ -548,7 +551,7 @@ include_once $rootdir.'/inc/packages.php';
 			if($public){
 				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES";
 				if($page == "RMA"){$right .= " FROM SO #$order_number";}
-				$right .= ":</b><br>";
+				$right .= "</b><br>";
 				$right .= $public;
 				$right .= "<br><br>";
 			}
@@ -557,8 +560,9 @@ include_once $rootdir.'/inc/packages.php';
 				
 				$right .= "<b style='color: #526273;font-size: 14px;'>PRIVATE NOTES";
 				if($page == "RMA"){$right .= " FROM SO #$order_number";}
-				$right .=":</b><br>";
+				$right .="</b><br>";
 				$right .= $private;
+				$right .= "<br>";
 			}
 
 			if($page == "RMA"){
@@ -577,7 +581,7 @@ include_once $rootdir.'/inc/packages.php';
 						<div class='row' style='padding-bottom: 10px;'>
 							<div class='col-sm-12'>
 								<label for='rma_notes'>RMA Notes</label>
-								<textarea id='rma_notes' class='form-control textarea' name='rma_notes' rows='3' style=''>$rma_notes</textarea>
+								<textarea id='rma_notes' class='form-control textarea' name='rma_notes' rows='3' style=''>".$rma_notes."</textarea>
 							</div>
 						</div>	
 					";
@@ -596,7 +600,7 @@ include_once $rootdir.'/inc/packages.php';
 				//If there are any existing packages, print them out on this list
 				if (mysqli_num_rows($result) > 0){
 					$right .= "<br>";
-					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST:</b><br>";
+					$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST</b><br>";
 					foreach($result as $slip) {
 						//Create a date_time object
 						// Append to right the packing slip options

@@ -641,31 +641,24 @@
 		//operations.js; it might even need to be moved to ventel.js. Similarly 
 		//for the RM button, which has it's own independent processing method
 		
+		var SEARCH = "<?=$searched?>";
 		$(document).ready(function() {
 			$('#loader-message').html('Please wait for Inventory results to load...');
-			$('#loader').show();
+			if (SEARCH!='') { inventory_history(SEARCH); }
+//			$('#loader').show();
 
 			//Triggering Aaron 2017
-			var phpStuff = "<?=$_REQUEST['s']; ?>";
-			if($("#part_search").val() || phpStuff != ''){
-				var search = $("#part_search").val();
-				if(search == '') {
-					search = phpStuff;
-					$("#part_search").val(phpStuff);
-				}
+//			var phpStuff = "<?=$_REQUEST['s']; ?>";
+//			if($("#part_search").val() || phpStuff != ''){
+//				SEARCH = $("#part_search").val();
+//				if(! SEARCH) {
+//					SEARCH = phpStuff;
+//					$("#part_search").val(phpStuff);
+//				}
 				
-				$('#loader').hide();
-/*
-				$.when( inventory_history(search) ).then(function() {
-					$('.loading_search').hide();
-				});
-*/
-			}
-			
-/*
-			$('.loading_search').hide();
-*/
-			$('#loader').hide();
+//				$('#loader').hide();
+//			}
+//			$('#loader').hide();
 		});
 		
 		
@@ -690,14 +683,14 @@
 			}
 		});
 		$(document).on("click",".part_filter",function(){
-			var search = $("#part_search").val();
-			inventory_history(search);
+			SEARCH = $("#part_search").val();
+			inventory_history(SEARCH);
 		});
 
 		$("#part_search").on("keyup",function(e){
 			if (e.keyCode == 13) {
-				var search = $("#part_search").val();
-				inventory_history(search);
+				SEARCH = $("#part_search").val();
+				inventory_history(SEARCH);
 			}
 		});
 

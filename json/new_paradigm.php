@@ -108,6 +108,7 @@ function sub_rows($search = ''){
     //General Collumn information
         //Item information
         
+		$rows = "";
         $multi = explode(' ',$search);
         $items = array();
         foreach($multi as $search_s){
@@ -150,7 +151,7 @@ function sub_rows($search = ''){
                     }
                 }
                 
-                if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming)){
+                if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming) || (! mysqli_num_rows($in_stock) && ! mysqli_num_rows($in_stock))){
                     //build the results rows
                         $rows = "
                         <!-- Created from $search -->

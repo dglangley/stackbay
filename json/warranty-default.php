@@ -27,7 +27,7 @@
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    //$companyid = prep($companyid,"'25'");
 	    
-        $select = "SELECT warranty, COUNT(*) mode FROM ".$order['tables']." AND companyid = $companyid GROUP BY warranty ORDER BY mode limit 21;";
+        $select = "SELECT warranty, COUNT(*) mode FROM ".$order['tables']." AND companyid = $companyid GROUP BY warranty ORDER BY mode DESC limit 21;";
 	    
 	    if ($carrier && $carrier != 'NULL'){
 	    	$select .= "AND carrier = '$carrier'";

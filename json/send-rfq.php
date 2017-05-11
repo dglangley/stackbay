@@ -92,7 +92,9 @@
 			$result = qdb($query);
 			$num_emails = mysqli_num_rows($result);
 			if ($num_emails==0) {
-				$query = "SELECT email, name FROM emails, contacts WHERE contacts.companyid = '".$cid."' AND emails.contactid = contacts.id; ";
+				$query = "SELECT email, name FROM emails, contacts ";
+				$query .= "WHERE contacts.companyid = '".$cid."' AND emails.contactid = contacts.id AND contacts.status = 'Active' ";
+				$query .= "ORDER BY IF(contacts.title RLIKE 'A[PR]',1,0); ";
 				$result = qdb($query);
 				$num_emails = mysqli_num_rows($result);
 			}
