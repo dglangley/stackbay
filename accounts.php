@@ -180,7 +180,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-			<h2 class="minimal"><?=ucwords($orders_table);?> Accounts</h2>
+			<h2 class="minimal"><?=ucwords($orders_table);?></h2>
 			<a href="/accounts.php?report_type=summary&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
 			<input type="radio" name="orders_table" value="<?=$orders_table;?>" class="hidden" checked>
 		</td>
@@ -263,6 +263,9 @@
 	$rows = '';
 	$total_pcs = 0;
 	$total_amt = 0;
+	$total_sub = 0;
+	$total_cred = 0;
+	$total_payments = 0;
 	
 	//Write the query for the gathering of Pipe data
 	$record_start = $startDate;
@@ -311,7 +314,7 @@
 			$r['price'] = format_price($r['price'],true,'',true);
 			$ext_amt = $row['price']*$row['qty'];
 			$total_pcs += $row['qty'];
-			$total_amt += $ext_amt;
+			$total_sub += $ext_amt;
 
             if(!array_key_exists($id, $summary_rows)){
                 $summary_rows[$id] = array(
@@ -362,9 +365,12 @@
             $summary_rows[$id]['company'] = $row['name'];
             $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
             $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'credit' => ($credit == '' ? 0 : $credit)];
+
+
         }
 
         //print_r($summary_rows);
+        $init = true;
 
         foreach ($summary_rows as $id => $info) {
         	$invoice_no = 0;
@@ -461,9 +467,9 @@
         	$rows .= '
                 <tr>
                     <td>'.format_date($info['date'], 'M j, Y').'</td>';
-                    if(!$company_filter){$rows .= '<td><a href="/profile.php?companyid='.$info['cid'].'">'.$info['company'].'</a></td>';}
+                    if(!$company_filter){$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';}
             $rows .='
-            		<td>'.$id.'</td>
+            		<td>'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>
                     <td class="text-right">'.format_price($info['summed']).'</td>
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
@@ -472,18 +478,25 @@
                 </tr>
             ';
 
+            $total_amt += ($info['summed'] - $info['credit'] - $paymentTotal);
+            $total_payments += $paymentTotal;
+            $total_cred += $info['credit'];
+
             //Add in the dropdown element into the accounts page
             $rows .= '<tr style="'.($report_type=='summary' ? 'display: none;' : '').'">
                 <td colspan="12">
                 <table class="table table-condensed commission-table">
-                    <tbody>
-                        <tr>
+                    <tbody>';
+            if($init)
+            	$rows .= '<tr>
                             <th class="col-md-4">Part Description</th>
                             <th class="col-md-2">Qty</th>
                             <th class="col-md-2 text-right">Price (ea)</th>
                             <th class="col-md-2 text-right">Ext Price</th>
                             <th class="col-md-2 text-right">Credits</th>
-               			</tr>';
+            		</tr>';
+
+            $init = false;
 
             foreach($info['partids'] as $part) {
             	$rows .= '<tr>
@@ -633,8 +646,12 @@
 							<?php if ($rows) { ?>
                             <!-- row -->
                             <tr class="nohover" style="background: #EEE;">
-                                <td colspan="<?php echo $footer_span1; ?>"> </td>
-                                <td><strong><?php echo $total_pcs; ?></td></strong>
+                            	<td colspan=""> </td>
+                            	<td colspan=""> </td>
+                            	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
+                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
+                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_payments,true,' '); ?></strong></td>
+                                <td><strong></strong></td>
                                 <td class="text-right" colspan="<?php echo $footer_span2; ?>">
                                     <strong><?php echo format_price($total_amt,true,' '); ?></strong>
                                 </td>
