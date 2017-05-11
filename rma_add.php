@@ -51,6 +51,7 @@
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
 		$rma_serial = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
+		exit($rma_serial);
 		// exit($invid);
 		if($rma_serial == '') {
 			//Get the initial Sales Item 
