@@ -478,14 +478,15 @@
 									<td class="history-col">
 										<?php foreach ($row as $i => $inf):?>
 										
-										<div class = "infinite" style='line-height:15px;'>
+										<div class = "infinite" style='line-height:15px;font-size:.6vw;'>
 											<?php 
 												$history_text ='';
 												$first_war = true;
 												$hist_count = 0;
 												$printable = array();
 												$war_text = "";
-												foreach ($inf['history'] as $i => $history){
+												if($inf['history']){
+													foreach ($inf['history'] as $i => $history){
 													$select = "";
 													$link = "";
 													$action = "";
@@ -526,7 +527,8 @@
 														$first_war = false;
 													}
 												}
-												if ($printable){
+												}
+												if (count($printable) > 0){
 													foreach ($printable as $o => $text) {
 														echo($text);
 														if ($o != 1){
