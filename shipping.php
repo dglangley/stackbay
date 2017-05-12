@@ -283,7 +283,7 @@
 						$output = '
 						<div class ="btn-group">
 							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-                              <i class="fa fa-shopping-cart"></i>
+                              <i class="fa fa-question-circle-o"></i>
                               <span class="caret"></span>
                             </button>';
                         

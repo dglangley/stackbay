@@ -401,6 +401,9 @@
 					echo'        <td>'.$item.'</td>';
 					echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					echo'    	<td class="status text-right">';
+					if($order == 's') {
+						echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
+					}
 					echo'			<a href="/'.($order == 'p' ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
 					if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
 						echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
@@ -478,6 +481,14 @@
 		.descr-label {
 			white-space:nowrap;
     		overflow:hidden;
+		}
+
+		.rma_icon {
+			display: none;
+		}
+
+		.complete_item .rma_icon {
+			display: inline;
 		}
 		
 		.table tbody > tr > td { vertical-align:top !important; }
@@ -695,7 +706,7 @@
 				$('.complete_item').show();
 				$('.show_more').hide();
 			} else if(type == 'active') {
-				$('.active_item ').show();	
+				$('.active_item ').show();
 				$('.show_more').hide();
 			} else {
 				$('.filter_item').show();
