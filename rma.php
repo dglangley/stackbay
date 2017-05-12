@@ -478,7 +478,8 @@
 									<td class="history-col">
 										<?php foreach ($row as $i => $inf):?>
 										
-										<div class = "infinite" style='line-height:15px;font-size:.6vw;'>
+										<!--font-size:1.2vh;-->
+										<div class = "infinite" style='line-height:15px;font-size:.6vw;vertical-align:initial !important;'>
 											<?php 
 												$history_text ='';
 												$first_war = true;
