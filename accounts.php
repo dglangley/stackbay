@@ -30,6 +30,9 @@
 	setcookie('report_type',$report_type);
 	//$report_type = 'detail';
 
+	//For local testing
+	$report_type = $_GET['report_type'];
+
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$report_type = 'detail';
@@ -101,6 +104,13 @@
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'inc/getRecords.php'; ?>
 	<?php require_once 'modal/payments_account.php';  ?>
+
+	<?php if($_REQUEST['payment']): ?>
+		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
+		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+		    <strong>Success!</strong> Payment has been updated.
+		</div>
+	<?php endif; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
@@ -443,14 +453,14 @@
 							
 							$output .= '
 								<li>
-									<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-toggle="modal" data-target="#modal-payment">
+									<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
 										Payment #'.$payment['paymentid'].'
 									</a>
 								</li>';
 						}
 					}
 					$output .= '<li>
-						<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
+						<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'">
 							<i class="fa fa-plus"></i> Add New Payment
 						</a>
 						
@@ -460,7 +470,7 @@
 					//echo $output;
 
 					//Remove output for live
-					$output = '';
+					//$output = '';
 
         	$rows .= '
                 <tr>
@@ -694,27 +704,70 @@
 			var ref = $(this).data('ref');
 			var notes = $(this).data('notes');
 			var date = $(this).data('date');
-			
+
+			var order_number = $(this).data('orders_number');
+			var orders_table = $(this).data('orders_table');
 			$('select[name="payment_type"]').val(type);
 			$('input[name="payment_ID"]').val(number);
 			$('input[name="payment_amount"]').val(amount);
 			$('input[name="payment_date"]').val(date);
 			
 			$('textarea[name="notes"]').val(notes);
+
+			$('.payment-data').empty();
 			
 			$('input[name="reference_button"][value="' + ref + '"]').prop('checked', true);
+			$.ajax({
+				type: "POST",
+				url: '/json/payment_accounts.php',
+				data: {
+					"orders_table": orders_table,
+					"order_number": order_number,
+				}, // serializes the form's elements.
+				dataType: 'json',
+				success: function(result) {
+					$('.payment-data').append(result);
+				},					
+				error: function(xhr, status, error) {
+					console.log("JSON | Initial table load | order table out.php: "+error);
+				}
+			});
         });
         
         $(document).on("click", ".new-payment", function() {
+
+        	var order_number = $(this).data('orders_number');
+			var orders_table = $(this).data('orders_table');
+
 			$('select[name="payment_type"]').val('Wire Transfer');
 			$('input[name="payment_ID"]').val('');
 			$('input[name="payment_amount"]').val('');
 			$('input[name="payment_date"]').val($('input[name="payment_date"]').data('date'));
 			
 			$('textarea[name="notes"]').val('');
+
+			$('.payment-data').empty();
 			
 			$('input[name="reference_button"]').prop('checked', false);
+
+			$.ajax({
+				type: "POST",
+				url: '/json/payment_accounts.php',
+				data: {
+					"orders_table": orders_table,
+					"order_number": order_number,
+				}, // serializes the form's elements.
+				dataType: 'json',
+				success: function(result) {
+					$('.payment-data').append(result);
+				},					
+				error: function(xhr, status, error) {
+					console.log("JSON | Initial table load | order table out.php: "+error);
+				}
+			});
         });
+
+        $('#item-updated-timer').delay(1000).fadeOut('fast');
         
     })(jQuery);
 /*
