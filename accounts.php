@@ -499,8 +499,9 @@
             	$rows .= '<tr>
                             <th class="col-md-4">Part Description</th>
                             <th class="col-md-2">Qty</th>
-                            <th class="col-md-2 text-right">Price (ea)</th>
                             <th class="col-md-2 text-right">Ext Price</th>
+                            <th class="col-md-2 text-right">Price (ea)</th>
+                            
                             <th class="col-md-2 text-right">Credits</th>
             		</tr>';
 
@@ -508,11 +509,12 @@
 
             foreach($info['partids'] as $part) {
             	$rows .= '<tr>
-            		<td>'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
-            		<td>'.$part['qty'].'</td>
-            		<td class="text-right">'.format_price($part['price']).'</td>
-            		<td class="text-right">'.format_price($part['price'] * $part['qty']).'</td>
-            		<td class="text-right">-'.format_price($part['credit']).'</td>
+            		<td class="col-md-4">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
+            		<td class="col-md-2">'.$part['qty'].'</td>
+            		<td class="col-md-2 text-right">'.format_price($part['price'] * $part['qty']).'</td>
+            		<td class="col-md-2 text-right">'.format_price($part['price']).'</td>
+            		
+            		<td class="col-md-2 text-right">-'.format_price($part['credit']).'</td>
             	</tr>';
             }
 
