@@ -452,8 +452,9 @@
 					        }
 							
 							$output .= '
-								<li>
+								<li style="text-align: left;">
 									<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
+										<i class="fa fa-usd" aria-hidden="true"></i>
 										Payment #'.$payment['paymentid'].'
 									</a>
 								</li>';
