@@ -32,6 +32,11 @@
         $results = qdb($select) or die(qe()." | $select | ");
         $origin_meta = mysqli_fetch_assoc($results);
         
+        $line_select = "SELECT group_concat(`id`) si_ids FROM ".$o['item']." WHERE ".$o['id']."=".prep($origin_number).";";
+        $line_results = qdb($line_select) or die(qe()." | $line_select | ");
+        $line_results = mysqli_fetch_assoc($line_results);
+        $si_ids = $line_results['si_ids'];
+        
         $company = prep($origin_meta['companyid']);
         $contact = prep($origin_meta['contactid']);
         $rma_meta = array();
@@ -51,7 +56,7 @@
         "INSERT INTO `sales_credits`(`companyid`, `date_created`, `order_num`, `order_type`, `rma`, `repid`, `contactid`) 
         VALUES ($company,NOW(),".prep($origin_number).",'".$o['type']."',".prep($rma).",".$GLOBALS['U']['id'].",$contact);";
         
-        qedb($meta_insert);
+        qdb($meta_insert) or die(qe()." $meta_insert");
         $scid = qid();
         
         $sc_line = array();
@@ -61,8 +66,10 @@
         SELECT ".$o["item"].".* ".(($rma_meta['items_ids'])?", `returns_item_id` ":"")."
         FROM `".$o["item"]."`".(($rma_meta['items_ids'])?" LEFT JOIN `inventory` ON `sales_item_id` ":"")."
         WHERE ".$o['id']." = ".prep($origin_number).(($item_number)?" AND id = ".prep($item_number):"")."
-        ".(($rma_meta['items_ids'])?"AND `sales_item_id` in (".$rma_meta['items_ids'].")":"").";";
+        ".(($rma_meta['items_ids'])?"AND `returns_item_id` NOT in (".$rma_meta['items_ids'].")":"")."
+        AND `sales_item_id` in ($si_ids);";
         // exit($line_item_select);
+        exit($line_item_select);
         $line_items = qdb($line_item_select) or die(qe()."| ".$line_item_select);
 
         foreach($line_items as $row){
@@ -98,11 +105,10 @@
         // exit($received_select."<br>".$total_select);
         //Eventual Spot to check (Maybe in query) that there has been no similar credit applied
         
-        
         $received = qdb($received_select);
         $total = qdb($total_select);
         $result = true;
-        if (mysqli_num_rows($received) < mysqli_num_rows($total)){
+        if (mysqli_num_rows($received) < mysqli_num_rows($total) || mysqli_num_rows($total) == 0){
             $result = false;
         }
         return $result;

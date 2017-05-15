@@ -4,18 +4,25 @@
     // include dompdf autoloader
     include_once $rootdir.'/dompdf/autoload.inc.php';
 	include_once $rootdir.'/inc/renderOrder.php';
-
+    include_once $rootdir.'/inc/packing-slip.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(INV|SO|PO|CM||RMA)([0-9]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|PS|SO|PO|CM||RMA)([0-9]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];
 	if ($order_type=='PO') { $order_type = 'Purchase'; }
 	else if ($order_type=='SO') { $order_type = 'Sales'; }
 	else if ($order_type=='RMA') { $order_type = 'RMA'; }
+	else if ($order_type=='PS') { $order_type = 'PS'; }
 	$order_number = $file_split[1];
 
-	$html = renderOrder($order_number,$order_type);
+    if($order_type != "PS"){
+	    $html = renderOrder($order_number,$order_type);
+    } else {
+        $file_parts = preg_replace('/^(PS)([0-9]+)([D](.*))/','$1,$2,$4',$filename);
+    	$file_split = explode(',',$file_parts);
+        $html = create_packing_slip($file_split[1],substr($file_split[2], 0,-4));
+    }
     // reference the Dompdf namespace
     use Dompdf\Dompdf;
 
