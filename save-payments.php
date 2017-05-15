@@ -126,6 +126,9 @@
 	if (isset($_REQUEST['po_order'])) { $po_order = $_REQUEST['po_order']; }
 	
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
+
+	//Special case for accounting page
+	if (isset($_REQUEST['accounting_page'])) { $accounting_page = $_REQUEST['accounting_page']; }
 	
 	if (!$payment_ID) {
 		$msg = 'Missing valid input data';
@@ -146,5 +149,9 @@
 		$payment = 'true';
 	}
 
-	header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
+	if(!$accounting_page) {
+		header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
+	} else {
+		header('Location: /accounts.php?payment=true');
+	}
 	exit;
