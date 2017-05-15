@@ -32,13 +32,13 @@
             $tracking[] = $r;
         }
 
-        foreach($tracking as $item) {
+        foreach($tracking as $i => $item) {
             $html .= "<tr>";
                 $html .= "<td>";
                     $html .= $item['package_no'];
                 $html .= "</td>";
                 $html .= "<td>";
-                    $html .= $item['tracking_no'];
+                $html .= (!$item['tracking_no'] && $i == 0)? 'None Provided' : $item['tracking_no'];
                 $html .= "</td>";
             $html .= "</tr>";
         }

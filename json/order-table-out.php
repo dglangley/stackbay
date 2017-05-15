@@ -71,8 +71,8 @@
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
             <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
-			<td class='forms_edit'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
-			<td class='forms_trash'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
+			<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
+			<td class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";
 	
 	//If the row is being updated, this information would be duplicated, so ignore it
