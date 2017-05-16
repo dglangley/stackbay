@@ -59,6 +59,18 @@
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
 	 }
+
+	 function getPackagesFix($order_number) {
+	 	$package_data = array();
+
+	 	$result = getPackages($order_number);
+
+	 	while ($row = $result->fetch_assoc()) {
+			$package_data[] = $row;
+		}
+
+	 	return $package_data;
+	 }
 	 
 	function getFreightTotal($order_number) {
 	 	$total = 0;
@@ -103,7 +115,6 @@
 	<!---->
 	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
 		<div class="pad-wrapper">
-
 			<?php 
 				include 'inc/navbar.php';
 				include_once $rootdir.'/modal/address.php';
@@ -125,35 +136,45 @@
 						}
 						if($order_number != "New" && $o['type'] == 'Sales'){
 							$rows = get_assoc_invoices($order_number);
-							if($rows){
+							//if($rows){
 							$output = '
 							<div class ="btn-group">
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-	                              <i class="fa fa-credit-card"></i>
-	                              <span class="caret"></span>
+									<i class="fa fa-credit-card"></i>
+									<span class="caret"></span>
 	                            </button>';
 	                            
 								$output .= '<ul class="dropdown-menu">';
 								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-								foreach ($rows as $invoice) {
-									$output .= '
-										<li>
-											<a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf">
-											Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
-											</a>
+								if($rows) {
+									foreach ($rows as $invoice) {
+										$output .= '
+											<li>
+												<a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf">
+												Invoice #'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
+												</a>
+											</li>';
+									}
+								} 
+									//Check to see if this order has a valid package to create an invoice
+
+									$output .= '<li>
+										<a target="_blank" href="/invoice.php?on='.$order_number.'">
+											<i class="fa fa-plus"></i> Proforma Invoice
+										</a>
 										</li>';
-								}
+								// }
 	                            $output .= "</ul>";
 								$output .= "</div>";
 								echo $output;
-							}
+							//}
 						}
 						if($order_number != "New" && $o['type'] == 'Purchase'){
 							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
 							$rows = qdb($bills_selector);
 							$output = '
 							<div class ="btn-group">
-								<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-credit-card"></i>
 	                              <span class="caret"></span>
 	                            </button>';
