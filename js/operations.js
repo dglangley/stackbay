@@ -2074,9 +2074,11 @@
 						}
 						
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
-						
+						var serial = $(this).data('inv-id');
+						// alert(serial);
+						// alert($(this).closest('tr').find('.infiniteBox').find().html());
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+$(this).attr('data-serial')+'"]').find(':selected').attr('data-boxno')+"</td>\
+										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+serial+'"]').find(':selected').attr('data-boxno')+"</td>\
 										<td>"+$(this).attr('data-part')+"</td>\
 										<td>"+$(this).attr('data-serial')+"</td>\
 										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
@@ -2281,7 +2283,9 @@
 					console.log("JSON packages_contents.php: Error");
 					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 				},				
-				
+				complete: function(){
+					$("#modal-tracking").focus();
+				}
 			});
 		}
 		else{
@@ -2367,7 +2371,9 @@
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active").removeClass('btn-grey').addClass('btn-secondary');
-					$(".box_drop").children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
+					$(".box_drop").each(function(){
+						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
+					});
 					$(".active_box_selector").each(function(){
 						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");		
 					});
@@ -3071,7 +3077,9 @@
 								.removeClass("active_box_selector")
 								.addClass("drop_box")
 								.val($serial.closest('tr').find(".active_box_selector").first().val())
-								.attr("data-associated",serial);
+								.attr("associated",result['invid'])
+								.attr("data-serial",serial)
+								.attr("data-inv-id",result['invid']);
 
 								if(qty >= 0) {
 									$serial.closest('.infiniteSerials').siblings('.remaining_qty').text(qty);

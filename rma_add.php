@@ -51,9 +51,8 @@
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
 		$rma_serial = strtoupper(grab('rmaid'));
 		$invid = grab('invid');
-		exit($rma_serial);
 		// exit($invid);
-		if($rma_serial == '') {
+
 			//Get the initial Sales Item 
 			$query = "SELECT serial_no, sales_item_id, returns_item_id FROM inventory WHERE id = ".prep($invid).";";
 			$serial_find = qdb($query) or die(qe());
@@ -62,7 +61,7 @@
 				$rma_serial = $serial_find['serial_no'];
 				$sales_item_id = $serial_find['sales_item_id'];
 			}
-		}
+
 		
 		
 		$place = grab('place');
@@ -513,11 +512,13 @@
 										?>
 										<div class="row text-center">
 											
-												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" <?=($item['returns_item_id'] ? 'disabled' : '');?>><i class="fa fa-truck"></i></button>
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive" <?=($item['returns_item_id'] ? 'disabled' : '');?>>
+													<i class="fa fa-truck"></i>
+													</button>
 											<!--</form>-->
 											
 											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
-												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
+												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' data-toggle="tooltip"data-placement="bottom" title="Exchange" value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
 											
 										</div>
 										<?php 

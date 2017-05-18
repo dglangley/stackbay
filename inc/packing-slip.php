@@ -31,23 +31,29 @@
 	    return $line_number;
 	}
 	
-
-    // Grab the order number
-    $order_number = prep(grab('on'));
+    $order_number = (grab('on'));
     $datetime = grab('date');
+    function create_packing_slip($order_number,$datetime){
+    // Grab the order number
+    $porder_number = prep($order_number);
+    $datetime = preg_replace('/%20/', ' ', $datetime);
+
     
-    $order = "SELECT * FROM sales_orders WHERE so_number = $order_number;";
+    $order = "SELECT * FROM sales_orders WHERE so_number = $porder_number;";
     $items = "
-    SELECT serial_no, tracking_no, inventory.qty, sales_item_id, inventory.id invid, inventory.partid, package_no, packages.datetime DATE, sales_orders.so_number
+    SELECT serial_no, tracking_no, sales_item_id, inventory.id invid, inventory.partid, package_no, packages.datetime DATE, sales_orders.so_number
     FROM inventory, packages, package_contents, sales_items,sales_orders
     WHERE serialid = inventory.id
     AND packageid = packages.id
     AND sales_orders.so_number = sales_items.so_number
     AND sales_items.id = `inventory`.`sales_item_id`
-    AND sales_orders.so_number = $order_number 
+    AND sales_orders.so_number = $porder_number 
     AND packages.datetime = '$datetime'
+    GROUP BY serial_no
     ORDER BY package_no ASC;";
 
+
+    
 	$order_result = qdb($order);
 	$items_results = qdb($items);
 
@@ -62,7 +68,6 @@
 	    foreach ($items_results as $i){
 	        $part = $i['partid'];
 	        $serial = $i['serial_no'];
-	        $qty = $i['qty'];
 	        $box = $i['package_no'];
 	        $tracking = $i['tracking_no'];
 	        $date = $i['DATE'];
@@ -72,8 +77,9 @@
 	        $items_info["$box,$tracking,$date"][$part]['serials'][] = $serial;
 	    }
 	}
-;
-?>
+$ps_string = '';
+$ps_string .= '
+
 
 <!DOCTYPE html>
 <html>
@@ -91,32 +97,31 @@
                 border:thin black solid;
                 padding:5px;
             }
-            @media print{
-                table{
-                    width:100%;
-                }
-                #addresses td{
-                    width:50%;
-                }
-                body{
-                    margin:0.5in;
-                }
-                #ps_bold{
-                    position: fixed;
-                    top: 0;
-                    right: 0;
-                    font-size:14pt;
-                }
-                #letter_head{
-                    position:fixed;
-                    top: 0;
-                    left: 0;
-                    font-size:10pt;
-                }
-                #footer{
-                    text-align:center;
-                }
+            table{
+                width:100%;
             }
+            #addresses td{
+                width:50%;
+            }
+            body{
+                margin:0.5in;
+            }
+            #ps_bold{
+                position: fixed;
+                top: 0;
+                right: 0;
+                font-size:14pt;
+            }
+            #letter_head{
+                position:fixed;
+                top: 0;
+                left: 0;
+                font-size:10pt;
+            }
+            #footer{
+                text-align:center;
+            }
+        
             
         </style>
     </head>
@@ -129,7 +134,6 @@
             Ventura, CA 93003
         </b></div>
         <br>
-        <div id = 'ps_bold'><b>PACKING SLIP #<?=grab('on');?></b></div>
         
         <div style="width:100%;height:60px;">&nbsp;</div>
         <!-- Shipping info -->
@@ -140,10 +144,8 @@
                 <td>Ship To</td>
             </tr>
             <tr>
-                <td><?=address_out($order_info['bill_to_id'])?></td>
-                <td><?=address_out($order_info['ship_to_id'])?></td>
-                
-                
+                <td>'.address_out($order_info['bill_to_id']).'</td>
+                <td>'.address_out($order_info['ship_to_id']).'</td>
             </tr>
         </table>
         
@@ -156,31 +158,30 @@
             </tr>
             <tr>
                 <td>
-                    <?=getContact($order_info['sales_rep_id'])?> <br>
-                    <?=getContact($order_info['sales_rep_id'],'id','phone')?><br>
-                    <?=getContact($order_info['sales_rep_id'],'id','email')?>
+                    '.getContact($order_info['sales_rep_id']).' <br>
+                    '.getContact($order_info['sales_rep_id'],'id','phone').'<br>
+                    '.getContact($order_info['sales_rep_id'],'id','email').'
                 </td>
                 
-                <td><?=getFreight('carrier',$order_info['freight_carrier_id'],'','name')?> <?=strtoupper(getFreight('services','',$order_info['freight_services_id'],'method'))?></td>
-                <td><?=$order_info['cust_ref']?></td>
-
+                <td>'.getFreight('carrier',$order_info['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$order_info['freight_services_id'],'method')).'</td>
+                <td>'.$order_info['cust_ref'].'</td>
             </tr>
         </table>
-<?php
+';
     $tracking_table  = "<table>";
     $tracking_table .= "
     <tr>
-        <td colspan='3'>Tracking Numbers</td>
+        <td colspan='2' style='text-align:center;'>Tracking Numbers</td>
     </tr>
     <tr>
-        <td>Box</td>
-        <td>Tracking Number</td>
-        <td>Shipping Date</td>
+        <td><i>Box</i></td>
+        <td><i>Tracking Number</i></td>
     </tr>
     ";
     foreach ($items_info as $box =>$part) {
+        $row_span++;
         $box = explode(",",$box);
-        echo"
+        $ps_string .="
         <table>
             <tr>
                 <td colspan = '2' style = 'border:none;'><b>
@@ -201,7 +202,7 @@
             </tr>";
             
             foreach ($part as $pid => $info) {
-                echo"
+                $ps_string .="
                 <tr>
                     <td>".getLN($order_number,$pid)."</td>
                     <td>".$info['info']['part']."</td>
@@ -211,24 +212,25 @@
                     <td>".$info['qty']."</td>
                     <td>";
                         foreach ($info['serials'] as $serial) {
-                            echo ($serial."<br>");
+                            $ps_string .= ($serial."<br>");
                         }
-                    echo "</td>";
-                echo "</tr>";
+                    $ps_string .= "</td>";
+                $ps_string .= "</tr>";
             }
-            echo "</tr>";
-        echo "</table>";
+            $ps_string .= "</tr>";
+        $ps_string .= "</table>";
         $tracking_table .= "
         <tr>
             <td>".$box[0]."</td>
             <td>".$box[1]."</td>
-            <td>".format_date($box[2],"n/j/y g:ia")."</td>
-        </tr>    
+        </tr>
         ";
     }
         $tracking_table .= "</table>";
-        echo $tracking_table;
-?>
-        <div id="footer">If you have any questions, please call us at (805)212-4959</div>
-    </body>
-</html>
+        $ps_string .= $tracking_table;
+        $ps_string .='<div id="footer">If you have any questions, please call us at (805)212-4959</div>
+            </body>
+        </html>';
+        return $ps_string;
+}
+    // create_packing_slip($order_number,$datetime);

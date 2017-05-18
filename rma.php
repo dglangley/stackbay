@@ -306,6 +306,14 @@
 				font-size:8pt;
 			}
 
+			.table td {
+				vertical-align: top !important;
+			}
+
+			.infinite {
+				min-height: 30px;
+			}
+
 		</style>
 	</head>
 	<!---->
@@ -541,6 +549,10 @@
 															echo "<a class = 'lonk history_button' data-id='".$inf['inventoryid']."'>Show more</a>";
 															break;
 														}
+														$final = $o;
+													}
+													if($final < 1){
+														echo"<br>&nbsp;";
 													}
 												} else {
 													echo "&nbsp;<br>&nbsp;";

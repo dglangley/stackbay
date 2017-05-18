@@ -604,7 +604,7 @@ include_once $rootdir.'/inc/packages.php';
 					foreach($result as $slip) {
 						//Create a date_time object
 						// Append to right the packing slip options
-						$right .= '<a target="_blank" href="/packing-slip.php?on='.$order_number.'&date='.$slip['datetime'].'"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
+						$right .= '<a target="_blank" href="/docs/PS'.$order_number.'D'.$slip['datetime'].'.pdf"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
 						$right .= '<b>Box #  ' . $slip['boxes']. '</b></a> ' .format_date($slip['datetime'], "n/j/y g:ia") . '<br>';
 						if($slip['tracking_no'])
 							$right .= 'Tracking # ' . $slip['tracking_no'] . '<br>';

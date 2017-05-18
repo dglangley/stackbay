@@ -26,19 +26,24 @@
         $tracking = array();
         $html = '';
 
-        $packages = "SELECT package_no, tracking_no FROM packages WHERE order_number = ".prep($so_number).";";
+        $packages = "SELECT * from invoices i, invoice_items ii, invoice_shipments s, packages p, package_contents pc 
+                WHERE i.order_number = ".prep($so_number)."
+                AND i.invoice_no = ii.invoice_no and ii.id = s.invoice_item_id
+                AND s.packageid = p.id and p.id = pc.packageid
+                GROUP BY s.packageid;";
+        //$packages = "SELECT package_no, tracking_no FROM packages WHERE order_number = ".prep($so_number).";";
         $result = qdb($packages) OR die(qe().'<BR>'.$packages);
         while ($r = mysqli_fetch_assoc($result)) {
             $tracking[] = $r;
         }
 
-        foreach($tracking as $item) {
+        foreach($tracking as $i => $item) {
             $html .= "<tr>";
                 $html .= "<td>";
                     $html .= $item['package_no'];
                 $html .= "</td>";
                 $html .= "<td>";
-                    $html .= $item['tracking_no'];
+                $html .= (!$item['tracking_no'] && $i == 0)? 'None Provided' : $item['tracking_no'];
                 $html .= "</td>";
             $html .= "</tr>";
         }
