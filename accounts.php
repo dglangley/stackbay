@@ -354,6 +354,14 @@
     //                 $credit = $query_row['amount'];
     //                 //$credit_total = $query_row['total'];
     //             }
+				// david's purchase credits hack for now
+				$query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s WHERE po_number = ".prep($id)." AND s.ref_1 = p.id AND s.ref_1_label = 'purchase_item_id'; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$credit = $r['price'];
+					$credit_total = $r['total'];
+				}
 	        }
 
 			$summary_rows[$id]['date'] = $row['datetime'];
@@ -371,8 +379,9 @@
         $init = true;
 
         foreach ($summary_rows as $id => $info) {
-        	$invoice_no = 0;
 	    	$paymentTotal = 0;
+/*
+        	$invoice_no = 0;
 
 	    	if($item_id && $orders_table == 'sales') {
 	         	//Grab the invoice number using the order number
@@ -407,6 +416,7 @@
                     $payments = $row['amount'];
                 }
             }
+*/
 
             $query = 'SELECT * FROM payment_details WHERE order_number = '.prep($id).' AND order_type = "'.($orders_table == 'sales' ? 'so' : 'po').'";';
             //echo $query;
@@ -421,6 +431,14 @@
 					if(mysqli_num_rows($prows) > 0){
 						//echo $query;
 						foreach ($prows as $payment) {
+//								$p_number = $r['number'];
+								$p_amount = $payment['amount'];
+								$paymentTotal += $payment['amount'];
+//								$p_type = $r['payment_type'];
+//								$p_notes = $r['notes'];
+								$p_ref = $payment['ref_type'].' '.$payment['ref_number'];
+//								$p_date = format_date($r['date']);
+/*
 							$p_number = 0;
 							$p_amount = 0;
 							$p_type = '';
@@ -440,6 +458,7 @@
 								$p_ref = $r['ref_type'].' '.$r['ref_number'];
 								$p_date = format_date($r['date']);
 					        }
+*/
 							
 							$output .= '
 								<li>

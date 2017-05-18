@@ -158,7 +158,7 @@
         
         if($type == '') {
             $display = $row['place'];
-            if($row['instance']){$display .= " - ".$row['instance'];}
+            if($row['instance']){$display .= "-".$row['instance'];}
         } else if($type == 'place') {
             $display = $row['place'];
         } else {

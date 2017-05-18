@@ -437,7 +437,7 @@ include_once $rootdir.'/inc/packages.php';
 				
 							
 							if($order_number){ 
-									$right.="			<option value = $order_number>$order_number - $company_name</option>";
+									$right.="			<option value = $order_number>$order_number $company_name</option>";
 							}
 				$right.="			</select>
 								</div>
