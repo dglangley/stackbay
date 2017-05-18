@@ -19,7 +19,6 @@
 			AND inventory_history.field_changed = 'sales_item_id'
 			AND inventory_history.value = sales_items.id
 			AND order_number = $order_number AND sales_items.so_number = order_number
-			/*AND order_type = $type*/
 			AND price > 0.00
 			GROUP BY sales_items.id;
 		";
@@ -57,28 +56,6 @@
 		$result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
 		$invoice_id =  qid();
 
-		//Select associated package orders
-
-// Aaron's commented out super ultra mega join that will eventually be useful for inventory checks and such
-//     $mystical = "SELECT '$invoice_id' as invoice_no, i.partid, si.qty sold_qty, si.price price
-//     FROM sales_items si, inventory i, package_contents pc, packages p 
-//     WHERE si.so_number = ".prep($order_number)."
-//     AND p.datetime = ".prep($shipment_datetime)."
-//     AND i.sales_item_id = si.id 
-//     AND pc.serialid = i.id 
-//     AND packageid = p.id;";
-// exit($mystical); 
-// $items_insert = "
-// INSERT INTO invoice_items(`invoice_no`, `partid`, `qty`, `price`)
-// SELECT '$invoice_id' as invoice_no, i.partid, si.qty sold_qty, si.price price
-// FROM sales_items si, inventory i, package_contents pc, packages p 
-// WHERE si.so_number = ".prep($order_number)."
-// AND p.datetime = ".prep($shipment_datetime)."
-// AND i.sales_item_id = si.id 
-// AND pc.serialid = i.id 
-// AND packageid = p.id;
-// ";
-
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
 			$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
@@ -110,18 +87,6 @@
 			";
 			qdb($package_insert) or die(qe()." ".$package_insert);
 		}/* end foreach */
-   
-		//Email here (if)
-
-    // $package_insert = "
-    // Select 
-    //     FROM packages, package_contents, inventory_history, sales_items
-    //     WHERE package_contents.packageid = packages.id
-    //     AND package_contents.serialid = inventory_history.invid
-    //     AND inventory_history.field_changed = 'sales_item_id'
-    //     AND inventory_history.value = sales_items.id
-    //     AND order_number = $order_number;
-    // ";
 
 		return $invoice_id;
 	}

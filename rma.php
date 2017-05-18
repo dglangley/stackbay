@@ -306,6 +306,14 @@
 				font-size:8pt;
 			}
 
+			.table td {
+				vertical-align: top !important;
+			}
+
+			.infinite {
+				min-height: 30px;
+			}
+
 		</style>
 	</head>
 	<!---->

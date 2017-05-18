@@ -35,7 +35,8 @@
 		} else {
 			if (! $partid OR ! is_numeric($partid)) { return ($qty); }
 
-			$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."' AND conditionid >= 0 AND status <> 'scrapped' AND status <> 'in repair'; ";
+			$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."' ";
+			$query .= "AND conditionid >= 0 AND status <> 'scrapped' AND status <> 'in repair'; ";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)==0) { return ($qty); }
 			$r = mysqli_fetch_assoc($result);

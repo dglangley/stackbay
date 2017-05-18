@@ -27,6 +27,9 @@
 	
 	$filter = $_REQUEST['filter'];
 
+	if(!$filter) 
+		$filter = 'active';
+
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 	$levenshtein = false;
@@ -326,14 +329,14 @@
 				if ($order == 'p') {
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
-					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 100;";
+					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 200;";
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number ";
-					$query .= "ORDER BY o.so_number DESC LIMIT 0, 100; ";
+					$query .= "ORDER BY o.so_number DESC LIMIT 0, 200; ";
 				} else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
-					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 100; ";
+					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else {
 					//RO Future stuff goes here
 				}
@@ -346,6 +349,8 @@
 			
 			//display only the first N rows, but output all of them
 			$count = 0;
+			$active = 1;
+			$complete = 1;
 			//Loop through the results.
 			if(!empty($results)) {
 				//print_r($results);
@@ -375,12 +380,12 @@
 					}
 				
 					if($count<=10){
-						echo'	<tr class="filter_item '.$status.'">';
+						echo'	<tr class="filter_item '.(($active <= 10 && $status == 'active_item') ? 'toggle_active' : '' ).' '.(($complete <= 10 && $status == 'complete_item') ? 'toggle_complete' : '' ).' row_'.($status == 'active_item' ? $active++ : $complete++ ).' '.$status.'">';
 					} else{
-						echo'	<tr class="show_more '.$status.'" style="display:none;">';
+						echo'	<tr class="show_more '.(($active <= 10 && $status == 'active_item') ? 'toggle_active' : '' ).' '.(($complete <= 10 && $status == 'complete_item') ? 'toggle_complete' : '' ).' row_'.($status == 'active_item' ? $active++ : $complete++ ).' '.$status.'" style="display:none;">';
 					}
 
-					echo'        <td>'.$date.'</td>';
+					echo'        <td>'.$date.'<br>'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					//Either go to inventory add or PO or shipping for SO
 					if($order == 'p') {
@@ -398,7 +403,7 @@
 					} else if($order == 'rma') {
 						echo'        <td><a href="/rma.php?rma='.$order_num.'">'.$order_num.'</a></td>';
 					}
-					echo'        <td>'.$item.'</td>';
+					echo'        <td><div class="desc">'.$item.'</div></td>';
 					echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					echo'    	<td class="status text-right">';
 					if($order == 's') {
@@ -511,14 +516,14 @@
 	<div class="table-header" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id = "filterBar">
 			<div class="col-md-1">
-			    <div class="btn-group" data-toggle="buttons">
-			        <button class="glow left large btn-report filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
+			    <div class="btn-group medium" data-toggle="buttons">
+			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-warning btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-			        <button class="glow center large btn-report filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
+			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-success btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-					<button class="glow right large btn-report filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all" checked>
+					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-info btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all">
 			        	All
 			        </button>
 			    </div>
@@ -703,14 +708,15 @@
 			$('.filter_item').hide();
 
 			if(type == 'complete') {
-				$('.complete_item').show();
 				$('.show_more').hide();
+				$('.toggle_complete').show();
 			} else if(type == 'active') {
-				$('.active_item ').show();
 				$('.show_more').hide();
+				$('.toggle_active ').show();
 			} else {
 				$('.filter_item').show();
 				$('.show_more').hide();
+				$('.status_label').show();
 			}
 		}
 		
@@ -720,22 +726,23 @@
 			
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
-			
+
 			if(type == 'complete') {
-				$('.complete_item').show();
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();
-				$(this).addClass('active');
+				$('.toggle_complete').show();
+				
+				$('.status_label').hide();
 			} else if(type == 'active') {
-				$('.active_item ').show();
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();	
-				$(this).addClass('active');
+				$('.toggle_active ').show();
+				$('.status_label').hide();
 			} else {
 				$('.filter_item').show();
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();
-				$(this).addClass('active');
+				$('.status_label').show();
 			}
 			
 			if(search != '') {
@@ -743,6 +750,7 @@
 			} else {
 				window.history.replaceState(null, null, "/operations.php?filter=" + type);
 			}
+			$(this.element).addClass('active');
 		});
 		
 	})(jQuery);

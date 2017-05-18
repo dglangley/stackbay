@@ -61,6 +61,8 @@
         	$r = mysqli_fetch_assoc($result);
 			$paid += $r['amount'];
         }
+
+        $paid = 0;
         
         //Sum the new payment with the old payment amount for the payment ID on the details level
         $check_amount += $paid;
