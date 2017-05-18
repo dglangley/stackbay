@@ -109,7 +109,9 @@
 		}
 
 		 //check to see if there are any shipments not linked to an invoice
-		 $missing_ship_invoices = array_diff($package_data, $packages_accounted);
+		if($package_data && $packages_accounted){
+			$missing_ship_invoices = array_diff($package_data, $packages_accounted);
+		}
 
 		 foreach($invoices as $shipment) {
 		 	$output .= "
