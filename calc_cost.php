@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
 	$s = '';
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $s = trim($_REQUEST['s']); }
@@ -15,7 +15,7 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			echo $r['po_number'].' '.$partid.' $'.$r['price'].' = ';
-			$cost = calcCost($r['po_number'],$partid);
+			$cost = setCost($r['po_number'],$partid);
 			echo $cost.'<BR><BR>';
 		}
 	}

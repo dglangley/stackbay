@@ -3,8 +3,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCost.php';
 
-	function calcCost($order_number,$partid=0) {
+	function setCost($order_number,$partid=0) {
 if ($GLOBALS['U']['id']<>1) { return 0; }
+
 		$total = 0;
 		$qtys = 0;
 		$purch_cost = 0;
@@ -18,9 +19,17 @@ echo 'PO'.$order_number.'<BR>';
 			$result2 = qdb($query2) OR die(qe().' '.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$qty = 1;
+				// if no serial number, then we might be dealing with 2+ qty, so check it before we wreck it
+				// like Wreck It Ralph
 				if (! $r2['serial_no'] AND $r2['qty']>1) { $qty = $r2['qty']; }
+
 				$qtys += $qty;
 				$ext = ($qty*$r['price']);
+
+				// set the cost of the purchase price itself
+				$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
+				$query3 .= "VALUES ('".$r['id']."','".$r['id']."','purchase_item_id','".$ext."'); ";
+echo $query3.'<BR>';
 
 				$total_repair = 0;
 				// get repair costs (currently from old db, but this will change)
