@@ -257,7 +257,6 @@
 			"search" =>  $search,
 			"start" => grab("start"),
 			"end" => grab("end", format_date($GLOBALS['Today'],"n/j/Y")),
-			"conditionid" => grab("conditionid"),
 			"vendor" => grab("vendor"),
 			"order" => grab("order")
 			);
@@ -292,14 +291,14 @@
 			-Date Range
 			-Condition
 			*/
-
+		
 		$query  = "SELECT i.*, p.*, i.id invid ";
 		if ($f['order'] || $f['vendor']) { $query .= ", pi.po_number "; }
 		if ($f['vendor']) { $query .= ", o.companyid "; }
 		$query .= "FROM inventory i, parts p ";
 		if ($f['order'] || $f['vendor']) { $query .= ", purchase_items pi "; }
 		if ($f['vendor']) { $query .= ", purchase_orders o "; }
-		$query .= "WHERE i.partid = p.id AND i.qty > 0 ";
+		$query .= "WHERE i.partid = p.id ";
 		if ($f['search']) {
 			$in = '';
 			//Get all the parts from the search
@@ -318,7 +317,7 @@
 		if ($f['order'] || $f['vendor']) { $query .= "AND pi.id = i.purchase_item_id "; }
 		if ($f['vendor']) {$query .= "AND o.po_number = pi.po_number"; }
 		$query .= sFilter('i.locationid', $f['locationid']);
-		$query .= sFilter('i.conditionid',$f['conditionid']);
+		// $query .= sFilter('i.conditionid',$f['conditionid']);
 		$query .= sFilter('o.companyid', $f['vendor']);
 		$query .= sFilter('pi.po_number',$f['order']);
 		if ($f['start']<>'' OR format_date($f['end'],'Y-m-d')<>$GLOBALS['today']) {

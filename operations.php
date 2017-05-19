@@ -296,6 +296,10 @@
             echo'   	<span class="line"></span>';
             echo'   	Qty';
             echo'  	</th>';
+            echo'   <th class="col-sm-1 status-column" style="display: none;">';
+            echo'   	<span class="line"></span>';
+            echo'   	Status';
+            echo'  	</th>';
 			echo'  	<th class="col-sm-1">';
             echo'   	<span class="line"></span>';
             echo'  		Action';
@@ -385,7 +389,7 @@
 						echo'	<tr class="show_more '.(($active <= 10 && $status == 'active_item') ? 'toggle_active' : '' ).' '.(($complete <= 10 && $status == 'complete_item') ? 'toggle_complete' : '' ).' row_'.($status == 'active_item' ? $active++ : $complete++ ).' '.$status.'" style="display:none;">';
 					}
 
-					echo'        <td>'.$date.'<br>'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
+					echo'        <td>'.$date.'</td>';
 					echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					//Either go to inventory add or PO or shipping for SO
 					if($order == 'p') {
@@ -405,6 +409,7 @@
 					}
 					echo'        <td><div class="desc">'.$item.'</div></td>';
 					echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
+					echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					echo'    	<td class="status text-right">';
 					if($order == 's') {
 						echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
@@ -717,6 +722,7 @@
 				$('.filter_item').show();
 				$('.show_more').hide();
 				$('.status_label').show();
+				$('.status-column').show();
 			}
 		}
 		
@@ -731,18 +737,20 @@
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();
 				$('.toggle_complete').show();
-				
+				$('.status-column').hide();
 				$('.status_label').hide();
 			} else if(type == 'active') {
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();	
 				$('.toggle_active ').show();
+				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {
 				$('.filter_item').show();
 				if($('.show_more_link:first').text() == "Show more") 
 					$('.show_more').hide();
 				$('.status_label').show();
+				$('.status-column').show();
 			}
 			
 			if(search != '') {
