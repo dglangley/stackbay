@@ -92,6 +92,7 @@
 
 		$descr = trim(str_replace('BOT GENERATED','',str_replace('*',' ',$descr)));
 		if (! $partid) {
+			continue;
 			$partid = setPart(array('part'=>$part,'heci'=>$heci,'manfid'=>$manfid,'sysid'=>$sysid,'descr'=>$descr));
 		}
 

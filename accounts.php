@@ -30,6 +30,8 @@
 	setcookie('report_type',$report_type);
 	//$report_type = 'detail';
 
+	//echo $_REQUEST['filter'] . 'test';
+
 	//For local testing
 	$report_type = $_GET['report_type'];
 
@@ -118,23 +120,36 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-		<?php //echo '<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR>' . $report_type . '<br>';?>
-		    <div class="btn-group">
-		        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
-		        <i class="fa fa-ticket"></i>	
-		        </button>
-				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
-		        	<i class="fa fa-list"></i>	
-	        	</button>
-				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			<div class="col-md-4">
+			    <div class="btn-group">
+			        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
+			        <i class="fa fa-ticket"></i>	
+			        </button>
+					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
+			        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
+			        	<i class="fa fa-list"></i>	
+		        	</button>
+					<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			    </div>
 		    </div>
-<!-- 			<div class="btn-group">
-			        <button class="glow left large btn-radio <?php if ($orders_table=='sales') { echo ' active'; } ?>" type="submit" data-value="sales">Sales</button>
-					<input type="radio" name="orders_table" value="sales" class="hidden"<?php if ($orders_table=='sales') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-radio<?php if ($orders_table=='purchases') { echo ' active'; } ?>" type="submit" data-value="purchases">Purchases</button>
-			        <input type="radio" name="orders_table" value="purchases" class="hidden"<?php if ($orders_table=='purchases') { echo ' checked'; } ?>>
-		    </div> -->
+
+		    <div class="col-md-8">
+			    <div class="btn-group medium" data-toggle="buttons">
+			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-warning btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
+			        	<i class="fa fa-sort-numeric-desc"></i>	
+			        </button>
+			        <input type="radio" name="filter" value="active" class="hidden"<?php if ($filter=='active') { echo ' checked'; } ?>>
+			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-success btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
+			        	<i class="fa fa-history"></i>	
+			        </button>
+			        <input type="radio" name="filter" value="complete" class="hidden"<?php if ($filter=='complete') { echo ' checked'; } ?>>
+					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-info btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all">
+			        	All
+			        </button>
+			        <input type="radio" name="filter" value="all" class="hidden"<?php if ($filter=='all') { echo ' checked'; } ?>>
+			    </div>
+
+			</div>
 		</td>
 
 		<td class = "col-md-3">
@@ -189,7 +204,7 @@
 		</td>
 		<td class="col-md-2 text-center">
 			<h2 class="minimal"><?=ucwords($orders_table);?></h2>
-			<a href="/accounts.php?report_type=summary&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
+			<a href="/accounts.php?report_type=<?=($report_type ? $report_type : 'summary');?><?=($_REQUEST['START_DATE'] ? '&START_DATE=' . $_REQUEST['START_DATE'] : '')?><?=($_REQUEST['END_DATE'] ? '&END_DATE=' . $_REQUEST['END_DATE'] : '')?><?=($order ? '&order=' . $order : '')?><?=($company_filter ? '&companyid=' . $company_filter : '')?>&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
 			<input type="radio" name="orders_table" value="<?=$orders_table;?>" class="hidden" checked>
 		</td>
 		<td class="col-md-2 text-center">
@@ -317,6 +332,7 @@
 	//if($report_type == 'summary'){
 	    foreach ($result as $row){
             $id = $row['order_num'];
+            $status = 'complete';
 			if ($order AND $order<>$id) { continue; }
 
 			$r['price'] = format_price($r['price'],true,'',true);
@@ -336,12 +352,22 @@
             //Query to get the credit per item
             //test for sales first
             $item_id = 0;
+            $qty_shipped = 0;
             if($orders_table == 'sales') {
-	            $query = "SELECT id FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
+	            $query = "SELECT * FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
 	            $result = qdb($query) OR die(qe().'<BR>'.$query);
                 if (mysqli_num_rows($result)>0) {
                     $query_row = mysqli_fetch_assoc($result);
                     $item_id = $query_row['id'];
+                    $qty_shipped = $query_row['qty_shipped'];
+                }
+	        } else {
+	        	$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
+	            $result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $query_row = mysqli_fetch_assoc($result);
+                    $item_id = $query_row['id'];
+                    $qty_shipped = $query_row['qty_received'];
                 }
 	        }
 
@@ -374,13 +400,18 @@
 				}
 	        }
 
+	        if($row['qty'] > $qty_shipped) {
+	        	$status = 'active';
+		    }
+
 			$summary_rows[$id]['date'] = $row['datetime'];
 			$summary_rows[$id]['cid'] = $row['cid'];
             $summary_rows[$id]['items'] += $row['qty'];
             $summary_rows[$id]['summed'] += $ext_amt;
             $summary_rows[$id]['company'] = $row['name'];
             $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
-            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'credit' => ($credit == '' ? 0 : $credit)];
+            $summary_rows[$id]['status'] = $status;
+            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
 
 
         }
@@ -502,7 +533,7 @@
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td>'.terms_calc($id, $orders_table).'</td>
-                    <td class="text-right">'.format_price($info['summed'] - $info['credit'] - $paymentTotal).'</td>
+                    <td class="text-right '.$info['status'].'">'.format_price($info['summed'] - $info['credit'] - $paymentTotal).'</td>
                 </tr>
             ';
 
@@ -517,24 +548,26 @@
                     <tbody>';
             if($init)
             	$rows .= '<tr>
-                            <th class="col-md-4">Part Description</th>
-                            <th class="col-md-2">Qty</th>
-                            <th class="col-md-2 text-right">Ext Price</th>
+                            <th class="col-md-3">Part Description</th>
+                            <th class="col-md-1">Qty</th>
+                            <th class="col-md-1">'.($orders_table == 'sales' ? 'Shipped' : 'Received').'</th>
                             <th class="col-md-2 text-right">Price (ea)</th>
-                            
-                            <th class="col-md-2 text-right">Credits</th>
+                            <th class="col-md-1 text-right">Ext Price</th>
+                            <th class="col-md-1 text-right">Credits</th>
+                            <th class="col-md-3 text-right"></th>
             		</tr>';
 
             $init = false;
 
             foreach($info['partids'] as $part) {
             	$rows .= '<tr>
-            		<td class="col-md-4">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
-            		<td class="col-md-2">'.$part['qty'].'</td>
+            		<td class="col-md-3">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
+            		<td class="col-md-1">'.$part['qty'].'</td>
+            		<td class="col-md-1">'.$part['qty_shipped'].'</td>
             		<td class="col-md-2 text-right">'.format_price($part['price'] * $part['qty']).'</td>
-            		<td class="col-md-2 text-right">'.format_price($part['price']).'</td>
-            		
-            		<td class="col-md-2 text-right">-'.format_price($part['credit']).'</td>
+            		<td class="col-md-1 text-right">'.format_price($part['price']).'</td>
+            		<td class="col-md-1 text-right">-'.format_price($part['credit']).'</td>
+            		<td class="col-md-3"></td>
             	</tr>';
             }
 
@@ -678,6 +711,7 @@
                             <tr class="nohover" style="background: #EEE;">
                             	<td colspan=""> </td>
                             	<td colspan=""> </td>
+                            	<td colspan=""> </td>
                             	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
                             	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
                             	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_payments,true,' '); ?></strong></td>
@@ -792,17 +826,7 @@
         $('#item-updated-timer').delay(1000).fadeOut('fast');
         
     })(jQuery);
-/*
 
-        $(document).ready(function() {
-			$('.btn-report').click(function() {
-				var btnValue = $(this).data('value');
-				$(this).closest("div").find("input[type=radio]").each(function() {
-					if ($(this).val()==btnValue) { $(this).attr('checked',true); }
-				});
-			});
-        });
-*/
     </script>
 
 </body>
