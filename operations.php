@@ -27,11 +27,15 @@
 	
 	$filter = $_REQUEST['filter'];
 
-	if(!$filter) 
-		$filter = 'active';
-
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
+
+	if(!$filter && !$_REQUEST['s']) { 
+		$filter = 'active';
+	} else if(!$filter && $_REQUEST['s']) {
+		$filter = 'all';
+	}
+
 	$levenshtein = false;
 	$nothingFound = true;
 	$found = false;
@@ -277,34 +281,64 @@
 	function output_header($order,$type='Order'){
 			echo'<thead>';
 			echo'<tr>';
-			echo'	<th class="col-sm-1">';
-			echo'		Date';
-			echo'	</th>';
-			echo'	<th class="col-sm-3 company_col">';
-			echo'	<span class="line"></span>';
-			echo'		Company';
-			echo'	</th>';
-            echo'	<th class="col-sm-1">';
-            echo'		<span class="line"></span>';
-            echo'		'.$type.'#';
-            echo'	</th>';
-        	echo'   <th class="col-sm-5 item_col">';
-            echo'   	<span class="line"></span>';
-            echo'       Item';
-            echo'	</th>';
-            echo'   <th class="col-sm-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
-            echo'   	<span class="line"></span>';
-            echo'   	Qty';
-            echo'  	</th>';
-            echo'   <th class="col-sm-1 status-column" style="display: none;">';
-            echo'   	<span class="line"></span>';
-            echo'   	Status';
-            echo'  	</th>';
-			echo'  	<th class="col-sm-1">';
-            echo'   	<span class="line"></span>';
-            echo'  		Action';
-            echo'  	</th>';
-            echo'</tr>';
+			if($type != 'RO') {
+				echo'	<th class="col-sm-1">';
+				echo'		Date';
+				echo'	</th>';
+				echo'	<th class="col-sm-3 company_col">';
+				echo'	<span class="line"></span>';
+				echo'		Company';
+				echo'	</th>';
+	            echo'	<th class="col-sm-1">';
+	            echo'		<span class="line"></span>';
+	            echo'		'.$type.'#';
+	            echo'	</th>';
+	        	echo'   <th class="col-sm-5 item_col">';
+	            echo'   	<span class="line"></span>';
+	            echo'       Item';
+	            echo'	</th>';
+	            echo'   <th class="col-sm-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
+	            echo'   	<span class="line"></span>';
+	            echo'   	Qty';
+	            echo'  	</th>';
+	            echo'   <th class="col-sm-1 status-column" style="display: none;">';
+	            echo'   	<span class="line"></span>';
+	            echo'   	Status';
+	            echo'  	</th>';
+				echo'  	<th class="col-sm-1">';
+	            echo'   	<span class="line"></span>';
+	            echo'  		Action';
+	            echo'  	</th>';
+	        } else {
+	        	echo'	<th class="col-sm-1">';
+				echo'		Date';
+				echo'	</th>';
+				echo'	<th class="col-sm-2 company_col">';
+				echo'	<span class="line"></span>';
+				echo'		Repair #';
+				echo'	</th>';
+	            echo'	<th class="col-sm-4">';
+	            echo'		<span class="line"></span>';
+	            echo'		Part #';
+	            echo'	</th>';
+	        	echo'   <th class="col-sm-3 item_col">';
+	            echo'   	<span class="line"></span>';
+	            echo'       Serial';
+	            echo'	</th>';
+	            echo'   <th class="col-sm-1">';
+	            echo'   	<span class="line"></span>';
+	            echo'   	Due';
+	            echo'  	</th>';
+	            echo'   <th class="col-sm-1 status-column" style="display: none;">';
+	            echo'   	<span class="line"></span>';
+	            echo'   	Status';
+	            echo'  	</th>';
+				echo'  	<th class="col-sm-1">';
+	            echo'   	<span class="line"></span>';
+	            echo'  		Action';
+	            echo'  	</th>';
+	        }
+	        echo'</tr>';
 			echo'</thead>';
 	}
 	
@@ -681,7 +715,7 @@
 		//Search parameter has been passed in that case show the search results
 		if(search != '') {
 			if(filter != '') {
-				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=" + filter);
+				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
 			} else {
 				window.history.replaceState(null, null, "/operations.php?search=" + search);
 			}
@@ -709,7 +743,7 @@
 		//Prefilter if loaded with a parameter in url
 		if(filter != '') {
 			var type = filter;
-			
+			//alert(filter);
 			$('.filter_item').hide();
 
 			if(type == 'complete') {
@@ -754,7 +788,7 @@
 			}
 			
 			if(search != '') {
-				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=" + type);
+				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
 			} else {
 				window.history.replaceState(null, null, "/operations.php?filter=" + type);
 			}
