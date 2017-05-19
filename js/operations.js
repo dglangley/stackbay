@@ -1535,7 +1535,7 @@
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
 				if ($(this).text() == "Show more"){
-					$('.col-lg-6').hide();
+					$('.col-lg-6.data-load').hide();
 					//$(this).closest("body").children(".table-header").show();
 					//$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");

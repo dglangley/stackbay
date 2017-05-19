@@ -781,8 +781,11 @@
 				$('.status_label').hide();
 			} else {
 				$('.filter_item').show();
-				if($('.show_more_link:first').text() == "Show more") 
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.show_more').hide();
+				} else {
+					$('.show_more').show();
+				}
 				$('.status_label').show();
 				$('.status-column').show();
 			}
