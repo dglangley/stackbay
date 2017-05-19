@@ -408,7 +408,7 @@
 					
 					<!-- Output the sales-rep dropdown in the top right corner -->
 					<div class="forms_section">
-						<?php if($o['type']!="invoice"){?>
+						<?php if(!$o['invoice'] && !$o['repair']){?>
 							<div style="float:right;padding-top:15px;">
 							<div class="ui-select" style="width:125px; 'margin-bottom:0;">
 								<?php
