@@ -2015,7 +2015,7 @@
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
 						if(print != '' && data['timestamp'] != null) {
-							var newWin = window.open('/packing-slip.php?on='+data['on']+'&date='+data['timestamp']+'', '_blank');
+							var newWin = window.open('/docs/PS'+data['on']+'D'+data['timestamp']+'.pdf', '_blank');
 							if (newWin) {
 							    //Browser has allowed it to be opened
 							    newWin.focus();

@@ -234,7 +234,7 @@
             $info['warranty'] = false;
             
 		}
-		else if (strtolower($type) == "repair"){
+		else if (strtolower($type) == "repair" || strtolower($type) == "ro"){
 			$info['type'] = "Repair";
 			//convenient type check
 			$info['purchase'] = false;
@@ -265,7 +265,7 @@
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
 			$info['url'] = "inventory_add";
-			$info['color'] = '#f5dfba';
+			$info['color'] = '#51bb51';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'receive_date';
 			//Field header information

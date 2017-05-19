@@ -362,15 +362,15 @@
 				<div class="col-md-4 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
-					if($o['type'] != "Invoice"){
+					if(!$o['invoice']){
 						if ($order_number=='New'){
 							echo $order_number;
 						} else {
 							echo getCompany($ORDER['companyid']);
 						}
-						echo " ".substr($o['type'],0,1)."O#";
+						echo " ".strtoupper($o['short']);
 						if ($order_number!='New'){
-							echo " $order_number";
+							echo " # $order_number";
 							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
 						}
 					} else {

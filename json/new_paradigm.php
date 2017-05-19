@@ -11,7 +11,7 @@
 //                                                                            | 
 // Last intention update: Aaron Morefield - December 5th, 2016                |
 //=============================================================================
-	header('Content-Type: application/json');
+// 	header('Content-Type: application/json');
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
 		include_once $rootdir.'/inc/dbconnect.php';
