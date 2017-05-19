@@ -163,10 +163,10 @@
     }
     
     //Function which returns the list of Master tracking boxes based off the order number
-    function master_packages($order_number){
+    function master_packages($order_number, $order_type){
         $result = array();
         $order_number = prep($order_number);
-        $query_result = qdb("SELECT min(`package_no`) masters FROM `packages` where order_number = $order_number group by `datetime`");
+        $query_result = qdb("SELECT min(`package_no`) masters FROM `packages` where order_number = $order_number AND order_type = '$order_type' group by `datetime`") or die("masters fail");
         if (mysqli_num_rows($query_result) > 0){
             foreach($query_result as $row){
                 $result[] = $row['masters'];

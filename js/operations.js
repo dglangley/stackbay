@@ -2244,7 +2244,7 @@
 			
 			var status = $(".box_selector.active").attr('data-box-shipped');
 			
-			if(status) {
+			if(status && order_type !='Purchase') {
 				$("#alert_message").show();
 			} else {
 				$("#alert_message").hide();
@@ -2370,7 +2370,7 @@
 					// alert(final);
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
-					.addClass("active").removeClass('btn-grey').addClass('btn-secondary');
+					.addClass("active").removeClass('btn-grey');
 					$(".box_drop").each(function(){
 						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
 					});
