@@ -153,9 +153,24 @@
 	 	
 	 	return $total;
 	 }
+
+	$ORDER = array('fcreated'=>'','companyid'=>0);
+	if ($order_number!='New') {
+		$o = o_params($o['type']);
+		$table = $o['order'];
+		$id = $o['id'];
+		$q = "SELECT * FROM `$table` WHERE $id = '".$order_number."'; ";
+		$result = qdb($q) or die(qe()." | $q");
+		if (mysqli_num_rows($result)){
+			$ORDER = mysqli_fetch_assoc($result);
+			$ORDER['fcreated'] = format_date($ORDER['created'],"D n/j/y g:ia");
+		}
+	}
+
+/*
 	function getOrderCreated($order_type, $order_number){
-		$o = o_params($order_type);
 		$order_number = prep($order_number);
+		$o = o_params($order_type);
 		$table = $o['order'];
 		$id = $o['id'];
 		$q = "SELECT `created` FROM `$table` where $id = $order_number;";
@@ -167,6 +182,7 @@
 			return "This has never been created!";
 		}
 	}
+*/
 ?>
 
 <!DOCTYPE html>
@@ -348,12 +364,14 @@
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if($o['type'] != "Invoice"){
 						if ($order_number=='New'){
-							echo "$order_number ";
+							echo $order_number;
+						} else {
+							echo getCompany($ORDER['companyid']);
 						}
-						echo $o['type']." Order";
+						echo " ".substr($o['type'],0,1)."O#";
 						if ($order_number!='New'){
-							echo " #$order_number";
-							echo("<br><span style = 'font-size:14px;'>".getOrderCreated($o['type'],$order_number)."</span>");
+							echo " $order_number";
+							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
 						}
 					} else {
 						echo("Invoice #".$order_number);

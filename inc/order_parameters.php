@@ -125,6 +125,8 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			
+			$info['ship'] = "ship_to_id";
+			$info['bill'] = "bill_to_id";
 			$info['order'] = "sales_orders";
 			$info['header'] = "RTV Order";
 			$info['item'] = "";

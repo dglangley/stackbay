@@ -14,6 +14,8 @@
 	
 	$searched = (grab("search") != '' ? grab("search") : grab("s"));
 	$_REQUEST['s'] = '';
+	$qty_filter = grab("qty","in_stock");
+	$cond_filter = grab("cond","good");
 
 ?>
 
@@ -123,7 +125,9 @@
 			<div class="col-md-2 col-sm-2" style='padding-right:0px;'>
 				<!--<input class="form-control" type="text" name="" placeholder="Location"/>-->
 				<div class="row" style = 'padding-right:0px;'>
-					<div class='col-md-4' style = 'padding-right:0px; max-width:120px;'><?= loc_dropdowns('place')?></div>
+					<div class='col-md-4' style = 'padding-right:0px; max-width:120px;'>
+						<?= loc_dropdowns('place')?>
+					</div>
 					<div class='col-md-4 nopadding'>
 						<div class="input-group">
 							<?= loc_dropdowns('instance')?>
@@ -186,10 +190,24 @@
 			
 			<!--Condition Drop down Handler-->
 			<div class="col-md-1 col-sm-1">
-				<?php
-					$condition_selected = grab('conditionid','');
-					echo dropdown('conditionid',$condition_selected,'','',false,"condition_global");
-				?>
+				<div class="row">
+				    <div class="btn-group condition_filters">
+				        <button class="glow filter_cond left large btn-radio<?php if ($cond_filter=='good') { echo ' active'; } ?>" type="submit" data-filter="good" data-toggle="tooltip" data-placement="bottom" title="Good">
+				        	<i class="fa fa-thumbs-up"></i>					        
+				        </button>
+				        <button class="glow right filter_cond large btn-radio<?php if ($cond_filter=='all') { echo ' active'; } ?>" type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
+				        	<i class="fa fa-square"></i>
+			        	</button>
+				    </div>
+					<div class="btn-group qty_filters">
+				        <button class="glow left large btn-radio filter_qty<?php if ($qty_filter=='in_stock') { echo ' active'; } ?>" type="submit" data-filter="in_stock" data-toggle="tooltip" data-placement="bottom" title="In Stock">
+				        	<i class="fa fa-tag"></i>
+				        </button>
+				        <button class="glow right large btn-radio filter_qty<?php if ($qty_filter=='all') { echo ' active'; } ?>" type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
+				        	<i class="fa fa-tags"></i>
+			        	</button>
+				    </div>
+			    </div>
 			</div>
 			
 			<div class="col-md-2 col-sm-2">
@@ -283,33 +301,70 @@
 <script>
 	(function($){
 		
+		$(document).on("click onload", ".filter_cond", function(){
+			var type = $(this).data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
+			var search = $("#part_search").val();
+			$(this).closest(".btn-group").find(".filter_cond").removeClass("active");
+			$(this).addClass("active");
+			//alert($('.show_more_link:first').text() == "Show more");
+			if(type == "in_stock"){
+				$(".in_stock").show();
+				$(".no_stock").hide();
+			} else {
+				$(".in_stock").show();
+				$(".no_stock").show();
+			}
+			if(search != '') {
+				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + type + "&qty="+qty);
+			} else {
+				window.history.replaceState(null, null, "/inventory.php?cond=" + type + "&qty="+qty);
+			}
+		});
+		$(document).on("click onload", ".filter_qty", function(){
+			var qty = $(this).data('filter');
+			var search = $("#part_search").val();
+			var cond = $(".condition_filters").find(".filter_cond.active").data("filter");
+			$(this).closest(".btn-group").find(".filter_qty").removeClass("active");
+			$(this).addClass("active");
+			//alert($('.show_more_link:first').text() == "Show more");
+			if(cond == "good"){
+				$(".good_stock").show();
+				$(".bad_stock").hide();
+			} else {
+				$(".good_stock").show();
+				$(".bad_stock").show();
+			}
+			if(search != '') {
+				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
+			} else {
+				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
+			}
+		});
+		
 		// $('.disabled_input').find('select').prop('disabled', true)
 		var filter_grab = function (){
-
 			//Set an array up with the filter fields from the filter bar
 			var output = {
 				place : $("#filterBar").find(".place").val(),
 				location : $("#filterBar").find(".instance").val(),
 				start : $("#filterBar").find("input[name='START_DATE']").val(),
 				end : $("#filterBar").find("input[name='END_DATE']").val(),
-				conditionid : $("#condition_global").val(),
 				vendor : $("#companyid").val()
 			};
 			console.log(output);
 			return output;
 		};
 		var inventory_history = function (search) {
-
 			var place = $("#filterBar").find(".place").val();
 			var location = $("#filterBar").find(".instance").val();
 			var start = $("#filterBar").find("input[name='START_DATE']").val();
 			var end = $("#filterBar").find("input[name='END_DATE']").val();
-			var conditionid = $("#condition_global").val();
 			var vendor = $("#companyid").val();
 			var order = $("#po_filter").val();
 			$('#loader').show();
 
-			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&conditionid="+conditionid+"&vendor="+vendor);
+			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&vendor="+vendor);
 			$.ajax({
 					type: "POST",
 					url: '/json/inventory-out.php',
@@ -319,21 +374,23 @@
 						"location" : location,
 						"start" : start,
 						"end" : end,
-						"conditionid" : conditionid,
 						"vendor" : vendor,
 						"order" : order
 					},
 					dataType: 'json',
 					complete: function() { $('#loader').hide(); },
 					success: function(part) {
+						var nothing_found = true;
+						var cond_filter = $(".condition_filters").find(".active").data("filter");
+						var qty_filter = $(".qty_filters").find(".active").data("filter");
 						if (part=='test') {
-							console.log("Nothing_found")
+							console.log("Nothing_found");
 							//$(".loading_element_listing").hide();
 					  		//alert("No Parts Found with those parameters");
 							$("#item-none").show();
 							return;
 						}
-
+							
 							// Add feature to auto update the URL without a refresh
 							if(search == '') {
 								window.history.replaceState(null, null, "/inventory.php");
@@ -399,7 +456,29 @@
 									// break apart key to get relevant data (PO)
 									var key = key.split(".");
 									console.log(key);
-									parts += "<tr class='parts-list parts-"+counter+"' data-serial= 'serial_listing_"+info.unique+"'>";
+									parts += "<tr class='parts-list parts-"+counter;
+									if(info.qty == 0){
+										parts += " no_stock ";
+									} else {
+										parts += " in_stock ";
+									}
+									if(info.conditionid > 0){
+										parts += " good_stock ";
+									} else {
+										parts += " bad_stock ";
+									}
+									
+									parts +="'";
+									
+									parts += "data-serial= 'serial_listing_"+info.unique+"'";
+									//If the part has no quantity and the filter is NOT all, show it OR if the condition is negative and the filter is not negative, hide it.
+									if((qty_filter != "all" && info.qty == 0) || (cond_filter != "all" && info.conditionid < 0)){
+										parts += "style = 'display:none;'";
+									} else {
+										nothing_found = false;
+									}
+									
+									parts += ">";
 									if (!search){
 										parts += 	"<td>"+info.part_name+"</td>";
 									}
@@ -407,13 +486,8 @@
 										parts += 	"<td>"+info.location+"</td>";
 									}
 									
-									var counterqty = info.serials.length;
-/*
-									$.each(info.serials, function(i,s_string){
-										counterqty++;
-									});
-*/
-										// parts += 	"<td><span class='check_serials' style='color: #428bca; cursor: pointer;'>"+counterqty+"</span></td>";
+									var counterqty = info.qty;
+
 										parts +=	"<td><button class = 'check_serials btn btn-sm btn-default pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
 									
 										parts += 	"<td>"+key[2]+"</td>";
@@ -442,8 +516,14 @@
 											var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
 											    return letter.toUpperCase();
 											});
-											
-											parts += "<tr class='serial_listing_"+info.unique+"' data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
+											var line_qty = serial[2];
+											parts += "<tr class='serial_listing_"+info.unique+"'";
+											if(info.conditionid > 0){
+												parts += " good_stock ";
+											} else {
+												parts += " bad_stock ";
+											}
+											parts += " data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
 											parts += "	<td class='notes_col data notes_original'>";
@@ -486,6 +566,12 @@
 								parts = "";
 		
 							});
+							if (nothing_found) {
+								console.log("Nothing_found");
+								//$(".loading_element_listing").hide();
+						  		//alert("No Parts Found with those parameters");
+								$("#item-none").show();
+							} 
 							$('.revisions').append(revisions);
 							$('.headers').append(headers);
 							
@@ -617,7 +703,9 @@
 				var actualInstance = loc_col.data('instance');
 				var actualPlace = loc_col.data('place');
 				loc_col.find('.instance').val(actualInstance);
+				loc_col.find('option[data-place='+actualPlace+']').show();
 				loc_col.find('.place').val(actualPlace);
+				
 			}
 			var con_col = $(this).closest('tr').find('.edit.condition_col');
 			if (con_col.find('.conditions_main').length === 0){

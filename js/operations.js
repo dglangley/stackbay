@@ -1366,7 +1366,7 @@
 							var line_ref_1_label = '';
 							if(order_type == "RTV"){
 								line_ref_1 = $(this).find(".line_ref").text();
-								line_ref_1_label = 'line_item_id';
+								line_ref_1_label = 'purchase_item_id';
 								order_number = 'New';
 							}
 							

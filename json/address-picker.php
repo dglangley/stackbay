@@ -19,7 +19,7 @@
     $short = $o['short'];
     $order = $o['order'];
     
-	if($companyid){
+	if($companyid AND ! $q){
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    $companyid = prep($companyid,"'25'");
 	    
@@ -28,9 +28,8 @@
 			a.`street`, a.`city`, a.`state`,a.`postal_code`
     	    FROM $order $short, addresses a
     	    WHERE $short.`$id` = a.`id` AND `companyid` = $companyid
-    	    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
     	    GROUP BY `$id` 
-    	    ORDER BY mode,recent 
+			ORDER BY mode, recent, IF(created>=DATE_SUB(CURDATE(),INTERVAL 365 DAY),0,1)
     	    LIMIT 15;";
 	    $default = qdb($d_bill);
 	    foreach ($default as $row){
@@ -44,7 +43,7 @@
         
 	if ($q) { 
         
-        $query = "SELECT * FROM `addresses`";
+        $query = "SELECT * FROM `addresses` WHERE name RLIKE '".$q."' OR street RLIKE '".$q."' OR city RLIKE '".$q."'; ";
         $results = qdb($query);
         foreach($results as $id => $row){
             $line = array(

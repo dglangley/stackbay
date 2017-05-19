@@ -15,7 +15,12 @@
 	$i = 1;
     $query = "SELECT part_number, clei, inventory_id, COUNT(*) as qty ";
 	$query .= "FROM inventory_itemlocation il, inventory_inventory i ";
-	$query .= "WHERE il.inventory_id = i.id AND i.id <> 1 AND i.id <> 5953 AND i.id <> 234081 AND i.id <> 224786 ";
+	$query .= "WHERE il.inventory_id = i.id ";
+	$query .= "AND i.id NOT IN (1,5953,234081,224786,230438,259499,247611,247259,250036,235442,224124,";
+	$query .= "224134,206940,234112,234915,240882,248715,244879,247978,206954,206914,217082,27165,15384,";
+	$query .= "15385,247973,243610,234917,232850,232814,232433,103157,123282,168238,206452,224174,227595,";
+	$query .= "76478,246677,226162) ";
+$query .= "AND location_id <> 67 AND location_id <> 80 AND location_id <> 81 AND location_id <> 125 AND location_id <> 128 AND location_id <> 69 ";
 	$query .= "GROUP BY inventory_id;";
     $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
     while ($r = mysqli_fetch_assoc($result)) {
@@ -29,7 +34,10 @@ continue;
 		$pid = prep($partid);
 
 		$aws_qty = 0;
-		$query2 = "SELECT SUM(qty) as qty FROM inventory WHERE qty > 0 AND partid = $pid GROUP BY partid;";
+		$query2 = "SELECT SUM(qty) as qty FROM inventory WHERE qty > 0 AND partid = $pid ";
+		$query2 .= "AND conditionid >= 0 AND status <> 'scrapped' AND status <> 'in repair' ";
+		$query2 .= "AND locationid <> 67 AND locationid <> 80 AND locationid <> 81 AND locationid <> 125 AND locationid <> 128 AND locationid <> 69 ";
+		$query2 .= "GROUP BY partid;";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
@@ -40,7 +48,10 @@ continue;
 		$part_partid = getPartId($r['part_number']);
 		$part_pid = prep($part_partid);
 		$part_qty = 0;
-		$query2 = "SELECT SUM(qty) as qty FROM inventory WHERE qty > 0 AND partid = $part_pid GROUP BY partid;";
+		$query2 = "SELECT SUM(qty) as qty FROM inventory WHERE qty > 0 AND partid = $part_pid ";
+		$query2 .= "AND conditionid >= 0 AND status <> 'scrapped' AND status <> 'in repair' ";
+		$query2 .= "AND locationid <> 67 AND locationid <> 80 AND locationid <> 81 AND locationid <> 125 AND locationid <> 128 AND locationid <> 69 ";
+		$query2 .= "GROUP BY partid;";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
