@@ -901,41 +901,48 @@
 				$("#address-modal-body").attr("data-oldid",'false');
 				
 				console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
-			    $.post("/json/addressSubmit.php", {
-			    	"name" : name,
-					"line_1" : line_1,
-					"line2" : line2,
-					"city" : city,
-					"state" : state,
-					"zip" : zip,
-					"id" : id
-			    },function(data){
-			    	console.log("Logging the ID (this should be false if creating new): "+id);
-			    	console.log("Return from Address Submission: "+data);
-			    	
-			    	if (!isNaN(id)){
-			    		data = id;
-			    	}
-		    		//If it didn't have an update, it is a new field
-			    	if (field == "ship_to"){
-			    		// $("#select2-ship_to-container").html(line_1);
-			    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-			    		// $("#ship_to").val(data);
+				$.ajax({
+					type: "POST",
+					url: '/json/addressSubmit.php',
+					data: {
+						"name" : name,
+						"line_1" : line_1,
+						"line2" : line2,
+						"city" : city,
+						"state" : state,
+						"zip" : zip,
+						"id" : id
+					},
+					dataType: 'json',
+					success: function(data) {
+						console.log("Logging the ID (this should be false if creating new): "+id);
+				    	console.log("Return from Address Submission: "+data);
+				    	
+				    	if (!isNaN(id)){
+				    		data = id;
+				    	}
+			    		//If it didn't have an update, it is a new field
+				    	if (field == "ship_to"){
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#ship_to"));
 							/* Let select2 do whatever it likes with this */
 							$("#ship_to").trigger('change');
-				    	}
-				    	else{
+				    	} else {
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#bill_to"));
+							$("#bill_to").val(data);
 							/* Let select2 do whatever it likes with this */
 							$("#bill_to").trigger('change');
+							// updateShipTo();
 				    	}
-			    	$('.modal').modal('hide');
-			    });
+				    	$('.modal').modal('hide');
+					},
+					error: function(xhr, status, error) {
+					   	alert(error);
+					}
+				});
 			});
 			
 			$(document).on("click", "#address-cancel", function(e) {
@@ -2749,7 +2756,7 @@
 //Address Suite of functions
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					var display = $("#bill_to").text().trim();
+					var display = $("#bill_to").find("option:selected").text().trim();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
 					$("#ship_to").setDefault(display,value);
