@@ -194,6 +194,17 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<title><?=($order_number != 'New')? (strtoupper($o['short'])." #".$order_number) : ('New '.strtoupper($o['short']) )?></title>
 
+		<style>
+			tr.strikeout td:before {
+			    content: " ";
+			    position: absolute;
+			    top: 50%;
+			    left: 0;
+			    border-bottom: 1px solid;
+			    width: 100%;
+			}
+		</style>
+
 	</head>
 	<!---->
 	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
@@ -208,7 +219,7 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:<?=$o['color']?>;">
 				
-				<div class="col-md-4">
+				<div class="col-md-3">
 					<?php
 						if($order_number != "New"){
 							if($o['type'] == 'Invoice'){
@@ -359,7 +370,7 @@
 					
 				</div>
 				
-				<div class="col-md-4 text-center">
+				<div class="col-md-6 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if(!$o['invoice']){
@@ -383,7 +394,7 @@
 					echo"</h2>";
 					?>
 				</div>
-				<div class="col-md-4">
+				<div class="col-md-3">
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
