@@ -313,17 +313,21 @@
 	        	echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
-				echo'	<th class="col-sm-2 company_col">';
+				echo'	<th class="col-sm-1 company_col">';
 				echo'	<span class="line"></span>';
-				echo'		Repair #';
+				echo'		Repair#';
 				echo'	</th>';
-	            echo'	<th class="col-sm-4">';
+	            echo'	<th class="col-sm-2">';
 	            echo'		<span class="line"></span>';
-	            echo'		Part #';
+	            echo'		Item';
 	            echo'	</th>';
 	        	echo'   <th class="col-sm-3 item_col">';
 	            echo'   	<span class="line"></span>';
 	            echo'       Serial';
+	            echo'	</th>';
+	            echo'   <th class="col-sm-3 item_col">';
+	            echo'   	<span class="line"></span>';
+	            echo'       Notes';
 	            echo'	</th>';
 	            echo'   <th class="col-sm-1">';
 	            echo'   	<span class="line"></span>';
@@ -428,7 +432,7 @@
 					if($order != 'ro') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					} else {
-						echo'        <td><a href="#">331XX</a></td>';
+						echo'        <td>331xx <a href="#"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
@@ -453,6 +457,7 @@
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
 						echo'        <td>Serial # or TBA</td>';
+						echo'        <td>Writing stuff here for references</td>';
 					}
 
 					if($order == 'ro') {

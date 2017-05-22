@@ -61,7 +61,7 @@
 		
 		//Build the display row
 	   	$row_out = "
-		<tr class='easy-output' data-record='".$row['id']."'>
+		<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
             <td class = 'line_date' data-date = '$date'>".$date."</td>
