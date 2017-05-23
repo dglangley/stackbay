@@ -167,8 +167,8 @@ function sub_rows($search = ''){
                     <!-- Created from $search -->
                     <tr class = 'items_label'>
                         <td></td>
-                        <td></td>
-                        <td></td>
+                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -219,8 +219,8 @@ function sub_rows($search = ''){
         
                     $rows .=(display_part($info));
                     $rows .= "</td>
-                        <td></td>
-                        <td></td>
+                        <td".($page =="Repair" ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
                         <td></td>
                         <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
                         <td></td>

@@ -368,7 +368,6 @@
 				 $r[$partid][$key]['serials'] = array();
 				 //$r[$partid][$key]['part_name'] =  $info['part']." ".$info['heci']; 
 				 $r[$partid][$key]['part_name'] =  $row['part']." ".$row['heci']; 
-				 $r[$partid][$key]['qty'] += $row['qty'];
 				 $r[$partid][$key]['partid'] = $row['partid'];
 				 $r[$partid][$key]['locationid'] = $row['locationid'];
 				 $r[$partid][$key]['location'] = display_location($row['locationid']);
@@ -380,6 +379,7 @@
 				 $r[$partid][$key]['notes'] = $row['notes'];
 				 $r[$partid][$key]['unique'] = $row['invid'];
 			 }
+			 $r[$partid][$key]['qty'] += $row['qty'];
 			 //Null Serial handler and serial grouping/append
 			 $serial = 'null';
 			 

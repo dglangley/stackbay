@@ -13,6 +13,7 @@
 			$info['repair'] = false;
 			
 			$info['bill'] = 'remit_to_id';
+			$info['bill_label'] = 'Remit To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "purchase_orders";
 			$info['contact_col'] = "Sales Rep";
@@ -53,6 +54,7 @@
 			
 			$info['order'] = "sales_orders";
 			$info['bill'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
@@ -131,7 +133,8 @@
 			
 			$info['ship'] = "ship_to_id";
 			$info['bill'] = "bill_to_id";
-			$info['order'] = "sales_orders";
+			$info['bill_label'] = "Bill To";
+			$info['order'] = "purchase_orders";
 			$info['header'] = "RTV Order";
 			$info['item'] = "";
 			$info['client'] = "Vendor";
@@ -141,8 +144,8 @@
 			$info['rep_type'] = "Purchase";
 			$info['date_label'] = "PO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "so";
-			$info['id'] = "so_number";
+			$info['short'] = "po";
+			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND i.ship_date IS NULL ";
 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
@@ -246,6 +249,7 @@
 			$info['repair'] = true;
 			
 			$info['bill'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "repair_orders";
 			$info['contact_col'] = "Sales Rep";
@@ -264,10 +268,10 @@
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
-			$info['url'] = "inventory_add";
-			$info['color'] = '#51bb51';
+			$info['url'] = "repair_add";
+			$info['color'] = '#beadbe';
 			$info['edit_mode'] = 'order';
-			$info['date_field'] = 'receive_date';
+			$info['date_field'] = 'due_date';
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;

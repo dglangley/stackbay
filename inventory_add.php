@@ -203,7 +203,7 @@
 								} else {
 									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
 									qdb($insert);
-									echo("<button type='button' class='btn btn-secondary active box_selector master-package' data-row-id = '".qid()."'>1</button>");
+									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
 	
 							?>
@@ -260,12 +260,14 @@
 										<?=display_part(current(hecidb($part['partid'],'id')));?>
 									</td>
 									<td  class="infiniteLocations">
-										<div class="locations_tracker" data-serial="">
-											<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
-												<?=loc_dropdowns('place')?>
-											</div>
-											<div class="col-md-6 instances" style="padding: 0 0 0 5px">
-												<?=loc_dropdowns('instance')?>
+										<div class="row row-fluid">
+											<div class="locations_tracker" data-serial="">
+												<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
+													<?=loc_dropdowns('place')?>
+												</div>
+												<div class="col-md-6 instances" style="padding: 0 0 0 5px">
+													<?=loc_dropdowns('instance')?>
+												</div>
 											</div>
 										</div>
 									</td>

@@ -42,12 +42,13 @@
 		return $f;
 	}
     
-    function package_edit($action,$id='',$order ='',$name =''){
+    function package_edit($action,$id='',$order ='',$type ='',$name =''){
     
     if ($action == 'addition'){
         $order_number = prep($order);
         $name = prep($name);
-        $insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, $name);";
+        $order_type = prep($type,'Sales');
+        $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,$order_type, $name,NOW());";
         qdb($insert) OR die(qe().": $insert");
         
         return qid();
@@ -66,7 +67,7 @@
         $update .= " WHERE ";
         $update .= "id = $row_id;";
         
-        qdb($update);
+        qdb($update) or die(qe()." $update");
         return $update;
     }
     elseif($action == "change"){
@@ -75,7 +76,7 @@
         $update = "Not Updated";
         if($assoc && $new){
             $update = "UPDATE package_contents SET packageid = $new WHERE serialid = $assoc";
-            qdb($update);
+            qdb($update) or die(qe()." $update");
         }
         return $update;
         
@@ -86,7 +87,7 @@
         $update = "Not Deleted";
         if($assoc && $new){
             $update = "DELETE FROM package_contents WHERE packageid = $new AND serialid = $assoc";
-            qdb($update);
+            qdb($update) or die(qe()." $update");
         }
         return $update;
         
@@ -97,11 +98,9 @@
 }
 	
 	//Get the freight total for a shipment returned as a float
-	function shipment_freight($order_number,$datetime = ''){
-	    $on = prep($order_number);
-	    prep($datetime);
+	function shipment_freight($order_number,$order_type,$datetime = ''){
 	    $select = "SELECT SUM(freight_amount) total FROM `packages` 
-	    WHERE `order_number` = $order_number 
+	    WHERE `order_number` = $order_number AND `order_type` = '$order_type'
 	    ".($datetime? "AND `datetime` = ".prep($datetime) : "")."
 	    ;";
 	    $result = qdb($select) or die(qe()." | $select");
