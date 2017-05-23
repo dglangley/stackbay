@@ -30,6 +30,8 @@
 		include_once $rootdir.'/inc/jsonDie.php';
 		include_once $rootdir.'/inc/getContact.php';
 		include_once $rootdir.'/inc/send_gmail.php';
+		include_once $rootdir.'/inc/order_parameters.php';
+
 
 		// initializes Amea's gmail API session
 		setGoogleAccessToken(5);
@@ -96,6 +98,7 @@
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
+    $o = o_params($order_type);
 
     
     //Form Specifics
@@ -203,22 +206,14 @@
         $assoc_order = prep($assoc_order);
         $created = prep($now);
         
-        
-        
-        if($order_type=="Purchase"){
-            $insert = "INSERT INTO `purchase_orders` (`created_by`, `created`, `companyid`, `sales_rep_id`, `contactid`, `assoc_order`,
-            `remit_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $created, $cid, $save_rep, $save_contact, $assoc_order, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
-        }
-        else{
+        if(!$o['purchase']){
     		$filename = grab('filename');
     		$filename = prep($filename);
-
-            $insert = "INSERT INTO `sales_orders`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, `cust_ref`, `ref_ln`, 
-            `bill_to_id`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
-            ($created_by, $created, $save_rep, $cid, $save_contact, $assoc_order, $filename, $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
-        }
-
+        } 
+        $insert = "INSERT INTO `".$o['order']."`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, ".((!$o['purchase'])?"`cust_ref`, `ref_ln`, " : "")."
+        `".$o['bill']."`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+        ($created_by, $created, $save_rep, $cid, $save_contact, ".((!$o['purchase'])?"$assoc_order, $filename," : "")." $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
+		exit($insert);
     //Run the update
 		$result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
@@ -228,22 +223,19 @@
     else{
         
         //Note that the update field doesn't have all the requisite fields
-        $macro = "UPDATE ";
-        $macro .= ($order_type == "Purchase")? "`purchase_orders`" :"`sales_orders`";
-        $macro .= " SET ";
+        $macro = "UPDATE ".$o['order']." SET ";
         $macro .= updateNull('sales_rep_id',$rep);
         $macro .= updateNull('companyid',$companyid);
         $macro .= updateNull('contactid',$contact);
-        if ($order_type == "Purchase"){
+        if ($o['purchase']){
             $macro .= updateNull('assoc_order',$assoc_order);
-            $macro .= updateNull('remit_to_id',$bill);
         }
         else{
             $macro .= updateNull('cust_ref',$assoc_order);
 //David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
 //            $macro .= updateNull('ref_ln','NULL');
-            $macro .= updateNull('bill_to_id',$bill);
         }
+        $macro .= updateNull($o['bill'],$bill);
         $macro .= updateNull('ship_to_id',$ship);
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('freight_services_id',$service);
@@ -251,9 +243,7 @@
         $macro .= updateNull('termsid',$terms);
         $macro .= updateNull('public_notes',$public_notes);
         $macro .= rtrim(updateNull('private_notes',$private),',');
-        $macro .= " WHERE ";
-        $macro .= ($order_type == "Purchase")? "`po_number`" :"`so_number`";
-        $macro .= " = $order_number;";
+        $macro .= " WHERE `".$o['id']."` = $order_number;";
         
         //Query the database
 
@@ -265,6 +255,7 @@
     //RIGHT HAND SUBMIT
     
 	$rows = array();
+	// $form_rows = json_decode($form_rows,true);
     if(isset($form_rows)){
 		if (count($form_rows)>0) {
 			$msg .= "<p><strong>Item Details:</strong><br/>";
@@ -304,30 +295,32 @@
             if ($record == 'new'){
                 
                 //Build the insert statements
-                $line_insert = "INSERT INTO ";
-                $line_insert .=  ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
-                $line_insert .=  " (`partid`, ";
-                $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
-                $line_insert .=  "`line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`, `id`) VALUES ";
-                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice , $ref_1, $ref_1_label, NULL, NULL, $warranty , $conditionid, NULL);";
+                $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
+                // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
+                $line_insert .=  " `line_number`, `qty`, `price` ";
+                $line_insert .= (!$o['repair'] ? ", `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`  , `warranty`, `conditionid`, " : "");
+                $line_insert .= ") VALUES ";
+                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice ";
+                $line_insert .= (!$o['repair'] ? " , $ref_1, $ref_1_label, NULL, NULL , `warranty`, `conditionid`, " : "");
+                $line_insert .= ");";
+                
                 
 				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
             }
             else{
-                $update = "UPDATE ";
-                $update .= ($order_type=="Purchase") ? "`purchase_items`" : "`sales_items`";
-                $update .= " SET 
+                $update = "UPDATE ".$o['item']." SET 
                 `partid`= $item_id,
                 `line_number`= $line_number,
                 `qty`= $qty,
-                `price`= $unitPrice, ";
-    $update .=  ($order_type == "Purchase")? "
-                `receive_date` = $date, " : "
-                `delivery_date` = $date, ";
+                `price`= $unitPrice, 
+                `".$o['date_field']."`= $date ";
+if(!$o['repair']){
     $update .= "
-                `warranty` = $warranty,
-                `conditionid` = $conditionid 
-                WHERE id = $record;";
+                `,warranty` = $warranty,
+                `conditionid` = $conditionid ";
+}
+	$update .= "
+                WHERE `id` = $record;";
 				$line_update = qdb($update) OR jsonDie(qe().' '.$line_update);
             }
         }

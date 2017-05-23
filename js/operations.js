@@ -2803,7 +2803,7 @@
 	   			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 				return;
 			}
-
+			var order_type = $("body").attr("data-order-type");
 			var sub_row = e.closest("tr");
 			var editRow = '';
 			var line_item_id = 'new';
@@ -2847,6 +2847,7 @@
 					"warranty":warranty,
 					"conditionid":conditionid,
 			       	"id":line_item_id,
+			       	"type":order_type,
 			       	"mode":mode
 				}, // serializes the form's elements.
 				dataType: 'json',

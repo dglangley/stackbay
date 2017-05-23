@@ -23,7 +23,7 @@
     
     $line = array();
 	
-	if($companyid){
+	if($companyid && !$order['repair']){
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    //$companyid = prep($companyid,"'25'");
 	    
@@ -44,6 +44,9 @@
         	$line['value'] = $id;
         	$line['display'] = getWarranty($id,'warranty');
 		}
+	} else {
+		$line['value'] = "null";
+		$line['display'] = "none";
 	}
 	echo json_encode($line);
 	exit;

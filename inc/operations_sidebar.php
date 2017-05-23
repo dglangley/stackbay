@@ -27,6 +27,7 @@ include_once $rootdir.'/inc/getAddresses.php';
 include_once $rootdir.'/inc/form_handle.php';
 include_once $rootdir.'/inc/dropPop.php';
 include_once $rootdir.'/inc/packages.php';
+include_once $rootdir.'/inc/order_parameters.php';
 
 	$rtv_items = array();
 	$rtv_array = array();
@@ -59,6 +60,7 @@ include_once $rootdir.'/inc/packages.php';
 	
 	function edit($order_number,$order_type, $mode='',$current_no = ''){
 		global $rtv_items;
+		$o = o_params($order_type);
 	//======================= DECLARE VARIABLE DEFAULTS ======================= 
 		//This will have the reference order number(s) and associated files attached to it
 		$associated_order = '';
@@ -75,39 +77,25 @@ include_once $rootdir.'/inc/packages.php';
 		
 		//If it is an old record 
 		if ($order_number != 'New'){
-			$q_form = "SELECT * FROM ";
-			$q_form .= ($order_type == 'Purchase' || strtolower($order_type) == 'rtv') ? 'purchase_orders' : 'sales_orders';
-			$q_form .= " WHERE ";
-			$q_form .= ($order_type == 'Purchase' || strtolower($order_type) == 'rtv') ? 'po_number' : 'so_number';
-			$q_form .= " = '$order_number';";
-			
-			$results = qdb($q_form);
-			
-			foreach ($results as $row){
-				$companyid = $row['companyid'];
-				$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
-				$contact = $row['contactid'];
-				if($order_type == 'Purchase'){
-					$b_add = $row['remit_to_id'];
-				}
-				else{
-					$b_add = $row['bill_to_id'];
-				}
-				$b_name = getAddresses($b_add,'street');
-				$s_add = $row['ship_to_id'];
-				$s_name = getAddresses($s_add,'street');
-				$selected_carrier = $row['freight_carrier_id'];
-				// $s_carrier_name = getFreight('carrier',$s_carrier_name)['name'];
-				$selected_service = $row['freight_services_id'];
-				$selected_account = $row['freight_account_id'];
-				$public = $row['public_notes'];
-				$private = $row['private_notes'];
-				$terms = $row['termsid'];
-				$status = $row['status'];
-				$associated_order = ($order_type == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
-				if ($order_type == 'Purchase') {$tracking = $row['tracking_no'];}
-				else { $ref_ln = $row['ref_ln']; }
-			}
+			$q_form = "SELECT * FROM ".$o['order']." WHERE ".$o['id']." = '$order_number';";
+			$results = qdb($q_form) or die(qe()." | $q_form");
+			$row = mysqli_fetch_assoc($results);
+			$companyid = $row['companyid'];
+			$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
+			$contact = $row['contactid'];
+			$b_add = $row[$o['bill']];
+			$b_name = getAddresses($b_add,'street');
+			$s_add = $row['ship_to_id'];
+			$s_name = getAddresses($s_add,'street');
+			$selected_carrier = $row['freight_carrier_id'];
+			$selected_service = $row['freight_services_id'];
+			$selected_account = $row['freight_account_id'];
+			$public = $row['public_notes'];
+			$private = $row['private_notes'];
+			$terms = $row['termsid'];
+			$status = $row['status'];
+			$associated_order = $row['cust_ref'];
+			$ref_ln = $row['ref_ln'];
 		}
 		
 		if(strtolower($order_type) == 'rtv'){
@@ -170,34 +158,21 @@ include_once $rootdir.'/inc/packages.php';
 						</div>
 					</div>
 				</div>";
-		if ($order_type == "Purchase"){
+		
 			$right .="
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>
-						<label for='bill_to'>Remit to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
+						<label for='bill_to'>".$o['bill_label']." [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
 						</label>
 		                <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
 							<option value = '$b_add'>$b_name</option>
 		                </select>
 				    </div>
 			    </div>";
-		} else {
-			//Billing Address
-				$right .="
-					<div class='row'>
-						<div class='col-sm-12' style='padding-bottom: 10px;'>	     
-							<label for='bill_to'>Bill to [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]
-							</label>
-		                    <select id='bill_to' class='form-control input-xs required' style='overflow:hidden;' data-ship-id='0' value='$b_add'>
-								<option value = '$b_add'>$b_name</option>
-		                    </select>
-					    </div>
-				    </div>";
-			}
-
+		
 		//Payment Terms and warranty
 		$right .= "	<div class='row' style='padding-bottom: 10px;'>";
-		if ($order_type == "Sales" || $order_type == 'RTV'){
+		if ($o['sales'] || $o['rtv'] || $o['repair']){
 			$right .= "		<div class='col-sm-7' id='customer_order'>";
 			// Changes the label based off of creation of the order number
 			if ($order_number != 'New' && $associated_order){
@@ -236,41 +211,12 @@ include_once $rootdir.'/inc/packages.php';
 				</div>
 		";
 		
-		//This feature will be added later ***Upload  	
-		 //$right .= "
-			// 	<div class='row'>
-			// 		<div class='col-sm-12' id='customer_order' style='padding-bottom: 10px;'>
-			// 			<label for='assoc'>Customer Order</label>
-			// 			<div class = 'input-group'>
-			// 				<input class='form-control' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
-			// 				<span class='input-group-btn'>
-			// 			        <button class='btn btn-secondary' id = 'associate_clip' type='button'>
-			// 				        <i class='fa fa-paperclip' aria-hidden='true'></i>
-			// 			        </button>
-			//     			</span>
-		 //   			</div>
-	  //  			</div>
-		 //   	</div>";
-		    	
-		//If this is a purchase order, allow a static associated tracking field to be entered.
-		// if($order_type == "Purchase"){
-		// 	$right .= "
-		// 			<div class='row'>
-		// 				<div class='col-sm-12' id='tracking_div' style='padding-bottom: 10px;'>
-		// 					<label for='tracking'>Associated Tracking #</label>
-		// 					<input class='form-control required' id = 'tracking' name='tracking' type='text' placeholder = 'Tracking #' value='$tracking'>
-		//     			</div>
-		// 			</div>";
-		// }
-		
-		
-			    	//".dropdown('warranty','','','col-sm-6',true,'warranty_global')."
 		//Shipping Address 	
 		$right .= "
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]";
-		$right .= ($order_type == "Purchase")? "" : " &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
+		$right .= ($o['purchase'])?:" &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
 		$right .=		"</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
 							<option value = '$s_add' >$s_name</option>
@@ -371,7 +317,6 @@ include_once $rootdir.'/inc/packages.php';
 		$company_name;
 		$public;
 		$s_carrier_name;
-		
 		// Aquire macro level information about the RMA Item
 		if (substr($mode,0,3) == 'RMA' && $page =='RMA'){
 			//$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";

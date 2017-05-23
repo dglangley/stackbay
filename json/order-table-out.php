@@ -26,6 +26,9 @@
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/dropPop.php';
+		include_once $rootdir.'/inc/order_parameters.php';
+		include_once $rootdir.'/inc/display_part.php';
+
 		
 	//Mode expects one of the following: update, append, load
 	//Load: only the database, output the values associated ot the order number
@@ -38,13 +41,15 @@
 	//The general purpose array-to-row output
 	function build_row($row = array()){
 		//Re-access the mode, just to prevent uncertainty of it's arrival.
-		
 		$mode = ($_REQUEST['mode'])? ($_REQUEST['mode']) : "load";
+		$o = o_params(grab("type"));
 		
 		//Process the search ID into readable text.
 		$display = '';
 		$select_display = '';
 		$partid = $row['search'];
+		//Eventually I will make this cooler - Aaron 2017
+		// $display = display_part(current(hecidb($partid,"id")));
 		$p = hecidb($partid,'id');
 		foreach ($p as $r){
             //$display = $r['part']." &nbsp; ".$r['heci'].' &nbsp; '.$r['Manf'].' '.$r['system'].' '.$r['Descr'];
@@ -64,10 +69,14 @@
 		<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
             <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
-            <td class = 'line_date' data-date = '$date'>".$date."</td>
-            <td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
-            <td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>
-            <td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
+            <td class = 'line_date' data-date = '$date'>".$date."</td>";
+		if(!$o['repair']){
+			$row_out .= "
+			<td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
+        	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
+		}
+	   	$row_out .=
+	   		"<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
             <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
@@ -93,10 +102,12 @@
 				                <span class='fa fa-calendar'></span>
 				            </span>
 			            </div>
-				    </td>
-		            <td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
-		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>
-		            <td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
+				    </td>";
+		if(!$o['repair']){
+	    $row_out .="<td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
+		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>";
+        }
+		$row_out .="<td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm oto_price' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
 		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 					<td colspan='2' id = 'check_collumn'>
@@ -153,18 +164,14 @@
 		$table = '';
 		
 		//Determine from the post to the page what we are working on. Assume new if there is no number.
-	    $order_type = isset($_REQUEST['type']) ? trim($_REQUEST['type']) : 'Purchase';
-	    $order_number = isset($_REQUEST['number']) ? trim($_REQUEST['number']) : 'New';
-
+	    
+	    
+	    $order_type = grab("type","purchase");// $order_type = isset($_REQUEST['type']) ? trim($_REQUEST['type']) : 'Purchase';
+	    $order_number = grab("number","new"); // $order_number = isset($_REQUEST['number']) ? trim($_REQUEST['number']) : 'New';
+		$o = o_params($order_type);
 	    //If this is not a new order, load the already existing information from the table.
 	    if ($order_number != 'New'){
-		    	
-				$q_form = "SELECT * FROM ";
-				$q_form .= ($order_type == 'Purchase') ? 'purchase_items' : 'sales_items';
-				$q_form .= " WHERE ";
-				$q_form .= ($order_type == 'Purchase') ? 'po_number' : 'so_number';
-				$q_form .= " = '$order_number';";
-				
+				$q_form = "SELECT * FROM ".$o['item']." WHERE ".$o['id']." = '$order_number';";
 				$old = qdb($q_form);
 				
 				foreach ($old as $r){
@@ -173,7 +180,7 @@
 					'id' => $r['id'],
 					'line' => $r['line_number'],
 					'search' => $r['partid'],
-					'date' => $r['delivery_date'].$r['receive_date'], //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+					'date' => $r[$o['date_field']], //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
 					'qty' => $r['qty'],
 					'uPrice' => $r['price'],
 					'warranty' => $r['warranty'],

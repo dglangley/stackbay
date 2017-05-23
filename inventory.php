@@ -471,6 +471,7 @@
 									parts +="'";
 									
 									parts += "data-serial= 'serial_listing_"+info.unique+"'";
+									
 									//If the part has no quantity and the filter is NOT all, show it OR if the condition is negative and the filter is not negative, hide it.
 									if((qty_filter != "all" && info.qty == 0) || (cond_filter != "all" && info.conditionid < 0)){
 										parts += "style = 'display:none;'";
@@ -509,7 +510,7 @@
 													<td colspan='12'>";
 													parts += "<table class='table serial table-hover table-condensed'>\
 																<tbody>";
-	
+									//SERIAL LEVEL ROW BUILDER	
 										$.each(info.serials, function(i,s_string){
 											var serial = s_string.split(", ");
 											
@@ -524,7 +525,7 @@
 												parts += " bad_stock ";
 											}
 											parts += " data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
-											parts += " data-invid="+serial[0]+" data-locid="+info.locationid+" data-place="+info.place+" data-instance="+info.instance+" data-name="+info.part_name+" data-cond = "+key[2]+" style='display: none;'>";	
+											parts += " data-invid='"+serial[0]+"' data-locid='"+info.locationid+"' data-place='"+info.place+"' data-instance='"+info.instance+"' data-name='"+info.part_name+"' data-cond = '"+key[2]+"' style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
 											parts += "	<td class='notes_col data notes_original'>";
 											parts += serial[4];
