@@ -203,7 +203,7 @@ if (grab("form_submitted")){
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
+			<div class="col-sm-4"><a href="/order_form.php?ps=repair&on=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage Repair</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2>Repair #<?= $order_number.' Receiving'; ?></h2>
 			</div>
@@ -222,7 +222,7 @@ if (grab("form_submitted")){
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 			<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-				<?=sidebar_out($order_number,$o['type'],$o['edit_mode'])?>
+				<?=sidebar_out($order_number,$o['type'],"display")?>
 				<!--<div class="row">-->
 				<!--	<div class="col-sm-12" style="padding-bottom: 10px;font-size:14pt; ">						-->
 				<!--		Repair Ticket #12451-->

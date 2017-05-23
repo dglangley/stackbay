@@ -83,7 +83,7 @@ include_once $rootdir.'/inc/order_parameters.php';
 			$companyid = $row['companyid'];
 			$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
 			$contact = $row['contactid'];
-			$b_add = $row[$o['bill']];
+			$b_add = $row[$o['billing']];
 			$b_name = getAddresses($b_add,'street');
 			$s_add = $row['ship_to_id'];
 			$s_name = getAddresses($s_add,'street');
@@ -313,12 +313,13 @@ include_once $rootdir.'/inc/order_parameters.php';
 	
 	function display($order_number = '',$page = 'Purchase',$mode = '',$rma_number = ''){
 		//Opens the sidebar
-		// $file = basename(__FILE__);
+		$o = o_params($page);
+		$m = o_params($mode);
 		$company_name;
 		$public;
 		$s_carrier_name;
 		// Aquire macro level information about the RMA Item
-		if (substr($mode,0,3) == 'RMA' && $page =='RMA'){
+		if (substr($mode,0,3) == 'RMA' && $o['rma']){
 			//$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE rma_number = ".prep($order_number).";";
 			$rma_macro_select = "SELECT `notes`, `order_number` FROM `returns` WHERE order_number = ".prep($order_number)." ";
 			if ($rma_number AND $rma_number<>'New') { $rma_macro_select .= "AND rma_number = ".$rma_number." "; }
@@ -337,28 +338,23 @@ include_once $rootdir.'/inc/order_parameters.php';
 		// }
 		$right .= "		<div class='sidebar-container'>";
 
-		if ($order_number && !($page == "bill")) {
+		if ($order_number && !($o['bill'])) {
 			
-			$order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
-			$num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
+			// $order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
+			$order = $o['order'];
+			// $num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
+			$num_type = $o['id'];
 			
 			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
-			$results = qdb($query);
-			
+			$results = qdb($query) or die(qe());
 			foreach ($results as $row){
 				$companyid = $row['companyid'];
-				$orderNumber = ($page == 'Purchase') ? $row['assoc_order'] : $row['cust_ref'];
-				$company_name = (!empty($companyid) ? getCompany($companyid) : '- Select a Company -');
+				$company_name = getCompany($companyid);
 				$contact = $row['contactid'];
-				$ref_ln = '';
-				if($page == 'Purchase'){
-					$b_add = $row['remit_to_id'];
-				}
-				else{
-					$b_add = $row['bill_to_id'];
-					$ref_ln = $row['ref_ln'];
-				}
+				$ref_ln = $row['ref_ln'];
+				$b_add = $row[$o['billing']];
 				$b_name = getAddresses($b_add,'name');
+				$orderNumber = $row['cust_ref'];
 				$s_add = $row['ship_to_id'];
 				$s_name = getAddresses($s_add,'name');
 				$selected_carrier = $row['freight_carrier_id'];
@@ -370,7 +366,8 @@ include_once $rootdir.'/inc/order_parameters.php';
 				$terms = $row['termsid'];
 			}
 			
-			if($page != "RMA" && $mode != 'bill'){
+			if(!$o['rma'] && !$m['bill']){
+				/*
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;'>						
@@ -388,7 +385,8 @@ include_once $rootdir.'/inc/order_parameters.php';
 								</div>
 							</div>
 						</div>";
-			}else if ($mode != 'bill'){
+						*/
+			}else if ($o['rma']){
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
@@ -457,11 +455,9 @@ include_once $rootdir.'/inc/order_parameters.php';
 						"<b style='color: #526273;font-size: 12px;'>".getContact($contact)."</b><br><br>";
 				
 			//Order Number
-			if($ref_ln != '') {
+			if($o['sales']) {
 				$right .= "<a href='".$ref_ln."'><i class='fa fa-file fa-4' aria-hidden='true'></i> " . $orderNumber . "</a><br><br>";
-			} else {
-				$right .=  $orderNumber . "<br><br>";
-			}
+			} 
 			
 			if($page != "RMA"){
 				//Addresses

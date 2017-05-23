@@ -11,8 +11,9 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
-			$info['bill'] = 'remit_to_id';
+			$info['billing'] = 'remit_to_id';
 			$info['bill_label'] = 'Remit To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "purchase_orders";
@@ -51,9 +52,10 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['order'] = "sales_orders";
-			$info['bill'] = 'bill_to_id';
+			$info['billing'] = 'bill_to_id';
 			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
@@ -91,6 +93,7 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 
 			$info['order'] = "invoices";
@@ -130,9 +133,10 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['ship'] = "ship_to_id";
-			$info['bill'] = "bill_to_id";
+			$info['billing'] = "bill_to_id";
 			$info['bill_label'] = "Bill To";
 			$info['order'] = "purchase_orders";
 			$info['header'] = "RTV Order";
@@ -170,6 +174,7 @@
 			$info['rma'] = true;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			
 			$info['order'] = "returns";
@@ -210,6 +215,7 @@
 			$info['rma'] = false;
 			$info['credit'] = true;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['order'] = "sales_credits";
 			$info['id'] = "id";
@@ -247,8 +253,9 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = true;
+			$info['bill'] = false;
 			
-			$info['bill'] = 'bill_to_id';
+			$info['billing'] = 'bill_to_id';
 			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "repair_orders";
@@ -275,8 +282,16 @@
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
-		}
-		else{
+		} else if (strtolower($type) == "bill"){
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = false;
+			$info['bill'] = true;
+		} else{
 			$info['case'] = $type;
 		}
 		return $info;

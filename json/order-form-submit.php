@@ -211,7 +211,7 @@
     		$filename = prep($filename);
         } 
         $insert = "INSERT INTO `".$o['order']."`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, ".((!$o['purchase'])?"`cust_ref`, `ref_ln`, " : "")."
-        `".$o['bill']."`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
+        `".$o['billing']."`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
         ($created_by, $created, $save_rep, $cid, $save_contact, ".((!$o['purchase'])?"$assoc_order, $filename," : "")." $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
 
     //Run the update
@@ -235,7 +235,7 @@
 //David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
 //            $macro .= updateNull('ref_ln','NULL');
         }
-        $macro .= updateNull($o['bill'],$bill);
+        $macro .= updateNull($o['billing'],$bill);
         $macro .= updateNull('ship_to_id',$ship);
         $macro .= updateNull('freight_carrier_id',$carrier);
         $macro .= updateNull('freight_services_id',$service);
