@@ -18,6 +18,7 @@
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/dictionary.php';
+	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getPart.php';
@@ -36,121 +37,46 @@
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
-	$order_type = "Sales";
+	$order_type = "Repair";
 	
 	$so_updated = $_REQUEST['success'];
 	
-	//If no order is selected then return to shipping home
 	if(empty($order_number)) {
 		//header("Location: /shipping_home.php");
 		//die();
 	}
 	
 	
-	$sales_order;
+	$repair_order;
 	$notes;
-	$shipid;
-	$selected_carrier;
-	$selected_service;
-	$selected_account;
+	$sales_rep_id;
+	$status;
 	$exchange = false;
 	
 	//get the information based on the order number selected
-	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
+	$query = "SELECT * FROM repair_orders WHERE ro_number = ". prep($order_number) .";";
 	$result = qdb($query) OR die(qe());
 	
 	if (mysqli_num_rows($result)>0) {
 		$result = mysqli_fetch_assoc($result);
-		$sales_order = $result['so_number'];
+		$repair_order = $result['ro_number'];
 		$notes = $result['public_notes'];
-		$shipid = $result['ship_to_id'];
-		$selected_carrier = $result['freight_carrier_id'];
-		$selected_service = $result['freight_services_id'];
-		$selected_account = $result['freight_account_id'];
+		$sales_rep_id = $result['sales_rep_id'];
 		$status = $result['status'];
 	}
 	
-	function getItems($so_number = 0, $exchange) {
-		$sales_items = array();
+	function getItems($ro_number = 0) {
+		$repair_items = array();
 		$query;
-		//First run a check just in case the sales order was changed recently and reflect the changes (E.G. qty order was increase, if qty is less than order admin may need to intervene)
 		
-//david 2-28-17
-//		$query = "UPDATE sales_items SET ship_date = NULL WHERE so_number = ". res($so_number) ." AND qty_shipped < qty;";
-//		qdb($query);
-		
-		//Get all the items, including old items from the sales order.
-		if($so_number != 0) {
-			$query = "SELECT * FROM sales_items WHERE so_number = ". prep($so_number) ." ORDER BY ship_date, ref_2 DESC;";
-			$result = qdb($query) OR die(qe());
-					
-			while ($row = $result->fetch_assoc()) {
-				$sales_items[] = $row;
-			}
-		}
-		
-		return $sales_items;
-	}
-	
-	// print_r(getItems($sales_order));
-	
-	function getPartName($partid) {
-		$part;
-		
-		$query = "SELECT part FROM parts WHERE id = ". res($partid) .";";
+		$query = "SELECT * FROM repair_items WHERE ro_number = ". prep($ro_number) .";";
 		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$part = $result['part'];
-		}
-	
-		return $part;
-	}
-	
-	function getInventory($partid) {
-		$inventory = array();
-		$partid = prep($partid);
-		$query = "SELECT DISTINCT place, instance FROM inventory i, locations l WHERE partid = $partid AND `qty` > 0 AND i.locationid = l.id;";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$inventory[] = $row;
-			}
+				
+		while ($row = $result->fetch_assoc()) {
+			$repair_items[] = $row;
 		}
 		
-		return $inventory;
-	}
-	
-	function getHistory($itemid) {
-		$listSerials;
-		
-		$query = "SELECT * FROM inventory WHERE sales_item_id = '". res($itemid) ."';";
-		$result = qdb($query);
-	    
-	    if($result)
-	    if (mysqli_num_rows($result)>0) {
-			while ($row = $result->fetch_assoc()) {
-				$listSerials[] = $row;
-			}
-		}
-		
-		return $listSerials;
-	}
-	
-	function getComments($invid) {
-		$comment;
-		
-		$query = "SELECT * FROM inventory WHERE id = ". res($invid) .";";
-		$result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$comment = $result['notes'];
-		}
-		
-		return $comment;
+		return $repair_items;
 	}
 	
 	function getDateStamp($order_number) {
@@ -177,12 +103,23 @@
 
 	    return $display;
 	}
-	
-	if (grab('exchange')){
-		$exchange = grab('exchange');
+
+	function grabActivities($ro_number){
+		$repairs_activities = array();
+		$query;
+		
+		$query = "SELECT * FROM repairs_activities WHERE ro_number = ". prep($ro_number) .";";
+		$result = qdb($query) OR die(qe());
+				
+		while ($row = $result->fetch_assoc()) {
+			$repairs_activities[] = $row;
+		}
+
+		return $repairs_activities;
 	}
 	
-	$items = getItems($sales_order, $exchange);
+	$items = getItems($repair_order);
+	$activities = grabActivities($repair_order);
 ?>
 	
 
@@ -272,196 +209,175 @@
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/component_request.php';
 		?>
-		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
-			<div class="col-md-4">
-				<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
-				<?php } ?>
+		<form action="repair_activities.php" method="post">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
+				<div class="col-md-4">
+					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
+					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<?php } ?>
+				</div>
+				
+				<div class="col-md-4 text-center">
+					<?php
+						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
+							echo "Repair Ticket ";
+						if ($order_number!='New'){
+							echo "#$order_number";
+						}
+						if (strtolower($status) == 'void'){
+							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
+						}
+						echo"</h2>";
+					?>
+				</div>
+				<div class="col-md-4">
+					<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
+					<input type="text" name="techid" value="<?=$U['contactid'];?>" class="hidden">
+					<?php if($activites): foreach($activites as $activity) { ?>
+							<input type="text" name="repair_item_id" value="<?=$activity['id'];?>" class="hidden">
+					<?php } endif; ?>
+
+					<input type="text" name="type" value="check_in" class="hidden">
+					<button class="btn-flat success pull-right btn-update" type="submit" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button>
+
+	<!-- 				<input type="text" name="type" value="check_out" class="hidden">
+					<button class="btn-flat danger pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check Out</button> -->
+
+					<button class="btn-flat info pull-right btn-update" type="submit" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>			
+				</div>
 			</div>
 			
-			<div class="col-md-4 text-center">
-				<?php
-					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
-						echo "Repair Ticket ";
-					if ($order_number!='New'){
-						echo "#$order_number";
-					}
-					if (strtolower($status) == 'void'){
-						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
-					}
-					echo"</h2>";
-				?>
-			</div>
-			<div class="col-md-4">
-				<!-- <button class="btn-flat success pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button> -->
-				<button class="btn-flat danger pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check Out</button>
-				<button class="btn-flat info pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>
-			</div>
-		</div>
-		
-		<?php if($ro_updated == 'true'): ?>
-			<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
-			    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-			    <!-- <strong>Success!</strong> <?= ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated. -->
-			</div>
-		<?php endif; ?>
+			<?php if($ro_updated == 'true'): ?>
+				<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 95px;">
+				    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+				    <!-- <strong>Success!</strong> <?= ($po_updated ? 'Purchase' : 'Sales'); ?> Order Updated. -->
+				</div>
+			<?php endif; ?>
+		</form>	
+			<div class="loading_element">
+				<div class="row remove-margin">
+					<!--================== Begin Left Half ===================-->
+					<div class="left-side-main col-sm-2">
+						<div class="row company_meta left-sidebar" style="height:100%; padding: 0 10px;">		
+							<div class="sidebar-container">
+								<div class="row">
+									<div class="col-sm-12" style="padding-bottom: 10px; margin-top: 15px;">						
+										<div class="order">
+											<?=$order_number;?>
+										</div>
+									</div>
+								</div>
 
-		<div class="loading_element">
-			<div class="row remove-margin">
-				<!--================== Begin Left Half ===================-->
-				<div class="left-side-main col-sm-2">
-					<div class="row company_meta left-sidebar" style="height:100%; padding: 0 10px;">		
-						<div class="sidebar-container">
-							<div class="row">
-								<div class="col-sm-12" style="padding-bottom: 10px; margin-top: 15px;">						
-									<div class="order">
-										<?=$order_number;?>
+								<div class="row">
+									<div class="col-md-12">
+										<b style="color: #526273;font-size: 14px;">Rep</b><br><br>
+										<b style="color: #526273;font-size: 14px;">Due</b><br><br>
+										<b style="color: #526273;font-size: 14px;">Notes</b><br>
+										Lorem ipsum dolor sit amet, bonorum imperdiet duo ne, homero legere in quo, ea ridens audiam dissentiunt sed.
+										<br>
 									</div>
 								</div>
 							</div>
+						</div>
+					</div>
+					<!--======================= End Left half ======================-->
+					
+					<div class="col-sm-10 shipping-list" style="padding-top: 20px">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="table-responsive">
+									<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+										<thead>
+											<tr>
+												<th class="col-md-6">Part Number</th>
+												<th class="col-md-6">SERIAL</th>
+											</tr>
+										</thead>
+										<?php
+											$serial;
 
-							<div class="row">
-								<div class="col-md-12">
-									<b style="color: #526273;font-size: 14px;">Rep</b><br><br>
-									<b style="color: #526273;font-size: 14px;">Due</b><br><br>
-									<b style="color: #526273;font-size: 14px;">Notes</b><br>
-									Lorem ipsum dolor sit amet, bonorum imperdiet duo ne, homero legere in quo, ea ridens audiam dissentiunt sed.
-									<br>
+											if(!empty($items))
+											foreach($items as $item): 
+												$query = "SELECT serial_no FROM inventory WHERE id = ".prep($item['invid']).";";
+												$result = qdb($query) or die(qe() . ' ' . $query);
+
+												if (mysqli_num_rows($result)>0) {
+													$r = mysqli_fetch_assoc($result);
+													$serial = $r['serial_no'];
+												}
+										?>
+											<tr class="" style = "padding-bottom:6px;">
+												<td><?=format($item['partid'], true);?></td>
+												<td><?=$serial;?></td>
+											</tr>
+											
+										<?php endforeach; ?>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">	
+								<div class="table-responsive">
+									<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+										<thead>
+											<tr>
+												<th>Date / Time</th>
+												<th>Tech</th>
+												<th>Activity</th>
+											</tr>
+										</thead>
+										<?php
+										// print_r($U);
+											if($activities)
+											foreach($activities as $activity):
+										?>
+											<tr class="" style = "padding-bottom:6px;">
+												<td><?=format_date($activity['datetime'], 'n/j/y, H:i:s');?></td>
+												<td><?=getContact($activity['techid']);?></td>
+												<td><?=$activity['notes'];?></td>
+											</tr>
+										<?php endforeach; ?>
+									</table>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12">	
+								<div class="table-responsive">
+									<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+										<thead>
+											<tr>
+												<th>Component</th>
+												<th>Order Qty</th>
+												<th>Available Qty</th>
+												<th>PO
+													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle filter_status pull-right" type="submit" data-filter="complete">
+											        	<i class="fa fa-plus"></i>	
+											        </button>
+				        						</th>
+											</tr>
+										</thead>
+										<?php
+										?>
+											<tr class="" style = "padding-bottom:6px;">
+												<td><?=format('311173', true);?></td>
+												<td></td>
+												<td></td>
+												<td></td>
+											</tr>
+											
+										<?php //endforeach; ?>
+									</table>
 								</div>
 							</div>
 						</div>
 					</div>
+				<!--End Row-->
 				</div>
-				<!--======================= End Left half ======================-->
-				
-				<div class="col-sm-10 shipping-list" style="padding-top: 20px">
-					<div class="row">
-						<div class="col-md-6">
-							<div class="table-responsive">
-								<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
-									<thead>
-										<tr>
-											<th class="col-md-6">Part Number</th>
-											<th class="col-md-6">SERIAL</th>
-										</tr>
-									</thead>
-									<?php
-										//Grab a list of items from an associated sales order.
-										// $serials = array();
-										// if(!empty($items))
-										// foreach($items as $item): 
-										// 	$inventory = getInventory($item['partid']);
-										// 	$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
-										// 	$serials = qdb($select);
-										// 	//print_r($inventory);
-										// 	$parts = explode(' ',getPartName($item['partid']));
-										// 	$part = $parts[0];
-									?>
-										<tr class="" style = "padding-bottom:6px;">
-											<td><?=format('311173', true);?></td>
-											<td>9AC4DCSDGT</td>
-										</tr>
-										
-									<?php //endforeach; ?>
-								</table>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-md-6">	
-							<div class="table-responsive">
-								<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
-									<thead>
-										<tr>
-											<th>Date / Time</th>
-											<th>Tech</th>
-											<th>Activity 
-												
-										    </th>
-										</tr>
-									</thead>
-									<?php
-										//Grab a list of items from an associated sales order.
-										// $serials = array();
-										// if(!empty($items))
-										// foreach($items as $item): 
-										// 	$inventory = getInventory($item['partid']);
-										// 	$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
-										// 	$serials = qdb($select);
-										// 	//print_r($inventory);
-										// 	$parts = explode(' ',getPartName($item['partid']));
-										// 	$part = $parts[0];
-									?>
-										<tr class="" style = "padding-bottom:6px;">
-											<td><?=format_date($now, 'n/j/y, H:i:s');?></td>
-											<td>Aaron</td>
-											<td>Broke Everything</td>
-										</tr>
-
-										<tr class="" style = "padding-bottom:6px;">
-											<td><?=format_date($now, 'n/j/y, H:i:s');?></td>
-											<td>David</td>
-											<td>Fixed Everything</td>
-										</tr>
-
-										<tr class="" style = "padding-bottom:6px;">
-											<td><?=format_date($now, 'n/j/y, H:i:s');?></td>
-											<td>Andrew</td>
-											<td>Broke it again</td>
-										</tr>
-										
-									<?php //endforeach; ?>
-								</table>
-							</div>
-						</div>
-					</div>
-
-					<div class="row">
-						<div class="col-md-12">	
-							<div class="table-responsive">
-								<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
-									<thead>
-										<tr>
-											<th>Component</th>
-											<th>Order Qty</th>
-											<th>Available Qty</th>
-											<th>PO
-												<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle filter_status pull-right" type="submit" data-filter="complete">
-										        	<i class="fa fa-plus"></i>	
-										        </button>
-			        						</th>
-										</tr>
-									</thead>
-									<?php
-										//Grab a list of items from an associated sales order.
-										// $serials = array();
-										// if(!empty($items))
-										// foreach($items as $item): 
-										// 	$inventory = getInventory($item['partid']);
-										// 	$select = "SELECT DISTINCT `serial_no`, i.id, `packageid`, p.datetime FROM `inventory` AS i, `package_contents`, `packages` AS p WHERE i.id = serialid AND sales_item_id = ".prep($item['id'])." AND p.id = packageid AND p.order_number = ".prep($order_number).";";
-										// 	$serials = qdb($select);
-										// 	//print_r($inventory);
-										// 	$parts = explode(' ',getPartName($item['partid']));
-										// 	$part = $parts[0];
-									?>
-										<tr class="" style = "padding-bottom:6px;">
-											<td><?=format('311173', true);?></td>
-											<td></td>
-											<td></td>
-											<td></td>
-										</tr>
-										
-									<?php //endforeach; ?>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-			<!--End Row-->
+			<!--End Loading Element-->
 			</div>
-		<!--End Loading Element-->
-		</div>
-		
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>

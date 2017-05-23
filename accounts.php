@@ -43,6 +43,8 @@
 	
 	$keyword = '';
 	$part_string = '';
+
+	$filter = $_REQUEST['filter'];
 /*
 	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
     	$keyword = $_REQUEST['part'];
@@ -99,6 +101,18 @@
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
 	?>
+	<style>
+		.goog-te-banner-frame.skiptranslate {
+		    display: none !important;
+	    } 
+		body {
+		    top: 0px !important; 
+	    }
+
+/*	    .complete {
+	    	color: rgb(129, 189, 130) !important;
+	    }*/
+	</style>
 </head>
 
 <body class="sub-nav accounts-body">
@@ -135,18 +149,18 @@
 
 		    <div class="col-md-8">
 			    <div class="btn-group medium" data-toggle="buttons">
-			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-warning btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
+			        <button data-toggle="tooltip" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-warning btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active' : '');?>">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-			        <input type="radio" name="filter" value="active" class="hidden"<?php if ($filter=='active') { echo ' checked'; } ?>>
-			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-success btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
+			        <input type="radio" value="active" class="filter_radio active_radio hidden" <?php if ($filter=='active' || !$filter) { echo ' checked'; } ?>>
+			        <button data-toggle="tooltip" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-success btn-sm middle filter_status <?=($filter == 'complete' ? 'active' : '');?>">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-			        <input type="radio" name="filter" value="complete" class="hidden"<?php if ($filter=='complete') { echo ' checked'; } ?>>
-					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-info btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all">
+			        <input type="radio" value="complete" class="filter_radio complete_radio hidden"<?php if ($filter=='complete') { echo ' checked'; } ?>>
+					<button data-toggle="tooltip" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-info btn-sm right filter_status <?=(($filter == 'all') ? 'active' : '');?>">
 			        	All
 			        </button>
-			        <input type="radio" name="filter" value="all" class="hidden"<?php if ($filter=='all') { echo ' checked'; } ?>>
+			        <input type="radio" value="all" class="filter_radio all_radio hidden"<?php if ($filter=='all') { echo ' checked'; } ?>>
 			    </div>
 
 			</div>
@@ -824,6 +838,15 @@
         });
 
         $('#item-updated-timer').delay(1000).fadeOut('fast');
+
+        $(document).on("click", ".filter_status", function(){
+			//var type = $(this).data('filter');
+			$('input[type=radio]').prop("disable", true);
+			$('input[type=radio]').show();
+			//$("."+type).prop("checked", true);
+			//alert('stop');
+			//submit();
+		});
         
     })(jQuery);
 
