@@ -5,8 +5,6 @@
 //==============================================================================
 //  Description to come when I have a better sense of all the functions this   |
 //	will cover.                                                                |
-//                                                                             |
-//	                                                        				   |
 //																			   |
 //	Aaron Morefield - February 28nd, 2017               					   |
 //==============================================================================
@@ -54,7 +52,7 @@
 	if ($rma_number && !$so_number){
 		$query = "SELECT order_number FROM `returns` WHERE rma_number = ".prep($rma_number)." AND order_type = 'Sale';";
 		// echo($query);
-		$result = qdb($query);
+		$result = qdb($query) or die(qe()." $query");
 		// exit;
 		if (mysqli_num_rows($result)){
 			$result = mysqli_fetch_assoc($result);
@@ -122,10 +120,10 @@
 	        	$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
 	        	$rmaSave = qdb($partidQuery) or die(qe());
 	        	
-	        	if (mysqli_num_rows($rmaSave)>0) {
+	        	if (mysqli_num_rows($rmaSave)) {
 					$rmaSave = mysqli_fetch_assoc($rmaSave);
 					$partid = $rmaSave['partid'];
-					$so_number = $rmaSave['sales_item_id'];
+					$so_line_id = $rmaSave['sales_item_id'];
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
@@ -628,7 +626,13 @@
 				var row = $(this).data('row');
 				$(this).closest("tr").find(".serials-col").find(".brow-"+row).attr('checked', 'checked');
 			});
-			
+			$(document).on("keyup", "#rma_notes", function(){
+				$('#rma_save_button').removeClass('gray');
+				$('#rma_save_button').addClass('success');
+				$('#rma_save_button').prop('disabled', false);
+				var row = $(this).data('row');
+				$(this).closest("tr").find(".serials-col").find(".brow-"+row).attr('checked', 'checked');
+			});
 		})(jQuery);
 		
 		function validateForm() {

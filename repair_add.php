@@ -30,11 +30,12 @@
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/credit_creation.php';
+	include_once $rootdir.'/inc/order_parameters.php';
 
 
 	//Set initials to be used throughout the page
 	$order_number = grab('on');
-	$order_type = "ro";
+	$o = o_params("ro");
 	
 	//Variables used for the post save
 	$rma_serial = '';
@@ -45,6 +46,54 @@
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
+	
+	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
+	function getRepairParts ($order_number) {		
+		$listPartid;
+		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
+		$query = "SELECT id, partid FROM repair_items WHERE ro_number = ".prep($order_number)." GROUP BY partid;";
+		$result = qdb($query) or die(qe()." $query");
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listPartid[] = $row;
+			}
+		}
+		
+		return $listPartid;
+	}
+	
+
+	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
+	function getRepairItems($partid, $order_number) {
+
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid 
+		FROM return_items  as r, inventory as i 
+		WHERE r.partid = ". res($partid) ." 
+		AND i.id = r.inventoryid 
+		AND r.rma_number = ".res($order_number).";";
+		$result = qdb($query);
+	    
+	    if($result)
+	    if (mysqli_num_rows($result)>0) {
+			while ($row = $result->fetch_assoc()) {
+				$listSerial[] = $row;
+			}
+		}
+		
+		return $listSerial;
+	}
+	
+	if (grab("form_submitted")){
+		$place = grab("place");
+		$instance = grab("instance");
+		$condition = grab("condition");
+		echo("$place | $instance | $condition | ");
+		exit;
+	}
+	
+	$partsListing = getRepairParts($order_number);
 ?>
 
 <!DOCTYPE html>
@@ -119,7 +168,7 @@
 		</style>
 	</head>
 	
-	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav" id="rma-add" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
@@ -152,9 +201,7 @@
 			
 			<div class="col-sm-10">
 				<form method="post">
-				<div class="row" style="margin: 20px 0;">
-					
-					
+					<div class="row" style="margin: 20px 0;">
 						<div class="col-md-7" style="padding-left: 0px !important;">
 							<div class="col-md-6 location">
 								<div class="row">
@@ -173,11 +220,16 @@
 								</div>
 							</div>
 							
-							<div class="col-md-6" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
+							<div class="col-md-5" style="padding: 0 0 0 5px;">
+							    <input class="form-control input-sm serialInput auto-focus" name="repairid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
 				            </div>
+				            <div class="col-md-1" style="padding: 0 0 0 5px;">
+								<button type='submit'>submit</button>
+							</div>
+						    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
 			            </div>
-				</div>
+					</div>
+				</form>
 			
 				<div class="table-responsive">
 					<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
@@ -195,18 +247,18 @@
 					        	<th class="text-center col-sm-2">
 									Location
 					        	</th>
-					        	<th class="text-right col-sm-1">
-					        		Receive
-					        	</th>
+					        	<!--<th class="text-right col-sm-1">-->
+					        	<!--	Receive-->
+					        	<!--</th>-->
 					         </tr>
 						</thead>
 						
 						<tbody>
 						<?php 
-							// //Grab all the parts from the specified PO #
-							// if(!empty($partsListing)) {
-							// 	foreach($partsListing as $part): 
-							// 		$serials = getRMAitems($part['partid'],$order_number);
+							//Grab all the parts from the specified PO #
+							if(!empty($partsListing)) {
+								foreach($partsListing as $part): 
+									$serials = getRepairItems($part['partid'],$order_number);
 
 						?>
 								<tr>
@@ -215,33 +267,74 @@
 										<input type="radio" name="part" class="pull-left" style="margin-right: 10px;margin-top:12px;">
 										<div class="product-img pull-left"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
 										<div>
-										<?php 
-											echo display_part(current(hecidb('311173','id')));
-										?>
+										<?=display_part(current(hecidb($part['partid'],'id')));?>
 										</div>
 									</td>
-									
-								</tr>
-								<tr>
+									<td class="serials_col">
+										<?php 
+											if(!empty($serials)):
+												foreach($serials as $item) { 
+										?>
+												<div class="row">
+													<!--<div class="input-group">-->
+														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
+														<!--<span class="input-group-addon">-->
+													
+														<!--</span>-->
+													<!--</div>-->
+												</div>
+										<?php 
+												} 
+											endif;
+										?>
+									</td>
+									<td class="notes_col">
+										<?php 
+											if(!empty($serials)):
+												foreach($serials as $item) { 
+										?>
+												<div class="row">
+													<!--<div class="input-group">-->
+														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
+														<!--<span class="input-group-addon">-->
+													
+														<!--</span>-->
+													<!--</div>-->
+												</div>
+										<?php 
+												} 
+											endif;
+										?>
+									</td>
+									<td class="location_col">
+										<?php 
+											if(!empty($serials)):
+												foreach($serials as $item) { 
+										?>
+												<div class="row">
+													<!--<div class="input-group">-->
+														<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=$item['serial_no'];?></span>
+														<!--<span class="input-group-addon">-->
+													
+														<!--</span>-->
+													<!--</div>-->
+												</div>
+										<?php 
+												} 
+											endif;
+										?>
+									</td>
 									<td>
-										<input type="radio" name="part" class="pull-left" style="margin-right: 10px;margin-top:12px;">
-										<div class="product-img pull-left"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
-										<div>
-										<?php 
-											echo display_part(current(hecidb('311172','id')));
-										?>
-										</div>
-									</td>
-									
+
 								</tr>
+								
 							<?php 
-									// endforeach;
-								// } 
+									endforeach;
+								} 
 							?>
 						</tbody>
 					</table>
 				</div>
-				</form>
 			</div>
 		</div> 
 		

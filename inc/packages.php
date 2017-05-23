@@ -100,7 +100,7 @@
 	//Get the freight total for a shipment returned as a float
 	function shipment_freight($order_number,$order_type,$datetime = ''){
 	    $select = "SELECT SUM(freight_amount) total FROM `packages` 
-	    WHERE `order_number` = $order_number AND `order_type` = $order_type
+	    WHERE `order_number` = $order_number AND `order_type` = '$order_type'
 	    ".($datetime? "AND `datetime` = ".prep($datetime) : "")."
 	    ;";
 	    $result = qdb($select) or die(qe()." | $select");
