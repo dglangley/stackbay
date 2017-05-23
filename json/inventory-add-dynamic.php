@@ -19,6 +19,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/packages.php';
 
 	//This is a list of everything
 	$partid = grab('partid');
@@ -29,9 +30,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	$item_id = grab('item_id');
 	$place = grab('place');
 	$instance = grab('instance');
-	
+	$packageid = grab('package');
+
 	//items = ['partid', 'serial', 'qty', 'location', 'status', 'conditionid'];
-	function savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance){
+	function savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance,$packageid){
 		$result = array();
 		$locationid;
 		$query;
@@ -68,17 +70,23 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				//$result['test'] = $query;
 				$result['query'] = qdb($query) or die(qe());
 				//$result['query'] = $query;
+				$inventory_id = qid();
+				//Pair the package to the line item of the inventory number we changed.
+				$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$packageid','$inventory_id');";
+				$result['package'] = qdb($package_query) OR die(qe());
+				$result['package_q'] = $package_query;
 			} else {
 				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', conditionid = '". res($conditionid) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
 				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 				$result['query'] = qdb($query) or die(qe());
 				$result['saved'] = $serial;
+				
 			}
 		}
 		
 		return $result;
 	}
 	
-	$result = savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance);
+	$result = savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance,$packageid);
 	echo json_encode($result);
     exit;

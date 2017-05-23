@@ -2331,6 +2331,7 @@
 				"weight": weight,
 				"tracking": tracking,
 				"freight": freight,
+				"type":order_type,
 				"id": id,
 			},
 			dataType: 'json',
@@ -2368,6 +2369,7 @@
 				data: {
 					action: "addition",
 					order: order_number,
+					type: order_type,
 					name: autoinc
 				},
 				dataType: 'json',
@@ -2396,7 +2398,7 @@
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
 					console.log("JSON package addition packages.php: Error");
-					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc);
+					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc+"&type="+order_type);
 				}
 			});
 			
@@ -2946,6 +2948,8 @@
 	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		var box_number = $(".box_group").find(".box_selector.active").data("row-id");
+
 	    		var result;
 	    		// alert(place+"-"+instance);
 	    		
@@ -2967,7 +2971,8 @@
 							 'item_id' : item_id,
 							 'savedSerial' : savedSerial,
 							 'place' : place,
-							 'instance' : instance
+							 'instance' : instance,
+							 'package': box_number
 						},
 						dataType: 'json',
 						success: function(result) {

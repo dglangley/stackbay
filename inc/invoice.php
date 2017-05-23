@@ -47,7 +47,7 @@
 			// $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
 			$status = 'Pending';
 		}
-		$freight = prep(shipment_freight($order_number, $shipment_datetime));
+		$freight = prep(shipment_freight($order_number, "Sales", $shipment_datetime));
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 

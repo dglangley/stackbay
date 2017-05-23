@@ -269,7 +269,7 @@
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
 			$info['url'] = "repair_add";
-			$info['color'] = '#51bb51';
+			$info['color'] = '#beadbe';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'due_date';
 			//Field header information

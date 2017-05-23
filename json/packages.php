@@ -7,8 +7,8 @@
     
     $action = grab('action');
     $order_number = grab('order');
+    $order_type = grab('type');
     $name = grab('name');
     $id = grab('id');
-    
-    echo json_encode(package_edit($action,$id,$order_number,$name));
+    echo json_encode(package_edit($action,$id,$order_number,$order_type,$name));
 ?>
