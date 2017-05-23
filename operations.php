@@ -372,15 +372,21 @@
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 200;";
-				} else if ($order == 's' || $order == 'ro') {
+				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number ";
 					$query .= "ORDER BY o.so_number DESC LIMIT 0, 200; ";
 				} else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
-				} else {
-					//RO Future stuff goes here
+				} else if($order == 'ro') {
+					// $query .= "sales_orders o, sales_items i ";
+					// $query .= "WHERE o.so_number = i.so_number ";
+					// $query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
+
+					$query .= "repair_orders o, repair_items i ";
+					$query .= "WHERE o.ro_number = i.ro_number ";
+					$query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
 				}
 				
 				$results = qdb($query);
@@ -456,8 +462,8 @@
 					if($order != 'ro') {
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
-						echo'        <td>Serial # or TBA</td>';
-						echo'        <td>Writing stuff here for references</td>';
+						echo'        <td>'.($r['invid'] ? $r['invid'] : 'TBA').'</td>';
+						echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
 					if($order == 'ro') {
