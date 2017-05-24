@@ -260,7 +260,6 @@
 		if (count($form_rows)>0) {
 			$msg .= "<p><strong>Item Details:</strong><br/>";
 		}
-
         foreach ($form_rows as $r){
             $line_number = prep($r['line_number']);
             $item_id = prep($r['part']);
@@ -316,8 +315,8 @@
                 `".$o['date_field']."`= $date ";
 if(!$o['repair']){
     $update .= "
-                `,warranty` = $warranty,
-                `conditionid` = $conditionid ";
+                ,`warranty` = ".prep($warranty)."
+                ,`conditionid` = ".prep($conditionid)." ";
 }
 	$update .= "
                 WHERE `id` = $record;";
