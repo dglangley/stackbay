@@ -51,7 +51,7 @@
 	function getRepairParts ($order_number) {		
 		$listPartid;
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
-		$query = "SELECT id, partid, notes FROM repair_items WHERE ro_number = ".prep($order_number)." GROUP BY partid;";
+		$query = "SELECT id, partid, notes, qty FROM repair_items WHERE ro_number = ".prep($order_number)." GROUP BY partid;";
 		$result = qdb($query) or die(qe()." $query");
 	    
 	    if($result)
@@ -84,43 +84,54 @@
 		
 		return $listSerial;
 	}
-	
-if (grab("form_submitted")){
-		
-		$place = grab("place");
-		$instance = grab("instance");
-		$condition = prep(grab("condition"));
-		$serial = grab("serial_number");
-		$rlineid = prep(grab("line_id"));
-		
-		if($serial){
-			$serial = prep($serial);
-			$line_item_sel = "SELECT * FROM repair_items where id = $rlineid;";
-			$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
-			$row = mysqli_fetch_assoc($result);
-			$partid = prep($row['partid']);
+
+	function process_repair_to_db(){
 			
-			$location_id = prep(dropdown_processor($place, $instance));
-			
-			$quick_check = "SELECT * FROM inventory where serial_no like $serial AND repair_item_id = $rlineid;";
-			$res = qdb($quick_check) or die(qe()." $quick_check");
-			if(!mysqli_num_rows($res)){
-				$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
-				`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
-				VALUES ($serial,1,$partid,$condition,'in repair',$location_id,$rlineid,".$GLOBALS['U']['id'].",NOW(),NULL)";
-				
-				qdb($insert) or die(qe()." $insert");
-				echo(qid());
+			$place = grab("place");
+			$instance = grab("instance");
+			$condition = prep(grab("condition"));
+			$serial = grab("serial_number");
+			$rlineid = grab("line_id");
+			if(!$rlineid){
+				return("No Line!!");
 			} else {
-				echo"ALREADY SCANNED THIS PART FOR THIS RECORD";
+				$rlineid = prep($rlineid);
 			}
-		}
-		foreach($_REQUEST['notes'] as $invid => $note){
-			$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
-			qdb($update) or die(qe()." $update");
-		}
+			if($serial){
+				$serial = prep($serial);
+				$line_item_sel = "SELECT * FROM repair_items where id = $rlineid;";
+				$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
+				$row = mysqli_fetch_assoc($result);
+				$partid = prep($row['partid']);
+				if($place){
+					$location_id = prep(dropdown_processor($place, $instance));
+				} else {
+					return("NO LOCATION SELECTED ");
+				}
+				
+				$quick_check = "SELECT * FROM inventory where serial_no like $serial AND repair_item_id = $rlineid;";
+				$res = qdb($quick_check) or die(qe()." $quick_check");
+				if(!mysqli_num_rows($res)){
+					$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
+					`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
+					VALUES ($serial,1,$partid,$condition,'in repair',$location_id,$rlineid,".$GLOBALS['U']['id'].",NOW(),NULL)";
+					
+					qdb($insert) or die(qe()." $insert");
+				} else {
+					return"ALREADY SCANNED THIS PART FOR THIS RECORD";
+				}
+			}
+			foreach($_REQUEST['notes'] as $invid => $note){
+				$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
+				qdb($update) or die(qe()." $update");
+			}
+		return($rlineid);
+	}
+	if (grab("form_submitted")){
+		$result = process_repair_to_db();
 	}
 	
+	$active = grab("line_id");
 	$partsListing = getRepairParts($order_number);
 ?>
 
@@ -267,7 +278,10 @@ if (grab("form_submitted")){
 						            <th class="col-sm-3">
 						            	PART	
 						            </th>
-						            <th class="text-center col-sm-1">
+						            <th class="text-left col-sm-1">
+										Remaining Qty
+						        	</th>
+						        	<th class="text-center col-sm-1">
 										Serial
 						        	</th>
 						        	<th class="text-center col-sm-2">
@@ -294,14 +308,17 @@ if (grab("form_submitted")){
 									<tr>
 	
 										<td>
-											<input type="radio" name="line_id" class="pull-left" style="margin-right: 10px;margin-top:12px;" value = '<?=$part['id']?>' <?=(($results == 1)? 'checked' : "")?>>
+											<input type="radio" name="line_id" class="pull-left" style="margin-right: 10px;margin-top:12px;" value = '<?=$part['id']?>' <?=(($results == 1 || $active == $part['id']) ? 'checked' : "")?>>
 											<div class="product-img pull-left"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
 											<div>
 											<?=display_part(current(hecidb($part['partid'],'id')));?>
 											</div>
 											<div class="meta_notes">
-												<?=$part['notes']?>
+												<?=(($part['notes'])?"<br>Notes: ".$part['notes']:"")?>
 											</div>
+										</td>
+										<td>
+											<?=$part['qty'] - count($serials)?>
 										</td>
 										<td class="serials_col">
 											<?php 
