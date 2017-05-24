@@ -513,7 +513,13 @@
 										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
-										parts += "<tr class='serial_listing serial_listing_"+info.unique+"' style='display: none;'>\
+										parts += "<tr class='serial_listing serial_listing_"+info.unique;
+										// if(info.conditionid > 0){
+										// 	parts += " good_stock ";
+										// } else {
+										// 	parts += " bad_stock ";
+										// }
+										parts += "' style='display: none;'>\
 													<td colspan='12'>";
 													parts += "<table class='table serial table-hover table-condensed'>\
 																<tbody>";
@@ -555,25 +561,30 @@
 				                            parts +='</button>';
 											parts += '<ul class="dropdown-menu">';
 											parts += '<li>';
-												parts += "<a class='rm_button pointer text-left'>RM Serial <i class='fa fa-random' aria-hidden='true'></i></a>";
+											parts += "<a class='rm_button pointer text-left'><i class='fa fa-random' aria-hidden='true'></i> RM Serial</a>";
 											parts += '</li>';
 											parts += '<li>';
 											parts += "<a class='history_button pointer text-left' data-id='"+serial[0]+"'>";
-											parts += "Show History <i style='margin-right: 5px;' class='fa fa-history' aria-hidden='true'></i>";
+											parts += "<i style='margin-right: 5px;' class='fa fa-history' aria-hidden='true'></i> Show History";
 											parts += "</a>";
 												// parts += "<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>";
 											parts += '</li>';
 											parts += '<li>';
 											parts += "<a class='repair_button pointer text-left' data-invid="+serial[0]+" data-status='"+serial[3]+"'>";
 											if(serial[3] == 'in repair') {
-												parts += "Mark as Repaired <i style='margin-right: 5px;' class='fa fa-truck' aria-hidden='true'></i>";
+												parts += "<i style='margin-right: 5px;' class='fa fa-truck' aria-hidden='true'></i> Mark as Repaired";
 											} else {
-												parts += "Send to Repair <i style='margin-right: 5px;' class='fa fa-wrench' aria-hidden='true'></i>";
+												parts += "<i style='margin-right: 5px;' class='fa fa-wrench' aria-hidden='true'></i> Send to Repair";
 											}
 											parts += '</li>';
 											parts += '<li>';
 											parts += "<a class='edit_button pointer text-left'>";
-											parts += "Edit Serial Details <i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i>";
+											parts += "<i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i> Edit Serial Details";
+											parts += '</a>';
+											parts += '</li>';
+											parts += '<li>';
+											parts += "<a class='scrap_button pointer text-left'  data-invid="+serial[0]+" data-status='"+serial[3]+"'>";											
+											parts += "<i style='margin-right: 5px;' class='fa fa-recycle' aria-hidden='true'></i> Scrap Item";
 											parts += '</a>';
 											parts += '</li>';
 											parts += '</ul>';
@@ -596,7 +607,7 @@
 												color = "label-warning";
 												interpreted = "Active"
 											}
-											parts += '<span class="label '+color+' complete_label status_label text-right" style=""><b>'+interpreted+'</b></span>';
+											parts += '<span class="label '+color+' complete_label status_label text-right" style="">'+interpreted+'</span>';
 											parts +="</td>";
 											parts += "</tr>";
 										}); //Serials loop end
@@ -663,7 +674,7 @@
 		
 		
 		//============================ Side buttons ============================
-		$(document).on('click','.repair_button, .save_button, .delete_button',function(){
+		$(document).on('click','.repair_button, .save_button, .delete_button, .scrap_button',function(){
 			//Variable Delcarations
 			var $save =$(this);
 			var id = $save.closest('tr').data('invid');
@@ -682,6 +693,11 @@
 				action = 'delete';
 				valid = false;
 				if (window.confirm("Are you sure you want to delete this serial?")) {
+					valid = true;
+				}
+			}else if($(this).hasClass("scrap_button")){
+				action = 'scrap';
+				if (window.confirm("Are you sure you want to scrap this serial?")) {
 					valid = true;
 				}
 			}

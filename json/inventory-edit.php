@@ -46,6 +46,9 @@
 		} else if($status){
 			$status = "in repair";
 		}
+		if ($action == "scrap"){
+			$status = "scrapped";
+		}
 		$locationid = dropdown_processor($place, $instance);
 		//Prep Query information
 		$serial = prep($serial);
@@ -87,7 +90,7 @@
 	$id = grab('id');
 	$action = grab('action');
 	
-	if(action == 'delete') {
+	if($action == 'delete') {
 		$result = deleteToDatabase($id);
 	} else {
 		// $result = updateToDatabase($serial, dropdown_processor($place, $instance), $qty, $conditionid, $status, $id, $notes);
