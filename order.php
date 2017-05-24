@@ -6,6 +6,36 @@
 	$type = $order_str[0];
 	$order = $order_str[1];
 
+	// user is searching by customer PO#?
+	$search_parts = '';
+	if (! $order AND $type==$_SERVER["REQUEST_URI"]) {
+		$search_parts = explode('-',preg_replace('/^([\/])([SPR]O)?([0-9]{8,12})$/i','$2-$3',trim($_SERVER["REQUEST_URI"])));
+		$type = $search_parts[0];
+		$search = $search_parts[1];
+
+		if ($search) {
+			if ($type=='SO') {
+				$query = "SELECT so_number FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$search);
+				if (mysqli_num_rows($result)==1) {
+					$r = mysqli_fetch_assoc($result);
+					header('Location: /order_form.php?on='.$r['so_number'].'&ps=s');
+					exit;
+				}
+			} else if ($type=='PO') {
+				$query = "SELECT po_number FROM purchase_orders WHERE assoc_order = '".res($search)."' OR po_number = '".res($search)."'; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$search);
+				if (mysqli_num_rows($result)==1) {
+					$r = mysqli_fetch_assoc($result);
+					header('Location: /order_form.php?on='.$r['po_number'].'&ps=p');
+					exit;
+				}
+			}
+			header('Location: /operations.php?s='.$search);
+			exit;
+		}
+	}
+
 	// if no prefixed type ("PO123456") we are going to auto-determine (or try!)
 	if (! $type) {
 		$query = "SELECT * FROM purchase_orders WHERE po_number = '".$order."' AND created >= CONCAT(DATE_SUB(CURDATE(),INTERVAL 365 DAY),' 00:00:00'); ";

@@ -7,7 +7,7 @@
 	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
-	include_once 'inc/calcCost.php';
+	include_once 'inc/getCost.php';
 	include_once 'inc/array_stristr.php';
 
 	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST) {
@@ -660,7 +660,7 @@ if (! $r['partid']) { return ($results); }
 			}
 		}
 
-		$avg_cost = calcCost($partid_csv);
+		$avg_cost = getCost($partid_csv);
 
 		// now pre-process to get grouped qtys, but it needs to be a separate foreach loop since we're now gathering
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present

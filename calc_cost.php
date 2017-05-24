@@ -11,10 +11,12 @@
 	$results = hecidb($s);
 	foreach ($results as $partid => $P) {
 		$cost = 0;
-		$query = "SELECT po_number, price FROM purchase_items WHERE partid = '".$partid."' GROUP BY po_number ORDER BY po_number DESC; ";
+		$query = "SELECT po_number, price FROM purchase_items WHERE partid = '".$partid."' ";
+$query .= "AND po_number = '504805' ";
+		$query .= "GROUP BY po_number ORDER BY po_number DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			echo $r['po_number'].' '.$partid.' $'.$r['price'].' = ';
+			//echo $r['po_number'].' '.$partid.' $'.$r['price'].' = ';
 			$cost = setCost($r['po_number'],$partid);
 			echo $cost.'<BR><BR>';
 		}
