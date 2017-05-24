@@ -102,6 +102,9 @@
 		#modalHistoryBody div:nth-child(even){
 			background-color:#f7f7f7;
 		}
+		.label-in-repair{
+			background-color: rgb(156,106,65);
+		}
 	</style>
 
 </head>
@@ -301,46 +304,50 @@
 <script>
 	(function($){
 		
-		$(document).on("click onload", ".filter_cond", function(){
-			var type = $(this).data('filter');
+		$(document).on("click onload", ".filter_cond, .filter_qty", function(){
+			var search = $("#part_search").val();
+			$(this).closest(".btn-group").find(".active").removeClass("active");
+			$(this).addClass("active");
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
 			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
-			var search = $("#part_search").val();
-			$(this).closest(".btn-group").find(".filter_cond").removeClass("active");
-			$(this).addClass("active");
 			//alert($('.show_more_link:first').text() == "Show more");
-			if(type == "in_stock"){
-				$(".in_stock").show();
-				$(".no_stock").hide();
-			} else {
-				$(".in_stock").show();
-				$(".no_stock").show();
-			}
-			if(search != '') {
-				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + type + "&qty="+qty);
-			} else {
-				window.history.replaceState(null, null, "/inventory.php?cond=" + type + "&qty="+qty);
-			}
-		});
-		$(document).on("click onload", ".filter_qty", function(){
-			var qty = $(this).data('filter');
-			var search = $("#part_search").val();
-			var cond = $(".condition_filters").find(".filter_cond.active").data("filter");
-			$(this).closest(".btn-group").find(".filter_qty").removeClass("active");
-			$(this).addClass("active");
-			//alert($('.show_more_link:first').text() == "Show more");
-			if(cond == "good"){
-				$(".good_stock").show();
-				$(".bad_stock").hide();
-			} else {
-				$(".good_stock").show();
-				$(".bad_stock").show();
-			}
+			/* reset rows to defaults with no filters */
+            $(".good_stock").show();
+            $(".bad_stock").show();
+            $(".in_stock").show();
+            $(".no_stock").show();
+            if(qty == "in_stock"){
+                $(".no_stock").hide();
+            }
+            if (cond == "good"){
+                $(".bad_stock").hide();
+            }
 			if(search != '') {
 				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
 			} else {
 				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
 			}
 		});
+		// $(document).on("click onload", ".filter_qty", function(){
+		// 	var qty = $(this).data('filter');
+		// 	var search = $("#part_search").val();
+		// 	var cond = $(".condition_filters").find(".filter_cond.active").data("filter");
+		// 	$(this).closest(".btn-group").find(".filter_qty").removeClass("active");
+		// 	$(this).addClass("active");
+		// 	//alert($('.show_more_link:first').text() == "Show more");
+		// 	if(cond == "good"){
+		// 		$(".good_stock").show();
+		// 		$(".bad_stock").hide();
+		// 	} else {
+		// 		$(".good_stock").show();
+		// 		$(".bad_stock").show();
+		// 	}
+		// 	if(search != '') {
+		// 		window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
+		// 	} else {
+		// 		window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
+		// 	}
+		// });
 		
 		// $('.disabled_input').find('select').prop('disabled', true)
 		var filter_grab = function (){
@@ -526,8 +533,12 @@
 											}
 											parts += " data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid='"+serial[0]+"' data-locid='"+info.locationid+"' data-place='"+info.place+"' data-instance='"+info.instance+"' data-name='"+info.part_name+"' data-cond = '"+key[2]+"' style='display: none;'>";	
-											parts += "	<td class='serial_col data serial_original' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
-											parts += "	<td class='notes_col data notes_original'>";
+											parts += "	<td class='serial_col data serial_original col-md-2' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
+											parts += "	<td class='data col-md-1'></td>";
+											parts += "	<td class='data col-md-1'></td>";
+											parts += "	<td class='data col-md-2'></td>";
+											parts += "	<td class='data col-md-1'></td>";
+											parts += "	<td class='notes_col data notes_original col-md-2'>";
 											parts += serial[4];
 											parts += "</td>";
 
@@ -537,23 +548,56 @@
 											parts += "	<td class='location_col edit location_holder' data-place='"+info.place+"' data-instance='"+info.instance+"'></td>";
 											parts += "	<td class='condition_col edit condition_holder' data-condition='"+info.conditionid+"'></td>";
 											parts += "	<td class='notes_col edit notes_holder'><input class='new_notes input-sm form-control' value='"+serial[4]+"' data-serial='"+serial[1]+"'/></td>";
-											parts += "	<td class='edit_col' style='text-align: right;'>";
+											parts += "	<td class='edit_col' style='text-align: left;'>";
+											parts += "<div class ='btn-group'>";
+											parts += "<button type='button' class='btn-sm btn-flat dropdown-toggle white' style='padding-top:3px;padding-bottom:3px;' data-toggle='dropdown'>";
+				                            parts += "<i class='fa fa-chevron-down'></i>";
+				                            parts +='</button>';
+											parts += '<ul class="dropdown-menu">';
+											parts += '<li>';
+												parts += "<a class='rm_button pointer text-left'>RM Serial <i class='fa fa-random' aria-hidden='true'></i></a>";
+											parts += '</li>';
+											parts += '<li>';
+											parts += "<a class='history_button pointer text-left' data-id='"+serial[0]+"'>";
+											parts += "Show History <i style='margin-right: 5px;' class='fa fa-history' aria-hidden='true'></i>";
+											parts += "</a>";
+												// parts += "<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>";
+											parts += '</li>';
+											parts += '<li>';
+											parts += "<a class='repair_button pointer text-left' data-invid="+serial[0]+" data-status='"+serial[3]+"'>";
 											if(serial[3] == 'in repair') {
-												parts += "<i style='margin-right: 5px;' class='fa fa-truck repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
+												parts += "Mark as Repaired <i style='margin-right: 5px;' class='fa fa-truck' aria-hidden='true'></i>";
 											} else {
-												parts += "<i style='margin-right: 5px;' class='fa fa-wrench repair_button pointer' data-invid="+serial[0]+" data-status='"+serial[3]+"' aria-hidden='true'></i>";
+												parts += "Send to Repair <i style='margin-right: 5px;' class='fa fa-wrench' aria-hidden='true'></i>";
 											}
-											
-											parts += "	<i style='margin-right: 5px;' class='fa fa-random rm_button pointer' aria-hidden='true'></i>\
-														<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>\
-														</td>";
+											parts += '</li>';
+											parts += '<li>';
+											parts += "<a class='edit_button pointer text-left'>";
+											parts += "Edit Serial Details <i style='margin-right: 5px;' class='fa fa-pencil' aria-hidden='true'></i>";
+											parts += '</a>';
+											parts += '</li>';
+											parts += '</ul>';
+											parts += "</td>";
 											
 		                					parts +="<td>\
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
-		                						<i style='margin-right: 5px;' class='fa fa-trash delete_button pointer' aria-hidden='true'></i>\
-												<i style='margin-right: 5px;' class='fa fa-pencil edit_button pointer' aria-hidden='true'></i>\
 		                						</td>";
-		                						
+											parts +="<td class = 'text-right'>";
+											var color = '';
+											var interpreted = status;
+											if (status == "Manifest" || status == "Outbound"){
+												interpreted = "Sold";
+												color = "label-success";
+											} else if (status == "Scrapped"){
+												color = "label-danger";
+											} else if (status == "In Repair"){
+												color = "label-in-repair";
+											} else {
+												color = "label-warning";
+												interpreted = "Active"
+											}
+											parts += '<span class="label '+color+' complete_label status_label text-right" style=""><b>'+interpreted+'</b></span>';
+											parts +="</td>";
 											parts += "</tr>";
 										}); //Serials loop end
 										parts += "</tbody>\
@@ -709,7 +753,7 @@
 				
 			}
 			var con_col = $(this).closest('tr').find('.edit.condition_col');
-			if (con_col.find('.conditions_main').length === 0){
+			if (con_col.find('.conditionid').length === 0){
 				$('.conditions_main').clone().appendTo(con_col).removeClass("conditions_main").addClass('conditions');
 				var actualCon = con_col.data('condition');
 				con_col.find('.conditionid').val(actualCon);

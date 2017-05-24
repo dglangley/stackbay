@@ -121,9 +121,11 @@
 					return"ALREADY SCANNED THIS PART FOR THIS RECORD";
 				}
 			}
-			foreach($_REQUEST['notes'] as $invid => $note){
-				$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
-				qdb($update) or die(qe()." $update");
+			if(isset($_REQUEST['notes'])){
+				foreach($_REQUEST['notes'] as $invid => $note){
+					$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
+					qdb($update) or die(qe()." $update");
+				}
 			}
 		return($rlineid);
 	}
@@ -132,6 +134,9 @@
 	}
 	
 	$active = grab("line_id");
+	$sel_place = grab("place");
+	$sel_instance = grab("instance");
+	$sel_condition = grab("condition");
 	$partsListing = getRepairParts($order_number);
 ?>
 
@@ -248,15 +253,15 @@
 							<div class="col-md-6 location">
 								<div class="row">
 									<div class="col-md-4" style="padding-left: 0px !important;">
-										<?=loc_dropdowns('place', $itemLocation)?>
+										<?=loc_dropdowns('place', $sel_place)?>
 									</div>
 									
 									<div class="col-md-3">
-										<?=loc_dropdowns('instance', $itemLocation)?>
+										<?=loc_dropdowns('instance', $sel_instance, $sel_place)?>
 									</div>
 
 									<div class="col-md-5">
-										<?=dropdown('conditionid', '', '', '',false)?>
+										<?=dropdown('conditionid', $sel_condition, '', '',false)?>
 									</div>
 								</div>
 							</div>
