@@ -194,6 +194,17 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<title><?=($order_number != 'New')? (strtoupper($o['short'])." #".$order_number) : ('New '.strtoupper($o['short']) )?></title>
 
+		<style>
+			tr.strikeout td:before {
+			    content: " ";
+			    position: absolute;
+			    top: 50%;
+			    left: 0;
+			    border-bottom: 1px solid;
+			    width: 100%;
+			}
+		</style>
+
 	</head>
 	<!---->
 	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
@@ -208,7 +219,7 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:<?=$o['color']?>;">
 				
-				<div class="col-md-4">
+				<div class="col-md-3">
 					<?php
 						if($order_number != "New"){
 							if($o['type'] == 'Invoice'){
@@ -359,7 +370,7 @@
 					
 				</div>
 				
-				<div class="col-md-4 text-center">
+				<div class="col-md-6 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if(!$o['invoice']){
@@ -383,7 +394,7 @@
 					echo"</h2>";
 					?>
 				</div>
-				<div class="col-md-4">
+				<div class="col-md-3">
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
@@ -461,11 +472,12 @@
 						<thead>
 							<?php //if($o['type'] != 'invoice'){?>
 		    				<th style='min-width:30px;'>#</th>		
-		    				<th class='col-md-5'>Item Information</th>
+		    				<th class='col-md-<?=($o['repair']?"7":"5")?>'>Item Information</th>
 		    				<th class='col-md-2'>Delivery Date</th>
+		    				<?php if(!$o['repair']): ?>
 		    				<th class='col-md-1'>
 			    				<?php
-			    					if($o['type'] != 'Invoice' || $status == 'void'){
+			    					if(!$o['invoice'] && $status != 'void'){
 				    					$rootdir = $_SERVER['ROOT_DIR'];
 				    					include_once($rootdir.'/inc/dropPop.php');
 				    					echo(dropdown("conditionid","","full_drop","",false,"condition_global"));
@@ -485,6 +497,7 @@
 		    						}
 		    					?>
 	    					</th>
+	    					<?php endif;?>
 	    					<th class='col-md-1'>Qty</th>
 		    				<th class='col-md-1'>Price</th>
 	    					<th class='col-md-1'>Ext. Price</th>
@@ -493,10 +506,10 @@
 	    					
 	    				</thead>
 	
-			        	<tbody id="right_side_main" <?=($o['type'] == 'RTV' ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
+			        	<tbody id="right_side_main" <?=($o['rtv'] ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
 			        	</tbody>
 				        
-				        <?php if($o['type'] != 'RTV' && $o['type'] != 'Invoice'){ ?>
+				        <?php if(!$o['rtv'] && !$o['invoice']){ ?>
 							<tfoot id = "search_input">
 					            
 								<?php
@@ -528,8 +541,10 @@
 										    </span>
 							            </div>
 							        </td>
-					        		<td><?php echo $condition_dropdown; ?></td>
-					        		<td><?php echo $warranty_dropdown; ?></td>
+				        		<?php if(!$o['repair']):?>
+					        		<td><?=$condition_dropdown;?></td>
+					        		<td><?=$warranty_dropdown;?></td>
+					        	<?php endif; ?>
 					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' id = 'new_item_qty' placeholder='QTY' value = ''></td>
 					            	<td>
 						                <div class='input-group'>
@@ -549,8 +564,10 @@
 								<!-- dummy line for nothing found -->
 						   	 	<tr class='nothing_found' style='display: none;'><td colspan='12'><span style='text-align:center; display: block; padding-top: 10px; font-weight: bold;'>Nothing Found</span></td></tr>
 								<tr id = 'subtotal_row' style=''>
+				        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
+								<?php endif; ?>
 					                <td></td>
 					                <td></td>
 					                <td></td>
@@ -560,8 +577,10 @@
 					                <td></td>
 					            </tr>
 					            <tr id = 'tax_row' style=''>
+				        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
+								<?php endif; ?>
 					                <td></td>
 					                <td></td>
 					                <td></td>
@@ -571,8 +590,10 @@
 					                <td></td>
 					            </tr>
 					            <tr id = 'freight_row' style=''>
+				        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
+								<?php endif; ?>
 					                <td></td>
 					                <td></td>
 					                <td></td>
@@ -582,8 +603,10 @@
 					                <td></td>
 					            </tr>
 					            <tr id = 'totals_row' style=''>
+				        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
+								<?php endif; ?>
 					                <td></td>
 					                <td></td>
 					                <td></td>

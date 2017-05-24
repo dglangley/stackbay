@@ -901,41 +901,48 @@
 				$("#address-modal-body").attr("data-oldid",'false');
 				
 				console.log("/json/addressSubmit.php?"+"name="+name+"&line_1="+line_1+"&line2="+line2+"&city="+city+"&state="+state+"&zip="+zip+"&id="+id);
-			    $.post("/json/addressSubmit.php", {
-			    	"name" : name,
-					"line_1" : line_1,
-					"line2" : line2,
-					"city" : city,
-					"state" : state,
-					"zip" : zip,
-					"id" : id
-			    },function(data){
-			    	console.log("Logging the ID (this should be false if creating new): "+id);
-			    	console.log("Return from Address Submission: "+data);
-			    	
-			    	if (!isNaN(id)){
-			    		data = id;
-			    	}
-		    		//If it didn't have an update, it is a new field
-			    	if (field == "ship_to"){
-			    		// $("#select2-ship_to-container").html(line_1);
-			    		// $("#ship_to").append("<option selected value='"+data+"'>"+line_1+"</option>");
-			    		// $("#ship_to").val(data);
+				$.ajax({
+					type: "POST",
+					url: '/json/addressSubmit.php',
+					data: {
+						"name" : name,
+						"line_1" : line_1,
+						"line2" : line2,
+						"city" : city,
+						"state" : state,
+						"zip" : zip,
+						"id" : id
+					},
+					dataType: 'json',
+					success: function(data) {
+						console.log("Logging the ID (this should be false if creating new): "+id);
+				    	console.log("Return from Address Submission: "+data);
+				    	
+				    	if (!isNaN(id)){
+				    		data = id;
+				    	}
+			    		//If it didn't have an update, it is a new field
+				    	if (field == "ship_to"){
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#ship_to"));
 							/* Let select2 do whatever it likes with this */
 							$("#ship_to").trigger('change');
-				    	}
-				    	else{
+				    	} else {
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#bill_to"));
+							$("#bill_to").val(data);
 							/* Let select2 do whatever it likes with this */
 							$("#bill_to").trigger('change');
+							// updateShipTo();
 				    	}
-			    	$('.modal').modal('hide');
-			    });
+				    	$('.modal').modal('hide');
+					},
+					error: function(xhr, status, error) {
+					   	alert(error);
+					}
+				});
 			});
 			
 			$(document).on("click", "#address-cancel", function(e) {
@@ -1535,7 +1542,7 @@
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
 				if ($(this).text() == "Show more"){
-					$('.col-lg-6').hide();
+					$('.col-lg-6.data-load').hide();
 					//$(this).closest("body").children(".table-header").show();
 					//$(this).closest("body").children(".initial-header").hide();
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
@@ -2074,11 +2081,11 @@
 						}
 						
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
-						var serial = $(this).data('inv-id');
+						var serial = $(this).data('invid');
 						// alert(serial);
 						// alert($(this).closest('tr').find('.infiniteBox').find().html());
 						var element = "<tr class='"+ damaged +"'>\
-										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+serial+'"]').find(':selected').attr('data-boxno')+"</td>\
+										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+serial+'"]').find('option:selected').attr('data-boxno')+"</td>\
 										<td>"+$(this).attr('data-part')+"</td>\
 										<td>"+$(this).attr('data-serial')+"</td>\
 										<td class='comment-data' data-invid='"+$(this).attr('data-inv-id')+"' data-comment ='"+$(this).val()+"' data-part = '"+$(this).attr('data-part')+"' data-serial = '"+$(this).attr('data-serial')+"'>"+$(this).val()+"</td>\
@@ -2324,6 +2331,7 @@
 				"weight": weight,
 				"tracking": tracking,
 				"freight": freight,
+				"type":order_type,
 				"id": id,
 			},
 			dataType: 'json',
@@ -2361,6 +2369,7 @@
 				data: {
 					action: "addition",
 					order: order_number,
+					type: order_type,
 					name: autoinc
 				},
 				dataType: 'json',
@@ -2371,9 +2380,9 @@
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active").removeClass('btn-grey');
-					$(".box_drop").each(function(){
-						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
-					});
+					// $(".box_drop").each(function(){
+					// 	$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");
+					// });
 					$(".active_box_selector").each(function(){
 						$(this).children("option").last().after("<option data-boxno="+autoinc+" value='"+id+"'>Box "+autoinc+"</option>");		
 					});
@@ -2389,7 +2398,7 @@
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
 					console.log("JSON package addition packages.php: Error");
-					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc);
+					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc+"&type="+order_type);
 				}
 			});
 			
@@ -2407,7 +2416,7 @@
 		
 //Change of a dropdown
 		$(document).on("change",".box_drop",function() {
-		    var assoc = $(this).attr("data-associated");
+		    var assoc = $(this).data("associated");
 		    var pack = $(this).val();
 				$.ajax({
 					type: "POST",
@@ -2749,7 +2758,7 @@
 //Address Suite of functions
 			function updateShipTo(){
 				if ( $("#mismo").prop( "checked" )){
-					var display = $("#bill_to").text().trim();
+					var display = $("#bill_to").find("option:selected").text().trim();
 					var value = $("#bill_to").val();
 					console.log("Display: "+display+" | Value: "+value);
 					$("#ship_to").setDefault(display,value);
@@ -2796,7 +2805,7 @@
 	   			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 				return;
 			}
-
+			var order_type = $("body").attr("data-order-type");
 			var sub_row = e.closest("tr");
 			var editRow = '';
 			var line_item_id = 'new';
@@ -2840,6 +2849,7 @@
 					"warranty":warranty,
 					"conditionid":conditionid,
 			       	"id":line_item_id,
+			       	"type":order_type,
 			       	"mode":mode
 				}, // serializes the form's elements.
 				dataType: 'json',
@@ -2938,6 +2948,8 @@
 	    		var $locationClone = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').clone();
 	    		var place = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:first').val();
 	    		var instance = $serial.closest('tr').find('.infiniteLocations').children('.row-fluid:first').find('select:last').val();
+	    		var box_number = $(".box_group").find(".box_selector.active").data("row-id");
+
 	    		var result;
 	    		// alert(place+"-"+instance);
 	    		
@@ -2959,7 +2971,8 @@
 							 'item_id' : item_id,
 							 'savedSerial' : savedSerial,
 							 'place' : place,
-							 'instance' : instance
+							 'instance' : instance,
+							 'package': box_number
 						},
 						dataType: 'json',
 						success: function(result) {
@@ -3077,7 +3090,7 @@
 								.removeClass("active_box_selector")
 								.addClass("drop_box")
 								.val($serial.closest('tr').find(".active_box_selector").first().val())
-								.attr("associated",result['invid'])
+								.attr("data-associated",result['invid'])
 								.attr("data-serial",serial)
 								.attr("data-inv-id",result['invid']);
 

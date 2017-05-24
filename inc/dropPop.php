@@ -210,7 +210,7 @@
     	   	
             $output = "<div class=''>";
             $output .= ($label)? "<label for='condition'>Condition:</label>" : '';
-            $output .= "<select id = '$id' class='form-control input-sm conditionid'>";
+            $output .= "<select id = '$id' name = 'condition' class='form-control input-sm conditionid'>";
                 	if($id == 'condition_global'){
                         $output .= "<option selected value=''>Condition</option>";
                 	}

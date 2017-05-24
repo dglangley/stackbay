@@ -388,7 +388,7 @@
 										$init = true;
 										$package_no = 0;
 										
-										$masters = master_packages($order_number);
+										$masters = master_packages($order_number,"sales");
 										foreach($results as $b){
 											$package_no = $b['package_no'];
 											$box_button = "<button type='button' class='btn ";

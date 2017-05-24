@@ -11,8 +11,10 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
-			$info['bill'] = 'remit_to_id';
+			$info['billing'] = 'remit_to_id';
+			$info['bill_label'] = 'Remit To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "purchase_orders";
 			$info['contact_col'] = "Sales Rep";
@@ -50,9 +52,11 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['order'] = "sales_orders";
-			$info['bill'] = 'bill_to_id';
+			$info['billing'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
@@ -89,6 +93,7 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 
 			$info['order'] = "invoices";
@@ -128,10 +133,12 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['ship'] = "ship_to_id";
-			$info['bill'] = "bill_to_id";
-			$info['order'] = "sales_orders";
+			$info['billing'] = "bill_to_id";
+			$info['bill_label'] = "Bill To";
+			$info['order'] = "purchase_orders";
 			$info['header'] = "RTV Order";
 			$info['item'] = "";
 			$info['client'] = "Vendor";
@@ -141,8 +148,8 @@
 			$info['rep_type'] = "Purchase";
 			$info['date_label'] = "PO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "so";
-			$info['id'] = "so_number";
+			$info['short'] = "po";
+			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND i.ship_date IS NULL ";
 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
@@ -167,6 +174,7 @@
 			$info['rma'] = true;
 			$info['credit'] = false;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			
 			$info['order'] = "returns";
@@ -207,6 +215,7 @@
 			$info['rma'] = false;
 			$info['credit'] = true;
 			$info['repair'] = false;
+			$info['bill'] = false;
 			
 			$info['order'] = "sales_credits";
 			$info['id'] = "id";
@@ -244,8 +253,10 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = true;
+			$info['bill'] = false;
 			
-			$info['bill'] = 'bill_to_id';
+			$info['billing'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
 			$info['order'] = "repair_orders";
 			$info['contact_col'] = "Sales Rep";
@@ -264,15 +275,23 @@
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
-			$info['url'] = "inventory_add";
-			$info['color'] = '#51bb51';
+			$info['url'] = "repair_add";
+			$info['color'] = '#beadbe';
 			$info['edit_mode'] = 'order';
-			$info['date_field'] = 'receive_date';
+			$info['date_field'] = 'due_date';
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
-		}
-		else{
+		} else if (strtolower($type) == "bill"){
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = false;
+			$info['bill'] = true;
+		} else{
 			$info['case'] = $type;
 		}
 		return $info;

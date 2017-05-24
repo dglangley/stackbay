@@ -313,17 +313,21 @@
 	        	echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
-				echo'	<th class="col-sm-2 company_col">';
+				echo'	<th class="col-sm-1 company_col">';
 				echo'	<span class="line"></span>';
-				echo'		Repair #';
+				echo'		Repair#';
 				echo'	</th>';
-	            echo'	<th class="col-sm-4">';
+	            echo'	<th class="col-sm-2">';
 	            echo'		<span class="line"></span>';
-	            echo'		Part #';
+	            echo'		Item';
 	            echo'	</th>';
 	        	echo'   <th class="col-sm-3 item_col">';
 	            echo'   	<span class="line"></span>';
 	            echo'       Serial';
+	            echo'	</th>';
+	            echo'   <th class="col-sm-3 item_col">';
+	            echo'   	<span class="line"></span>';
+	            echo'       Notes';
 	            echo'	</th>';
 	            echo'   <th class="col-sm-1">';
 	            echo'   	<span class="line"></span>';
@@ -375,8 +379,14 @@
 				} else if ($order == 'rma') {
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
-				} else {
-					//RO Future stuff goes here
+				} else if($order == 'ro') {
+					// $query .= "sales_orders o, sales_items i ";
+					// $query .= "WHERE o.so_number = i.so_number ";
+					// $query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
+
+					$query .= "repair_orders o, repair_items i ";
+					$query .= "WHERE o.ro_number = i.ro_number ";
+					$query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
 				}
 				
 				$results = qdb($query);
@@ -424,7 +434,13 @@
 					}
 
 					echo'        <td>'.$date.'</td>';
-					echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+
+					if($order != 'ro') {
+						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+					} else {
+						echo'        <td>331xx <a href="#"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					}
+
 					//Either go to inventory add or PO or shipping for SO
 					if($order == 'p') {
 						$base = 'inventory_add.php';
@@ -441,18 +457,40 @@
 					} else if($order == 'rma') {
 						echo'        <td><a href="/rma.php?rma='.$order_num.'">'.$order_num.'</a></td>';
 					}
+
 					echo'        <td><div class="desc">'.$item.'</div></td>';
-					echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
+					if($order != 'ro') {
+						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
+					} else {
+						echo'        <td>'.($r['invid'] ? $r['invid'] : 'TBA').'</td>';
+						echo'        <td>'.$r['public_notes'].'</td>';
+					}
+
+					if($order == 'ro') {
+						global $now;
+						echo'    	<td>'.format_date($now).'</td>';
+					}
+					
 					echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
-					echo'    	<td class="status text-right">';
-					if($order == 's') {
-						echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
+					if($order != 'ro') {
+						echo'    	<td class="status text-right">';		
+						if($order == 's') {
+							echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
+						}
+
+						echo'			<a href="/'.($order == 'p' ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+							echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						}
+						echo'		</td>'; 			
+					} else {
+						echo'    	<td class="status text-right">';		
+						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						echo'		</td>'; 							
 					}
-					echo'			<a href="/'.($order == 'p' ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-					if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
-						echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
-					}
-					echo'		</td>'; 
+
+					
 					echo'	</tr>';
 				}
 		}
@@ -781,8 +819,11 @@
 				$('.status_label').hide();
 			} else {
 				$('.filter_item').show();
-				if($('.show_more_link:first').text() == "Show more") 
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.show_more').hide();
+				} else {
+					$('.show_more').show();
+				}
 				$('.status_label').show();
 				$('.status-column').show();
 			}
