@@ -318,9 +318,11 @@
             $(".no_stock").show();
             if(qty == "in_stock"){
                 $(".no_stock").hide();
+                $(".out_stock_item").hide();
             }
             if (cond == "good"){
                 $(".bad_stock").hide();
+                $(".bad_stock_item").hide();
             }
 			if(search != '') {
 				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
@@ -328,26 +330,7 @@
 				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
 			}
 		});
-		// $(document).on("click onload", ".filter_qty", function(){
-		// 	var qty = $(this).data('filter');
-		// 	var search = $("#part_search").val();
-		// 	var cond = $(".condition_filters").find(".filter_cond.active").data("filter");
-		// 	$(this).closest(".btn-group").find(".filter_qty").removeClass("active");
-		// 	$(this).addClass("active");
-		// 	//alert($('.show_more_link:first').text() == "Show more");
-		// 	if(cond == "good"){
-		// 		$(".good_stock").show();
-		// 		$(".bad_stock").hide();
-		// 	} else {
-		// 		$(".good_stock").show();
-		// 		$(".bad_stock").show();
-		// 	}
-		// 	if(search != '') {
-		// 		window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
-		// 	} else {
-		// 		window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
-		// 	}
-		// });
+
 		
 		// $('.disabled_input').find('select').prop('disabled', true)
 		var filter_grab = function (){
@@ -530,14 +513,39 @@
 											var status = serial[3].toLowerCase().replace(/\b[a-z]/g, function(letter) {
 											    return letter.toUpperCase();
 											});
+											var color = '';
+											var interpreted = status;
+											if (status == "Manifest" || status == "Outbound"){
+												interpreted = "Sold";
+												color = "label-success";
+											} else if (status == "Scrapped"){
+												color = "label-danger";
+											} else if (status == "In Repair"){
+												color = "label-in-repair";
+											} else {
+												color = "label-warning";
+												interpreted = "Active"
+											}
 											var line_qty = serial[2];
-											parts += "<tr class='serial_listing_"+info.unique+"'";
+											parts += "<tr class='serial_listing_"+info.unique;
+											if(info.conditionid < 0){
+												parts += " bad_stock_item ";
+											} 
+											
+											if(interpreted == "Sold"){
+												parts += " out_stock_item ";
+											}
+											if(info.qty == 0){
+												parts += " no_stock ";
+											} else {
+												parts += " in_stock ";
+											}
 											if(info.conditionid > 0){
 												parts += " good_stock ";
 											} else {
 												parts += " bad_stock ";
 											}
-											parts += " data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
+											parts += "' data-serial="+serial[1]+" data-part="+partid+" data-status='"+serial[3]+"'";
 											parts += " data-invid='"+serial[0]+"' data-locid='"+info.locationid+"' data-place='"+info.place+"' data-instance='"+info.instance+"' data-name='"+info.part_name+"' data-cond = '"+key[2]+"' style='display: none;'>";	
 											parts += "	<td class='serial_col data serial_original col-md-2' data-id='"+serial[0]+"'>"+serial[1]+"</td>";
 											parts += "	<td class='data col-md-1'></td>";
@@ -594,19 +602,7 @@
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 		                						</td>";
 											parts +="<td class = 'text-right'>";
-											var color = '';
-											var interpreted = status;
-											if (status == "Manifest" || status == "Outbound"){
-												interpreted = "Sold";
-												color = "label-success";
-											} else if (status == "Scrapped"){
-												color = "label-danger";
-											} else if (status == "In Repair"){
-												color = "label-in-repair";
-											} else {
-												color = "label-warning";
-												interpreted = "Active"
-											}
+
 											parts += '<span class="label '+color+' complete_label status_label text-right" style="">'+interpreted+'</span>';
 											parts +="</td>";
 											parts += "</tr>";
@@ -814,21 +810,31 @@
 		//This function show all the serial if the user clicks on the qty link
 		$(document).on('click', '.check_serials', function(e) {
 			e.preventDefault;
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
 			var parent = $(this).closest('.parts-list').data('serial');
 			if ($("."+parent).is(":visible")){
 				$('.' + parent).hide();
 			}else{
 				$('.' + parent).show();
+				if (qty == "in_stock"){
+					$(".out_stock_item").hide();
+				}
 			}
 			
 			
 		});
 		$(document).on('click', '.all_serials', function(e) {
 			e.preventDefault;
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
 	        if ($(".serial_listing:visible").length){
 	        	$(".serial_listing").hide();
 	        }else{
 	        	$("[class^=serial_listing]").show();
+				if (qty == "in_stock"){
+					$(".out_stock_item").hide();
+				}
 			}
 		});
 		$(document).on("click",".part_filter",function(){
