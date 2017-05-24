@@ -69,7 +69,7 @@
         }    
         else if ($type == "place") {
 
-            if ($selected){
+            if (is_numeric($selected)){
                 $locations = mysqli_fetch_assoc(getLocation($selected));
                 $selected = $locations['place'];
             }
@@ -84,7 +84,7 @@
 
         	    foreach($results as $row){
         	        $output .= "<option ";
-        	        if ($row['place'] == $selected){$output .= ' selected ';}
+        	        if (strtoupper($row['place']) == $selected){$output .= ' selected ';}
         	        $output .= "value = '".strtoupper($row['place'])."'> ".strtoupper($row['place'])."</option>";
         	    }
         	    $output .= "</select>";
