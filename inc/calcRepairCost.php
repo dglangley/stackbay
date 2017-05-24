@@ -33,7 +33,12 @@
 $queries[] = $query2;
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$results[] = $r2;
+/*
+			if ($r2['']) {
+				$query3 = "SELECT cost, qty FROM inventory_repairoffer WHERE id = '".$r['tpquote_id']."'; ";
+				$results[] = $r2;
+			}
+*/
 		}
 
 		// add subsequent rma repairs to the array for additional cost evaluation

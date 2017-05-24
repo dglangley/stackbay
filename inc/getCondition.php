@@ -4,7 +4,8 @@
 		global $CONDITIONS;
 
 		// if already set previously, just re-use from memory
-		if (count($CONDITIONS)>0) {
+//		if (count($CONDITIONS)>0) {
+		if (isset($CONDITIONS[$search_string])) {
 			return ($CONDITIONS[$search_string]);
 		}
 
@@ -14,7 +15,7 @@
 			$CONDITIONS[$r['id']] = $r['condition'];
 		}
 
-		if ($search_string) {
+		if ($search_string AND isset($CONDITIONS[$search_string])) {
 			return ($CONDITIONS[$search_string]);
 		} else {
 			return false;

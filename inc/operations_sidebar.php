@@ -32,7 +32,9 @@ include_once $rootdir.'/inc/order_parameters.php';
 	$rtv_items = array();
 	$rtv_array = array();
 	
-	if(strtolower($_REQUEST['ps']) == 'rtv'){
+	$ps = '';
+	if (isset($_REQUEST['ps'])) { $ps = strtolower($_REQUEST['ps']); }
+	if($ps == 'rtv'){
 		$order_type = "RTV";
 		$origin = $order_number;
 		$order_number = "New";
