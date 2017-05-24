@@ -2528,7 +2528,11 @@
 							//Populate the modal
 							$.each(lines, function(i, phrase){
 								//$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
-								$("#history_items").append("<div class='row'><div class='col-sm-4'>"+i+"</div><div class='col-sm-8'>"+phrase+"</div></div>");
+								$("#history_items").append("\
+									<div class='row history_meta'>\
+										<div class='col-sm-4' style='vertical-align: middle;'>"+i+"</div>\
+										<div class='col-sm-8'>"+phrase+"</div>\
+									</div>");
 							});
 							//Show the modal
 							$("#modal-history").modal("show");
