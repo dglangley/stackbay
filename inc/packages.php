@@ -48,9 +48,9 @@
         $order_number = prep($order);
         $name = prep($name);
         $order_type = prep($type,'Sales');
-        $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,$order_type, $name,NOW());";
+        $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,$order_type, $name);";
         qdb($insert) OR die(qe().": $insert");
-        
+
         return qid();
         
     }
