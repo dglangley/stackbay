@@ -109,8 +109,11 @@ $ps_string .= '
             #ps_bold{
                 position: fixed;
                 top: 0;
-                right: 0;
+                width:100%;
                 font-size:14pt;
+                text-align:right;
+                font-family:helvetica;
+                font-size:16pt;
             }
             #letter_head{
                 position:fixed;
@@ -118,6 +121,7 @@ $ps_string .= '
                 left: 0;
                 font-size:10pt;
             }
+
             #footer{
                 text-align:center;
             }
@@ -133,8 +137,10 @@ $ps_string .= '
             Unit 2 <br>
             Ventura, CA 93003
         </b></div>
+        <div id="ps_bold">
+            Packing Slip
+        </div>
         <br>
-        
         <div style="width:100%;height:60px;">&nbsp;</div>
         <!-- Shipping info -->
 

@@ -834,6 +834,7 @@
 	        	$("[class^=serial_listing]").show();
 				if (qty == "in_stock"){
 					$(".out_stock_item").hide();
+					$(".no_stock").hide();
 				}
 			}
 		});
