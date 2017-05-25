@@ -35,6 +35,7 @@ RewriteRule ^(.*)docs/([^.]+.pdf|PDF)$ docs.php [L]
 # orders handler
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([SPR]O)?([0-9]+)$ order.php [L]
+#RewriteRule ^([SPR]O)?([0-9]+)$ order.php [L]
+RewriteRule ^([SPR]O)?(.+)$ order.php [L]
 
 </IfModule>
