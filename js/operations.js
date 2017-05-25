@@ -1512,6 +1512,33 @@
 					$(window).scrollTop();
 				}
 			});
+
+		$(document).on('click', '.component_request_submit', function(e){
+			var submit = [];
+
+			$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
+					
+				var row = {
+					"part" : $(this).find(".line_part").attr("data-search"),
+					"qty" : $(this).find(".line_qty").attr("data-qty"),
+				};
+					
+				submit.push(row);
+			});
+
+			console.log(submit);
+
+			// $.ajax({
+			// 			type: "POST",
+			// 			url: '/json/order-form-submit.php',
+			// 			data: {
+			// 				"table_rows":submit,
+			// 			}, // serializes the form's elements.
+			// 			dataType: 'json',
+			// 			success: function(result) {
+
+			// 			}
+		});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================
 			//Cancel button?

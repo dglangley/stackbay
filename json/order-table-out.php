@@ -65,21 +65,30 @@
 		$date = date("m/d/Y",strtotime($row['date']));
 		
 		//Build the display row
-	   	$row_out = "
-		<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>
-	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
-            <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
-            <td class = 'line_date' data-date = '$date'>".$date."</td>";
-		if(!$o['repair']){
+	   	$row_out = "<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>";
+	   	if(!$o['tech']){
+	   		$row_out .= "
+	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>";
+	    }
+	    $row_out .= "<td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>";
+	    if(!$o['tech']){
+        	$row_out .= "<td class = 'line_date' data-date = '$date'>".$date."</td>";
+        }
+		if(!$o['repair'] && !$o['tech']){
 			$row_out .= "
 			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
-	   	$row_out .=
-	   		"<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
+	   	$row_out .= "<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>";
+
+	   	if(!$o['tech']){
+	   		$row_out .= "
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
-            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
+            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>";
+        }
+
+        $row_out .= "
 			<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
 			<td class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
 		</tr>";

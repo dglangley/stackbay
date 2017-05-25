@@ -298,6 +298,46 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = true;
+		} else if (strtolower($type) == "tech"){
+			$info['type'] = "Tech";
+			//convenient type check
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = false;
+			$info['bill'] = false;
+			$info['tech'] = true;
+			
+			//$info['billing'] = 'bill_to_id';
+			// $info['bill_label'] = 'Bill To';
+			// $info['ship'] = 'ship_to_id';
+			// $info['order'] = "repair_orders";
+			// $info['contact_col'] = "Sales Rep";
+			// $info['header'] = "Repair";
+			$info['item'] = "purchase_requests";
+			// $info['client'] = "Customer";
+			// $info['address_type'] = '';
+			// $info['price'] = 'Price';
+			// $info['ext'] = 'Ext Price';
+			$info['rep_type'] = "Tech";
+			// $info['date_label'] = "PO";
+			//$info['tables'] = " purchase_requests ";
+			//$info['short'] = "ro";
+			$info['id'] = "ro_number";
+			$info['item_id'] = $info['id'];
+			$info['active'] = " status = 'Active' ";
+			$info['inactive'] = " status = 'Completed' ";
+			$info['status_empty'] = "Void";
+			$info['url'] = "repair_add";
+			$info['color'] = '#beadbe';
+			$info['edit_mode'] = 'order';
+			$info['date_field'] = 'due_date';
+			//Field header information
+			// $info['due_date'] = true;
+			// $info['warranty'] = true;
 		} else{
 			$info['case'] = $type;
 		}

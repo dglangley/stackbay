@@ -166,20 +166,20 @@ function sub_rows($search = ''){
                 $rows = "
                     <!-- Created from $search -->
                     <tr class = 'items_label'>
-                        <td></td>
-                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
-                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
-                        <td></td>
-                        <td></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page=="Tech" ?"style='display:none;'":"")."></td>
                         <td></td>
                         <td></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td>
                             <div class='row-fluid'>
-                                <div class='col-md-6' style='padding:0%;text-align:center;'>Stock</div>
-                                <div class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
+                                <div class='".($page=="Tech" ?"col-md-12":"col-md-6")."' style='padding:0%;text-align:center;'>Stock</div>
+                                <div ".($page=="Tech" ?"style='display:none;'":"")." class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
                             </div>
                         </td>
-                        <td></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                     </tr>";
     
                 foreach ($items as $id => $info){
@@ -196,16 +196,17 @@ function sub_rows($search = ''){
                         $text .= "&nbsp;";
                     }
                     $text .= "</b></div>";
-                    
-                    $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;padding-left:0%;padding-right:0%;'>";
-                    if(array_key_exists($id, $inc)){
-                        $sellable = true;
-                        $text .= $inc[$id];
+                    if($page!="Tech") {
+                        $text .= "<div title='Ordered' class='col-md-6 new_stock' style='text-align:center;color:red;padding-left:0%;padding-right:0%;'>";
+                        if(array_key_exists($id, $inc)){
+                            $sellable = true;
+                            $text .= $inc[$id];
+                        }
+                        else{
+                            $text .= "&nbsp;";
+                        }
+                        $text .= "</div>";
                     }
-                    else{
-                        $text .= "&nbsp;";
-                    }
-                    $text .= "</div>";
                     $text .= "</div>";
                     if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
                         $text = '';
@@ -214,16 +215,16 @@ function sub_rows($search = ''){
                     }
                     $rows .= "
                     <tr class = 'search_lines' data-line-id = $id>
-                        <td></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td>";
         
                     $rows .=(display_part($info));
                     $rows .= "</td>
-                        <td".($page =="Repair" ?"style='display:none;'":"")."></td>
-                        <td ".($page =="Repair" ?"style='display:none;'":"")."></td>
-                        <td></td>
+                        <td".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-                        <td></td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td>$text</td>
                         <td></td>
                     </tr>
