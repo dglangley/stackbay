@@ -133,10 +133,12 @@
             if ($companyid != "'%'"){
                 //Find the company's most popular option (IF THE SELECTED FIELD IS NOT ALREADY SELECTED)            
                 if (!$selected){
-                    $default = "SELECT `termsid`, COUNT(`termsid`) n FROM ".$o['order']."
-                    WHERE `companyid` LIKE $companyid AND `created` BETWEEN NOW() - INTERVAL 30 DAY AND NOW()
+                    $default = "SELECT `termsid`, COUNT(`termsid`) n, `created` 
+                    FROM ".$o['order']."
+                    WHERE `companyid` LIKE $companyid
                     GROUP BY `termsid`
-                    ORDER BY n DESC;";
+                    ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), mode DESC
+                    limit 1";
                     $preselected = qdb($default) or die(qe()." $default");
                     if (mysqli_num_rows($preselected)){
                         $row = mysqli_fetch_assoc($preselected);
