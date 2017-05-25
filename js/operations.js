@@ -299,45 +299,46 @@
 						},
 					dataType: 'json',
 					success: function(right) {
-						
-							var bvalue = right['b_value'];
-							
-//							$("#select2-bill_to-container").html("");
-							if (bvalue){
-								var bstring = right['b_street'];
-//								var useful = right['b_street']+'<br>'+right['b_city']+', '+right['b_state']+' '+right['b_postal_code'];
-//					    		$("#select2-bill_to-container").html(useful);
-//					    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bstring+"</option>");
+						console.log(right);
+						var most = true;
+						if (typeof right.bill !== 'undefined') {
+							$.each(right.bill, function(id, info) {
 								var option = $('<option></option>').
-									prop('selected',true).
-									text(bstring).
-									val(bvalue);
+									text(info.street).
+									val(id);
+								if(most){
+									option.prop('selected',true);
+									most = false;
+								}
 								option.appendTo($("#bill_to"));//insert pre-selected option into select menu
 								// initialize the change so it takes effect
-								$("#bill_to").trigger("change");
-							}
-			    			console.log("bdisplay: "+bstring);
-							var svalue = right['s_value'];
-//							$("#select2-ship_to-container").html("");
-							if (svalue){
-								var sstring = right['s_street'];
-//								var useful = right['s_street']+'<br>'+right['s_city']+', '+right['s_state']+' '+right['s_postal_code'];
-//					    		$("#select2-ship_to-container").html(useful);
-//					    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sstring+"</option>");
+							})
+							$("#bill_to").trigger("change");
+						}
+						most = true;
+
+						if (typeof right.ship !== 'undefined') {
+							$.each(right.ship, function(id, info) {
 								var option = $('<option></option>').
-									prop('selected',true).
-									text(sstring).
-									val(svalue);
+									text(info.street).
+									val(id);
+								if(most){
+									option.prop('selected',true);
+									most = false;
+								}
 								option.appendTo($("#ship_to"));//insert pre-selected option into select menu
 								// initialize the change so it takes effect
-								$("#ship_to").trigger("change");
-							}
+							})
+							$("#ship_to").trigger("change");
+						}
+							
 
 			    		console.log("JSON address-default.php: Success");
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON address-default.php: Error");
+						console.log(window.location.origin+"/json/address-default.php?company="+company+"&order="+order_type);
 					},
 					complete: function(jqXHR,textStatus) {
 						$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":carrier});
@@ -916,7 +917,7 @@
 					dataType: 'json',
 					success: function(data) {
 						console.log("Logging the ID (this should be false if creating new): "+id);
-				    	console.log("Return from Address Submission: "+data);
+				    	console.log("Return from Address Submission: "+data.query);
 				    	
 				    	if (!isNaN(id)){
 				    		data = id;
@@ -926,14 +927,13 @@
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#ship_to"));
-							/* Let select2 do whatever it likes with this */
+							$("#select2-ship_to-container").html('');
 							$("#ship_to").trigger('change');
 				    	} else {
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#bill_to"));
-							$("#bill_to").val(data);
-							/* Let select2 do whatever it likes with this */
+							$("#select2-bill_to-container").html('');
 							$("#bill_to").trigger('change');
 							// updateShipTo();
 				    	}
