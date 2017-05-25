@@ -157,8 +157,8 @@ echo $query2.'<BR>';
 				$actual = round($r['total'],4);
 				$average = $actual;
 
-				$query3 = "SELECT average FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
-				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				$avg_query = "SELECT average FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
+				$result3 = qdb($avg_query) OR die(qe().'<BR>'.$avg_query);
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
 					$average = $r3['average'];
@@ -174,11 +174,15 @@ echo $query2.'<BR>';
 echo $r['serial'].' ';
 if ($r['b_cost']<>$actual) {
 	if ($debug==1) { echo $qty.' * '.$r['price'].' + '.$total_repair.' = '.$ext.' '; }
-	echo '(Brians cost: '.$cost.', avg: '.$avg_cost.')<BR>';
+	echo '(Brians cost: '.$r['b_cost'].', avg: '.$r['b_avg'].')<BR>';
 	echo $query3.'<BR>';
 } else {
 	echo '<BR>';
 }
+if ($average<>$r['b_avg']) {
+	echo $avg_query.'<BR>';
+}
+echo '<BR>';
 			}
 		}
 

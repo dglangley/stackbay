@@ -2,14 +2,18 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	//$order = preg_replace('/^([\/])([SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
-	$order_str = explode('-',preg_replace('/^([\/])([SPR]O)?([0-9]{4,6})$/i','$2-$3',trim($_SERVER["REQUEST_URI"])));
-	$type = $order_str[0];
-	$order = $order_str[1];
+	$type = trim($_SERVER["REQUEST_URI"]);
+	$order = '';
+	$order_str = explode('|',preg_replace('/^([\/])([SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
+	if (count($order_str)==2) {
+		$type = $order_str[0];
+		$order = $order_str[1];
+	}
 
 	// user is searching by customer PO#?
 	$search_parts = '';
 	if (! $order AND $type==$_SERVER["REQUEST_URI"]) {
-		$search_parts = explode('-',preg_replace('/^([\/])([SPR]O)?([0-9]{8,12})$/i','$2-$3',trim($_SERVER["REQUEST_URI"])));
+		$search_parts = explode('|',preg_replace('/^([\/])([SPR]O)?([[:alnum:].-]{3,25})$/i','$2|$3',trim($_SERVER["REQUEST_URI"])));
 		$type = $search_parts[0];
 		$search = $search_parts[1];
 
