@@ -453,11 +453,11 @@
 							$('#terms_div').replaceWith(result);
 						}
 						console.log("JSON company terms dropPop.php: Success");
-						console.log(window.location.origin+"/json/dropPop.php?field=terms&size=col-sm-5&label=Terms&limit="+company+"-"+order_type);
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON company terms dropPop.php: Error");
+						console.log(window.location.origin+"/json/dropPop.php?field=terms&size=col-sm-5&label=Terms&limit="+company+"-"+order_type);
 					}
 				});
 			});
@@ -621,6 +621,7 @@
 				if(e.keyCode == 9 && shifted){
 					e.preventDefault();
 					$(".search_lines input[name='ni_qty']:first").focus();
+				var sub_row = $(this).closest("tr");
 				} else if (e.keyCode == 9) {
 					e.preventDefault();
 				} else if (e.keyCode == 13) {

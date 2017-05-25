@@ -137,7 +137,7 @@
                     FROM ".$o['order']."
                     WHERE `companyid` LIKE $companyid
                     GROUP BY `termsid`
-                    ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), mode DESC
+                    ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), n DESC
                     limit 1";
                     $preselected = qdb($default) or die(qe()." $default");
                     if (mysqli_num_rows($preselected)){
