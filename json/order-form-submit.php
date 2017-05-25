@@ -315,8 +315,8 @@
                 `".$o['date_field']."`= $date ";
 if(!$o['repair']){
     $update .= "
-                ,`warranty` = ".prep($warranty)."
-                ,`conditionid` = ".prep($conditionid)." ";
+                ,`warranty` = ".$warranty."
+                ,`conditionid` = ".$conditionid." ";
 }
 	$update .= "
                 WHERE `id` = $record;";
@@ -376,7 +376,7 @@ if(!$o['repair']){
         'error' => qe(),
         'update' => $macro,
 		'message' => 'Success',
-        'input' => $insert,
+        'input' => $update,
         'qar' => qar()
     );
     

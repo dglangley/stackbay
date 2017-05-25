@@ -719,10 +719,14 @@
 			$(document).on("click",".forms_edit",function() {
 				var click_row = $(this).closest("tr");
 				var lazy_row = click_row.next();
+				var ext = click_row.find(".line_linext").text();
+				var price = click_row.find(".line_price").text();
+				var qty = click_row.find(".line_qty").text();
 				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
-				var ext = click_row.find(".line_linext").text();
 				lazy_row.find("input[name='ni_ext']").val(ext);
+				lazy_row.find("input[name='ni_qty']").val(qty);
+				lazy_row.find("input[name='ni_price']").val(price);
 				click_row.hide();
 				lazy_row.show();
 			});
