@@ -19,12 +19,13 @@
 	// $br = ($order_type == "Purchase")? 'remit_to_id' : 'bill_to_id';
 	if($companyid){
 	    //If there is a value set for the company, load their defaults to the top result always.
-		    $d_bill = "Select count(`".$o['billing']."`) moden, max(`created`) recent, `".$o['billing']."`, a.`name`, a.`street`, a.`city`, a.`state`, a.`postal_code`
-	    	    FROM ".$o['order'].", addresses a
-	    	    WHERE `".$o['billing']."` = a.`id` AND `companyid` = $companyid
-	    	    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
-	    	    GROUP BY `".$o['billing']."` 
-	    	    ORDER BY moden desc,recent;";
+		    $d_bill = "Select count('".$o['billing']."') mode, `".$o['billing']."`, a.`name`,
+            a.`street`, a.`city`, a.`state`,a.`postal_code`, created
+            FROM ".$o['order'].", addresses a
+            WHERE `".$o['billing']."` = a.`id` AND `companyid` = $companyid 
+            GROUP BY `".$o['billing']."`
+            ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), mode DESC
+            LIMIT 3;";
 			
 			$b_lines = array();
 		    $bill = qdb($d_bill) or die(qe().$d_bill);
@@ -32,25 +33,20 @@
 				foreach ($bill as $row) {
 					$b_lines[$row[$o['billing']]] = $row;
 		            $b_lines[$row[$o['billing']]]['b_value'] = $row[$o['billing']];
-		            // // $line['b_display'] = $row['name'].' <br> '.$row['street'].'<br>'.$row['city'].', '.$row['state'].' '.$row['postal_code'];
-		            // $line['b_name'] = $row['name'];
-		            // $line['b_street'] = $row['street'];
-		            // $line['b_city'] = $row['city'];
-		            // $line['b_state'] = $row['state'];
-		            // $line['b_postal_code'] = $row['postal_code'];
 				}
 			}
-			
+
 		if ($o['purchase']){
 			$d_ship = "SELECT a.`name`, a.`street`, a.`city`, a.`state`, a.`postal_code`, `id` ship_to_id FROM addresses a WHERE `name` = 'Ventura Telephone';";
 		}else{
 			
-	    $d_ship = "Select count(`ship_to_id`) moden, max(`created`) recent, `ship_to_id`, a.`name`, a.`street`, a.`city`, a.`state`, a.`postal_code`
-		    FROM ".$o['order']." , addresses a
-		    WHERE `ship_to_id` = a.`id` AND `companyid` = $companyid
-		    AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
-		    GROUP BY `ship_to_id` 
-		    ORDER BY moden,recent;";
+	    $d_ship = "Select count('ship_to_id') mode, `ship_to_id`, a.`name`,
+            a.`street`, a.`city`, a.`state`,a.`postal_code`, created
+            FROM sales_orders, addresses a
+            WHERE sales_orders.`ship_to_id` = a.`id` AND `companyid` = $companyid 
+            GROUP BY `ship_to_id`
+            ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), mode DESC
+            LIMIT 3;";
 		}
 		$s_lines;
 		$ship = qdb($d_ship) or die(qe().$d_ship);

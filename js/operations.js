@@ -442,16 +442,18 @@
 					url: '/json/dropPop.php',
 					data: {
 						"field":"terms",
-						"limit":company,
+						"limit": company+"-"+order_type ,
 						"size": "col-sm-5",
 						"label": "Terms"
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
 						//Run this if this is a new PO otherwise the items are preset and we don't want to change terms
-						if(po_number == null)
+						if(po_number == null){
 							$('#terms_div').replaceWith(result);
+						}
 						console.log("JSON company terms dropPop.php: Success");
+						console.log(window.location.origin+"/json/dropPop.php?field=terms&size=col-sm-5&label=Terms&limit="+company+"-"+order_type);
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);

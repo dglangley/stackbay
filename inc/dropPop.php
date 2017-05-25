@@ -17,6 +17,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/getCondition.php';
+	include_once $rootdir.'/inc/order_parameters.php';
 
     
     function getEnumValue( $table = 'inventory', $field = 'status' ) {
@@ -125,21 +126,21 @@
         }
         else if ($field == 'terms'){
             //Here limit will be used as a companyid
-            $companyid = prep($limit, "'%'");
-
+            $limit = explode("-", $limit);
+            $companyid = prep($limit[0], "'%'");
+            $o = o_params($limit[1]);
+            
             if ($companyid != "'%'"){
                 //Find the company's most popular option (IF THE SELECTED FIELD IS NOT ALREADY SELECTED)            
                 if (!$selected){
-                    $default = "SELECT `termsid`, COUNT(`termsid`) n FROM sales_orders 
+                    $default = "SELECT `termsid`, COUNT(`termsid`) n FROM ".$o['order']."
                     WHERE `companyid` LIKE $companyid AND `created` BETWEEN NOW() - INTERVAL 30 DAY AND NOW()
                     GROUP BY `termsid`
-                    ORDER BY n DESC
-    				LIMIT 1;";
-                    $preselected = qdb($default);
-                    if (mysqli_num_rows($preselected) > 0){
-                        foreach ($preselected as $row){
-                            $selected = $row['termsid'];
-                        }
+                    ORDER BY n DESC;";
+                    $preselected = qdb($default) or die(qe()." $default");
+                    if (mysqli_num_rows($preselected)){
+                        $row = mysqli_fetch_assoc($preselected);
+                        $selected = $row['termsid'];
                     }
                 }
                 //Pull anything /explicitly allowed/ from the company terms table
