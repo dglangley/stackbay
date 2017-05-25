@@ -16,17 +16,23 @@
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/dropPop.php';
 		include_once $rootdir.'/inc/locations.php';
+		include_once $rootdir.'/inc/order_parameters.php';
 		
 
     $inventory = grab('inventory');
 	$mode = grab('mode');
 
-
+	function getOrderNumber($line_number, $order_type){
+		$o = o_params($order_type);
+		$select = "SELECT ".$o['id']." FROM ".$o['item']." where id = ".prep($line_number);
+		$old = qdb($select) or die(qe()." $select");
+		$result = mysqli_fetch_assoc($old);
+		return($result[$o['id']]);
+	}
 
     function display_history($invid){
     	//Initialize variables
     	$output = array();
-    	
     	//Take in the inventory id
 		$invid = prep($invid);
 		// Get current values
@@ -36,7 +42,7 @@
 			$c = mysqli_fetch_assoc($c);
 		}
 		//Get associated history items
-		$query  = "SELECT * FROM inventory_history WHERE invid = $invid ORDER BY date_changed DESC;";
+		$query  = "SELECT * FROM inventory_history WHERE invid = $invid ORDER BY date_changed ASC;";
 		$history = qdb($query);
 		
     	//Things to eventually consider: record splitting the history
@@ -48,61 +54,67 @@
 				$string = '';
 				switch ($r['field_changed']){
 					case 'locationid':
-						$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($c['locationid'])." ";
+						if($r['changed_from']){
+							$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($r['value'])." ";
+						} else {
+							$string = "Part placed in ".display_location($r['value'])." ";
+						}
 						//Update the current locationid to make the rest of the phrases make sense.
-						$c['locationid'] = $r['changed_from'];
 						//Break the loop
 						break;
 
 					case 'serial_no':
-						$string = "Serial number was changed from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
-						$c[$r['field_changed']] = $r['field_changed'];
+						$string = "Serial number changed: ".$r['changed_from']." to ".$r['value']." ";
 						break;
 
 					case 'conditionid':
-						$string = "Condition was updated from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
-						$c[$r['field_changed']] = $r['field_changed'];
+						$string = "Condition: ".getCondition($r['changed_from'])." to ".($r['value']? getCondition($r['value']) : " unknown ")." ";
 						break;
 	
 					case 'qty':
+						continue(2);
 						$string = "Quantity ";
 						if($r['changed_from'] > $c[$r['field_changed']]){ $string .= "decremented "; }
 						else { $string .= "incremented "; }
-						$string .= "from ".$r['changed_from']." to ".$c[$r['field_changed']]." ";
-
-						$c[$r['field_changed']] = $r['field_changed'];
+						$string .= ": ".$r['changed_from']." to ".$r['value']." ";
 						break;
 
 					case 'partid':
-						$string = "Part was changed from ".getPart($r['changed_from'])." to ".getPart($c[$r['field_changed']])." ";
-						$c[$r['field_changed']] = $r['field_changed'];
+						$string = "Part RM'ed: ".getPart($r['changed_from'])." to ".getPart($r['value'])." ";
+				
 						break;
-
+					case 'status':
+						$string = "Status Changed: ".$r['changed_from']." to ".$r['value'];
+						break;
 					case 'purchase_item_id':
 					case 'sales_item_id':
 					case 'returns_item_id':
-						$order_type = strtoupper(substr($r['field_changed'],0,1))."O";
+						// $order_type = strtoupper(substr($r['field_changed'],0,1))."O";
+						$o = o_params($r['field_changed']);
+						/*
 						$event = 'purchased';
 						if ($r['field_changed']=='returns_item_id') {
 							$order_type = 'RMA';
 							$event = 'returned';
 						} else if ($r['field_changed']=='sales_item_id') {
 							$event = 'sold';
-						}
-						$string = "Item was previously ".$event." from ".$order_type."#".$r['changed_from']." to ".$c[$r['field_changed']]." ";
-						$c[$r['field_changed']] = $r['field_changed'];
+						}*/
+						$string = "Item ".$o['event']." on ".strtoupper($o['short'])."#".getOrderNumber($r['value'],$r['field_changed']);
 						break;
 
 					case 'new':
 						$string = "Item entered into system ";
 						break;
+					default:
+						continue(2);
+						break;
 
 				}
 				//$string .= "on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
 				if($r['userid']){
-					$string .= " by ".getContact($r['userid']);
+					$string .= "by ".getContact($r['userid']);
 				}
-				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = $string;
+				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = ucwords($string);
 	    	}
     	}
     	else{

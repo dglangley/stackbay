@@ -110,6 +110,7 @@
 			)
 			OR i.id IS NULL
 		)
+		Order by ln
 		;";
 		// echo($po_select);
 		$po_results = qdb($po_select) OR die(qe().": $po_select");
@@ -122,6 +123,7 @@
             $grouped[$row['purchid']]['price'] = $row['price'];
             // $grouped[$row['purchid']]['id'] = $row['id'];
 			$grouped[$row['purchid']]['serials'][$row['id']] = $row['serial_no'];
+			$grouped[$row['purchid']]['ln'] = $row['ln'];
 			$subtotal += $row['qty'] * $row['amount'];
 			
 		}

@@ -1,7 +1,7 @@
 <?php
     function o_params($type){
 		$info = array();
-		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po"){
+		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id"){
 			$info['type'] = "Purchase";
 			//convenient type check
 			$info['purchase'] = true;
@@ -28,6 +28,7 @@
 			$info['date_label'] = "PO";
 			$info['tables'] = " purchase_orders o, purchase_items i WHERE o.po_number = i.po_number ";
 			$info['short'] = "po";
+			$info['event'] = 'purchased';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
@@ -42,7 +43,7 @@
 			$info['warranty'] = true;
 			
 		}
-		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so"){
+		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id"){
 			$info['type'] = "Sales";
 			//convenient type check
 			$info['purchase'] = false;
@@ -68,6 +69,7 @@
 			$info['date_label'] = "SO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
 			$info['short'] = "so";
+			$info['event'] = 'sold';
 			$info['id'] = "so_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND i.ship_date IS NULL ";
@@ -108,6 +110,7 @@
 			$info['date_label'] = "Invoice";
 			$info['tables'] = " invoices i, invoice_items ii WHERE i.invoice_no = ii.invoice_no ";
 			$info['short'] = "INV";
+			//$info['event'] = '';
 			$info['id'] = "invoice_no";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND i.status = 'Pending' ";
@@ -149,6 +152,7 @@
 			$info['date_label'] = "PO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
 			$info['short'] = "po";
+			//$info['event'] = '';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " AND i.ship_date IS NULL ";
@@ -163,7 +167,7 @@
             $info['warranty'] = true;
             
 		}
-		else if (strtolower($type) == "rma"){
+		else if (strtolower($type) == "rma" || strtolower($type) == "returns_item_id"){
 			//RMA acts as a purchase order
 			$info['type'] = "RMA";
 			//Convenient type check
@@ -190,6 +194,7 @@
 			$info['date_label'] = "RMA";
 // 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
 			$info['short'] = "po";
+			$info['event'] = 'returned';
 			$info['id'] = "rma_number";
 			$info['item_id'] = $info['id'];
 // 			$info['active'] = " AND i.ship_date IS NULL ";
@@ -231,6 +236,7 @@
 			$info['date_label'] = "Invoice";
 			$info['tables'] = " sales_credits sc, sales_credit_items sci WHERE sci.cid = sc.id ";
 			$info['short'] = "INV";
+			//$info['event'] = '';
 			$info['active'] = " AND i.status = 'Pending' ";
 			$info['inactive'] = " AND i.status = 'Completed' ";
 			$info['status_empty'] = "Void";
@@ -243,7 +249,7 @@
             $info['warranty'] = false;
             
 		}
-		else if (strtolower($type) == "repair" || strtolower($type) == "ro"){
+		else if (strtolower($type) == "repair" || strtolower($type) == "ro" || strtolower($type) == "repair_item_id"){
 			$info['type'] = "Repair";
 			//convenient type check
 			$info['purchase'] = false;
@@ -270,6 +276,7 @@
 			$info['date_label'] = "PO";
 			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
 			$info['short'] = "ro";
+			$info['event'] = 'ordered for repair';
 			$info['id'] = "ro_number";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " status = 'Active' ";

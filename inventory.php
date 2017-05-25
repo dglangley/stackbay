@@ -99,7 +99,10 @@
 				display: block;
 			}
 		}
-		#modalHistoryBody div:nth-child(even){
+		#modalHistoryBody .history_meta{
+			padding:2px;
+		}
+		#modalHistoryBody .history_meta:nth-child(even){
 			background-color:#f7f7f7;
 		}
 		.label-in-repair{
