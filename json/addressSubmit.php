@@ -55,7 +55,9 @@
 						`country` = 'US'
 						Where `id` = $id;";
 			qdb($update) or die(qe());
-			echo json_encode($update);
+			$result['query'] = $update;
+			$result['display'] = $street;
+			echo json_encode($result);
 			exit;
 		}	
 		else{

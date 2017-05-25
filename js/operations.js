@@ -299,45 +299,46 @@
 						},
 					dataType: 'json',
 					success: function(right) {
-						
-							var bvalue = right['b_value'];
-							
-//							$("#select2-bill_to-container").html("");
-							if (bvalue){
-								var bstring = right['b_street'];
-//								var useful = right['b_street']+'<br>'+right['b_city']+', '+right['b_state']+' '+right['b_postal_code'];
-//					    		$("#select2-bill_to-container").html(useful);
-//					    		$("#bill_to").append("<option selected value='"+bvalue+"'>"+bstring+"</option>");
+						console.log(right);
+						var most = true;
+						if (typeof right.bill !== 'undefined') {
+							$.each(right.bill, function(id, info) {
 								var option = $('<option></option>').
-									prop('selected',true).
-									text(bstring).
-									val(bvalue);
+									text(info.street).
+									val(id);
+								if(most){
+									option.prop('selected',true);
+									most = false;
+								}
 								option.appendTo($("#bill_to"));//insert pre-selected option into select menu
 								// initialize the change so it takes effect
-								$("#bill_to").trigger("change");
-							}
-			    			console.log("bdisplay: "+bstring);
-							var svalue = right['s_value'];
-//							$("#select2-ship_to-container").html("");
-							if (svalue){
-								var sstring = right['s_street'];
-//								var useful = right['s_street']+'<br>'+right['s_city']+', '+right['s_state']+' '+right['s_postal_code'];
-//					    		$("#select2-ship_to-container").html(useful);
-//					    		$("#ship_to").append("<option selected value='"+svalue+"'>"+sstring+"</option>");
+							})
+							$("#bill_to").trigger("change");
+						}
+						most = true;
+
+						if (typeof right.ship !== 'undefined') {
+							$.each(right.ship, function(id, info) {
 								var option = $('<option></option>').
-									prop('selected',true).
-									text(sstring).
-									val(svalue);
+									text(info.street).
+									val(id);
+								if(most){
+									option.prop('selected',true);
+									most = false;
+								}
 								option.appendTo($("#ship_to"));//insert pre-selected option into select menu
 								// initialize the change so it takes effect
-								$("#ship_to").trigger("change");
-							}
+							})
+							$("#ship_to").trigger("change");
+						}
+							
 
 			    		console.log("JSON address-default.php: Success");
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON address-default.php: Error");
+						console.log(window.location.origin+"/json/address-default.php?company="+company+"&order="+order_type);
 					},
 					complete: function(jqXHR,textStatus) {
 						$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":carrier});
@@ -441,20 +442,22 @@
 					url: '/json/dropPop.php',
 					data: {
 						"field":"terms",
-						"limit":company,
+						"limit": company+"-"+order_type ,
 						"size": "col-sm-5",
 						"label": "Terms"
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
 						//Run this if this is a new PO otherwise the items are preset and we don't want to change terms
-						if(po_number == null)
+						if(po_number == null){
 							$('#terms_div').replaceWith(result);
+						}
 						console.log("JSON company terms dropPop.php: Success");
 					},					
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON company terms dropPop.php: Error");
+						console.log(window.location.origin+"/json/dropPop.php?field=terms&size=col-sm-5&label=Terms&limit="+company+"-"+order_type);
 					}
 				});
 			});
@@ -618,6 +621,7 @@
 				if(e.keyCode == 9 && shifted){
 					e.preventDefault();
 					$(".search_lines input[name='ni_qty']:first").focus();
+				var sub_row = $(this).closest("tr");
 				} else if (e.keyCode == 9) {
 					e.preventDefault();
 				} else if (e.keyCode == 13) {
@@ -715,10 +719,14 @@
 			$(document).on("click",".forms_edit",function() {
 				var click_row = $(this).closest("tr");
 				var lazy_row = click_row.next();
+				var ext = click_row.find(".line_linext").text();
+				var price = click_row.find(".line_price").text();
+				var qty = click_row.find(".line_qty").text();
 				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
-				var ext = click_row.find(".line_linext").text();
 				lazy_row.find("input[name='ni_ext']").val(ext);
+				lazy_row.find("input[name='ni_qty']").val(qty);
+				lazy_row.find("input[name='ni_price']").val(price);
 				click_row.hide();
 				lazy_row.show();
 			});
@@ -916,7 +924,7 @@
 					dataType: 'json',
 					success: function(data) {
 						console.log("Logging the ID (this should be false if creating new): "+id);
-				    	console.log("Return from Address Submission: "+data);
+				    	console.log("Return from Address Submission: "+data.query);
 				    	
 				    	if (!isNaN(id)){
 				    		data = id;
@@ -926,14 +934,13 @@
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#ship_to"));
-							/* Let select2 do whatever it likes with this */
+							$("#select2-ship_to-container").html('');
 							$("#ship_to").trigger('change');
 				    	} else {
 	    					var option = $('<option></option>').prop('selected', true).text(line_1).val(data);
 							/* insert the option (which is already 'selected'!) into the select */
 							option.appendTo($("#bill_to"));
-							$("#bill_to").val(data);
-							/* Let select2 do whatever it likes with this */
+							$("#select2-bill_to-container").html('');
 							$("#bill_to").trigger('change');
 							// updateShipTo();
 				    	}

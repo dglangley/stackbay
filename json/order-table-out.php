@@ -72,7 +72,7 @@
             <td class = 'line_date' data-date = '$date'>".$date."</td>";
 		if(!$o['repair']){
 			$row_out .= "
-			<td class = 'line_cond'  data-cond = ".$row['conditionid'].">".getCondition($row['conditionid'])."</td>
+			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
 	   	$row_out .=
