@@ -40,6 +40,23 @@
 	$yesterday = '';
 	
 
+	function lastPrice($invid,$ps = 'sold',$before_date = ''){
+		//Search for the last purchased price based off an inventory id.
+		//If there are multiple, look for the most recent prior to the date of the search
+		$o = o_params($ps);
+		$select = "SELECT `price` FROM `".$o['item']."` WHERE `id` = (
+			SELECT `value`
+			from `inventory_history`
+			WHERE invid = $invid 
+			AND field_changed = '".$o['inv_item_id']."'
+			".(($before_date)? "AND date(date_changed) <= ".format_date($before_date,"Y-m-d"):"")." 
+			order by date_changed desc 
+			limit 1 
+			);";
+		$result = qdb($select) or die(qe()." | $select");
+		$result = mysqli_fetch_assoc($result);
+		return($result['price']);
+	}
 
 	
 
@@ -175,41 +192,73 @@
 	}
 
 	// echo"<div style='position:fixed;right:15px;bottom:10px;'>";
+	//If there is an RMA number, then this is an existing RMA record
 	if ($rma_number){
 		$sidebar_mode = 'RMA';
 		$sidebar_number = $rma_number;
 		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
 		$rma_select = qdb($rma_select);
-		//If this record exists, perform the check that there is some valid answer
-
-		if (mysqli_num_rows($rma_select) > 0){
+		
+		//Verify there are Rows from this returns/get meta information
+		if (mysqli_num_rows($rma_select)){
 			//Date Created
 			
+			//Should only be one row
 			$rma = mysqli_fetch_assoc($rma_select);
 			
 			//Check to see if the order was within the last day
 			$date_created = format_date($rma['created'],"Y-m-d");
 			$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
 			if($date_created >= $yesterday){
+				//If order was within last day, load Available sales order rows (allowing the user to edit them)
 				if($rma['order_type'] == "Sale"){
-					//If order was within last day, load associated Available sales order rows
 					$so_number = $rma['order_number'];
 				}
 				else{
+					//Otherwise, there is no need: just pull the 
 					$so_number = false;
 				}
 			} else {
 				$mode = 'old';
 			}
 			
-			$rma_mic = "SELECT si.price, i.serial_no, ri.* FROM `return_items` ri, inventory i, sales_items si WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
-			$rma_micro = qdb($rma_mic);
+			//Grab all the serials which have been received on this RMA already
+			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
+			/*
+			This is the sales information of all the items which were ever sold on the inventory
+			SELECT * FROM inventory i, sales_items si where 
+			si.id = i.sales_item_id
+			AND i.id in ( 
+				SELECT invid FROM `return_items` ri, inventory_history ih 
+				WHERE ih.invid = ri.inventoryid 
+				and field_changed = "returns_item_id" 
+				and value = ri.id
+				and rma_number = 14347
+			);
+			*/
+			/*
+			
+			SELECT i.* FROM `inventory_history` ih, inventory i
+			where invid = i.id 
+			AND field_changed = 'sales_item_id' 
+			AND value in(
+				SELECT si.id FROM `returns`, `sales_items` si 
+				where order_type = 'Sale' 
+				and order_number = si.so_number 
+				and rma_number = 14162
+			)
+
+
+			*/
+			$rma_micro = qdb($rma_mic) or die(qe()." $rma_mic");
 			
 			$receive_check = '';
+			//This check is grouping line item information by the inventory ID. I should be able to 
 			foreach($rma_micro as $line_item){
 				$receive_check = $line_item['id'].", ";
 				$rma_items[$line_item['partid']][$line_item['inventoryid']] = $line_item;
-				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange");
+				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange"); 
+				//Exhange is a bit of a doubled name in the line above: here it refers to a "exhange" as a general term for sales, returns, purhcases and repairs.
 			}
 			$receive_check = trim($receive_check,", ");
 			//This Query will search the history to see if the parts were ever received against the line item record
@@ -225,6 +274,7 @@
 		$sidebar_number = $so_number;
 	}
 	
+	//If there is an so_number set, and we are not just looking at an existing record, here I would pull the SO items for addition
 	if($so_number && $mode != 'view' && $mode != 'old'){
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 		$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
@@ -408,7 +458,7 @@
 
 										<td>
 											<?php if($init):?>
-												<?=format_price($inf['price']);?>
+												<?=format_price(lastPrice($inf['inventoryid']));?>
 											<?php endif;?>
 										</td>
 
