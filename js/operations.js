@@ -830,22 +830,43 @@
 			//Delete Button
 			$(document).on("click",".forms_trash",function() {
 				var id = $(this).closest("tr").attr('data-record');
-				var number_recieved = check_received(order_type,id);
-				if (number_recieved == 0){
-					if(confirm("Are you sure you want to delete this row?")){
-						$(this).closest("tr").remove();
-						$(this).closest("tr").next().remove();
-						$.ajax({
-							type: "POST",
-							url: '/json/row_delete.php',
-							data: {
-								"id" : id,
-								"order": order_type
-								}, // serializes the form's elements.
-							dataType: 'json',
-						});
+				var $this = $(this);
+				$.ajax({
+					type: "POST",
+					url: '/json/check_received.php',
+					data: {
+						"type" : order_type,
+						"line" : id,
+					},
+					dataType: 'json',
+					success: function(number_received) {	
+						console.log("valid");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON Check Received | check_received.php: Error");
+						console.log(window.location.origin+"/json/check_received.php");
+					},
+					complete: function(number_received){
+						if(confirm("Are you sure you want to delete this row?")){
+							$this.closest("tr").remove();
+							$this.closest("tr").next().remove();
+							$.ajax({
+								type: "POST",
+								url: '/json/row_delete.php',
+								data: {
+									"id" : id,
+									"order": order_type
+									}, // serializes the form's elements.
+								dataType: 'json',
+							});
+						}
 					}
-				}
+				});
+				
+				
+				
+				
 			});
 
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -2597,26 +2618,8 @@
 		
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
-			var received;
-			function check_received(type, line){
-				$.ajax({
-					type: "POST",
-					url: '/json/check_received.php',
-					data: {
-						"type" : type,
-						"line" : line,
-					},
-					dataType: 'json',
-					success: function(number_recieved) {
-						console.log(number_recieved+" items have been received against line id "+line);
-						return number_recieved;
-					},
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON Check Received | check_received.php: Error");
-					}
-				});
-			}
+			
+			
 			
 			function package_delete(pack, serialid){
 				$.ajax({

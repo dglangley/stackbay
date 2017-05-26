@@ -28,7 +28,7 @@
 		include_once $rootdir.'/inc/dropPop.php';
 		include_once $rootdir.'/inc/order_parameters.php';
 		include_once $rootdir.'/inc/display_part.php';
-
+		include_once $rootdir.'/inc/check_received.php';
 		
 	//Mode expects one of the following: update, append, load
 	//Load: only the database, output the values associated ot the order number
