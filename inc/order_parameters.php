@@ -1,7 +1,7 @@
 <?php
     function o_params($type){
 		$info = array();
-		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id"){
+		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id" || strtolower($type) == "purchased"){
 			$info['type'] = "Purchase";
 			//convenient type check
 			$info['purchase'] = true;
@@ -19,6 +19,7 @@
 			$info['order'] = "purchase_orders";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Purchase Order";
+			$info['inv_item_id'] = "purchase_item_id";
 			$info['item'] = "purchase_items";
 			$info['client'] = "Vendor";
 			$info['address_type'] = '';
@@ -43,7 +44,7 @@
 			$info['warranty'] = true;
 			
 		}
-		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id"){
+		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
 			$info['type'] = "Sales";
 			//convenient type check
 			$info['purchase'] = false;
@@ -61,6 +62,7 @@
 			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
+			$info['inv_item_id'] = "sales_item_id";
 			$info['client'] = "Vendor";
 			$info['address_type'] = '';
 			$info['price'] = 'Price';
@@ -185,6 +187,7 @@
 			$info['header'] = "RMA";
 			$info['item'] = "return_items";
 			$info['client'] = "Customer";
+			$info['inv_item_id'] = "returns_item_id";
 			$info['address_type'] = '';
 			$info['contact_col'] = '';
 			$info['price'] = 'Reason';
@@ -267,6 +270,7 @@
 			$info['order'] = "repair_orders";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Repair";
+			$info['inv_item_id'] = "repair_item_id";
 			$info['item'] = "repair_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';

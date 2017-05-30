@@ -829,20 +829,44 @@
 			
 			//Delete Button
 			$(document).on("click",".forms_trash",function() {
-				if(confirm("Are you sure you want to delete this row?")){
-					var id = $(this).closest("tr").attr('data-record');
-					$(this).closest("tr").remove();
-					$(this).closest("tr").next().remove();
-					$.ajax({
-						type: "POST",
-						url: '/json/row_delete.php',
-						data: {
-							"id" : id,
-							"order": order_type
-							}, // serializes the form's elements.
-						dataType: 'json',
-					});
-				}
+				var id = $(this).closest("tr").attr('data-record');
+				var $this = $(this);
+				$.ajax({
+					type: "POST",
+					url: '/json/check_received.php',
+					data: {
+						"type" : order_type,
+						"line" : id,
+					},
+					dataType: 'json',
+					success: function(number_received) {	
+						console.log("valid");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON Check Received | check_received.php: Error");
+						console.log(window.location.origin+"/json/check_received.php");
+					},
+					complete: function(number_received){
+						if(confirm("Are you sure you want to delete this row?")){
+							$this.closest("tr").remove();
+							$this.closest("tr").next().remove();
+							$.ajax({
+								type: "POST",
+								url: '/json/row_delete.php',
+								data: {
+									"id" : id,
+									"order": order_type
+									}, // serializes the form's elements.
+								dataType: 'json',
+							});
+						}
+					}
+				});
+				
+				
+				
+				
 			});
 
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -1513,33 +1537,6 @@
 					$(window).scrollTop();
 				}
 			});
-
-		$(document).on('click', '.component_request_submit', function(e){
-			var submit = [];
-
-			$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
-					
-				var row = {
-					"part" : $(this).find(".line_part").attr("data-search"),
-					"qty" : $(this).find(".line_qty").attr("data-qty"),
-				};
-					
-				submit.push(row);
-			});
-
-			console.log(submit);
-
-			// $.ajax({
-			// 			type: "POST",
-			// 			url: '/json/order-form-submit.php',
-			// 			data: {
-			// 				"table_rows":submit,
-			// 			}, // serializes the form's elements.
-			// 			dataType: 'json',
-			// 			success: function(result) {
-
-			// 			}
-		});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================
 			//Cancel button?
@@ -2622,7 +2619,9 @@
 		
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
-
+			
+			
+			
 			function package_delete(pack, serialid){
 				$.ajax({
 					type: "POST",

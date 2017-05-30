@@ -28,7 +28,7 @@
 		include_once $rootdir.'/inc/dropPop.php';
 		include_once $rootdir.'/inc/order_parameters.php';
 		include_once $rootdir.'/inc/display_part.php';
-
+		include_once $rootdir.'/inc/check_received.php';
 		
 	//Mode expects one of the following: update, append, load
 	//Load: only the database, output the values associated ot the order number
@@ -38,6 +38,8 @@
 //------------------------------------------------------------------------------
 //---------------------------- Function Declarations ---------------------------
 //------------------------------------------------------------------------------
+	
+
 	//The general purpose array-to-row output
 	function build_row($row = array()){
 		//Re-access the mode, just to prevent uncertainty of it's arrival.
@@ -88,10 +90,15 @@
             <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>";
         }
 
-        $row_out .= "
-			<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
-			<td class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
-		</tr>";
+        $row_out .= "<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>";
+        $row_out .= "<td";
+        if(num_received($o['type'],$row['id']) == 0){
+			$row_out .=" class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i>";
+        }else{
+        	$row_out .= ">";
+        }
+        $row_out .= "</td>";
+		$row_out .= "</tr>";
 	
 	//If the row is being updated, this information would be duplicated, so ignore it
 	   if ($mode != 'update'){
