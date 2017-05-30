@@ -244,7 +244,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 		$right .= ($o['purchase'])?"":" &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
 		$right .=		"</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>";
-	$right .= "			<option value = '$s_add' >$s_name</option>";
+		$right .= "<option value = '$s_add' >$s_name</option>";
         $right .= "</select>
 				   </div>
 			    </div>";

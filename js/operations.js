@@ -608,7 +608,7 @@
 				$("#new_item_total").val(qty['price']);
 			});
 			
-			$(document).on("change","#tax_rate",function(){
+			$(document).on("keyup",".fee_inputs",function(){
 				$("#order_total").val(updateTotal());
 			});
 			$(document).on("change","#new_item_price, #new_item_qty", function(){
@@ -1340,9 +1340,10 @@
 					//Aaron's New Fees Section: 5/30/2017
 					var first_fee_label = $("#first_fee_label").val();
 					var first_fee_amount = $("#first_fee_amount").val();
+					var first_fee_id = $("#first_fee_label").data("scid");
 					var second_fee_label = $("#second_fee_label").val();
 					var second_fee_amount = $("#second_fee_amount").val();
-					
+					var second_fee_id = $("#second_fee_label").data("scid");
 					
 					
 					// if (($('#account_select').last('option').val())){
@@ -1408,7 +1409,7 @@
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
 					var submit = [];
-
+					console.log("first_fee_label:"+first_fee_label+" | first_fee_amount:"+first_fee_amount+" | first_fee_id:"+first_fee_id+" | second_fee_label:"+second_fee_label+" | second_fee_amount:"+second_fee_amount+" | second_fee_id:"+second_fee_id);
 					//This loop runs through the right-hand side and parses out the general values from the page
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 							var line_ref_1 = '';
@@ -1492,8 +1493,10 @@
 							"pub_notes": pub_notes,
 							"first_fee_label" : first_fee_label,
 							"first_fee_amount" : first_fee_amount,
+							"first_fee_id" : first_fee_id,
 							"second_fee_label" : second_fee_label,
 							"second_fee_amount" : second_fee_amount,
+							"second_fee_id" : second_fee_id,
 							"table_rows":submit,
 							"filename":filename,
 							"email_confirmation":email_confirmation,
@@ -2740,22 +2743,7 @@
 				//Get all the 
 				return total;
 			}
-			function updateTax(){
-				if($("#subtotal").length > 0){
-					var tax = parseFloat($("#tax_rate").val());
-					if (tax >= 1){
-						tax = tax / 100;
-					}
-					var sub = $("#subtotal").val();
-					sub = Number(sub.replace(/[^0-9\.]+/g,""));
-					
-					if (isNaN(tax) || isNaN(sub)){
-						return 0.00;
-					}else{
-						return tax*sub;
-					}
-				}
-			}
+
 			function updateTotal(){
 				if($("#subtotal").length > 0){
 					var search = 0.00;
@@ -2765,14 +2753,16 @@
 					var subtotal = parseFloat(subTotal());
 					$("#subtotal").val(price_format(subtotal));
 					// $("#subtotal").trigger("change");
-					var tax = parseFloat(updateTax());
-					$("#tax").val(tax);
+					var fees = 0.00;
+					$(".fee_inputs").each(function(){
+						fees += parseFloat($(this).val());
+					});
 					// $("#tax").trigger("change");
 					var freight = parseFloat($("#freight").val().replace('$',''));
 					if(isNaN(freight)) {
 						freight = 0;
 					}
-					var price = price_format(subtotal+freight+tax+search);
+					var price = price_format(subtotal+freight+fees+search);
 	
 					return price;
 				}

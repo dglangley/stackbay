@@ -32,6 +32,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
+	include_once $rootdir.'/inc/sales_charges.php';
 	
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
@@ -155,6 +156,13 @@
 	 }
 
 	$ORDER = array('fcreated'=>'','companyid'=>0);
+	$dataid = array();
+	$dataid[0]['id'] = "New";
+	$dataid[0]['text'] = "";
+	$dataid[0]['memo'] = "";
+	$dataid[1]['id'] = "New";
+	$dataid[1]['text'] = "";
+	$dataid[1]['memo'] = "";
 	if ($order_number!='New') {
 		$o = o_params($o['type']);
 		$table = $o['order'];
@@ -165,24 +173,20 @@
 			$ORDER = mysqli_fetch_assoc($result);
 			$ORDER['fcreated'] = format_date($ORDER['created'],"D n/j/y g:ia");
 		}
+	
+		$charges = getSalesCharges($order_number);
+		
+		if ($charges){
+			$i = 0;
+			foreach($charges as $charge){
+				$dataid[$i]['id'] = $charge['id'];
+				$dataid[$i]['text'] = $charge['price'];
+				$dataid[$i]['label'] = $charge['memo'];
+				$i++;
+			}
+		} 
 	}
 
-/*
-	function getOrderCreated($order_type, $order_number){
-		$order_number = prep($order_number);
-		$o = o_params($order_type);
-		$table = $o['order'];
-		$id = $o['id'];
-		$q = "SELECT `created` FROM `$table` where $id = $order_number;";
-		$result = qdb($q) or die(qe()." | $q");
-		if (mysqli_num_rows($result)){
-			$result = mysqli_fetch_assoc($result);
-			return format_date($result['created'],"D n/j/y g:ia");
-		} else {
-			return "This has never been created!";
-		}
-	}
-*/
 ?>
 
 <!DOCTYPE html>
@@ -632,16 +636,21 @@
 					                <td></td>
 					                <td></td>
 					                <td colspan="2">
-										<input class='form-control input-xs hidden' tabIndex='-1' type='text' id ='first_memo' name='first_memo' placeholder='Memo'>
+										<input class='form-control input-xs hidden' tabIndex='-1' type='text' id ='first_memo' name='first_memo'placeholder='Memo'>
 					                </td>
 					                <td style='text-align:right;'>
-					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='first_label' name='first_label'>
-					                		<option>CC Proc Fee</option>
-					                		<option>Sales Tax</option>
-					                		<option>Freight</option>
+					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='first_fee_label' name='first_fee_label' data-scid='<?=$dataid[0]['id']?>' value="<?=$dataid[0]['label']?>">
+					                		<option></option>
+					                		<option <?=($dataid[0]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
+					                		<option <?=($dataid[0]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
+					                		<option <?=($dataid[0]['label'] == "Freight"?"selected":"");?>>Freight</option>
 					                	</select>
 					                </td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='first_fee_amount' name='first_fee_amount' placeholder='0.00'></td>
+					                <td>
+					                	<div class="input-group">
+						                    <span class="input-group-addon">$</span>
+					                		<input class='form-control input-xs fee_inputs' tabIndex='-1' type='text' id ='first_fee_amount' name='first_fee_amount' placeholder='0.00' value="<?=$dataid[0]['text']?>"></td>
+						                </div>
 					                <td></td>
 					            </tr>
 					            
@@ -656,13 +665,18 @@
 										<input class='form-control input-xs hidden' tabIndex='-1' type='text' id ='second_memo' name='second_memo' placeholder='Memo'>
 					                </td>
 					                <td style='text-align:right;'>
-					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='second_label' name='second_label'>
-					                		<option>CC Proc Fee</option>
-					                		<option>Sales Tax</option>
-					                		<option>Freight</option>
+					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='second_fee_label' name='second_fee_label' data-scid='<?=$dataid[1]['id']?>' value='<?=$dataid[1]['label']?>'>
+					                		<option></option>
+					                		<option <?=($dataid[1]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
+					                		<option <?=($dataid[1]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
+					                		<option <?=($dataid[1]['label'] == "Freight"?"selected":"");?>>Freight</option>
 					                	</select>
 					                </td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='second_fee_amount' name='second_fee_amount' placeholder='0.00'></td>
+					                <td>
+					                	<div class="input-group">
+						                    <span class="input-group-addon">$</span>
+					                		<input class='form-control input-xs fee_inputs' tabIndex='-1' type='text' id ='second_fee_amount' name='second_fee_amount' placeholder='0.00' value='<?=$dataid[1]['text']?>'></td>
+						                </div>
 					                <td></td>
 					            </tr>
 					            
@@ -676,7 +690,12 @@
 					                <td></td>
 					                <td></td>
 					                <td style='text-align:right;'>Freight:</td>
-					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' value='<?=format_price(getFreightTotal($order_number));?>' placeholder='0.00' readonly></td>
+					                <td>
+					                	<div class="input-group">
+						                    <span class="input-group-addon">$</span>
+					                		<input class='form-control input-xs' tabIndex='-1' type='text' id ='freight' name='np_freight' value='<?=format_price(getFreightTotal($order_number));?>' placeholder='0.00' readonly>
+						                </div>
+				                	</td>
 					                <td></td>
 					            </tr>
 					            <tr id = 'totals_row' style=''>
