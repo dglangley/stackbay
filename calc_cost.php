@@ -7,18 +7,26 @@
 	$s = '';
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $s = trim($_REQUEST['s']); }
 
-	$pos = array();
-	$results = hecidb($s);
-	foreach ($results as $partid => $P) {
-		$cost = 0;
-		$query = "SELECT po_number, price FROM purchase_items WHERE partid = '".$partid."' ";
-$query .= "AND po_number = '504805' ";
-		$query .= "GROUP BY po_number ORDER BY po_number DESC; ";
+	if ($s) {
+		$pos = array();
+		$results = hecidb($s);
+		foreach ($results as $partid => $P) {
+			$cost = 0;
+			$query = "SELECT po_number, price FROM purchase_items WHERE partid = '".$partid."' ";
+			$query .= "GROUP BY po_number ORDER BY po_number DESC; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				//echo $r['po_number'].' '.$partid.' $'.$r['price'].' = ';
+				$cost = setCost($r['po_number'],$partid);
+				//echo $cost.'<BR><BR>';
+			}
+		}
+	} else {
+		$query = "SELECT po_number, partid FROM purchase_items ";
+		$query .= "GROUP BY po_number, partid ORDER BY po_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			//echo $r['po_number'].' '.$partid.' $'.$r['price'].' = ';
-			$cost = setCost($r['po_number'],$partid);
-			echo $cost.'<BR><BR>';
+//			$cost = setCost($r['po_number'],$r['partid']);
 		}
 	}
 
