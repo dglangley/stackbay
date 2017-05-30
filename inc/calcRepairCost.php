@@ -20,7 +20,22 @@
 
 		$results = array();
 
+		// calc third party repair costs
+		$query2  = "SELECT ro.cost, ro.qty filled, '' order_id FROM inventory_repair r, inventory_repairoffer ro ";
+		$query2 .= "WHERE r.serials = '".$r['serial']."' AND third_party_success = 1 ";
+		if ($r['repair_id']) { $query2 .= "AND r.ticket_number = '".$r['repair_id']."' "; }
+		if ($r['po']) { $query2 .= "AND r.purchase_order = '".$r['po']."' "; }
+		else { $query2 .= "AND r.inventory_id = '".$r['inventory_id']."' "; }
+		$query2 .= "AND ro.id = r.tpquote_id ";
+		$query2 .= "; ";
+$queries[] = $query2;
+		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$results[] = $r2;
+		}
+
 		// if we have the PO, search db against the related purchase order with matching serial
+		$repairs_csv = '';
 		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id ";
 		$query2 .= "FROM inventory_repair r, inventory_componentrepair cr ";
 		$query2 .= "LEFT JOIN inventory_componentorder co ON co.id = cr.order_id ";
@@ -33,12 +48,9 @@
 $queries[] = $query2;
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-/*
-			if ($r2['']) {
-				$query3 = "SELECT cost, qty FROM inventory_repairoffer WHERE id = '".$r['tpquote_id']."'; ";
-				$results[] = $r2;
-			}
-*/
+			if ($repairs_csv) { $repairs_csv .= ',';}
+			$repairs_csv .= $r2['repair_id'];
+			$results[] = $r2;
 		}
 
 		// add subsequent rma repairs to the array for additional cost evaluation
@@ -47,6 +59,7 @@ $queries[] = $query2;
 		$query2 .= "FROM inventory_repair r, inventory_rmaticket rt, inventory_componentrepair cr ";
 		$query2 .= "LEFT JOIN inventory_componentorder co ON co.id = cr.order_id ";
 		$query2 .= "WHERE cr.repair_id = r.ticket_number AND cr.repair_id = rt.repair_id ";
+		if ($repairs_csv) { $query2 .= "AND cr.repair_id NOT IN (".$repairs_csv.") "; }
 		$query2 .= "AND rt.item_id = '".$r['id']."'; ";
 $queries[] = $query2;
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);

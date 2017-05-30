@@ -15,12 +15,10 @@
 		$query = "SELECT * FROM purchase_items pi WHERE po_number = '".$order_number."' ";
 		if ($partid) { $query .= "AND partid = '".$partid."' "; }
 		$query .= "; ";
-echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().' '.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$serial = '';
 			$query2 = "SELECT * FROM inventory i WHERE i.purchase_item_id = '".$r['id']."'; ";
-echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().' '.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$serial = $r2['serial_no'];
@@ -79,7 +77,7 @@ echo $query2.'<BR>';
 						);
 						$repair_cost = calcRepairCost($repair);
 						$total_repair += $repair_cost;
-						if ($repair_cost>0) { echo 'Repair '.$r3['ticket_number'].' cost: '.$repair_cost.'<BR>'; }
+						if ($repair_cost>0) { echo 'Serial '.$serial.' Repair '.$r3['ticket_number'].' cost: '.$repair_cost.'<BR>'; }
 
 						// set the cost of repair
 						if ($repair_cost>0) {
@@ -153,37 +151,51 @@ echo $query2.'<BR>';
 		$total += $freight;
 
 		foreach ($serials as $invid => $r) {
-			if ($r['total']>0) {
-				$actual = round($r['total'],4);
-				$average = $actual;
+			if ($r['total']==0) { continue; }
 
-				$avg_query = "SELECT average FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
-				$result3 = qdb($avg_query) OR die(qe().'<BR>'.$avg_query);
-				if (mysqli_num_rows($result3)>0) {
-					$r3 = mysqli_fetch_assoc($result3);
-					$average = $r3['average'];
-				}
+			$actual = round($r['total'],4);
+			$average = $actual;
 
-				$query3 = "DELETE FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
-//				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-				if ($debug==1) { echo $query3.'<BR>'; }
+			$avg_query = "SELECT average FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
+			$result3 = qdb($avg_query) OR die(qe().'<BR>'.$avg_query);
+			if (mysqli_num_rows($result3)>0) {
+				$r3 = mysqli_fetch_assoc($result3);
+				$average = $r3['average'];
+			}
 
-				$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average) ";
-				$query3 .= "VALUES ('".$invid."','".$GLOBALS['now']."','".$actual."','".$average."'); ";
-//				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-echo $r['serial'].' ';
+			$query3 = "DELETE FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
+//			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if ($debug==1) { echo $query3.'<BR>'; }
+
+			$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average) ";
+			$query3 .= "VALUES ('".$invid."','".$GLOBALS['now']."','".$actual."','".$average."'); ";
+//			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if ($debug==1) { echo $query3.'<BR>'; }
+
+
 if ($r['b_cost']<>$actual) {
+			echo $r['serial'].'<BR>';
+			$corr = $r['b_cost']-$actual;
+			$query3 = "SELECT * FROM inventory_costs_log ";
+			$query3 .= "WHERE inventoryid = '".$invid."' AND eventid IS NULL AND event_type = 'import adjustment'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if (mysqli_num_rows($result3)==0) {
+				$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
+				$query3 .= "VALUES ('".$invid."',NULL,'import adjustment','".$corr."'); ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+echo $query3.'<BR><BR>';
+			}
+/*
+	echo $r['serial'].' ';
 	if ($debug==1) { echo $qty.' * '.$r['price'].' + '.$total_repair.' = '.$ext.' '; }
 	echo '(Brians cost: '.$r['b_cost'].', avg: '.$r['b_avg'].')<BR>';
 	echo $query3.'<BR>';
-} else {
+	if ($average<>$r['b_avg']) {
+		echo $avg_query.'<BR>';
+	}
 	echo '<BR>';
+*/
 }
-if ($average<>$r['b_avg']) {
-	echo $avg_query.'<BR>';
-}
-echo '<BR>';
-			}
 		}
 
 		return ($total);

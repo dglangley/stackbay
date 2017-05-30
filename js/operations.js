@@ -1590,6 +1590,10 @@
 			
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
+
+				//Get current filter type
+				var type = $('.filter_status.active').data('filter');
+
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6.data-load').hide();
 					//$(this).closest("body").children(".table-header").show();
@@ -1597,7 +1601,13 @@
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
 					//Show everything
-					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					if(type == 'active') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.active_item').show();
+					} else if(type == 'complete') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.complete_item').show();
+					} else {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					}
 					
 					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
 					$(this).closest(".shipping-dash").removeClass("shipping-dash");
@@ -1628,7 +1638,21 @@
 					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
 					
 					//Hide all elements over the count of 10
-					$('.show_more').hide();
+					$('.filter_item').hide();
+
+					if(type == 'active') {
+						$('.p_table .active_item:lt(10)').show();
+						$('.s_table .active_item:lt(10)').show();
+						$('.rma_table .active_item:lt(10)').show();
+					} else if(type == 'complete') {
+						$('.p_table .complete_item:lt(10)').show();
+						$('.s_table .complete_item:lt(10)').show();
+						$('.rma_table .complete_item:lt(10)').show();
+					} else {
+						$('.p_table .filter_item:lt(10)').show();
+						$('.s_table .filter_item:lt(10)').show();
+						$('.rma_table .filter_item:lt(10)').show();
+					}
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 					$("#filter-title").text('Operations Dashboard');
