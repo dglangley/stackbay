@@ -28,7 +28,7 @@
 		include_once $rootdir.'/inc/dropPop.php';
 		include_once $rootdir.'/inc/order_parameters.php';
 		include_once $rootdir.'/inc/display_part.php';
-
+		include_once $rootdir.'/inc/check_received.php';
 		
 	//Mode expects one of the following: update, append, load
 	//Load: only the database, output the values associated ot the order number
@@ -38,6 +38,8 @@
 //------------------------------------------------------------------------------
 //---------------------------- Function Declarations ---------------------------
 //------------------------------------------------------------------------------
+	
+
 	//The general purpose array-to-row output
 	function build_row($row = array()){
 		//Re-access the mode, just to prevent uncertainty of it's arrival.
@@ -65,24 +67,38 @@
 		$date = date("m/d/Y",strtotime($row['date']));
 		
 		//Build the display row
-	   	$row_out = "
-		<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>
-	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>
-            <td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>
-            <td class = 'line_date' data-date = '$date'>".$date."</td>";
-		if(!$o['repair']){
+	   	$row_out = "<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>";
+	   	if(!$o['tech']){
+	   		$row_out .= "
+	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>";
+	    }
+	    $row_out .= "<td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>";
+	    if(!$o['tech']){
+        	$row_out .= "<td class = 'line_date' data-date = '$date'>".$date."</td>";
+        }
+		if(!$o['repair'] && !$o['tech']){
 			$row_out .= "
 			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
-	   	$row_out .=
-	   		"<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>
+	   	$row_out .= "<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>";
+
+	   	if(!$o['tech']){
+	   		$row_out .= "
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
-            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>
-			<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>
-			<td class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i></td>
-		</tr>";
+            <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>";
+        }
+
+        $row_out .= "<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>";
+        $row_out .= "<td";
+        if(num_received($o['type'],$row['id']) == 0){
+			$row_out .=" class='forms_trash' style='cursor: pointer;'><i class='fa fa-trash fa-4' aria-hidden='true'></i>";
+        }else{
+        	$row_out .= ">";
+        }
+        $row_out .= "</td>";
+		$row_out .= "</tr>";
 	
 	//If the row is being updated, this information would be duplicated, so ignore it
 	   if ($mode != 'update'){
@@ -192,14 +208,20 @@
 				}
 		} else if ($mode == 'rtv') {
 			$row_num = 0;
+			//Debug decode
+			// $rows = json_decode($_REQUEST['rtv_array']);
 			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
+				$qty_grab = "SELECT SUM(`qty`) total FROM `inventory` where `purchase_item_id` = ".prep($lineid).";";
+				$qty_res = qdb($qty_grab) or die(qe()." $qty_grab");
+				$qty_res = mysqli_fetch_assoc($qty_res);
+				$qty = $qty_res['total'];
 				$row_num++;
 				$new_row = array(
 					'id' => 'new',
 					'line' => $row_num, 
 					'search' => current($item), //
 					'date' => date("n/j/Y"), 
-					'qty' => key($item), //This blows Andrew's Brain
+					'qty' => $qty, //This blew Andrew's Brain when we were using Key as qty
 					'uPrice' => 0.00,
 					'ref_1' => $lineid,
 					'ref_1_label' => 'purchase_item_id',

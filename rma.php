@@ -40,6 +40,23 @@
 	$yesterday = '';
 	
 
+	function lastPrice($invid,$ps = 'sold',$before_date = ''){
+		//Search for the last purchased price based off an inventory id.
+		//If there are multiple, look for the most recent prior to the date of the search
+		$o = o_params($ps);
+		$select = "SELECT `price` FROM `".$o['item']."` WHERE `id` = (
+			SELECT `value`
+			from `inventory_history`
+			WHERE invid = $invid 
+			AND field_changed = '".$o['inv_item_id']."'
+			".(($before_date)? "AND date(date_changed) <= ".format_date($before_date,"Y-m-d"):"")." 
+			order by date_changed desc 
+			limit 1 
+			);";
+		$result = qdb($select) or die(qe()." | $select");
+		$result = mysqli_fetch_assoc($result);
+		return($result['price']);
+	}
 
 	
 
@@ -175,41 +192,73 @@
 	}
 
 	// echo"<div style='position:fixed;right:15px;bottom:10px;'>";
+	//If there is an RMA number, then this is an existing RMA record
 	if ($rma_number){
 		$sidebar_mode = 'RMA';
 		$sidebar_number = $rma_number;
 		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
 		$rma_select = qdb($rma_select);
-		//If this record exists, perform the check that there is some valid answer
-
-		if (mysqli_num_rows($rma_select) > 0){
+		
+		//Verify there are Rows from this returns/get meta information
+		if (mysqli_num_rows($rma_select)){
 			//Date Created
 			
+			//Should only be one row
 			$rma = mysqli_fetch_assoc($rma_select);
 			
 			//Check to see if the order was within the last day
 			$date_created = format_date($rma['created'],"Y-m-d");
 			$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
 			if($date_created >= $yesterday){
+				//If order was within last day, load Available sales order rows (allowing the user to edit them)
 				if($rma['order_type'] == "Sale"){
-					//If order was within last day, load associated Available sales order rows
 					$so_number = $rma['order_number'];
 				}
 				else{
+					//Otherwise, there is no need: just pull the 
 					$so_number = false;
 				}
 			} else {
 				$mode = 'old';
 			}
 			
-			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i, sales_items si WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
-			$rma_micro = qdb($rma_mic);
+			//Grab all the serials which have been received on this RMA already
+			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
+			/*
+			This is the sales information of all the items which were ever sold on the inventory
+			SELECT * FROM inventory i, sales_items si where 
+			si.id = i.sales_item_id
+			AND i.id in ( 
+				SELECT invid FROM `return_items` ri, inventory_history ih 
+				WHERE ih.invid = ri.inventoryid 
+				and field_changed = "returns_item_id" 
+				and value = ri.id
+				and rma_number = 14347
+			);
+			*/
+			/*
+			
+			SELECT i.* FROM `inventory_history` ih, inventory i
+			where invid = i.id 
+			AND field_changed = 'sales_item_id' 
+			AND value in(
+				SELECT si.id FROM `returns`, `sales_items` si 
+				where order_type = 'Sale' 
+				and order_number = si.so_number 
+				and rma_number = 14162
+			)
+
+
+			*/
+			$rma_micro = qdb($rma_mic) or die(qe()." $rma_mic");
 			
 			$receive_check = '';
+			//This check is grouping line item information by the inventory ID. I should be able to 
 			foreach($rma_micro as $line_item){
 				$receive_check = $line_item['id'].", ";
 				$rma_items[$line_item['partid']][$line_item['inventoryid']] = $line_item;
-				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange");
+				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange"); 
+				//Exhange is a bit of a doubled name in the line above: here it refers to a "exhange" as a general term for sales, returns, purhcases and repairs.
 			}
 			$receive_check = trim($receive_check,", ");
 			//This Query will search the history to see if the parts were ever received against the line item record
@@ -225,6 +274,7 @@
 		$sidebar_number = $so_number;
 	}
 	
+	//If there is an so_number set, and we are not just looking at an existing record, here I would pull the SO items for addition
 	if($so_number && $mode != 'view' && $mode != 'old'){
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 		$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
@@ -236,7 +286,7 @@
 		$limit_result = qdb($limiter);
 		$limit = '';
 		$limit_arr = array();
-		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
 		
 		//here is where I take out the results of the serials I have already RMA'ed
 		if (mysqli_num_rows($limit_result) > 0){
@@ -264,6 +314,7 @@
 				$rma_items[$partid][$invid]['dispositionid'] = '';
 				$rma_items[$partid][$invid]['qty'] = '';
 				$rma_items[$partid][$invid]['id'] = '';
+				$rma_items[$partid][$invid]['price'] = '';
 				$rma_items[$partid][$invid]['history'] = getItemHistory($invid,"exchange");
 				if($limit_arr[$invid]){
 					$rma_items[$partid][$invid]['already'] = true;
@@ -297,9 +348,7 @@
 			.reason-col, .serials-col, .qty-col,.disp-col,.history-col,.warranty-col{
 				padding-top:10px !important;
 			}
-			.infinite{
-				margin-bottom:10px;
-			}
+
 			.history-col{
 				font-size:8pt;
 			}
@@ -307,11 +356,6 @@
 			.table td {
 				vertical-align: top !important;
 			}
-
-			.infinite {
-				min-height: 30px;
-			}
-
 		</style>
 	</head>
 	<!---->
@@ -392,30 +436,42 @@
 						<table class="rma-create table table-hover table-striped table-condensed" style="margin-top: 15px;">
 							<thead>
 								<tr>
-									<th class="col-md-3">Item</th>
-									<th class="col-md-2">Serials</th>
+									<th class="col-md-2">Description</th>
+									<th class="col-md-1">Price</th>
 									<th class="col-md-1">Warr Exp</th>
+									<th class="col-md-2">Serials</th>
 									<th class="col-md-1">Disposition</th>
 									<th class="col-md-2">Reason</th>
 									<th class="col-md-3">History</th>
-									<th></th>
-									<th></th>
 								</tr>
 							</thead>
-							<?php foreach ($rma_items as $part => $row): ?>
-							<?php $i++;?>
+							
+							<?php foreach ($rma_items as $part => $row): $init = true;?>
 								<!-- html... -->
-								<tr class="line_item" style = "padding-bottom:6px;">
-									<td class="part"  data-partid="" style="padding-top: 5px !important;vertical-align:top !important;">
-										<?=display_part(current(hecidb($part,"id")));?>
-									</td>
-								<!-- Grab the old serial values from the database and display them-->
-									<td class="serials-col" style="">
-										<?php $initial = $i; ?>
-										<?php $line = $initial;?>
-										<?php foreach ($row as $i => $inf): ?>
-											<?php //$i++; ?>
+								<?php foreach ($row as $i => $inf):?>
+									<tr class="line_item" style = "padding-bottom:6px;">
+										<td class="part"  data-partid="" style="padding-top: 5px !important;vertical-align:top !important;">
+											<?php if($init):?>
+												<?=display_part(current(hecidb($part,"id")));?>
+											<?php endif;?>
+										</td>
+
+										<td>
+											<?php if($init):?>
+												<?=format_price(lastPrice($inf['inventoryid']));?>
+											<?php endif;?>
+										</td>
+
+										<td class="warranty-col" style="">
+											<?php if($init):?>
+												<div class='war-disp'>
+												    <div class="infinite warranty_col brow-<?=$i?>"><?=calcWarranty($inf['inventoryid'])?></div>
+												</div>
+											<?php endif;?>
 											
+										</td>
+									<!-- Grab the old serial values from the database and display them-->
+										<td class="serials-col" style="">											
 											<div class="input-group serial_box">
 											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?><?=($inf['already'])? "&nbsp;(RMA'ed)" : ''?>" readonly>
 
@@ -429,24 +485,10 @@
 											    	<?=($inf['already'])? "disabled" : ''?>/>
 											    </span>
 											    <?php } ?>
-								            </div>
-											<?php $line++; ?>
-										<?php endforeach; ?>
-	
-									</td>
-									<td class="warranty-col" style="">
-										<?php	$line = $initial;?>
-										<?php foreach ($row as $i => $inf):?>
-											<div class='war-disp'>
-											    <div class="infinite warranty_col brow-<?=$i?>" style="line-height:30px;"><?=calcWarranty($inf['inventoryid'])?></div>
-											</div>
-											<?php $line++; ?>
-										<?php endforeach; ?>
-									</td>
+								            </div>	
+										</td>
 
-									<td class="disp-col">
-										<?php	$line = $initial;?>
-										<?php foreach ($row as $i => $inf):?>
+										<td class="disp-col">
 											<div class='line-disp'>
 												<?php 
 													//Get all the disposition values
@@ -463,14 +505,9 @@
 											    </select>
 											    <?php }?>
 											</div>
-											<?php $line++; ?>
-										<?php endforeach; ?>
-									</td>
-	
-									<td class="reason-col">
-										<?php	$line = $initial;?>
-										<?php foreach ($row as $i => $inf):?>
-										
+										</td>
+		
+										<td class="reason-col">
 											<div class='line-reason'>
 											    <?php if($mode=='view'){?>
 											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=$inf['reason']?></div>
@@ -478,109 +515,93 @@
 											    <input class="form-control reason_input infinite brow-<?=$i?> input-sm" type="text" name="reason[<?=$inf['inventoryid']?>]" value="<?=$inf['reason']?>" placeholder="Reason" data-row='<?=$inf['id']?>' data-part="" <?=($inf['already'])? "disabled" : ''?>>
 											    <?php }?>
 											</div>
-											<?php $line++; ?>
-										<?php endforeach; ?>
-									</td>
-									<td class="history-col">
-										<?php foreach ($row as $i => $inf):?>
-										
-										<!--font-size:1.2vh;-->
-										<div class = "infinite" style='line-height:15px;font-size:.6vw;vertical-align:initial !important;'>
-											<?php 
-												$history_text ='';
-												$first_war = true;
-												$hist_count = 0;
-												$printable = array();
-												$war_text = "";
-												if($inf['history']){
-													foreach ($inf['history'] as $i => $history){
-													$select = "";
-													$link = "";
-													$action = "";
-													switch ($history['field']) {
-														case 'sales_item_id':
-															$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
-															$link = "/SO";
-															$action = "Sold";
-															break;
-														case 'returns_item_id':
-															$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
-															$link = "/rma.php?rma=";
-															$action = "Returned";
-															break;
-														case 'purchase_item_id':
-															$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
-															$action = "Purchased";
-															$link = "/PO";
-															if($first_war){
-																$war_text = "Vendor War Exp: ";
-																// $most_recent_war = $history['value'];
-																$war_text .= calcWarranty($history['value'],"history");
+										</td>
+										<td class="history-col">										
+											<!--font-size:1.2vh;-->
+											<div class = "infinite" style='line-height:15px;font-size:.6vw;vertical-align:initial !important;'>
+												<?php 
+													$history_text ='';
+													$first_war = true;
+													$hist_count = 0;
+													$printable = array();
+													$war_text = "";
+													if($inf['history']){
+														foreach ($inf['history'] as $i => $history){
+														$select = "";
+														$link = "";
+														$actionHolder = "";
+														$action = "";
+														switch ($history['field']) {
+															case 'sales_item_id':
+																$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
+																$link = "/SO";
+																$actionHolder = "SO";
+																break;
+															case 'returns_item_id':
+																$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
+																$link = "/rma.php?rma=";
+																$actionHolder = "Returned";
+																break;
+															case 'purchase_item_id':
+																$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
+																$actionHolder = "PO";
+																$link = "/PO";
+																if($first_war){
+																	$war_text = "Warr ";
+																	// $most_recent_war = $history['value'];
+																	$war_text .= calcWarranty($history['value'],"history") . '<br>';
+																}
+																break;
+														}
+													
+
+														if($select){
+															$result = qdb($select);
+															$result = mysqli_fetch_assoc($result);
+															if($result['o'] != $so_number) {
+																$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+																if($actionHolder != 'PO') {
+																	$action .= " ".format_date($history['date'],"n/j/y") . "<br>";
+																}
 															}
-															break;
-													}
-													
-													if($select){
-														$result = qdb($select);
-														$result = mysqli_fetch_assoc($result);
-														$action .= "<a class = 'lonk' href='$link".$result['o']."'> #".$result['o']."</a>";
-													}
-													$printable[] = $action.": ".format_date($history['date'],"n/j/y");
-													
-													if($first_war && $war_text){
-														//Print out the $warranty text
-														$printable[] = $war_text;
-														//We only care about the most recent warranty
-														$first_war = false;
-													}
-												}
-												}
-												if (count($printable) > 0){
-													foreach ($printable as $o => $text) {
-														echo($text);
-														if ($o != 1){
-															echo " | ";
-														} else {
-															echo "<br>";
 														}
-														if($o == 3){
-															echo "<a class = 'lonk history_button' data-id='".$inf['inventoryid']."'>Show more</a>";
-															break;
+
+														$printable[] = $action;
+														
+														if($first_war && $war_text){
+															//Print out the $warranty text
+															$printable[] = $war_text;
+															//We only care about the most recent warranty
+															$first_war = false;
 														}
-														$final = $o;
 													}
-													if($final < 1){
-														echo"<br>&nbsp;";
 													}
-												} else {
-													echo "&nbsp;<br>&nbsp;";
-												}
-	
-											?>
-										</div>
-										<?php endforeach; ?>
-										
-									</td>
-									<td>
-										<?php	$line = $initial;?>
-										<?php foreach ($row as $i => $inf):?>
-											<!--<div class = "infinite" style="line-height:30px;">-->
-											<!--	<i class='fa fa-pencil fa-4' aria-hidden='true'></i>-->
-											<!--</div>-->
-											<?php $line++; ?>
-										<?php endforeach; ?>
-									</td>
-									<td>
-										<?php	$line = $initial;?>
-										<?php foreach ($row as $i => $inf):?>
-										
-											<!--<div class = "infinite" style="line-height:30px;">-->
-											<!--	<i class='fa fa-trash fa-4' aria-hidden='true'></i>-->
-											<!--</div>-->
-										<?php $line++; ?>
-										<?php endforeach; ?>
-									</td>
-								</tr>
+													if (count($printable) > 0){
+														foreach ($printable as $o => $text) {
+															echo($text);
+															// if ($o != 1){
+															// 	echo " ";
+															// } else {
+															//echo "<br>";
+															// }
+															// if($o == 3){
+															// 	echo "<a class = 'lonk history_button' data-id='".$inf['inventoryid']."'>Show more</a>";
+															// 	break;
+															// }
+															$final = $o;
+														}
+														if($final < 1){
+															echo"<br>&nbsp;";
+														}
+													} else {
+														echo "&nbsp;<br>&nbsp;";
+													}
+		
+												?>
+											</div>										
+										</td>
+									</tr>
+								<?php $init = false; endforeach; ?>
 							<?php endforeach; ?>
 						</table>
 							

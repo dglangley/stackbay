@@ -13,7 +13,7 @@
     
     //$companyid = (isset($_REQUEST['limit']))? trim($_REQUEST['limit']) : '0'; 
     $companyid = grab('limit');
-    $cid = prep($companyid); 
+    $cid = prep($companyid);
     $carrierid = prep(grab('carrierid')); 
     
     $output = array();

@@ -60,6 +60,7 @@
 	$order_info = array();
 	if (mysqli_num_rows($order_result) > 0){
 	    $order_info = mysqli_fetch_assoc($order_result);
+	    $public_notes = str_replace(chr(10),'<BR>',$order_info['public_notes']);
 	}
 
 	$items_info = array();
@@ -161,6 +162,7 @@ $ps_string .= '
                 <td>Sales Rep</td>
                 <td>Freight Carrier</td>
                 <td>Customer PO</td>
+                <td width="30%">Public Notes</td>
             </tr>
             <tr>
                 <td>
@@ -171,6 +173,7 @@ $ps_string .= '
                 
                 <td>'.getFreight('carrier',$order_info['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$order_info['freight_services_id'],'method')).'</td>
                 <td>'.$order_info['cust_ref'].'</td>
+                <td>'.$public_notes.'</td>
             </tr>
         </table>
 ';

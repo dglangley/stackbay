@@ -37,7 +37,7 @@
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
-	$order_type = "Repair";
+	$order_type = "Tech";
 	
 	$so_updated = $_REQUEST['success'];
 	

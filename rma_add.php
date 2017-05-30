@@ -230,7 +230,7 @@
 		$receive_check = qdb($query);
 		
 		if (mysqli_num_rows($receive_check)>0) {
-			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."' WHERE id = '". res($id) ."';";
+			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
 			//Query or pass back error
 			$result = (qdb($query) ? '' : qe());
 		} else {

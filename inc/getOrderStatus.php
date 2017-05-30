@@ -10,8 +10,8 @@
         }else{
             $o = o_params($type);
             $select = "SELECT `status` FROM ".$o['order']." WHERE ".$o['id']." = $number;";
-            $result = qdb($select);
-            if(mysqli_num_rows($result)>0){
+            $result = qdb($select) or die(qe()." $select");
+            if(mysqli_num_rows($result)){
                 $result = mysqli_fetch_assoc($result);
                 return($result['status']);
             }

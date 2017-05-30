@@ -7,6 +7,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/default_addresses.php';
 	
 	$q = '';
 	$output = array();
@@ -16,41 +17,20 @@
     $box = strtolower(grab('id'));
     $o = o_params($page);
 
-    if($box == "bill"){
-        $box = "billing";
-    }
-    $id = $o[$box];
+    //$id = $o[$box];
     $short = $o['short'];
     $order = $o['order'];
     
 	if($companyid){
 	    //If there is a value set for the company, load their defaults to the top result always.
-	    $companyid = prep($companyid,"'25'");
-	    
-	    //
-	    
-	    $default = "Select count('$id') mode, `$id`, a.`name`, 
-            a.`street`, a.`city`, a.`state`,a.`postal_code`, created
-            FROM $order, addresses a
-            WHERE $order.`$id` = a.`id` AND `companyid` = $companyid 
-            GROUP BY `$id`
-            ORDER BY IF(DATE_SUB(CURDATE(),INTERVAL 365 DAY)<MAX(created),0,1), mode DESC
-            LIMIT 3;";
-        // $default = "Select count(`".$id."`) moden, max(`created`) recent, `".$id."`, a.`name`, a.`street`, a.`city`, a.`state`, a.`postal_code`
-	       //         FROM ".$o['order'].", addresses a
-	       //         WHERE `".$id."` = a.`id` AND `companyid` = $companyid
-	       //         ".(($q)? "AND (name RLIKE '".$q."' OR street RLIKE '".$q."' OR city RLIKE '".$q."') " : "")."
-	       //         AND DATE_SUB(CURDATE(),INTERVAL 365 DAY) <= `created` 
-	       //         GROUP BY `".$id."` 
-	       //         ORDER BY moden desc,recent desc;";
-	    $default = qdb($default) or die(qe().$default);
+	    $default = default_addresses($companyid, $o['type']);
 	    $not_in = array();
-	    foreach ($default as $row){
+	    foreach ($default[$box] as $id => $row){
 	        $line = array(
-                'id' => $row[$id], 
+                'id' => $id, 
                 'text' => $row['street'].'<br>'.$row['city'].' '.$row['state'].' '.$row['postal_code'],/*.' <br> '.$row['name'],*/
                 );
-            $not_in[] = $row[$id];
+            $not_in[] = $id;
 	        $output[] = $line;
 	    }
 	} 

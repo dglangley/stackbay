@@ -22,20 +22,11 @@
         return $freights;
 	}
 	
-/*
-	function getContact($id) {
-		$name;
-		
-		$select = "SELECT name FROM contacts WHERE id = '$id';";
-        $result = qdb($select) or die(qe());
-        if (mysqli_num_rows($result)>0) {
-        	$r = mysqli_fetch_assoc($result);
-			$name = $r['name'];
-        }
-        
-		return $name;
+	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$company = $_REQUEST['s'];
+
+		echo $_REQUEST['s'] . getCompany($company, "name", "id");
 	}
-*/
 	
 	function getAddress($searchid,$search_type='addressid') {
 		$A = array('name'=>'','street'=>'','city'=>'','state'=>'','postal_code'=>'','country'=>'','id'=>0);
@@ -53,7 +44,7 @@
 		$A['address'] = $A['street'].', '.$A['city'].', '.$A['state'].' '.$A['postal_code'];
 		return ($A);
 	}
-
+	
 	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 ?>
 <!DOCTYPE html>

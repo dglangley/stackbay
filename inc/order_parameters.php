@@ -1,7 +1,7 @@
 <?php
     function o_params($type){
 		$info = array();
-		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id"){
+		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id" || strtolower($type) == "purchased"){
 			$info['type'] = "Purchase";
 			//convenient type check
 			$info['purchase'] = true;
@@ -19,6 +19,7 @@
 			$info['order'] = "purchase_orders";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Purchase Order";
+			$info['inv_item_id'] = "purchase_item_id";
 			$info['item'] = "purchase_items";
 			$info['client'] = "Vendor";
 			$info['address_type'] = '';
@@ -43,7 +44,7 @@
 			$info['warranty'] = true;
 			
 		}
-		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id"){
+		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
 			$info['type'] = "Sales";
 			//convenient type check
 			$info['purchase'] = false;
@@ -61,6 +62,7 @@
 			$info['ship'] = 'ship_to_id';
 			$info['header'] = "Sales Order";
 			$info['item'] = "sales_items";
+			$info['inv_item_id'] = "sales_item_id";
 			$info['client'] = "Vendor";
 			$info['address_type'] = '';
 			$info['price'] = 'Price';
@@ -139,7 +141,7 @@
 			$info['bill'] = false;
 			
 			$info['ship'] = "ship_to_id";
-			$info['billing'] = "bill_to_id";
+			$info['billing'] = "remit_to_id";
 			$info['bill_label'] = "Bill To";
 			$info['order'] = "purchase_orders";
 			$info['header'] = "RTV Order";
@@ -151,7 +153,7 @@
 			$info['rep_type'] = "Purchase";
 			$info['date_label'] = "PO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "po";
+			$info['short'] = "RTV";
 			//$info['event'] = '';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
@@ -185,6 +187,7 @@
 			$info['header'] = "RMA";
 			$info['item'] = "return_items";
 			$info['client'] = "Customer";
+			$info['inv_item_id'] = "returns_item_id";
 			$info['address_type'] = '';
 			$info['contact_col'] = '';
 			$info['price'] = 'Reason';
@@ -267,6 +270,7 @@
 			$info['order'] = "repair_orders";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Repair";
+			$info['inv_item_id'] = "repair_item_id";
 			$info['item'] = "repair_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
@@ -298,6 +302,46 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = true;
+		} else if (strtolower($type) == "tech"){
+			$info['type'] = "Tech";
+			//convenient type check
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = false;
+			$info['bill'] = false;
+			$info['tech'] = true;
+			
+			//$info['billing'] = 'bill_to_id';
+			// $info['bill_label'] = 'Bill To';
+			// $info['ship'] = 'ship_to_id';
+			// $info['order'] = "repair_orders";
+			// $info['contact_col'] = "Sales Rep";
+			// $info['header'] = "Repair";
+			$info['item'] = "purchase_requests";
+			// $info['client'] = "Customer";
+			// $info['address_type'] = '';
+			// $info['price'] = 'Price';
+			// $info['ext'] = 'Ext Price';
+			$info['rep_type'] = "Tech";
+			// $info['date_label'] = "PO";
+			//$info['tables'] = " purchase_requests ";
+			//$info['short'] = "ro";
+			$info['id'] = "ro_number";
+			$info['item_id'] = $info['id'];
+			$info['active'] = " status = 'Active' ";
+			$info['inactive'] = " status = 'Completed' ";
+			$info['status_empty'] = "Void";
+			$info['url'] = "repair_add";
+			$info['color'] = '#beadbe';
+			$info['edit_mode'] = 'order';
+			$info['date_field'] = 'due_date';
+			//Field header information
+			// $info['due_date'] = true;
+			// $info['warranty'] = true;
 		} else{
 			$info['case'] = $type;
 		}

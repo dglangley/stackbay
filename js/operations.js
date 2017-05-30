@@ -158,6 +158,7 @@
 					},					
 					error: function(xhr, status, error) {
 						console.log("JSON | Initial table load | order table out.php: "+error);
+						console.log(window.location.origin+"/json/order-table-out.php?type="+order_type+"&number="+order_number+"&rtv_array="+JSON.stringify(rtv_array)+"&mode="+mode);
 					}
 				});
 			}
@@ -829,20 +830,44 @@
 			
 			//Delete Button
 			$(document).on("click",".forms_trash",function() {
-				if(confirm("Are you sure you want to delete this row?")){
-					var id = $(this).closest("tr").attr('data-record');
-					$(this).closest("tr").remove();
-					$(this).closest("tr").next().remove();
-					$.ajax({
-						type: "POST",
-						url: '/json/row_delete.php',
-						data: {
-							"id" : id,
-							"order": order_type
-							}, // serializes the form's elements.
-						dataType: 'json',
-					});
-				}
+				var id = $(this).closest("tr").attr('data-record');
+				var $this = $(this);
+				$.ajax({
+					type: "POST",
+					url: '/json/check_received.php',
+					data: {
+						"type" : order_type,
+						"line" : id,
+					},
+					dataType: 'json',
+					success: function(number_received) {	
+						console.log("valid");
+					},
+					error: function(xhr, status, error) {
+						alert(error+" | "+status+" | "+xhr);
+						console.log("JSON Check Received | check_received.php: Error");
+						console.log(window.location.origin+"/json/check_received.php");
+					},
+					complete: function(number_received){
+						if(confirm("Are you sure you want to delete this row?")){
+							$this.closest("tr").remove();
+							$this.closest("tr").next().remove();
+							$.ajax({
+								type: "POST",
+								url: '/json/row_delete.php',
+								data: {
+									"id" : id,
+									"order": order_type
+									}, // serializes the form's elements.
+								dataType: 'json',
+							});
+						}
+					}
+				});
+				
+				
+				
+				
 			});
 
 			$(document).on("change","#ship_to, #bill_to",function() {
@@ -1253,6 +1278,7 @@
 			
 			$('#save_button').click(function(e) {
 				
+				$(this).prop("disable", true);
 
 				var isValid = nonFormCase($(this), e);
 				//if($(".search_lines").length > 0){
@@ -1310,6 +1336,15 @@
 					var freight = $('#terms').val();
 					var service = $('#service').val();
 					var account = $('#account_select').val();
+					
+					//Aaron's New Fees Section: 5/30/2017
+					var first_fee_label = $("#first_fee_label").val();
+					var first_fee_amount = $("#first_fee_amount").val();
+					var second_fee_label = $("#second_fee_label").val();
+					var second_fee_amount = $("#second_fee_amount").val();
+					
+					
+					
 					// if (($('#account_select').last('option').val())){
 					// 	var account = $('#account_select').last('option').val();
 					// }
@@ -1455,6 +1490,10 @@
 							"service" : service,
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
+							"first_fee_label" : first_fee_label,
+							"first_fee_amount" : first_fee_amount,
+							"second_fee_label" : second_fee_label,
+							"second_fee_amount" : second_fee_amount,
 							"table_rows":submit,
 							"filename":filename,
 							"email_confirmation":email_confirmation,
@@ -2594,7 +2633,9 @@
 		
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
-
+			
+			
+			
 			function package_delete(pack, serialid){
 				$.ajax({
 					type: "POST",
@@ -2700,38 +2741,41 @@
 				return total;
 			}
 			function updateTax(){
-				var tax = parseFloat($("#tax_rate").val());
-				if (tax >= 1){
-					tax = tax / 100;
-				}
-				var sub = $("#subtotal").val();
-				sub = Number(sub.replace(/[^0-9\.]+/g,""));
-				
-				if (isNaN(tax) || isNaN(sub)){
-					return 0.00;
-				}else{
-					return tax*sub;
+				if($("#subtotal").length > 0){
+					var tax = parseFloat($("#tax_rate").val());
+					if (tax >= 1){
+						tax = tax / 100;
+					}
+					var sub = $("#subtotal").val();
+					sub = Number(sub.replace(/[^0-9\.]+/g,""));
+					
+					if (isNaN(tax) || isNaN(sub)){
+						return 0.00;
+					}else{
+						return tax*sub;
+					}
 				}
 			}
 			function updateTotal(){
-				
-				var search = 0.00;
-				if($(".search_lines").length){
-					search = parseFloat(sumSearchLines());
+				if($("#subtotal").length > 0){
+					var search = 0.00;
+					if($(".search_lines").length){
+						search = parseFloat(sumSearchLines());
+					}
+					var subtotal = parseFloat(subTotal());
+					$("#subtotal").val(price_format(subtotal));
+					// $("#subtotal").trigger("change");
+					var tax = parseFloat(updateTax());
+					$("#tax").val(tax);
+					// $("#tax").trigger("change");
+					var freight = parseFloat($("#freight").val().replace('$',''));
+					if(isNaN(freight)) {
+						freight = 0;
+					}
+					var price = price_format(subtotal+freight+tax+search);
+	
+					return price;
 				}
-				var subtotal = parseFloat(subTotal());
-				$("#subtotal").val(price_format(subtotal));
-				// $("#subtotal").trigger("change");
-				var tax = parseFloat(updateTax());
-				$("#tax").val(tax);
-				// $("#tax").trigger("change");
-				var freight = parseFloat($("#freight").val().replace('$',''));
-				if(isNaN(freight)) {
-					freight = 0;
-				}
-				var price = price_format(subtotal+freight+tax+search);
-
-				return price;
 			}
 			
 			function sumSearchLines(){
