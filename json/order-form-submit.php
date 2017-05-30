@@ -99,6 +99,9 @@
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
     $o = o_params($order_type);
+    if($o['rtv']){
+    	$o = o_params("sales");
+    }
 
     
     //Form Specifics
@@ -309,7 +312,6 @@
 			}
 
             if ($record == 'new'){
-                
                 //Build the insert statements
                 $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
                 // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
