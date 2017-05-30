@@ -241,7 +241,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 				<div class='row'>
 					<div class='col-sm-12' style='padding-bottom: 10px;'>	     
 						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]";
-		$right .= ($o['purchase'])?:" &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
+		$right .= ($o['purchase'])?"":" &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
 		$right .=		"</label>
 	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>";
 	$right .= "			<option value = '$s_add' >$s_name</option>";
