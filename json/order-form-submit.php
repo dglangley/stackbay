@@ -118,6 +118,10 @@
     $created_by = grab('created_by');
     $email_to = grab('email_to');
     $email_confirmation = grab('email_confirmation');
+    $first_fee_label = grab('first_fee_label');
+	$first_fee_amount = grab('first_fee_amount');
+	$second_fee_label = grab('second_fee_label');
+	$second_fee_amount = grab('second_fee_amount');
 	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation) {
@@ -219,6 +223,19 @@
         
         //Create a new update number
         $order_number = qid();
+        
+        if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
+        	if ($first_fee_label && $first_fee_amount){
+        		$sales_charge_insert = "
+        		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
+        		VALUES ($order_number, $first_fee_label, 1, $first_fee_amount)";
+        	}
+	       	if ($second_fee_label && $second_fee_amount){
+        		$sales_charge_insert = "
+        		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
+        		VALUES ($order_number, $second_fee_label, 1, $second_fee_amount)";
+        	}
+        }
     }
     else{
         

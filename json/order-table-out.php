@@ -208,14 +208,20 @@
 				}
 		} else if ($mode == 'rtv') {
 			$row_num = 0;
+			//Debug decode
+			// $rows = json_decode($_REQUEST['rtv_array']);
 			foreach($_REQUEST['rtv_array'] as  $lineid => $item) {
+				$qty_grab = "SELECT SUM(`qty`) total FROM `inventory` where `purchase_item_id` = ".prep($lineid).";";
+				$qty_res = qdb($qty_grab) or die(qe()." $qty_grab");
+				$qty_res = mysqli_fetch_assoc($qty_res);
+				$qty = $qty_res['total'];
 				$row_num++;
 				$new_row = array(
 					'id' => 'new',
 					'line' => $row_num, 
 					'search' => current($item), //
 					'date' => date("n/j/Y"), 
-					'qty' => key($item), //This blows Andrew's Brain
+					'qty' => $qty, //This blew Andrew's Brain when we were using Key as qty
 					'uPrice' => 0.00,
 					'ref_1' => $lineid,
 					'ref_1_label' => 'purchase_item_id',

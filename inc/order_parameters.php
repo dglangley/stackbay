@@ -141,7 +141,7 @@
 			$info['bill'] = false;
 			
 			$info['ship'] = "ship_to_id";
-			$info['billing'] = "bill_to_id";
+			$info['billing'] = "remit_to_id";
 			$info['bill_label'] = "Bill To";
 			$info['order'] = "purchase_orders";
 			$info['header'] = "RTV Order";
@@ -153,7 +153,7 @@
 			$info['rep_type'] = "Purchase";
 			$info['date_label'] = "PO";
 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "po";
+			$info['short'] = "RTV";
 			//$info['event'] = '';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
