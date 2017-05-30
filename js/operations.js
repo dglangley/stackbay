@@ -1278,6 +1278,7 @@
 			
 			$('#save_button').click(function(e) {
 				
+				$(this).prop("disable", true);
 
 				var isValid = nonFormCase($(this), e);
 				//if($(".search_lines").length > 0){
