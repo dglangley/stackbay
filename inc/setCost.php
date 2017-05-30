@@ -96,7 +96,7 @@
 				$purch_cost += ($ext+$total_repair);
 			}
 		}
-		$total = round($purch_cost/$qtys,4);
+		if ($qtys>0) { $total = round($purch_cost/$qtys,4); }
 
 		$total_freight = 0;
 		$freight_pcs = 0;
