@@ -306,7 +306,20 @@
 
 <script>
 	(function($){
+		function getUrlParameter(sParam) {
+		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
 		
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+		
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		}
 		$(document).on("click onload", ".filter_cond, .filter_qty", function(){
 			var search = $("#part_search").val();
 			$(this).closest(".btn-group").find(".active").removeClass("active");
@@ -338,31 +351,37 @@
 		// $('.disabled_input').find('select').prop('disabled', true)
 		var filter_grab = function (){
 			//Set an array up with the filter fields from the filter bar
+			var f = getUrlParameter('search');
+			if(!f){
+				f = $("#part_search").val();
+			}
 			var output = {
-				place : $("#filterBar").find(".place").val(),
-				location : $("#filterBar").find(".instance").val(),
-				start : $("#filterBar").find("input[name='START_DATE']").val(),
-				end : $("#filterBar").find("input[name='END_DATE']").val(),
-				vendor : $("#companyid").val()
+				'part' : f,
+				'place' : $("#filterBar").find(".place").val(),
+				'location' : $("#filterBar").find(".instance").val(),
+				'start' : $("#filterBar").find("input[name='START_DATE']").val(),
+				'end' : $("#filterBar").find("input[name='END_DATE']").val(),
+				'vendor' : $("#companyid").val()
 			};
 			console.log(output);
 			return output;
 		};
-		var inventory_history = function (search) {
+		var inventory_history = function () {
+			var s = filter_grab();
 			var place = $("#filterBar").find(".place").val();
 			var location = $("#filterBar").find(".instance").val();
 			var start = $("#filterBar").find("input[name='START_DATE']").val();
 			var end = $("#filterBar").find("input[name='END_DATE']").val();
 			var vendor = $("#companyid").val();
 			var order = $("#po_filter").val();
+			var search = s.part;
 			$('#loader').show();
-
-			console.log(window.location.origin+'/json/inventory-out.php?search='+search+"&place="+place+"&location="+location+"&start="+start+"&end="+end+"&vendor="+vendor);
+			console.log(window.location.origin+'/json/inventory-out.php?search='+s.part+"&place="+s.place+"&location="+s.location+"&start="+s.start+"&end="+s.end+"&vendor="+s.vendor);
 			$.ajax({
 					type: "POST",
 					url: '/json/inventory-out.php',
 					data: {
-						"search": search,
+						"search": s.part,
 						"place" : place,
 						"location" : location,
 						"start" : start,
@@ -726,8 +745,8 @@
 						$save.closest('tr').find('.delete_button').show();
 						
 						$save.hide();
-						$('.alert-success').show();
-						$('.alert-success').delay(6000).fadeOut('fast');
+						// $('.alert-success').show();
+						// $('.alert-success').delay(6000).fadeOut('fast');
 						
 						$save.closest('tr').find('.serial_original').html(newSerial);
 						$save.closest('tr').find('.notes_original').text(newNotes);
@@ -743,6 +762,10 @@
 					// $(".loading_element_listing").hide();
 				   	alert("No Parts Found with those parameters: "+error);
 				},
+				complete: function(result){
+					$("tbody").html("");
+					inventory_history();
+				}
 			});
 			}
 
@@ -792,7 +815,7 @@
 		var SEARCH = "<?=$searched?>";
 		$(document).ready(function() {
 			$('#loader-message').html('Please wait for Inventory results to load...');
-			if (SEARCH!='') { inventory_history(SEARCH); }
+			if (SEARCH!='') { inventory_history(); }
 //			$('#loader').show();
 
 			//Triggering Aaron 2017
@@ -843,13 +866,13 @@
 		});
 		$(document).on("click",".part_filter",function(){
 			SEARCH = $("#part_search").val();
-			inventory_history(SEARCH);
+			inventory_history();
 		});
 
-		$("#part_search").on("keyup",function(e){
+		$("#part_search, #po_filter").on("keyup",function(e){
 			if (e.keyCode == 13) {
 				SEARCH = $("#part_search").val();
-				inventory_history(SEARCH);
+				inventory_history();
 			}
 		});
 

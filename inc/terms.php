@@ -21,5 +21,12 @@
 
 		return($due_estimate);
 	}
+	
+	function getTermsInfo($value,$input = 'terms',$return = "id"){
+		$select = "SELECT * FROM `terms` where `$input` LIKE ".prep($value).";"; //Assume days
+		$result = qdb($select) or die(qe()." | $select");
+		$result = mysqli_fetch_assoc($result);
+		return $result[$return];
+	}
 
 ?>

@@ -28,6 +28,10 @@ include_once $rootdir.'/inc/form_handle.php';
 include_once $rootdir.'/inc/dropPop.php';
 include_once $rootdir.'/inc/packages.php';
 include_once $rootdir.'/inc/order_parameters.php';
+include_once $rootdir.'/inc/getAccount.php';
+include_once $rootdir.'/inc/terms.php';
+include_once $rootdir.'/inc/default_addresses.php';
+
 
 	$rtv_items = array();
 	$rtv_array = array();
@@ -100,7 +104,7 @@ include_once $rootdir.'/inc/order_parameters.php';
 			$ref_ln = $row['ref_ln'];
 		}
 		
-		if(strtolower($order_type) == 'rtv'){
+		if($o['rtv']){
 			//Overwrite the information from the purchase order based on the RTV Defaults
 			$purchase_lineid;
 			$data = array();
@@ -113,24 +117,29 @@ include_once $rootdir.'/inc/order_parameters.php';
 			$query = "SELECT * FROM purchase_items p, purchase_orders o, inventory i WHERE p.id = ".prep($purchase_lineid)." AND p.po_number = o.po_number AND i.purchase_item_id = p.id;";
 			$result = qdb($query) or die(qe());
 			
-			if (mysqli_num_rows($result)>0) { 
-				$data = mysqli_fetch_assoc($result);
+			if (mysqli_num_rows($result)) { 
+				$result = mysqli_fetch_assoc($result);
 			}
 			
-			$terms = 1;
-			$associated_order = '';
-			$selected_service = '';
-			$selected_account = '';
-			$selected_account = '';
+			$rtv_po = $order_number;
+			$terms = getTermsInfo("N/A");
 			$private = 'RTV From PO #'.$order_number;
-			$public = '';
-			$contact = '';
-			
+			$companyid = $result['companyid'];
+			$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
+			$contact = $result['contactid'];
+			$b_add = $result[$o['billing']];
+			$b_name = getAddresses($b_add,'street');
+			//THE SHIP to works like the default ship to address.
+			$s_add_line = default_addresses($companyid,"sales");
+			$s_add = key($s_add_line['ship']);
+			$s_name = getAddresses($s_add,'street');
+			$selected_carrier = $result['freight_carrier_id'];
+			$selected_service = $result['freight_services_id'];
+			$selected_account = getDefaultAccount($companyid,$selected_carrier);
+			$associated_order = $result['cust_ref'];
+			$ref_ln = $result['ref_ln'];
 			// $b_add = $data['remit_to_id'];
 			// $b_name = getAddresses($b_add,'street');
-			
-			$s_add = '';
-			$s_name = '';
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
@@ -175,12 +184,16 @@ include_once $rootdir.'/inc/order_parameters.php';
 		//Payment Terms and warranty
 		$right .= "	<div class='row' style='padding-bottom: 10px;'>";
 		if ($o['sales'] || $o['rtv'] || $o['repair']){
+			if($o['rtv'] && !$ref_ln){
+				$associated_order = "RTV-PO$rtv_po";
+				$ref_ln ="/docs/PO$rtv_po.pdf";
+			}
 			$right .= "		<div class='col-sm-7' id='customer_order'>";
 			// Changes the label based off of creation of the order number
 			if ($order_number != 'New' && $associated_order){
 				$right .= "	<label for='assoc'><a href='".$ref_ln."' target='_new'>".$associated_order."</a></label>
 							<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>";
-			} else {
+			} else if (!$o['rtv']){
 				$right .= "	<label for='assoc'>Customer Order</label>
 							<div class='input-group'>
 								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='$associated_order'>
@@ -188,7 +201,17 @@ include_once $rootdir.'/inc/order_parameters.php';
 									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
 								</span>
 							</div><!-- /input-group -->
-							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' />
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' value=''/>
+				";
+			} else {
+				$right .= "	<label for='assoc'>Customer Order</label>
+							<div class='input-group'>
+								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='RTV-PO$rtv_po'>
+								<span class='input-group-btn'>
+									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
+								</span>
+							</div><!-- /input-group -->
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' value='https://aaronventel-aaronventel.c9users.io/docs/PO506016.pdf'/>
 				";
 			}
 			$right .= "</div>";
@@ -220,10 +243,10 @@ include_once $rootdir.'/inc/order_parameters.php';
 						<label for='ship_to' >Ship to  [ <i class='address_edit fa fa-pencil' aria-hidden='true'></i> ]";
 		$right .= ($o['purchase'])?:" &nbsp;<input id='mismo' type=checkbox></input> (Same as billing)";
 		$right .=		"</label>
-	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>
-							<option value = '$s_add' >$s_name</option>
-	                    </select>
-				    </div>
+	                    <select id='ship_to' class='required' style='overflow:hidden;' data-ship-id='0' value='$s_add'>";
+	$right .= "			<option value = '$s_add' >$s_name</option>";
+        $right .= "</select>
+				   </div>
 			    </div>";
 		
 		//Carrier and service
@@ -567,7 +590,7 @@ include_once $rootdir.'/inc/order_parameters.php';
 		return $right;
 	}
 
-function sidebar_out($number, $type, $mode ='order'){
+	function sidebar_out($number, $type, $mode ='order'){
 	// if(!empty($rma)) {
 	// 	$mode = 'rma';
 	// } else {

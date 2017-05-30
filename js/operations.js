@@ -158,6 +158,7 @@
 					},					
 					error: function(xhr, status, error) {
 						console.log("JSON | Initial table load | order table out.php: "+error);
+						console.log(window.location.origin+"/json/order-table-out.php?type="+order_type+"&number="+order_number+"&rtv_array="+JSON.stringify(rtv_array)+"&mode="+mode);
 					}
 				});
 			}
@@ -1335,6 +1336,15 @@
 					var freight = $('#terms').val();
 					var service = $('#service').val();
 					var account = $('#account_select').val();
+					
+					//Aaron's New Fees Section: 5/30/2017
+					var first_fee_label = $("#first_fee_label").val();
+					var first_fee_amount = $("#first_fee_amount").val();
+					var second_fee_label = $("#second_fee_label").val();
+					var second_fee_amount = $("#second_fee_amount").val();
+					
+					
+					
 					// if (($('#account_select').last('option').val())){
 					// 	var account = $('#account_select').last('option').val();
 					// }
@@ -1480,6 +1490,10 @@
 							"service" : service,
 							"pri_notes": pri_notes,
 							"pub_notes": pub_notes,
+							"first_fee_label" : first_fee_label,
+							"first_fee_amount" : first_fee_amount,
+							"second_fee_label" : second_fee_label,
+							"second_fee_amount" : second_fee_amount,
 							"table_rows":submit,
 							"filename":filename,
 							"email_confirmation":email_confirmation,
@@ -2751,38 +2765,41 @@
 				return total;
 			}
 			function updateTax(){
-				var tax = parseFloat($("#tax_rate").val());
-				if (tax >= 1){
-					tax = tax / 100;
-				}
-				var sub = $("#subtotal").val();
-				sub = Number(sub.replace(/[^0-9\.]+/g,""));
-				
-				if (isNaN(tax) || isNaN(sub)){
-					return 0.00;
-				}else{
-					return tax*sub;
+				if($("#subtotal").length > 0){
+					var tax = parseFloat($("#tax_rate").val());
+					if (tax >= 1){
+						tax = tax / 100;
+					}
+					var sub = $("#subtotal").val();
+					sub = Number(sub.replace(/[^0-9\.]+/g,""));
+					
+					if (isNaN(tax) || isNaN(sub)){
+						return 0.00;
+					}else{
+						return tax*sub;
+					}
 				}
 			}
 			function updateTotal(){
-				
-				var search = 0.00;
-				if($(".search_lines").length){
-					search = parseFloat(sumSearchLines());
+				if($("#subtotal").length > 0){
+					var search = 0.00;
+					if($(".search_lines").length){
+						search = parseFloat(sumSearchLines());
+					}
+					var subtotal = parseFloat(subTotal());
+					$("#subtotal").val(price_format(subtotal));
+					// $("#subtotal").trigger("change");
+					var tax = parseFloat(updateTax());
+					$("#tax").val(tax);
+					// $("#tax").trigger("change");
+					var freight = parseFloat($("#freight").val().replace('$',''));
+					if(isNaN(freight)) {
+						freight = 0;
+					}
+					var price = price_format(subtotal+freight+tax+search);
+	
+					return price;
 				}
-				var subtotal = parseFloat(subTotal());
-				$("#subtotal").val(price_format(subtotal));
-				// $("#subtotal").trigger("change");
-				var tax = parseFloat(updateTax());
-				$("#tax").val(tax);
-				// $("#tax").trigger("change");
-				var freight = parseFloat($("#freight").val().replace('$',''));
-				if(isNaN(freight)) {
-					freight = 0;
-				}
-				var price = price_format(subtotal+freight+tax+search);
-
-				return price;
 			}
 			
 			function sumSearchLines(){

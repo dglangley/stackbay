@@ -420,7 +420,7 @@
 				<div class="col-md-6 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
-					if(!$o['invoice']){
+					if(!$o['invoice'] && !$o['rtv']){
 						if ($order_number=='New'){
 							echo $order_number;
 						} else {
@@ -431,9 +431,10 @@
 							echo " # $order_number";
 							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
 						}
-					} else {
+					} else if ($o['invoice']){
 						echo("Invoice #".$order_number);
-						
+					} else if ($o['rtv']){
+						echo("RTV FROM PO #$origin");
 					}
 					if (strtolower($status) == 'void' || strtolower($status) == 'voided'){
 						echo ("<b><span style='color:red;'> [".strtoupper($status)."]</span></b>");
@@ -486,7 +487,7 @@
 										$get_reps = "SELECT users.id userid, contacts.name name, contacts.id contactid FROM users, contacts ";
 										$get_reps .= "WHERE users.contactid = contacts.id; ";		               
 			                        	
-			                        	$all_reps = qdb($get_reps);
+			                        	$all_reps = qdb($get_reps) or die(qe()." $get_reps");
 			                        	foreach ($all_reps as $rep) {
 			                        		//If it is a new order, set the default to the current user
 			                        		if($order_number == 'New'){
@@ -623,19 +624,48 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
-					            <tr id = 'tax_row' style=''>
+					            <tr id = 'first_fee_field' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
 								<?php endif; ?>
 					                <td></td>
 					                <td></td>
-					                <td></td>
-					                <td></td>
-					                <td style='text-align:right;'>Tax:</td>
-					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='tax' name='np_tax' placeholder='0.00'></td>
+					                <td colspan="2">
+										<input class='form-control input-xs hidden' tabIndex='-1' type='text' id ='first_memo' name='first_memo' placeholder='Memo'>
+					                </td>
+					                <td style='text-align:right;'>
+					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='first_label' name='first_label'>
+					                		<option>CC Proc Fee</option>
+					                		<option>Sales Tax</option>
+					                		<option>Freight</option>
+					                	</select>
+					                </td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='first_fee_amount' name='first_fee_amount' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
+					            
+					            <tr id = 'second_fee_field' style=''>
+				        		<?php if(!$o['repair']):?>
+					                <td></td>
+					                <td></td>
+								<?php endif; ?>
+					                <td></td>
+					                <td></td>
+					                <td colspan="2">
+										<input class='form-control input-xs hidden' tabIndex='-1' type='text' id ='second_memo' name='second_memo' placeholder='Memo'>
+					                </td>
+					                <td style='text-align:right;'>
+					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='second_label' name='second_label'>
+					                		<option>CC Proc Fee</option>
+					                		<option>Sales Tax</option>
+					                		<option>Freight</option>
+					                	</select>
+					                </td>
+					                <td><input class='form-control input-xs' tabIndex='-1' type='text' id ='second_fee_amount' name='second_fee_amount' placeholder='0.00'></td>
+					                <td></td>
+					            </tr>
+					            
 					            <tr id = 'freight_row' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
