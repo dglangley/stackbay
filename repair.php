@@ -109,7 +109,9 @@
 		$repairs_activities = array();
 		$query;
 		
-		$query = "SELECT * FROM repairs_activities WHERE ro_number = ". prep($ro_number) ." ORDER BY datetime DESC;";
+		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
+				UNION
+				SELECT techid, datetime as datetime, notes FROM repairs_activities WHERE ro_number = ".prep($ro_number)." ORDER BY datetime DESC";
 		$result = qdb($query) OR die(qe());
 				
 		while ($row = $result->fetch_assoc()) {
@@ -391,6 +393,26 @@
 												<th>Activity</th>
 											</tr>
 										</thead>
+										<tr>
+											<td colspan="12">
+												<!-- <div class="row"> -->
+												<form action="repair_activities.php" method="POST">
+													<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
+													<input type="text" name="techid" value="<?=$U['contactid'];?>" class="hidden">
+													<?php if(!empty($items))
+														foreach($items as $item): ?>
+														<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
+													<?php endforeach; ?>
+													<div class="col-md-11">
+														<input type="text" name="notes" class="form-control">
+													</div>
+													<div class="col-md-1">
+														<button class="btn-flat btn" id="submit">Log</button>
+													</div>
+												</form>
+												<!-- </div> -->
+											</td>
+										</tr>
 										<?php
 										// print_r($U);
 											if($activities)
