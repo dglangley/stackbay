@@ -1,4 +1,7 @@
 <?php
+	 set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
@@ -26,7 +29,7 @@
 		$query .= "GROUP BY po_number, partid ORDER BY po_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-//			$cost = setCost($r['po_number'],$r['partid']);
+			$cost = setCost($r['po_number'],$r['partid']);
 		}
 	}
 

@@ -73,6 +73,7 @@
 							'serial'=>$serial,
 							'repair_id'=>$r3['ticket_number'],
 							'inventory_id'=>$r3['inventory_id'],
+							'po'=>'',
 							'id'=>$r3['item_id'],
 						);
 						$repair_cost = calcRepairCost($repair);
@@ -81,12 +82,12 @@
 
 						// set the cost of repair
 						if ($repair_cost>0) {
-							$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-							$query3 .= "VALUES ('".$r2['id']."','".$r3['ticket_number']."','repair_id','".$repair_cost."'); ";
-							$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+							$query4 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
+							$query4 .= "VALUES ('".$r2['id']."','".$r3['ticket_number']."','repair_id','".$repair_cost."'); ";
+							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 							$serials[$r2['id']]['repair'] += $repair_cost;
 							$serials[$r2['id']]['total'] += $repair_cost;
-							if ($debug==1) { echo $query3.'<BR>'; }
+							if ($debug==1) { echo $query4.'<BR>'; }
 						}
 					}
 				}
@@ -96,7 +97,7 @@
 				$purch_cost += ($ext+$total_repair);
 			}
 		}
-		$total = round($purch_cost/$qtys,4);
+		if ($qtys>0) { $total = round($purch_cost/$qtys,4); }
 
 		$total_freight = 0;
 		$freight_pcs = 0;
@@ -128,9 +129,19 @@
 //				$n = $r2['n'];
 //5/23 why did I have this here? (was $packages[])
 //				$serials[$r2['serialid']] = $freight_per;
+				if (! isset($serials[$r2['serialid']])) {
+					$serial = '';
+					$query3 = "SELECT serial_no FROM inventory WHERE id = '".$r2['serialid']."'; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$serial = $r3['serial_no'];
+					}
+					$serials[$r2['serialid']] = array('purchase'=>0,'freight'=>0,'repair'=>0,'total'=>0,'serial'=>$serial,'b_avg'=>0,'b_cost'=>0);
+				}
 
 				// set the cost of the purchase price itself
-				if ($ext>0) {
+				if ($freight_per>0) {
 					$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
 					$query3 .= "VALUES ('".$r2['serialid']."','".$r['id']."','package_id','".$freight_per."'); ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);

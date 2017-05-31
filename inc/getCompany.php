@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
+	include_once $_SERVER["ROOT_DIR"]."/inc/pipe.php";
 
 	//Declare the company array which will be used to globally communicate the found companies
 	$COMPANIES = array();
@@ -14,12 +15,21 @@
 		if (isset($COMPANY_MAPS[$companyid][$oldToNew])) { return ($COMPANY_MAPS[$companyid][$oldToNew]); }
 
 		if ($oldToNew){
-			$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid';";
+			$query = "SELECT name FROM inventory_company WHERE id = '".$companyid."'; ";
+			$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+			if (mysqli_num_rows($result)==0) { return 0; }
+			$r = mysqli_fetch_assoc($result);
+
+			$query = "SELECT c.id `c` FROM companies c LEFT JOIN company_aliases a ON c.id = a.companyid ";
+			$query .= "WHERE c.name = '".$r['name']."' OR a.name = '".$r['name']."' ";
+			$query .= "GROUP BY c.id ORDER BY c.id ASC LIMIT 1; ";
+
+//			$query = "Select companyid `c` From company_maps where inventory_companyid = '$companyid';";
 		} else {
 			$query = "Select inventory_companyid `c` From company_maps where companyid = '$companyid';";
 		}
 
-		$result = qdb($query);
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if(mysqli_num_rows($result)){
 			foreach($result as $row){
 //				echo "Found the translation: ".$row['c'];

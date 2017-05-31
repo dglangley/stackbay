@@ -413,6 +413,7 @@
 					if ($order == 's'){ $order_num = $r['so_number']; }
 					else if ($order == 'p'){ $order_num = $r['po_number']; }
 					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
+					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
 					
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
@@ -440,7 +441,7 @@
 					if($order != 'ro') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					} else {
-						echo'        <td>331xx <a href="#"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="/repair.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
@@ -494,8 +495,9 @@
 						echo'		</td>'; 
 					} else {
 						echo'    	<td class="status text-right">';		
-						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
-						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						echo'		</td>'; 							
 					}
 
@@ -854,13 +856,14 @@
 				$('.p_table .complete_item:lt(10)').show();
 				$('.s_table .complete_item:lt(10)').show();
 				$('.rma_table .complete_item:lt(10)').show();
+				$('.ro_table .complete_item:lt(10)').show();
 			} else if(type == 'active') {
 				$('.show_more').hide();
 				sortTheTable('active');
 				$('.p_table .active_item:lt(10)').show();
 				$('.s_table .active_item:lt(10)').show();
 				$('.rma_table .active_item:lt(10)').show();
-				//$('.ro_table .active_item:lt(10)').show();
+				$('.ro_table .active_item:lt(10)').show();
 			} else {
 				$('.p_table .filter_item:lt(10)').show();
 				$('.s_table .filter_item:lt(10)').show();
@@ -884,6 +887,7 @@
 					$('.p_table .complete_item:lt(10)').show();
 					$('.s_table .complete_item:lt(10)').show();
 					$('.rma_table .complete_item:lt(10)').show();
+					$('.ro_table .complete_item:lt(10)').show();
 				} else {
 					$('.complete_item').show();
 				}
@@ -897,6 +901,7 @@
 					$('.p_table .active_item:lt(10)').show();
 					$('.s_table .active_item:lt(10)').show();
 					$('.rma_table .active_item:lt(10)').show();
+					$('.ro_table .active_item:lt(10)').show();
 				} else {
 					$('.active_item ').show();
 				}
@@ -910,6 +915,7 @@
 					$('.p_table .filter_item:lt(10)').show();
 					$('.s_table .filter_item:lt(10)').show();
 					$('.rma_table .filter_item:lt(10)').show();
+					$('.ro_table .filter_item:lt(10)').show();
 				} else {
 					$('.filter_item').show();
 				}

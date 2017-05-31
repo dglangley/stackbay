@@ -36,7 +36,7 @@ $queries[] = $query2;
 
 		// if we have the PO, search db against the related purchase order with matching serial
 		$repairs_csv = '';
-		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id ";
+		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id, cr.repair_id ";
 		$query2 .= "FROM inventory_repair r, inventory_componentrepair cr ";
 		$query2 .= "LEFT JOIN inventory_componentorder co ON co.id = cr.order_id ";
 //		$query2 .= "WHERE co.repair_id = r.ticket_number AND r.serials = '".$r['serial']."' ";

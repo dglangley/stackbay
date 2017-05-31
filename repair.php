@@ -51,6 +51,7 @@
 	$notes;
 	$sales_rep_id;
 	$status;
+	$due_date;
 	$exchange = false;
 	
 	//get the information based on the order number selected
@@ -108,7 +109,7 @@
 		$repairs_activities = array();
 		$query;
 		
-		$query = "SELECT * FROM repairs_activities WHERE ro_number = ". prep($ro_number) .";";
+		$query = "SELECT * FROM repairs_activities WHERE ro_number = ". prep($ro_number) ." ORDER BY datetime DESC;";
 		$result = qdb($query) OR die(qe());
 				
 		while ($row = $result->fetch_assoc()) {
@@ -117,9 +118,43 @@
 
 		return $repairs_activities;
 	}
+
+	function getComponents($ro_number) {
+		$purchase_requests = array();
+		$query;
+		
+		$query = "SELECT * FROM purchase_requests WHERE ro_number = ". prep($ro_number) .";";
+		$result = qdb($query) OR die(qe());
+				
+		while ($row = $result->fetch_assoc()) {
+			$purchase_requests[] = $row;
+		}
+
+		return $purchase_requests;
+	}
+
+	function getQuantity($partid) {
+		$qty = 0;
+		$query;
+		
+		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." GROUP BY partid;";
+		$result = qdb($query) OR die(qe());
+				
+		if (mysqli_num_rows($result)>0) {
+			$results = mysqli_fetch_assoc($result);
+			$qty = $results['sum'];
+		}
+
+		return $qty;
+	}
 	
 	$items = getItems($repair_order);
 	$activities = grabActivities($repair_order);
+
+	foreach($items as $item):
+		$due_date = format_date($item['due_date']);
+		break;
+	endforeach;
 ?>
 	
 
@@ -213,7 +248,7 @@
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
 					<?php } ?>
 				</div>
 				
@@ -233,17 +268,46 @@
 				<div class="col-md-4">
 					<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
 					<input type="text" name="techid" value="<?=$U['contactid'];?>" class="hidden">
-					<?php if($activites): foreach($activites as $activity) { ?>
-							<input type="text" name="repair_item_id" value="<?=$activity['id'];?>" class="hidden">
-					<?php } endif; ?>
+					<?php if(!empty($items))
+						foreach($items as $item): ?>
+						<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
+					<?php endforeach; ?>
 
-					<input type="text" name="type" value="check_in" class="hidden">
-					<button class="btn-flat success pull-right btn-update" type="submit" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button>
+					<?php $status = 'opened'; foreach($activities as $activity): ?>
+						<?php 
+							if(strpos($activity['notes'], 'Checked') !== false) {
+								if(strtolower($activity['notes']) == 'checked in') {
+									$status = 'closed';
+								} else if(strtolower($activity['notes']) == 'checked out') {
+									$status = 'opened';
+								}
+								break;
+							}
+						?>
+					<?php endforeach; ?>
 
-	<!-- 				<input type="text" name="type" value="check_out" class="hidden">
-					<button class="btn-flat danger pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check Out</button> -->
+					<?php $claimed = ""; foreach($activities as $activity): ?>
+						<?php 
+							if(strpos($activity['notes'], 'Claimed') !== false) {
+								$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid']) . "</b>";
+								break;
+							}
+						?>
+					<?php endforeach; ?>
 
-					<button class="btn-flat info pull-right btn-update" type="submit" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>			
+					<?php if($status == 'opened') { ?>
+						<!-- <input type="text" name="type" value="check_in" class="hidden"> -->
+						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button>
+					<?php } else { ?>
+						<!-- <input type="text" name="type" value="check_out" class="hidden"> -->
+						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check Out</button>
+					<?php } ?>
+
+					<?php if(!$claimed){ ?>
+						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>	
+					<?php } else { ?>
+						<p class="pull-right" style="margin-top: 17px;"><?=$claimed;?></p>
+					<?php } ?>		
 				</div>
 			</div>
 			
@@ -270,10 +334,10 @@
 
 								<div class="row">
 									<div class="col-md-12">
-										<b style="color: #526273;font-size: 14px;">Rep</b><br><br>
-										<b style="color: #526273;font-size: 14px;">Due</b><br><br>
+										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getContact($sales_rep_id)?><br><br>
+										<b style="color: #526273;font-size: 14px;">Due</b><br><?=$due_date;?><br><br>
 										<b style="color: #526273;font-size: 14px;">Notes</b><br>
-										Lorem ipsum dolor sit amet, bonorum imperdiet duo ne, homero legere in quo, ea ridens audiam dissentiunt sed.
+										<?=$notes;?>
 										<br>
 									</div>
 								</div>
@@ -289,7 +353,7 @@
 									<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
 										<thead>
 											<tr>
-												<th class="col-md-6">Part Number</th>
+												<th class="col-md-6">Description</th>
 												<th class="col-md-6">SERIAL</th>
 											</tr>
 										</thead>
@@ -306,7 +370,7 @@
 													$serial = $r['serial_no'];
 												}
 										?>
-											<tr class="" style = "padding-bottom:6px;">
+											<tr class="meta_part" data-item_id="<?=$item['id'];?>" style="padding-bottom:6px;">
 												<td><?=format($item['partid'], true);?></td>
 												<td><?=$serial;?></td>
 											</tr>
@@ -353,22 +417,25 @@
 												<th>Order Qty</th>
 												<th>Available Qty</th>
 												<th>PO
-													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle filter_status pull-right" type="submit" data-filter="complete">
+													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 				        						</th>
 											</tr>
 										</thead>
 										<?php
+											$components = getComponents($repair_order);
+											if($components)
+												foreach($components as $comp):
 										?>
 											<tr class="" style = "padding-bottom:6px;">
-												<td><?=format('311173', true);?></td>
-												<td></td>
-												<td></td>
-												<td></td>
+												<td><?=format($comp['partid'], true);?></td>
+												<td><?=$comp['qty']?></td>
+												<td><?=getQuantity($comp['partid']);?></td>
+												<td><?=$comp['po_number']?></td>
 											</tr>
 											
-										<?php //endforeach; ?>
+										<?php endforeach; ?>
 									</table>
 								</div>
 							</div>
@@ -384,6 +451,42 @@
 		<script>
 			(function($){
 				$('#item-updated-timer').delay(1000).fadeOut('fast');
+
+				$(document).on('click', '.modal_component', function(){
+					$('#right_side_main').empty();
+					//$('#go_find_me').focus();
+				});
+
+				$('#modal-component').on('shown.bs.modal', function() {
+				    $("#go_find_me").focus();
+				});
+
+				$(document).on("keydown",".search_line_qty",function(e){
+					 if (e.keyCode == 13) {
+						var isValid = nonFormCase($(this), e);
+						
+						$(".items_label").html("").remove();
+						if(isValid) {
+							var qty = 0;
+							console.log($(".search_lines"));
+	   		    			$(".search_lines").each(function() {
+								qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+							});
+							$(".items_label").html("").remove();
+							
+							if (qty == 0){
+								modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
+							} else {
+								$(".search_lines").html("").remove();
+								$("#totals_row").show();
+								$(this).val("");
+								$("input[name='ni_qty']").val("");
+								$("#order_total").val(updateTotal());
+								$('#go_find_me').focus();
+							}
+						} 
+					}
+				});
 			})(jQuery);
 		</script>
 	</body>
