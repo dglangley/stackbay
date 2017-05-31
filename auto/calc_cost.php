@@ -29,7 +29,7 @@
 		$query .= "GROUP BY po_number, partid ORDER BY po_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-//			$cost = setCost($r['po_number'],$r['partid']);
+			$cost = setCost($r['po_number'],$r['partid']);
 		}
 	}
 

@@ -82,12 +82,12 @@
 
 						// set the cost of repair
 						if ($repair_cost>0) {
-							$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-							$query3 .= "VALUES ('".$r2['id']."','".$r3['ticket_number']."','repair_id','".$repair_cost."'); ";
-							$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+							$query4 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
+							$query4 .= "VALUES ('".$r2['id']."','".$r3['ticket_number']."','repair_id','".$repair_cost."'); ";
+							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 							$serials[$r2['id']]['repair'] += $repair_cost;
 							$serials[$r2['id']]['total'] += $repair_cost;
-							if ($debug==1) { echo $query3.'<BR>'; }
+							if ($debug==1) { echo $query4.'<BR>'; }
 						}
 					}
 				}
