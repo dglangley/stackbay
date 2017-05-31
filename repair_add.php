@@ -29,7 +29,6 @@
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
-	include_once $rootdir.'/inc/credit_creation.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 
 
@@ -109,7 +108,7 @@
 					return("NO LOCATION SELECTED ");
 				}
 				
-				$quick_check = "SELECT * FROM inventory where serial_no like $serial AND repair_item_id = $rlineid;";
+				$quick_check = "SELECT * FROM inventory where `serial_no` like $serial AND repair_item_id = $rlineid;";
 				$res = qdb($quick_check) or die(qe()." $quick_check");
 				if(!mysqli_num_rows($res)){
 					$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
@@ -129,14 +128,14 @@
 			}
 		return($rlineid);
 	}
-	if (grab("form_submitted")){
+	if ($_REQUEST["form_submitted"]){
 		$result = process_repair_to_db();
 	}
 	
-	$active = grab("line_id");
-	$sel_place = grab("place");
-	$sel_instance = grab("instance");
-	$sel_condition = grab("condition");
+	$active = $_REQUEST["line_id"];
+	$sel_place = $_REQUEST["place"];
+	$sel_instance = $_REQUEST["instance"];
+	$sel_condition = $_REQUEST["condition"];
 	$partsListing = getRepairParts($order_number);
 ?>
 
