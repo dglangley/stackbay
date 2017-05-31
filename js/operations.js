@@ -2812,7 +2812,9 @@
 					// $("#subtotal").trigger("change");
 					var fees = 0.00;
 					$(".fee_inputs").each(function(){
-						fees += parseFloat($(this).val());
+						if(parseFloat($(this).val())){
+							fees += parseFloat($(this).val());
+						}
 					});
 					// $("#tax").trigger("change");
 					var freight = parseFloat($("#freight").val().replace('$',''));
