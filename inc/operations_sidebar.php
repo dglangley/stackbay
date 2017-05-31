@@ -217,7 +217,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 			$right .= "</div>";
 		}
 			// $right .= "<div class='so-terms'>";
-			$right .= dropdown('terms',$terms,$companyid, 'col-sm-5');
+			$right .= dropdown('terms',$terms,"$companyid-".$o['type'], 'col-sm-5');
 			// $right .= "</div>";
 		$right .= "</div>";
 	

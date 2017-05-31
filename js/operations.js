@@ -2131,6 +2131,35 @@
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
+		var has_freight = false;
+		var first = true;
+		var account = $(".box_group").data("account");
+		if(!account){
+			var $unshipped = $('.box_selector').filter(function() { 
+			  return $(this).data("shipped") == false;
+			});
+			//If account is null, then treat this as prepaid;
+			var box_number = 1;
+			if($unshipped){
+				$unshipped.each(function() {
+					if(first){
+						box_number = $(this).text();
+					}
+					if($(this).data("row-freight")){
+				   		has_freight = true;
+					}
+				});
+			}
+		} else {
+			has_freight = true;
+		}
+		if(!has_freight){
+			if(confirm("This shipment has prepaid freight: opening the modal to add it now")){
+				box_edit(box_number);
+				return;
+			}
+		}
+		
 		if($('.check-save').length >0){
 			var isoCheck = [];
 			var init = true;
@@ -2308,69 +2337,10 @@
 //==============================================================================
 
 //Open Modal
+	
 	$(document).on("click",".box_edit", function(){
 		var package_number = $(".box_selector.active").text();
-		var order_number = $("body").attr('data-order-number');
-		if (package_number){
-			$("#package_title").text("Editing Box #"+package_number);
-			$("#alert_title").text("Box #"+package_number);
-			$("#modal-width").val($(".box_selector.active").attr("data-width"));
-			$("#modal-height").val($(".box_selector.active").attr("data-h"));
-			$("#modal-length").val($(".box_selector.active").attr("data-l"));
-			$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
-			$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
-			$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
-			$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
-			
-			var status = $(".box_selector.active").attr('data-box-shipped');
-			
-			if(status && order_type !='Purchase') {
-				$("#alert_message").show();
-			} else {
-				$("#alert_message").hide();
-			}
-			//alert("ON: "+order_number+" | Package #: "+package_number);
-			$.ajax({
-				type: "POST",
-				url: '/json/package_contents.php',
-				data: {
-					"order_number": order_number,
-					"package_number": package_number
-				},
-				dataType: 'json',
-				success: function(data) {
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-					console.log(data);
-					$('.modal-packing').empty();
-					if (data){
-						$.each( data, function( i, val ) {
-							$.each(val, function(it,serial){
-									var element = "<tr>\
-											<td>"+ i +"</td>\
-											<td>"+ serial +"</td>\
-										</tr>";
-									$('.modal-packing').append( element );
-								});
-							});
-							// for(var k = 0; k < val.length; k++) {
-					}
-						
-						//After the edit modal has been set with the proper data, show it
-						$("#modal-package").modal("show");
-				},
-				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
-					console.log("JSON packages_contents.php: Error");
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-				},				
-				complete: function(){
-					$("#modal-tracking").focus();
-				}
-			});
-		}
-		else{
-			alert('Please select a box before editing');
-		}
+		box_edit(package_number);
 	});
 //Submit Modal
 	$(document).on("click","#package-continue", function(){
@@ -2662,7 +2632,70 @@
 }); //END OF THE GENERAL DOCUMENT READY TAG
 			
 			
+			function box_edit(package_number){
+		var order_number = $("body").attr('data-order-number');
+		var origin = $(".box_selector:contains('"+package_number+"')");
+		if (package_number){
+			$("#package_title").text("Editing Box #"+package_number);
+			$("#alert_title").text("Box #"+package_number);
+			$("#modal-width").val(origin.attr("data-width"));
+			$("#modal-height").val(origin.attr("data-h"));
+			$("#modal-length").val(origin.attr("data-l"));
+			$("#modal-weight").val(origin.attr("data-weight"));
+			$("#modal-tracking").val(origin.attr("data-tracking"));
+			$("#modal-freight").val(origin.attr("data-row-freight"));
+			$("#package-modal-body").attr("data-modal-id",origin.attr("data-row-id"));
 			
+			var status = origin.attr('data-box-shipped');
+			
+			if(status && order_type !='Purchase') {
+				$("#alert_message").show();
+			} else {
+				$("#alert_message").hide();
+			}
+			//alert("ON: "+order_number+" | Package #: "+package_number);
+			$.ajax({
+				type: "POST",
+				url: '/json/package_contents.php',
+				data: {
+					"order_number": order_number,
+					"package_number": package_number
+				},
+				dataType: 'json',
+				success: function(data) {
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+					console.log(data);
+					$('.modal-packing').empty();
+					if (data){
+						$.each( data, function( i, val ) {
+							$.each(val, function(it,serial){
+									var element = "<tr>\
+											<td>"+ i +"</td>\
+											<td>"+ serial +"</td>\
+										</tr>";
+									$('.modal-packing').append( element );
+								});
+							});
+							// for(var k = 0; k < val.length; k++) {
+					}
+						
+						//After the edit modal has been set with the proper data, show it
+						$("#modal-package").modal("show");
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON packages_contents.php: Error");
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+				},				
+				complete: function(){
+					$("#modal-tracking").focus();
+				}
+			});
+		}
+		else{
+			alert('Please select a box before editing');
+		}
+}
 			function package_delete(pack, serialid){
 				$.ajax({
 					type: "POST",
