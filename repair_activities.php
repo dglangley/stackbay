@@ -29,9 +29,7 @@
 			$notes = "Checked In";
 		} else if($_REQUEST['type'] == 'check_out'){
 			$notes = "Checked Out";
-		} else if($_REQUEST['type'] == 'component'){
-			$notes = "Component Requested";
-		}
+		} 
 	}
 
 	triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
