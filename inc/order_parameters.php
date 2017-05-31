@@ -196,7 +196,7 @@
 			$info['rep_type'] = "Sales";
 			$info['date_label'] = "RMA";
 // 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
-			$info['short'] = "po";
+			$info['short'] = "RMA";
 			$info['event'] = 'returned';
 			$info['id'] = "rma_number";
 			$info['item_id'] = $info['id'];

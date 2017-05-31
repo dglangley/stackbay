@@ -340,6 +340,7 @@
                 $(".bad_stock").hide();
                 $(".bad_stock_item").hide();
             }
+			$("[class^=serial_listing]").hide();
 			if(search != '') {
 				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
 			} else {
@@ -519,11 +520,17 @@
 										parts += "</tr>";
 	
 										parts += "<tr class='serial_listing serial_listing_"+info.unique;
-										// if(info.conditionid > 0){
-										// 	parts += " good_stock ";
-										// } else {
-										// 	parts += " bad_stock ";
-										// }
+										if(info.qty == 0){
+											parts += " no_stock ";
+										} else {
+											parts += " in_stock ";
+										}
+										if(info.conditionid > 0){
+											parts += " good_stock ";
+										} else {
+											parts += " bad_stock ";
+										}
+									
 										parts += "' style='display: none;'>\
 													<td colspan='12'>";
 													parts += "<table class='table serial table-hover table-condensed'>\
@@ -861,6 +868,10 @@
 				if (qty == "in_stock"){
 					$(".out_stock_item").hide();
 					$(".no_stock").hide();
+				}
+				if (cond == "good"){
+					$(".bad_stock").hide();
+					$(".bad_stock_item").hide();
 				}
 			}
 		});
