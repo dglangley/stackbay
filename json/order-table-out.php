@@ -128,11 +128,11 @@
 		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<div class='btn-group'>
-							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 7px 10px;'>
+							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 3px;margin-left:2px;'>
 								<i class='fa fa-minus fa-4' aria-hidden='true'></i>
 							</a>
 							
-							<a class='btn-flat success pull-right line_item_submit' style='padding: 7px;'>
+							<a class='btn-flat success pull-right line_item_submit' style='padding: 3px;'>
 								<i class='fa fa-save fa-4' aria-hidden='true'></i>
 							</a>
 						</div>
