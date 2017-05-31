@@ -264,7 +264,7 @@
 		// </div></a>";
 		echo	'</div>
 				<div class="table-responsive">
-		            <table class="table heighthover heightstriped table-condensed">';
+		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">';
 		            output_header($order,$type);
 		echo	'<tbody>';
         			output_rows($order, $search);
@@ -371,7 +371,12 @@
 				if ($order == 'p') {
 					$query .= "purchase_orders o, purchase_items i ";
 					$query .= "WHERE o.po_number = i.po_number ";
-					$query .= "ORDER BY o.po_number DESC LIMIT 0 , 200;";
+					$query .= "ORDER BY o.po_number DESC LIMIT 0, 200; ";
+					// $query .= "purchase_orders o, purchase_items i 
+					// 			WHERE o.po_number = i.po_number 
+					// 			ORDER BY 
+					// 			CASE WHEN (cast(i.qty_received as signed) - cast(i.qty as signed)) >= 0 THEN o.po_number END DESC, 
+					// 			CASE WHEN (cast(i.qty_received as signed) - cast(i.qty as signed)) < 0 THEN i.receive_date END ASC LIMIT 0 , 200;";
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
 					$query .= "WHERE o.so_number = i.so_number ";
@@ -380,10 +385,6 @@
 					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
-					// $query .= "sales_orders o, sales_items i ";
-					// $query .= "WHERE o.so_number = i.so_number ";
-					// $query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
-
 					$query .= "repair_orders o, repair_items i ";
 					$query .= "WHERE o.ro_number = i.ro_number ";
 					$query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
@@ -412,9 +413,11 @@
 					if ($order == 's'){ $order_num = $r['so_number']; }
 					else if ($order == 'p'){ $order_num = $r['po_number']; }
 					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
+					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
 					
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
+					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
 					$item = format($r['partid'], true);
 					$qty = $r['qty'];
@@ -428,9 +431,9 @@
 					}
 				
 					if($count<=10){
-						echo'	<tr class="filter_item '.(($active <= 10 && $status == 'active_item') ? 'toggle_active' : '' ).' '.(($complete <= 10 && $status == 'complete_item') ? 'toggle_complete' : '' ).' row_'.($status == 'active_item' ? $active++ : $complete++ ).' '.$status.'">';
+						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item '.$status.'">';
 					} else{
-						echo'	<tr class="show_more '.(($active <= 10 && $status == 'active_item') ? 'toggle_active' : '' ).' '.(($complete <= 10 && $status == 'complete_item') ? 'toggle_complete' : '' ).' row_'.($status == 'active_item' ? $active++ : $complete++ ).' '.$status.'" style="display:none;">';
+						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item show_more '.$status.'" style="display:none;">';
 					}
 
 					echo'        <td>'.$date.'</td>';
@@ -438,7 +441,7 @@
 					if($order != 'ro') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					} else {
-						echo'        <td>331xx <a href="#"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="/repair.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
@@ -492,8 +495,9 @@
 						echo'		</td>'; 
 					} else {
 						echo'    	<td class="status text-right">';		
-						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
-						echo'			<a href="#"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						echo'		</td>'; 							
 					}
 
@@ -784,8 +788,63 @@
 				$('.'+key+'-column').closest(".item_col").addClass('col-sm-4').removeClass('col-sm-5');
 		    }
 		}
+
+		function sortActive(a, b) {
+			var a = $(a).data("date");
+			var b = $(b).data("date");
+
+			if(a > b)
+				return 1;
+
+			if(a < b)
+				return -1;
+
+			return 0;
+        }
+
+        function sortAll(a, b) {
+			var a = $(a).data("order");
+			var b = $(b).data("order");
+
+			if(a < b)
+				return 1;
+
+			if(a > b)
+				return -1;
+
+			return 0;
+        }
+
+        function sortComplete(a, b) {
+			var a = $(a).data("order");
+			var b = $(b).data("order");
+
+			if(a < b)
+				return 1;
+
+			if(a > b)
+				return -1;
+
+			return 0;
+        }
+
+        function sortTheTable(type){
+        	if(type == 'active') {
+	            var elems = $.makeArray($('table.p_table tbody tr.active_item').remove());
+	            elems.sort(sortActive);
+	            $('table.p_table').append($(elems));
+	        } else if(type == 'all') {
+	        	var elems = $.makeArray($('table.p_table tbody tr').remove());
+	            elems.sort(sortAll);
+	            $('table.p_table').append($(elems));
+	        } else if(type == 'complete') {
+	        	var elems = $.makeArray($('table.p_table tbody tr.complete_item').remove());
+	            elems.sort(sortComplete);
+	            $('table.p_table').append($(elems));
+	        }
+        }
 		
-		//Prefilter if loaded with a parameter in url
+        //Prefilter if loaded with a parameter in url
 		if(filter != '') {
 			var type = filter;
 			//alert(filter);
@@ -793,46 +852,76 @@
 
 			if(type == 'complete') {
 				$('.show_more').hide();
-				$('.toggle_complete').show();
+				sortTheTable('complete');
+				$('.p_table .complete_item:lt(10)').show();
+				$('.s_table .complete_item:lt(10)').show();
+				$('.rma_table .complete_item:lt(10)').show();
+				$('.ro_table .complete_item:lt(10)').show();
 			} else if(type == 'active') {
 				$('.show_more').hide();
-				$('.toggle_active ').show();
+				sortTheTable('active');
+				$('.p_table .active_item:lt(10)').show();
+				$('.s_table .active_item:lt(10)').show();
+				$('.rma_table .active_item:lt(10)').show();
+				$('.ro_table .active_item:lt(10)').show();
 			} else {
-				$('.filter_item').show();
+				$('.p_table .filter_item:lt(10)').show();
+				$('.s_table .filter_item:lt(10)').show();
+				$('.rma_table .filter_item:lt(10)').show();
 				$('.show_more').hide();
 				$('.status_label').show();
 				$('.status-column').show();
+				sortTheTable('all');
 			}
 		}
-		
+
 		$(document).on("click onload", ".filter_status", function(){
 			var type = $(this).data('filter');
 			//alert($('.show_more_link:first').text() == "Show more");
-			
+
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
 
 			if(type == 'complete') {
-				if($('.show_more_link:first').text() == "Show more") 
-					$('.show_more').hide();
-				$('.toggle_complete').show();
-				$('.status-column').hide();
-				$('.status_label').hide();
-			} else if(type == 'active') {
-				if($('.show_more_link:first').text() == "Show more") 
-					$('.show_more').hide();	
-				$('.toggle_active ').show();
-				$('.status-column').hide();
-				$('.status_label').hide();
-			} else {
-				$('.filter_item').show();
-				if($('.show_more_link:visible:first').text() == "Show more") {
-					$('.show_more').hide();
+				if($('.show_more_link:first').text() == "Show more") {
+					$('.p_table .complete_item:lt(10)').show();
+					$('.s_table .complete_item:lt(10)').show();
+					$('.rma_table .complete_item:lt(10)').show();
+					$('.ro_table .complete_item:lt(10)').show();
 				} else {
-					$('.show_more').show();
+					$('.complete_item').show();
+				}
+				$('.active_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+				sortTheTable('complete');
+				//alert("here");
+			} else if(type == 'active') {
+				if($('.show_more_link:first').text() == "Show more") {
+					$('.p_table .active_item:lt(10)').show();
+					$('.s_table .active_item:lt(10)').show();
+					$('.rma_table .active_item:lt(10)').show();
+					$('.ro_table .active_item:lt(10)').show();
+				} else {
+					$('.active_item ').show();
+				}
+				$('.complete_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+				sortTheTable('active');
+			} else {
+				//$('.filter_item').show();
+				if($('.show_more_link:first').text() == "Show more") {
+					$('.p_table .filter_item:lt(10)').show();
+					$('.s_table .filter_item:lt(10)').show();
+					$('.rma_table .filter_item:lt(10)').show();
+					$('.ro_table .filter_item:lt(10)').show();
+				} else {
+					$('.filter_item').show();
 				}
 				$('.status_label').show();
 				$('.status-column').show();
+				sortTheTable('all');
 			}
 			
 			if(search != '') {

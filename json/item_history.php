@@ -55,20 +55,20 @@
 				switch ($r['field_changed']){
 					case 'locationid':
 						if($r['changed_from']){
-							$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($r['value'])." ";
+							$string = "Moved from ".display_location($r['changed_from'])." to ".display_location($r['value']);
 						} else {
-							$string = "Part placed in ".display_location($r['value'])." ";
+							$string = "Part placed in ".display_location($r['value']);
 						}
 						//Update the current locationid to make the rest of the phrases make sense.
 						//Break the loop
 						break;
 
 					case 'serial_no':
-						$string = "Serial number changed: ".$r['changed_from']." to ".$r['value']." ";
+						$string = "Serial number changed: ".$r['changed_from']." to ".$r['value'];
 						break;
 
 					case 'conditionid':
-						$string = "Condition: ".getCondition($r['changed_from'])." to ".($r['value']? getCondition($r['value']) : " unknown ")." ";
+						$string = "Condition: ".getCondition($r['changed_from'])." to ".($r['value']? getCondition($r['value']) : " unknown ");
 						break;
 	
 					case 'qty':
@@ -76,11 +76,11 @@
 						$string = "Quantity ";
 						if($r['changed_from'] > $c[$r['field_changed']]){ $string .= "decremented "; }
 						else { $string .= "incremented "; }
-						$string .= ": ".$r['changed_from']." to ".$r['value']." ";
+						$string .= ": ".$r['changed_from']." to ".$r['value'];
 						break;
 
 					case 'partid':
-						$string = "Part RM'ed: ".getPart($r['changed_from'])." to ".getPart($r['value'])." ";
+						$string = "Part RM'ed: ".getPart($r['changed_from'])." to ".getPart($r['value']);
 				
 						break;
 					case 'status':
@@ -110,9 +110,11 @@
 						break;
 
 				}
-				//$string .= "on <strong>".format_date($r['date_changed'], 'D n/d/y g:ia')."</strong>";
+				// if($r['date_changed']){
+				// 	$string .= " on <strong>".format_date($r['date_changed'], 'n/d/y')."</strong>";
+				// }
 				if($r['userid']){
-					$string .= "by ".getContact($r['userid']);
+					$string .= " by ".getContact($r['userid']);
 				}
 				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = ucwords($string);
 	    	}

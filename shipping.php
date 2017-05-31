@@ -52,7 +52,7 @@
 	$shipid;
 	$selected_carrier;
 	$selected_service;
-	$selected_account;
+	$selected_account = true;
 	$exchange = false;
 	
 	//get the information based on the order number selected
@@ -370,7 +370,7 @@
 -->
 						</div>
 						<div class="col-sm-9">
-							<div class="btn-group box_group" style = "padding-bottom:16px;">
+							<div class="btn-group box_group" data-account='<?=$selected_account?>' style = "padding-bottom:16px;">
 								<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
 									<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
 								</button>

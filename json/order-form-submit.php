@@ -123,8 +123,10 @@
     $email_confirmation = grab('email_confirmation');
     $first_fee_label = grab('first_fee_label');
 	$first_fee_amount = grab('first_fee_amount');
+	$first_fee_id = grab('first_fee_id');
 	$second_fee_label = grab('second_fee_label');
 	$second_fee_amount = grab('second_fee_amount');
+	$second_fee_id = grab('second_fee_id');
 	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation) {
@@ -227,18 +229,42 @@
         //Create a new update number
         $order_number = qid();
         
-        if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
-        	if ($first_fee_label && $first_fee_amount){
-        		$sales_charge_insert = "
-        		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
-        		VALUES ($order_number, $first_fee_label, 1, $first_fee_amount)";
-        	}
-	       	if ($second_fee_label && $second_fee_amount){
-        		$sales_charge_insert = "
-        		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
-        		VALUES ($order_number, $second_fee_label, 1, $second_fee_amount)";
-        	}
-        }
+    }
+    if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
+    	if ($first_fee_label && $first_fee_amount){
+    		$first_fee_label = prep($first_fee_label);
+    		$first_fee_amount = prep($first_fee_amount);
+    		if($first_fee_id == "New"){
+	    		$sales_charge_insert = "
+	    		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
+	    		VALUES ($order_number, $first_fee_label, 1, $first_fee_amount);";
+	    		qdb($sales_charge_insert) or jsonDie(qe()." $sales_charge_insert");
+	    	} else {
+	    		$sales_charge_update = "
+	    		UPDATE `sales_charges` SET 
+	    		price = $first_fee_amount,
+	    		memo = $first_fee_label
+	    		WHERE id = $first_fee_id;";
+	    		qdb($sales_charge_update) or jsonDie(qe()." $sales_charge_update");
+	    	}
+    	}
+       	if ($second_fee_label && $second_fee_amount){
+    		$second_fee_label = prep($second_fee_label);
+    		$second_fee_amount = prep($second_fee_amount);
+    		if($second_fee_id == "New"){
+	    		$sales_charge_insert = "
+	    		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
+	    		VALUES ($order_number, $second_fee_label, 1, $second_fee_amount);";
+	    		qdb($sales_charge_insert) or jsonDie(qe()." $sales_charge_insert");
+	    	} else {
+	    		$sales_charge_update = "
+	    		UPDATE `sales_charges` SET 
+	    		price = $second_fee_amount,
+	    		memo = $second_fee_label
+	    		WHERE id = $second_fee_id;";
+	    		qdb($sales_charge_update) or jsonDie(qe()." $sales_charge_update");
+	    	}
+    	}
     }
     else{
         

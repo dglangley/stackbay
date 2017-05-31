@@ -608,7 +608,7 @@
 				$("#new_item_total").val(qty['price']);
 			});
 			
-			$(document).on("change","#tax_rate",function(){
+			$(document).on("keyup",".fee_inputs",function(){
 				$("#order_total").val(updateTotal());
 			});
 			$(document).on("change","#new_item_price, #new_item_qty", function(){
@@ -1340,9 +1340,10 @@
 					//Aaron's New Fees Section: 5/30/2017
 					var first_fee_label = $("#first_fee_label").val();
 					var first_fee_amount = $("#first_fee_amount").val();
+					var first_fee_id = $("#first_fee_label").data("scid");
 					var second_fee_label = $("#second_fee_label").val();
 					var second_fee_amount = $("#second_fee_amount").val();
-					
+					var second_fee_id = $("#second_fee_label").data("scid");
 					
 					
 					// if (($('#account_select').last('option').val())){
@@ -1408,7 +1409,7 @@
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
 					var submit = [];
-
+					console.log("first_fee_label:"+first_fee_label+" | first_fee_amount:"+first_fee_amount+" | first_fee_id:"+first_fee_id+" | second_fee_label:"+second_fee_label+" | second_fee_amount:"+second_fee_amount+" | second_fee_id:"+second_fee_id);
 					//This loop runs through the right-hand side and parses out the general values from the page
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 							var line_ref_1 = '';
@@ -1492,8 +1493,10 @@
 							"pub_notes": pub_notes,
 							"first_fee_label" : first_fee_label,
 							"first_fee_amount" : first_fee_amount,
+							"first_fee_id" : first_fee_id,
 							"second_fee_label" : second_fee_label,
 							"second_fee_amount" : second_fee_amount,
+							"second_fee_id" : second_fee_id,
 							"table_rows":submit,
 							"filename":filename,
 							"email_confirmation":email_confirmation,
@@ -1551,6 +1554,38 @@
 					$(window).scrollTop();
 				}
 			});
+
+			$(document).on('click', '.component_request_submit', function(e){ 
+				var submit = []; 
+				var order_number = $('body').data("order-number");
+				var repair_item_id = $('tr.meta_part').data("item_id");
+
+				$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){ 
+					var row = { 
+						"part" : $(this).find(".line_part").attr("data-search"), 
+						"qty" : $(this).find(".line_qty").attr("data-qty"), 
+					}; 
+
+					submit.push(row); 
+				}); 
+
+				console.log(submit); 
+
+				$.ajax({ 
+					type: "POST", 
+					url: '/json/component_request.php', 
+					data: { 
+						"requested_items":submit,
+						"order_number":order_number,
+						"repair_item_id":repair_item_id
+					}, 
+					dataType: 'json', 
+					success: function(result) { 
+						console.log(result);
+						location.reload();
+					} 
+				}); 
+			});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================
 			//Cancel button?
@@ -1587,6 +1622,10 @@
 			
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
+
+				//Get current filter type
+				var type = $('.filter_status.active').data('filter');
+
 				if ($(this).text() == "Show more"){
 					$('.col-lg-6.data-load').hide();
 					//$(this).closest("body").children(".table-header").show();
@@ -1594,7 +1633,13 @@
 					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
 					
 					//Show everything
-					$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					if(type == 'active') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.active_item').show();
+					} else if(type == 'complete') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.complete_item').show();
+					} else {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					}
 					
 					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
 					$(this).closest(".shipping-dash").removeClass("shipping-dash");
@@ -1625,7 +1670,21 @@
 					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
 					
 					//Hide all elements over the count of 10
-					$('.show_more').hide();
+					$('.filter_item').hide();
+
+					if(type == 'active') {
+						$('.p_table .active_item:lt(10)').show();
+						$('.s_table .active_item:lt(10)').show();
+						$('.rma_table .active_item:lt(10)').show();
+					} else if(type == 'complete') {
+						$('.p_table .complete_item:lt(10)').show();
+						$('.s_table .complete_item:lt(10)').show();
+						$('.rma_table .complete_item:lt(10)').show();
+					} else {
+						$('.p_table .filter_item:lt(10)').show();
+						$('.s_table .filter_item:lt(10)').show();
+						$('.rma_table .filter_item:lt(10)').show();
+					}
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 					$("#filter-title").text('Operations Dashboard');
@@ -2104,6 +2163,35 @@
 
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
+		var has_freight = false;
+		var first = true;
+		var account = $(".box_group").data("account");
+		if(!account){
+			var $unshipped = $('.box_selector').filter(function() { 
+			  return $(this).data("shipped") == false;
+			});
+			//If account is null, then treat this as prepaid;
+			var box_number = 1;
+			if($unshipped){
+				$unshipped.each(function() {
+					if(first){
+						box_number = $(this).text();
+					}
+					if($(this).data("row-freight")){
+				   		has_freight = true;
+					}
+				});
+			}
+		} else {
+			has_freight = true;
+		}
+		if(!has_freight){
+			if(confirm("This shipment has prepaid freight: opening the modal to add it now")){
+				box_edit(box_number);
+				return;
+			}
+		}
+		
 		if($('.check-save').length >0){
 			var isoCheck = [];
 			var init = true;
@@ -2281,69 +2369,10 @@
 //==============================================================================
 
 //Open Modal
+	
 	$(document).on("click",".box_edit", function(){
 		var package_number = $(".box_selector.active").text();
-		var order_number = $("body").attr('data-order-number');
-		if (package_number){
-			$("#package_title").text("Editing Box #"+package_number);
-			$("#alert_title").text("Box #"+package_number);
-			$("#modal-width").val($(".box_selector.active").attr("data-width"));
-			$("#modal-height").val($(".box_selector.active").attr("data-h"));
-			$("#modal-length").val($(".box_selector.active").attr("data-l"));
-			$("#modal-weight").val($(".box_selector.active").attr("data-weight"));
-			$("#modal-tracking").val($(".box_selector.active").attr("data-tracking"));
-			$("#modal-freight").val($(".box_selector.active").attr("data-row-freight"));
-			$("#package-modal-body").attr("data-modal-id",$(".box_selector.active").attr("data-row-id"));
-			
-			var status = $(".box_selector.active").attr('data-box-shipped');
-			
-			if(status && order_type !='Purchase') {
-				$("#alert_message").show();
-			} else {
-				$("#alert_message").hide();
-			}
-			//alert("ON: "+order_number+" | Package #: "+package_number);
-			$.ajax({
-				type: "POST",
-				url: '/json/package_contents.php',
-				data: {
-					"order_number": order_number,
-					"package_number": package_number
-				},
-				dataType: 'json',
-				success: function(data) {
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-					console.log(data);
-					$('.modal-packing').empty();
-					if (data){
-						$.each( data, function( i, val ) {
-							$.each(val, function(it,serial){
-									var element = "<tr>\
-											<td>"+ i +"</td>\
-											<td>"+ serial +"</td>\
-										</tr>";
-									$('.modal-packing').append( element );
-								});
-							});
-							// for(var k = 0; k < val.length; k++) {
-					}
-						
-						//After the edit modal has been set with the proper data, show it
-						$("#modal-package").modal("show");
-				},
-				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
-					console.log("JSON packages_contents.php: Error");
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-				},				
-				complete: function(){
-					$("#modal-tracking").focus();
-				}
-			});
-		}
-		else{
-			alert('Please select a box before editing');
-		}
+		box_edit(package_number);
 	});
 //Submit Modal
 	$(document).on("click","#package-continue", function(){
@@ -2635,7 +2664,70 @@
 }); //END OF THE GENERAL DOCUMENT READY TAG
 			
 			
+			function box_edit(package_number){
+		var order_number = $("body").attr('data-order-number');
+		var origin = $(".box_selector:contains('"+package_number+"')");
+		if (package_number){
+			$("#package_title").text("Editing Box #"+package_number);
+			$("#alert_title").text("Box #"+package_number);
+			$("#modal-width").val(origin.attr("data-width"));
+			$("#modal-height").val(origin.attr("data-h"));
+			$("#modal-length").val(origin.attr("data-l"));
+			$("#modal-weight").val(origin.attr("data-weight"));
+			$("#modal-tracking").val(origin.attr("data-tracking"));
+			$("#modal-freight").val(origin.attr("data-row-freight"));
+			$("#package-modal-body").attr("data-modal-id",origin.attr("data-row-id"));
 			
+			var status = origin.attr('data-box-shipped');
+			
+			if(status && order_type !='Purchase') {
+				$("#alert_message").show();
+			} else {
+				$("#alert_message").hide();
+			}
+			//alert("ON: "+order_number+" | Package #: "+package_number);
+			$.ajax({
+				type: "POST",
+				url: '/json/package_contents.php',
+				data: {
+					"order_number": order_number,
+					"package_number": package_number
+				},
+				dataType: 'json',
+				success: function(data) {
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+					console.log(data);
+					$('.modal-packing').empty();
+					if (data){
+						$.each( data, function( i, val ) {
+							$.each(val, function(it,serial){
+									var element = "<tr>\
+											<td>"+ i +"</td>\
+											<td>"+ serial +"</td>\
+										</tr>";
+									$('.modal-packing').append( element );
+								});
+							});
+							// for(var k = 0; k < val.length; k++) {
+					}
+						
+						//After the edit modal has been set with the proper data, show it
+						$("#modal-package").modal("show");
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON packages_contents.php: Error");
+					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+				},				
+				complete: function(){
+					$("#modal-tracking").focus();
+				}
+			});
+		}
+		else{
+			alert('Please select a box before editing');
+		}
+}
 			function package_delete(pack, serialid){
 				$.ajax({
 					type: "POST",
@@ -2740,22 +2832,7 @@
 				//Get all the 
 				return total;
 			}
-			function updateTax(){
-				if($("#subtotal").length > 0){
-					var tax = parseFloat($("#tax_rate").val());
-					if (tax >= 1){
-						tax = tax / 100;
-					}
-					var sub = $("#subtotal").val();
-					sub = Number(sub.replace(/[^0-9\.]+/g,""));
-					
-					if (isNaN(tax) || isNaN(sub)){
-						return 0.00;
-					}else{
-						return tax*sub;
-					}
-				}
-			}
+
 			function updateTotal(){
 				if($("#subtotal").length > 0){
 					var search = 0.00;
@@ -2765,14 +2842,18 @@
 					var subtotal = parseFloat(subTotal());
 					$("#subtotal").val(price_format(subtotal));
 					// $("#subtotal").trigger("change");
-					var tax = parseFloat(updateTax());
-					$("#tax").val(tax);
+					var fees = 0.00;
+					$(".fee_inputs").each(function(){
+						if(parseFloat($(this).val())){
+							fees += parseFloat($(this).val());
+						}
+					});
 					// $("#tax").trigger("change");
 					var freight = parseFloat($("#freight").val().replace('$',''));
 					if(isNaN(freight)) {
 						freight = 0;
 					}
-					var price = price_format(subtotal+freight+tax+search);
+					var price = price_format(subtotal+freight+fees+search);
 	
 					return price;
 				}

@@ -21,20 +21,22 @@
         
         return $freights;
 	}
+
+	$companyid;
 	
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$company = $_REQUEST['s'];
 
-		echo $_REQUEST['s'] . getCompany($company, "name", "id");
+		$companyid = getCompany($company, "name", "id");
 	}
 	
 	function getAddress($searchid,$search_type='addressid') {
 		$A = array('name'=>'','street'=>'','city'=>'','state'=>'','postal_code'=>'','country'=>'','id'=>0);
 		
 		if ($search_type=='addressid') {
-			$query = "SELECT * FROM addresses WHERE id = '".res($searchid)."'; ";
+			$query = "SELECT * FROM `addresses` WHERE id = '".res($searchid)."'; ";
 		} else if ($search_type=='companyid') {
-			$query = "SELECT * FROM companies, addresses ";
+			$query = "SELECT * FROM `companies`, `addresses` ";
 			$query .= "WHERE companies.id = '".res($searchid)."' AND companies.corporateid = addresses.id; ";
 		}
 		
@@ -45,7 +47,8 @@
 		return ($A);
 	}
 	
-	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
+	if(!$companyid)
+		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 ?>
 <!DOCTYPE html>
 <html>
