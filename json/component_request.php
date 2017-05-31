@@ -22,7 +22,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	
 	$components = $_REQUEST['requested_items'];
 	$order_number = $_REQUEST['order_number'];
-	$techid = $U['contactid'];
+	$techid = $U['id'];
 	$requested = $now;
 	$repair_item_id = $_REQUEST['repair_item_id'];
 	
