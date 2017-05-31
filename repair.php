@@ -107,25 +107,25 @@
 	}
 
 	function grabActivities($ro_number, $repair_item_id){
-		$repairs_activities = array();
+		$repair_activities = array();
 		$query;
 		
 		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)."  
 				UNION
-				SELECT techid, datetime as datetime, notes FROM repairs_activities WHERE ro_number = ".prep($ro_number)." 
+				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
 				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE repair_item_id = ".prep($repair_item_id)." 
 				ORDER BY datetime DESC;";
 		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
 		// 		UNION
-		// 		SELECT techid, datetime as datetime, notes FROM repairs_activities WHERE ro_number = ".prep($ro_number)." ORDER BY datetime DESC";
+		// 		SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." ORDER BY datetime DESC";
 		$result = qdb($query) OR die(qe());
 				
 		while ($row = $result->fetch_assoc()) {
-			$repairs_activities[] = $row;
+			$repair_activities[] = $row;
 		}
 
-		return $repairs_activities;
+		return $repair_activities;
 	}
 
 	function getComponents($ro_number) {

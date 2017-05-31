@@ -44,7 +44,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	}
 
 	// function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now){
-	// 	$query = "INSERT INTO repairs_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", ".prep($notes).");";
+	// 	$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", ".prep($notes).");";
 	// 	$result = qdb($query) OR die(qe());
 	// }
 	
