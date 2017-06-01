@@ -58,16 +58,16 @@
 		} else if($_REQUEST['type'] == 'check_out'){
 			$notes = "Checked Out";
 		} else if($_REQUEST['type'] == 'complete_ticket'){
-			//Change to inventory status instead
+			$notes = "Repair Ticket Completed";
 			$trigger = "complete";
 		} else if ($_REQUEST['type'] == 'test_changer'){
 			$notes = "Marked as `In Testing`";
 		}
 	}
 
-	if($trigger != "complete"){
-		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
-	} else if($repair_item_id) {
+	triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
+
+	if($trigger == "complete") {
 		stockUpdate($repair_item_id, $ro_number);
 	}
 	
