@@ -230,6 +230,9 @@
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
 							echo '<a href="/'.$o['url'].'.php?on=' . (($origin)? $origin : $order_number) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+							if($o['type'] == 'Repair'){
+								echo '<a href="/repair.php?on='. $order_number .'" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
+							}
 							echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 						}
 						if($order_number != "New" && $o['type'] == 'Sales'){

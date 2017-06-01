@@ -7,7 +7,7 @@
 	function getItemHistory($invid = 0, $filter = '') {
 		$invid = prep($invid);
 		$query  = "SELECT * FROM inventory_history WHERE invid = $invid";
-		$query .= ($filter == "exchange")? " AND field_changed LIKE '%_item_id'" : '' ; 
+		$query .= ($filter == "exchange")? " AND field_changed LIKE '%_item_id'" : '' ;
 		$query .= ";";
 		$result = qdb($query);
 		

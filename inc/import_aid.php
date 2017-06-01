@@ -124,20 +124,71 @@
 
 		return ($USER_MAPS[$id]);
 	}
-	$FREIGHT_MAPS = array(
-		1 => 1,
-		2 => 7,
-		3 => 13,
-		4 => 10,
-		5 => 9,
-		6 => 8,
-		7 => 4,
+	$upsid = 1;
+	$fedexid = 2;
+	$otherid = 3;
+	$CARRIER_MAPS = array(
+		1 => $upsid,
+		2 => $fedexid,
+		3 => $otherid,
+		4 => $fedexid,
+		5 => $fedexid,
+		6 => $fedexid,
+		7 => $upsid,
+		8 => $upsid,
+		9 => $upsid,
+		10 => $otherid,
+		11 => $otherid,
+		12 => $upsid,
+		13 => $upsid,
+	);
+	$SERVICE_MAPS = array(
+		1 => 1,/*UPS GROUND*/
+		2 => 7,/*FedEx GROUND*/
+		3 => 13,/*Other LTL*/
+		4 => 12,/*FedEx Standard Overnight*/
+		5 => 9,/*FedEx 2Day*/
+		6 => 8,/*FedEx Express Saver*/
+		7 => 4,/*UPS Overnight*/
+		8 => 3,/*UPS 2nd Day Air*/
+		9 => 2,/*UPS 3 Day Select*/
+		10 => 14,/*Other Other*/
+		11 => 14,/*Other Other*/
+		12 => 6,/*UPS Red Saver*/
+		13 => 4,/*UPS Overnight*/
+	);
+	$TERMS_MAPS = array(
+		1 => 10,
+		2 => 6,
+		3 => 12,
+		4 => 4,
+		5 => 14,
+		6 => 13,
+		7 => 7,
 		8 => 3,
 		9 => 2,
-		10 => 14,
-		11 => 14,
-		12 => 6,
-		13 => 5
+		10 => 11,
+		11 => 8,
+		12 => 1,
+		13 => 6,
+		14 => 9,
 	);
 	
+	function mapFreight($id){
+		global $FREIGHT_MAPS;
+		if (! $FREIGHT_MAPS[$id]) { return false; }
+		return ($FREIGHT_MAPS[$id]);
+	}
+	function address_translate($address_string){
+		$address_string = prep($address_string);
+		$search = "SELECT `id` FROM `addresses` where street = '$address_string';";
+		$results = qdb($search) or die(qe()." | $search");
+		if(mysqli_num_rows($results)){
+			mysqli_fetch_assoc($results);
+			return($results['id']);
+		} else {
+			return 'null';
+		}
+		
+	}
 ?>

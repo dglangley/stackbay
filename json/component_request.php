@@ -22,7 +22,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	
 	$components = $_REQUEST['requested_items'];
 	$order_number = $_REQUEST['order_number'];
-	$techid = $U['contactid'];
+	$techid = $U['id'];
 	$requested = $now;
 	$repair_item_id = $_REQUEST['repair_item_id'];
 	
@@ -34,19 +34,19 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($item['qty']).");";
 			$result = qdb($query);
 
-			if($result) {
-				$notes = "Part #" . $item['part'] . " Requested. Qty: " . $item['qty'];
-				triggerActivity($order_number, $repair_item_id, $notes, $techid, $requested);
-			}
+			// if($result) {
+			// 	$notes = "Part #" . $item['part'] . " Requested. Qty: " . $item['qty'];
+			// 	triggerActivity($order_number, $repair_item_id, $notes, $techid, $requested);
+			// }
 		}
 
 		return $result;
 	}
 
-	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now){
-		$query = "INSERT INTO repairs_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", ".prep($notes).");";
-		$result = qdb($query) OR die(qe());
-	}
+	// function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now){
+	// 	$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", ".prep($notes).");";
+	// 	$result = qdb($query) OR die(qe());
+	// }
 	
 	$result = saveReq($techid, $order_number, $requested, $components, $repair_item_id);
 		
