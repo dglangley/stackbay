@@ -180,12 +180,27 @@
 		return ($FREIGHT_MAPS[$id]);
 	}
 	function address_translate($address_string){
-		$address_string = prep($address_string);
-		$search = "SELECT `id` FROM `addresses` where street = '$address_string';";
-		$results = qdb($search) or die(qe()." | $search");
-		if(mysqli_num_rows($results)){
-			mysqli_fetch_assoc($results);
-			return($results['id']);
+		$address_string = str_replace(chr(160),'',trim($address_string));
+		if (! $address_string) { return false; }
+
+		$address_fields = explode(chr(10),$address_string);
+		$last_field = count($address_fields)-1;
+		$csz = explode('|',preg_replace('/^([^,]+)[[:space:],]+([A-Z]{2})[[:space:].]+([0-9]{5})$/','$1|$2|$3',$address_fields[$last_field]));
+		$city = trim($csz[0]);
+		$state = trim($csz[1]);
+		$zip = trim($csz[2]);
+		$street = trim($address_fields[($last_field-1)]);
+
+		$query = "SELECT `id` FROM `addresses` where (street = '".res($address_string)."') ";
+		if ($city AND $state) {
+			$query .= "OR (street = '".res($street)."' AND city = '".res($city)."' AND state = '".res($state)."' AND postal_code = '".res($zip)."') ";
+		} else {
+		}
+		$query .= "; ";
+		$result = qdb($query) or die(qe()." | $query");
+		if(mysqli_num_rows($result)){
+			$r = mysqli_fetch_assoc($result);
+			return($r['id']);
 		} else {
 			return null;
 		}

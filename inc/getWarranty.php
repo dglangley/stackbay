@@ -34,12 +34,14 @@
         }
 	}
 	function calcWarranty($invid, $type = 'sales') {
+		global $today;
+
 		$date;
 		$warranty;
 		$warranty_lines;
 		$query;
 		
-		$today = date($date_format);
+		//$today = date($date_format);
 
 		//If querying our warranty
 		if($type == 'sales') {
@@ -61,13 +63,13 @@
 		
 			//Create the date
 			$warranty_date = format_date($result['created'],'Y-m-d', array("d"=>$result['days']));
-			$date_text = summarize_date($warranty_date);
+			$date_text = format_date($warranty_date);
             
 			//Add warranty days
 			// $date = date($date_format, strtotime($date. ' + '.$warranty.' days'));
 			
 			//Expired
-			if($date < $warranty_date) {
+			if($today < $warranty_date) {
 				$warranty_lines = "<span class='in_warranty'>";
 			} else {
 				$warranty_lines = "<span class='expired_warranty'>";

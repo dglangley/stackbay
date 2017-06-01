@@ -540,7 +540,7 @@
 															case 'returns_item_id':
 																$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
 																$link = "/rma.php?rma=";
-																$actionHolder = "Returned";
+																$actionHolder = "RMA";
 																break;
 															case 'purchase_item_id':
 																$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
@@ -559,9 +559,9 @@
 															$result = qdb($select);
 															$result = mysqli_fetch_assoc($result);
 															if($result['o'] != $so_number) {
-																$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+																$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a> &nbsp; ";
 																if($actionHolder != 'PO') {
-																	$action .= " ".format_date($history['date'],"n/j/y") . "<br>";
+																	$action .= format_date($history['date'],"n/j/y") . "<br>";
 																}
 															}
 														}
