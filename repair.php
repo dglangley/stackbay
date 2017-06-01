@@ -64,7 +64,7 @@
 		$repair_order = $result['ro_number'];
 		$notes = $result['public_notes'];
 		$sales_rep_id = $result['sales_rep_id'];
-		$status = $result['status'];
+		$ticketStatus = $result['status'];
 	}
 	
 	function getItems($ro_number = 0) {
@@ -114,7 +114,6 @@
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
-				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).")
 				UNION
 				SELECT `userid` as techid, `date_changed` as datetime, CONCAT('Status changed from ', `changed_from`, ' to ', `value` ) as notes FROM `inventory_history` where `field_changed` = 'status' AND `invid` in (
 					SELECT `invid` FROM `inventory_history` where `field_changed` = 'repair_item_id' and `value` = ".prep($repair_item_id)."
@@ -290,29 +289,26 @@
 						<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
 					<?php endforeach; ?>
 
-					<?php $status = 'opened'; foreach($activities as $activity): ?>
-						<?php 
-							if(strpos($activity['notes'], 'Checked') !== false) {
+					<?php 
+						$status = ""; 
+						$claimed = "";
+
+						foreach($activities as $activity):
+							if(strpos($activity['notes'], 'Checked') !== false && !$status) {
 								if(strtolower($activity['notes']) == 'checked in') {
 									$status = 'closed';
 								} else if(strtolower($activity['notes']) == 'checked out') {
 									$status = 'opened';
 								}
-								break;
 							}
-						?>
-					<?php endforeach; ?>
 
-					<?php $claimed = ""; foreach($activities as $activity): ?>
-						<?php 
-							if(strpos($activity['notes'], 'Claimed') !== false) {
+							if(strpos($activity['notes'], 'Claimed') !== false && !$claimed) {
 								$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid'], 'userid') . "</b>";
-								break;
 							}
-						?>
-					<?php endforeach; ?>
+						endforeach; 
+					?>
 
-					<?php if($status == 'opened') { ?>
+					<?php if($status == 'opened' || !$status) { ?>
 						<!-- <input type="text" name="type" value="check_in" class="hidden"> -->
 						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button>
 					<?php } else { ?>
@@ -323,7 +319,8 @@
 					<?php if(!$claimed){ ?>
 						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>	
 					<?php } else { ?>
-						<p class="pull-right" style="margin-top: 17px;"><?=$claimed;?></p>
+						<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
+						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
 					<?php } ?>		
 				</div>
 			</div>
