@@ -464,7 +464,7 @@
 								counter++;
 								$.each(macro, function(key,info){
 									if (!(info.part_name in rev_arr)){
-										revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+										revisions += "<option value='parts-"+counter+"' data-part-id='"+partid+"'>"+info.part_name+"</option>";
 										rev_arr[info.part_name] = false;
 									}
 									// break apart key to get relevant data (PO)
@@ -520,7 +520,7 @@
 										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
-										parts += "<tr class='serial_listing serial_listing_"+info.unique+"  parts-"+counter;
+										parts += "<tr class='serial_listing serial_listing_"+info.unique;
 										if(info.qty == 0){
 											parts += " no_stock ";
 										} else {
@@ -859,7 +859,6 @@
 			
 			
 		});
-		
 		$(document).on('click', '.all_serials', function(e) {
 			e.preventDefault;
 			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
@@ -867,37 +866,27 @@
 	        if ($(".serial_listing:visible").length){
 	        	$(".serial_listing").hide();
 	        }else{
-	        	$('.revisions').find(':selected').each(function(i, selected){
-						var part = $(this).val();
-						if (part != ''){
-							$('.' + part).show();
-				        	$(".serial_listing [class*="+part+"]").show();
-				        	$("[class*=serial_listing_]").show();
-							if (qty == "in_stock"){
-								$(".out_stock_item").hide();
-								$(".no_stock").hide();
-							}
-							if (cond == "good"){
-								$(".bad_stock").hide();
-								$(".bad_stock_item").hide();
-							}
-						} else {
-							$('.parts-list').show();
-							if (qty == "in_stock"){
-								$(".out_stock_item").hide();
-								$(".no_stock").hide();
-							}
-							if (cond == "good"){
-								$(".bad_stock").hide();
-								$(".bad_stock_item").hide();
-							}
-							// $('.serial_listing').show();
-							return false;
-						}
-					});
-				}
-			});
-		
+				$('.revisions').find(':selected').each(function(i, selected){
+					var part_listing = $(this).val();
+					if (!part_listing){
+	        			$("[class^=serial_listing]").show();
+					} else {
+						$('.'+part_listing).each(function(j, part_parent){
+							var serial_listing = $(this).data("serial");
+							$("."+serial_listing).show();
+						});
+					}
+				});
+			}
+			if (qty == "in_stock"){
+				$(".no_stock").hide();
+				$(".out_stock_item").hide();
+			}
+			if (cond == "good"){
+				$(".bad_stock").hide();
+				$(".bad_stock_item").hide();
+			}
+		});
 		$(document).on("click",".part_filter",function(){
 			SEARCH = $("#part_search").val();
 			inventory_history();
@@ -919,7 +908,6 @@
 				var part = $(this).val();
 				if (part != ''){
 					$('.' + part).show();
-					$("tr[class*=serial_listing_]").hide();
 					if (qty == "in_stock"){
 						$(".out_stock_item").hide();
 						$(".no_stock").hide();

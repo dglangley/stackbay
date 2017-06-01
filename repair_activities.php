@@ -10,8 +10,8 @@
 	}
 
 	function stockUpdate($repair_item_id, $ro_number){
-		$query = "UPDATE inventory SET status ='shelved' WHERE repair_item_id = ".prep($repair_item_id).";";
-		$result = qdb($query) OR die(qe());
+		// $query = "UPDATE inventory SET status ='shelved' WHERE repair_item_id = ".prep($repair_item_id).";";
+		// $result = qdb($query) OR die(qe());
 
 		$query = "UPDATE repair_orders SET status ='Completed' WHERE ro_number = ".prep($ro_number).";";
 		$result = qdb($query) OR die(qe());
@@ -40,14 +40,14 @@
 		} else if($_REQUEST['type'] == 'check_out'){
 			$notes = "Checked Out";
 		} else if($_REQUEST['type'] == 'complete_ticket'){
-			//Change to inventory status instead
+			$notes = "Repair Ticket Completed";
 			$trigger = "complete";
 		} 
 	}
 
-	if($trigger != "complete"){
-		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
-	} else if($repair_item_id) {
+	triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
+
+	if($trigger == "complete") {
 		stockUpdate($repair_item_id, $ro_number);
 	}
 	

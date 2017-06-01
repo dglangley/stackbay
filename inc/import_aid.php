@@ -195,11 +195,6 @@
 		if ($city AND $state) {
 			$query .= "OR (street = '".res($street)."' AND city = '".res($city)."' AND state = '".res($state)."' AND postal_code = '".res($zip)."') ";
 		} else {
-/*
-for ($i=0; $i<strlen($address_string); $i++) {
-	echo $address_string[$i].' ('.ord($address_string[$i]).')<BR>';
-}
-*/
 		}
 		$query .= "; ";
 		$result = qdb($query) or die(qe()." | $query");
@@ -207,7 +202,7 @@ for ($i=0; $i<strlen($address_string); $i++) {
 			$r = mysqli_fetch_assoc($result);
 			return($r['id']);
 		} else {
-			return 'NULL';
+			return null;
 		}
 		
 	}

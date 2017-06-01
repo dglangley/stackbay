@@ -44,10 +44,10 @@ foreach($results as $r){
     $partid = translateID($r['inventory_id']);
     
     //status_id - Connects to the 'repairshippeddtatus' table, correlates to our condition table. will need to be mapped to conditions, most likely.
-    $line['ref_1'] = 'NULL';
-    $line['ref_1_label'] = 'NULL';
-    $line['ref_2'] = 'NULL';
-    $line['ref_2_label'] = 'NULL';
+    $line['ref_1'] = null;
+    $line['ref_1_label'] = null;
+    $line['ref_2'] = null;
+    $line['ref_2_label'] = null;
     if($r['material_sap']){
         //material_sap -> some verizon label REF_LABEL1 SAP, Re11val
         $line['ref_1'] = $r['material_sap'];
