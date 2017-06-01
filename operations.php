@@ -72,7 +72,7 @@
         		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number;";
 		        break;
 			case 'ro':
-        		$query = "";
+        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number;";
 		        break;
 			default:
 				//Should rarely ever happen
@@ -102,15 +102,20 @@
 			    case 'rma':
 	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number;";
 			        break;
+			    case 'ro':
+			    	$query = "";
+			        break;
 			    default:
 					//Should rarely ever happen
 					break;
 			}
 
-			$result = qdb($query) OR die(qe());
+			if($query) {
+				$result = qdb($query) OR die(qe());
 			
-			while ($row = $result->fetch_assoc()) {
-				$initial[] = $row;
+				while ($row = $result->fetch_assoc()) {
+					$initial[] = $row;
+				}
 			}
 		}
 		
@@ -127,21 +132,26 @@
 		    	$query = "SELECT * FROM inventory inv, return_items i, returns o WHERE serial_no = '".res(strtoupper($search))."' ";
 				$query .= "AND inv.returns_item_id = i.id AND o.rma_number = i.rma_number;";
 		        break;
+		    case 'ro':
+		    	$query = "";
+		        break;
 		    default:
 				//Should rarely ever happen
 				break;
 		}
 		
-		$result = qdb($query) OR die(qe());
-		
-		while ($row = $result->fetch_assoc()) {
-			//Checks if the array row already exists within the array, if not add it to the list
-			if (!in_array($row, $initial)) {
-			    $initial[] = $row;
+		if($query){
+			$result = qdb($query) OR die(qe());
+			
+			while ($row = $result->fetch_assoc()) {
+				//Checks if the array row already exists within the array, if not add it to the list
+				if (!in_array($row, $initial)) {
+				    $initial[] = $row;
+				}
 			}
 		}
 		//If the initial search is empty populate the data with close alternates
-		if(empty($initial) && $type != 'rma') {
+		if(empty($initial) && $type != 'rma' && $type != 'ro') {
 			$initial = soundsLike($search, $type);
 		} else if (!empty($initial)) {
 			//Items were found so remove any warning messages ever
@@ -393,7 +403,7 @@
 				$results = qdb($query);
 			} else {
 				$results = searchQuery($search, $order);
-				//print_r($results); die;
+				//print_r($results); //die;
 			}
 			
 			//display only the first N rows, but output all of them
@@ -878,6 +888,7 @@
 				$('.p_table .filter_item:lt(10)').show();
 				$('.s_table .filter_item:lt(10)').show();
 				$('.rma_table .filter_item:lt(10)').show();
+				$('.ro_table .filter_item:lt(10)').show();
 				$('.show_more').hide();
 				$('.status_label').show();
 				$('.status-column').show();

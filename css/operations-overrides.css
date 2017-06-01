@@ -222,7 +222,7 @@ body.modal-open.accounts-body, #order_body.modal-open {
 	height: 100%;
 }
 
-.arrow:after, .arrow:before {
+/*.arrow:after, .arrow:before {
 	left: 100%;
 	top: 50%;
 	border: solid transparent;
@@ -231,7 +231,7 @@ body.modal-open.accounts-body, #order_body.modal-open {
 	width: 0;
 	position: absolute;
 	pointer-events: none;
-}
+}*/
 
 .arrow:after {
 	border-color: rgba(239, 239, 239, 0);
