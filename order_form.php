@@ -428,15 +428,15 @@
 						if ($order_number=='New'){
 							echo $order_number;
 						} else {
-							echo getCompany($ORDER['companyid']);
+							//echo getCompany($ORDER['companyid']);
 						}
 						echo " ".strtoupper($o['short']);
 						if ($order_number!='New'){
-							echo " # $order_number";
+							echo "# $order_number";
 							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
 						}
 					} else if ($o['invoice']){
-						echo("Invoice #".$order_number);
+						echo("Invoice# ".$order_number);
 					} else if ($o['rtv']){
 						echo("RTV FROM PO #$origin");
 					}
@@ -640,7 +640,7 @@
 					                </td>
 					                <td style='text-align:right;'>
 					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='first_fee_label' name='first_fee_label' data-scid='<?=$dataid[0]['id']?>' value="<?=$dataid[0]['label']?>">
-					                		<option></option>
+					                		<option>Add Charge...</option>
 					                		<option <?=($dataid[0]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
 					                		<option <?=($dataid[0]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
 					                		<option <?=($dataid[0]['label'] == "Freight"?"selected":"");?>>Freight</option>
@@ -666,7 +666,7 @@
 					                </td>
 					                <td style='text-align:right;'>
 					                	<select class='form-control input-xs' tabIndex='-1' type='text' id ='second_fee_label' name='second_fee_label' data-scid='<?=$dataid[1]['id']?>' value='<?=$dataid[1]['label']?>'>
-					                		<option></option>
+					                		<option>Add Charge...</option>
 					                		<option <?=($dataid[1]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
 					                		<option <?=($dataid[1]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
 					                		<option <?=($dataid[1]['label'] == "Freight"?"selected":"");?>>Freight</option>

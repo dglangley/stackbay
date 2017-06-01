@@ -327,7 +327,7 @@ body.modal-open.accounts-body, #order_body.modal-open {
 }
 .expired_warranty{
 	color: red;
-	font-weight: bold;
+	/*font-weight: bold;*/
 }
 
 /*Media Queries*/
