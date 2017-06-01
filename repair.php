@@ -365,33 +365,46 @@
 						<div class="row">
 							<div class="col-md-6">
 								<div class="table-responsive">
-									<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
-										<thead>
-											<tr>
-												<th class="col-md-6">Description</th>
-												<th class="col-md-6">SERIAL</th>
-											</tr>
-										</thead>
-										<?php
-											$serial;
-
-											if(!empty($items))
-											foreach($items as $item): 
-												$query = "SELECT serial_no FROM inventory WHERE repair_item_id = ".prep($item['id']).";";
-												$result = qdb($query) or die(qe() . ' ' . $query);
-
-												if (mysqli_num_rows($result)>0) {
-													$r = mysqli_fetch_assoc($result);
-													$serial = $r['serial_no'];
+									<form action="repair_activities.php" method="post">
+										<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
+										<input type="text" name="techid" value="<?=$U['id'];?>" class="hidden">
+										<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
+											<thead>
+												<tr>
+													<th class="col-md-6">Description</th>
+													<th class="col-md-5">SERIAL</th>
+													<th class="col-md-1"></th>
+												</tr>
+											</thead>
+											<?php
+												$serial;
+												$item_row = '';
+												if(!empty($items)){
+													foreach($items as $item){
+														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id']).";";
+														$result = qdb($query) or die(qe() . ' ' . $query);
+		
+														if (mysqli_num_rows($result)>0) {
+															$r = mysqli_fetch_assoc($result);
+															$serial = $r['serial_no'];
+															$invid = $r['id'];
+															$status = $r['status'];
+														}
+														echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
+														
+														$item_row .= '
+														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
+															<td>'.format($item['partid'], true).'</td>
+															<td>'.$serial.'</td>
+															<td><button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer">'.(($status == 'in repair')?"Send to Testing":"Mark as Tested").'</button></td>
+														</tr>';
+													}
+													echo($item_row);
 												}
-										?>
-											<tr class="meta_part" data-item_id="<?=$item['id'];?>" style="padding-bottom:6px;">
-												<td><?=format($item['partid'], true);?></td>
-												<td><?=$serial;?></td>
-											</tr>
-											
-										<?php endforeach; ?>
-									</table>
+											?>
+												
+										</table>
+									</form>
 								</div>
 							</div>
 						</div>
