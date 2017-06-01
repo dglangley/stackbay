@@ -465,7 +465,17 @@
 					if($order != 'ro') {
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
-						echo'        <td>'.($r['invid'] ? $r['invid'] : 'TBA').'</td>';
+						$serial;
+						if($r['id']) {
+							$query = "SELECT serial_no FROM inventory WHERE repair_item_id = ".prep($r['id']).";";
+							$result = qdb($query) or die(qe() . ' ' . $query);
+
+							if (mysqli_num_rows($result)>0) {
+								$r = mysqli_fetch_assoc($result);
+								$serial = $r['serial_no'];
+							}
+						}
+						echo'        <td>'.($serial ? $serial : 'TBA').'</td>';
 						echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
