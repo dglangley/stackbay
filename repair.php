@@ -114,7 +114,11 @@
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
-				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE repair_item_id = ".prep($repair_item_id)." 
+				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).")
+				UNION
+				SELECT `userid` as techid, `date_changed` as datetime, CONCAT('Status changed from ', `changed_from`, ' to ', `value` ) as notes FROM `inventory_history` where `field_changed` = 'status' AND `invid` in (
+					SELECT `invid` FROM `inventory_history` where `field_changed` = 'repair_item_id' and `value` = ".prep($repair_item_id)."
+					)
 				ORDER BY datetime DESC;";
 		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
 		// 		UNION
