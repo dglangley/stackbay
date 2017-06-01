@@ -45,14 +45,16 @@
     }
     
     function getCarrierID($serviceid){
+		if (! $serviceid) { return false; }
         $serviceid = prep($serviceid);
+
         $select = "SELECT * FROM `freight_services` where `id` like $serviceid;";
         $result = qdb($select) or die(qe()." $select");
         if(mysqli_num_rows($result)){
             $result = mysqli_fetch_assoc($result);
             return($result['carrierid']);
         } else {
-            return "Not a valid Freight Service ID";
+            return false; //"Not a valid Freight Service ID";
         }
     }
 ?>
