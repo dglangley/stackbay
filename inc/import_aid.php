@@ -187,7 +187,7 @@
 			mysqli_fetch_assoc($results);
 			return($results['id']);
 		} else {
-			return 'null';
+			return null;
 		}
 		
 	}
