@@ -328,18 +328,19 @@
 			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
 			//alert($('.show_more_link:first').text() == "Show more");
 			/* reset rows to defaults with no filters */
-            $(".good_stock").show();
-            $(".bad_stock").show();
-            $(".in_stock").show();
-            $(".no_stock").show();
-            if(qty == "in_stock"){
-                $(".no_stock").hide();
-                $(".out_stock_item").hide();
-            }
-            if (cond == "good"){
-                $(".bad_stock").hide();
-                $(".bad_stock_item").hide();
-            }
+            // $(".good_stock").show();
+            // $(".bad_stock").show();
+            // $(".in_stock").show();
+            // $(".no_stock").show();
+            // if(qty == "in_stock"){
+            //     $(".no_stock").hide();
+            //     $(".out_stock_item").hide();
+            // }
+            // if (cond == "good"){
+            //     $(".bad_stock").hide();
+            //     $(".bad_stock_item").hide();
+            // }
+            filter_with_revision();
 			$("[class^=serial_listing]").hide();
 			if(search != '') {
 				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
@@ -463,7 +464,7 @@
 								counter++;
 								$.each(macro, function(key,info){
 									if (!(info.part_name in rev_arr)){
-										revisions += "<option value='parts-"+counter+"'>"+info.part_name+"</option>";
+										revisions += "<option value='parts-"+counter+"' data-part-id='"+partid+"'>"+info.part_name+"</option>";
 										rev_arr[info.part_name] = false;
 									}
 									// break apart key to get relevant data (PO)
@@ -811,6 +812,7 @@
 			
 			$(this).closest('tr').find('.delete_button').hide();
 			$(this).hide();
+
 		});
 		
 		
@@ -864,15 +866,25 @@
 	        if ($(".serial_listing:visible").length){
 	        	$(".serial_listing").hide();
 	        }else{
-	        	$("[class^=serial_listing]").show();
-				if (qty == "in_stock"){
-					$(".out_stock_item").hide();
-					$(".no_stock").hide();
-				}
-				if (cond == "good"){
-					$(".bad_stock").hide();
-					$(".bad_stock_item").hide();
-				}
+				$('.revisions').find(':selected').each(function(i, selected){
+					var part_listing = $(this).val();
+					if (!part_listing){
+	        			$("[class^=serial_listing]").show();
+					} else {
+						$('.'+part_listing).each(function(j, part_parent){
+							var serial_listing = $(this).data("serial");
+							$("."+serial_listing).show();
+						});
+					}
+				});
+			}
+			if (qty == "in_stock"){
+				$(".no_stock").hide();
+				$(".out_stock_item").hide();
+			}
+			if (cond == "good"){
+				$(".bad_stock").hide();
+				$(".bad_stock_item").hide();
 			}
 		});
 		$(document).on("click",".part_filter",function(){
@@ -887,28 +899,41 @@
 			}
 		});
 
-		$(document).on('click', '.revisions', function() {
+		function filter_with_revision(){
 			$('.serial_listing').hide();
 			$('.parts-list').hide();
-			var element = $(this).val();
-			if(element != '') {
-				$('.revisions').find(':selected').each(function(i, selected){
-					var part = $(this).val();
-					if (part != ''){
-						$('.' + part).show();
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
+			$('.revisions').find(':selected').each(function(i, selected){
+				var part = $(this).val();
+				if (part != ''){
+					$('.' + part).show();
+					if (qty == "in_stock"){
+						$(".out_stock_item").hide();
+						$(".no_stock").hide();
 					}
-					else{
-						$('.parts-list').show();
-						// $('.serial_listing').show();
-						return false;
+					if (cond == "good"){
+						$(".bad_stock").hide();
+						$(".bad_stock_item").hide();
 					}
-				});
-			}
-			else {
-				// alert('here');
-				$('.parts-list').show();
-				// $('.serial_listing').hide();
-			}
+				}
+				else{
+					$('.parts-list').show();
+					if (qty == "in_stock"){
+						$(".out_stock_item").hide();
+						$(".no_stock").hide();
+					}
+					if (cond == "good"){
+						$(".bad_stock").hide();
+						$(".bad_stock_item").hide();
+					}
+					// $('.serial_listing').show();
+					return false;
+				}
+			});
+		}
+		$(document).on('click change', '.revisions', function() {
+			filter_with_revision();
 		});
 	
 	})(jQuery);
