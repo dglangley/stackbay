@@ -328,18 +328,19 @@
 			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
 			//alert($('.show_more_link:first').text() == "Show more");
 			/* reset rows to defaults with no filters */
-            $(".good_stock").show();
-            $(".bad_stock").show();
-            $(".in_stock").show();
-            $(".no_stock").show();
-            if(qty == "in_stock"){
-                $(".no_stock").hide();
-                $(".out_stock_item").hide();
-            }
-            if (cond == "good"){
-                $(".bad_stock").hide();
-                $(".bad_stock_item").hide();
-            }
+            // $(".good_stock").show();
+            // $(".bad_stock").show();
+            // $(".in_stock").show();
+            // $(".no_stock").show();
+            // if(qty == "in_stock"){
+            //     $(".no_stock").hide();
+            //     $(".out_stock_item").hide();
+            // }
+            // if (cond == "good"){
+            //     $(".bad_stock").hide();
+            //     $(".bad_stock_item").hide();
+            // }
+            filter_with_revision();
 			$("[class^=serial_listing]").hide();
 			if(search != '') {
 				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
@@ -519,7 +520,7 @@
 										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
-										parts += "<tr class='serial_listing serial_listing_"+info.unique;
+										parts += "<tr class='serial_listing serial_listing_"+info.unique+"  parts-"+counter;
 										if(info.qty == 0){
 											parts += " no_stock ";
 										} else {
@@ -811,6 +812,7 @@
 			
 			$(this).closest('tr').find('.delete_button').hide();
 			$(this).hide();
+
 		});
 		
 		
@@ -857,6 +859,7 @@
 			
 			
 		});
+		
 		$(document).on('click', '.all_serials', function(e) {
 			e.preventDefault;
 			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
@@ -864,17 +867,37 @@
 	        if ($(".serial_listing:visible").length){
 	        	$(".serial_listing").hide();
 	        }else{
-	        	$("[class^=serial_listing]").show();
-				if (qty == "in_stock"){
-					$(".out_stock_item").hide();
-					$(".no_stock").hide();
+	        	$('.revisions').find(':selected').each(function(i, selected){
+						var part = $(this).val();
+						if (part != ''){
+							$('.' + part).show();
+				        	$(".serial_listing [class*="+part+"]").show();
+				        	$("[class*=serial_listing_]").show();
+							if (qty == "in_stock"){
+								$(".out_stock_item").hide();
+								$(".no_stock").hide();
+							}
+							if (cond == "good"){
+								$(".bad_stock").hide();
+								$(".bad_stock_item").hide();
+							}
+						} else {
+							$('.parts-list').show();
+							if (qty == "in_stock"){
+								$(".out_stock_item").hide();
+								$(".no_stock").hide();
+							}
+							if (cond == "good"){
+								$(".bad_stock").hide();
+								$(".bad_stock_item").hide();
+							}
+							// $('.serial_listing').show();
+							return false;
+						}
+					});
 				}
-				if (cond == "good"){
-					$(".bad_stock").hide();
-					$(".bad_stock_item").hide();
-				}
-			}
-		});
+			});
+		
 		$(document).on("click",".part_filter",function(){
 			SEARCH = $("#part_search").val();
 			inventory_history();
@@ -887,28 +910,42 @@
 			}
 		});
 
-		$(document).on('click', '.revisions', function() {
+		function filter_with_revision(){
 			$('.serial_listing').hide();
 			$('.parts-list').hide();
-			var element = $(this).val();
-			if(element != '') {
-				$('.revisions').find(':selected').each(function(i, selected){
-					var part = $(this).val();
-					if (part != ''){
-						$('.' + part).show();
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
+			$('.revisions').find(':selected').each(function(i, selected){
+				var part = $(this).val();
+				if (part != ''){
+					$('.' + part).show();
+					$("tr[class*=serial_listing_]").hide();
+					if (qty == "in_stock"){
+						$(".out_stock_item").hide();
+						$(".no_stock").hide();
 					}
-					else{
-						$('.parts-list').show();
-						// $('.serial_listing').show();
-						return false;
+					if (cond == "good"){
+						$(".bad_stock").hide();
+						$(".bad_stock_item").hide();
 					}
-				});
-			}
-			else {
-				// alert('here');
-				$('.parts-list').show();
-				// $('.serial_listing').hide();
-			}
+				}
+				else{
+					$('.parts-list').show();
+					if (qty == "in_stock"){
+						$(".out_stock_item").hide();
+						$(".no_stock").hide();
+					}
+					if (cond == "good"){
+						$(".bad_stock").hide();
+						$(".bad_stock_item").hide();
+					}
+					// $('.serial_listing').show();
+					return false;
+				}
+			});
+		}
+		$(document).on('click change', '.revisions', function() {
+			filter_with_revision();
 		});
 	
 	})(jQuery);
