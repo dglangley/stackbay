@@ -229,7 +229,36 @@
         //Create a new update number
         $order_number = qid();
         
+    }else{
+        
+        //Note that the update field doesn't have all the requisite fields
+        $macro = "UPDATE ".$o['order']." SET ";
+        $macro .= updateNull('sales_rep_id',$rep);
+        $macro .= updateNull('companyid',$companyid);
+        $macro .= updateNull('contactid',$contact);
+        if ($o['purchase']){
+            $macro .= updateNull('assoc_order',$assoc_order);
+        }
+        else{
+            $macro .= updateNull('cust_ref',$assoc_order);
+//David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
+//            $macro .= updateNull('ref_ln','NULL');
+        }
+        $macro .= updateNull($o['billing'],$bill);
+        $macro .= updateNull('ship_to_id',$ship);
+        $macro .= updateNull('freight_carrier_id',$carrier);
+        $macro .= updateNull('freight_services_id',$service);
+        $macro .= updateNull('freight_account_id',$account);
+        $macro .= updateNull('termsid',$terms);
+        $macro .= updateNull('public_notes',$public_notes);
+        $macro .= rtrim(updateNull('private_notes',$private),',');
+        $macro .= " WHERE `".$o['id']."` = $order_number;";
+        
+        //Query the database
+
+		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
+
     if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
     	if ($first_fee_label && $first_fee_amount){
     		$first_fee_label = prep($first_fee_label);
@@ -266,36 +295,6 @@
 	    	}
     	}
     }
-    else{
-        
-        //Note that the update field doesn't have all the requisite fields
-        $macro = "UPDATE ".$o['order']." SET ";
-        $macro .= updateNull('sales_rep_id',$rep);
-        $macro .= updateNull('companyid',$companyid);
-        $macro .= updateNull('contactid',$contact);
-        if ($o['purchase']){
-            $macro .= updateNull('assoc_order',$assoc_order);
-        }
-        else{
-            $macro .= updateNull('cust_ref',$assoc_order);
-//David commented this out 2/13/2017, but we will eventually need to add in a way to change the attached file
-//            $macro .= updateNull('ref_ln','NULL');
-        }
-        $macro .= updateNull($o['billing'],$bill);
-        $macro .= updateNull('ship_to_id',$ship);
-        $macro .= updateNull('freight_carrier_id',$carrier);
-        $macro .= updateNull('freight_services_id',$service);
-        $macro .= updateNull('freight_account_id',$account);
-        $macro .= updateNull('termsid',$terms);
-        $macro .= updateNull('public_notes',$public_notes);
-        $macro .= rtrim(updateNull('private_notes',$private),',');
-        $macro .= " WHERE `".$o['id']."` = $order_number;";
-        
-        //Query the database
-
-		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
-    }
-    
 
 
     //RIGHT HAND SUBMIT
