@@ -258,6 +258,7 @@
 
 		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
+
     if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
     	if ($first_fee_label && $first_fee_amount){
     		$first_fee_label = prep($first_fee_label);

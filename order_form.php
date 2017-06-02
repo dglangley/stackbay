@@ -647,6 +647,7 @@
 					                		<option <?=($dataid[0]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
 					                		<option <?=($dataid[0]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
 					                		<option <?=($dataid[0]['label'] == "Freight"?"selected":"");?>>Freight</option>
+											<option <?=($dataid[0]['label'] == "Restocking Fee"?"selected":"");?>>Restocking Fee</option>
 					                	</select>
 					                </td>
 					                <td>
@@ -673,6 +674,7 @@
 					                		<option <?=($dataid[1]['label'] == "CC Proc Fee"?"selected":"");?>>CC Proc Fee</option>
 					                		<option <?=($dataid[1]['label'] == "Sales Tax"?"selected":"");?>>Sales Tax</option>
 					                		<option <?=($dataid[1]['label'] == "Freight"?"selected":"");?>>Freight</option>
+											<option <?=($dataid[0]['label'] == "Restocking Fee"?"selected":"");?>>Restocking Fee</option>
 					                	</select>
 					                </td>
 					                <td>
