@@ -295,7 +295,7 @@
 				echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
-				echo'	<th class="col-sm-3 company_col">';
+				echo'	<th class="col-sm-2 company_col">';
 				echo'	<span class="line"></span>';
 				echo'		Company';
 				echo'	</th>';
@@ -315,7 +315,7 @@
 	            echo'   	<span class="line"></span>';
 	            echo'   	Status';
 	            echo'  	</th>';
-				echo'  	<th class="col-sm-1">';
+				echo'  	<th class="col-sm-2">';
 	            echo'   	<span class="line"></span>';
 	            echo'  		Action';
 	            echo'  	</th>';
@@ -432,12 +432,15 @@
 					$item = format($r['partid'], true);
 					$qty = $r['qty'];
 					
-					if ($order != 's' && $order != 'rma'){
+					if ($order != 's' && $order != 'rma' && $order != 'ro'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
+					} else if($order == 'ro') {
+						$status = ($r['status'] == 'Completed' ? 'complete_item' : 'active_item');
+						//print_r($r['status'] );
 					}
 				
 					if($count<=10){
