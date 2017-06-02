@@ -19,12 +19,12 @@
 
 	
 
-qdb("TRUNCATE `purchase_requests`;") or die(qe());
-qdb("TRUNCATE `repair_activities`;") or die(qe());
-qdb("TRUNCATE `repair_items`;") or die(qe());
-qdb("TRUNCATE `repair_orders`;") or die(qe());
-qdb("TRUNCATE `repair_quotes`;") or die(qe());
-qdb("TRUNCATE `repair_sources`;") or die(qe());
+// qdb("TRUNCATE `purchase_requests`;") or die(qe());
+// qdb("TRUNCATE `repair_activities`;") or die(qe());
+// qdb("TRUNCATE `repair_items`;") or die(qe());
+// qdb("TRUNCATE `repair_orders`;") or die(qe());
+// qdb("TRUNCATE `repair_quotes`;") or die(qe());
+// qdb("TRUNCATE `repair_sources`;") or die(qe());
 	
 $pipe_select = "SELECT * FROM `inventory_repair` 
 WHERE `tpquote_id` is null 
