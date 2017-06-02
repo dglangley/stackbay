@@ -89,7 +89,7 @@ NULL,
 ".prep($line['warranty'])."
 );";
 qdb($item_insert) or die(qe()." | $item_insert");
-continue;
+
     $conditionid = 5;
     //This will need to be translated
     // Inventory_insert
