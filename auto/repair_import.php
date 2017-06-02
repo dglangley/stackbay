@@ -32,7 +32,7 @@ and `third_party_repair_id` is null
 AND purchase_order not like 'RMA%' 
 AND ticket_number IS NOT NULL 
 AND inventory_id is not null
-order by created_at desc;";
+order by created_at asc;";
 
 $results = qdb($pipe_select, "PIPE") or die(qe("PIPE")." $pipe_select");
 echo("INSERTED ".mysqli_num_rows($results)." ROWS");
