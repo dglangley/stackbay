@@ -32,7 +32,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
-	include_once $rootdir.'/inc/sales_charges.php';
+	include_once $rootdir.'/inc/getSalesCharges.php';
 	
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
