@@ -848,6 +848,17 @@
 			if(a > b)
 				return -1;
 
+			// if(a == b) {
+			// 	var c = $(a).data("order");
+			// 	var d = $(b).data("order");
+
+			// 	if(c < d)
+			// 		return 1;
+
+			// 	if(c > d)
+			// 		return -1;
+			// }
+
 			return 0;
         }
 
@@ -888,14 +899,14 @@
 				$('.rma_table .active_item:lt(10)').show();
 				$('.ro_table .active_item:lt(10)').show();
 			} else {
+				$('.show_more').hide();
+				sortTheTable('all');
 				$('.p_table .filter_item:lt(10)').show();
 				$('.s_table .filter_item:lt(10)').show();
 				$('.rma_table .filter_item:lt(10)').show();
 				$('.ro_table .filter_item:lt(10)').show();
-				$('.show_more').hide();
 				$('.status_label').show();
 				$('.status-column').show();
-				sortTheTable('all');
 			}
 		}
 
@@ -907,6 +918,7 @@
 			$('.filter_status').removeClass('active');
 
 			if(type == 'complete') {
+				sortTheTable('complete');
 				if($('.show_more_link:first').text() == "Show more") {
 					$('.p_table .complete_item:lt(10)').show();
 					$('.s_table .complete_item:lt(10)').show();
@@ -918,9 +930,9 @@
 				$('.active_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
-				sortTheTable('complete');
 				//alert("here");
 			} else if(type == 'active') {
+				sortTheTable('active');
 				if($('.show_more_link:first').text() == "Show more") {
 					$('.p_table .active_item:lt(10)').show();
 					$('.s_table .active_item:lt(10)').show();
@@ -932,8 +944,8 @@
 				$('.complete_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
-				sortTheTable('active');
 			} else {
+				sortTheTable('all');
 				//$('.filter_item').show();
 				if($('.show_more_link:first').text() == "Show more") {
 					$('.p_table .filter_item:lt(10)').show();
@@ -945,7 +957,6 @@
 				}
 				$('.status_label').show();
 				$('.status-column').show();
-				sortTheTable('all');
 			}
 			
 			if(search != '') {
