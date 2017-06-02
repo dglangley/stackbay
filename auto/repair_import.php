@@ -90,29 +90,22 @@ NULL,
 );";
 qdb($item_insert) or die(qe()." | $item_insert");
 continue;
-    $conditionid = 1;//This will need to be translated
-    //Inventory_insert
-    // $inv_insert = "INSERT INTO `inventory`(
-    // `serial_no`,`qty`,
-    // `partid`,
-    // `conditionid`,
-    // `status`,
-    // `locationid`,
-    // `repair_item_id`,
-    // `userid`,
-    // `date_created`,
-    // `notes`) 
-    // VALUES (
-    // ".$r['serial_number'].",
-    // ".1.",
-    // ".$partid.",
-    // ".$conditionid.",
-    // ".$status.",
-    // ".$locationid.",
-    // ".$r['serial_number'].",
-    // ".$r['serial_number'].",
-    // ".$r['serial_number'].",
-    // ".$r['serial_number'].")";
+    $conditionid = 5;
+    //This will need to be translated
+    // Inventory_insert
+    $inv_insert = "INSERT INTO `inventory`(`serial_no`,`qty`, `partid`, `conditionid`,
+    `status`,`locationid`,`repair_item_id`,`userid`,`date_created`,`notes`) 
+    VALUES (
+    ".$r['serial_number'].",
+    0,
+    ".$partid.",
+    ".$conditionid.",
+    ".$status.",
+    ".$locationid.",
+    ".$r['serial_number'].",
+    ".$r['serial_number'].",
+    ".$r['serial_number'].",
+    ".$r['serial_number'].")";
     
     
     
