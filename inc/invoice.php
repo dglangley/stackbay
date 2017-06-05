@@ -28,6 +28,9 @@
 			return null;
 		}
 
+		//Create an array for all the sales credit data
+		$sales_charge_holder = array();
+
 		if ($type == 'Sale'){
 			$macro = "
 				SELECT `companyid`, `created`, `days`, `type`
@@ -35,6 +38,15 @@
 				WHERE sales_orders.so_number = ".prep($order_number)." AND
 				sales_orders.termsid = termsid;
 			";
+
+			//Add in sales_charges rows into the invoice item
+			$sales_charges = "SELECT * FROM sales_charges WHERE so_number = ".prep($order_number).";";
+			$sales_result = qdb($sales_charges) OR die(qe());
+
+			while ($row = $sales_result->fetch_assoc()) {
+				$sales_charge_holder[] = $row;
+			}
+
 		}else{
 			echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; exit;
 		}
@@ -87,6 +99,28 @@
 			";
 			qdb($package_insert) or die(qe()." ".$package_insert);
 		}/* end foreach */
+
+		//Prevent breaks in the foreach loop
+		if($sales_charge_holder) {
+			foreach ($sales_charge_holder as $row) {
+				//first check if the sales_charge_id (unique to ref 1 exists) and labeled to sales_charge_id
+				$query = "SELECT * FROM `invoice_items` WHERE ref_1 = ".prep($row['id'])." AND ref_1_label = 'sales_charge_id';";
+				$result = qdb($query) OR die(qe().": ".$query);
+
+				//If record does no exists at all
+				if (mysqli_num_rows($result) == 0) {
+					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
+						VALUES (".$invoice_id.
+							", ".$row['partid'].
+							", ".$row['qty'].
+							", ".$row['price'].
+							", ".prep($row['id']).
+							", 'sales_charge_id');
+					";
+					qdb($insert) or die(qe()." ".$insert);
+				}
+			}/* end foreach */
+		}
 
 		return $invoice_id;
 	}
