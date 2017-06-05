@@ -2164,24 +2164,22 @@
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
 		var has_freight = false;
-		var first = true;
 		var account = $(".box_group").data("account");
 		if(!account){
-			var $unshipped = $('.box_selector').filter(function() { 
-			  return $(this).data("shipped") == false;
-			});
+			// var $unshipped = $('.box_selector').filter(function() { 
+			//   return $(this).data("shipped") == false;
+			// });
 			//If account is null, then treat this as prepaid;
 			var box_number = 1;
-			if($unshipped){
-				$unshipped.each(function() {
-					if(first){
-						box_number = $(this).text();
-					}
-					if($(this).data("row-freight")){
-				   		has_freight = true;
-					}
-				});
-			}
+			// if($unshipped){
+			$('.box_selector').each(function() {
+				if($(this).data("row-freight") || $(this).data("tracking")){
+			   		has_freight = true;
+				} else {
+					box_number = $(this).text();
+				}
+			});
+			// }
 		} else {
 			has_freight = true;
 		}
@@ -2664,9 +2662,10 @@
 }); //END OF THE GENERAL DOCUMENT READY TAG
 			
 			
-			function box_edit(package_number){
+	function box_edit(package_number){
 		var order_number = $("body").attr('data-order-number');
 		var origin = $(".box_selector:contains('"+package_number+"')");
+		var order_type = $("body").data("order-type");
 		if (package_number){
 			$("#package_title").text("Editing Box #"+package_number);
 			$("#alert_title").text("Box #"+package_number);
@@ -2728,41 +2727,41 @@
 			alert('Please select a box before editing');
 		}
 }
-			function package_delete(pack, serialid){
-				$.ajax({
-					type: "POST",
-					url: '/json/packages.php',
-					data: {
-						"action" : "delete",
-						"assoc" : serialid,
-						"package" : pack
-					},
-					dataType: 'json',
-					success: function(id) {
-						console.log("JSON Package Delete | packages.php: Success");
-					},
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON Package Delete | packages.php: Error");
-					}
-				});
+	function package_delete(pack, serialid){
+		$.ajax({
+			type: "POST",
+			url: '/json/packages.php',
+			data: {
+				"action" : "delete",
+				"assoc" : serialid,
+				"package" : pack
+			},
+			dataType: 'json',
+			success: function(id) {
+				console.log("JSON Package Delete | packages.php: Success");
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON Package Delete | packages.php: Error");
 			}
+		});
+	}
 
-			function getWorkingDays(startDate, endDate){
-				var result = 0;
-				var currentDate = startDate;
-				while (currentDate <= endDate)  {  
-				
-				var weekDay = currentDate.getDay();
-				if(weekDay != 0 && weekDay != 6)
-					result++;
-					currentDate.setDate(currentDate.getDate()+1); 
-				}
-				return result;
-			}
-			//Adding in all slide sidebar options to pages that utilize the classes depicted below
+	function getWorkingDays(startDate, endDate){
+		var result = 0;
+		var currentDate = startDate;
+		while (currentDate <= endDate)  {  
 		
-			function freight_date(days){
+		var weekDay = currentDate.getDay();
+		if(weekDay != 0 && weekDay != 6)
+			result++;
+			currentDate.setDate(currentDate.getDate()+1); 
+		}
+		return result;
+	}
+	//Adding in all slide sidebar options to pages that utilize the classes depicted below
+
+	function freight_date(days){
 				var today = new Date();
 				var dayOfTheWeek = today.getDay();
 				var calendarDays = days;
@@ -2783,21 +2782,21 @@
 				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
 				return today;
 			}
-			function headerOffset() {
-				var height = $('header.navbar').height();
-		        //get possible filter bar height
-		        var heightOPT = 0;
-		        var heightError = 0;
-		        if ($('.table-header').css("display")!='none'){
-		        	heightOPT = $('.table-header').height();
-		        }
-		        //heightError = $('.general-form-error').height();
-		        
-		        var offset = height + heightOPT + heightError;
-				
-				
-				$('body').css('padding-top', offset);
-			}
+	function headerOffset() {
+		var height = $('header.navbar').height();
+        //get possible filter bar height
+        var heightOPT = 0;
+        var heightError = 0;
+        if ($('.table-header').css("display")!='none'){
+        	heightOPT = $('.table-header').height();
+        }
+        //heightError = $('.general-form-error').height();
+        
+        var offset = height + heightOPT + heightError;
+		
+		
+		$('body').css('padding-top', offset);
+	}
 			
 			//======================== Right side page load ========================
 			// This function outputs each of the items on the table, as well as the
