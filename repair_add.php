@@ -45,6 +45,16 @@
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
+
+	$status = "Active";
+
+	$query = "SELECT status FROM repair_orders WHERE ro_number =".prep($order_number).";";
+	$result = qdb($query) or die(qe());
+	if (mysqli_num_rows($result)) {
+		$result = mysqli_fetch_assoc($result);
+		$status = $result['status'];
+	}
+
 	
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
 	function getRepairParts ($order_number) {		
@@ -214,16 +224,18 @@
 	</head>
 	
 	<body class="sub-nav" id="rma-add" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
-	<!----------------------- Begin the header output  ----------------------->
+	<!-- Begin the header output  -->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php?ps=repair&on=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage Repair</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2>Repair #<?= $order_number.' Receiving'; ?></h2>
+				<h2><?=($status == "Completed" ? "Completed" : "");?> Repair #<?= $order_number.' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
-			<!--	<button class="btn-flat gray pull-right btn-update" id="rma_complete" style="margin-top: 10px; margin-right: 10px;" disabled>Save</button>-->
+				<?php if($status == "Completed") { ?>
+					<a class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
+				<?php } ?>
 			</div>
 		</div>
 		
