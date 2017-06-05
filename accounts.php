@@ -33,7 +33,7 @@
 	//echo $_REQUEST['filter'] . 'test';
 
 	//For local testing
-	$report_type = $_GET['report_type'];
+	//$report_type = $_GET['report_type'];
 
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
@@ -134,7 +134,7 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-			<div class="col-md-4">
+			<div class="col-md-6">
 			    <div class="btn-group">
 			        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
 			        <i class="fa fa-ticket"></i>	
@@ -147,20 +147,19 @@
 			    </div>
 		    </div>
 
-		    <div class="col-md-8">
-			    <div class="btn-group medium" data-toggle="buttons">
-			        <button data-toggle="tooltip" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-warning btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active' : '');?>">
+		    <div class="col-md-6">
+			    <div class="btn-group medium">
+			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-warning btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active' : '');?>">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-			        <input type="radio" value="active" class="filter_radio active_radio hidden" <?php if ($filter=='active' || !$filter) { echo ' checked'; } ?>>
-			        <button data-toggle="tooltip" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-success btn-sm middle filter_status <?=($filter == 'complete' ? 'active' : '');?>">
+
+			        <button data-toggle="tooltip" name="filter" type="submit" value="complete" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-success btn-sm middle filter_status <?=($filter == 'complete' ? 'active' : '');?>">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-			        <input type="radio" value="complete" class="filter_radio complete_radio hidden"<?php if ($filter=='complete') { echo ' checked'; } ?>>
-					<button data-toggle="tooltip" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-info btn-sm right filter_status <?=(($filter == 'all') ? 'active' : '');?>">
+
+					<button data-toggle="tooltip" name="filter" type="submit" value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-info btn-sm right filter_status <?=(($filter == 'all') ? 'active' : '');?>">
 			        	All
 			        </button>
-			        <input type="radio" value="all" class="filter_radio all_radio hidden"<?php if ($filter=='all') { echo ' checked'; } ?>>
 			    </div>
 
 			</div>
@@ -416,17 +415,21 @@
 
 	        if($row['qty'] > $qty_shipped) {
 	        	$status = 'active';
+	        	$ext_amt - ($credit_total == '' ? 0 : $credit_total) - $paymentTotal;
 		    }
 
-			$summary_rows[$id]['date'] = $row['datetime'];
-			$summary_rows[$id]['cid'] = $row['cid'];
-            $summary_rows[$id]['items'] += $row['qty'];
-            $summary_rows[$id]['summed'] += $ext_amt;
-            $summary_rows[$id]['company'] = $row['name'];
-            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
-            $summary_rows[$id]['status'] = $status;
-            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
-
+		    //if(($filter && $filter == $status) || $filter == 'all' || !$filter) {
+				$summary_rows[$id]['date'] = $row['datetime'];
+				$summary_rows[$id]['cid'] = $row['cid'];
+	            $summary_rows[$id]['items'] += $row['qty'];
+	            $summary_rows[$id]['summed'] += $ext_amt;
+	            $summary_rows[$id]['company'] = $row['name'];
+	            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
+	            $summary_rows[$id]['status'] = $status;
+	            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
+	        // } else {
+	        // 	unset($summary_rows[$id]);
+	        // }
 
         }
 
@@ -536,9 +539,11 @@
 
 					//Remove output for live
 					//$output = '';
-
+			$total = ($info['summed'] - $info['credit'] - $paymentTotal);
+			$status  = ($total <= 0 ? 'complete' : 'active');
+			$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
         	$rows .= '
-                <tr>
+                <tr class="'.$status.' '.$filter_comb.'">
                     <td>'.format_date($info['date'], 'M j, Y').'</td>';
                     if(!$company_filter){$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';}
             $rows .='
@@ -547,16 +552,18 @@
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td>'.terms_calc($id, $orders_table).'</td>
-                    <td class="text-right '.$info['status'].'">'.format_price($info['summed'] - $info['credit'] - $paymentTotal).'</td>
+                    <td class="text-right total_cost">'.format_price($total).'</td>
                 </tr>
             ';
 
-            $total_amt += ($info['summed'] - $info['credit'] - $paymentTotal);
-            $total_payments += $paymentTotal;
-            $total_cred += $info['credit'];
+            if(!$filter_comb) {
+	            $total_amt += ($total);
+	            $total_payments += $paymentTotal;
+	            $total_cred += $info['credit'];
+	        }
 
             //Add in the dropdown element into the accounts page
-            $rows .= '<tr style="'.($report_type=='summary' ? 'display: none;' : '').'">
+            $rows .= '<tr class="'.$status.' '.$filter_comb.'" style="'.($report_type=='summary' ? 'display: none;' : '').'">
                 <td colspan="12">
                 <table class="table table-condensed commission-table">
                     <tbody>';
@@ -839,14 +846,6 @@
 
         $('#item-updated-timer').delay(1000).fadeOut('fast');
 
-        $(document).on("click", ".filter_status", function(){
-			//var type = $(this).data('filter');
-			$('input[type=radio]').prop("disable", true);
-			$('input[type=radio]').show();
-			//$("."+type).prop("checked", true);
-			//alert('stop');
-			//submit();
-		});
         
     })(jQuery);
 
