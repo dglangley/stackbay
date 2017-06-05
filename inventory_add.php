@@ -230,8 +230,8 @@
 									
 
 								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`package_no`) VALUES ($order_number, '1');";
-									qdb($insert);
+									$insert = "INSERT INTO `packages`(`order_number`,`package_no`,`datetime`) VALUES ($order_number, '1',NOW());";
+									qdb($insert) or die(qe());
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
 	
