@@ -19,6 +19,8 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/display_part.php';
+	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
@@ -166,12 +168,39 @@
 		
 		return $datestamp;
 	}
+
+	function getRMA($order_number, $type){
+		$RMA = array();
+
+		$query = "SELECT * FROM returns as r, return_items as i WHERE r.order_number = ".prep($order_number)." AND r.order_type = ".prep($type)." AND r.rma_number = i.rma_number;";
+		$result = qdb($query) OR die(qe());
+
+		while ($row = $result->fetch_assoc()) {
+			$RMA[] = $row;
+		}
+
+		return $RMA;
+	}
+
+	function getSerial($invid) {
+		$serial;
+
+		$query = "SELECT serial_no FROM inventory WHERE id = ".prep($invid).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)){
+			$row = mysqli_fetch_assoc($result);
+			$serial = $row['serial_no'];
+		}
+
+		return $serial;
+	}
 	
 	if (grab('exchange')){
 		$exchange = grab('exchange');
 	}
 	
 	$items = getItems($sales_order, $exchange);
+	$RMA_history = getRMA($sales_order, 'Sale');
 ?>
 	
 
@@ -553,6 +582,35 @@
 							<?php endforeach; ?>
 						</table>
 					</div>
+
+					<?php if($RMA_history): ?>
+						<div class="table-responsive">
+							<table class="table table-hover table-striped table-condensed">
+								<thead>
+									<th>RMA #</th>
+									<th>Description</th>
+									<th>Date</th>
+									<th>Serial</th>
+									<th>Disposition</th>
+									<th>Reason</th>
+								</thead>
+
+								<tbody>
+									<?php foreach($RMA_history as $history): ?>
+										<tr>
+											<td><?=$history['rma_number']?></td>
+											<td><?=display_part(current(hecidb($history['partid'], 'id')));?></td>
+											<td><?=format_date($history['created']);?></td>
+											<td><?=getSerial($history['inventoryid']);?></td>
+											<td><?=getDisposition($history['dispositionid']);?></td>
+											<td><?=$history['reason']?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					<?php endif; ?>
+
 				</div>
 			<!--End Row-->
 			</div>

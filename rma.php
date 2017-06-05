@@ -281,15 +281,21 @@
 		$sales_macro = mysqli_fetch_assoc(qdb($sales_macro));
 		
 		//Check to see if these items have already been RMA'd off this particular sales order
-		$limiter = "SELECT `inventoryid` FROM `returns`, `return_items` WHERE order_number=".prep($so_number)." and order_type = 'Sale' and `returns`.`rma_number` = `return_items`.`rma_number`;";
+		$limiter = "SELECT `inventoryid`
+		FROM `returns` r , `return_items` ri, inventory i
+		WHERE order_number=".prep($so_number)." 
+		AND order_type = 'Sale' 
+		AND r.`rma_number` = ri.`rma_number`
+		AND i.id = `inventoryid`
+		AND i.`qty` > 0;";
 		
-		$limit_result = qdb($limiter);
+		$limit_result = qdb($limiter) or die(qe()." | $limiter");
 		$limit = '';
 		$limit_arr = array();
 		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
 		
 		//here is where I take out the results of the serials I have already RMA'ed
-		if (mysqli_num_rows($limit_result) > 0){
+		if (mysqli_num_rows($limit_result)){
 			foreach ($limit_result as $invid){
 				// $limit .= $invid['inventoryid'].", ";
 				$limit_arr[$invid['inventoryid']] = true;
@@ -299,7 +305,7 @@
 		}
 		$sales_micro .= ";";
 		// echo($sales_micro);
-		$sales_micro = qdb($sales_micro);
+		$sales_micro = qdb($sales_micro) or die(qe()." | $sales_micro");
 		// print_r($sales_micro);
 		foreach ($sales_micro as $line_item){
 			$partid = '';

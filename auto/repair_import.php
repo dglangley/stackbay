@@ -16,9 +16,7 @@
 	include_once $rootdir.'/inc/filter.php';
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
-
 	
-
 // qdb("TRUNCATE `purchase_requests`;") or die(qe());
 // qdb("TRUNCATE `repair_activities`;") or die(qe());
 // qdb("TRUNCATE `repair_items`;") or die(qe());
@@ -33,18 +31,15 @@ AND purchase_order not like 'RMA%'
 AND ticket_number IS NOT NULL 
 AND inventory_id is not null
 order by created_at asc;";
-
 $results = qdb($pipe_select, "PIPE") or die(qe("PIPE")." $pipe_select");
 echo("INSERTED ".mysqli_num_rows($results)." ROWS");
 $meta = array();
 $meta['private_notes'] = "";
-
 //get repair location
 $getLocation = "SELECT id FROM locations where place like 'repair';";
 $result = qdb($getLocation) or die(qe()." | $getLocation");
 $result = mysqli_fetch_assoc($result);
 $locationid = $result['id'];
-
 foreach($results as $r){
     $ro_number = $r['ticket_number'];
     $meta['ro_number'] = $ro_number;
@@ -81,8 +76,6 @@ foreach($results as $r){
         $item_status = "In Repair";
     }
 //Note the fact that we don't actually have a part yet
-
-
 $order_insert = "INSERT INTO `repair_orders`(
 `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
 `freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES (
@@ -91,7 +84,6 @@ $ro_number, ".prep($r['created_at']).", ".prep($creator_id).", ".prep($sales_rep
 ".prep(address_translate($r['ship_to'])).", 
 $freight_carrier, $freight_service, 
 $terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).");";
-
 qdb($order_insert) or die(qe(). " | $order_insert");
 $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
 `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
@@ -187,11 +179,7 @@ VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_ou
             qdb($quote_insert) or die(qe()." | $quote_insert");
         }
     }
-
 }
-
-
-
 //ACTIVITIES (repair_activities)
   //date_in datereceived
   //datetime_test_in
@@ -216,13 +204,11 @@ VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_ou
 //Package Information
   //tracking_no : Create a package with any , add the tracking no(one per package), add all serials to the master unless otherwise specified
   //freight_cost -> only five items with freight cost
-
 //invoice information
   //If($invoiced){
   //invoice_number -> Insert "invoice no", company, $date_due, "Ticket_no?",'Repair',shipment
   //Grab the same associated freight from the tracking_no
   //date_due
-
 //Unknown
   //sales_order
   
@@ -276,6 +262,4 @@ VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_ou
   //quoteli_id
   //terms_idstacvk
   //verizon_region_id
-
-
 ?>

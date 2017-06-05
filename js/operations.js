@@ -654,8 +654,12 @@
 			$(document).on("keyup", ".oto_price, .oto_qty",function(){
 				var price = parseFloat($(this).closest("tr").find(".oto_price").val());
 				var qty = parseFloat($(this).closest("tr").find(".oto_qty").val());
+			
+				//alert(price);
 				
 				$(this).closest("tr").find(".oto_ext").val(price_format(price*qty));
+				$(this).closest("tr").find(".oto_ext").attr("value", (price*qty));
+				updateTotal();
 			});
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
@@ -723,6 +727,7 @@
 				var ext = click_row.find(".line_linext").text();
 				var price = click_row.find(".line_price").text();
 				var qty = click_row.find(".line_qty").text();
+				price = price.replace(/\$/g, '');
 				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 				lazy_row.find("input[name='ni_ext']").val(ext);
@@ -781,13 +786,13 @@
 				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
 				if (qty == 0){
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-				}else{
-							$(".search_lines").html("").remove();
-							$("#totals_row").show();
-							$("#search_row").find("input[name=ni_line]").val(line_number());
-							$("#order_total").val(updateTotal());
-							$('#go_find_me').focus();
-						}
+				} else {
+					$(".search_lines").html("").remove();
+					$("#totals_row").show();
+					$("#search_row").find("input[name=ni_line]").val(line_number());
+					$("#order_total").val(updateTotal());
+					$('#go_find_me').focus();
+				}
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
@@ -1017,6 +1022,7 @@
 						$("#address-modal-body").attr("data-oldid",add_id);
 						$("#add_name").val('').val(address.name);
 						$('#add_line_1').val('').val(address.street);
+						$('#add_line2').val('').val(address.addr2);
 						$('#add_city').val('').val(address.city);
 						$('#add_state').val('').val(address.state);
 						$('#add_zip').val('').val(address.postal_code);
@@ -2164,24 +2170,22 @@
 	//Configure the modal and also work on the printable page
 	$(document).on("click","#iso_report", function() {
 		var has_freight = false;
-		var first = true;
 		var account = $(".box_group").data("account");
 		if(!account){
-			var $unshipped = $('.box_selector').filter(function() { 
-			  return $(this).data("shipped") == false;
-			});
+			// var $unshipped = $('.box_selector').filter(function() { 
+			//   return $(this).data("shipped") == false;
+			// });
 			//If account is null, then treat this as prepaid;
 			var box_number = 1;
-			if($unshipped){
-				$unshipped.each(function() {
-					if(first){
-						box_number = $(this).text();
-					}
-					if($(this).data("row-freight")){
-				   		has_freight = true;
-					}
-				});
-			}
+			// if($unshipped){
+			$('.box_selector').each(function() {
+				if($(this).data("row-freight") || $(this).data("tracking")){
+			   		has_freight = true;
+				} else {
+					box_number = $(this).text();
+				}
+			});
+			// }
 		} else {
 			has_freight = true;
 		}
@@ -2664,9 +2668,10 @@
 }); //END OF THE GENERAL DOCUMENT READY TAG
 			
 			
-			function box_edit(package_number){
+	function box_edit(package_number){
 		var order_number = $("body").attr('data-order-number');
 		var origin = $(".box_selector:contains('"+package_number+"')");
+		var order_type = $("body").data("order-type");
 		if (package_number){
 			$("#package_title").text("Editing Box #"+package_number);
 			$("#alert_title").text("Box #"+package_number);
@@ -2728,41 +2733,41 @@
 			alert('Please select a box before editing');
 		}
 }
-			function package_delete(pack, serialid){
-				$.ajax({
-					type: "POST",
-					url: '/json/packages.php',
-					data: {
-						"action" : "delete",
-						"assoc" : serialid,
-						"package" : pack
-					},
-					dataType: 'json',
-					success: function(id) {
-						console.log("JSON Package Delete | packages.php: Success");
-					},
-					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON Package Delete | packages.php: Error");
-					}
-				});
+	function package_delete(pack, serialid){
+		$.ajax({
+			type: "POST",
+			url: '/json/packages.php',
+			data: {
+				"action" : "delete",
+				"assoc" : serialid,
+				"package" : pack
+			},
+			dataType: 'json',
+			success: function(id) {
+				console.log("JSON Package Delete | packages.php: Success");
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				console.log("JSON Package Delete | packages.php: Error");
 			}
+		});
+	}
 
-			function getWorkingDays(startDate, endDate){
-				var result = 0;
-				var currentDate = startDate;
-				while (currentDate <= endDate)  {  
-				
-				var weekDay = currentDate.getDay();
-				if(weekDay != 0 && weekDay != 6)
-					result++;
-					currentDate.setDate(currentDate.getDate()+1); 
-				}
-				return result;
-			}
-			//Adding in all slide sidebar options to pages that utilize the classes depicted below
+	function getWorkingDays(startDate, endDate){
+		var result = 0;
+		var currentDate = startDate;
+		while (currentDate <= endDate)  {  
 		
-			function freight_date(days){
+		var weekDay = currentDate.getDay();
+		if(weekDay != 0 && weekDay != 6)
+			result++;
+			currentDate.setDate(currentDate.getDate()+1); 
+		}
+		return result;
+	}
+	//Adding in all slide sidebar options to pages that utilize the classes depicted below
+
+	function freight_date(days){
 				var today = new Date();
 				var dayOfTheWeek = today.getDay();
 				var calendarDays = days;
@@ -2783,21 +2788,21 @@
 				today = (today.getMonth() + 1) + '/' + today.getDate() + '/' +  today.getFullYear();
 				return today;
 			}
-			function headerOffset() {
-				var height = $('header.navbar').height();
-		        //get possible filter bar height
-		        var heightOPT = 0;
-		        var heightError = 0;
-		        if ($('.table-header').css("display")!='none'){
-		        	heightOPT = $('.table-header').height();
-		        }
-		        //heightError = $('.general-form-error').height();
-		        
-		        var offset = height + heightOPT + heightError;
-				
-				
-				$('body').css('padding-top', offset);
-			}
+	function headerOffset() {
+		var height = $('header.navbar').height();
+        //get possible filter bar height
+        var heightOPT = 0;
+        var heightError = 0;
+        if ($('.table-header').css("display")!='none'){
+        	heightOPT = $('.table-header').height();
+        }
+        //heightError = $('.general-form-error').height();
+        
+        var offset = height + heightOPT + heightError;
+		
+		
+		$('body').css('padding-top', offset);
+	}
 			
 			//======================== Right side page load ========================
 			// This function outputs each of the items on the table, as well as the
@@ -3009,7 +3014,8 @@
 					if (mode=='update') {
 						var lazy_row = e.closest(".lazy-entry");
 						lazy_row.hide();
-						lazy_row.prev(".easy-output").show();
+						lazy_row.prev(".easy-output").show()
+						.find("line_ext").text(price_format(qty*price));
 					} else if (mode=='append') {
 						var lineNumber = parseInt(sub_row.find("input[name=ni_line]").val());
 						if (!lineNumber){lineNumber = 0;}

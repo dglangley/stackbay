@@ -16,7 +16,6 @@
 	$_REQUEST['s'] = '';
 	$qty_filter = grab("qty","in_stock");
 	$cond_filter = grab("cond","good");
-
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -117,11 +116,9 @@
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
 <!----------------------------------------------------------------------------->
-
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'modal/history.php'?>
 	<?php include_once 'modal/rm.php'?>
-
 	
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -393,11 +390,9 @@
 							
 							//dgl 5-9-17
 							//$(".part-container").html("").remove();	
-
 							// var p = JSON.parse(part)
 							//console.log(part);
 							var revisions, parts;
-
 							
 							$('.conditions').find('label').remove();
 							// var conditions = $('.conditions').clone();
@@ -457,7 +452,6 @@
 									}
 									
 									var counterqty = info.qty;
-
 										parts +=	"<td><button class = 'check_serials btn btn-sm btn-default pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
 									
 										parts += 	"<td>"+key[2]+"</td>";
@@ -540,7 +534,6 @@
 											parts += "	<td class='notes_col data notes_original col-md-2'>";
 											parts += serial[4];
 											parts += "</td>";
-
 											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											parts += "	<td class='qty_col edit'>1</td>";
 											parts += "	<td class='status_col edit'>"+status+"</td>";
@@ -587,7 +580,6 @@
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 		                						</td>";
 											parts +="<td class = 'text-right'>";
-
 											parts += '<span class="label '+color+' complete_label status_label text-right" style="">'+interpreted+'</span>';
 											parts +="</td>";
 											parts += "</tr>";
@@ -711,7 +703,6 @@
 				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
 			}
 		});
-
 		
 		// $('.disabled_input').find('select').prop('disabled', true)
 		
@@ -792,7 +783,6 @@
 				}
 			});
 			}
-
 		});
 		
 		// parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
@@ -828,7 +818,6 @@
 			
 			$(this).closest('tr').find('.delete_button').hide();
 			$(this).hide();
-
 		});
 		
 		
@@ -842,7 +831,6 @@
 			$('#loader-message').html('Please wait for Inventory results to load...');
 			if (SEARCH!='') { inventory_history(); }
 //			$('#loader').show();
-
 			//Triggering Aaron 2017
 //			var phpStuff = "<?=$_REQUEST['s']; ?>";
 //			if($("#part_search").val() || phpStuff != ''){
@@ -889,20 +877,17 @@
 			SEARCH = $("#part_search").val();
 			inventory_history();
 		});
-
 		$("#part_search, #po_filter").on("keyup",function(e){
 			if (e.keyCode == 13) {
 				SEARCH = $("#part_search").val();
 				inventory_history();
 			}
 		});
-
 		$(document).on('click change', '.revisions', function() {
 			filter_with_revision(false);
 		});
 	
 	})(jQuery);
-
 </script>
 
 </body>
