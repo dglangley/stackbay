@@ -652,10 +652,13 @@
 				}
 			});
 			$(document).on("keyup", ".oto_price, .oto_qty",function(){
-				var price = parseFloat($(this).closest("tr").find(".oto_price").val());
+				var price = parseFloat($(this).closest("tr").find(".oto_price").data("value"));
 				var qty = parseFloat($(this).closest("tr").find(".oto_qty").val());
+
+				//alert(price);
 				
 				$(this).closest("tr").find(".oto_ext").val(price_format(price*qty));
+				$(this).closest("tr").find(".oto_ext").attr("value", (price*qty));
 			});
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
@@ -781,13 +784,13 @@
 				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
 				if (qty == 0){
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
-				}else{
-							$(".search_lines").html("").remove();
-							$("#totals_row").show();
-							$("#search_row").find("input[name=ni_line]").val(line_number());
-							$("#order_total").val(updateTotal());
-							$('#go_find_me').focus();
-						}
+				} else {
+					$(".search_lines").html("").remove();
+					$("#totals_row").show();
+					$("#search_row").find("input[name=ni_line]").val(line_number());
+					$("#order_total").val(updateTotal());
+					$('#go_find_me').focus();
+				}
 			});
 			
 			$(document).on("click",".line_item_unsubmit",function() {
