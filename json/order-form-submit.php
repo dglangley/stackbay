@@ -1,5 +1,4 @@
 <?php
-
 //=============================================================================
 //========================= Order Form Submit Template ========================
 //=============================================================================
@@ -31,48 +30,38 @@
 		include_once $rootdir.'/inc/getContact.php';
 		include_once $rootdir.'/inc/send_gmail.php';
 		include_once $rootdir.'/inc/order_parameters.php';
-
-
 		// initializes Amea's gmail API session
 		setGoogleAccessToken(5);
-
 //=============================== Inputs section ==============================
-
 	// added by David 2/9/17 for file uploads; this takes a file upload when passed in its own, separate
 	// ajax (synchronous) request, we upload the file(s) to its storage location, then pass back the
 	// uploaded file name(s) as an indicator of success. the ensuing form post to this script uses
 	// those file names but does not upload the files themselves, so this sub-script gets handled only once
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		require($rootdir.'/vendor/autoload.php');
-
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 		if (!$DEV_ENV) {
 			$s3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
 			$bucket = getenv('S3_ORDER_UPLOADS')?: die('No "S3_ORDER_UPLOADS" config var in found in env!');
 		}
-
 		$files = '';
 		try {
 			foreach ($_FILES as $file) {
 				$filename = date("Ymd").'_'.preg_replace('/[^[:alnum:].]+/','-',$file['name']);
-
 				// check for file existing already
 				$keyExists = false;
 				if (!$DEV_ENV) {
 					$s3->registerStreamWrapper();
 					$keyExists = file_exists("s3://".$bucket."/".$filename);
 				}
-
 				if ($keyExists) {//file has already been uploaded
 					jsonDie('File has already been uploaded!');
 				}
-
 				if ($DEV_ENV) {
 					$temp_dir = sys_get_temp_dir();
 					if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 					$temp_file = $temp_dir.$filename;
 					$files = $temp_file;
-
 					// store uploaded file in temp dir so we can use it later
 					if (move_uploaded_file($file['tmp_name'], $temp_file)) {
 //						echo "File is valid, and was successfully uploaded.\n";
@@ -92,8 +81,6 @@
 		echo json_encode(array('filename'=>$files,'message'=>''));
 		exit;
 	}
-
-
     //Macros
     $order_type = $_REQUEST['order_type'];
     $order_number = $_REQUEST['order_number'];
@@ -102,7 +89,6 @@
     if($o['rtv']){
     	$o = o_params("sales");
     }
-
     
     //Form Specifics
     $companyid = is_numeric($_REQUEST['companyid'])? trim($_REQUEST['companyid']) : trim(getCompany($_REQUEST['companyid'],'name','id'));
@@ -139,10 +125,8 @@
 			}
 		}
 	}
-
     //Created By will be the value of the current userid
     $assoc_order = grab('assoc');
-
 /*
     //Process the contact, see if a new one was added
     if (!is_numeric($contact) && !is_null($contact) && ($contact)){
@@ -152,7 +136,6 @@
         }
         $contact = prep($contact);
         $title = prep($title);
-
         if ($contact != "NULL" && strtolower($contact) != "'null'"){
             $new_con = "INSERT INTO `contacts`(`name`,`title`,`notes`,`status`,`companyid`,`id`) 
             VALUES ($contact,$title,NULL,'Active',$companyid,NULL)";
@@ -162,8 +145,6 @@
         }
     }
 */
-
-
 	// build freight service and terms descriptors for email confirmation
 	$freight_service = '';
 	$freight_terms = '';
@@ -185,9 +166,7 @@
 		} else {
 			$freight_terms = 'Prepay and Bill';
 		}
-
 		$sbj = 'Order '.$assoc_order.' Confirmation';
-
 		// build confirmation email headers, then line items below
 		$msg = "<p>Here's your confirmation for order number ".$assoc_order.". <em>Please review for accuracy.</em></p><br/><br/>";
 		$msg .= "<p><strong>Order number:</strong> ".$assoc_order."</p>";
@@ -196,7 +175,6 @@
 		$msg .= "<p><strong>Shipping Address:</strong><br/>";
 		$msg .= format_address($ship)."</p>";
 	}
-
     if ($order_number == "New"){
         //If this is a new entry, save the value, insert the row, and return the
         //new-fangled ID from the mega-sketch qid function
@@ -222,7 +200,6 @@
         $insert = "INSERT INTO `".$o['order']."`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, ".((!$o['purchase'])?"`cust_ref`, `ref_ln`, " : "")."
         `".$o['billing']."`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
         ($created_by, $created, $save_rep, $cid, $save_contact, ".((!$o['purchase'])?"$assoc_order, $filename," : "")." $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
-
     //Run the update
 		$result = qdb($insert) OR jsonDie(qe().' '.$insert);
         
@@ -255,10 +232,8 @@
         $macro .= " WHERE `".$o['id']."` = $order_number;";
         
         //Query the database
-
 		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
-
     if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
     	if ($first_fee_label && $first_fee_amount){
     		$first_fee_label = prep($first_fee_label);
@@ -295,8 +270,6 @@
 	    	}
     	}
     }
-
-
     //RIGHT HAND SUBMIT
     
 	$rows = array();
@@ -316,13 +289,11 @@
             $unitPrice = prep(format_price($r['price'],true,'',true));
             $ref_1 = prep($r['ref_1']);
             $ref_1_label = prep($r['ref_1_label']);
-
 			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
 			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$part_strs = explode(' ',$r2['part']);
-
 				$partkey = '';
 				if ($r['line_number']) { $partkey = $r['line_number']; }
 				$heci = '';
@@ -335,7 +306,6 @@
 				if (! isset($rows[$partkey])) { $rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$r['line_number']); }
 				$rows[$partkey]['qty'] += $r['qty'];
 			}
-
             if ($record == 'new'){
                 //Build the insert statements
                 $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
@@ -368,7 +338,6 @@ if(!$o['repair']){
             }
         }
     }
-
 	// send order confirmation
 	if ($email_confirmation AND ! $DEV_ENV) {
 		foreach ($rows as $partkey => $r) {
@@ -389,18 +358,15 @@ if(!$o['repair']){
 			$recps[] = array($addl_recp_email,$addl_recp_name);
 		}
 		$recps[] = array('shipping@ven-tel.com','VenTel Shipping');
-
 		$bcc = false;
 		if ($rep) {
 			$rep_contactid = getRep($rep,'id','contactid');
 			$rep_email = getContact($rep_contactid,'id','email');
 			$bcc = $rep_email;
 		}
-
 		if ($public_notes) {
 			$msg .= '<br/>'.str_replace(chr(10),'<BR/>',$public_notes).'<br/>';
 		}
-
 		$send_success = send_gmail($msg,$sbj,$recps,$bcc);
 		if ($send_success) {
 //			jsonDie('Success');
@@ -408,11 +374,9 @@ if(!$o['repair']){
 //			jsonDie($SEND_ERR);
 		}
 	}
-
     
     //Return the meta data about the information submitted, including the order
     //type, number, and the inserted statement (for debugging purposes)
-
     $form = array(
         'type' => $order_type,
         'order' => $order_number,
@@ -426,5 +390,4 @@ if(!$o['repair']){
     
     echo json_encode($form);
     exit;
-
 ?>

@@ -16,7 +16,6 @@
 	$_REQUEST['s'] = '';
 	$qty_filter = grab("qty","in_stock");
 	$cond_filter = grab("cond","good");
-
 ?>
 
 <!----------------------------------------------------------------------------->
@@ -117,11 +116,9 @@
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
 <!----------------------------------------------------------------------------->
-
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'modal/history.php'?>
 	<?php include_once 'modal/rm.php'?>
-
 	
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -306,51 +303,6 @@
 
 <script>
 	(function($){
-		function getUrlParameter(sParam) {
-		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-		        sURLVariables = sPageURL.split('&'),
-		        sParameterName,
-		        i;
-		
-		    for (i = 0; i < sURLVariables.length; i++) {
-		        sParameterName = sURLVariables[i].split('=');
-		
-		        if (sParameterName[0] === sParam) {
-		            return sParameterName[1] === undefined ? true : sParameterName[1];
-		        }
-		    }
-		}
-		$(document).on("click onload", ".filter_cond, .filter_qty", function(){
-			var search = $("#part_search").val();
-			$(this).closest(".btn-group").find(".active").removeClass("active");
-			$(this).addClass("active");
-			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
-			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
-			//alert($('.show_more_link:first').text() == "Show more");
-			/* reset rows to defaults with no filters */
-            // $(".good_stock").show();
-            // $(".bad_stock").show();
-            // $(".in_stock").show();
-            // $(".no_stock").show();
-            // if(qty == "in_stock"){
-            //     $(".no_stock").hide();
-            //     $(".out_stock_item").hide();
-            // }
-            // if (cond == "good"){
-            //     $(".bad_stock").hide();
-            //     $(".bad_stock_item").hide();
-            // }
-            filter_with_revision();
-			$("[class^=serial_listing]").hide();
-			if(search != '') {
-				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
-			} else {
-				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
-			}
-		});
-
-		
-		// $('.disabled_input').find('select').prop('disabled', true)
 		var filter_grab = function (){
 			//Set an array up with the filter fields from the filter bar
 			var f = getUrlParameter('search');
@@ -438,11 +390,9 @@
 							
 							//dgl 5-9-17
 							//$(".part-container").html("").remove();	
-
 							// var p = JSON.parse(part)
 							//console.log(part);
 							var revisions, parts;
-
 							
 							$('.conditions').find('label').remove();
 							// var conditions = $('.conditions').clone();
@@ -452,7 +402,7 @@
 							
 							var counter = 1;
 							var rev_arr = [];
-							revisions = "<option value='' selected>All</option>";
+							revisions = "<option value='all' id='show_all_parts' selected>All</option>";
 							//If there are multiple parts being returned, loop through them all
 							$.each(part, function(partid, macro){
 								console.log(macro);
@@ -502,7 +452,6 @@
 									}
 									
 									var counterqty = info.qty;
-
 										parts +=	"<td><button class = 'check_serials btn btn-sm btn-default pull-center' style='padding-top:3px;padding-bottom:3px;'>"+counterqty+"</button></td>";
 									
 										parts += 	"<td>"+key[2]+"</td>";
@@ -520,7 +469,7 @@
 										parts +=	"<td><button class = 'check_serials btn-sm btn-flat white pull-right' style='padding-top:3px;padding-bottom:3px;'><i class='fa fa-list'></i></button></td>";
 										parts += "</tr>";
 	
-										parts += "<tr class='serial_listing serial_listing_"+info.unique;
+										parts += "<tr class='serial_listing serial_listing_"+info.unique+" parts-"+counter;
 										if(info.qty == 0){
 											parts += " no_stock ";
 										} else {
@@ -585,7 +534,6 @@
 											parts += "	<td class='notes_col data notes_original col-md-2'>";
 											parts += serial[4];
 											parts += "</td>";
-
 											parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
 											parts += "	<td class='qty_col edit'>1</td>";
 											parts += "	<td class='status_col edit'>"+status+"</td>";
@@ -632,7 +580,6 @@
 												<a class='edit save_button btn-sm btn-flat success pull-left'><i class='fa fa-save fa-4' aria-hidden='true'></i></a>\
 		                						</td>";
 											parts +="<td class = 'text-right'>";
-
 											parts += '<span class="label '+color+' complete_label status_label text-right" style="">'+interpreted+'</span>';
 											parts +="</td>";
 											parts += "</tr>";
@@ -698,6 +645,66 @@
 			});
 		}
 		
+		function filter_with_revision(serials_visible){
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
+			var show_all = $("#show_all_parts").prop("selected");
+			var part_to_hide = '';
+			$(".parts-list").show();
+			if(serials_visible){
+				$("[class*='serial_listing_'").show();
+			}
+			if(!show_all){
+				$('.revisions option:not(:selected)').each(function(i, selected){
+					part_to_hide = $(this).val();
+					if(part_to_hide != "all"){
+						$("."+part_to_hide).hide();
+					}
+					console.log(part_to_hide);
+				});
+			}
+				
+				if (qty == "in_stock"){
+					$(".out_stock_item").hide();
+					$(".no_stock").hide();
+				}
+				if (cond == "good"){
+					$(".bad_stock").hide();
+					$(".bad_stock_item").hide();
+				}
+			
+					// $('.serial_listing').show();
+					return false;
+		}
+		function getUrlParameter(sParam) {
+		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
+		
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+		
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		}
+		$(document).on("click onload", ".filter_cond, .filter_qty", function(){
+			var search = $("#part_search").val();
+			$(this).closest(".btn-group").find(".active").removeClass("active");
+			$(this).addClass("active");
+			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
+			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
+            filter_with_revision(false);
+			if(search != '') {
+				window.history.replaceState(null, null, "/inventory.php?search=" + search + "&cond=" + cond + "&qty="+qty);
+			} else {
+				window.history.replaceState(null, null, "/inventory.php?cond=" + cond + "&qty="+qty);
+			}
+		});
+		
+		// $('.disabled_input').find('select').prop('disabled', true)
 		
 		//============================ Side buttons ============================
 		$(document).on('click','.repair_button, .save_button, .delete_button, .scrap_button',function(){
@@ -776,7 +783,6 @@
 				}
 			});
 			}
-
 		});
 		
 		// parts += "	<td class='serial_col edit'><input class='newSerial input-sm form-control' value='"+serial[1]+"' data-serial='"+serial[1]+"'/></td>";
@@ -812,7 +818,6 @@
 			
 			$(this).closest('tr').find('.delete_button').hide();
 			$(this).hide();
-
 		});
 		
 		
@@ -826,7 +831,6 @@
 			$('#loader-message').html('Please wait for Inventory results to load...');
 			if (SEARCH!='') { inventory_history(); }
 //			$('#loader').show();
-
 			//Triggering Aaron 2017
 //			var phpStuff = "<?=$_REQUEST['s']; ?>";
 //			if($("#part_search").val() || phpStuff != ''){
@@ -865,79 +869,25 @@
 			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
 	        if ($(".serial_listing:visible").length){
 	        	$(".serial_listing").hide();
-	        }else{
-				$('.revisions').find(':selected').each(function(i, selected){
-					var part_listing = $(this).val();
-					if (!part_listing){
-	        			$("[class^=serial_listing]").show();
-					} else {
-						$('.'+part_listing).each(function(j, part_parent){
-							var serial_listing = $(this).data("serial");
-							$("."+serial_listing).show();
-						});
-					}
-				});
-			}
-			if (qty == "in_stock"){
-				$(".no_stock").hide();
-				$(".out_stock_item").hide();
-			}
-			if (cond == "good"){
-				$(".bad_stock").hide();
-				$(".bad_stock_item").hide();
+	        } else {
+				filter_with_revision(true);
 			}
 		});
 		$(document).on("click",".part_filter",function(){
 			SEARCH = $("#part_search").val();
 			inventory_history();
 		});
-
 		$("#part_search, #po_filter").on("keyup",function(e){
 			if (e.keyCode == 13) {
 				SEARCH = $("#part_search").val();
 				inventory_history();
 			}
 		});
-
-		function filter_with_revision(){
-			$('.serial_listing').hide();
-			$('.parts-list').hide();
-			var cond = $(".condition_filters").find(".filter_cond.active").data('filter');
-			var qty = $(".qty_filters").find(".filter_qty.active").data("filter");
-			$('.revisions').find(':selected').each(function(i, selected){
-				var part = $(this).val();
-				if (part != ''){
-					$('.' + part).show();
-					if (qty == "in_stock"){
-						$(".out_stock_item").hide();
-						$(".no_stock").hide();
-					}
-					if (cond == "good"){
-						$(".bad_stock").hide();
-						$(".bad_stock_item").hide();
-					}
-				}
-				else{
-					$('.parts-list').show();
-					if (qty == "in_stock"){
-						$(".out_stock_item").hide();
-						$(".no_stock").hide();
-					}
-					if (cond == "good"){
-						$(".bad_stock").hide();
-						$(".bad_stock_item").hide();
-					}
-					// $('.serial_listing').show();
-					return false;
-				}
-			});
-		}
 		$(document).on('click change', '.revisions', function() {
-			filter_with_revision();
+			filter_with_revision(false);
 		});
 	
 	})(jQuery);
-
 </script>
 
 </body>
