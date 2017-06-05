@@ -380,7 +380,7 @@
 				$query = "SELECT * FROM ";
 				if ($order == 'p') {
 					$query .= "purchase_orders o, purchase_items i ";
-					$query .= "WHERE o.po_number = i.po_number ";
+					$query .= "WHERE o.po_number = i.po_number AND o.status <> 'Void' ";
 					$query .= "ORDER BY o.po_number DESC LIMIT 0, 200; ";
 					// $query .= "purchase_orders o, purchase_items i 
 					// 			WHERE o.po_number = i.po_number 

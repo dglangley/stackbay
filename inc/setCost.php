@@ -4,7 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
 
 	function setCost($order_number,$partid=0) {
-		$debug = 0;
+		$debug = 1;
 
 		$serials = array();//stores all cost-related details per serial, including cost total
 		$total = 0;
@@ -184,7 +184,7 @@
 			if ($debug==1) { echo $query3.'<BR>'; }
 
 
-if ($r['b_cost']<>$actual) {
+if ($r['b_cost']>0 AND $r['b_cost']<>$actual) {
 			echo $r['serial'].'<BR>';
 			$corr = $r['b_cost']-$actual;
 			$query3 = "SELECT * FROM inventory_costs_log ";
