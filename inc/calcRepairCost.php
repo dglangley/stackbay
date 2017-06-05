@@ -34,6 +34,7 @@ $queries[] = $query2;
 			$results[] = $r2;
 		}
 
+		$freight_costs = array();
 		// if we have the PO, search db against the related purchase order with matching serial
 		$repairs_csv = '';
 		$freight_cost = array();
