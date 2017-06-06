@@ -585,8 +585,8 @@
             		<td class="col-md-3">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
             		<td class="col-md-1">'.$part['qty'].'</td>
             		<td class="col-md-1">'.$part['qty_shipped'].'</td>
-            		<td class="col-md-2 text-right">'.format_price($part['price'] * $part['qty']).'</td>
-            		<td class="col-md-1 text-right">'.format_price($part['price']).'</td>
+            		<td class="col-md-2 text-right">'.format_price($part['price']).'</td>
+            		<td class="col-md-1 text-right">'.format_price($part['price'] * $part['qty']).'</td>
             		<td class="col-md-1 text-right">-'.format_price($part['credit']).'</td>
             		<td class="col-md-3"></td>
             	</tr>';
