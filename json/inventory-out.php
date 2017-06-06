@@ -12,6 +12,7 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
+	include_once $rootdir.'/inc/item_history.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/getManf.php';
@@ -53,19 +54,7 @@
 		return $locations;
 	}
 
-	function getItemHistory($invid = 0) {
-		$partHistory_array = array(); 
-		
-		$query  = "SELECT * FROM inventory_history WHERE invid =" . res($invid) . ";";
-		$result = qdb($query);
-		
-		while ($row = $result->fetch_assoc()) {
-			$partHistory_array[] = $row;
-		}
-		
-		return $partHistory_array;
-	}
-	
+
 	function getStatusStock($stock = '', $partid = 0) {
 		$stockNumber;
 		

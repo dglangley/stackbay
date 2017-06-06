@@ -5,6 +5,38 @@
 
 	$IDS = array();
 
+	$serial = '';
+	$query = "SELECT * FROM inventory WHERE purchase_item_id IS NOT NULL AND serial_no LIKE 'VTL%'; ";
+	$result = qdb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$serial = $r['serial_no'];
+
+		$cost = 0;
+		$query2 = "SELECT SUM(actual) cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
+		$result2 = qdb($query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$cost = $r2['cost'];
+		}
+
+		$bdb_cost = 0;
+		$query3 = "SELECT cost FROM inventory_itemlocation WHERE serial = '".$serial."'; ";
+		$result3 = qdb($query3,'PIPE');
+		if (mysqli_num_rows($result3)==0) {
+			$query3 = "SELECT cost FROM inventory_solditem WHERE serial = '".$serial."'; ";
+			$result3 = qdb($query3,'PIPE');
+		}
+		if (mysqli_num_rows($result3)>0) {
+			$r3 = mysqli_fetch_assoc($result3);
+			$bdb_cost = $r3['cost'];
+		}
+
+if ($bdb_cost>0 AND $cost<>$bdb_cost) {
+	echo $serial.'<BR>';
+}
+	}
+exit;
+
 	$query = "SELECT serial, clei, heci, part_number, cost, inventory_id, item.avg_cost ";
 	$query .= "FROM inventory_solditem item, inventory_inventory i ";
 	$query .= "WHERE serial IS NOT NULL AND serial <> '' AND serial <> '000' ";

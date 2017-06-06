@@ -34,9 +34,11 @@ $queries[] = $query2;
 			$results[] = $r2;
 		}
 
+		$freight_costs = array();
 		// if we have the PO, search db against the related purchase order with matching serial
 		$repairs_csv = '';
-		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id, cr.repair_id ";
+		$freight_cost = array();
+		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id, cr.repair_id, r.freight_cost ";
 		$query2 .= "FROM inventory_repair r, inventory_componentrepair cr ";
 		$query2 .= "LEFT JOIN inventory_componentorder co ON co.id = cr.order_id ";
 //		$query2 .= "WHERE co.repair_id = r.ticket_number AND r.serials = '".$r['serial']."' ";
@@ -51,11 +53,12 @@ $queries[] = $query2;
 			if ($repairs_csv) { $repairs_csv .= ',';}
 			$repairs_csv .= $r2['repair_id'];
 			$results[] = $r2;
+			$freight_costs[$r2['repair_id']] = $r2['freight_cost'];//key by repair id to avoid duplication below
 		}
 
 		// add subsequent rma repairs to the array for additional cost evaluation
 //		$query2 = "SELECT repair_id FROM inventory_rmaticket WHERE item_id = '".$r['id']."'; ";
-		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id ";
+		$query2 = "SELECT cr.filled, cr.cost, co.received, co.price, cr.order_id, cr.repair_id, r.freight_cost ";
 		$query2 .= "FROM inventory_repair r, inventory_rmaticket rt, inventory_componentrepair cr ";
 		$query2 .= "LEFT JOIN inventory_componentorder co ON co.id = cr.order_id ";
 		$query2 .= "WHERE cr.repair_id = r.ticket_number AND cr.repair_id = rt.repair_id ";
@@ -65,6 +68,7 @@ $queries[] = $query2;
 		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$results[] = $r2;
+			$freight_costs[$r2['repair_id']] = $r2['freight_cost'];//key by repair id to avoid duplication from above
 		}
 
 		foreach ($results as $r2) {
@@ -80,6 +84,10 @@ $queries[] = $query2;
 				// in component stock, repair cost is already summed
 				$repair_cost += $r2['cost'];
 			}
+		}
+
+		foreach ($freight_costs as $repair_id => $amt) {
+			$repair_cost += $amt;
 		}
 if ($repair_cost>0) {
 //echo $r['po'].': '.$repair_cost.' repair cost<BR>';

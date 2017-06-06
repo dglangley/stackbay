@@ -652,13 +652,14 @@
 				}
 			});
 			$(document).on("keyup", ".oto_price, .oto_qty",function(){
-				var price = parseFloat($(this).closest("tr").find(".oto_price").data("value"));
+				var price = parseFloat($(this).closest("tr").find(".oto_price").val());
 				var qty = parseFloat($(this).closest("tr").find(".oto_qty").val());
-
+			
 				//alert(price);
 				
 				$(this).closest("tr").find(".oto_ext").val(price_format(price*qty));
 				$(this).closest("tr").find(".oto_ext").attr("value", (price*qty));
+				updateTotal();
 			});
 			$(document).on("click",".li_search_button",function() {
 				var search = $("#go_find_me").val();
@@ -726,6 +727,7 @@
 				var ext = click_row.find(".line_linext").text();
 				var price = click_row.find(".line_price").text();
 				var qty = click_row.find(".line_qty").text();
+				price = price.replace(/\$/g, '');
 				lazy_row.find("input[name='ni_date']").parent().initDatetimePicker('MM/DD/YYYY');
 				lazy_row.find(".item_search").initSelect2("/json/part-search.php","Select a Part",$("body").attr("data-page"));
 				lazy_row.find("input[name='ni_ext']").val(ext);
@@ -3012,7 +3014,8 @@
 					if (mode=='update') {
 						var lazy_row = e.closest(".lazy-entry");
 						lazy_row.hide();
-						lazy_row.prev(".easy-output").show();
+						lazy_row.prev(".easy-output").show()
+						.find("line_ext").text(price_format(qty*price));
 					} else if (mode=='append') {
 						var lineNumber = parseInt(sub_row.find("input[name=ni_line]").val());
 						if (!lineNumber){lineNumber = 0;}
