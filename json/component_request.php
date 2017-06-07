@@ -40,7 +40,7 @@
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
-			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '16');";
+			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '13');";
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result) {
