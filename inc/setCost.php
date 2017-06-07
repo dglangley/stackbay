@@ -3,26 +3,33 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
 
+	$debug = 1;
 	function setCost($order_number,$partid=0) {
-		$debug = 0;
+		$debug = $GLOBALS['debug'];
 
 		$serials = array();//stores all cost-related details per serial, including cost total
 		$total = 0;
 		$qtys = 0;
 		$purch_cost = 0;
 
+		// get all items with that PO# and optional $partid, then we'll grab all related inventory records
 		if ($debug) { echo 'PO'.$order_number.'<BR>'; }
 		$query = "SELECT * FROM purchase_items pi WHERE po_number = '".$order_number."' ";
 		if ($partid) { $query .= "AND partid = '".$partid."' "; }
 		$query .= "; ";
 		$result = qdb($query) OR die(qe().' '.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$serial = '';
+			// grab inventory records related to the purchase item id
 			$query2 = "SELECT * FROM inventory i WHERE i.purchase_item_id = '".$r['id']."'; ";
 			$result2 = qdb($query2) OR die(qe().' '.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$serial = $r2['serial_no'];
+				if ($debug) { echo 'Serial '.$serial.'<BR>'; }
 				$qty = 1;
+				// for import purposes, we want dates to be according to inventory dates; later, we just want '$now'
+				// for when we capture the cost
+				$inv_dt = $r2['date_created'];
+
 				// if no serial number, then we might be dealing with 2+ qty, so check it before we wreck it
 				// like Wreck It Ralph
 				if (! $serial AND $r2['qty']>1) { $qty = $r2['qty']; }
@@ -35,14 +42,13 @@
 
 				// set the cost of the purchase price itself
 				if ($ext>0) {
-					$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-					$query3 .= "VALUES ('".$r2['id']."','".$r['id']."','purchase_item_id','".$ext."'); ";
-					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					setCostsLog($r2['id'],$r['id'],'purchase_item_id',$ext);//,$inv_dt);
+
 					$serials[$r2['id']]['purchase'] += $ext;
 					$serials[$r2['id']]['total'] += $ext;
-					if ($debug==1) { echo $query3.'<BR>'; }
 				}
 
+/*
 				$cost = 0;
 				$avg_cost = 0;
 				$total_repair = 0;
@@ -64,7 +70,7 @@
 						}
 					}
 
-					$query3 = "SELECT r.ticket_number, r.inventory_id, s.id item_id ";//, s.repair_id ";
+					$query3 = "SELECT r.ticket_number, r.inventory_id, s.id item_id, r.date_out ";//, s.repair_id ";
 					$query3 .= "FROM inventory_repair r, inventory_solditem s ";
 					$query3 .= "WHERE r.serials = '".$serial."' AND r.serials = s.serial; ";
 					$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
@@ -82,18 +88,17 @@
 
 						// set the cost of repair
 						if ($repair_cost>0) {
-							$query4 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-							$query4 .= "VALUES ('".$r2['id']."','".$r3['ticket_number']."','repair_id','".$repair_cost."'); ";
-							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+							setCostsLog($r2['id'],$r3['ticket_number'],'repair_id',$repair_cost,$r3['date_out']." 16:00:00");
+
 							$serials[$r2['id']]['repair'] += $repair_cost;
 							$serials[$r2['id']]['total'] += $repair_cost;
-							if ($debug==1) { echo $query4.'<BR>'; }
 						}
 					}
 				}
 
 				$serials[$r2['id']]['b_avg'] = $avg_cost;
 				$serials[$r2['id']]['b_cost'] = $cost;
+*/
 				$purch_cost += ($ext+$total_repair);
 			}
 		}
@@ -102,10 +107,11 @@
 		$total_freight = 0;
 		$freight_pcs = 0;
 		$freight = 0;
-		$query = "SELECT freight_amount, id FROM packages WHERE order_number = '".$order_number."'; ";
+		$query = "SELECT freight_amount, datetime, id FROM packages WHERE order_number = '".$order_number."'; ";
 		$result = qdb($query) OR die(qe().' '.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$n = 0;//number of items on this PO/partid for this package
+			$pkg_dt = $r['datetime'];
 
 			//$query2 = "SELECT COUNT(package_contents.id) n FROM package_contents ";
 			$query2 = "SELECT package_contents.id, package_contents.serialid FROM package_contents ";
@@ -142,12 +148,9 @@
 
 				// set the cost of the purchase price itself
 				if ($freight_per>0) {
-					$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-					$query3 .= "VALUES ('".$r2['serialid']."','".$r['id']."','package_id','".$freight_per."'); ";
-					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					setCostsLog($r2['serialid'],$r['id'],'package_id',$freight_per);//,$pkg_dt);
 					$serials[$r2['serialid']]['freight'] += $freight_per;
 					$serials[$r2['serialid']]['total'] += $freight_per;
-					if ($debug==1) { echo $query3.'<BR>'; }
 				}
 			}
 		}
@@ -174,41 +177,52 @@
 				$average = $r3['average'];
 			}
 
+			// insert adjustment to log, and set the actual cost with consideration to the adjustment
+			if ($r['b_cost']>0 AND $r['b_cost']<>$actual) {
+				echo $r['serial'].'<BR>';
+				$corr = $r['b_cost']-$actual;
+				$actual += $corr;
+				setCostsLog($invid,false,'import adjustment');//,$corr);
+			}
+
 			$query3 = "DELETE FROM inventory_costs WHERE inventoryid = '".$invid."'; ";
-//			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 			if ($debug==1) { echo $query3.'<BR>'; }
 
 			$query3 = "REPLACE inventory_costs (inventoryid, datetime, actual, average) ";
 			$query3 .= "VALUES ('".$invid."','".$GLOBALS['now']."','".$actual."','".$average."'); ";
-//			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-			if ($debug==1) { echo $query3.'<BR>'; }
-
-
-if ($r['b_cost']<>$actual) {
-			echo $r['serial'].'<BR>';
-			$corr = $r['b_cost']-$actual;
-			$query3 = "SELECT * FROM inventory_costs_log ";
-			$query3 .= "WHERE inventoryid = '".$invid."' AND eventid IS NULL AND event_type = 'import adjustment'; ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-			if (mysqli_num_rows($result3)==0) {
-				$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, amount) ";
-				$query3 .= "VALUES ('".$invid."',NULL,'import adjustment','".$corr."'); ";
-				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-echo $query3.'<BR><BR>';
-			}
-/*
-	echo $r['serial'].' ';
-	if ($debug==1) { echo $qty.' * '.$r['price'].' + '.$total_repair.' = '.$ext.' '; }
-	echo '(Brians cost: '.$r['b_cost'].', avg: '.$r['b_avg'].')<BR>';
-	echo $query3.'<BR>';
-	if ($average<>$r['b_avg']) {
-		echo $avg_query.'<BR>';
-	}
-	echo '<BR>';
-*/
-}
+			if ($debug==1) { echo $query3.'<BR>'; }
 		}
 
 		return ($total);
+	}
+	function setCostsLog($inventoryid,$eventid,$event_type,$amount,$dt=false) {
+		if (! $dt) { $dt = $GLOBALS['now']; }
+
+		$amount = round($amount,4);
+
+		$log_amount = 0;
+		$query3 = "SELECT SUM(amount) amount FROM inventory_costs_log ";
+		$query3 .= "WHERE inventoryid = '".res($inventoryid)."' AND eventid ";
+		if ($eventid) { $query3 .= "= '".res($eventid)."' "; } else { $query3 .= "IS NULL "; }
+		$query3 .= "AND event_type = '".res($event_type)."'; ";
+		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+		// insert new log entry only if not previously-entered so that we preserve datetime stamp on cogs
+		if (mysqli_num_rows($result3)>0) {
+			$r3 = mysqli_fetch_assoc($result3);
+			$log_amount = round($r3['amount'],4);
+		}
+		// update the logged amount if it doesn't match what's already stored for this event, and update datetime stamp
+		if ($log_amount<>$amount) {
+			$log_diff = $amount-$log_amount;
+
+			$query3 = "REPLACE inventory_costs_log (inventoryid, eventid, event_type, datetime, amount) ";
+			$query3 .= "VALUES ('".res($inventoryid)."',";
+			if ($eventid) { $query3 .= "'".res($eventid)."',"; } else { $query3 .= "NULL,"; }
+			$query3 .= "'".res($event_type)."','".$dt."','".$log_diff."'); ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if ($GLOBALS['debug']==1) { echo $query3.'<BR>'; }
+		}
 	}
 ?>

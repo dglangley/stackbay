@@ -110,7 +110,7 @@
 		$repair_activities = array();
 		$query;
 		
-		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested <b>', parts.heci, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
+		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.id, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
@@ -339,16 +339,16 @@
 					<div class="left-side-main col-sm-2">
 						<div class="row company_meta left-sidebar" style="height:100%; padding: 0 10px;">		
 							<div class="sidebar-container">
-								<div class="row">
+<!-- 								<div class="row">
 									<div class="col-sm-12" style="padding-bottom: 10px; margin-top: 15px;">						
 										<div class="order">
 											<?=$order_number;?>
 										</div>
 									</div>
-								</div>
+								</div> -->
 
 								<div class="row">
-									<div class="col-md-12">
+									<div class="col-md-12" style="padding-bottom: 10px; margin-top: 15px;">
 										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getContact($sales_rep_id)?><br><br>
 										<b style="color: #526273;font-size: 14px;">Due</b><br><?=$due_date;?><br><br>
 										<b style="color: #526273;font-size: 14px;">Notes</b><br>

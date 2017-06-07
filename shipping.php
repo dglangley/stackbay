@@ -56,7 +56,10 @@
 	$selected_service;
 	$selected_account = true;
 	$exchange = false;
-	
+
+	$repair_item_id;
+	$repair_order;
+
 	//get the information based on the order number selected
 	$query = "SELECT * FROM sales_orders WHERE so_number = ". prep($order_number) .";";
 	$result = qdb($query) OR die(qe());
@@ -71,7 +74,7 @@
 		$selected_account = $result['freight_account_id'];
 		$status = $result['status'];
 	}
-	
+
 	function getItems($so_number = 0, $exchange) {
 		$sales_items = array();
 		$query;
@@ -200,6 +203,21 @@
 	}
 	
 	$items = getItems($sales_order, $exchange);
+
+	foreach($items as $item) {
+		$repair_item_id = $item['ref_1'];
+		break;
+	}
+
+	if($repair_item_id) {
+		$query = "SELECT ro_number FROM repair_items WHERE id = ".prep($repair_item_id).";";
+		$result = qdb($query) OR die(qe());
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$repair_order = $result['ro_number'];
+		}
+	}
+
 	$RMA_history = getRMA($sales_order, 'Sale');
 ?>
 	
@@ -357,13 +375,17 @@
 			<div class="col-md-4 text-center">
 				<?php
 					echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
-					if(!$exchange) {
-						echo " Shipping Order ";
+					if(!$repair_order) {
+						if(!$exchange) {
+							echo " Shipping Order ";
+						} else {
+							echo " Exchange for SO ";
+						}
+						if ($order_number!='New'){
+							echo "#$order_number";
+						}
 					} else {
-						echo " Exchange for SO ";
-					}
-					if ($order_number!='New'){
-						echo "#$order_number";
+						echo "Shipping Repair #$repair_order";
 					}
 					if (strtolower($status) == 'void'){
 						echo ("<b><span style='color:red;'> [VOIDED]</span></b>");

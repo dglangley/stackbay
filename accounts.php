@@ -340,7 +340,7 @@
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
-
+	
 	//print_r($result);
 	//if($report_type == 'summary'){
 	    foreach ($result as $row){
@@ -585,8 +585,8 @@
             		<td class="col-md-3">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
             		<td class="col-md-1">'.$part['qty'].'</td>
             		<td class="col-md-1">'.$part['qty_shipped'].'</td>
-            		<td class="col-md-2 text-right">'.format_price($part['price'] * $part['qty']).'</td>
-            		<td class="col-md-1 text-right">'.format_price($part['price']).'</td>
+            		<td class="col-md-2 text-right">'.format_price($part['price']).'</td>
+            		<td class="col-md-1 text-right">'.format_price($part['price'] * $part['qty']).'</td>
             		<td class="col-md-1 text-right">-'.format_price($part['credit']).'</td>
             		<td class="col-md-3"></td>
             	</tr>';

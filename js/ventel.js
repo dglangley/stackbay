@@ -249,7 +249,7 @@
 							if (row.read=='') { read_class = ' unread'; }
 							else if (row.viewed=='') { read_class = ' unviewed'; }
 
-							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\')" class="item'+read_class+'">'+
+							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\')" class="item'+read_class+'">'+
 								'<div class="user fa-stack fa-lg">'+
 									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
 								'</div> '+
@@ -1599,7 +1599,7 @@
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
 		modalBody.html(table_html);
 	}
-	function viewNotification(partid,search) {
+	function viewNotification(partid,search, type) {
 		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
         console.log(window.location.origin+"/json/notes.php?partid="+partid);
 
@@ -1610,7 +1610,11 @@
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					document.location.href = '/?s='+search;
+					if(type != "purchase_request") {
+						document.location.href = '/?s='+search;
+					} else {
+						document.location.href = '/order_form.php?ps=Purchase&s='+search;
+					}
 				} else {
 					var message = 'There was an error processing your request!';
 					if (json.message) { message = json.message; } // show response from the php script.
@@ -1624,7 +1628,7 @@
         }); // end ajax call
 	}
 	function loadOrders() {
-		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0) { return; }
+		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0 && $("#repair-orders-list").length==0 && $("#return-orders-list").length==0) { return; }
 
 		// do the thing
 		refreshOrders();
@@ -1652,6 +1656,21 @@
 				});
 				$.each(json.purchases, function(key, order) {
 					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+				var repairs = $("#repair-orders-list");
+				repairs.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.repairs, function(key, order) {
+					repairs.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var returns = $("#return-orders-list");
+				returns.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.returns, function(key, order) {
+					returns.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {
