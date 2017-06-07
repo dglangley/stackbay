@@ -95,8 +95,8 @@ foreach($results as $r){
     
     $sales_rep_id = mapUser($r['sales_rep_id']);
     $meta['private_notes'] .= $r['ext_notes'];
-    $freight_service = prep($FREIGHT_MAPS[$r['carrier_id']]);
-    $freight_carrier = prep(getCarrierID($freight_service));
+    $freight_service = prep($SERVICE_MAPS[$r['carrier_id']]);
+    $freight_carrier = prep($CARRIER_MAPS[$r['carrier_id']]);
     $terms = prep($TERMS_MAPS[$R['terms_id']]);
     $line['warranty'] = $WARRANTY_MAPS[$r['warranty_id']]; //warranty_id
     $partid = translateID($r['inventory_id']);
@@ -126,7 +126,7 @@ foreach($results as $r){
 $order_insert = "INSERT INTO `repair_orders`(
 `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
 `freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES (
-$ro_number, ".prep($r['created_at']).", ".prep($creator_id).", ".prep($sales_rep_id).", ".prep($companyid).", 
+$ro_number, ".prep($r['created_at']).", ".$creator_id.", ".prep($sales_rep_id).", ".prep($companyid).", 
 ".prep($r['purchase_order']).", 
 ".prep(address_translate($r['ship_to'])).", 
 $freight_carrier, $freight_service, 
@@ -151,7 +151,7 @@ echo($item_insert."<br>");
 
 $repair_item_id = qid();
 $conditionid = 5;
-$pserial = $r['serials'];
+$pserial = strtoupper($r['serials']);
 
     $inv_check = "SELECT * FROM `inventory` where serial_no like '$pserial' AND partid like '$partid';";
     
@@ -177,7 +177,7 @@ $pserial = $r['serials'];
       echo($inv_history."<br>");
     } else {
       // Inventory_insert
-      $inv_insert = "INSERT INTO `inventory`(`serial_no`,`qty`, `partid`, `conditionid`,`status`,`locationid`,`userid`,`date_created`,`notes`,`repair_item_id`) VALUES (".prep($r['serials']).",0,".prep($partid).",".$conditionid.",".prep($item_status).",".$locationid.",".$creator_id.",".prep($r['created_at']).",".prep("REPAIR IMPORT ".$r['notes']).",".prep($repair_item_id).")";
+      $inv_insert = "INSERT INTO `inventory`(`serial_no`,`qty`, `partid`, `conditionid`,`status`,`locationid`,`userid`,`date_created`,`notes`,`repair_item_id`) VALUES (".prep(strtoupper($r['serials'])).",0,".prep($partid).",".$conditionid.",".prep($item_status).",".$locationid.",".$creator_id.",".prep($r['created_at']).",".prep("REPAIR IMPORT ".$r['notes']).",".prep($repair_item_id).")";
       qdb($inv_insert) or die(qe()." | $inv_insert");
       echo($inv_insert."<br>");
       $invid = qid();
@@ -289,12 +289,12 @@ foreach($results as $i => $r){
         $inv_info = mysqli_fetch_assoc($serial_match);
         print_r($inv_info);
     } else {
-        $inv = "INSERT INTO `inventory` (`partid`,`serial_no`,`qty`) VALUES (".prep($r['serials']).", 0);";
+        $inv = "INSERT INTO `inventory` (`partid`,`serial_no`,`qty`) VALUES (".prep(strtoupper($r['serials'])).", 0);";
         echo("$i: $inv<br>");
         continue;
         qdb($inv) or die(qe()." | $inv");
         echo("$inv '\$inv'<br>");
-        $inv = "SELECT * FROM `inventory` WHERE serial_no like ".prep($r['serials']).";";
+        $inv = "SELECT * FROM `inventory` WHERE serial_no like ".prep(strtoupper($r['serials'])).";";
     }
     //Info From Brian's system (relevant for the RO);
     $ro_number = $r['ticket_number'];
@@ -302,8 +302,8 @@ foreach($results as $i => $r){
     $creator_id = prep(16);
     $sales_rep_id = mapUser($r['sales_rep_id']);
     $private_notes .= $r['ext_notes'];
-    $freight_service = prep($FREIGHT_MAPS[$r['carrier_id']]);
-    $freight_carrier = prep(getCarrierID($freight_service));
+    $freight_service = prep($SERVICE_MAPS[$r['carrier_id']]);
+    $freight_carrier = prep($CARRIER_MAPS($r['carrier_id']));
     $terms = prep($TERMS_MAPS[$R['terms_id']]);
     $line['warranty'] = $WARRANTY_MAPS[$r['warranty_id']]; //warranty_id
     $partid = $inv_info['partid'];
@@ -424,7 +424,7 @@ else{
       $inv_insert = "INSERT INTO `inventory`(`serial_no`,`qty`, `partid`, `conditionid`,
       `status`,`locationid`,`userid`,`date_created`,`notes`,`repair_item_id`) 
       VALUES (
-      ".prep($r['serials']).",
+      ".prep(strtoupper($r['serials'])).",
       0,
       ".prep($partid).",
       5,
