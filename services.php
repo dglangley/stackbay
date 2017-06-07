@@ -77,7 +77,7 @@
 	$manager = '';
 	if (isset($_REQUEST['manager']) AND $_REQUEST['manager'] AND $_REQUEST['manager']<>'All') {
 		$manager = $_REQUEST['manager'];
-	} else if ($U['name']=='David Oden' OR $U['name']=='Robert Cumer') {
+	} else if ($U['name']=='David Oden' OR $U['name']=='Robert Cumer' OR $U['name']=='Scott Johnston') {
 		$manager = $U['name'];
 	}
 ?>
@@ -200,6 +200,7 @@
 				<option value="All"<?php if (! $manager) { echo ' selected'; } ?>>- All -</option>
 				<option value="Robert Cumer"<?php if ($manager=='Robert Cumer') { echo ' selected'; } ?>>Robert Cumer</option>
 				<option value="David Oden"<?php if ($manager=='David Oden') { echo ' selected'; } ?>>David Oden</option>
+				<option value="Scott Johnston"<?php if ($manager=='Scott Johnston') { echo ' selected'; } ?>>Scott Johnston</option>
 			</select>
 		</td>
 		<td class="col-md-2">

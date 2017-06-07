@@ -4,7 +4,7 @@
 
 	function updateCommission($rate,$userid) {
 		if(!empty($rate)) {
-			$query = "UPDATE users SET commission_rate = $rate WHERE id = userid;";
+			$query = "UPDATE users SET commission_rate = '".res($rate)."' WHERE id = '".res($userid)."';";
 			qdb($query) OR die(qe().' '.$query);
 		} 
 	}
