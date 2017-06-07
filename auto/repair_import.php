@@ -17,12 +17,12 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
 	
-// qdb("TRUNCATE `purchase_requests`;") or die(qe());
-// qdb("TRUNCATE `repair_activities`;") or die(qe());
-// qdb("TRUNCATE `repair_items`;") or die(qe());
-// qdb("TRUNCATE `repair_orders`;") or die(qe());
-// qdb("TRUNCATE `repair_quotes`;") or die(qe());
-// qdb("TRUNCATE `repair_sources`;") or die(qe());
+qdb("TRUNCATE `purchase_requests`;") or die(qe());
+qdb("TRUNCATE `repair_activities`;") or die(qe());
+qdb("TRUNCATE `repair_items`;") or die(qe());
+qdb("TRUNCATE `repair_orders`;") or die(qe());
+qdb("TRUNCATE `repair_quotes`;") or die(qe());
+qdb("TRUNCATE `repair_sources`;") or die(qe());
 // qdb('DELETE FROM `inventory` WHERE notes like "%REPAIR IMPORT%";') or die(qe());
 
 $pipe_select = "
@@ -137,7 +137,7 @@ $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`q
 `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
 ".prep($partid).",$ro_number,1,1,
 ".prep($r['price_per_unit']).",
-".prep(format_date($r['due_date'],"Y-m-d")).",
+".prep(format_date($r['date_due'],"Y-m-d")).",
 NULL,
 ".prep($line['ref_1']).",
 ".prep($line['ref_1_label']).",
@@ -358,7 +358,7 @@ if(mysqli_num_rows($check_result) == 0){
     1,
     1,
     ".prep($r['price_per_unit']).",
-    ".prep(format_date($r['due_date'],"Y-m-d")).",
+    ".prep(format_date($r['date_due'],"Y-m-d")).",
     ".prep($invid).",
     ".prep($line['ref_1']).",
     ".prep($line['ref_1_label']).",

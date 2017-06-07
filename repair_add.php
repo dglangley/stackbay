@@ -95,7 +95,7 @@
 		FROM inventory i 
 		WHERE id in (
 			SELECT DISTINCT invid FROM inventory_history WHERE field_changed = 'repair_item_id' AND value = ".prep($line_id)."
-		);";
+		) or i.repair_item_id = ".prep($line_id).";";
 		$result = qdb($query) or die(qe()." | $query");
 		
 	    if (mysqli_num_rows($result)>0) {
