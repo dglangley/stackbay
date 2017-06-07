@@ -217,7 +217,7 @@ function sub_rows($search = ''){
                     <tr class = 'search_lines' data-line-id = $id>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td>";
-        
+
                     $rows .=(display_part($info));
                     $rows .= "</td>
                         <td".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>
