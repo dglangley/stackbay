@@ -396,7 +396,7 @@
 														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 															<td>'.format($item['partid'], true).'</td>
 															<td>'.$serial.'</td>
-															<td><button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer">'.(($status == 'in repair')?"Send to Testing":"Mark as Tested").'</button></td>
+															<td><button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus == "Completed" ? 'disabled' : '').'>'.(($status == 'in repair')?"Send to Testing":"Mark as Tested").'</button></td>
 														</tr>';
 													}
 													echo($item_row);
@@ -467,7 +467,7 @@
 												<th>Order Qty</th>
 												<th>Available Qty</th>
 												<th>PO
-													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete">
+													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 				        						</th>
