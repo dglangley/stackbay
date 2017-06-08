@@ -1682,14 +1682,17 @@
 						$('.p_table .active_item:lt(10)').show();
 						$('.s_table .active_item:lt(10)').show();
 						$('.rma_table .active_item:lt(10)').show();
+						$('.ro_table .active_item:lt(10)').show();
 					} else if(type == 'complete') {
 						$('.p_table .complete_item:lt(10)').show();
 						$('.s_table .complete_item:lt(10)').show();
 						$('.rma_table .complete_item:lt(10)').show();
+						$('.ro_table .complete_item:lt(10)').show();
 					} else {
 						$('.p_table .filter_item:lt(10)').show();
 						$('.s_table .filter_item:lt(10)').show();
 						$('.rma_table .filter_item:lt(10)').show();
+						$('.ro_table .filter_item:lt(10)').show();
 					}
 					
 					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");

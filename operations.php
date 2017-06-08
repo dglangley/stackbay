@@ -919,7 +919,7 @@
 
 			if(type == 'complete') {
 				sortTheTable('complete');
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .complete_item:lt(10)').show();
 					$('.s_table .complete_item:lt(10)').show();
 					$('.rma_table .complete_item:lt(10)').show();
@@ -933,7 +933,7 @@
 				//alert("here");
 			} else if(type == 'active') {
 				sortTheTable('active');
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .active_item:lt(10)').show();
 					$('.s_table .active_item:lt(10)').show();
 					$('.rma_table .active_item:lt(10)').show();
@@ -947,7 +947,7 @@
 			} else {
 				sortTheTable('all');
 				//$('.filter_item').show();
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .filter_item:lt(10)').show();
 					$('.s_table .filter_item:lt(10)').show();
 					$('.rma_table .filter_item:lt(10)').show();
