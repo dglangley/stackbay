@@ -115,7 +115,7 @@ foreach($results as $r){
         $line['ref_2'] = $r['verizon_ref'];
         $line['ref_2_label'] = 'Verizon Ref';
     }
-    if($r['status'] == "12" || $r['status'] == "11"){
+    if($r['status_id'] == "12" || $r['status_id'] == "11"){
         $status = 'Completed';
         $item_status = "Manifest";
     } else {
