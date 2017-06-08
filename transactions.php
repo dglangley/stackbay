@@ -18,6 +18,10 @@
 	$completed_Invoice = $_REQUEST['invoice_checkbox'];
 	$completed_Bills = $_REQUEST['bills_checkbox'];
 
+	// if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+	// 	$keyword = $_REQUEST['s'];
+	// }
+
 	if($completed_Invoice) {
 		foreach($completed_Invoice as $invoice) {
 			insertQBLog($invoice, 'Invoice');
@@ -195,7 +199,7 @@
 			}
 
 	    	$invoices .= "
-	            <tr>
+	            <tr class = '".($completed? "complete" : "pending" )."'>
 	            	<td><a href='docs/INV".$row['invoice_no'].".pdf'>".$row['invoice_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
@@ -263,7 +267,7 @@
 			}
 
 	    	$bills .= "
-	            <tr>
+	            <tr class = '".($completed? "complete" : "pending" )."'>
 	            	<td><a href='bill.php?bill=".$row['bill_no']."'>".$row['bill_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
