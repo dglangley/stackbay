@@ -149,15 +149,15 @@
 
 		    <div class="col-md-6">
 			    <div class="btn-group medium">
-			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-warning btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active' : '');?>">
+			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active btn-warning' : '');?>">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
 
-			        <button data-toggle="tooltip" name="filter" type="submit" value="complete" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-success btn-sm middle filter_status <?=($filter == 'complete' ? 'active' : '');?>">
+			        <button data-toggle="tooltip" name="filter" type="submit" value="complete" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-default btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : '');?>">
 			        	<i class="fa fa-history"></i>	
 			        </button>
 
-					<button data-toggle="tooltip" name="filter" type="submit" value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-info btn-sm right filter_status <?=(($filter == 'all') ? 'active' : '');?>">
+					<button data-toggle="tooltip" name="filter" type="submit" value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-default btn-sm right filter_status <?=(($filter == 'all') ? 'active btn-info' : '');?>">
 			        	All
 			        </button>
 			    </div>
@@ -217,11 +217,21 @@
 		</td>
 		<td class="col-md-2 text-center">
 			<h2 class="minimal"><?=ucwords($orders_table);?></h2>
-			<a href="/accounts.php?report_type=<?=($report_type ? $report_type : 'summary');?><?=($_REQUEST['START_DATE'] ? '&START_DATE=' . $_REQUEST['START_DATE'] : '')?><?=($_REQUEST['END_DATE'] ? '&END_DATE=' . $_REQUEST['END_DATE'] : '')?><?=($order ? '&order=' . $order : '')?><?=($company_filter ? '&companyid=' . $company_filter : '')?>&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
+			<a href="/accounts.php?report_type=<?=($report_type ? $report_type : 'detail');?><?=($_REQUEST['START_DATE'] ? '&START_DATE=' . $_REQUEST['START_DATE'] : '')?><?=($_REQUEST['END_DATE'] ? '&END_DATE=' . $_REQUEST['END_DATE'] : '')?><?=($order ? '&order=' . $order : '')?><?=($company_filter ? '&companyid=' . $company_filter : '')?>&filter=<?=$filter;?>&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
 			<input type="radio" name="orders_table" value="<?=$orders_table;?>" class="hidden" checked>
 		</td>
 		<td class="col-md-2 text-center">
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+			<div class="row">
+				<div class="col-md-9">
+					<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+				</div>
+
+				<?php if($orders_table == 'sales') { ?>
+					<div class="col-md-3">
+						<label class="checkbox-inline"><input type="checkbox" onChange="this.form.submit()" name='invoice' value="checked" <?=(($_REQUEST['invoice'] == 'checked') ? 'checked' : '')?>>Invoice#</label>
+					</div>
+				<?php } ?>
+			</div>
 <!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
 -->
@@ -345,6 +355,16 @@
 	//if($report_type == 'summary'){
 	    foreach ($result as $row){
             $id = $row['order_num'];
+            $invoiceid = array();
+            //if($_REQUEST['invoice']) {
+            	$query = "SELECT invoice_no FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
+            	$result = qdb($query) OR die(qe());
+					
+				while ($rowInvoice = $result->fetch_assoc()) {
+					$invoiceid[] = $rowInvoice['invoice_no'];
+				}
+            //}
+
             $status = 'complete';
 			if ($order AND $order<>$id) { continue; }
 
@@ -425,6 +445,7 @@
 	            $summary_rows[$id]['summed'] += $ext_amt;
 	            $summary_rows[$id]['company'] = $row['name'];
 	            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
+	            $summary_rows[$id]['invoice'] = $invoiceid;
 	            $summary_rows[$id]['status'] = $status;
 	            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
 	        // } else {
@@ -547,14 +568,36 @@
                     <td>'.format_date($info['date'], 'M j, Y').'</td>';
                     if(!$company_filter){$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';}
             $rows .='
-            		<td>'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>
-                    <td class="text-right">'.format_price($info['summed']).'</td>
+            		<td><div class="row"><div class="col-md-6">'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
+            if($_REQUEST['invoice']) {		
+            	$rows .='<div class="col-md-6">'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>': 'N/A').'</div>';
+            }
+
+            $rows .='</div></td>
+            		<td class="text-right">'.format_price($info['summed']).'</td>
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td>'.terms_calc($id, $orders_table).'</td>
                     <td class="text-right total_cost">'.format_price($total).'</td>
                 </tr>
             ';
+            //print_r($info['invoice']);
+            if($_REQUEST['invoice'] && count($info['invoice']) > 1) {
+            	$infoArr = array_slice($info['invoice'],1);
+
+            	foreach($infoArr as $another) {
+	            	$rows .='<tr class="'.$status.' '.$filter_comb.'">
+	            		<td></td>
+	            		<td></td>
+	            		<td><div class="row"><div class="col-md-6"></div><div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div></div></div></td>
+	            		<td></td>
+	            		<td></td>
+	            		<td></td>
+	            		<td></td>
+	            		<td></td>
+	            	</tr>';
+	            }
+            }
 
             if(!$filter_comb) {
 	            $total_amt += ($total);
@@ -700,8 +743,18 @@
                                 </th>
 <?php } ?>
                                 <th class="col-md-<?php echo $widths[$c++]; ?>">
-                                    <span class="line"></span>
-                                    Order#
+                                	<div class="row">
+	                                	<div class="col-md-6">
+		                                    <span class="line"></span>
+		                                    Order#
+	                                    </div>
+	                                    <?php if($_REQUEST['invoice']) { ?>
+		                                    <div class="col-md-6">
+			                                    <span class="line"></span>
+			                                    Invoice#
+		                                    </div>
+	                                    <?php } ?>
+                                    </div>
                                 </th>
                                 <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
                                 	<span class="line"></span>
