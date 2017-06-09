@@ -41,8 +41,10 @@
 				$average_sum += $r2['average']/$r['qty'];
 			}
 		}
-		$actual_cost = $actual_sum/$qty_sum;
-		$average_cost = $average_sum/$qty_sum;
+		if ($qty_sum>0) {
+			$actual_cost = $actual_sum/$qty_sum;
+			$average_cost = $average_sum/$qty_sum;
+		}
 
 		if ($cost_basis=='average' AND (! $actual_cost OR $average_cost>0)) {
 			return ($average_cost);

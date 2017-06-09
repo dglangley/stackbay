@@ -198,8 +198,7 @@
 							<h3><a href="/commission.php" class="text-info"><i class="fa fa-chevron-left"></i> &nbsp; Users</a></h3>
                             <h2>Commission Details</h2>
                             
-                            <a href="/commission_details.php" class="btn btn-default btn-sm pull-right mb-20 mt-42">Show All</a>
-                            <a href="/commission.php" style="margin-right: 10px;" class="btn btn-primary btn-sm pull-right mb-20 mt-42">Users</a>
+							<?php if (isset($_REQUEST['user']) AND $_REQUEST['user']) { echo '<a href="/commission_details.php" class="pull-right mb-20 mt-42">Show All</a>'; } ?>
                         </div>
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                         

@@ -1,4 +1,7 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
@@ -6,13 +9,14 @@
 	$IDS = array();
 
 	$serial = '';
-	$query = "SELECT * FROM inventory WHERE purchase_item_id IS NOT NULL AND serial_no LIKE 'VTL%'; ";
+	$query = "SELECT * FROM inventory; ";// WHERE sales_item_id IS NULL AND (purchase_item_id IS NULL OR serial_no LIKE 'VTL%'); ";
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$serial = $r['serial_no'];
 
 		$cost = 0;
-		$query2 = "SELECT SUM(actual) cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
+		//$query2 = "SELECT SUM(actual) cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
+		$query2 = "SELECT average cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
 		$result2 = qdb($query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
@@ -20,21 +24,49 @@
 		}
 
 		$bdb_cost = 0;
-		$query3 = "SELECT cost FROM inventory_itemlocation WHERE serial = '".$serial."'; ";
+		$po = '';
+		$repair = '';
+/*
+		$query3 = "SELECT cost, po_id po, '' repair, '' repair_id FROM inventory_itemlocation WHERE serial = '".$serial."'; ";
 		$result3 = qdb($query3,'PIPE');
 		if (mysqli_num_rows($result3)==0) {
-			$query3 = "SELECT cost FROM inventory_solditem WHERE serial = '".$serial."'; ";
+			$query3 = "SELECT cost, po, repair, repair_id FROM inventory_solditem WHERE serial = '".$serial."'; ";
 			$result3 = qdb($query3,'PIPE');
+			if (mysqli_num_rows($result3)==0) {
+				continue;//must not need it, or let's face it, at this point, do we care??
+			}
+		}
+*/
+		$query3 = "SELECT avg_cost cost, po, repair, repair_id FROM inventory_solditem WHERE serial = '".$serial."'; ";
+		$result3 = qdb($query3,'PIPE');
+		if (mysqli_num_rows($result3)==0) {
+			continue;//must not need it, or let's face it, at this point, do we care??
 		}
 		if (mysqli_num_rows($result3)>0) {
 			$r3 = mysqli_fetch_assoc($result3);
 			$bdb_cost = $r3['cost'];
+			if ($r3['po']) { $po = $r3['po']; }
+			if ($r3['repair']) { $repair = $r3['repair']; }
+			else if ($r3['repair_id']) { $repair = $r3['repair_id']; }
 		}
 
 if ($bdb_cost>0 AND $cost<>$bdb_cost) {
-	echo $serial.'<BR>';
+	echo $serial.' (id '.$r['id'].'), BDB $'.$bdb_cost.', Ours $'.$cost.'<BR>'.chr(10);
+
+/*
+        $query3 = "INSERT INTO inventory_costs (inventoryid, datetime, actual) ";
+        $query3 .= "VALUES ('".$r['id']."','".$now."','".$bdb_cost."'); ";
+echo $query3.'<BR>'.chr(10);
+        $result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+
+        $query3 = "INSERT INTO inventory_costs_log (inventoryid, eventid, event_type, datetime, amount) ";
+        $query3 .= "VALUES ('".$r['id']."','".$repair."','repair_id','".$now."','".$bdb_cost."'); ";
+echo $query3.'<BR>'.chr(10);
+        $result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+*/
 }
 	}
+echo 'Finished!'.chr(10);
 exit;
 
 	$query = "SELECT serial, clei, heci, part_number, cost, inventory_id, item.avg_cost ";
