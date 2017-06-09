@@ -213,31 +213,7 @@ VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_ou
     //date_out dateshiipped
     
     //QUOTES innfo
-    if($r['tpquote_id'] && false){
-        $quote_select = "SELECT * FROM inventory_repairoffer where id = '".$r['tpquote_id']."';";
-        $results = qdb($quote_select) or die(qe()." | $quote_select");
-        echo($quote_select."<br>");
-        if(mysqli_num_rows($results)){
-            $offer = mysqli_fetch_assoc($results);
-            $o_part = $partid;
-            if($offer['inventory_id'] != $r['inventory_id']){
-                $o_part = dbTranslate($offer['inventory_id']);
-            }
-            $userid = prep(mapUser($offer['creator_id']));
-            $meta_insert = "INSERT INTO `search_meta`(`companyid`, `datetime`, `source`, `userid`) 
-            VALUES (".prep($companyid).",".prep($offer['date']." 12:00:00").",'RO#$ro_number',$userid)";
-            qdb($meta_insert) or die(qe()." | $meta_insert");
-            echo($meta_insert."<br>");
-            $metaid = null;
-            $metaid = qid();
-            $metaid = prep($metaid);
-            $quote_insert = "INSERT INTO `repair_quotes`(`partid`, `qty`, `price`, `metaid`, `line_number`, `notes`) VALUES
-            ('$o_part','1',".prep($offer['cost']).",$metaid,'1',".prep($offer['notes']).");";
-            
-            qdb($quote_insert) or die(qe()." | $quote_insert");
-            echo($quote_insert."<br>");
-        }
-    }
+
     echo("<br><br>");
 }
 // echo("</table>");
@@ -480,9 +456,21 @@ else{
                     qdb($insert) or die(qe()." | $insert");
                     echo($insert."<br>");
         }
+        
+        //THIS IS NOT A STABLE WAY TO BUILD THIS BUT WILL MAKE THE WORLD SLIGHTLY BETTER? TALK TO DAVID;
         if ($r['assigned_in']){
             $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
                     VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['assigned_in']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Claimed Ticket');";
+                    qdb($insert) or die(qe()." | $insert");
+                    echo($insert."<br>");
+        } else if($r['date_in']) {
+            $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_in']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Claimed Ticket');";
+                    qdb($insert) or die(qe()." | $insert");
+                    echo($insert."<br>");
+        } else {
+            $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['created'],"Y-m-d G:i:s")).", $tech_id, 'Claimed Ticket');";
                     qdb($insert) or die(qe()." | $insert");
                     echo($insert."<br>");
         }
@@ -493,10 +481,22 @@ else{
             $notes = $n;
         }
         if ($notes){
-            $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
-                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['created_at'],"Y-m-d G:i:s")).", $tech_id, ".prep($notes).");";
-                    qdb($insert) or die(qe()." | $insert");
-                    echo($insert);
+            if ($r['assigned_in']){
+                $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                        VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['assigned_in']." 17:00:00","Y-m-d G:i:s")).", $tech_id, ".prep($notes).");";
+                        qdb($insert) or die(qe()." | $insert");
+                        echo($insert."<br>");
+            } else if($r['date_in']) {
+                $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                        VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_in']." 17:00:00","Y-m-d G:i:s")).", $tech_id, ".prep($notes).");";
+                        qdb($insert) or die(qe()." | $insert");
+                        echo($insert."<br>");
+            } else {
+                $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                        VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['created'],"Y-m-d G:i:s")).", $tech_id, ".prep($notes).");";
+                        qdb($insert) or die(qe()." | $insert");
+                        echo($insert."<br>");
+            }
         }
         echo("<br><br>");
         
