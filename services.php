@@ -119,10 +119,10 @@
 		<td class = "col-md-2">
 			<div class="btn-group medium">
 				<input type="hidden" name="status" id="status" value="<?php echo $status; ?>">
-				<button class="btn btn-warning btn-sm btn-status left<?php if (! $status OR $status=='open') { echo ' active'; } ?>" type="button" data-status="open" data-toggle="tooltip" data-placement="right" title="Open/Idle"><i class="fa fa-folder-open"></i></button>
-				<button class="btn btn-primary btn-sm btn-status middle<?php if ($status=='complete') { echo ' active'; } ?>" type="button" data-status="complete" data-toggle="tooltip" data-placement="bottom" title="Tech Completed"><i class="fa fa-folder"></i></button>
-				<button class="btn btn-success btn-sm btn-status middle<?php if ($status=='closed') { echo ' active'; } ?>" type="button" data-status="closed" data-toggle="tooltip" data-placement="bottom" title="Closed"><i class="fa fa-check-square"></i></button>
-				<button class="btn btn-info btn-sm btn-status right<?php if ($status=='all') { echo ' active'; } ?>" type="button" data-status="all" data-toggle="tooltip" data-placement="bottom" title="All"><i class="fa fa-square"></i></button>
+				<button class="btn  btn-default btn-sm btn-status left<?php if (! $status OR $status=='open') { echo ' active btn-warning'; } ?>" type="button" data-status="open" data-toggle="tooltip" data-placement="right" title="Open/Idle"><i class="fa fa-folder-open"></i></button>
+				<button class="btn  btn-default btn-sm btn-status middle<?php if ($status=='complete') { echo ' active btn-primary'; } ?>" type="button" data-status="complete" data-toggle="tooltip" data-placement="bottom" title="Tech Completed"><i class="fa fa-folder"></i></button>
+				<button class="btn  btn-default btn-sm btn-status middle<?php if ($status=='closed') { echo ' active btn-success'; } ?>" type="button" data-status="closed" data-toggle="tooltip" data-placement="bottom" title="Closed"><i class="fa fa-check-square"></i></button>
+				<button class="btn  btn-default btn-sm btn-status right<?php if ($status=='all') { echo ' active btn-info'; } ?>" type="button" data-status="all" data-toggle="tooltip" data-placement="bottom" title="All"><i class="fa fa-square"></i></button>
 			</div>
 		</td>
 

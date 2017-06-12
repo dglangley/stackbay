@@ -47,12 +47,25 @@
 	$rmaArray = array();
 
 	$status = "Active";
+	$repair_item_id;
+	$sales_order;
 
-	$query = "SELECT status FROM repair_orders WHERE ro_number =".prep($order_number).";";
+	$query = "SELECT status, id as repair_item_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
 	$result = qdb($query) or die(qe());
 	if (mysqli_num_rows($result)) {
 		$result = mysqli_fetch_assoc($result);
 		$status = $result['status'];
+		$repair_item_id = $result['repair_item_id'];
+	}
+
+	//Check to see if a sales_item record has been created for this item
+	if($status == 'Completed') {
+		$query = "SELECT so_number FROM sales_items WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$sales_order = $result['so_number'];
+		}
 	}
 
 	
@@ -82,7 +95,7 @@
 		FROM inventory i 
 		WHERE id in (
 			SELECT DISTINCT invid FROM inventory_history WHERE field_changed = 'repair_item_id' AND value = ".prep($line_id)."
-		);";
+		) or i.repair_item_id = ".prep($line_id).";";
 		$result = qdb($query) or die(qe()." | $query");
 		
 	    if (mysqli_num_rows($result)>0) {
@@ -107,7 +120,7 @@
 				$rlineid = prep($rlineid);
 			}
 			if($serial){
-				$serial = prep($serial);
+				$serial = prep(strtoupper($serial));
 				$line_item_sel = "SELECT * FROM repair_items where id = $rlineid;";
 				$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
 				$row = mysqli_fetch_assoc($result);
@@ -223,7 +236,7 @@
 		</style>
 	</head>
 	
-	<body class="sub-nav" id="rma-add" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav" id="rma-add" >
 	<!-- Begin the header output  -->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
@@ -234,7 +247,14 @@
 			</div>
 			<div class="col-sm-4">
 				<?php if($status == "Completed") { ?>
-					<a class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
+					<?php if($sales_order) { ?>
+						<a href="/shipping.php?on=<?=$sales_order;
+						?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
+					<?php } else { ?>
+						<form action="repair_shipping.php" method="POST">
+							<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
+						</form>
+					<?php } ?>
 				<?php } ?>
 			</div>
 		</div>
@@ -373,12 +393,7 @@
 													foreach($serials as $item) { 
 											?>
 													<div class="row">
-														<!--<div class="input-group">-->
 															<span class="text-center" style="display: block; padding: 7px 0; margin-bottom: 4px;"><?=getCondition($item['conditionid'])?></span>
-															<!--<span class="input-group-addon">-->
-														
-															<!--</span>-->
-														<!--</div>-->
 													</div>
 											<?php 
 													} 

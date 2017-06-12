@@ -23,6 +23,22 @@
 		$purchases[] = array('number'=>$r['po_number'],'company'=>$r['name']);
 	}
 
-	echo json_encode(array('sales'=>$sales,'purchases'=>$purchases,'message'=>''));
+	$repairs = array();
+	$query = "SELECT ro_number, name FROM repair_orders, companies ";
+	$query .= "WHERE repair_orders.companyid = companies.id ORDER BY ro_number DESC LIMIT 0,10; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$repairs[] = array('number'=>$r['ro_number'],'company'=>$r['name']);
+	}
+	
+	$returns = array();
+	$query = "SELECT rma_number, name FROM returns, companies ";
+	$query .= "WHERE returns.companyid = companies.id ORDER BY rma_number DESC LIMIT 0,10; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$returns[] = array('number'=>$r['rma_number'],'company'=>$r['name']);
+	}
+
+	echo json_encode(array('sales'=>$sales,'purchases'=>$purchases, 'repairs'=>$repairs, 'returns'=>$returns,'message'=>''));
 	exit;
 ?>

@@ -628,13 +628,13 @@
 		<div class="row" style="padding: 8px;" id = "filterBar">
 			<div class="col-md-1">
 			    <div class="btn-group medium" data-toggle="buttons">
-			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-warning btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active' : '');?>" type="submit" data-filter="active">
+			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
-			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-success btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active' : '');?>" type="submit" data-filter="complete">
+			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
 			        	<i class="fa fa-history"></i>	
 			        </button>
-					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-info btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active' : '');?>" type="submit" data-filter="all">
+					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
 			        	All
 			        </button>
 			    </div>
@@ -917,9 +917,16 @@
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
 
+			$('.filter_status').removeClass('btn-warning');
+			$('.filter_status').removeClass('btn-success');
+			$('.filter_status').removeClass('btn-info');
+
+			$('.filter_status').addClass('btn-default');
+
 			if(type == 'complete') {
+				$('.filter_status[data-filter="complete"]').addClass('btn-success');
 				sortTheTable('complete');
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .complete_item:lt(10)').show();
 					$('.s_table .complete_item:lt(10)').show();
 					$('.rma_table .complete_item:lt(10)').show();
@@ -932,8 +939,9 @@
 				$('.status_label').hide();
 				//alert("here");
 			} else if(type == 'active') {
+				$('.filter_status[data-filter="active"]').addClass('btn-warning');
 				sortTheTable('active');
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .active_item:lt(10)').show();
 					$('.s_table .active_item:lt(10)').show();
 					$('.rma_table .active_item:lt(10)').show();
@@ -945,9 +953,10 @@
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {
+				$('.filter_status[data-filter="all"]').addClass('btn-info');
 				sortTheTable('all');
 				//$('.filter_item').show();
-				if($('.show_more_link:first').text() == "Show more") {
+				if($('.show_more_link:visible:first').text() == "Show more") {
 					$('.p_table .filter_item:lt(10)').show();
 					$('.s_table .filter_item:lt(10)').show();
 					$('.rma_table .filter_item:lt(10)').show();

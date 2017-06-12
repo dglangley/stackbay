@@ -18,6 +18,10 @@
 	$completed_Invoice = $_REQUEST['invoice_checkbox'];
 	$completed_Bills = $_REQUEST['bills_checkbox'];
 
+	// if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+	// 	$keyword = $_REQUEST['s'];
+	// }
+
 	if($completed_Invoice) {
 		foreach($completed_Invoice as $invoice) {
 			insertQBLog($invoice, 'Invoice');
@@ -195,7 +199,7 @@
 			}
 
 	    	$invoices .= "
-	            <tr>
+	            <tr class = '".($completed? "complete" : "pending" )."'>
 	            	<td><a href='docs/INV".$row['invoice_no'].".pdf'>".$row['invoice_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
@@ -263,7 +267,7 @@
 			}
 
 	    	$bills .= "
-	            <tr>
+	            <tr class = '".($completed? "complete" : "pending" )."'>
 	            	<td><a href='bill.php?bill=".$row['bill_no']."'>".$row['bill_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
@@ -326,9 +330,9 @@
 		<tr>
 			<td class="col-md-2">
 				<div class="btn-group">
-					<button class="btn btn-success btn-sm left" type="button" id="complete-toggle" data-toggle="tooltip" data-placement="bottom" title="Complete"><i class="fa fa-check-square"></i></button>
-					<button class="btn btn-warning btn-sm middle" type="button" id="pending-toggle" data-toggle="tooltip" data-placement="bottom" title="Open/Incomplete"><i class="fa fa-folder-open"></i></button>
-					<button class="btn btn-info btn-sm right active" type="button" id="all-toggle" data-toggle="tooltip" data-placement="bottom" title="All"><i class="fa fa-square"></i></button>
+					<button class="btn btn-default filter_status btn-sm left" type="button" id="complete-toggle" data-toggle="tooltip" data-placement="bottom" title="Complete" data-filter="complete"><i class="fa fa-check-square" data-filter="complete"></i></button>
+					<button class="btn btn-default filter_status btn-sm middle" type="button" id="pending-toggle" data-toggle="tooltip" data-placement="bottom" title="Open/Incomplete" data-filter="active"><i class="fa fa-folder-open"></i></button>
+					<button class="btn btn-info btn-sm filter_status right active" type="button" id="all-toggle" data-toggle="tooltip" data-placement="bottom" title="All" data-filter="all"><i class="fa fa-square"></i></button>
 <!--
 			        <button class="glow left large btn-radio"  type="button" id = "complete-toggle" data-toggle="tooltip" data-placement="bottom"  title="" data-original-title="Completed">
 			        	<i class="fa fa-check-circle"></i>	
@@ -524,18 +528,36 @@
 <script type="text/javascript">
     $(document).ready(function() {
 		$("#complete-toggle").click(function(){
+			$('.filter_status').removeClass('btn-warning');
+			$('.filter_status').removeClass('btn-success');
+			$('.filter_status').removeClass('btn-info');
+			
+			$('.filter_status').addClass('btn-default');
+			$('.filter_status[data-filter="complete"]').addClass('btn-success');
 			$(this).siblings().removeClass("active");
 			$(".complete").show();
 			$(".pending").hide();
 			$(this).addClass("active");
 		});
 		$("#all-toggle").click(function(){
+			$('.filter_status').removeClass('btn-warning');
+			$('.filter_status').removeClass('btn-success');
+			$('.filter_status').removeClass('btn-info');
+			
+			$('.filter_status').addClass('btn-default');
+			$('.filter_status[data-filter="all"]').addClass('btn-info');
 			$(this).siblings().removeClass("active");
 			$(".complete").show();
 			$(".pending").show();
 			$(this).addClass("active");
 		});
 		$("#pending-toggle").click(function(){
+			$('.filter_status').removeClass('btn-warning');
+			$('.filter_status').removeClass('btn-success');
+			$('.filter_status').removeClass('btn-info');
+			
+			$('.filter_status').addClass('btn-default');
+			$('.filter_status[data-filter="active"]').addClass('btn-warning');
 			$(this).siblings().removeClass("active");
 			$(".complete").hide();
 			$(".pending").show();

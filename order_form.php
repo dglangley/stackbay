@@ -44,6 +44,10 @@
 	$origin = '';
 	$order_short;
 	$o = array();
+
+	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
+		$keyword = $_REQUEST['s'];
+	}
 	
 	
 	//High level order parameters
@@ -622,7 +626,7 @@
 					        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
 							        <td id = 'search'>
 							            <div class='input-group'>
-							              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
+							              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...' value='<?=$keyword?>'>
 							              <span class='input-group-btn'>
 							                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
 							            </span>

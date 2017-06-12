@@ -20,15 +20,43 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-wrench"></i> Repairs <span class="pull-right"><a href="#" class="mode-tab" title="Start New Repair Order"><i class="fa fa-plus"></i></a></span></h4>
-                                    <ul id="repairs-orders-list">
+                                    <h4 class="megamenu-block-title">
+									  <div class="form-group">
+										<div class="input-group pull-left">
+											<span class="input-group-btn">
+												<a href="/order_form.php?ps=RO" class="btn btn-default btn-xs bg-repairs" title="Start New Repair"><i class="fa fa-plus"></i></a>
+											</span>
+											<input type="text" class="form-control input-xs order-search" placeholder="Repairs..." data-type="RO">
+											<span class="input-group-btn">
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+											</span>
+										</div>
+										<!-- <a href="/accounts.php?orders_table=repairs" class="mode-tab"><i class="fa fa-money"></i> Repairs</a> -->
+									  </div>
+									</h4>
+                                    <ul id="repair-orders-list">
                                     </ul>
                                 </div>
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-                                    <h4 class="megamenu-block-title"><i class="fa fa-shopping-cart"></i> Returns <span class="pull-right"><a href="/returns.php" class="mode-tab" title="Start New RMA"><i class="fa fa-plus"></i></a></span></h4>
-                                    <ul id="returns-orders-list">
+                                    <h4 class="megamenu-block-title">
+<!--
+										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Returns</a> <span class="pull-right"><a href="/order_form.php?ps=Return" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
+-->
+									  <div class="form-group">
+										<div class="input-group pull-left">
+											<span class="input-group-btn">
+												<a href="#" class="btn btn-default btn-xs bg-returns" title="Start New Return"><i class="fa fa-plus"></i></a>
+											</span>
+											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="PO">
+											<span class="input-group-btn">
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+											</span>
+										</div>
+									  </div>
+									</h4>
+                                    <ul id="return-orders-list">
                                     </ul>
                                 </div>
                             </div>

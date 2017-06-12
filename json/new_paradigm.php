@@ -52,8 +52,8 @@ function search_as_heci($search_str){
 			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
 		} else {
 		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'; ";
-			$result = qdb($query);
-			if (mysqli_num_rows($result)) { 
+			$result = qdb($query) or jsonDie(qe()." | $query");
+			if (mysqli_num_rows($result)) {
 			    $result = mysqli_fetch_assoc($result);
 			    $search_str = $result['heci'];
 			    $heci7_search = true;
@@ -139,7 +139,7 @@ function sub_rows($search = ''){
         
             //Get all the currently in hand
             $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
-            $in_stock  = qdb($inventory);
+            $in_stock  = qdb($inventory) or jsonDie(qe()." | $inventory");
             if (mysqli_num_rows($in_stock)){
                 foreach ($in_stock as $r){
                     $stock[$r['partid']] = $r['total'];
@@ -152,7 +152,7 @@ function sub_rows($search = ''){
             $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
             //Use an inventory join method here at some point
                 
-            $incoming = qdb($purchased);
+            $incoming = qdb($purchased) or jsonDie(qe()." | $purchased");
             if (mysqli_num_rows($incoming)){
                 foreach ($incoming as $i){
                     if($i['total'] > 0){
@@ -217,7 +217,7 @@ function sub_rows($search = ''){
                     <tr class = 'search_lines' data-line-id = $id>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td>";
-        
+
                     $rows .=(display_part($info));
                     $rows .= "</td>
                         <td".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>

@@ -1,6 +1,7 @@
 <?php
 	//Include Gmail function
 	include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 
 	class venPriv {
@@ -924,7 +925,7 @@
 
 		//Function generates an email for the user that is being created by the admin
 		function SendUserConfirmationEmail() {
-	        setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+	        global $SEND_ERR;
 	        
 	        // send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			// $recipients can be either a single recipient string, or array($rec1,$rec2,etc)
@@ -951,7 +952,7 @@
 	    
 	    //Function generates an email for the user that is being created by the admin
 		function resetPasswordEmail($username = '') {
-	        setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+	        global $SEND_ERR;
 	        
 	        // send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			// $recipients can be either a single recipient string, or array($rec1,$rec2,etc)
