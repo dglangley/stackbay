@@ -54,7 +54,7 @@
 
 		// find inventory_costs record with matching average cost and discard the other(s)
 		$query = "SELECT inventoryid FROM inventory_costs WHERE (inventoryid = '".$s1['id']."' OR inventoryid = '".$s2['id']."') AND average = '".$avg_cost."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qdb($query) OR die(qe().'<BR>'.chr(10).$query);
 		if (mysqli_num_rows($result)>1) {
 			echo 'Could not determine a singular inventory_costs source for "'.$s.'" with average cost '.$avg_cost.'<BR>'.chr(10);
 			return false;
@@ -74,27 +74,27 @@
 
 		// count deleting records for safe-keeping
 		$query = "SELECT * FROM inventory_costs WHERE inventoryid = '".$serials[$del]['id']."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qdb($query) OR die(qe().'<BR>'.chr(10).$query);
 		$query = "DELETE FROM inventory_costs WHERE inventoryid = '".$serials[$del]['id']."'; ";
 		echo 'Matching '.mysqli_num_rows($result).' inventory_costs result(s) for deletion: '.$query.'<BR>'.chr(10);
-		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.chr(10).$query); }
 
 		$query = "SELECT * FROM inventory_costs_log WHERE inventoryid = '".$serials[$del]['id']."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qdb($query) OR die(qe().'<BR>'.chr(10).$query);
 		$query = "UPDATE inventory_costs_log SET inventoryid = '".$serials[$save]['id']."' WHERE inventoryid = '".$serials[$del]['id']."'; ";
 		echo 'Matching '.mysqli_num_rows($result).' inventory_costs_log result(s) for update: '.$query.'<BR>'.chr(10);
-		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.chr(10).$query); }
 
 		$query = "UPDATE inventory SET qty = 0, partid = '".$s2['partid']."', status = 'manifest', date_created = '".$date_created."', ";
 		$query .= "purchase_item_id = '".$s1['purchase_item_id']."', sales_item_id = '".$s2['sales_item_id']."' ";
 		if ($returns_item_id) { $query .= ", returns_item_id = '".$returns_item_id."' "; }
 		$query .= "WHERE id = '".$serials[$save]['id']."'; ";
 		echo $query.'<BR>'.chr(10);
-		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.chr(10).$query); }
 
 		$query = "DELETE FROM inventory WHERE id = '".$serials[$del]['id']."'; ";
 		echo $query.'<BR>'.chr(10);
-		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.chr(10).$query); }
 
 /*
 		$query = "UPDATE inventory_history SET date_changed = '".$date_created."' ";
@@ -110,13 +110,13 @@ echo $query.'<BR>'.chr(10);
 		if ($returns_item_id) {
 			$query = "UPDATE inventory_history SET invid = '".$serials[$save]['id']."' WHERE invid = '".$serials[$del]['id']."'; ";
 			if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
-			echo $query.'<BR>';
+			echo $query.'<BR>'.chr(10);
 
 			$query = "UPDATE return_items SET inventoryid = '".$serials[$save]['id']."' WHERE inventoryid = '".$serials[$del]['id']."'; ";
 			if (! $debug) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
-			echo $query.'<BR>';
+			echo $query.'<BR>'.chr(10);
 		}
 
-echo '<BR>';
+echo '<BR>'.chr(10);
 	}
 ?>

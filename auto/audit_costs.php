@@ -2,9 +2,12 @@
 	set_time_limit(0);
 	ini_set('memory_limit', '2000M');
 
-	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+$debug = 0;
+	$root_dir = $_SERVER["ROOT_DIR"];
+	include_once $root_dir.'/inc/dbconnect.php';
+	include_once $root_dir.'/inc/pipe.php';
+	include_once $root_dir.'/inc/getPartId.php';
+	include_once $root_dir.'/inc/mergeInventories.php';
 
 	$IDS = array();
 
@@ -13,12 +16,14 @@
 	$result = qdb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$serial = $r['serial_no'];
+		$inventoryid = $r['id'];
 
 		$cost = 0;
 		//$query2 = "SELECT SUM(actual) cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
 		$query2 = "SELECT average cost FROM inventory_costs WHERE inventoryid = '".$r['id']."'; ";
 		$result2 = qdb($query2);
-		if (mysqli_num_rows($result2)>0) {
+		$num_costs = mysqli_num_rows($result2);
+		if ($num_costs>0) {
 			$r2 = mysqli_fetch_assoc($result2);
 			$cost = $r2['cost'];
 		}
@@ -37,21 +42,33 @@
 			}
 		}
 */
-		$query3 = "SELECT avg_cost cost, po, repair, repair_id FROM inventory_solditem WHERE serial = '".$serial."'; ";
-		$result3 = qdb($query3,'PIPE');
+		$query3 = "SELECT avg_cost cost, po, repair, repair_id FROM inventory_solditem WHERE serial = '".$serial."' ORDER BY id DESC LIMIT 0,1; ";
+		$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
 		if (mysqli_num_rows($result3)==0) {
 			continue;//must not need it, or let's face it, at this point, do we care??
 		}
-		if (mysqli_num_rows($result3)>0) {
-			$r3 = mysqli_fetch_assoc($result3);
-			$bdb_cost = $r3['cost'];
-			if ($r3['po']) { $po = $r3['po']; }
-			if ($r3['repair']) { $repair = $r3['repair']; }
-			else if ($r3['repair_id']) { $repair = $r3['repair_id']; }
-		}
+		$r3 = mysqli_fetch_assoc($result3);
+		$bdb_cost = $r3['cost'];
+		if ($r3['po']) { $po = $r3['po']; }
+		if ($r3['repair']) { $repair = $r3['repair']; }
+		else if ($r3['repair_id']) { $repair = $r3['repair_id']; }
 
-if ($bdb_cost>0 AND $cost<>$bdb_cost) {
-	echo $serial.' (id '.$r['id'].'), BDB $'.$bdb_cost.', Ours $'.$cost.'<BR>'.chr(10);
+		if ($bdb_cost>0 AND $cost<>$bdb_cost) {
+			echo $serial.' (id '.$r['id'].'), BDB $'.$bdb_cost.', Ours $'.$cost.'<BR>'.chr(10);
+
+			// if just one inventory record for this serial, and just one costs record, update the average cost
+			if ($num_costs==1) {
+				$query2 = "SELECT id FROM inventory WHERE serial_no = '".res($serial)."'; ";
+				$result2 = qdb($query2) or die(qe().'<BR>'.chr(10).$query2);
+				if (mysqli_num_rows($result2)==1) {
+					$query3 = "UPDATE inventory_costs SET average = '".$bdb_cost."' WHERE inventoryid = '".$inventoryid."'; ";
+					if (! $debug) { $result3 = qdb($query3) OR die(qe().'<BR>'.chr(10).$query3); }
+echo $query3.'<BR>'.chr(10);
+				}
+			}
+
+continue;
+			mergeInventories($serial);
 
 /*
         $query3 = "INSERT INTO inventory_costs (inventoryid, datetime, actual) ";
@@ -64,7 +81,7 @@ echo $query3.'<BR>'.chr(10);
 echo $query3.'<BR>'.chr(10);
         $result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 */
-}
+		}
 	}
 echo 'Finished!'.chr(10);
 exit;
@@ -109,7 +126,7 @@ echo $query.'<BR>';
 			}
 		}
 if ($cost_match===false) {
-echo $serial.' serial with old db inventory id '.$r['inventory_id'].' ($'.$cost.' real cost, $'.$avg.' avg cost)<BR> &nbsp; &nbsp; new part id '.$partid.' ($'.$actual.' real cost, $'.$average.' avg cost)<BR>';
+echo $serial.' serial with old db inventory id '.$r['inventory_id'].' ($'.$cost.' real cost, $'.$avg.' avg cost)<BR> &nbsp; &nbsp; new part id '.$partid.' ($'.$actual.' real cost, $'.$average.' avg cost)<BR>'.chr(10);
 }
 	}
 ?>
