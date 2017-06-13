@@ -40,13 +40,13 @@
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
-			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '13');";
+			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '6');";
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
-				$recipients = 'dev@ven-tel.com';
+				$recipients = 'andrew@ven-tel.com';
 				//$recipients = 'ssabedra@ven-tel.com';
 				// $bcc = 'dev@ven-tel.com';
 				

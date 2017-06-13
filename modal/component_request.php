@@ -1,12 +1,29 @@
+<style>
+    #search_row {
+        background: transparent !important;
+    }
+</style>
+
 <div class="modal modal-alert fade" id="modal-component" tabindex="-1" role="dialog" aria-labelledby="modalcomponentTitle">
     <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
-                    <h4 class="modal-title" id="modalcomponentTitle"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Component Request</h4>
-                </div>
-                <div class="modal-body component-modal" id="component-modal-body" data-origin ="component_info" data-oldid = "false">
-					<div class="row">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
+                <h4 class="modal-title" id="modalcomponentTitle"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Component Request</h4>
+            </div>
+            <div class="modal-body component-modal" id="component-modal-body" data-origin ="component_info" data-oldid = "false">
+				<div class="row">
+                    
+				</div>
+                <ul class="nav nav-tabs nav-tabs-ar">
+                    <li class="active"><a href="#request" data-toggle="tab"><i class="fa fa-qrcode"></i> Component Request</a></li>
+                    <li class=""><a href="#stock"><i class="fa fa-exclamation-triangle"></i> Stock</a></li>
+                </ul><!-- nav-tabs -->
+                
+                <div class="tab-content">
+
+                    <!-- Materials pane -->
+                    <div class="tab-pane active" id="request">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
                                 <thead>  
@@ -21,10 +38,10 @@
                                     <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
                                         <td id = 'search'>
                                             <div class='input-group'>
-                                              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...'>
-                                              <span class='input-group-btn'>
-                                                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
-                                            </span>
+                                                <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR COMPONENT...'>
+                                                <span class='input-group-btn'>
+                                                    <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+                                                </span>
                                             </div>
                                         </td>
                                         <td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_qty' id = 'new_item_qty' placeholder='QTY' value = ''></td>
@@ -42,17 +59,23 @@
                                 </tfoot>
                             </table>
                         </div>
-					</div>
-                </div>
-                <div class="modal-footer text-center">
-                    <div class="col-md-8">
-                        <!-- <textarea rows="2" class="form-control" placeholder="Notes" name="notes"></textarea> -->
+
+                        <button class="btn btn-primary btn-sm pull-right stock_check" data-form="" data-callback="" data-element="">Next</button>
                     </div>
-                    <div class="col-md-4">
-                        <button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
+                    
+                    <div class="tab-pane" id="stock">
                         <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Save</button>
                     </div>
                 </div>
             </div>
+            <div class="modal-footer text-center">
+                <div class="col-md-8">
+                    <!-- <textarea rows="2" class="form-control" placeholder="Notes" name="notes"></textarea> -->
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
