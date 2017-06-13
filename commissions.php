@@ -365,14 +365,37 @@
 			echo '
 						<tr>
 							<td class="col-md-2"> </td>
-							<td class="col-md-7"> '.getRep($c['rep_id']).' </td>
-							<td class="col-md-1"> </td>
+							<td class="col-md-4"> <strong>'.getRep($c['rep_id']).'</strong> </td>
+							<td class="col-md-4"> </td>
 							<td class="col-md-1 text-right">
 								'.format_price($c['commission_amount']).'
 							</td>
-							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right" style="padding:0px !important;">
+								<a class="btn btn-default btn-xs btn-details"><i class="fa fa-caret-down"></i></a>
+							</td>
 						</tr>
 			';
+
+			$query2 = "SELECT part, heci, serial_no, c.commission_amount FROM commissions c, inventory i, parts p ";
+			$query2 .= "WHERE invoice_no = '".$r['invoice_no']."' AND rep_id = '".$c['rep_id']."' ";
+			$query2 .= "AND c.inventoryid = i.id AND i.partid = p.id; ";
+			$result2 = qdb($query2) OR die("Could not pull inventory record ".$c['inventoryid']);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$parts = explode(' ',$r2['part']);
+				echo '
+						<tr>
+							<td class="col-md-2" style="padding:0px !important">
+								<input type="checkbox" style="margin-left:5px" checked>
+							</td>
+							<td class="col-md-4"> '.$parts[0].' '.$r2['heci'].' </td>
+							<td class="col-md-4"> '.$r2['serial_no'].' </td>
+							<td class="col-md-1">
+								'.format_price($r2['commission_amount']).'
+							</td>
+							<td class="col-md-1"> </td>
+						</tr>
+				';
+			}
 		}
 		if ($num_comms>0) {
 			echo '
@@ -389,6 +412,11 @@
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
+		$(document).ready(function() {
+			$(".btn-details").on("click",function() {
+				alert('hi');
+			});
+		});
     </script>
 
 </body>
