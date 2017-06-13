@@ -7,6 +7,7 @@
     include_once $rootdir.'/inc/import_aid.php';
     
     qdb("TRUNCATE TABLE `parts_component_map`;");
+    //qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
     $component_query = "SELECT * FROM inventory_component;";
     $result = qdb($component_query,"PIPE") or die(qe("PIPE")." | $component_query");
     $i = 0;
@@ -21,7 +22,7 @@
         } else {
             $insert = "
             INSERT INTO `parts` (`part`,`description`,`classification`) 
-            VALUES (".prep($r['part']).", ".prep($r['description']).",'component');
+            VALUES (".prep($r['part_number']).", ".prep($r['description']).",'component');
             ";
             qdb($insert) or die(qe()." | $insert");
             $partid = qid();

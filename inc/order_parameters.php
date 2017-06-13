@@ -39,6 +39,7 @@
 			$info['color'] = '#f5dfba';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'receive_date';
+			$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
@@ -81,6 +82,7 @@
 			$info['color'] = '#f7fff0';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'delivery_date';
+			$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
@@ -122,6 +124,7 @@
             $info['color'] = '#94b4b5';
             $info['edit_mode'] = 'display';
             $info['date_field'] = 'receive_date';
+            //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = true;
@@ -164,6 +167,7 @@
             $info['color'] = '#f7fff0';
             $info['edit_mode'] = 'order';
             $info['date_field'] = 'receive_date';
+            //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = true;
             $info['warranty'] = true;
@@ -207,6 +211,7 @@
             $info['color'] = '#f5dfba';
             $info['edit_mode'] = 'order';
             $info['date_field'] = 'receive_date';
+            //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = false;
@@ -247,6 +252,7 @@
             $info['color'] = '#94b4b5';
             $info['edit_mode'] = 'display';
             $info['date_field'] = 'receive_date';
+            //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = false;
@@ -290,6 +296,7 @@
 			$info['color'] = '#beadbe';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'due_date';
+			//$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
@@ -339,6 +346,7 @@
 			$info['color'] = '#beadbe';
 			$info['edit_mode'] = 'order';
 			$info['date_field'] = 'due_date';
+			//$info['create_date'] = "created";
 			//Field header information
 			// $info['due_date'] = true;
 			// $info['warranty'] = true;
