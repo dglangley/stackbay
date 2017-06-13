@@ -83,6 +83,9 @@
         $o = o_params($order_type);
 	    $prep = prep($order_number);
         
+		$subtotal = 0;
+		$freight = 0;
+		$total = 0;
         $added_order ="";
         $added_order_join = "";
         $serials = array();
@@ -103,6 +106,7 @@
 		$oi = array();
 		if (mysqli_num_rows($order_result) > 0){
 			$oi = mysqli_fetch_assoc($order_result);
+			if($o['type'] == 'Invoice'){ $freight = $oi["freight"]; }
             // echo("<pre>");
             // print_r($oi);
             // echo("</pre>");
@@ -145,7 +149,7 @@
 			$part_details = current(hecidb($item['partid'],'id'));
 			$part_strs = explode(' ',$part_details['Part']);
 			$lineTotal = $price*$item['qty'];
-			$total += $lineTotal;
+			$subtotal += $lineTotal;
 			
 			//FREIGHT CALCULATION HERE FOR INVOICE (based off the payment type/shipping account)
 			$item_rows .= '
@@ -461,6 +465,8 @@ $html_page_str .='
         //End of the shipping information table
 }
 
+	$total = $subtotal+$freight;
+
 $html_page_str .= '
 <!-- Items Table -->
         <table class="table-full table-striped table-condensed">
@@ -484,14 +490,14 @@ $html_page_str .= '
             <tr>
                 <td style="text-align:right;border:none;">Subtotal</td>
                 <td class="text-price">
-                    '.format_price($total).'
+                    '.format_price($subtotal).'
                 </td>
             </tr>
             <!--  -->
             <tr>
                 <td style="text-align:right;border:none;">Freight</td>
                 <td class="text-price">
-                    '.format_price(0).'
+                    '.format_price($freight).'
                 </td>
             </tr>
             <tr>

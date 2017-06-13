@@ -22,6 +22,8 @@
 		if (mysqli_num_rows($result)==0) { return ($REPS[$userid]); }
 
 		$r = mysqli_fetch_assoc($result);
+		$names = explode(' ',$r['name']);
+		$r['first_name'] = $names[0];
 		$REPS[$userid] = $r;
 
 		return ($REPS[$userid][$output]);

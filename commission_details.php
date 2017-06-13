@@ -165,6 +165,13 @@
             left: auto !important;
             right: 0 !important;
         }
+		.comm-row, .comm-row td {
+			margin:0 !important;
+			padding:0 !important;
+		}
+		.comm-row td:last-child {
+			padding-bottom:10px !important;
+		}
     </style>
 </head>
 <body class="sub-nav">
@@ -188,22 +195,22 @@
                 <div class="col-md-10">
                     <!--<form class="form-inline" method="POST" action="/save-commission.php">-->
                         <div style="display: inline-block; width: 100%;">
+							<h3><a href="/commission.php" class="text-info"><i class="fa fa-chevron-left"></i> &nbsp; Users</a></h3>
                             <h2>Commission Details</h2>
                             
-                            <a href="/commission_details.php" class="btn btn-default btn-sm pull-right mb-20 mt-42">Show All</a>
-                            <a href="/commission.php" style="margin-right: 10px;" class="btn btn-primary btn-sm pull-right mb-20 mt-42">Users</a>
+							<?php if (isset($_REQUEST['user']) AND $_REQUEST['user']) { echo '<a href="/commission_details.php" class="pull-right mb-20 mt-42">Show All</a>'; } ?>
                         </div>
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                         
                         <!-- This table creates a list of all the users on file in the system that way the admin can pick and choose which user to update/edit -->
-                        <table class="table">
+                        <table class="table table-condensed">
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Sales Rep</th>
                                     <th>Sales Order</th>
                                     <th>Company</th>
-                                    <th>Sales Rep</th>
-                                    <th>Total Sale</th>
+                                    <th class="text-right">Total Sale</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -212,31 +219,33 @@
                                         if(getTotalCost($order['so_number']) == 0)
                                             continue;
                                 ?>
-                                <tr style="display: none;">
+                                <tr>
                                     <td>
                                         <?= date("m/d/Y", strtotime($order['created'])); ?>
                                     </td>
                                     <td>
-                                        <?= $order['so_number']; ?>
+                                        <span class="info"><?= getContact($order['sales_rep_id']); ?></span>
                                     </td>
                                     <td>
-                                        <?= getCompany($order['companyid']); ?>
+                                        <?= $order['so_number']; ?> <a href="/order_form.php?on=<?= $order['so_number']; ?>&ps=s"><i class="fa fa-arrow-right"></i></a>
                                     </td>
                                     <td>
-                                        <?= getContact($order['sales_rep_id']); ?>
+                                        <?= getCompany($order['companyid']); ?> <a href="/profile.php?companyid=<?= $order['companyid']; ?>"><i class="fa fa-arrow-right"></i></a>
                                     </td>
-                                    <td>
-                                        <?= getTotalCost($order['so_number']); ?>
+                                    <td class="text-right">
+                                        <?= format_price(getTotalCost($order['so_number'])); ?>
                                     </td>
                                 </tr>
-                                <tr style="display: none;">
-                                    <td colspan='12'>
-                                    <table class="table table-condensed commission-table">
-                                        <tbody>
+                                <tr class="comm-row">
+                                    <td colspan="5">
+	                                    <table class="table table-condensed">
                                             <?php foreach($usernames as $user) { 
                                                 $privNames = $venEdit->getPrivilegeTitle($user['userid']);
                                                 $total = getTotalCost($order['so_number']);
-                                                $commission = floatval(round(getTotalCost($order['so_number']) * ($user['commission_rate'] / 100), 2));
+												$comm_rate = $user['commission_rate'];
+												$comm_pct = $comm_rate/100;
+
+                                                $commission = floatval(round(getTotalCost($order['so_number']) * $comm_pct, 2));
                                                 
                                                 //For single user only show commission for sales rep for sales order they took care of
                                                 if(!empty($userid)) {
@@ -254,26 +263,21 @@
                                                     continue;
                                                 }
                                             ?>
-                                                <tr>
-                                                    <td class="col-md-4"><?= ($user['userid'] == $order['sales_rep_id'] ? $user['name'] ." <b>(Rep)</b>" : $user['name']); ?></td>
-                                                    <td class="col-md-4">
-                                                        <?php if(in_array('Administration', $privNames)) {
-                                                            echo 'Administrator';
-                                                        } else {
-                                                            echo 'Sales';
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                    <td class="col-md-2">
-                                                        <?=$user['commission_rate'];?>%
-                                                    </td>
-                                                    <td class="col-md-2">
-                                                        <?=format_price($commission);?>
-                                                    </td>
-                                                </tr>
+                                            <tr>
+												<td class="col-md-2"> </td>
+                                                <td class="col-md-7"><?= ($user['userid'] == $order['sales_rep_id'] ? $user['name'] ." <b>(Rep)</b>" : $user['name']); ?></td>
+                                                <td class="col-md-1">
+<!--
+                                                    <?=$comm_rate;?>%
+-->
+                                                </td>
+                                                <td class="col-md-1 text-right">
+                                                    <?=format_price($commission);?>
+                                                </td>
+												<td class="col-md-1"> </td>
+                                            </tr>
                                             <?php } ?>
-                                        </tbody>
-                                    </table>
+	                                    </table>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -298,12 +302,14 @@
     <script>
         (function($) {
             //Fastest and probably worst dirty hack
+/*
             $(".commission-table").each(function() {
                 if($(this).find('tr').length > 0) {
                     $(this).closest('tr').show();
                     $(this).closest('tr').prev().show();
                 }
             });
+*/
         })(jQuery);
     </script>
     <!-- This is for multi select feature, if we like it lets pull down the library and input it into our system to avoid external url calls -->

@@ -49,10 +49,10 @@
 			$query .= "JOIN user_privileges ON user_roles.privilegeid = user_privileges.id ";
 			$query .= "WHERE user_privileges.privilege = 'Administration' OR user_privileges.privilege = 'Sales' ";
 			$query .= "ORDER BY contacts.status ASC, usernames.id ASC; ";
-	    	$result = qdb($query);
+	    	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	    	//Check is any rows exists then populate all the results into an array
-			while ($row = $result->fetch_assoc()) {
+			while ($row = mysqli_fetch_assoc($result)) {
 			  $usernames[] = $row;
 			}
 

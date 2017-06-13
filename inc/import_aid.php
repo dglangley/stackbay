@@ -4,6 +4,7 @@
 	include_once $rootdir.'/inc/getPartId.php';
 	include_once $rootdir.'/inc/setPart.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/form_handle.php';
      
         $INVENTORY_IDS = array();
     	function translateID($inventory_id){
@@ -106,16 +107,16 @@
 	);
 
 	$USER_MAPS = array(
-		1=>1398,/*brian*/
+		1=>17,/*brian*/
 		2=>2,/*sam*/
 		3=>3,/*chris*/
 		4=>16,/*rathna*/
-		5=>3,/*accounting => chris*/
-		9=>1401,/*mike*/
-		11=>3,/*sabedra*/
-		13=>1399,/*vicky*/
+		5=>15,/*accounting => joe*/
+		9=>20,/*mike m*/
+		11=>13,/*sabedra*/
+		13=>19,/*vicky*/
 		18=>1,/*david*/
-		21=>3,/*juan*/
+		21=>14,/*juan*/
 	);
 	function mapUser($id) {
 		global $USER_MAPS;

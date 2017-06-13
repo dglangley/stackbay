@@ -150,14 +150,11 @@
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
                     <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
                     <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
-                    <li><a href="/commission_details.php"><i class="fa fa-percent"></i> Commissions</a></li>
+                    <li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
 <!--
                     <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>
 -->
 				</ul>
-			</li>
-            <li class="hidden-xs hidden-sm">
-				<a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a>
 			</li>
             <li class="notification-dropdown hidden-xs hidden-sm">
 <?php
@@ -183,17 +180,20 @@
                     </div>
                 </div>
             </li>
-            <li class="dropdown">
+            <li class="dropdown text-left">
                 <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
 					<i class="fa fa-user"></i><span> <?php echo $U['name']; ?></span>
                     <b class="caret"></b>
 				</a>
                 <ul class="dropdown-menu">
+		            <li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
 	                <?php if($USER_ROLES[array_search(array_search('Administration', $ROLES), $USER_ROLES)] == array_search('Administration', $ROLES)) { ?>
 		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
+<!--
                         <li><a class="<?php echo ($pageName == 'commission.php' || $pageName == 'commission_details.php' ? 'active' : ''); ?>" href="commission.php">Commissions</a></li>
+-->
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
