@@ -55,7 +55,7 @@
 	// these conditions are non-negotiable
 	$query .= "WHERE c.source_id = s.id AND (orig_amount > 0 OR amount > 0) ";
 
-	$query .= "AND (canceled = '0' OR approved = '1' OR paid_date IS NOT NULL) ";
+	$query .= "AND canceled = '0' AND approved = '0' ";//AND (approved = '1' OR paid_date IS NOT NULL) ";
 $query .= "AND repair_id IS NULL AND ticket_id IS NULL AND sold_item_id IS NOT NULL ";
 //	$query .= "LIMIT 0,1000 ";
 	$query .= "; ";
@@ -64,6 +64,19 @@ echo $query.'<BR>';
 	while ($r = mysqli_fetch_assoc($result)) {
 //		print "<pre>".print_r($r,true)."</pre>";
 		$invoice = $r['invoice_id'];
+		if (! isset($INVOICES[$r['invoice_id']])) {
+			$query2 = "SELECT date FROM inventory_invoice WHERE id = '".$r['invoice_id']."'; ";
+			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$INVOICES[$r['invoice_id']] = "'".$r2['date']." 15:00:00'";
+			}
+		}
+		if (isset($INVOICES[$r['invoice_id']])) {
+			$comm_date = $INVOICES[$r['invoice_id']];
+		} else {
+			$comm_date = 'NULL';
+		}
 		$paid_date = $r['paid_date'];
 		if ($paid_date) { $paid_date = "'".$paid_date." 09:00:00'"; }
 		else { $paid_date = 'NULL'; }
@@ -138,7 +151,7 @@ continue;
 		$commissionid = 0;
 		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, datetime, cogs, profit, ";
 		$query2 .= "rep_id, commission_rate, commission_amount) ";
-		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $paid_date, NULL, NULL, ";
+		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, NULL, NULL, ";
 		$query2 .= "'$rep_id', NULL, '".$r['amount']."'); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$commissionid = qid();

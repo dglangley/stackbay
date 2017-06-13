@@ -355,12 +355,14 @@
 	//if($report_type == 'summary'){
 	    foreach ($result as $row){
             $id = $row['order_num'];
+			$freight = 0;
             $invoiceid = array();
             //if($_REQUEST['invoice']) {
-            	$query = "SELECT invoice_no FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
+            	$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
             	$result = qdb($query) OR die(qe());
 					
 				while ($rowInvoice = $result->fetch_assoc()) {
+					$freight += $rowInvoice['freight'];
 					$invoiceid[] = $rowInvoice['invoice_no'];
 				}
             //}
@@ -442,7 +444,7 @@
 				$summary_rows[$id]['date'] = $row['datetime'];
 				$summary_rows[$id]['cid'] = $row['cid'];
 	            $summary_rows[$id]['items'] += $row['qty'];
-	            $summary_rows[$id]['summed'] += $ext_amt;
+	            $summary_rows[$id]['summed'] += ($ext_amt+$freight);
 	            $summary_rows[$id]['company'] = $row['name'];
 	            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
 	            $summary_rows[$id]['invoice'] = $invoiceid;
@@ -640,80 +642,6 @@
                 </td>
             </tr>';
         }
-// 	} else if ($report_type=='detail') {
-// 		foreach ($result as $r){
-// 			if ($order AND $order<>$r['order_num']) { continue; }
-
-// 			$r['price'] = format_price($r['price'],true,'',true);
-
-// 			//Set the amount to zero for the number of items and the total price
-// 			$amt = 0;
-// 			$num_items = 0;
-		
-// 			//Set the value of the company to the individual row if there is no company ID preset
-// 			if (! $company_filter) {
-// 				$company_col = '
-//                                 <td>
-// 	                                    <a href="#">'.$r['name'].'</a>
-//                                 </td>
-// 				';
-// 			}
-// 			$this_amt = $r['qty']*$r['price'];
-// 			$amt += $this_amt;
-// 			$num_items += $r['qty'];
-
-// 			$total_pcs += $r['qty'];
-// 			$total_amt += $amt;
-
-// 			$qty_col = '
-//                             <td>
-//                                 '.$r['qty'].'
-//                             </td>
-// 			';
-// 			$price_col = '
-//                             <td class="text-right">
-//                                 '.format_price($r['price']).'
-//                             </td>
-// 			';
-
-// 			// legacy (pipe) support
-// //			if (isset($r['part_number'])) { $r['part'] = $r['part_number']; }
-// //			if (isset($r['clei'])) { $r['heci'] = $r['clei']; }
-
-// 			$part = $r['part'];
-// 			if (strlen($part)>40) { $part = substr($r['part'],0,38).'...'; }
-// 			$descr = $part.' &nbsp; '.$r['heci'];
-// 			$row = array('datetime'=>$r['datetime'],'company_col'=>$company_col,'id'=>$r['order_num'],'detail'=>$descr,'qty_col'=>$qty_col,'price_col'=>$price_col,'amt'=>$this_amt,'status'=>'<span class="label label-success">Completed</span>');
-// 			$results[] = $row;
-// 		}
-
-		// foreach ($results as $r) {
-		// 	$ln = '#';
-		// 	if ($orders_table=='sales') { $ln = '/SO'.$r['id']; }
-		// 	else if ($orders_table=='purchases') { $ln = 'PO'.$r['id']; }
-		// 	$rows .= '
-  //                           <!-- row -->
-  //                           <tr>
-  //                               <td>
-  //                                   '.format_date($r['datetime'],'M j, Y').'
-  //                               </td>
-		// 						'.$r['company_col'].'
-  //                               <td>
-  //                                   <a href="'.$ln.'" target="_new">'.$r['id'].'</a>
-  //                               </td>
-  //                               <td>
-  //                                   '.$r['detail'].'
-  //                               </td>
-		// 						'.$r['qty_col'].'
-		// 						'.$r['price_col'].'
-  //                               <td class="text-right">
-  //                                   '.format_price($r['amt'],true,' ').'
-  //                               </td>
-
-  //                           </tr>
-		// 	';
-		// }
-// 	}/* end $report_type=='detail' */
 
 	if ($keyword) {
 		echo '
