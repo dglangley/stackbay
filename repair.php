@@ -535,7 +535,6 @@
 
 				$(document).on('click', '.modal_component', function(){
 					$('#right_side_main').empty();
-					//$('#go_find_me').focus();
 				});
 
 				$('#modal-component').on('shown.bs.modal', function() {
@@ -543,7 +542,7 @@
 				});
 
 				$(document).on("keydown",".search_line_qty",function(e){
-					 if (e.keyCode == 13) {
+					if (e.keyCode == 13) {
 						var isValid = nonFormCase($(this), e);
 						
 						$(".items_label").html("").remove();
@@ -551,7 +550,7 @@
 							var qty = 0;
 							console.log($(".search_lines"));
 	   		    			$(".search_lines").each(function() {
-								qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+								qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
 							});
 							$(".items_label").html("").remove();
 							
@@ -567,6 +566,35 @@
 							}
 						} 
 					}
+				});
+
+				$(document).on("click", ".stock_check", function(e) {
+					$('.stock_component').empty();
+					var html = "";
+
+					$(".table_components .easy-output").each(function() {
+					    var qty = $(this).find(".line_qty").data('qty');
+					    var available = $(this).find(".line_qty").data('stock');
+					    var partid = $(this).find(".line_part").data('search');
+					    var cost = $(this).find(".line_price").text();
+					    var pullable = 0;
+
+					    if(available - qty < 0) {
+					    	pullable = available;
+					    } else {
+					    	pullable = qty
+					    }
+					    //$(this).clone().appendTo(".stock_component");
+					    html += "<tr>\
+					    			<td>"+$(this).find(".line_part").html()+"</td>\
+					    			<td>"+$(this).find(".line_qty").html()+"</td>\
+					    			<td>"+available+"</td>\
+					    			<td><input type='text' class='input-sm form-control' name='inventory_stock['"+partid+"']' value='"+pullable+"'></td>\
+					    		</tr>";
+					});
+					$(".stock_component").append(html);
+
+					$('.nav-tabs a[href="#stock"]').tab('show');
 				});
 			})(jQuery);
 		</script>

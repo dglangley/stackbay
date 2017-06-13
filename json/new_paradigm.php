@@ -227,7 +227,7 @@ function sub_rows($search = ''){
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td data-stock='$qty_in'>".($page=="Tech" ? "" : $text)."</td>
+                        <td class='data_stock' data-stock='$qty_in'>". $text."</td>
                         <td></td>
                     </tr>
                     ";

@@ -633,7 +633,7 @@
 						var qty = 0;
 						console.log($(".search_lines"));
    		    			$(".search_lines").each(function() {
-							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+							qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
 						});
 						$(".items_label").html("").remove();
 						
@@ -783,7 +783,7 @@
 			$(document).on("click",".line_item_submit",function() {
 				var qty = 0;
 				$(".items_label").html("").remove();
-				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val());
+				qty += populateSearchResults($(this),'',$(this).closest("tr").find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
 				if (qty == 0){
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
 				} else {
@@ -815,7 +815,7 @@
 					var qty = 0;
 	    			$(".search_lines").each(function() {
 						$(".items_label").html("").remove();
-						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
 						qty += $(this).find("input[name=ni_qty]").val();
 					});
 					if (qty == 0){
@@ -1286,6 +1286,8 @@
 				
 				$(this).prop("disable", true);
 
+				var repair_order = getUrlParameter('repair');
+
 				var isValid = nonFormCase($(this), e);
 				//if($(".search_lines").length > 0){
 					//line_item_submit();
@@ -1507,6 +1509,7 @@
 							"filename":filename,
 							"email_confirmation":email_confirmation,
 							"email_to":email_to,
+							"repair_order":repair_order,
 						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(form) {
@@ -2943,7 +2946,7 @@
 	        return partTime;
 	    }
 
-		function populateSearchResults(e,search,qty) {
+		function populateSearchResults(e,search,qty,stock=0) {
 			//always must be a valid qty passed in
   		    if (! qty) {
 	   			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Qty is missing or invalid. <br><br>If this message appears to be in error, please contact an Admin.");
@@ -2976,7 +2979,6 @@
    		    var warranty = sub_row.find(".warranty").val();
 			var conditionid = sub_row.find(".conditionid").val();
 //	    	var partid = row.attr("data-line-id");
-//			var qty = row.find("input[name=ni_qty]").val();
 
 			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);
 
@@ -2994,7 +2996,8 @@
 					"conditionid":conditionid,
 			       	"id":line_item_id,
 			       	"type":order_type,
-			       	"mode":mode
+			       	"mode":mode,
+			       	"available":stock
 				}, // serializes the form's elements.
 				dataType: 'json',
 				success: function(row_out) {

@@ -103,6 +103,10 @@ include_once $rootdir.'/inc/default_addresses.php';
 			$associated_order = $row['cust_ref'];
 			$ref_ln = $row['ref_ln'];
 		}
+
+		if($_REQUEST['repair']) {
+			$private = "Purchase Request for Repair# " . $_REQUEST['repair'];
+		}
 		
 		if($o['rtv']){
 			//Overwrite the information from the purchase order based on the RTV Defaults

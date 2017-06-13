@@ -81,7 +81,7 @@
 			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
-	   	$row_out .= "<td class = 'line_qty'  data-qty = ".$row['qty'].">".$row['qty']."</td>";
+	   	$row_out .= "<td class = 'line_qty' data-stock=".$row['available']." data-qty = ".$row['qty'].">".$row['qty']."</td>";
 
 	   	if(!$o['tech']){
 	   		$row_out .= "
@@ -157,6 +157,7 @@
 		$id = grab('id','NULL');
 		$warranty = grab('warranty','NULL');
 		$conditionid = grab('conditionid');
+		$available = grab('available');
 
 		//Store all caught data into the standard array and build the row.
 		$row = array(
@@ -169,6 +170,7 @@
 			'line' => $line,
 			'warranty' => $warranty,
 			'conditionid' => $conditionid,
+			'available' => $available,
 			);
 		$row_out = build_row($row);
 		

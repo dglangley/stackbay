@@ -44,7 +44,7 @@
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result) {
-				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
+				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."$repair=".$order_number."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				$recipients = 'andrew@ven-tel.com';
 				//$recipients = 'ssabedra@ven-tel.com';
