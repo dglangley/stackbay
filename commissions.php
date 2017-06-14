@@ -157,6 +157,9 @@
 		.rep-selector {
 			width:120px;
 		}
+		.comm-item {
+			margin-left:5px !important;
+		}
 	</style>
 </head>
 
@@ -322,40 +325,13 @@
 
 		$orders[] = $r;
 	}
-?>
 
-		<table class="table table-hover table-striped table-condensed">
-			<tr>
-				<th>
-					<span class="line"></span>
-					Invoice Date
-				</th>
-				<th>
-					<span class="line"></span>
-					Sales Rep
-				</th>
-				<th>
-					<span class="line"></span>
-					Sales Order
-				</th>
-				<th>
-					<span class="line"></span>
-					Company
-				</th>
-				<th>
-					<span class="line"></span>
-					Invoice
-				</th>
-				<th class="text-right">
-					<span class="line"></span>
-					Total Sale
-				</th>
-			</tr>
-<?php
+	$comm_reps = array();
+	$comm_rows = '';
 	foreach ($orders as $r) {
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
 
-		echo '
+		$comm_rows .= '
 			<tr class="success">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
@@ -379,14 +355,14 @@
 
 		$num_comms = count($r['commissions']);
 		if ($num_comms>0) {
-			echo '
+			$comm_rows .= '
 			<tr class="comm-row">
 				<td colspan="6">
 					<table class="table table-condensed">
 			';
 		}
 		foreach ($r['commissions'] as $c) {
-			echo '
+			$comm_rows .= '
 						<tr>
 							<td class="col-md-1"> </td>
 							<td class="col-md-2"> <strong>'.getRep($c['rep_id']).'</strong> </td>
@@ -397,7 +373,7 @@
 							<td class="col-md-1 text-right"> <strong>Profit</strong> </td>
 							<td class="col-md-1"> </td>
 							<td class="col-md-1 text-right">
-								<strong>'.format_price($c['commission_amount']).'</strong>
+								<strong>Commission</strong>
 							</td>
 							<td class="col-md-1 text-right" style="padding:0px !important;">
 <!--
@@ -435,6 +411,10 @@
 					}
 				}
 				$comm_amount = round($comm_amount,2);
+				// sum comm amount for this rep
+				if (! isset($comm_reps[$c['rep_id']])) { $comm_reps[$c['rep_id']] = 0; }
+				if ($chk) { $comm_reps[$c['rep_id']] += $comm_amount; }
+
 				$serial = $I['serial_no'];
 				$sale_amount = $I['amount'];
 				$pi_id = $I['purchase_item_id'];
@@ -445,36 +425,13 @@
 				$parts = explode(' ',$r3['part']);
 				$part = $parts[0];
 				$heci = $r3['heci'];
-/*
-			$query2 = "SELECT part, heci, serial_no, c.commission_amount, c.cogs, c.id, ii.amount, i.purchase_item_id ";
-			$query2 .= "FROM commissions c, inventory i, parts p, invoice_items ii ";
-			$query2 .= "WHERE c.invoice_no = '".$r['invoice_no']."' AND rep_id = '".$c['rep_id']."' ";
-			$query2 .= "AND c.inventoryid = i.id AND i.partid = p.id AND i.partid = ii.partid AND c.invoice_no = ii.invoice_no; ";
-			$result2 = qdb($query2) OR die("Could not pull comm/inventory records for invoice ".$r['invoice_no']);
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$parts = explode(' ',$r2['part']);
-				$part = $parts[0];
-				$heci = $r2['heci'];
-				$serial = $r2['serial_no'];
 
-//				$paid_amount = 0;
-//				$query3 = "SELECT SUM(amount) paid_amount FROM commission_payouts WHERE commissionid = '".$r2['id']."'; ";
-//				$result3 = qdb($query3) OR die("Problem querying commission payouts on commissionid ".$r2['id']);
-//				if (mysqli_num_rows($result3)>0) {
-//					$r3 = mysqli_fetch_assoc($result3);
-//					$paid_amount = $r3['paid_amount'];
-//				}
-
-				$sale_amount = $r2['amount'];
-				$profit = $r2['amount']-$r2['cogs'];
-				$pi_id = r2['purchase_item_id']);
-*/
 				$source_ln = getSource($pi_id);
 
-				echo '
+				$comm_rows .= '
 						<tr class="'.$cls.'">
 							<td class="col-md-1" style="padding:0px !important">
-								<input type="checkbox" style="margin-left:5px"'.$chk.'>
+								<input type="checkbox" name="comm['.$inventoryid.']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'"'.$chk.'>
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
 							<td class="col-md-2"> '.$serial.' </td>
@@ -500,14 +457,65 @@
 			}
 		}
 		if ($num_comms>0) {
-			echo '
+			$comm_rows .= '
 					</table>
 				</td>
 			</tr>
 			';
 		}
 	}
+
+	$comm_stats = '';
+	$num_reps = count($comm_reps);
+	$col_width = floor(12/$num_reps);
+	foreach ($comm_reps as $rep_id => $rep_amt) {
+		$comm_stats .= '
+                <div class="col-md-'.$col_width.' col-sm-'.$col_width.' stat">
+                    <div class="data" id="'.$rep_id.'">
+                        <span class="number text-brown">'.format_price(round($rep_amt,2),true,'').'</span>
+						<span class="info"><label><input type="checkbox" class="comm-master" checked> '.getRep($rep_id).'</label></span>
+                    </div>
+                </div>
+		';
+	}
 ?>
+
+        <!-- upper main stats -->
+        <div id="main-stats">
+            <div class="row stats-row">
+				<?php echo $comm_stats; ?>
+            </div>
+        </div>
+		<hr/>
+        <!-- end upper main stats -->
+		<table class="table table-hover table-striped table-condensed">
+			<tr>
+				<th>
+					<span class="line"></span>
+					Invoice Date
+				</th>
+				<th>
+					<span class="line"></span>
+					Sales Rep
+				</th>
+				<th>
+					<span class="line"></span>
+					Sales Order
+				</th>
+				<th>
+					<span class="line"></span>
+					Company
+				</th>
+				<th>
+					<span class="line"></span>
+					Invoice
+				</th>
+				<th class="text-right">
+					<span class="line"></span>
+					Total Sale
+				</th>
+			</tr>
+			<?php echo $comm_rows; ?>
 		</table>
 	</div>
 
@@ -518,7 +526,33 @@
 			$(".btn-details").on("click",function() {
 				alert('hi');
 			});
+			// calc commissions based on checked items
+			$(".comm-item").on("click",function() {
+				calcCommissions();
+			});
+			$(".comm-master").on("click",function() {
+				var repid = $(this).closest(".data").attr('id');
+				var rep_checked = $(this).prop('checked');
+				$(".comm-item").each(function() {
+					if ($(this).data('repid')!=repid) { return; }
+					$(this).prop('checked',rep_checked);
+				});
+				calcCommissions();
+			});
 		});
+		function calcCommissions() {
+			$(".stat .data").each(function() {
+				var repid = $(this).attr('id');
+				var rep_comm = $(this).find(".number");
+				var n = rep_comm.html().replace('$','').replace(',','');
+				var amount = 0;
+				$(".comm-item:checked").each(function() {
+					if ($(this).data('repid')!=repid) { return; }
+					amount += $(this).data('amount');
+				});
+				rep_comm.html('$'+amount.formatMoney(2));
+			});
+		}
     </script>
 
 </body>
