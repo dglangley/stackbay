@@ -585,11 +585,11 @@
 					    	pullable = qty
 					    }
 					    //$(this).clone().appendTo(".stock_component");
-					    html += "<tr>\
-					    			<td>"+$(this).find(".line_part").html()+"</td>\
-					    			<td>"+$(this).find(".line_qty").html()+"</td>\
+					    html += "<tr class='component'>\
+					    			<td class='line_part' data-search='"+$(this).find(".line_part").data('search')+"''>"+$(this).find(".line_part").html()+"</td>\
+					    			<td class='line_qty' data-qty='"+qty+"'>"+$(this).find(".line_qty").html()+"</td>\
 					    			<td>"+available+"</td>\
-					    			<td><input type='text' class='input-sm form-control' name='inventory_stock['"+partid+"']' value='"+pullable+"'></td>\
+					    			<td><input type='text' class='input-sm form-control inventory_pull' value='"+pullable+"'></td>\
 					    		</tr>";
 					});
 					$(".stock_component").append(html);
