@@ -353,7 +353,7 @@
 							console.log("Nothing_found");
 							//$(".loading_element_listing").hide();
 					  		//alert("No Parts Found with those parameters");
-							$("#item-none").show();
+							// $("#item-none").show();
 							return;
 						}
 							

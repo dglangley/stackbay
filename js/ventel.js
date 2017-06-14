@@ -249,7 +249,7 @@
 							if (row.read=='') { read_class = ' unread'; }
 							else if (row.viewed=='') { read_class = ' unviewed'; }
 
-							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\')" class="item'+read_class+'">'+
+							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\',\''+row.ro_number+'\')" class="item'+read_class+'">'+
 								'<div class="user fa-stack fa-lg">'+
 									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
 								'</div> '+
@@ -1599,7 +1599,7 @@
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
 		modalBody.html(table_html);
 	}
-	function viewNotification(partid,search, type) {
+	function viewNotification(partid,search, type, order_number) {
 		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
         console.log(window.location.origin+"/json/notes.php?partid="+partid);
 
@@ -1613,7 +1613,7 @@
 					if(type != "purchase_request") {
 						document.location.href = '/?s='+search;
 					} else {
-						document.location.href = '/order_form.php?ps=Purchase&s='+search;
+						document.location.href = '/order_form.php?ps=Purchase&s='+search + '&repair=' +order_number;
 					}
 				} else {
 					var message = 'There was an error processing your request!';
@@ -1670,7 +1670,7 @@
 					$(this).remove();
 				});
 				$.each(json.returns, function(key, order) {
-					returns.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					returns.append('<li><a href="/rma.php?on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

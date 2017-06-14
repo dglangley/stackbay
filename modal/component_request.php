@@ -32,7 +32,7 @@
                                     <th></th>
                                     <th></th>
                                 </thead>
-                                <tbody id="right_side_main" style = "font-size:13px;">
+                                <tbody id="right_side_main" class="table_components" style = "font-size:13px;">
                                 </tbody>
                                 <tfoot id = "search_input">                                             
                                     <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
@@ -64,6 +64,18 @@
                     </div>
                     
                     <div class="tab-pane" id="stock">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
+                                <thead>  
+                                    <th class='col-md-6'>Item Information</th>
+                                    <th class='col-md-2'>Requested</th>
+                                    <th class='col-md-2'>Available</th>
+                                    <th class='col-md-2'>Pulled</th>
+                                </thead>
+                                <tbody class="stock_component" style = "font-size:13px;">
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Save</button>
                     </div>
                 </div>
