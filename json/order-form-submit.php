@@ -37,6 +37,9 @@
 	// ajax (synchronous) request, we upload the file(s) to its storage location, then pass back the
 	// uploaded file name(s) as an indicator of success. the ensuing form post to this script uses
 	// those file names but does not upload the files themselves, so this sub-script gets handled only once
+
+	$repair_order = grab('repair_order');
+
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		require($rootdir.'/vendor/autoload.php');
 		// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
@@ -113,6 +116,7 @@
 	$second_fee_label = grab('second_fee_label');
 	$second_fee_amount = grab('second_fee_amount');
 	$second_fee_id = grab('second_fee_id');
+
 	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation) {
@@ -205,6 +209,11 @@
         
         //Create a new update number
         $order_number = qid();
+
+        if($repair_order && $o['purchase']) {
+			$query = "UPDATE purchase_requests SET po_number =".prep($order_number)." WHERE ro_number = ".prep($repair_order).";";
+			$result = qdb($query) OR die(qe());
+		}
         
     }else{
         

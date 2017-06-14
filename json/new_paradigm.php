@@ -173,7 +173,7 @@ function sub_rows($search = ''){
                         <td></td>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td>
+                        <td ".($page=="Tech" ?"style='display:none;'":"").">
                             <div class='row-fluid'>
                                 <div class='".($page=="Tech" ?"col-md-12":"col-md-6")."' style='padding:0%;text-align:center;'>Stock</div>
                                 <div ".($page=="Tech" ?"style='display:none;'":"")." class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
@@ -184,6 +184,7 @@ function sub_rows($search = ''){
     
                 foreach ($items as $id => $info){
                     $sellable = false;
+                    $qty_in = 0;
                 
                     $text = "<div class='row-flud'>";
                     $text .= "<div title='Stocked' class='col-md-6 new_stock' style='text-align:center;height:100%;color:green;padding:0%;'><b>";
@@ -191,6 +192,7 @@ function sub_rows($search = ''){
                     if(array_key_exists($id, $stock)){
                         $sellable = true;
                         $text .= $stock[$id];
+                        $qty_in = $stock[$id];
                     }
                     else{
                         $text .= "&nbsp;";
@@ -225,7 +227,7 @@ function sub_rows($search = ''){
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
                         <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
                         <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td>$text</td>
+                        <td class='data_stock' data-stock='$qty_in'>". $text."</td>
                         <td></td>
                     </tr>
                     ";

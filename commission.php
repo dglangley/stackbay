@@ -174,7 +174,6 @@
                             <h2>Commissions</h2>
                             
                             <button name='submit' type="submit" class="btn btn-success btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission" style="margin-left: 10px;">Save</button>
-                            <a href="/commission_details.php" class="btn btn-default btn-sm pull-right mb-20 mt-42" value="commission" title="Save Commission">Show All</a>
                         </div>
                         <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                         
@@ -182,11 +181,12 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Position</th>
-                                    <th>Commission Rate</th>
+                                    <th class="col-sm-2">Name</th>
+                                    <th class="col-sm-2">Username</th>
+                                    <th class="col-sm-4">Email</th>
+                                    <th class="col-sm-2">Position</th>
+                                    <th class="col-sm-1">Rate</th>
+                                    <th class="col-sm-1"> </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -195,7 +195,7 @@
                             ?>
                                 <tr>
                                     <td><?=$user['name']; ?></td>
-                                    <td class='username'><a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
+                                    <td class='username'><?php echo $user['username']; ?></td>
                                     <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                     <td>
                                         <?php if(in_array('Administration', $privNames)) {
@@ -211,8 +211,16 @@
                                             <span class="input-group-addon">%</span>
                                         </div>
                                     </td>
+                                    <td class="text-right">
+										<a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><i class="fa fa-search fa-2x"></i></a>
+                                    </td>
                                 </tr>
                             <?php } ?>
+								<tr>
+									<td colspan="6" class="text-right">
+                            			<a href="/commission_details.php" title="Show All">Search All &nbsp; <i class="fa fa-search fa-2x"></i></a>
+									</td>
+								</tr>
                             </tbody>
                         </table>
                     </form>

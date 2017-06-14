@@ -34,6 +34,10 @@
 		$query = "UPDATE repair_orders SET status ='Completed' WHERE ro_number = ".prep($ro_number).";";
 		$result = qdb($query) OR die(qe());
 	}
+
+	function repairComponent($partid, $location, $condition, $ro_number, $qty) {
+
+	}
 	
 	//Declare variables
 	$ro_number;
@@ -42,6 +46,8 @@
 	$techid;
 	$partid;
 
+	$repair_components;
+
 	$trigger;
 	
 	if (isset($_REQUEST['ro_number'])) { $ro_number = $_REQUEST['ro_number']; }
@@ -49,26 +55,31 @@
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
+	if (isset($_REQUEST['repair_components'])) { $repair_components = $_REQUEST['repair_components']; }
 
-	if (isset($_REQUEST['type'])) { 
-		if($_REQUEST['type'] == 'claim'){
-			$notes = "Claimed Ticket";
-		} else if($_REQUEST['type'] == 'check_in'){
-			$notes = "Checked In";
-		} else if($_REQUEST['type'] == 'check_out'){
-			$notes = "Checked Out";
-		} else if($_REQUEST['type'] == 'complete_ticket'){
-			$notes = "Repair Ticket Completed";
-			$trigger = "complete";
-		} else if ($_REQUEST['type'] == 'test_changer'){
-			$notes = "Marked as `In Testing`";
+	if(!$repair_components) {
+		if (isset($_REQUEST['type'])) { 
+			if($_REQUEST['type'] == 'claim'){
+				$notes = "Claimed Ticket";
+			} else if($_REQUEST['type'] == 'check_in'){
+				$notes = "Checked In";
+			} else if($_REQUEST['type'] == 'check_out'){
+				$notes = "Checked Out";
+			} else if($_REQUEST['type'] == 'complete_ticket'){
+				$notes = "Repair Ticket Completed";
+				$trigger = "complete";
+			} else if ($_REQUEST['type'] == 'test_changer'){
+				$notes = "Marked as `In Testing`";
+			}
 		}
-	}
 
-	triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
+		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
 
-	if($trigger == "complete") {
-		stockUpdate($repair_item_id, $ro_number);
+		if($trigger == "complete") {
+			stockUpdate($repair_item_id, $ro_number);
+		}
+	} else {
+
 	}
 	
 	header('Location: /repair.php?on=' . $ro_number);

@@ -464,25 +464,56 @@
 										<thead>
 											<tr>
 												<th>Component</th>
-												<th>Order Qty</th>
-												<th>Available Qty</th>
-												<th>PO
-													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
+												<th>Requested</th>
+												<th>Available</th>
+												<th>Ordered</th>
+												<th>PO</th>
+				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
-											        </button>
-				        						</th>
+											        </button></th>
 											</tr>
 										</thead>
 										<?php
 											$components = getComponents($repair_order);
 											if($components)
 												foreach($components as $comp):
+													//Get the current status of the PO
+													$status;
+													$ordered = 0;
+
+													if($comp['po_number']) {
+														$query = "SELECT * FROM purchase_orders po, purchase_items pi WHERE po.po_number = ".prep($comp['po_number'])." AND pi.po_number = po.po_number;";
+														$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+														if (mysqli_num_rows($result)>0) {
+										                    $query_row = mysqli_fetch_assoc($result);
+										                    $status = $query_row['status'];
+
+										                    if($status == 'Active') {
+										                    	$ordered = $query_row['qty'];
+										                    }
+										                }
+													}
 										?>
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=format($comp['partid'], true);?></td>
-												<td><?=$comp['qty']?></td>
+												<td><?=$comp['qty'];?></td>
 												<td><?=getQuantity($comp['partid']);?></td>
-												<td><?=$comp['po_number']?></td>
+												<td><?=$ordered;?></td>
+												<td class=""><?=$comp['po_number'];?></td>
+												<td>
+													<form action="repair_activities.php" method="post">
+														<input class="form-control input-sm hidden" type="text" name="partid" value="<?=$comp['partid'];?>" placeholder="Used for Repair">
+														<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
+														<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
+														<div class="input-group">
+											                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
+										                	<span class="input-group-btn">
+											                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp=""><i class="fa fa-wrench" aria-hidden="true"></i></button>
+											                </span>
+										                </div>
+									                </form>
+												</td>
 											</tr>
 											
 										<?php endforeach; ?>
@@ -504,7 +535,6 @@
 
 				$(document).on('click', '.modal_component', function(){
 					$('#right_side_main').empty();
-					//$('#go_find_me').focus();
 				});
 
 				$('#modal-component').on('shown.bs.modal', function() {
@@ -512,7 +542,7 @@
 				});
 
 				$(document).on("keydown",".search_line_qty",function(e){
-					 if (e.keyCode == 13) {
+					if (e.keyCode == 13) {
 						var isValid = nonFormCase($(this), e);
 						
 						$(".items_label").html("").remove();
@@ -520,7 +550,7 @@
 							var qty = 0;
 							console.log($(".search_lines"));
 	   		    			$(".search_lines").each(function() {
-								qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val());
+								qty += populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
 							});
 							$(".items_label").html("").remove();
 							
@@ -536,6 +566,35 @@
 							}
 						} 
 					}
+				});
+
+				$(document).on("click", ".stock_check", function(e) {
+					$('.stock_component').empty();
+					var html = "";
+
+					$(".table_components .easy-output").each(function() {
+					    var qty = $(this).find(".line_qty").data('qty');
+					    var available = $(this).find(".line_qty").data('stock');
+					    var partid = $(this).find(".line_part").data('search');
+					    var cost = $(this).find(".line_price").text();
+					    var pullable = 0;
+
+					    if(available - qty < 0) {
+					    	pullable = available;
+					    } else {
+					    	pullable = qty
+					    }
+					    //$(this).clone().appendTo(".stock_component");
+					    html += "<tr class='component'>\
+					    			<td class='line_part' data-search='"+$(this).find(".line_part").data('search')+"''>"+$(this).find(".line_part").html()+"</td>\
+					    			<td class='line_qty' data-qty='"+qty+"'>"+$(this).find(".line_qty").html()+"</td>\
+					    			<td>"+available+"</td>\
+					    			<td><input type='text' class='input-sm form-control inventory_pull' value='"+pullable+"'></td>\
+					    		</tr>";
+					});
+					$(".stock_component").append(html);
+
+					$('.nav-tabs a[href="#stock"]').tab('show');
 				});
 			})(jQuery);
 		</script>
