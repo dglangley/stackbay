@@ -9,9 +9,23 @@
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 
+	function getSource($pi_id) {
+		if (! $pi_id) { return (''); }
+
+		$query = "SELECT po_number FROM purchase_items WHERE id = '".res($pi_id)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)==0) { return (''); }
+		$r = mysqli_fetch_assoc($result);
+
+		return ($r['po_number'].' <a href="/order_form.php?on='.$r['po_number'].'&ps=p" target="_new"><i class="fa fa-arrow-right"></i></a>');
+	}
+
+	$RATES = array();
 	function getSalesReps($selected_repid=0) {//,$first_name_only=false) {
+		global $RATES;
+
 		$reps = '<option value="0">- Select a Rep -</option>'.chr(10);
-		$query = "SELECT u.id, c.name FROM contacts c, users u, user_roles r, user_privileges p ";
+		$query = "SELECT u.id, c.name, u.commission_rate FROM contacts c, users u, user_roles r, user_privileges p ";
 		$query .= "WHERE c.id = u.contactid AND u.id = r.userid AND r.privilegeid = p.id ";
 		$query .= "AND (p.privilege = 'Sales' OR p.privilege = 'Management') ";
 		$query .= "AND c.status = 'Active' ";
@@ -19,6 +33,7 @@
 		$result = qdb($query) OR die("Could not get sales reps from database");
 		while ($r = mysqli_fetch_assoc($result)) {
 			$name = $r['name'];
+			$RATES[$r['id']] = $r['commission_rate'];
 /*
 			if ($first_name_only) {
 				$names = explode(' ',$name);
@@ -111,9 +126,6 @@
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
-
-	$orders_table = 'sales';
-	if (isset($_GET['orders_table']) AND $_GET['orders_table']=='purchases') { $orders_table = 'purchases'; }
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -284,6 +296,7 @@
    		$dbEndDate = format_date($endDate, 'Y-m-d');
    		$query .= "AND so.created between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
+	if ($order) { $query .= "AND (so.so_number = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
 	$query .= "GROUP BY so.so_number, i.invoice_no ORDER BY so.so_number ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -353,6 +366,17 @@
 			</tr>
 		';
 
+		$inventories = array();
+		$query2 = "SELECT i.id, i.partid, i.purchase_item_id, ii.amount, i.serial_no ";
+		$query2 .= "FROM invoice_items ii, inventory i, inventory_history h, sales_items si, invoices inv ";
+		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = i.partid AND i.id = h.invid ";
+		$query2 .= "AND h.field_changed = 'sales_item_id' AND h.value = si.id ";
+		$query2 .= "AND si.so_number = inv.order_number AND inv.order_type = 'Sale' AND inv.invoice_no = ii.invoice_no; ";
+		$result2 = qdb($query2) OR die("Could not pull comm/inventory records for invoice ".$r['invoice_no']);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$inventories[$r2['id']] = $r2;
+		}
+
 		$num_comms = count($r['commissions']);
 		if ($num_comms>0) {
 			echo '
@@ -364,33 +388,111 @@
 		foreach ($r['commissions'] as $c) {
 			echo '
 						<tr>
+							<td class="col-md-1"> </td>
+							<td class="col-md-2"> <strong>'.getRep($c['rep_id']).'</strong> </td>
 							<td class="col-md-2"> </td>
-							<td class="col-md-4"> <strong>'.getRep($c['rep_id']).'</strong> </td>
-							<td class="col-md-4"> </td>
+							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right"> <strong>Sale Price</strong> </td>
+							<td class="col-md-1 text-right"> <strong>COGS (Avg)</strong> </td>
+							<td class="col-md-1 text-right"> <strong>Profit</strong> </td>
+							<td class="col-md-1"> </td>
 							<td class="col-md-1 text-right">
-								'.format_price($c['commission_amount']).'
+								<strong>'.format_price($c['commission_amount']).'</strong>
 							</td>
 							<td class="col-md-1 text-right" style="padding:0px !important;">
+<!--
 								<a class="btn btn-default btn-xs btn-details"><i class="fa fa-caret-down"></i></a>
+-->
 							</td>
 						</tr>
 			';
 
-			$query2 = "SELECT part, heci, serial_no, c.commission_amount FROM commissions c, inventory i, parts p ";
-			$query2 .= "WHERE invoice_no = '".$r['invoice_no']."' AND rep_id = '".$c['rep_id']."' ";
-			$query2 .= "AND c.inventoryid = i.id AND i.partid = p.id; ";
-			$result2 = qdb($query2) OR die("Could not pull inventory record ".$c['inventoryid']);
+			foreach ($inventories as $inventoryid => $I) {
+				$cogs = 0;
+				$comm_amount = 0;
+				$chk = ' checked';
+				$cls = ' warning';
+				$query2 = "SELECT cogs, commission_amount FROM commissions c ";
+				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					$cogs = $r2['cogs'];
+					$profit = $I['amount']-$cogs;
+					$comm_amount = $r2['commission_amount'];
+				} else {
+					$chk = '';
+					$cls = '';
+					$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
+					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+					if (mysqli_num_rows($result2)>0) {
+						$r2 = mysqli_fetch_assoc($result2);
+						if ($r2['average']>0) { $cogs = $r2['average']; }
+						else { $cogs = $r2['actual']; }
+						$cogs = round($cogs,2);
+						$profit = $I['amount']-$cogs;
+						$comm_amount = $profit*($RATES[$c['rep_id']]/100);
+					}
+				}
+				$comm_amount = round($comm_amount,2);
+				$serial = $I['serial_no'];
+				$sale_amount = $I['amount'];
+				$pi_id = $I['purchase_item_id'];
+
+				$query3 = "SELECT * FROM parts WHERE id = '".$I['partid']."'; ";
+				$result3 = qdb($query3);
+				$r3 = mysqli_fetch_assoc($result3);
+				$parts = explode(' ',$r3['part']);
+				$part = $parts[0];
+				$heci = $r3['heci'];
+/*
+			$query2 = "SELECT part, heci, serial_no, c.commission_amount, c.cogs, c.id, ii.amount, i.purchase_item_id ";
+			$query2 .= "FROM commissions c, inventory i, parts p, invoice_items ii ";
+			$query2 .= "WHERE c.invoice_no = '".$r['invoice_no']."' AND rep_id = '".$c['rep_id']."' ";
+			$query2 .= "AND c.inventoryid = i.id AND i.partid = p.id AND i.partid = ii.partid AND c.invoice_no = ii.invoice_no; ";
+			$result2 = qdb($query2) OR die("Could not pull comm/inventory records for invoice ".$r['invoice_no']);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$parts = explode(' ',$r2['part']);
+				$part = $parts[0];
+				$heci = $r2['heci'];
+				$serial = $r2['serial_no'];
+
+//				$paid_amount = 0;
+//				$query3 = "SELECT SUM(amount) paid_amount FROM commission_payouts WHERE commissionid = '".$r2['id']."'; ";
+//				$result3 = qdb($query3) OR die("Problem querying commission payouts on commissionid ".$r2['id']);
+//				if (mysqli_num_rows($result3)>0) {
+//					$r3 = mysqli_fetch_assoc($result3);
+//					$paid_amount = $r3['paid_amount'];
+//				}
+
+				$sale_amount = $r2['amount'];
+				$profit = $r2['amount']-$r2['cogs'];
+				$pi_id = r2['purchase_item_id']);
+*/
+				$source_ln = getSource($pi_id);
+
 				echo '
-						<tr>
-							<td class="col-md-2" style="padding:0px !important">
-								<input type="checkbox" style="margin-left:5px" checked>
+						<tr class="'.$cls.'">
+							<td class="col-md-1" style="padding:0px !important">
+								<input type="checkbox" style="margin-left:5px"'.$chk.'>
 							</td>
-							<td class="col-md-4"> '.$parts[0].' '.$r2['heci'].' </td>
-							<td class="col-md-4"> '.$r2['serial_no'].' </td>
+							<td class="col-md-2"> '.$part.' '.$heci.' </td>
+							<td class="col-md-2"> '.$serial.' </td>
 							<td class="col-md-1">
-								'.format_price($r2['commission_amount']).'
+								'.$source_ln.'
+							</td>
+							<td class="col-md-1 text-right">
+								'.format_price($sale_amount).'
+							</td>
+							<td class="col-md-1 text-right">
+								'.format_price($cogs).'
+							</td>
+							<td class="col-md-1 text-right">
+								'.format_price($profit).'
+							</td>
+							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right">
+								'.format_price($comm_amount).'
 							</td>
 							<td class="col-md-1"> </td>
 						</tr>
