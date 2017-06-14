@@ -53,7 +53,7 @@
 	$query .= "canceled, approved, paid_date, source_id, orig_amount, adjusted, orig_rep_id, name ";
 	$query .= "FROM inventory_commission c, inventory_commissionsource s ";
 	// these conditions are non-negotiable
-	$query .= "WHERE c.source_id = s.id AND (orig_amount > 0 OR amount > 0) ";
+	$query .= "WHERE c.source_id = s.id AND (orig_amount <> 0 OR amount <> 0) ";
 
 	$query .= "AND canceled = '0' AND (approved = '1' OR paid_date IS NOT NULL) ";
 //	$query .= "AND canceled = '0' AND approved = '0' ";//AND (approved = '1' OR paid_date IS NOT NULL) ";

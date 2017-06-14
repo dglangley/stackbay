@@ -21,25 +21,22 @@
 	}
 
 	$RATES = array();
-	function getSalesReps($selected_repid=0) {//,$first_name_only=false) {
+	function getSalesReps($selected_repid=0,$force_selected=false) {
 		global $RATES;
 
-		$reps = '<option value="0">- Select a Rep -</option>'.chr(10);
-		$query = "SELECT u.id, c.name, u.commission_rate FROM contacts c, users u, user_roles r, user_privileges p ";
+		$reps = '';
+		if (! $force_selected) { $reps = '<option value="0">- Select a Rep -</option>'.chr(10); }
+		$query = "SELECT u.id, c.name, u.commission_rate, r.privilegeid FROM contacts c, users u, user_roles r, user_privileges p ";
 		$query .= "WHERE c.id = u.contactid AND u.id = r.userid AND r.privilegeid = p.id ";
 		$query .= "AND (p.privilege = 'Sales' OR p.privilege = 'Management') ";
 		$query .= "AND c.status = 'Active' ";
+		if ($force_selected) { $query .= "AND u.id = '".$selected_repid."' "; }
 		$query .= "ORDER BY c.name ASC; ";
 		$result = qdb($query) OR die("Could not get sales reps from database");
 		while ($r = mysqli_fetch_assoc($result)) {
 			$name = $r['name'];
 			$RATES[$r['id']] = $r['commission_rate'];
-/*
-			if ($first_name_only) {
-				$names = explode(' ',$name);
-				$name = $names[0];
-			}
-*/
+
 			$s = '';
 			if ($selected_repid==$r['id']) { $s = ' selected'; }
 			$reps .= '<option value="'.$r['id'].'"'.$s.'>'.$name.'</option>'.chr(10);
@@ -93,6 +90,18 @@
 	$rep_filter = 0;
 	if (isset($_REQUEST['repid']) AND is_numeric($_REQUEST['repid']) AND $_REQUEST['repid']>0) { 
 		$rep_filter = $_REQUEST['repid']; 
+	}
+	// restrict user access to other rep's info if they don't have admin or management roles
+	if (!in_array("1", $USER_ROLES) AND !in_array("4", $USER_ROLES)) {
+		$rep_filter = $U['id'];
+		$reps_list = getSalesReps($rep_filter,true);
+	} else {
+		$reps_list = getSalesReps($rep_filter);
+	}
+
+	$history_date = '';
+	if (isset($_REQUEST['history_date']) AND $_REQUEST['history_date']){
+		$history_date = $_REQUEST['history_date'];
 	}
 
 	$order = '';
@@ -174,9 +183,7 @@
 		</div>
 	<?php endif; ?>
 
-	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/commissions.php">
-
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
@@ -199,7 +206,7 @@
 			<div class="col-md-6">
 			    <div class="btn-group">
 					<select name="repid" id="repid" class="rep-selector form-control input-sm">
-						<?php echo getSalesReps($rep_filter); ?>
+						<?php echo $reps_list; ?>
 					</select>
 			    </div>
 		    </div>
@@ -258,12 +265,28 @@
 		<td class="col-md-2 text-center">
 			<h2 class="minimal">Commissions</h2>
 		</td>
-		<td class="col-md-2 text-center">
-			<div class="row">
-				<div class="col-md-9">
-					<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
-				</div>
+		<td class="col-md-1 text-center">
+			<div class="input-group">
+				<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
 			</div>
+		</td>
+		<td class="col-md-1 text-center">
+<?php
+	$payouts = '<option value="">- Comm History -</option>'.chr(10);
+	$query = "SELECT LEFT(paid_date,10) date FROM commission_payouts GROUP BY date ORDER BY paid_date DESC LIMIT 0,30; ";
+	$result = qdb($query) OR die('Could not get commission payouts history');
+	while ($r = mysqli_fetch_assoc($result)) {
+		$s = '';
+		if ($history_date==$r['date']) { $s = ' selected'; }
+		$payouts .= '<option value="'.$r['date'].'"'.$s.'>'.format_date($r['date'],'n/j/y').'</option>'.chr(10);
+	}
+?>
+			<select name="history_date" size="1" class="form-control input-sm" style="width:140px" disabled>
+				<?php echo $payouts; ?>
+			</select>
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
@@ -274,13 +297,14 @@
 				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
 				?>
 				</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
+				<button class="btn btn-primary btn-sm" type="submit" >
+					<i class="fa fa-filter" aria-hidden="true"></i>
+				</button>
 			</div>
 			</td>
 		</tr>
 	</table>
+	</form>
 	
     <div id="pad-wrapper">
 	
@@ -315,7 +339,7 @@
 		$query2 = "SELECT rep_id, SUM(c.commission_amount) commission_amount, SUM(p.amount) paid_amount FROM commissions c ";
 		$query2 .= "LEFT JOIN commission_payouts p ON c.id = p.commissionid ";
 		$query2 .= "WHERE c.invoice_no = '".$r['invoice_no']."' ";
-		if ($rep_filter) { $query .= "AND rep_id = '".res($rep_filter)."' "; }
+		if ($rep_filter) { $query2 .= "AND rep_id = '".res($rep_filter)."' "; }
 		$query2 .= "GROUP BY rep_id HAVING paid_amount IS NULL OR commission_amount <> paid_amount; ";
 		$result2 = qdb($query2) OR die("Problem pulling commissions for invoice# ".$r['invoice_no']);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -388,7 +412,7 @@
 				$comm_amount = 0;
 				$chk = ' checked';
 				$cls = ' warning';
-				$query2 = "SELECT cogs, commission_amount FROM commissions c ";
+				$query2 = "SELECT cogs, commission_amount, commission_rate FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)>0) {
@@ -488,6 +512,7 @@
         </div>
 		<hr/>
         <!-- end upper main stats -->
+		<form class="form-inline" method="get" action="/commissions.php">
 		<table class="table table-hover table-striped table-condensed">
 			<tr>
 				<th>
@@ -517,6 +542,7 @@
 			</tr>
 			<?php echo $comm_rows; ?>
 		</table>
+		</form>
 	</div>
 
 <?php include_once 'inc/footer.php'; ?>
