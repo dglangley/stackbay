@@ -306,8 +306,9 @@
 		var filter_grab = function (){
 			//Set an array up with the filter fields from the filter bar
 			var f = getUrlParameter('search');
-			if(!f){
-				f = $("#part_search").val();
+			var ps = $("#part_search").val();
+			if(!f || f != ps){
+				f = ps;
 			}
 			var output = {
 				'part' : f,
@@ -349,20 +350,28 @@
 						var nothing_found = true;
 						var cond_filter = $(".condition_filters").find(".active").data("filter");
 						var qty_filter = $(".qty_filters").find(".active").data("filter");
+						if(search == '') {
+							window.history.replaceState(null, null, "/inventory.php");
+						} else {
+							window.history.replaceState(null, null, "/inventory.php?search=" + search);	
+						}
+						console.log(part);
 						if (part=='test') {
 							console.log("Nothing_found");
 							//$(".loading_element_listing").hide();
 					  		//alert("No Parts Found with those parameters");
-							// $("#item-none").show();
+							$("#item-none").show();
+							$(".loading_element_listing").hide();
+							$(".revisions").empty();
+							$(".headers").empty();
+							$(".parts").empty();
+							
 							return;
+						} else {
+							$("#item-none").hide();
 						}
 							
 							// Add feature to auto update the URL without a refresh
-							if(search == '') {
-								window.history.replaceState(null, null, "/inventory.php");
-							} else {
-								window.history.replaceState(null, null, "/inventory.php?search=" + search);	
-							}
 							var headers = '<tr>';
 							if (!search){
 								headers +=	"<th>Items</th>";
@@ -412,14 +421,18 @@
 								}
 								//Add each part to the revisions page
 								counter++;
-								$.each(macro, function(key,info){
+								$.each(macro, function(ke,info){
+									var key = ke.split(".");
+									console.log(key);
+									if (key[4] == 'component'){
+										return true;
+									}
+									
 									if (!(info.part_name in rev_arr)){
 										revisions += "<option value='parts-"+counter+"' data-part-id='"+partid+"'>"+info.part_name+"</option>";
 										rev_arr[info.part_name] = false;
 									}
 									// break apart key to get relevant data (PO)
-									var key = key.split(".");
-									console.log(key);
 									parts += "<tr class='parts-list parts-"+counter;
 									if(info.qty == 0){
 										parts += " no_stock ";

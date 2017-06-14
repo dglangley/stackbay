@@ -104,6 +104,7 @@
 						break;
 
 					case 'new':
+						continue(2);
 						$string = "Item entered into system ";
 						break;
 					default:
