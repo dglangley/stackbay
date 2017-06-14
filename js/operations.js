@@ -1613,9 +1613,9 @@
 		            $('.date-options').animate({
 		                width: '100%'
 		            }, function() {
-		            	$('.cal-buttons').attr( "style", "" );;
+		            	$('.cal-buttons').attr( "style", "" );
 		            });
-		            $(this).attr('data-name', 'show')
+		            $(this).attr('data-name', 'show');
 		        }
 			});
   /*=============================================================================*/

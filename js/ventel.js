@@ -1670,7 +1670,7 @@
 					$(this).remove();
 				});
 				$.each(json.returns, function(key, order) {
-					returns.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					returns.append('<li><a href="/rma.php?on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

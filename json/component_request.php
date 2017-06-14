@@ -36,26 +36,35 @@
 		$result;
 
 		foreach($components as $item) {
-			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($item['qty']).");";
-			qdb($query) or die(qe() . ' ' . $query);
+			$amtRequested = $item['qty'] - $item['pulled'];
 
-			//13 = Sam Sabedra
-			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '6');";
-			$result = qdb($query) or die(qe() . ' ' . $query);
+			if($amtRequested > 0) {
+				$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($amtRequested).");";
+				qdb($query) or die(qe() . ' ' . $query);
 
-			if($result) {
-				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."$repair=".$order_number."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
-				$email_subject = 'Purchase Request on Repair# '.$order_number;
-				$recipients = 'andrew@ven-tel.com';
-				//$recipients = 'ssabedra@ven-tel.com';
-				// $bcc = 'dev@ven-tel.com';
-				
-				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
-				if ($send_success) {
-				    // echo json_encode(array('message'=>'Success'));
-				} else {
-				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+				//13 = Sam Sabedra
+				$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '6');";
+				$result = qdb($query) or die(qe() . ' ' . $query);
+
+				if($result) {
+					$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."$repair=".$order_number."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
+					$email_subject = 'Purchase Request on Repair# '.$order_number;
+					$recipients = 'andrew@ven-tel.com';
+					//$recipients = 'ssabedra@ven-tel.com';
+					// $bcc = 'dev@ven-tel.com';
+					
+					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+					if ($send_success) {
+					    // echo json_encode(array('message'=>'Success'));
+					} else {
+					    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+					}
 				}
+			}
+
+			if($item['pulled'] > 0) {
+				$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep().", ".prep($order_number).", ".prep($item['pulled']).");";
+				qdb($query) or die(qe() . ' ' . $query);
 			}
 		}
 
