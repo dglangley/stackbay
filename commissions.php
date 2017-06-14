@@ -356,7 +356,7 @@
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
 
 		echo '
-			<tr>
+			<tr class="success">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
 				<td> '.$r['so_number'].' <a href="/order_form.php?on='.$r['so_number'].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
