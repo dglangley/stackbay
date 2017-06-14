@@ -96,12 +96,12 @@ foreach($prq as $r){
 	
 }
 
-//COMPONENT STOCK
+//Uncomplicated COMPONENT STOCK
 $cps_order_stock = "
   SELECT cs.order_id, co.supplier_id, cs.location_id, co.id, co.component_id, cs.`quantity` qty_purchased, co.project_id, 
   co.price, co.cpo_id, co.`billed` qty_received, co.freight_instructions freight, co.date del_date, co.freight_cost, co.due_date, co.shipping_method_id ship
-  FROM inventory_componentstock cs, inventory_componentorder co, inventory_componentorder cpo
-  WHERE cs.order_id = co.id AND cs.order_id = cpo.id;
+  FROM  inventory_componentorder co, inventory_component c, inventory_componentpurchaseorder cpo, inventory_project p, inventory_componentstock cs, inventory_componentshipping compship
+  where c.id = co.component_id AND co.cpo_id = cpo.id AND p.id = co.project_id AND cs.order_id = co.id AND compship.cpo_id = cpo.id and compship.component_id = co.component_id and p.closed is FALSE;
 ";
 $stock_results =  qdb($cps_order_stock, "PIPE") or die(qe("PIPE")." | $cps_order_stock");
 echo($cps_order_stock."<br>");

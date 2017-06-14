@@ -114,7 +114,7 @@
 				// 	$string .= " on <strong>".format_date($r['date_changed'], 'n/d/y')."</strong>";
 				// }
 				if($r['userid']){
-					$string .= " by ".getContact($r['userid']);
+					$string .= " by ".getRep($r['userid']);
 				}
 				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = ucwords($string);
 	    	}

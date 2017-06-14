@@ -173,7 +173,7 @@
             $info['warranty'] = true;
             
 		}
-		else if (strtolower($type) == "rma" || strtolower($type) == "returns_item_id"){
+		else if (strtolower($type) == "rma" || strtolower($type) == "return" || strtolower($type) == "returns" || strtolower($type) == "returns_item_id"){
 			//RMA acts as a purchase order
 			$info['type'] = "RMA";
 			//Convenient type check
