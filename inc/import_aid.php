@@ -217,6 +217,8 @@
 		14 => 9,
 	);
 	
+	map
+	
 	function mapFreight($id){
 		global $FREIGHT_MAPS;
 		if (! $FREIGHT_MAPS[$id]) { return false; }

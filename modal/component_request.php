@@ -17,7 +17,8 @@
 				</div>
                 <ul class="nav nav-tabs nav-tabs-ar">
                     <li class="active"><a href="#request" data-toggle="tab"><i class="fa fa-qrcode"></i> Component Request</a></li>
-                    <li class=""><a href="#stock"><i class="fa fa-exclamation-triangle"></i> Stock</a></li>
+                    <li class="" data-toggle="tab"><a href="#stock"><i class="fa fa-list"></i> Available Components</a></li>
+                    <li class="" data-toggle="tab"><a href="#item_stock"><i class="fa fa-truck"></i> Pull Components</a></li>
                 </ul><!-- nav-tabs -->
                 
                 <div class="tab-content">
@@ -70,13 +71,35 @@
                                     <th class='col-md-6'>Item Information</th>
                                     <th class='col-md-2'>Requested</th>
                                     <th class='col-md-2'>Available</th>
-                                    <th class='col-md-2'>Pulled</th>
+                                    <!-- <th class='col-md-2'>Pulled</th> -->
                                 </thead>
                                 <tbody class="stock_component" style = "font-size:13px;">
                                 </tbody>
                             </table>
+                            <textarea class="form-control" id="comment" placeholder="Notes..."></textarea>
+                            <br>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Save</button>
+                        <div class="pull-right">
+                            <button class="btn btn-success btn-sm component_request_pull add_component" data-component="fulfill">Fulfill From Stock</button>
+                            <button class="btn btn-warning btn-sm component_request_submit_pull add_component" data-component="pull">Pull & Request</button>
+                            <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Request Order</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="item_stock">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
+                                <thead>  
+                                    <th class='col-md-10'>Item Information</th>
+                                    <!-- <th class='col-md-2'></th>
+                                    <th class='col-md-2'></th> -->
+                                    <th class='col-md-2'>Outstanding</th>
+                                </thead>
+                                <tbody id="stock_component" style = "font-size:13px;">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm component_pull_submit" data-dismiss="modal">Submit</button>
                     </div>
                 </div>
             </div>
@@ -85,6 +108,7 @@
                     <!-- <textarea rows="2" class="form-control" placeholder="Notes" name="notes"></textarea> -->
                 </div>
                 <div class="col-md-4">
+                    <!-- <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Save</button> -->
                     <button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
