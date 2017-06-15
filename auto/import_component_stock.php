@@ -7,7 +7,7 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/order_parameters.php';
     include_once $rootdir.'/inc/getCompany.php';
-    
+    include_once $rootdir."/inc/setCostsLog.php";
 //These are all the records not associated with any repair: we just have these in stock. 
 
 //Steps for import:
@@ -33,7 +33,7 @@ qdb("TRUNCATE repair_components;");
 
 //Check the componentorder table for alll the historical order records
 	$prq_select = "
-		SELECT co.`id` orderid, co.`component_id`, `price`, `received`,`cr`.`filled`,`billed`, `supplier_id`, `cpo_id`, co.`repair_id`, co.project_id, co.`shipping_method_id`, 
+		SELECT co.`id` orderid, co.`component_id`, `price`, `received`,`billed`, `supplier_id`, `cpo_id`, co.`repair_id`, co.project_id, co.`shipping_method_id`, 
 		co.`freight_instructions`, co.`date`, `freight_cost`, `due_date`, `co`.`quantity`
 		FROM inventory_componentorder co
 		WHERE (co.repair_id is not null or co.project_id is not null) 
@@ -96,18 +96,26 @@ foreach($prq as $r){
 		$pline = qid();
 			
 		$inv_insert = "	INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `userid`, `date_created`,`notes`, `purchase_item_id`) 
-			VALUES (".prep($r['filled']).", ".prep($partid).", 5, 'manifest', 16, ".$r['date'].", 'IMPORTED ON COMPONENTS IMPORT',".$pline.");"; 
+			VALUES (".prep($quantity).", ".prep($partid).", 5, 'manifest', 16, ".$r['date'].", 'IMPORTED ON COMPONENTS IMPORT',".$pline.");"; 
 		qdb($inv_insert) or die(qe()." | $inv_insert");
 		echo($inv_insert."<br>");
 		$invid = qid();
 		
+		$amount = $r['price'] * $quantity;
+		$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
+		VALUES ($invid, NOW(), $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
+		qdb($cost);
+		setCostsLog($invid,$pline,"purchase_item_id",$amount);
+		
 		if($ro_number){
+			$fill = "";
 			$filled = qdb("SELECT * FROM inventory_componentrepair cr where cr.repair_id = $ro_number AND cr.component_id = ".$r['component_id']." AND order_id = ".$r['orderid'].";");
 			if(mysqli_num_rows($filled)){
-				
+				$a_filled = mysqli_fetch_assoc($filled);
+				$fill = $a_filled['filled'];
 			};
 			// $inv_qty = $r['received'] - $r['filled'];
-			$rc_insert = "INSERT INTO `repair_components`(`invid`, `ro_number`, `qty`) VALUES (".prep($invid).",".prep($ro_number).",".prep($r['filled'], "'0'").");";
+			$rc_insert = "INSERT INTO `repair_components`(`invid`, `ro_number`, `qty`) VALUES (".prep($invid).",".prep($ro_number).",".prep($fill, "'0'").");";
 			qdb($rc_insert) or die(qe()." $rc_insert");
 			echo($rc_insert."<br><br>");
 		}
@@ -153,6 +161,7 @@ $results = qdb($component_stock) or die(qe()." $component_stock");
 foreach($results as $r){
 	$po_id = "";
 	$partid = translateComponent($r['component_id']);
+	$event_type ="imported cost";
 	if($r['order_id']){
 		$cpo_q = "SELECT `cpo_id` FROM `inventory_componentorder` co WHERE id = ".prep($r['order_id']).";";
 		$co = qdb($cpo_q,"PIPE") or die(qe("PIPE"));
@@ -161,6 +170,7 @@ foreach($results as $r){
 		$lstring = "";
 		$lresults = getLineItemIDs("purchase",$po_id,$partid);
 		if(count($lresults)){
+			$event_type = "purchase_item_id";
 			$lstring = $lresults[0];
 		}
 	}
@@ -170,9 +180,11 @@ foreach($results as $r){
 	qdb($insert);
 	$invid = prep(qid());
 	
+	$amount = $r['cost_per_unit']*$r['quantity'];
 	$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
-	VALUES ($invid, NOW(), ".prep($r['cost_per_unit']*$r['quantity']).",".prep($r['cost_per_unit']*$r['quantity']).", 'IMPORTED ON COMPONENTS IMPORT')";
+	VALUES ($invid, NOW(), $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
 	qdb($cost);
+	setCostsLog($invid,$lstring,$event_type,$amount);
 }
 
 
