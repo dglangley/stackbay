@@ -13,6 +13,7 @@
     qdb("DELETE FROM `inventory` WHERE `notes` = 'IMPORTED ON COMPONENTS IMPORT';");
     qdb("TRUNCATE repair_components;");
     qdb("TRUNCATE repair_orders;");
+    qdb("TRUNCATE repair_items;");
     qdb("TRUNCATE TABLE `parts_component_map`;");
     qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
     
