@@ -343,7 +343,7 @@
 			// print_r($row);
 			$date = format_date($row['date_created'],"m/d/Y");
 			$po = getPO($row['purchase_item_id']);
-			$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date;
+			$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date.'.'.$row['classification'];
 			$partid = $row['partid'];
 
 			if (! isset($r[$partid])) {

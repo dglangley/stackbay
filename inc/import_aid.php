@@ -4,9 +4,51 @@
 	include_once $rootdir.'/inc/getPartId.php';
 	include_once $rootdir.'/inc/setPart.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/form_handle.php';
-     
         $INVENTORY_IDS = array();
+        function translateComponent($componentid){
+        	$q = "SELECT * FROM parts_component_map WHERE `componentid` = $componentid;";
+        	$result = qdb($q) or die(qe()." | $q");
+        	if (mysqli_num_rows($result)){
+        		$result = mysqli_fetch_assoc($result);
+        		return($result['partid']);
+        	} else {
+        		return null;
+        	}
+        }
+        
+		function findNearestGap($type, $date){
+			//A function to back fill an inventory record without going over a date;
+			$o = o_params($type);
+			$select = "SELECT `".$o['id']."` n FROM ".$o['order']." WHERE `".$o['id']."` < (
+				SELECT MAX(`".$o['id']."`) FROM ".$o['order']." WHERE ".$o['create_date']." < '".format_date($date,"Y-m-d",array("d"=>1))."'
+			) order by n desc;";
+			$result = qdb($select) or die(qe()." | $select");
+			$max = mysqli_fetch_assoc($result);
+			$max = $max["n"];
+			foreach($result as $r){
+				// print_r($r);
+				if($r['n'] == $max){
+					$max--;
+				} else {
+					return $max;
+				}
+			}
+			return $max--;
+		}
+        
+        function getLineItemIDs($type, $order_num){
+        	$o = o_params($type);
+        	$query = "SELECT id from ".$o['item']." where ".$o['id']." = ".prep($order_num).";";
+        	$result = qdb($query) or die(qe()." | $query");
+        	$ids = array();
+        	foreach($result as $r){
+        		$ids[] = $r['id'];
+        	}
+        	return($ids);
+        }
+        
     	function translateID($inventory_id){
             global $INVENTORY_IDS;
     	    if (!isset($INVENTORY_IDS[$inventory_id])){
@@ -175,6 +217,8 @@
 		14 => 9,
 	);
 	
+	map
+	
 	function mapFreight($id){
 		global $FREIGHT_MAPS;
 		if (! $FREIGHT_MAPS[$id]) { return false; }
@@ -205,6 +249,12 @@
 		} else {
 			return null;
 		}
+		
+	}
+	
+	function component_use_array($component_id){
+		$oc_select = "SELECT * FROM `invenory_component_order` WHERE `component_id` = ".prep($component_id).";";
+		$oc = qdb($oc_select) or die(qe()." | $oc_select");
 		
 	}
 ?>

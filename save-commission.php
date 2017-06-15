@@ -32,5 +32,5 @@
 		}
 	}
 
-	header('Location: /commission.php?update=true');
+	header('Location: /user_commissions.php?update=true');
 	exit;
