@@ -149,7 +149,7 @@
 
 		    <div class="col-md-6">
 			    <div class="btn-group medium">
-			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="right" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active btn-warning' : '');?>">
+			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="bottom" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status <?=($filter == 'active' || !$filter ? 'active btn-warning' : '');?>">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
 

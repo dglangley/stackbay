@@ -212,13 +212,13 @@
                                         </div>
                                     </td>
                                     <td class="text-right">
-										<a href="/commission_details.php?user=<?php echo $user['userid']; ?>"><i class="fa fa-search fa-2x"></i></a>
+										<a href="/commissions.php?repid=<?php echo $user['userid']; ?>"><i class="fa fa-search fa-2x"></i></a>
                                     </td>
                                 </tr>
                             <?php } ?>
 								<tr>
 									<td colspan="6" class="text-right">
-                            			<a href="/commission_details.php" title="Show All">Search All &nbsp; <i class="fa fa-search fa-2x"></i></a>
+                            			<a href="/commissions.php" title="Show All">Search All &nbsp; <i class="fa fa-search fa-2x"></i></a>
 									</td>
 								</tr>
                             </tbody>

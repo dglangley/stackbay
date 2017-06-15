@@ -53,9 +53,10 @@
 	$query .= "canceled, approved, paid_date, source_id, orig_amount, adjusted, orig_rep_id, name ";
 	$query .= "FROM inventory_commission c, inventory_commissionsource s ";
 	// these conditions are non-negotiable
-	$query .= "WHERE c.source_id = s.id AND (orig_amount > 0 OR amount > 0) ";
+	$query .= "WHERE c.source_id = s.id AND (orig_amount <> 0 OR amount <> 0) ";
 
-	$query .= "AND canceled = '0' AND approved = '0' ";//AND (approved = '1' OR paid_date IS NOT NULL) ";
+	$query .= "AND canceled = '0' AND (approved = '1' OR paid_date IS NOT NULL) ";
+//	$query .= "AND canceled = '0' AND approved = '0' ";//AND (approved = '1' OR paid_date IS NOT NULL) ";
 $query .= "AND repair_id IS NULL AND ticket_id IS NULL AND sold_item_id IS NOT NULL ";
 //	$query .= "LIMIT 0,1000 ";
 	$query .= "; ";
@@ -83,26 +84,30 @@ echo $query.'<BR>';
 		$rep_id = mapUser($r['rep_id']);
 		$inventoryid = 'NULL';
 
+		// BDB data points
+		$serial = '';
+		$inventory_id = 0;
+		$avg_cost = 0;
 		if (! $r['sold_item_id']) {
 die("Wait what happened here?!");
 continue;
 		} else {
-			$serial = '';
-			$inventory_id = 0;
 			if (! isset($sold_items[$r['sold_item_id']])) {
 				$sold_items[$r['sold_item_id']] = array('serial'=>'');
 
-				$query2 = "SELECT serial, inventory_id FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
+				$query2 = "SELECT serial, inventory_id, avg_cost FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
 				$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) { continue; }//need to resolve these missing records, by my count there are 14 on 6/7/17
 				$r2 = mysqli_fetch_assoc($result2);
 				$serial = trim($r2['serial']);
 				$inventory_id = $r2['inventory_id'];
+				$avg_cost = $r2['avg_cost'];
 
-				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$r2['inventory_id']);
+				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$r2['inventory_id'],'avg_cost'=>$avg_cost);
 			} else {
 				$serial = $sold_items[$r['sold_item_id']]['serial'];
 				$inventory_id = $sold_items[$r['sold_item_id']]['inventory_id'];
+				$avg_cost = $sold_items[$r['sold_item_id']]['avg_cost'];
 			}
 
 			if ($serial=='000' OR $serial=='0') {
@@ -148,10 +153,12 @@ continue;
 			}
 		}
 
+		$cogs = 'NULL';
+		if ($avg_cost>0) { $cogs = "'".$avg_cost."'"; }
 		$commissionid = 0;
 		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, datetime, cogs, profit, ";
 		$query2 .= "rep_id, commission_rate, commission_amount) ";
-		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, NULL, NULL, ";
+		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, $cogs, NULL, ";
 		$query2 .= "'$rep_id', NULL, '".$r['amount']."'); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$commissionid = qid();
@@ -167,7 +174,7 @@ continue;
 
 		$serial = '';
 		if ($r['sold_item_id']) {
-			$query2 = "SELECT * FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
+			$query2 = "SELECT serial FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
 			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) { continue; }//need to resolve these missing records, by my count there are 14 on 6/7/17
 			$r2 = mysqli_fetch_assoc($result2);
@@ -179,7 +186,7 @@ continue;
 				$query2 = "WHERE serial = '".res($serial)."' AND i.id = pc.serialid AND pc.packageid = ";
 			}
 
-			$query2 = "SELECT * FROM inventory_invoiceli WHERE invoice_id = '$invoice'; ";
+			$query2 = "SELECT memo FROM inventory_invoiceli WHERE invoice_id = '$invoice'; ";
 			$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 

@@ -28,19 +28,24 @@
 		$actual_sum = 0;
 		$average_sum = 0;
 		$qty_sum = 0;
-		$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND qty > 0; ";
+		$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND (status = 'received' OR status = 'shelved') ";
+		$query .= "AND conditionid > 0; ";//AND qty > 0; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$qty_sum += $r['qty'];
+			$qty = 1;
+			if ($r['qty']>0) { $qty = $r['qty']; }
+			$qty_sum += $qty;
 
 			$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$r['id']."' ORDER BY id DESC LIMIT 0,1; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				$actual_sum += $r2['actual']/$r['qty'];
-				$average_sum += $r2['average']/$r['qty'];
+				$actual_sum += $r2['actual']/$qty;
+				$average_sum += $r2['average']/$qty;
 			}
 		}
+		$actual_cost = 0;
+		$average_cost = 0;
 		if ($qty_sum>0) {
 			$actual_cost = $actual_sum/$qty_sum;
 			$average_cost = $average_sum/$qty_sum;
