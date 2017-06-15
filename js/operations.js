@@ -1563,39 +1563,6 @@
 					$(window).scrollTop();
 				}
 			});
-
-			$(document).on('click', '.component_request_submit', function(e){ 
-				var submit = []; 
-				var order_number = $('body').data("order-number");
-				var repair_item_id = $('tr.meta_part').data("item_id");
-
-				$(this).closest("body").find(".component").each(function(){ 
-					var row = { 
-						"part" : $(this).find(".line_part").attr("data-search"), 
-						"qty" : $(this).find(".line_qty").attr("data-qty"), 
-						"pulled" : $(this).find(".inventory_pull").val(), 
-					}; 
-
-					submit.push(row); 
-				}); 
-
-				console.log(submit); 
-
-				$.ajax({ 
-					type: "POST", 
-					url: '/json/component_request.php', 
-					data: { 
-						"requested_items":submit,
-						"order_number":order_number,
-						"repair_item_id":repair_item_id
-					}, 
-					dataType: 'json', 
-					success: function(result) { 
-						console.log(result);
-						location.reload();
-					} 
-				}); 
-			});
 			
 //========================== END COMPLETE PAGE SUBMIT =========================
 			//Cancel button?

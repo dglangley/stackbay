@@ -114,6 +114,8 @@
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
+				SELECT '' as techid, '' as datetime, CONCAT('Component Received ', `invid`, ' Qty: ', `qty` ) as notes FROM repair_components rc WHERE rc.ro_number = ".prep($ro_number)."  
+				UNION
 				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") 
 				UNION
 				SELECT `userid` as techid, `date_changed` as datetime, CONCAT('Status changed from ', `changed_from`, ' to ', `value` ) as notes FROM `inventory_history` where `field_changed` = 'status' AND `invid` in (
@@ -136,7 +138,7 @@
 		$purchase_requests = array();
 		$query;
 		
-		$query = "SELECT * FROM purchase_requests WHERE ro_number = ". prep($ro_number) .";";
+		$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($ro_number) ." GROUP BY partid;";
 		$result = qdb($query) OR die(qe());
 				
 		while ($row = $result->fetch_assoc()) {
@@ -151,6 +153,20 @@
 		$query;
 		
 		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." GROUP BY partid;";
+		$result = qdb($query) OR die(qe());
+				
+		if (mysqli_num_rows($result)>0) {
+			$results = mysqli_fetch_assoc($result);
+			$qty = $results['sum'];
+		}
+
+		return $qty;
+	}
+
+	function getRepairQty($partid, $ro_number) {
+		$qty = 0;
+		
+		$query = "SELECT SUM(r.qty) as sum FROM repair_components r, inventory i WHERE r.ro_number = ". prep($ro_number) ." AND r.invid = i.id AND i.partid = ".prep($partid).";";
 		$result = qdb($query) OR die(qe());
 				
 		if (mysqli_num_rows($result)>0) {
@@ -260,6 +276,7 @@
 		<?php 
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/component_request.php';
+			include_once $rootdir.'/modal/component_available.php';
 		?>
 		<form action="repair_activities.php" method="post">
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
@@ -465,10 +482,11 @@
 											<tr>
 												<th>Component</th>
 												<th>Requested</th>
-												<th>Available</th>
-												<th>Ordered</th>
 												<th>PO</th>
-				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" data-filter="complete" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
+												<!-- <th>Ordered</th> -->
+												<th>Available</th>
+												<th>Received</th>
+				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
 											</tr>
@@ -497,22 +515,33 @@
 										?>
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=format($comp['partid'], true);?></td>
-												<td><?=$comp['qty'];?></td>
-												<td><?=getQuantity($comp['partid']);?></td>
-												<td><?=$ordered;?></td>
-												<td class=""><?=$comp['po_number'];?></td>
+												<td><?=$comp['totalOrdered'];?></td>
+												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style="">'.$comp['po_number'].'</span>' : '<span class="label label-warning active_label status_label" style="">Pending</span>');?></td>
+												<!-- <td><?=$ordered;?></td> -->
+												<td><?=getQuantity($comp['partid']);?></td> 
+												<td class=""><?=(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0')?></td>
 												<td>
-													<form action="repair_activities.php" method="post">
-														<input class="form-control input-sm hidden" type="text" name="partid" value="<?=$comp['partid'];?>" placeholder="Used for Repair">
-														<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
-														<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
-														<div class="input-group">
-											                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
-										                	<span class="input-group-btn">
-											                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp=""><i class="fa fa-wrench" aria-hidden="true"></i></button>
-											                </span>
-										                </div>
-									                </form>
+													<div class="row">
+														<div class="col-md-6">
+															<button data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+																<?=(getQuantity($comp['partid']) > 0 ? 'In' : 'No');?> Stock	
+													        </button>
+														</div>
+
+														<div class="col-md-6">
+															<form action="repair_activities.php" method="post">
+																<input class="form-control input-sm hidden" type="text" name="partid" value="<?=$comp['partid'];?>" placeholder="Used for Repair">
+																<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
+																<input class="form-control input-sm hidden" type="text" name="repair_components" value="" placeholder="Used for Repair">
+																<div class="input-group">
+													                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
+												                	<span class="input-group-btn">
+													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp=""><i class="fa fa-wrench" aria-hidden="true"></i></button>
+													                </span>
+												                </div>
+											                </form>
+											            </div>
+									                </div>
 												</td>
 											</tr>
 											
@@ -568,33 +597,272 @@
 					}
 				});
 
+				$(document).on("click", ".modal_component_available", function(e){
+					var request = $(this).data('requested');
+					var received = $(this).data('received');
+					var partid = $(this).data('partid');
+
+					$.ajax({ 
+						type: "POST", 
+						url: '/json/component_available.php', 
+						data: { 
+							"request":request,
+							"received":received,
+							"partid":partid,
+						}, 
+						dataType: 'json', 
+						success: function(result) { 
+							console.log(result);
+							//alert('here');
+							$('#stock_component_avail').empty();
+							$('#stock_component_avail').append(result);
+						},
+						error: function(error) { 
+							console.log(error);
+							alert(error);
+						}
+					}); 
+				});
+
+				$(document).on("click", ".add_component", function(e){
+					var request = $(this).data('requested');
+					var received = '0';
+					var partid = $(this).data('partid');
+
+					var available = $(this).data('available');
+
+					var amount;
+
+					if(available - request >= 0) {
+						amount = request;
+					} else {
+						amount = available;
+					}
+
+					//Either Fulfill from stock or partial fulfillment and rest ordered
+					var type = $(this).data('component');
+
+					//Partial Purchase Request can be fulfilled 
+					// if(type == 'pull') {
+
+					// }
+
+					$('.nav-tabs a[href="#item_stock"]').tab('show');
+
+					$.ajax({ 
+						type: "POST", 
+						url: '/json/component_available.php', 
+						data: { 
+							"request":request,
+							"received":received,
+							"partid":partid,
+							"type":type,
+						}, 
+						dataType: 'json', 
+						success: function(result) { 
+							console.log(result);
+							$('#stock_component').empty();
+							$('#stock_component').append(result);
+							$('.inventory_pull').val(amount);
+
+							if(type == 'pull') {
+								$('#item_stock .component_pull_submit').attr("data-type", type);
+							} else {
+								$('#item_stock .component_pull_submit').attr("data-type", "");
+							}
+
+							$('#item_stock .component_pull_submit').attr("data-request", request);
+						},
+						error: function(error) { 
+							console.log(error);
+							alert(error);
+						}
+					}); 
+				});
+
+				//Create middle modal to show the tech avaiable components and the option to partial / request or fulfill the request straight from the inventory
 				$(document).on("click", ".stock_check", function(e) {
 					$('.stock_component').empty();
 					var html = "";
 
-					$(".table_components .easy-output").each(function() {
-					    var qty = $(this).find(".line_qty").data('qty');
-					    var available = $(this).find(".line_qty").data('stock');
-					    var partid = $(this).find(".line_part").data('search');
-					    var cost = $(this).find(".line_price").text();
-					    var pullable = 0;
+					var init = true;
 
-					    if(available - qty < 0) {
-					    	pullable = available;
-					    } else {
-					    	pullable = qty
-					    }
-					    //$(this).clone().appendTo(".stock_component");
-					    html += "<tr class='component'>\
-					    			<td class='line_part' data-search='"+$(this).find(".line_part").data('search')+"''>"+$(this).find(".line_part").html()+"</td>\
-					    			<td class='line_qty' data-qty='"+qty+"'>"+$(this).find(".line_qty").html()+"</td>\
-					    			<td>"+available+"</td>\
-					    			<td><input type='text' class='input-sm form-control inventory_pull' value='"+pullable+"'></td>\
-					    		</tr>";
+					$(".table_components .easy-output").each(function() {
+						//For developement only limit to 1 component request per call
+						if(init) {
+						    var qty = $(this).find(".line_qty").data('qty');
+						    var available = $(this).find(".line_qty").data('stock');
+						    var partid = $(this).find(".line_part").data('search');
+						    var cost = $(this).find(".line_price").text();
+						    var pullable = 0;
+
+						    if(available - qty < 0 && available != 0) {
+						    	// pullable = available;
+						    	$('.component_request_submit_pull').show();
+						    	$('.component_request_pull').hide();
+						    } 
+
+						    if(available - qty >= 0 && available != 0) {
+						    	// pullable = available;
+						    	$('.component_request_pull').show();
+						    	$('.component_request_submit_pull').hide();
+						    } 
+
+						    if(available == 0) {
+						    	$('.component_request_pull').hide();
+						    	$('.component_request_submit_pull').hide();
+						    }
+						    // else {
+						    // 	pullable = qty
+						    // }
+
+						    $('.add_component').attr("data-partid",$(this).find(".line_part").data('search'));
+						    $('.add_component').attr("data-requested",qty);
+						    $('.component_request_submit_pull').attr("data-available",available);
+
+						    //$(this).clone().appendTo(".stock_component");
+						    html += "<tr class='component'>\
+						    			<td class='line_part' data-search='"+$(this).find(".line_part").data('search')+"''>"+$(this).find(".line_part").html()+"</td>\
+						    			<td class='line_qty' data-qty='"+qty+"'>"+$(this).find(".line_qty").html()+"</td>\
+						    			<td data-available='"+available+"'>"+available+"</td>\
+						    		</tr>";
+						    		//<td><input type='text' class='input-sm form-control inventory_pull' value='"+pullable+"'></td>\
+						    init = false;
+				    	}
 					});
 					$(".stock_component").append(html);
 
 					$('.nav-tabs a[href="#stock"]').tab('show');
+				});
+
+				//Request and create a purchase order for the component
+				$(document).on('click', '.component_request_submit', function(e){ 
+					var submit = []; 
+					var order_number = $('body').data("order-number");
+					var repair_item_id = $('tr.meta_part').data("item_id");
+
+					var notes = $('#comment').val();
+
+					$(this).closest("body").find("#right_side_main").find('tr').each(function(){ 
+						var row = { 
+							"part" : $(this).find(".line_part").attr("data-search"), 
+							"qty" : $(this).find(".line_qty").attr("data-qty"), 
+						}; 
+
+						submit.push(row); 
+					}); 
+
+					console.log(submit); 
+
+					$.ajax({ 
+						type: "POST", 
+						url: '/json/component_request.php', 
+						data: { 
+							"requested_items":submit,
+							"order_number":order_number,
+							"repair_item_id":repair_item_id,
+							"notes":notes,
+						}, 
+						dataType: 'json', 
+						success: function(result) { 
+							console.log(result);
+							location.reload();
+						} 
+					}); 
+				});
+
+				//Pull items from the shelved / inventory
+				$(document).on('click', '.component_pull_submit', function(e){ 
+					var submit = []; 
+					var partial = []; 
+					var order_number = $('body').data("order-number");
+					var repair_item_id = $('tr.meta_part').data("item_id");
+
+					var type = $(this).data('type');
+					var request = $(this).data('request');
+
+					var notes = $('#comment').val();
+
+					$(this).closest("body").find("#stock_component").find('tr.part').each(function(){ 
+						var row = { 
+							"invid" : $(this).data("invid"), 
+							"qty" : $(this).find(".inventory_pull").val(), 
+						}; 
+
+						var partialRow = {
+							"part" : $(this).data("partid"), 
+							"qty" : (request - $(this).find(".inventory_pull").val()), 
+						}
+
+						submit.push(row); 
+						partial.push(partialRow); 
+					}); 
+
+					//Create a purchase request for the remaining items
+					if(type == 'pull') {
+						$.ajax({ 
+							type: "POST", 
+							url: '/json/component_request.php', 
+							data: { 
+								"requested_items":partial,
+								"order_number":order_number,
+								"repair_item_id":repair_item_id,
+								"notes":notes
+							}, 
+							dataType: 'json', 
+							success: function(result) { 
+								console.log(result);
+							} 
+						}); 
+					}
+
+					$.ajax({ 
+						type: "POST", 
+						url: '/json/component_available.php', 
+						data: { 
+							"pulled_items":submit,
+							"order_number":order_number,
+							"repair_item_id":repair_item_id
+						}, 
+						dataType: 'json', 
+						success: function(result) { 
+							console.log(result);
+							location.reload();
+						} 
+					}); 
+				});
+
+				//Pull items from the shelved / inventory
+				$(document).on('click', '.component_pull_submit_avail', function(e){ 
+					var submit = []; 
+					var order_number = $('body').data("order-number");
+					var repair_item_id = $('tr.meta_part').data("item_id");
+
+					var type = $(this).data('type');
+
+					$(this).closest("body").find("#stock_component_avail").find('tr.part').each(function(){ 
+						var row = { 
+							"invid" : $(this).data("invid"), 
+							"qty" : $(this).find(".inventory_pull").val(), 
+						}; 
+
+						submit.push(row); 
+					}); 
+
+					$.ajax({ 
+						type: "POST", 
+						url: '/json/component_available.php', 
+						data: { 
+							"pulled_items":submit,
+							"order_number":order_number,
+							"repair_item_id":repair_item_id
+						}, 
+						dataType: 'json', 
+						success: function(result) { 
+							console.log(result);
+							location.reload();
+						} 
+					}); 
 				});
 			})(jQuery);
 		</script>
