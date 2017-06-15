@@ -22,15 +22,6 @@ SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
 $results = qdb($select,"PIPE") or die(qe("PIPE"));
 echo($select."<br><BR>");
 
-// qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
-// qdb("DELETE FROM `packages` WHERE package_no = 999;");
-qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
-qdb("TRUNCATE `purchase_requests`;");
-qdb("DELETE FROM `inventory` WHERE `notes` = 'IMPORTED ON COMPONENTS IMPORT';");
-qdb("TRUNCATE repair_components;");
-
-
-
 //Check the componentorder table for alll the historical order records
 	$prq_select = "
 		SELECT co.`id` orderid, co.`component_id`, `price`, `received`,`billed`, `supplier_id`, `cpo_id`, co.`repair_id`, co.project_id, co.`shipping_method_id`, 

@@ -17,13 +17,7 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
 	
-qdb("TRUNCATE `purchase_requests`;") or die(qe());
-qdb("TRUNCATE `repair_activities`;") or die(qe());
-qdb("TRUNCATE `repair_items`;") or die(qe());
-qdb("TRUNCATE `repair_orders`;") or die(qe());
-qdb("TRUNCATE `repair_quotes`;") or die(qe());
-qdb("TRUNCATE `repair_sources`;") or die(qe());
-// qdb('DELETE FROM `inventory` WHERE notes like "%REPAIR IMPORT%";') or die(qe());
+
 
 $pipe_select = "
 SELECT * FROM `inventory_repair` 

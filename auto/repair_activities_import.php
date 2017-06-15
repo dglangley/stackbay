@@ -19,7 +19,7 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
     
-    qdb("TRUNCATE `repair_activities`;") or die(qe());
+    
     $activities_select = "SELECT `ticket_number`,`date_in`,`date_out`, `assigned_in`, `created_at`, `notes` from inventory_repair WHERE `ticket_number` is not NULL AND `created_at` > '2014-12-31';";
     $results = qdb($activities_select, "PIPE") or die(qe("PIPE").$activities_select);
     foreach($results as $r){

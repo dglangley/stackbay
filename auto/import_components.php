@@ -6,8 +6,15 @@
 	include_once $rootdir.'/inc/form_handle.php';
     include_once $rootdir.'/inc/import_aid.php';
     
+    qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
+    qdb("DELETE FROM `packages` WHERE package_no = 999;");
+    qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
+    qdb("TRUNCATE `purchase_requests`;");
+    qdb("DELETE FROM `inventory` WHERE `notes` = 'IMPORTED ON COMPONENTS IMPORT';");
+    qdb("TRUNCATE repair_components;");
     qdb("TRUNCATE TABLE `parts_component_map`;");
-    //qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
+    qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
+    
     $component_query = "SELECT * FROM inventory_component;";
     $result = qdb($component_query,"PIPE") or die(qe("PIPE")." | $component_query");
     $i = 0;
