@@ -22,9 +22,9 @@ SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
 $results = qdb($select,"PIPE") or die(qe("PIPE"));
 echo($select."<br><BR>");
 
+// qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
+// qdb("DELETE FROM `packages` WHERE package_no = 999;");
 qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
-qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
-qdb("DELETE FROM `packages` WHERE package_no = 999;");
 qdb("TRUNCATE `purchase_requests`;");
 qdb("DELETE FROM `inventory` WHERE `notes` = 'IMPORTED ON COMPONENTS IMPORT';");
 qdb("TRUNCATE repair_components;");
@@ -109,7 +109,8 @@ foreach($prq as $r){
 		
 		if($ro_number){
 			$fill = "";
-			$filled = qdb("SELECT * FROM inventory_componentrepair cr where cr.repair_id = $ro_number AND cr.component_id = ".$r['component_id']." AND order_id = ".$r['orderid'].";");
+			$search = "SELECT * FROM inventory_componentrepair cr where cr.repair_id = $ro_number AND cr.component_id = ".$r['component_id']." AND order_id = ".$r['orderid'].";";
+			$filled = qdb($search, "PIPE") or die(qe("PIPE")." $search");
 			if(mysqli_num_rows($filled)){
 				$a_filled = mysqli_fetch_assoc($filled);
 				$fill = $a_filled['filled'];
