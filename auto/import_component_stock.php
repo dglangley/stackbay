@@ -133,7 +133,7 @@ foreach($prq as $r){
 	
 	$pr_insert = "
 	INSERT INTO `purchase_requests`(`techid`, `ro_number`, `repid`, `requested`, `po_number`, `partid`, `qty`, `notes`) 
-	VALUES (16, ".$ro_number.", ".prep($rep_id).", ".$r['date'].",".prep($po_number).", ".prep($partid).", $quantity, 'IMPORTED FROM OLD CPO TABLE');";
+	VALUES (16, ".$ro_number.", ".prep($rep_id).", ".prep($r['date']).",".prep($po_number).", ".prep($partid).", $quantity, 'IMPORTED FROM OLD CPO TABLE');";
 	qdb($pr_insert) or die(qe()." | $pr_insert");
 	echo($pr_insert."<br>");
 	
