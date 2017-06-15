@@ -36,7 +36,8 @@ qdb("TRUNCATE repair_components;");
 			AND  co.repair_id = cr.repair_id
 			AND co.component_id = cr.component_id
 			AND cr.order_id = co.id
-			and co.cpo_id = cpo.id;";
+			and co.cpo_id = cpo.id;
+		";
 
 	$prq = qdb($prq_select, "PIPE") or die(qe("PIPE")." | $prq_select");
 	echo($prq_select."<br><BR>");
@@ -89,6 +90,8 @@ foreach($prq as $r){
 	qdb($inv_insert) or die(qe()." | $inv_insert");
 	echo($inv_insert."<br>");
 	$invid = qid();
+	
+
 	
 	$rc_insert = "INSERT INTO `repair_components`(`invid`, `ro_number`, `qty`) VALUES (".prep($invid).",".prep($r['repair_id']).",".prep($r['filled'], "'0'").");";
 	qdb($rc_insert) or die(qe()." $rc_insert");
@@ -164,13 +167,28 @@ foreach($stock_results as $r){
 		;";
 	}
 }
+
+
+$component_stock = "
+SELECT c.part_number, cs.* 
+FROM inventory_componentstock cs, inventory_component c 
+where project_id is null 
+AND cs.component_id = c.id 
+and cs.order_id is null;
+";
+
+$results = qdb($component_stock) or die(qe()." $component_stock");
+
+foreach($results as $r){
+	// 	$partid = translateComponent($r['component_id']);
+	// 	"INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `locationid`, `userid`, `date_created`, `notes`) 
+	// 	VALUES (".($r['qty']).", ".prep($partid).", 5, shelved, ".$r['loc'].", 16, ".$r['date'].", 'IMPORTED ON THE COMPONENTS IMPORT');";
+		
+}
 //Non-repaired Stock
 // $cps_select = "
 // 	SELECT * FROM inventory_componentorder where repair_id is null;
 // ";
 
-// 	$partid = translateComponent($r['component_id']);
-// 	"INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `locationid`, `userid`, `date_created`, `notes`) 
-// 	VALUES (".($r['qty']).", ".prep($partid).", 5, shelved, ".$r['loc'].", 16, ".$r['date'].", 'IMPORTED ON THE COMPONENTS IMPORT');";
-	
+
 ?>
