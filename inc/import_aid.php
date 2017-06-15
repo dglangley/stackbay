@@ -38,11 +38,15 @@
 			return $max--;
 		}
         
-        function getLineItemIDs($type, $order_num){
-        	$o = o_params($type);
-        	$query = "SELECT id from ".$o['item']." where ".$o['id']." = ".prep($order_num).";";
-        	$result = qdb($query) or die(qe()." | $query");
+        function getLineItemIDs($type, $order_num, $partid = ''){
         	$ids = array();
+        	if(!$order_num){return $ids;}
+        	$o = o_params($type);
+        	$query = "SELECT id from ".$o['item']." 
+        	where ".$o['id']." = ".prep($order_num);
+        	$query .= (($partid)? " AND partid = ".prep($partid) : "");
+        	$query .= ";";
+        	$result = qdb($query) or die(qe()." | $query");
         	foreach($result as $r){
         		$ids[] = $r['id'];
         	}
@@ -216,8 +220,6 @@
 		13 => 6,
 		14 => 9,
 	);
-	
-	map
 	
 	function mapFreight($id){
 		global $FREIGHT_MAPS;
