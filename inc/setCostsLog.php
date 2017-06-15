@@ -1,6 +1,6 @@
 <?php
 	if (! isset($debug)) { $debug = 0; }
-	function setCostsLog($inventoryid,$eventid,$event_type,$amount,$dt=false) {
+	function setCostsLog($inventoryid,$eventid=0,$event_type,$amount,$dt=false) {
 		if (! $dt) { $dt = $GLOBALS['now']; }
 
 		$amount = round($amount,4);
