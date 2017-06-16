@@ -84,10 +84,10 @@ foreach($prq as $r){
 		
 		qdb($pi_insert) or die(qe()." $pi_insert");
 		echo($pi_insert."<br>");
-		$pline = qid();
+		$pline = qid(); 
 			
 		$inv_insert = "	INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `userid`, `date_created`,`notes`, `purchase_item_id`) 
-			VALUES (".prep($quantity).", ".prep($partid).", 5, 'manifest', 16, ".prep($r['date']).", 'IMPORTED ON COMPONENTS IMPORT',".$pline.");"; 
+			VALUES (".prep($quantity).", ".prep($partid).", 5, 'manifest', 16, ".prep($r['date']."12:00:00").", 'IMPORTED ON COMPONENTS IMPORT',".$pline.");"; 
 		qdb($inv_insert) or die(qe()." | $inv_insert");
 		echo($inv_insert."<br>");
 		$invid = qid();

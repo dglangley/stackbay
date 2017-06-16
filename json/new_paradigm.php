@@ -28,8 +28,8 @@
 		include_once $rootdir.'/inc/form_handle.php';
 		include_once $rootdir.'/inc/dropPop.php';
 		include_once $rootdir.'/inc/display_part.php';
-
-
+		include_once $rootdir.'/inc/filter.php';
+		
 //------------------------------------------------------------------------------
 //---------------------------- Function Declarations ---------------------------
 //------------------------------------------------------------------------------
@@ -47,11 +47,15 @@
 function search_as_heci($search_str){
 		$heci7_search = false;
 		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
-			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'";
+			$query .= (($page == "Tech")? " AND classification = 'component'" : "");
+			$query .= "; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
 		} else {
-		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'; ";
+		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'";
+		    $query .= (($page == "Tech")? " AND classification = 'component'" : "");
+		    $query .= "; ";
 			$result = qdb($query) or jsonDie(qe()." | $query");
 			if (mysqli_num_rows($result)) {
 			    $result = mysqli_fetch_assoc($result);
