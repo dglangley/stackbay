@@ -114,7 +114,7 @@
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
-				SELECT '' as techid, '' as datetime, CONCAT('Component Received ', p.part, ' Qty: ', rc.`qty` ) as notes FROM repair_components rc, inventory i, parts p WHERE rc.invid = i.id AND i.partid = p.id AND rc.ro_number = ".prep($ro_number)."  
+				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `invid`, ' Qty: ', rc.qty ) as notes FROM repair_components rc, inventory i WHERE rc.ro_number = ".prep($ro_number)." AND i.id = rc.invid 
 				UNION
 				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") 
 				UNION
@@ -388,8 +388,9 @@
 										<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
 											<thead>
 												<tr>
-													<th class="col-md-6">Description</th>
-													<th class="col-md-5">SERIAL</th>
+													<th class="col-md-6">DESCRIPTION</th>
+													<th class="col-md-4">SERIAL</th>
+													<th class="col-md-1">PRICE</th>
 													<th class="col-md-1"></th>
 												</tr>
 											</thead>
@@ -413,6 +414,7 @@
 														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 															<td>'.format($item['partid'], true).'</td>
 															<td>'.$serial.'</td>
+															<td>'.format_price($item['price']).'</td>
 															<td><button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus == "Completed" ? 'disabled' : '').'>'.(($status == 'in repair')?"Send to Testing":"Mark as Tested").'</button></td>
 														</tr>';
 													}
