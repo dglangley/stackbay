@@ -148,7 +148,7 @@ FROM inventory_componentstock cs, inventory_component c
 WHERE cs.component_id = c.id;
 ";
 
-$results = qdb($component_stock) or die(qe()." $component_stock");
+$results = qdb($component_stock,"PIPE") or die(qe("PIPE")." $component_stock");
 
 foreach($results as $r){
 	$po_id = "";

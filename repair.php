@@ -110,11 +110,11 @@
 		$repair_activities = array();
 		$query;
 		
-		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.id, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
+		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.part, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
-				SELECT '' as techid, '' as datetime, CONCAT('Component Received ', `invid`, ' Qty: ', `qty` ) as notes FROM repair_components rc WHERE rc.ro_number = ".prep($ro_number)."  
+				SELECT '' as techid, '' as datetime, CONCAT('Component Received ', p.part, ' Qty: ', rc.`qty` ) as notes FROM repair_components rc, inventory i, parts p WHERE rc.invid = i.id AND i.partid = p.id AND rc.ro_number = ".prep($ro_number)."  
 				UNION
 				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") 
 				UNION

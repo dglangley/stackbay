@@ -51,34 +51,6 @@ $INSERTED = 0;
 $already = array();
 // echo("<table style = 'border:thin black solid;'>");
 foreach($results as $r){
-    // $inv_orig_id = "";
-    // $inventory_check = "SELECT * FROM `inventory` where serial_no = ".prep($r['serials']).";";
-    // $invcheck = qdb($inventory_check) or die(qe()." | $inventory_check");
-    // echo($inventory_check."<br>");
-    // if(mysqli_num_rows($invcheck)){
-    //   // if($r['serials'] == "TBD" || $r['serials'] == "000" || $r['serials'] == "NA" || $r['serials'] == "n/a"){continue;}
-    //   $inv_res = mysqli_fetch_assoc($invcheck);
-    //   // echo("<tr style = 'border:thin black solid;'><td style = 'border:thin black solid;'>");
-    //   // echo($inventory_check);
-    //   // echo("<td style = 'border:thin black solid;'>");
-    //   if ($already[$r['serials']] || $inv_res['repair_item_id']){
-    //     //This is a part which has already had at least one repair on it.
-    //     $inv_orig_id = $inv_res['id'];
-    //     // echo("GUESS: ALREADY BEEN REPAIRED ONCE");
-    //   } else if ($r["cost"] == 0 && $r['company_id'] == 415){
-    //     $internal_repair_id = $inv_res['id'];
-    //   } else {
-    //     echo("I don't know");
-    //   }
-    //   echo("</td>");
-    //   echo("</td><td style = 'border:thin black solid;'><pre>");
-    //   print_r($inv_res);
-    //   echo("</pre></td><td style = 'border:thin black solid;'><pre>");
-    //   print_r($r);
-    //   echo("</pre></td></tr>");
-    //   continue;
-    // }
-    // $already[$r['serials']] = true;
     $INSERTED++;
     
     
@@ -127,19 +99,11 @@ $freight_carrier, $freight_service,
 $terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).");";
 qdb($order_insert) or die(qe(). " | $order_insert");
 echo($order_insert."<br>");
+
 $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
 `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
-".prep($partid).",$ro_number,1,1,
-".prep($r['price_per_unit']).",
-".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
-NULL,
-".prep($line['ref_1']).",
-".prep($line['ref_1_label']).",
-".prep($line['ref_2']).",
-".prep($line['ref_2_label']).",
-".prep($r['notes']).",
-".prep($line['warranty'])."
-);";
+".prep($partid).",$ro_number,1,1,".prep($r['price_per_unit']).",".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
+NULL,".prep($line['ref_1']).",".prep($line['ref_1_label']).",".prep($line['ref_2']).",".prep($line['ref_2_label']).",".prep($r['notes']).",".prep($line['warranty']).");";
 qdb($item_insert) or die(qe()." | $item_insert");
 echo($item_insert."<br>");
 
@@ -431,7 +395,6 @@ else{
     $results = qdb($activities_select, "PIPE") or die(qe("PIPE").$activities_select);
     foreach($results as $r){
         $ro_number = $r['ticket_number'];
-        
         //Get Line Item Number
         $ln_query = "SELECT `id` FROM `repair_items` WHERE `ro_number` = '$ro_number';";
         $ln = qdb($ln_query) or die(qe()." | $ln_query");
