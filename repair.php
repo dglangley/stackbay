@@ -121,6 +121,8 @@
 				SELECT `userid` as techid, `date_changed` as datetime, CONCAT('Status changed from ', `changed_from`, ' to ', `value` ) as notes FROM `inventory_history` where `field_changed` = 'status' AND `invid` in (
 					SELECT `invid` FROM `inventory_history` where `field_changed` = 'repair_item_id' and `value` = ".prep($repair_item_id)."
 					)
+				UNION
+				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)." 
 				ORDER BY datetime DESC;";
 		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
 		// 		UNION
@@ -186,6 +188,23 @@
 	endforeach;
 
 	$activities = grabActivities($repair_order, $repair_item_id);
+
+	$status = ""; 
+	$claimed = "";
+
+	foreach($activities as $activity):
+		if(strpos($activity['notes'], 'Checked') !== false && !$status) {
+			if(strtolower($activity['notes']) == 'checked in') {
+				$status = 'closed';
+			} else if(strtolower($activity['notes']) == 'checked out') {
+				$status = 'opened';
+			}
+		}
+
+		if(strpos($activity['notes'], 'Claimed') !== false && !$claimed) {
+			$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid'], 'userid') . "</b>";
+		}
+	endforeach; 
 
 	//print_r($U);
 ?>
@@ -268,6 +287,15 @@
 			.master-package {
 				font-weight:bold;
 			}
+			.ticket_status_danger {
+				color: #a94442;
+			}
+			.ticket_status_success {
+				color: #3c763d;
+			}
+			.ticket_status_warning {
+				color: #8a6d3b;
+			}
 		</style>
 
 	</head>
@@ -277,9 +305,13 @@
 			include 'inc/navbar.php'; 
 			include_once $rootdir.'/modal/component_request.php';
 			include_once $rootdir.'/modal/component_available.php';
+			// include_once $rootdir.'/modal/repair_complete.php';
 		?>
 		<form action="repair_activities.php" method="post">
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
+			<?php
+				include_once $rootdir.'/modal/repair_complete.php';
+			?>
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
 					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
@@ -289,7 +321,12 @@
 				<div class="col-md-4 text-center">
 					<?php
 						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
-							echo "Repair Ticket ";
+
+						if($ticketStatus != 'Active'){
+							echo '(<span class="ticket_status_'.($ticketStatus == 'Not Reparable' ? 'danger' : ($ticketStatus == 'NTF' ? 'warning' : 'success')).'">' .$ticketStatus . '</span>) ';
+						}
+
+						echo "Repair Ticket ";
 						if ($order_number!='New'){
 							echo "#$order_number";
 						}
@@ -307,37 +344,20 @@
 						<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
 					<?php endforeach; ?>
 
-					<?php 
-						$status = ""; 
-						$claimed = "";
-
-						foreach($activities as $activity):
-							if(strpos($activity['notes'], 'Checked') !== false && !$status) {
-								if(strtolower($activity['notes']) == 'checked in') {
-									$status = 'closed';
-								} else if(strtolower($activity['notes']) == 'checked out') {
-									$status = 'opened';
-								}
-							}
-
-							if(strpos($activity['notes'], 'Claimed') !== false && !$claimed) {
-								$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid'], 'userid') . "</b>";
-							}
-						endforeach; 
-					?>
-
 					<?php if($status == 'opened' || !$status) { ?>
-						<!-- <input type="text" name="type" value="check_in" class="hidden"> -->
-						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check In</button>
+						<input type="text" name="check_in" value="check_in" class="hidden">
+						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
-						<!-- <input type="text" name="type" value="check_out" class="hidden"> -->
-						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Check Out</button>
+						<input type="text" name="check_in" value="check_out" class="hidden">
+						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Check Out</button>
 					<?php } ?>
 
 					<?php if(!$claimed){ ?>
-						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Claim Ticket</button>	
+						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
-						<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
+						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>
+							Complete Ticket
+						</button>
 						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
 					<?php } ?>		
 				</div>
@@ -415,7 +435,9 @@
 															<td>'.format($item['partid'], true).'</td>
 															<td>'.$serial.'</td>
 															<td>'.format_price($item['price']).'</td>
-															<td><button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus == "Completed" ? 'disabled' : '').'>'.(($status == 'in repair')?"Send to Testing":"Mark as Tested").'</button></td>
+															<td>
+																<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus != "Active" ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+															</td>
 														</tr>';
 													}
 													echo($item_row);
@@ -452,7 +474,7 @@
 														<div class="input-group">
 															<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
 															<span class="input-group-btn">
-																<button class="btn btn-sm btn-primary" id="submit">Log</button>
+																<button class="btn btn-sm btn-primary" id="submit" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Log</button>
 															</span>
 														</div>
 													</div>
@@ -488,7 +510,7 @@
 												<!-- <th>Ordered</th> -->
 												<th>Available</th>
 												<th>Received</th>
-				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>
+				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
 											</tr>
@@ -525,7 +547,7 @@
 												<td>
 													<div class="row">
 														<div class="col-md-6">
-															<button data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+															<button <?=($ticketStatus != "Active" ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
 																<?=(getQuantity($comp['partid']) > 0 ? 'In' : 'No');?> Stock	
 													        </button>
 														</div>
@@ -538,7 +560,7 @@
 																<div class="input-group">
 													                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
 												                	<span class="input-group-btn">
-													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp=""><i class="fa fa-wrench" aria-hidden="true"></i></button>
+													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp="" <?=($ticketStatus != "Active" ? 'disabled' : '');?>><i class="fa fa-wrench" aria-hidden="true"></i></button>
 													                </span>
 												                </div>
 											                </form>

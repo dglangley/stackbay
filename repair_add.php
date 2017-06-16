@@ -59,7 +59,7 @@
 	}
 
 	//Check to see if a sales_item record has been created for this item
-	if($status == 'Completed') {
+	if($status != 'Active') {
 		$query = "SELECT so_number FROM sales_items WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id).";";
 		$result = qdb($query) or die(qe());
 		if (mysqli_num_rows($result)) {
@@ -246,7 +246,7 @@
 				<h2><?=($status == "Completed" ? "Completed" : "");?> Repair #<?= $order_number.' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
-				<?php if($status == "Completed") { ?>
+				<?php if($status != "Active") { ?>
 					<?php if($sales_order) { ?>
 						<a href="/shipping.php?on=<?=$sales_order;
 						?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>

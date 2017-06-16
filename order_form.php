@@ -251,6 +251,16 @@
 			    border-bottom: 1px solid;
 			    width: 100%;
 			}
+
+			.ticket_status_danger {
+				color: #a94442;
+			}
+			.ticket_status_success {
+				color: #3c763d;
+			}
+			.ticket_status_warning {
+				color: #8a6d3b;
+			}
 		</style>
 
 	</head>
@@ -476,6 +486,9 @@
 							echo $order_number;
 						} else {
 							//echo getCompany($ORDER['companyid']);
+						}
+						if($status != 'Active'){
+							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
 						}
 						echo " ".strtoupper($o['short']);
 						if ($order_number!='New'){
