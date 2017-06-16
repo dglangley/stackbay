@@ -7,7 +7,6 @@
     include_once $rootdir.'/inc/import_aid.php';
     
     qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
-    qdb("DELETE FROM `packages` WHERE package_no = 999;");
     qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
     qdb("TRUNCATE `purchase_requests`;");
     qdb("DELETE FROM `inventory` WHERE `notes` = 'IMPORTED ON COMPONENTS IMPORT';");
