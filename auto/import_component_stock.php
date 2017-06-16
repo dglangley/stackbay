@@ -13,7 +13,7 @@
 //Steps for import:
 //TABLES TOUCHED: `inventory`, `inventory_history`, `repair_components`, `purchase_requests`, 
 
-
+global $GLOBALS;
 
 $select ="
 SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
@@ -148,7 +148,7 @@ FROM inventory_componentstock cs, inventory_component c
 WHERE cs.component_id = c.id;
 ";
 
-$results = qdb($component_stock,"PIPE") or die(qe("PIPE")." $component_stock");
+$results = qdb($component_stock, "PIPE") or die(qe("PIPE")." $component_stock");
 
 foreach($results as $r){
 	$po_id = "";
@@ -157,7 +157,8 @@ foreach($results as $r){
 	if($r['order_id']){
 		$cpo_q = "SELECT `cpo_id` FROM `inventory_componentorder` co WHERE id = ".prep($r['order_id']).";";
 		$co = qdb($cpo_q,"PIPE") or die(qe("PIPE"));
-		$ca = mysqli_fetch_assoc($cpo_q);
+		echo($cpo_q."<br>");
+		$ca = mysqli_fetch_assoc($co);
 		$po_id = $ca['cpo_id'];
 		$lstring = "";
 		$lresults = getLineItemIDs("purchase",$po_id,$partid);
@@ -168,14 +169,16 @@ foreach($results as $r){
 	}
 	
 	$insert = "INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `locationid`,`bin`, `userid`, `date_created`, `notes`, `purchase_item_id`) 
-	VALUES (".($r['quantity']).", ".prep($partid).", 5, shelved, ".prep($r['location_id']).", ".prep($r['subloc_id']).", 16, NOW(), 'IMPORTED ON COMPONENTS IMPORT',".prep($lstring).");";
-	qdb($insert);
+	VALUES (".($r['quantity']).", ".prep($partid).", 5, 'shelved', ".prep($r['location_id']).", ".prep($r['subloc_id']).", 16, ".prep($GLOBALS['now']).", 'IMPORTED ON COMPONENTS IMPORT',".prep($lstring).");";
+	qdb($insert) or die(qe());
+	echo("$insert<br>");
 	$invid = prep(qid());
 	
 	$amount = $r['cost_per_unit']*$r['quantity'];
 	$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
-	VALUES ($invid, NOW(), $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
+	VALUES ($invid, ".prep($GLOBALS['now']).", $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
 	qdb($cost);
+	echo("$cost<br><br>");
 	setCostsLog($invid,$lstring,$event_type,$amount);
 }
 
