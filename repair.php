@@ -122,7 +122,9 @@
 					SELECT `invid` FROM `inventory_history` where `field_changed` = 'repair_item_id' and `value` = ".prep($repair_item_id)."
 					)
 				UNION
-				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)." 
+				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
+				UNION
+				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', tracking_no) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				ORDER BY datetime DESC;";
 		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
 		// 		UNION

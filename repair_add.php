@@ -49,6 +49,7 @@
 	$status = "Active";
 	$repair_item_id;
 	$sales_order;
+	$tracking;
 
 	$query = "SELECT status, id as repair_item_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
 	$result = qdb($query) or die(qe());
@@ -65,6 +66,13 @@
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
 			$sales_order = $result['so_number'];
+		} else {
+			$query = "SELECT tracking_no FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_number).";";
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$tracking = ($result['tracking_no'] ? $result['tracking_no'] : 'N/A');
+			}
 		}
 	}
 
@@ -233,6 +241,16 @@
 			body.modal-open#rma-add {
 				margin-right: 0;
 			}
+
+			.ticket_status_danger {
+				color: #a94442;
+			}
+			.ticket_status_success {
+				color: #3c763d;
+			}
+			.ticket_status_warning {
+				color: #8a6d3b;
+			}
 		</style>
 	</head>
 	
@@ -243,13 +261,19 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/order_form.php?ps=repair&on=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage Repair</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?=($status == "Completed" ? "Completed" : "");?> Repair #<?= $order_number.' Receiving'; ?></h2>
+				<h2><?php if($status != 'Active'){
+							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
+						}?> Repair #<?= $order_number.' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
 				<?php if($status != "Active") { ?>
 					<?php if($sales_order) { ?>
 						<a href="/shipping.php?on=<?=$sales_order;
 						?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
+					<?php } else if($tracking) { ?>
+						<div class="pull-right" style="margin-top: 15px;">
+							<b>Shipped Tracking#</b> <?=$tracking;?>
+						</div>
 					<?php } else { ?>
 						<form action="repair_shipping.php" method="POST">
 							<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>

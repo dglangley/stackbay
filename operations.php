@@ -327,7 +327,7 @@
 				echo'	<span class="line"></span>';
 				echo'		Repair#';
 				echo'	</th>';
-	            echo'	<th class="col-sm-2">';
+	            echo'	<th class="col-sm-4">';
 	            echo'		<span class="line"></span>';
 	            echo'		Item';
 	            echo'	</th>';
@@ -335,10 +335,10 @@
 	            echo'   	<span class="line"></span>';
 	            echo'       Serial';
 	            echo'	</th>';
-	            echo'   <th class="col-sm-3 item_col">';
-	            echo'   	<span class="line"></span>';
-	            echo'       Notes';
-	            echo'	</th>';
+	            // echo'   <th class="col-sm-3 item_col">';
+	            // echo'   	<span class="line"></span>';
+	            // echo'       Notes';
+	            // echo'	</th>';
 	            echo'   <th class="col-sm-1">';
 	            echo'   	<span class="line"></span>';
 	            echo'   	Due';
@@ -347,7 +347,7 @@
 	            echo'   	<span class="line"></span>';
 	            echo'   	Status';
 	            echo'  	</th>';
-				echo'  	<th class="col-sm-1">';
+				echo'  	<th class="col-sm-2">';
 	            echo'   	<span class="line"></span>';
 	            echo'  		Action';
 	            echo'  	</th>';
@@ -397,7 +397,7 @@
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
 					$query .= "WHERE o.ro_number = i.ro_number ";
-					$query .= "ORDER BY o.created ASC LIMIT 0, 200; ";
+					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				}
 				
 				$results = qdb($query);
@@ -439,7 +439,8 @@
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					} else if($order == 'ro') {
-						$status = ($r['status'] == 'Completed' ? 'complete_item' : 'active_item');
+						$status = ($r['status'] != 'Active' ? 'complete_item' : 'active_item');
+						$status_name = $r['status'];
 						//print_r($r['status'] );
 					}
 				
@@ -454,7 +455,7 @@
 					if($order != 'ro') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					} else {
-						echo'        <td>'.$order_num.' <a href="/repair.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
@@ -484,20 +485,22 @@
 							$result = qdb($query) or die(qe() . ' ' . $query);
 
 							if (mysqli_num_rows($result)>0) {
-								$r = mysqli_fetch_assoc($result);
-								$serial = $r['serial_no'];
+								$rq = mysqli_fetch_assoc($result);
+								$serial = $rq['serial_no'];
 							}
 						}
 						echo'        <td>'.($serial ? $serial : 'TBA').'</td>';
-						echo'        <td>'.$r['public_notes'].'</td>';
+						//echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
 					if($order == 'ro') {
 						global $now;
-						echo'    	<td>'.format_date($now).'</td>';
+						echo'    	<td>'.format_date($r['due_date']).'</td>';
+						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-'.($status_name == "Not Reparable" ? 'danger' : ($status_name == 'NTF' ? 'info' : 'success')).' complete_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).'</td>';
+					} else {
+						
+						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					}
-					
-					echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					if($order != 'ro' && $order != 'rma') {
 						echo'    	<td class="status text-right">';		
 						if($order == 's') {

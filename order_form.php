@@ -54,20 +54,39 @@
 	$o = o_params(grab('ps',"s"));
 	$order_number = grab('on','New');
 	$status = getOrderStatus($o['type'],$order_number);
+	$sales_order;
+	$tracking;
 	
-	
-	 if(strtolower($o['type']) == 'rtv'){
+	if(strtolower($o['type']) == 'rtv'){
 	 	$status = 'Active';
 		$origin = $order_number;
 		$order_number = "New";
 		//If there are items to be Returned to Vendor, we gather the items in through a passed JSON parameter
 		$rtv_items = $_REQUEST['partid'];
-	 } else if ($o['type'] == "Invoice"){
+	} else if ($o['type'] == "Invoice"){
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
-	 }
+	} else if($o['type'] == "Repair") {
+	 	//Check to see if a sales_item record has been created for this item
+		if($status != 'Active') {
+			$query = "SELECT so_number FROM sales_items s, repair_items r WHERE s.ref_1_label = 'repair_item_id' AND s.ref_1 = r.id AND r.ro_number = ".prep($order_number).";";
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$sales_order = $result['so_number'];
+			} else {
+				$query = "SELECT tracking_no FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_number).";";
+				$result = qdb($query) or die(qe());
+				if (mysqli_num_rows($result)) {
+					$result = mysqli_fetch_assoc($result);
+					$tracking = ($result['tracking_no'] ? $result['tracking_no'] : 'N/A');
+				}
+			}
+		}
+		//echo $query;
+	}
 
- 	 function getPackagesFix($order_number) {
+ 	function getPackagesFix($order_number) {
  	 	$output = '';
 	 	$invoices = array();
 
@@ -510,6 +529,20 @@
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
+					<?php if($status != "Active") { ?>
+						<?php if($sales_order) { ?>
+							<a href="/shipping.php?on=<?=$sales_order;
+							?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
+						<?php } else if($tracking) { ?>
+							<div class="pull-right" style="margin-top: 15px;">
+								<b>Shipped Tracking#</b> <?=$tracking;?>
+							</div>
+						<?php } else { ?>
+							<form action="repair_shipping.php" method="POST">
+								<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
+							</form>
+						<?php } ?>
+					<?php } ?>
 				</div>
 			</div>
 			

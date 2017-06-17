@@ -310,10 +310,32 @@ include_once $rootdir.'/inc/default_addresses.php';
 		}
 		//Closing Tag (Leave Outside of any if statment)
 	    	$right .= "</div>"; //close the immediate sidebar container
+
+	    $received = false;
+
+	    if($order_type == 'Repair' && $order_number != 'New') {
+	    	$repair_item_id;
+
+	    	$query = "SELECT id FROM repair_items WHERE ro_number = ".prep($order_number).";";
+	    	$repair_result = qdb($query) OR die(qe());
+
+			if (mysqli_num_rows($repair_result)>0) {
+				$repair_results = mysqli_fetch_assoc($repair_result);
+				$repair_item_id = $repair_results['id'];
+			}
+
+	    	$query = "SELECT date_created FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).");";
+	    	$result = qdb($query) OR die(qe());
+	    	
+			if (mysqli_num_rows($result)>0) {
+				$results = mysqli_fetch_assoc($result);
+				$received = true;
+			}
+	    }
 		
 		
 		//Output the void button to the bottom left side of the collumn
-		if ($order_number != 'New' && $status == 'Active') {
+		if ($order_number != 'New' && $status == 'Active' || ($order_number != 'New' && $order_type == "Repair" && !$received)) {
 			$right .= "
 				<div class='row'>
 					<div class='col-sm-12'>
