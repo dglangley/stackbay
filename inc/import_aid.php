@@ -171,6 +171,26 @@
 
 		return ($USER_MAPS[$id]);
 	}
+	
+	$SHIP_STATUS_MAP = array(
+		1	=> 'Completed',	//Repaired
+		2	=> 'NTF',	//No Trouble Found
+		3	=> 'Completed',	//Warranty
+		4	=> 'Not Repairable',	//Unrepairable - Parts unavailable
+		5	=> 'Not Repairable',	//Unrepairable - Too many defects
+		6	=> 'Not Repairable',	//Product not supported
+		7	=> 'Completed',	//Exchanged
+		8	=> 'Voided',	//Canceled - Not Received
+		9	=> 'Voided',	//Canceled by Customer
+		10	=> 'Completed',	//(Testing) ATP (All Tests Passed)
+		11	=> 'Completed',	//CAP Repair - no charge
+		12	=> 'Completed',	//(Testing) Testing of a good card that fails and is still under an OEM warranty (Card will be shipped back to CTDI to be sent to OEM)
+		13	=> 'Completed',	//(Testing) Test Repair for a failed test of a known good card that is subsequently repaired
+		14	=> 'Not Repairable',	//(Testing) Unit is unrepairable - part(s) are obsolete or unavailable
+		15	=> 'Not Repairable',	//(Testing) Unit is unrepairable - too many defects to repair
+		16	=> 'Not Repairable',	//(Testing) Product not supported - returned to customer not repaired
+	);
+	
 	$upsid = 1;
 	$fedexid = 2;
 	$otherid = 3;

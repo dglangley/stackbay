@@ -115,21 +115,6 @@ foreach($prq as $r){
 		
 	}
 
-// $cs_query = "SELECT * FROM inventory_componentshipping WHERE cpo_id is not null;";
-// qdb($cs_query)
-// 	    $package_insert = "
-// 	    INSERT INTO `packages`( `order_type`, `order_number`, `package_no`, `tracking_no`, `datetime`, `freight_amount`) 
-// 	    VALUES ('Purchase', $po_number, 1, NULL, ".prep($r['date']).", ".prep($r['freight_cost']).");";
-// 	    qdb($package_insert) or die(qe()." | $package_insert");
-// 	    echo("$package_insert '\$package_insert'<br>");
-// 	    $packageid = qid();
-	
-// 	//Package_contents (adding the received package info) 
-// 	    $pc_insert = "INSERT INTO package_contents (`serialid`, `packageid`) values($invid, $packageid);";
-// 	    qdb($pc_insert) or die(qe()." | $pc_insert");
-// 	    echo("$pc_insert '\$pc_insert'<br>");
-	
-
 	
 	$pr_insert = "
 	INSERT INTO `purchase_requests`(`techid`, `ro_number`, `repid`, `requested`, `po_number`, `partid`, `qty`, `notes`) 
