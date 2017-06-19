@@ -77,7 +77,7 @@ function search_as_heci($search_str){
 		}
         if($page =="Repair" || $page=="Tech" ){
             $results = array_filter($results, "is_component");
-        } else{
+        } else {
             $results = array_filter($results, "not_component");
         }
 		return $results;
