@@ -68,7 +68,8 @@
 	 	$origin = $inv_info['order_number'];
 	} else if($o['type'] == "Repair") {
 	 	//Check to see if a sales_item record has been created for this item
-		if($status != 'Active') {
+	 	//echo $status . 'test';
+		if($status) {
 			$query = "SELECT so_number FROM sales_items s, repair_items r WHERE s.ref_1_label = 'repair_item_id' AND s.ref_1 = r.id AND r.ro_number = ".prep($order_number).";";
 			$result = qdb($query) or die(qe());
 			if (mysqli_num_rows($result)) {
@@ -294,7 +295,7 @@
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
 			?>
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:<?=$o['color']?>;">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['type'] == 'Repair') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
 				<div class="col-md-3">
 					<?php
@@ -506,12 +507,16 @@
 						} else {
 							//echo getCompany($ORDER['companyid']);
 						}
-						if($status != 'Active'){
-							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
-						}
 						echo " ".strtoupper($o['short']);
 						if ($order_number!='New'){
 							echo "# $order_number";
+						}
+
+						if($status && $o['type'] == 'Repair'){
+							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
+						}
+
+						if ($order_number!='New'){
 							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
 						}
 					} else if ($o['invoice']){
@@ -529,15 +534,15 @@
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
-					<?php if($status != "Active") { ?>
-						<?php if($sales_order) { ?>
+					<?php if(strtolower($status) != 'voided') { ?>
+						<?php if($sales_order && $o['type'] == 'Repair') { ?>
 							<a href="/shipping.php?on=<?=$sales_order;
 							?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
-						<?php } else if($tracking) { ?>
+						<?php } else if($tracking && $o['type'] == 'Repair') { ?>
 							<div class="pull-right" style="margin-top: 15px;">
 								<b>Shipped Tracking#</b> <?=$tracking;?>
 							</div>
-						<?php } else { ?>
+						<?php } else if($o['type'] == 'Repair') { ?>
 							<form action="repair_shipping.php" method="POST">
 								<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
 							</form>

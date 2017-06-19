@@ -64,7 +64,7 @@
 		$repair_order = $result['ro_number'];
 		$notes = $result['public_notes'];
 		$sales_rep_id = $result['sales_rep_id'];
-		$ticketStatus = $result['status'];
+		$ticketStatus = getRepairCode($result['repaircodeid']);
 	}
 	
 	function getItems($ro_number = 0) {
@@ -124,7 +124,7 @@
 				UNION
 				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
 				UNION
-				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', tracking_no) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
+				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				ORDER BY datetime DESC;";
 		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
 		// 		UNION
@@ -165,6 +165,20 @@
 		}
 
 		return $qty;
+	}
+
+	function getRepairCode($repair_code){
+		$repair_text = "";
+				
+		$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
+		$results = qdb($select);
+
+		if (mysqli_num_rows($results)>0) {
+			$results = mysqli_fetch_assoc($results);
+			$repair_text = $results['description'];
+		}
+
+		return $repair_text;
 	}
 
 	function getRepairQty($partid, $ro_number) {
@@ -324,16 +338,16 @@
 					<?php
 						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 
-						if($ticketStatus != 'Active'){
-							echo '(<span class="ticket_status_'.($ticketStatus == 'Not Reparable' ? 'danger' : ($ticketStatus == 'NTF' ? 'warning' : 'success')).'">' .$ticketStatus . '</span>) ';
-						}
-
 						echo "Repair Ticket ";
 						if ($order_number!='New'){
 							echo "#$order_number";
 						}
 						if (strtolower($status) == 'void'){
 							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
+						}
+
+						if($ticketStatus){
+							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($ticketStatus), 'unrepairable') !== false ? 'danger' : (strpos(strtolower($ticketStatus), 'trouble') ? 'warning' : 'success')).'">' .ucwords($ticketStatus) . '</span>) ';
 						}
 						echo"</h2>";
 					?>
@@ -348,16 +362,16 @@
 
 					<?php if($status == 'opened' || !$status) { ?>
 						<input type="text" name="check_in" value="check_in" class="hidden">
-						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Check In</button>
+						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
 						<input type="text" name="check_in" value="check_out" class="hidden">
-						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Check Out</button>
+						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Check Out</button>
 					<?php } ?>
 
 					<?php if(!$claimed){ ?>
-						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Claim Ticket</button>	
+						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
-						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>
+						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
 							Complete Ticket
 						</button>
 						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
@@ -438,7 +452,7 @@
 															<td>'.$serial.'</td>
 															<td>'.format_price($item['price']).'</td>
 															<td>
-																<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus != "Active" ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+																<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
 															</td>
 														</tr>';
 													}
@@ -476,7 +490,7 @@
 														<div class="input-group">
 															<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
 															<span class="input-group-btn">
-																<button class="btn btn-sm btn-primary" id="submit" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>Log</button>
+																<button class="btn btn-sm btn-primary" id="submit" <?=($ticketStatus ? 'disabled' : '');?>>Log</button>
 															</span>
 														</div>
 													</div>
@@ -512,7 +526,7 @@
 												<!-- <th>Ordered</th> -->
 												<th>Available</th>
 												<th>Received</th>
-				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus != "Active" ? 'disabled' : '');?>>
+				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
 											</tr>
@@ -549,7 +563,7 @@
 												<td>
 													<div class="row">
 														<div class="col-md-6">
-															<button <?=($ticketStatus != "Active" ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
 																<?=(getQuantity($comp['partid']) > 0 ? 'In' : 'No');?> Stock	
 													        </button>
 														</div>
@@ -562,7 +576,7 @@
 																<div class="input-group">
 													                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
 												                	<span class="input-group-btn">
-													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp="" <?=($ticketStatus != "Active" ? 'disabled' : '');?>><i class="fa fa-wrench" aria-hidden="true"></i></button>
+													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" value="complete_ticket" data-datestamp="" <?=($ticketStatus ? 'disabled' : '');?>><i class="fa fa-wrench" aria-hidden="true"></i></button>
 													                </span>
 												                </div>
 											                </form>
