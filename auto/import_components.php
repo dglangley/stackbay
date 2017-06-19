@@ -14,6 +14,7 @@
     qdb("TRUNCATE repair_orders;");
     qdb("TRUNCATE repair_items;");
     qdb("TRUNCATE TABLE `parts_component_map`;");
+    qdb("TRUNCATE TABLE `repair_activities`;");
     qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
     
     $component_query = "SELECT * FROM inventory_component;";
