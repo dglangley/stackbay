@@ -25,6 +25,7 @@
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
+	include_once $rootdir.'/inc/component_split.php';
 
 	$partid = $_REQUEST['partid'];
 	$request = $_REQUEST['request'];
@@ -85,7 +86,10 @@
 		$result;
 
 		foreach($components as $item) {
-			$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep($item['invid']).", ".prep($order_number).", ".prep($item['qty']).")";
+			//function split_components($invid, $new_qty, $id_type = "", $id_number = "")
+			$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
+
+			$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep($newID).", ".prep($order_number).", ".prep($item['qty']).")";
 			$result = qdb($query) or die(qe());
 		}
 
@@ -97,7 +101,7 @@
 		$result = grabInventoryStock($partid, $request, $received, $request);
 	} else {
 		//used for component pull to repair
-		$result = repairComponent($order_number, $components);
+		$result = repairComponent($order_number, $components, $repair_item_id);
 	}
 		
 	echo json_encode($result);

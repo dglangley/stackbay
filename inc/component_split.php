@@ -29,9 +29,14 @@
         if(mysqli_num_rows($results)){
             $r = mysqli_fetch_assoc($results);
             if($r['classification'] == "component"){
+                if(!$r['qty']){
+                    return("No Quantity To Be Split!");
+                }
                 $orig_qty = $r['qty']; //Alias for the beginning quantity
                 $adj_qty = $orig_qty - $new_qty; //This is the quantity which will adjust the initial record.
-                $new_rate = (($new_qty < $orig_qty)? ($new_qty / $orig_qty) : ($orig_qty/$new_qty)); //This rate is applied to all cloned rows
+                if ($orig_qty != 0 && $new_qty != 0){
+                    $new_rate = (($new_qty < $orig_qty)? ($new_qty / $orig_qty) : ($orig_qty/$new_qty)); //This rate is applied to all cloned rows
+                }
                 $orig_rate = 1 - $new_rate; //This is the rate which affects the original record: changing initial costs
                 
                 $order_line = '';

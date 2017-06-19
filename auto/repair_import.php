@@ -16,13 +16,11 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
 	
-qdb("TRUNCATE `purchase_requests`;") or die(qe());
-qdb("TRUNCATE `repair_activities`;") or die(qe());
-qdb("TRUNCATE `repair_items`;") or die(qe());
-qdb("TRUNCATE `repair_orders`;") or die(qe());
-qdb("TRUNCATE `repair_quotes`;") or die(qe());
-qdb("TRUNCATE `repair_sources`;") or die(qe());
-// qdb('DELETE FROM `inventory` WHERE notes like "%REPAIR IMPORT%";') or die(qe());
+    // qdb("TRUNCATE repair_orders;");
+    // qdb("TRUNCATE repair_items;");
+    // qdb("TRUNCATE TABLE `repair_activities`;");
+
+    
 
 $pipe_select = "
 SELECT * FROM `inventory_repair` 
@@ -56,34 +54,6 @@ $INSERTED = 0;
 $already = array();
 // echo("<table style = 'border:thin black solid;'>");
 foreach($results as $r){
-    // $inv_orig_id = "";
-    // $inventory_check = "SELECT * FROM `inventory` where serial_no = ".prep($r['serials']).";";
-    // $invcheck = qdb($inventory_check) or die(qe()." | $inventory_check");
-    // echo($inventory_check."<br>");
-    // if(mysqli_num_rows($invcheck)){
-    //   // if($r['serials'] == "TBD" || $r['serials'] == "000" || $r['serials'] == "NA" || $r['serials'] == "n/a"){continue;}
-    //   $inv_res = mysqli_fetch_assoc($invcheck);
-    //   // echo("<tr style = 'border:thin black solid;'><td style = 'border:thin black solid;'>");
-    //   // echo($inventory_check);
-    //   // echo("<td style = 'border:thin black solid;'>");
-    //   if ($already[$r['serials']] || $inv_res['repair_item_id']){
-    //     //This is a part which has already had at least one repair on it.
-    //     $inv_orig_id = $inv_res['id'];
-    //     // echo("GUESS: ALREADY BEEN REPAIRED ONCE");
-    //   } else if ($r["cost"] == 0 && $r['company_id'] == 415){
-    //     $internal_repair_id = $inv_res['id'];
-    //   } else {
-    //     echo("I don't know");
-    //   }
-    //   echo("</td>");
-    //   echo("</td><td style = 'border:thin black solid;'><pre>");
-    //   print_r($inv_res);
-    //   echo("</pre></td><td style = 'border:thin black solid;'><pre>");
-    //   print_r($r);
-    //   echo("</pre></td></tr>");
-    //   continue;
-    // }
-    // $already[$r['serials']] = true;
     $INSERTED++;
     
     
@@ -124,27 +94,16 @@ foreach($results as $r){
 //Note the fact that we don't actually have a part yet
 $order_insert = "INSERT INTO `repair_orders`(
 `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
-`freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES (
+`freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`,`repaircodeid`) VALUES (
 $ro_number, ".prep($r['created_at']).", ".$creator_id.", ".prep($sales_rep_id).", ".prep($companyid).", 
-".prep($r['purchase_order']).", 
-".prep(address_translate($r['ship_to'])).", 
-$freight_carrier, $freight_service, 
-$terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).");";
+".prep($r['purchase_order']).", ".prep(address_translate($r['ship_to'])).", $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).", ".prep($r['shipped_status_id']).");";
 qdb($order_insert) or die(qe(). " | $order_insert");
 echo($order_insert."<br>");
+
 $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
 `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
-".prep($partid).",$ro_number,1,1,
-".prep($r['price_per_unit']).",
-".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
-NULL,
-".prep($line['ref_1']).",
-".prep($line['ref_1_label']).",
-".prep($line['ref_2']).",
-".prep($line['ref_2_label']).",
-".prep($r['notes']).",
-".prep($line['warranty'])."
-);";
+".prep($partid).",$ro_number,1,1,".prep($r['price_per_unit']).",".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
+NULL,".prep($line['ref_1']).",".prep($line['ref_1_label']).",".prep($line['ref_2']).",".prep($line['ref_2_label']).",".prep($r['notes']).",".prep($line['warranty']).");";
 qdb($item_insert) or die(qe()." | $item_insert");
 echo($item_insert."<br>");
 
@@ -278,7 +237,7 @@ foreach($results as $i => $r){
     $sales_rep_id = mapUser($r['sales_rep_id']);
     $private_notes .= $r['ext_notes'];
     $freight_service = prep($SERVICE_MAPS[$r['carrier_id']]);
-    $freight_carrier = prep($CARRIER_MAPS($r['carrier_id']));
+    $freight_carrier = prep($CARRIER_MAPS[$r['carrier_id']]);
     $terms = prep($TERMS_MAPS[$R['terms_id']]);
     $line['warranty'] = $WARRANTY_MAPS[$r['warranty_id']]; //warranty_id
     $partid = $inv_info['partid'];
@@ -314,11 +273,9 @@ if(mysqli_num_rows($check_result) == 0){
     $order_insert = "
         INSERT INTO `repair_orders`(
         `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
-        `freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES (
+        `freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`, `repaircodeid`) VALUES (
         $ro_number, ".prep($r['created_at']).", $creator_id, ".prep($sales_rep_id).", ".prep($companyid).", 
-        ".prep($r['purchase_order']).", 
-        ".prep(address_translate($r['ship_to'])).", 
-        $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($private_notes).", ".prep($status).");";
+        ".prep($r['purchase_order']).", ".prep(address_translate($r['ship_to'])).", $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($private_notes).", ".prep($status).", ".prep($r['shipped_status_id']).");";
     
     qdb($order_insert) or die(qe(). " | $order_insert");
     echo("$order_insert '\$order_insert'<br>");
@@ -329,19 +286,8 @@ if(mysqli_num_rows($check_result) == 0){
     $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
     `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
     ".prep($partid).",
-    $ro_number,
-    1,
-    1,
-    ".prep($r['price_per_unit']).",
-    ".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
-    ".prep($invid).",
-    ".prep($line['ref_1']).",
-    ".prep($line['ref_1_label']).",
-    ".prep($line['ref_2']).",
-    ".prep($line['ref_2_label']).",
-    ".prep($r['notes']).",
-    ".prep($line['warranty'])."
-    );";
+    $ro_number,1,1,".prep($r['price_per_unit']).",".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
+    ".prep($invid).",".prep($line['ref_1']).",".prep($line['ref_1_label']).",".prep($line['ref_2']).",".prep($line['ref_2_label']).",".prep($r['notes']).",".prep($line['warranty']).");";
     // exit($item_insert);
     qdb($item_insert) or die(qe()." | $item_insert");
     echo("$item_insert '\$item_insert'<br>");
@@ -399,16 +345,7 @@ else{
       $inv_insert = "INSERT INTO `inventory`(`serial_no`,`qty`, `partid`, `conditionid`,
       `status`,`locationid`,`userid`,`date_created`,`notes`,`repair_item_id`) 
       VALUES (
-      ".prep(strtoupper($r['serials'])).",
-      0,
-      ".prep($partid).",
-      5,
-      ".prep($item_status).",
-      ".$locationid.",
-      ".$creator_id.",
-      ".prep($r['created_at']).",
-      ".prep("REPAIR IMPORT ".$r['notes']).",
-      ".prep($repair_item_id).")";
+      ".prep(strtoupper($r['serials'])).",1,".prep($partid).",5,".prep($item_status).",".$locationid.",".$creator_id.",".prep($r['created_at']).",".prep("REPAIR IMPORT ".$r['notes']).",".prep($repair_item_id).")";
       qdb($inv_insert) or die(qe()." | $inv_insert");
       echo("$inv_insert '\$inv_insert'<br>");
       $invid = qid();
@@ -436,22 +373,27 @@ else{
     $results = qdb($activities_select, "PIPE") or die(qe("PIPE").$activities_select);
     foreach($results as $r){
         $ro_number = $r['ticket_number'];
-        
         //Get Line Item Number
         $ln_query = "SELECT `id` FROM `repair_items` WHERE `ro_number` = '$ro_number';";
         $ln = qdb($ln_query) or die(qe()." | $ln_query");
         $ln = mysqli_fetch_assoc($ln);
         $repair_item_id = $ln['id'];
         $tech_id = 16;
-        if ($r['date_in']){
-            $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
-                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_in']." 12:00:00","Y-m-d G:i:s")).", $tech_id, 'Checked In');";
-                    qdb($insert) or die(qe()." | $insert");
-                    echo($insert."<br>");
-        }
+        // if ($r['date_in']){
+        //     $item_received = "";
+        //     if(format_date($r['date_in'],"y-m-d") == format_date($r['created_at'],"y-m-d")){
+        //         $item_received = format_date($r['created_at'], "Y-m-d G:i:s", array("h"=>1));
+        //     } else {
+        //         $item_received = format_date($r['date_in']." 12:00:00", "Y-m-d G:i:s");
+        //     }
+        //     $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+        //             VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep($item_received).", $tech_id, 'Checked In');";
+        //             qdb($insert) or die(qe()." | $insert");
+        //             echo($insert."<br>");
+        // }
         if ($r['date_out']){
             $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
-                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_out']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Checked Out');";
+                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_out']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Ticket Closed');";
                     qdb($insert) or die(qe()." | $insert");
                     echo($insert."<br>");
         }
@@ -479,6 +421,7 @@ else{
         if($rma[0] != "RMA" && strlen($n) > 3){
             $notes = $n;
         }
+
         if ($notes){
             if ($r['assigned_in']){
                 $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
@@ -501,5 +444,79 @@ else{
         
     }
 
+
+$rtest = "SELECT * FROM `inventory_repairtest`";
+$rt_result = qdb($rtest,"PIPE") or die(qe("PIPE")." | $rtest");
+foreach($rt_result as $r){
+    $ro_number = $r['repair_id'];
+    //Get Line Item Number
+    $ln_query = "SELECT `id` FROM `repair_items` WHERE `ro_number` = '$ro_number';";
+    $ln = qdb($ln_query) or die(qe()." | $ln_query");
+    $ln = mysqli_fetch_assoc($ln);
+    $repair_item_id = $ln['id'];
+    $tech_id = 16;
+    if ($r['datetime_in']){
+        $tech_id = prep($r['checkin_by_id'],16);
+        $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['datetime_in'],"Y-m-d G:i:s")).", $tech_id, 'Testing Complete');";
+                qdb($insert) or die(qe()." | $insert");
+                echo($insert."<br>");
+    }
+    if ($r['datetime_out'] && !$r['datetime_in']){
+        $tech_id = prep($r['checkout_by_id'],16);
+        $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['datetime_out'],"Y-m-d G:i:s")).", $tech_id, ".prep($r['notes'],"'In Test Lab'").");";
+                qdb($insert) or die(qe()." | $insert");
+                echo($insert."<br>");
+    }
+    if($r['notes']){
+        $tech_id = prep($r['tech_id'],16);
+        $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['datetime_out'],"Y-m-d G:i:s")).", $tech_id, ".prep($r['notes']).");";
+                qdb($insert) or die(qe()." | $insert");
+                echo($insert."<br>");
+        $r['timestamp'];
+    }
+}
+
+$rcheckout = "SELECT * FROM inventory_repaircheckout;";
+$rc_result = qdb($rcheckout,"PIPE") or die(qe("PIPE")." | $rcheckout");
+foreach ($rc_result as $r) {
+    $ro_number = $r['repair_id'];
+    //Get Line Item Number
+    $ln_query = "SELECT `id` FROM `repair_items` WHERE `ro_number` = '$ro_number';";
+    $ln = qdb($ln_query) or die(qe()." | $ln_query");
+    $ln = mysqli_fetch_assoc($ln);
+    $repair_item_id = $ln['id'];
+    $tech_id = prep($r['tech_id'],16);
+    if ($r['datetime_in']){
+        $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['datetime_in'],"Y-m-d G:i:s")).", $tech_id, ".prep($r['notes'],"'Ready For Testing'").");";
+                qdb($insert) or die(qe()." | $insert");
+                echo($insert."<br>");
+    }
+    if ($r['datetime_out']){
+        $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['datetime_out'],"Y-m-d G:i:s")).", $tech_id, ".prep($r['notes'],"'In Repair Lab'").");";
+                qdb($insert) or die(qe()." | $insert");
+                echo($insert."<br>");
+    }
+}
+
+/*
+`328667`, `328666`, `328665`, `328664`, `328663`, `328662`, `328661`, `328660`, `328655`, 
+`328646`, `328633`, `328624`, `328612`, `328611`, `328610`, `328559`, `328545`, `328544`, 
+`328523`, `328490`, `328411`, `328388`, `328387`, `328384`, `328261`, `328246`, `328233`,
+`328140`, `328139`, `328138`, `328137`, `328129`, `328061`, `328019`, `327797`, `327576`,
+`327575`, `327574`, `327533`, `327513`, `327512`, `327510`, `327509`, `327336`, `327181`,
+`327127`, `326977`, `326881`, `326876`, `326785`, `326758`, `326722`, `326719`
+
+Screen          =>  database    =>  Ours
+----------------------------------------
+Item Received   =>  date_in     =>  
+
+
+
+*/
 ?>
 

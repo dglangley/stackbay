@@ -4,7 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now){
+	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in){
 		if ($_REQUEST['type'] == 'test_changer'){
 			$status = "in repair";
 			$select = "SELECT `status` FROM `inventory` where `repair_item_id` = ".prep($repair_item_id).";";
@@ -22,22 +22,47 @@
 			$query = "UPDATE `inventory` SET `status`='$status' WHERE `repair_item_id` = ".prep($repair_item_id).";";
 			qdb($query) or die(qe()." | $query");
 		}
+
+		if($trigger == "complete" && $check_in == 'check_out') {
+			$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", 'Checked Out');";
+			$result = qdb($query) OR die(qe());
+		}
 		
-		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", ".prep($notes).");";
+		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
 		$result = qdb($query) OR die(qe());
 	}
 
-	function stockUpdate($repair_item_id, $ro_number){
+	function stockUpdate($repair_item_id, $ro_number, $repair_code){
+		$REPAIR_MAP = array(
+			1=>"Completed",
+			2=>"NTF",
+			3=>"",
+			4=>"",
+			5=>"",
+			6=>"",
+			7=>"",
+			8=>"",
+			9=>"",
+			10=>"",
+			11=>"",
+			12=>"",
+			13=>"",
+			14=>"",
+			15=>"",
+			16=>"",
+			17=>"",
+		);
+
 		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
 		$result = qdb($query) OR die(qe());
 
-		$query = "UPDATE repair_orders SET status ='Completed' WHERE ro_number = ".prep($ro_number).";";
+		$query = "UPDATE repair_orders SET repaircodeid = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
 		$result = qdb($query) OR die(qe());
 	}
 
-	function repairComponent($partid, $location, $condition, $ro_number, $qty) {
+	// function repairComponent($partid, $location, $condition, $ro_number, $qty) {
 
-	}
+	// }
 	
 	//Declare variables
 	$ro_number;
@@ -56,6 +81,9 @@
 	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
 	if (isset($_REQUEST['repair_components'])) { $repair_components = $_REQUEST['repair_components']; }
+	if (isset($_REQUEST['check_in'])) { $check_in = $_REQUEST['check_in']; }
+	//if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
+	if (isset($_REQUEST['repair_code'])) { $repair_code = $_REQUEST['repair_code']; }
 
 	if(!$repair_components) {
 		if (isset($_REQUEST['type'])) { 
@@ -66,17 +94,27 @@
 			} else if($_REQUEST['type'] == 'check_out'){
 				$notes = "Checked Out";
 			} else if($_REQUEST['type'] == 'complete_ticket'){
-				$notes = "Repair Ticket Completed";
+				$repair_text = "";
+
+				$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
+				$results = qdb($select);
+		
+				if (mysqli_num_rows($results)>0) {
+					$results = mysqli_fetch_assoc($results);
+					$repair_text = $results['description'];
+				}
+
+				$notes = "Repair Ticket Completed. Final Status: <b>" . $repair_text . "</b>";
 				$trigger = "complete";
 			} else if ($_REQUEST['type'] == 'test_changer'){
 				$notes = "Marked as `In Testing`";
 			}
 		}
 
-		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now);
+		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
 
 		if($trigger == "complete") {
-			stockUpdate($repair_item_id, $ro_number);
+			stockUpdate($repair_item_id, $ro_number, $repair_code);
 		}
 	} else {
 

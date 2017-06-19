@@ -333,7 +333,7 @@
                 $update = "UPDATE ".$o['item']." SET 
                 `partid`= $item_id,
                 `line_number`= $line_number,
-                `qty`= $qty,
+                ".($r['qty'] ? "`qty`= $qty," : "")."
                 `price`= $unitPrice, 
                 `".$o['date_field']."`= $date ";
 if(!$o['repair']){
