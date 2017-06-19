@@ -46,6 +46,8 @@
 
 
 function is_component($row){return ($row['classification'] == "component");}
+function not_component($row){return ($row['classification'] != "component");}
+
 function search_as_heci($search_str){
 		$page = grab('page');
 		$heci7_search = false;
@@ -73,7 +75,11 @@ function search_as_heci($search_str){
 		} else {
 			$results = hecidb(format_part($search_str));
 		}
-        $results = array_filter($results, "is_component");
+        if($page =="Repair" || $page=="Tech" ){
+            $results = array_filter($results, "is_component");
+        } else{
+            $results = array_filter($results, "not_component");
+        }
 		return $results;
 }
 

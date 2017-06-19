@@ -17,9 +17,9 @@
     include_once $rootdir.'/inc/import_aid.php';
     include_once $rootdir.'/inc/getUser.php';
 	
-    qdb("TRUNCATE repair_orders;");
-    qdb("TRUNCATE repair_items;");
-    qdb("TRUNCATE TABLE `repair_activities`;");
+    // qdb("TRUNCATE repair_orders;");
+    // qdb("TRUNCATE repair_items;");
+    // qdb("TRUNCATE TABLE `repair_activities`;");
 
     
 
