@@ -246,6 +246,20 @@
 		
 		return $initial;
 	}
+
+	function getRepairCode($repair_code){
+		$repair_text = "";
+				
+		$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
+		$results = qdb($select);
+
+		if (mysqli_num_rows($results)>0) {
+			$results = mysqli_fetch_assoc($results);
+			$repair_text = $results['description'];
+		}
+
+		return $repair_text;
+	}
 	
 	function output_module($order, $search){
 		
@@ -439,8 +453,8 @@
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					} else if($order == 'ro') {
-						$status = ($r['status'] != 'Active' ? 'complete_item' : 'active_item');
-						$status_name = $r['status'];
+						$status = ($r['repaircodeid'] ? 'complete_item' : 'active_item');
+						$status_name = ($r['repaircodeid'] ? getRepairCode($r['repaircodeid']) : 'Active');
 						//print_r($r['status'] );
 					}
 				

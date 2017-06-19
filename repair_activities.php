@@ -32,17 +32,37 @@
 		$result = qdb($query) OR die(qe());
 	}
 
-	function stockUpdate($repair_item_id, $ro_number, $status){
+	function stockUpdate($repair_item_id, $ro_number, $repair_code){
+		$REPAIR_MAP = array(
+			1=>"Completed",
+			2=>"NTF",
+			3=>"",
+			4=>"",
+			5=>"",
+			6=>"",
+			7=>"",
+			8=>"",
+			9=>"",
+			10=>"",
+			11=>"",
+			12=>"",
+			13=>"",
+			14=>"",
+			15=>"",
+			16=>"",
+			17=>"",
+		);
+
 		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
 		$result = qdb($query) OR die(qe());
 
-		$query = "UPDATE repair_orders SET status =".prep($status)." WHERE ro_number = ".prep($ro_number).";";
+		$query = "UPDATE repair_orders SET repaircodeid = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
 		$result = qdb($query) OR die(qe());
 	}
 
-	function repairComponent($partid, $location, $condition, $ro_number, $qty) {
+	// function repairComponent($partid, $location, $condition, $ro_number, $qty) {
 
-	}
+	// }
 	
 	//Declare variables
 	$ro_number;
@@ -62,7 +82,8 @@
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
 	if (isset($_REQUEST['repair_components'])) { $repair_components = $_REQUEST['repair_components']; }
 	if (isset($_REQUEST['check_in'])) { $check_in = $_REQUEST['check_in']; }
-	if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
+	//if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
+	if (isset($_REQUEST['repair_code'])) { $repair_code = $_REQUEST['repair_code']; }
 
 	if(!$repair_components) {
 		if (isset($_REQUEST['type'])) { 
@@ -73,7 +94,17 @@
 			} else if($_REQUEST['type'] == 'check_out'){
 				$notes = "Checked Out";
 			} else if($_REQUEST['type'] == 'complete_ticket'){
-				$notes = "Repair Ticket Completed. Final Status: <b>" . $status . "</b>";
+				$repair_text = "";
+
+				$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
+				$results = qdb($select);
+		
+				if (mysqli_num_rows($results)>0) {
+					$results = mysqli_fetch_assoc($results);
+					$repair_text = $results['description'];
+				}
+
+				$notes = "Repair Ticket Completed. Final Status: <b>" . $repair_text . "</b>";
 				$trigger = "complete";
 			} else if ($_REQUEST['type'] == 'test_changer'){
 				$notes = "Marked as `In Testing`";
@@ -83,7 +114,7 @@
 		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
 
 		if($trigger == "complete") {
-			stockUpdate($repair_item_id, $ro_number, $status);
+			stockUpdate($repair_item_id, $ro_number, $repair_code);
 		}
 	} else {
 

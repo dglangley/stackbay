@@ -325,7 +325,7 @@
 							    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
 				            </div>
 				            <div class="col-md-1" style="padding: 0 0 0 5px;">
-								<button type='submit'>submit</button>
+								<button class="btn btn-sm btn-primary" type='submit'>Submit</button>
 							</div>
 						    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
 			            </div>
