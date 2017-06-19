@@ -171,7 +171,7 @@
 		$repair_text = "";
 				
 		$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
-		$results = qdb($select);
+		$results = qdb($select) or die(qe()." | $select");
 
 		if (mysqli_num_rows($results)>0) {
 			$results = mysqli_fetch_assoc($results);

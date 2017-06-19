@@ -37,7 +37,7 @@
             ";
             qdb($insert) or die(qe()." | $insert");
             $partid = qid();
-            indexer($partid);
+            indexer($partid, "partid");
         }
         print_r($r);
         echo("<br>");
