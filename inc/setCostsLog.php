@@ -24,8 +24,8 @@
 			$query3 .= "VALUES ('".res($inventoryid)."',";
 			if ($eventid) { $query3 .= "'".res($eventid)."',"; } else { $query3 .= "NULL,"; }
 			$query3 .= "'".res($event_type)."','".$dt."','".$log_diff."'); ";
-			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 			if ($GLOBALS['debug']==1) { echo $query3.'<BR>'; }
+			else { $result3 = qdb($query3) OR die(qe().'<BR>'.$query3); }
 		}
 	}
 ?>

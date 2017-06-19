@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcLegacyRepairCost.php';
 
 	$debug = 1;
 	function setCost($order_number,$partid=0) {
@@ -82,7 +82,7 @@
 							'po'=>'',
 							'id'=>$r3['item_id'],
 						);
-						$repair_cost = calcRepairCost($repair);
+						$repair_cost = calcLegacyRepairCost($repair);
 						$total_repair += $repair_cost;
 						if ($repair_cost>0) { echo 'Serial '.$serial.' Repair '.$r3['ticket_number'].' cost: '.$repair_cost.'<BR>'; }
 
@@ -147,7 +147,7 @@
 
 				// set the cost of the purchase price itself
 				if ($freight_per>0) {
-					setCostsLog($r2['serialid'],$r['id'],'package_id',$freight_per);//,$pkg_dt);
+					setCostsLog($r2['serialid'],$r['id'],'packageid',$freight_per);//,$pkg_dt);
 					$serials[$r2['serialid']]['freight'] += $freight_per;
 					$serials[$r2['serialid']]['total'] += $freight_per;
 				}

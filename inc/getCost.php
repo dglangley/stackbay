@@ -28,10 +28,14 @@
 		$actual_sum = 0;
 		$average_sum = 0;
 		$qty_sum = 0;
-		$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND (status = 'received' OR status = 'shelved') ";
-		$query .= "AND conditionid > 0; ";//AND qty > 0; ";
+		//$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND (status = 'received' OR status = 'shelved') ";
+		//$query .= "AND conditionid > 0; ";//AND qty > 0; ";
+		$query = "SELECT * FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid ORDER BY datetime DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$qty_sum = mysqli_num_rows($result);
 		while ($r = mysqli_fetch_assoc($result)) {
+			$average_sum += $r['amount'];
+/*
 			$qty = 1;
 			if ($r['qty']>0) { $qty = $r['qty']; }
 			$qty_sum += $qty;
@@ -43,6 +47,7 @@
 				$actual_sum += $r2['actual']/$qty;
 				$average_sum += $r2['average']/$qty;
 			}
+*/
 		}
 		$actual_cost = 0;
 		$average_cost = 0;

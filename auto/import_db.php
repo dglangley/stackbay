@@ -23,7 +23,7 @@
 	include_once $rootdir.'/inc/setPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
-	include_once $rootdir.'/inc/calcRepairCost.php';
+	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 	include_once $rootdir.'/inc/form_handle.php';
 
 

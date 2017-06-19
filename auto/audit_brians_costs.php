@@ -1,7 +1,7 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/pipe.php';
-	include_once 'inc/calcRepairCost.php';
+	include_once 'inc/calcLegacyRepairCost.php';
 
 	$BOGUS_COST = 0;//a catch-all for components purchased, then zeroed, and never received, but that Brian was including in project costs
 	$PROJECTS = array();
@@ -205,7 +205,7 @@ echo $query.'<BR><BR>';
 //		$cost += $r['freight_cost'];
 
 		/*** CALCULATE REPAIR COSTS, IF ANY ***/
-		$repair_cost = calcRepairCost($r);
+		$repair_cost = calcLegacyRepairCost($r);
 		$r['purch_cost'] = $cost;
 		$r['repair_cost'] = $repair_cost;
 		$r['cost_plus_repair'] = $cost+$repair_cost;

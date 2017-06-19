@@ -8,7 +8,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/getPipeIds.php';
-	include_once $rootdir.'/inc/calcRepairCost.php';
+	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 
 	$PURCHASES = array();
 	function getSalesRecords($item_id,$startDate='',$endDate='') {
@@ -293,7 +293,7 @@
 
 			// if repaired, calc repair cost
 			if ($r['repair_id']) {
-				$repair_cost = calcRepairCost($r);
+				$repair_cost = calcLegacyRepairCost($r);
 				// if item was not replaced and only repaired, and so long as the item has been shipped back,
 				// then we count only the repair cost against us
 				if (! $r['new_item_id']) {

@@ -1,19 +1,27 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCostsLog.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setAverageCost.php';
+
+	if (! isset($debug)) { $debug = 0; }
 
 	function setCost($inventoryid=0) {
 		if (! $inventoryid) { return false; }
 
+		$debug = $GLOBALS['debug'];
+
 		// get qty of inventory record in case it's a lot purchase price
-		$query = "SELECT qty, serial_no FROM inventory WHERE id = '".res($inventoryid)."'; ";
+		$cost = 0;
+		$query = "SELECT qty, serial_no, partid FROM inventory WHERE id = '".res($inventoryid)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$r = mysqli_fetch_assoc($result);
 		$qty = 1;
 		if ($r['qty']>0) { $qty = $r['qty']; }
 		$serial = $r['serial_no'];
+		$partid = $r['partid'];
 
-		$cost = 0;
 		// get all purchase records in case we've purchased it multiple times
 		$query = "SELECT * FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
 		$query .= "AND field_changed = 'purchase_item_id' AND value IS NOT NULL; ";
@@ -30,24 +38,15 @@
 			// use this for reference below in case there's an RTV
 			$purchase_cost = $r2['price']/$qty;
 
+			// update costs log
 			$cost += $purchase_cost;
+			setCostsLog($inventoryid,$pi_id,'purchase_item_id',$purchase_cost);
 
 			// get purchase-related freight costs here
-			$query2 = "SELECT freight_amount, packageid FROM package_contents c, packages p ";
-			$query2 .= "WHERE serialid = '".$inventoryid."' AND packageid = p.id ";
-			$query2 .= "AND p.order_number = '".$po_number."' AND p.order_type = 'Purchase'; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-			if (mysqli_fetch_assoc($result2)>0) {
-				$r2 = mysqli_fetch_assoc($result2);
-				$freight_amount = $r2['freight_amount'];
-
-				// divide the freight amount on the package by the total number of pieces in the box
-				$query2 = "SELECT id FROM package_contents c WHERE packageid = '".$r2['packageid']."'; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-				$pcs = mysqli_num_rows($result2);
-				if ($pcs>0) {//should always be >0; um, hello, we're already inside the conditional statement above!
-					$cost += ($freight/$pcs);
-				}
+			$freight_cost = getUnitFreight($inventoryid,$po_number,'Purchase');
+			if ($freight_cost>0) {
+				$cost += $freight_cost;
+				setCostsLog($inventoryid,$r2['packageid'],'packageid',$freight_cost);
 			}
 
 			// discount rtv's here
@@ -56,7 +55,9 @@
 			$query2 .= "AND si.id = h.value AND h.field_changed = 'sales_item_id' AND h.invid = i.id; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
 				$cost -= $purchase_cost;
+				setCostsLog($inventoryid,$r2['so_number'],'rtv',$purchase_cost);
 			}
 		}
 
@@ -69,15 +70,44 @@
 		}
 
 		// get repair costs here
-		$query = "SELECT * FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
+		$query = "SELECT value repair_item_id FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
 		$query .= "AND field_changed = 'repair_item_id' AND value IS NOT NULL; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$cost += 
+			$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['repair_item_id']."'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
+				$cost += $repair_cost;
+				setCostsLog($inventoryid,$r['repair_item_id'],'repair_item_id',$repair_cost);
+			}
 		}
 
+		// calculate diff in cost so we can adjust cost average
+		$actual = 0;
+		$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$actual = $r['actual'];
+		}
+		$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+		setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
+
+		// reset inventory costs with latest cost data
+		$query = "DELETE FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
+		if ($debug==1) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+
+		$query = "REPLACE inventory_costs (inventoryid, datetime, actual, average) ";
+		$query .= "VALUES ('".$inventoryid."','".$GLOBALS['now']."','".$cost."','".$cost."'); ";
+		if ($debug==1) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+
 		// until we've migrated repairs completely, this will stand in as our cost calculator for repairs
-		calcLegacyRepair($serial);
+//		calcLegacyRepair($serial);
+	}
+
 	function calcLegacyRepair($serial='') {
 		if (! $serial) { return (0); }
 
