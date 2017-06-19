@@ -534,7 +534,7 @@
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
-					<?php if(strtolower($status) != 'voided') { ?>
+					<?php if(strtolower($status) != 'voided' && $status) { ?>
 						<?php if($sales_order && $o['type'] == 'Repair') { ?>
 							<a href="/shipping.php?on=<?=$sales_order;
 							?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
