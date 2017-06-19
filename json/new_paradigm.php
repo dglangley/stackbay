@@ -44,17 +44,20 @@
 //      - Output the sub-rows
 //  Output the search row.
 
+
+function is_component($row){return ($row['classification'] == "component");}
 function search_as_heci($search_str){
+		$page = grab('page');
 		$heci7_search = false;
 		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
 			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'";
-			$query .= (($page == "Tech")? " AND classification = 'component'" : "");
+// 			$query .= (? " AND classification = 'component'" : "");
 			$query .= "; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
 		} else {
 		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'";
-		    $query .= (($page == "Tech")? " AND classification = 'component'" : "");
+		  //  $query .= (($page =="Repair" || $page == "Tech")? " AND classification = 'component'" : "");
 		    $query .= "; ";
 			$result = qdb($query) or jsonDie(qe()." | $query");
 			if (mysqli_num_rows($result)) {
@@ -70,6 +73,7 @@ function search_as_heci($search_str){
 		} else {
 			$results = hecidb(format_part($search_str));
 		}
+        $results = array_filter($results, "is_component");
 		return $results;
 }
 
@@ -258,7 +262,7 @@ function sub_rows($search = ''){
             }
         } else {
             $rows .= "
-                <tr class = '' data-line-id = $id>
+                <tr class = 'items_label' data-line-id = $id>
                     <td></td>
                     <td colspan='6' style=''>No Matches</td>
                     <td style=''></td>
@@ -274,13 +278,8 @@ function sub_rows($search = ''){
 $output = '';
 
 //$output .= head_out();
-if ($mode == "search"){
-    $output .= sub_rows($search_string);
-}
-else{
-//david 3/1/17 not using no mo
-//    $output .= search_row();
-}
+$output .= sub_rows($search_string);
+
 //echo $output;exit;
 
 echo json_encode($output);

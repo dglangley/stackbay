@@ -397,12 +397,12 @@ else{
         //             qdb($insert) or die(qe()." | $insert");
         //             echo($insert."<br>");
         // }
-        // if ($r['date_out']){
-        //     $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
-        //             VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_out']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Checked Out');";
-        //             qdb($insert) or die(qe()." | $insert");
-        //             echo($insert."<br>");
-        // }
+        if ($r['date_out']){
+            $insert = "INSERT INTO `repair_activities`(`ro_number`, `repair_item_id`, `datetime`, `techid`, `notes`) 
+                    VALUES (".prep($ro_number).",".prep($repair_item_id).", ".prep(format_date($r['date_out']." 17:00:00","Y-m-d G:i:s")).", $tech_id, 'Ticket Closed');";
+                    qdb($insert) or die(qe()." | $insert");
+                    echo($insert."<br>");
+        }
         
         //THIS IS NOT A STABLE WAY TO BUILD THIS BUT WILL MAKE THE WORLD SLIGHTLY BETTER? TALK TO DAVID;
         if ($r['assigned_in']){

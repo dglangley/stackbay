@@ -5,6 +5,8 @@
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/form_handle.php';
     include_once $rootdir.'/inc/import_aid.php';
+    include_once $rootdir.'/inc/indexer.php';
+    
     
     qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
     qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
@@ -15,7 +17,7 @@
     qdb("TRUNCATE repair_items;");
     qdb("TRUNCATE TABLE `parts_component_map`;");
     qdb("TRUNCATE TABLE `repair_activities`;");
-    qdb("DELETE FROM `parts` WHERE `classification` = 'component'");
+    qdb("DELETE FROM `parts` WHERE `classification` = 'component';");
     
     $component_query = "SELECT * FROM inventory_component;";
     $result = qdb($component_query,"PIPE") or die(qe("PIPE")." | $component_query");
@@ -35,6 +37,7 @@
             ";
             qdb($insert) or die(qe()." | $insert");
             $partid = qid();
+            indexer($partid);
         }
         print_r($r);
         echo("<br>");
