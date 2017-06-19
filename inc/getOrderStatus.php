@@ -18,8 +18,9 @@
             if(mysqli_num_rows($result)){
                 $result = mysqli_fetch_assoc($result);
                 return($result['status']);
-            }
-            else{
+            } else if($type == 'Repair') {
+                return('');
+            } else{
                 return($o['status_empty']);
             }
         }
