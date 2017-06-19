@@ -95,12 +95,9 @@ foreach($results as $r){
 //Note the fact that we don't actually have a part yet
 $order_insert = "INSERT INTO `repair_orders`(
 `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
-`freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES (
+`freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`,`repaircodeid`) VALUES (
 $ro_number, ".prep($r['created_at']).", ".$creator_id.", ".prep($sales_rep_id).", ".prep($companyid).", 
-".prep($r['purchase_order']).", 
-".prep(address_translate($r['ship_to'])).", 
-$freight_carrier, $freight_service, 
-$terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).");";
+".prep($r['purchase_order']).", ".prep(address_translate($r['ship_to'])).", $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($meta['notes']).", ".prep($status).", ".prep($r['shipped_status_id']).");";
 qdb($order_insert) or die(qe(). " | $order_insert");
 echo($order_insert."<br>");
 
@@ -279,9 +276,7 @@ if(mysqli_num_rows($check_result) == 0){
         `ro_number`, `created`, `created_by`, `sales_rep_id`, `companyid`, `cust_ref`, `ship_to_id`, 
         `freight_carrier_id`, `freight_services_id`, `termsid`, `public_notes`, `private_notes`, `status`, `repaircodeid`) VALUES (
         $ro_number, ".prep($r['created_at']).", $creator_id, ".prep($sales_rep_id).", ".prep($companyid).", 
-        ".prep($r['purchase_order']).", 
-        ".prep(address_translate($r['ship_to'])).", 
-        $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($private_notes).", ".prep($status).", ".prep($r['shipped_status_id']).");";
+        ".prep($r['purchase_order']).", ".prep(address_translate($r['ship_to'])).", $freight_carrier, $freight_service, $terms, ".prep($r['ship_to']).", ".prep($private_notes).", ".prep($status).", ".prep($r['shipped_status_id']).");";
     
     qdb($order_insert) or die(qe(). " | $order_insert");
     echo("$order_insert '\$order_insert'<br>");
