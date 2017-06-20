@@ -77,7 +77,7 @@ function search_as_heci($search_str){
 		}
         if($page =="Repair" || $page=="Tech" ){
             $results = array_filter($results, "is_component");
-        } else{
+        } else {
             $results = array_filter($results, "not_component");
         }
 		return $results;
@@ -150,9 +150,13 @@ function sub_rows($search = ''){
                 $match_string .= prep($match).", ";
             }
             $match_string = rtrim($match_string, ", ");
-        
+            
+            
+            
             //Get all the currently in hand
-            $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string) GROUP BY partid;";
+            $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string)
+            ".($page =="Repair" || $page=="Tech" ?" AND (`status` = 'shelved' OR `status` = 'received') ":"")."
+            GROUP BY partid;";
             $in_stock  = qdb($inventory) or jsonDie(qe()." | $inventory");
             if (mysqli_num_rows($in_stock)){
                 foreach ($in_stock as $r){
@@ -160,10 +164,12 @@ function sub_rows($search = ''){
                 }
             }
             
-
             // Get all the ordered quantities
-            
-            $purchased = "SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` FROM  `purchase_items` pi WHERE pi.partid in ($match_string) GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
+            $purchased = "
+            SELECT (SUM( pi.qty ) - SUM(pi.qty_received)) total, pi.`partid` 
+            FROM  `purchase_items` pi 
+            WHERE pi.partid in ($match_string) 
+            GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
             //Use an inventory join method here at some point
                 
             $incoming = qdb($purchased) or jsonDie(qe()." | $purchased");

@@ -42,6 +42,6 @@
         print_r($r);
         echo("<br>");
         $pcm_insert = "INSERT INTO parts_component_map (`partid`,`componentid`) VALUES (".prep($partid).", ".prep($r['id']).");";
-        qdb($pcm_insert) or die(qe());
+        qdb($pcm_insert) or die(qe()." | $pcm_insert");
     }
 ?>
