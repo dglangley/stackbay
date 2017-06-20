@@ -27,6 +27,8 @@
 	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/component_split.php';
 
+	$result;
+
 	$partid = $_REQUEST['partid'];
 	$request = $_REQUEST['request'];
 	$received = $_REQUEST['received'];
@@ -50,7 +52,7 @@
 	    return $display;
 	}
 
-	function grabInventoryStock($partid, $request, $received, $request){
+	function grabInventoryStock($partid, $request, $received){
 		$html = "";
 		$inventory = array();
 
@@ -82,15 +84,21 @@
 		return $html;
 	}
 
-	function repairComponent($order_number, $components){
-		$result;
-
+	function repairComponent($order_number, $components, $repair_item_id){
+		$result = true;
 		foreach($components as $item) {
-			//function split_components($invid, $new_qty, $id_type = "", $id_number = "")
-			$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
+			if($item['qty']) {
+				//function split_components($invid, $new_qty, $id_type = "", $id_number = "")
+				$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
 
-			$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep($newID).", ".prep($order_number).", ".prep($item['qty']).")";
-			$result = qdb($query) or die(qe());
+				if($newID) {
+					$query = "UPDATE inventory SET status = 'in repair' WHERE id = ".prep($newID).";";
+					qdb($query) or die(qe());
+
+					$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep($newID).", ".prep($order_number).", ".prep($item['qty']).");";
+					$result = qdb($query) or die(qe());
+				}
+			}
 		}
 
 		return $result;
@@ -98,7 +106,7 @@
 
 	if(!$components) {
 		//This is for stock grabbing
-		$result = grabInventoryStock($partid, $request, $received, $request);
+		$result = grabInventoryStock($partid, $request, $received);
 	} else {
 		//used for component pull to repair
 		$result = repairComponent($order_number, $components, $repair_item_id);

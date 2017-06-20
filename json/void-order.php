@@ -14,7 +14,11 @@
     $status;
     
     if($number && $type){
-        $query = "SELECT status FROM ".$o['order']." WHERE ".$o['id']." = $number;";
+        if($type != 'Repair') {
+            $query = "SELECT status FROM ".$o['order']." WHERE ".$o['id']." = $number;";
+        } else {
+           $query = "SELECT repaircodeid as status FROM ".$o['order']." WHERE ".$o['id']." = $number;"; 
+        }
         $result = qdb($query);
         
         if (mysqli_num_rows($result)>0) {
@@ -24,9 +28,12 @@
     }
     
     //echo $status; die;
-    $status = ($status == 'Void' ? 'Active' : 'Void');
-    
-    if($number && $type){
+    if($type == 'Repair') {
+        $status = ($status == '18' ? '' : '18');
+        $update = "UPDATE ".$o['order']." SET `repaircodeid` = '$status' WHERE ".$o['id']." = $number;";
+        $result = qdb($update);
+    } else if($number && $type){
+        $status = ($status == 'Void' ? 'Active' : 'Void');
         $update = "UPDATE ".$o['order']." SET `status` = '$status' WHERE ".$o['id']." = $number;";
         $result = qdb($update);
     }

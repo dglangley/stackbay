@@ -114,7 +114,7 @@
 				UNION
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
-				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `invid`, ' Qty: ', rc.qty ) as notes FROM repair_components rc, inventory i WHERE rc.ro_number = ".prep($ro_number)." AND i.id = rc.invid 
+				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)."
 				UNION
 				SELECT userid as techid, date_created as datetime, 'Received' as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") 
 				UNION
@@ -138,7 +138,11 @@
 		return $repair_activities;
 	}
 
-	function getComponents($ro_number) {
+	function in_array_r($item , $array){
+	    return preg_match('/"'.$item.'"/i' , json_encode($array));
+	}
+
+	function getComponents($ro_number, $repair_item_id) {
 		$purchase_requests = array();
 		$query;
 		
@@ -149,6 +153,15 @@
 			$purchase_requests[] = $row;
 		}
 
+		$query = "SELECT *, SUM(qty) as totalReceived FROM inventory WHERE repair_item_id = ". prep($repair_item_id) ." AND serial_no IS NULL GROUP BY partid;";
+		$result = qdb($query) OR die(qe());
+
+		while ($row = $result->fetch_assoc()) {
+			if(!in_array_r($row['partid'] , $purchase_requests)) {
+				$purchase_requests[] = $row;
+			}
+		}
+
 		return $purchase_requests;
 	}
 
@@ -156,7 +169,7 @@
 		$qty = 0;
 		$query;
 		
-		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." GROUP BY partid;";
+		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." AND (status = 'shelved' OR status = 'received') GROUP BY partid;";
 		$result = qdb($query) OR die(qe());
 				
 		if (mysqli_num_rows($result)>0) {
@@ -532,7 +545,7 @@
 											</tr>
 										</thead>
 										<?php
-											$components = getComponents($repair_order);
+											$components = getComponents($repair_order, $repair_item_id);
 											if($components)
 												foreach($components as $comp):
 													//Get the current status of the PO
@@ -555,17 +568,19 @@
 										?>
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=format($comp['partid'], true);?></td>
-												<td><?=$comp['totalOrdered'];?></td>
-												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style="">'.$comp['po_number'].'</span>' : '<span class="label label-warning active_label status_label" style="">Pending</span>');?></td>
+												<td><?=($comp['totalReceived'] ? $comp['totalReceived'] : $comp['totalOrdered']);?></td>
+												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style="">'.$comp['po_number'].'</span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
 												<!-- <td><?=$ordered;?></td> -->
 												<td><?=getQuantity($comp['partid']);?></td> 
-												<td class=""><?=(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0')?></td>
+												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-6">
-															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
-																<?=(getQuantity($comp['partid']) > 0 ? 'In' : 'No');?> Stock	
-													        </button>
+															<?php if($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0): ?>
+																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+																	<?=(getQuantity($comp['partid']) > 0 ? 'In' : 'No');?> Stock	
+														        </button>
+														    <?php endif; ?>
 														</div>
 
 														<div class="col-md-6">
@@ -838,6 +853,8 @@
 						partial.push(partialRow); 
 					}); 
 
+					console.log(submit);
+
 					//Create a purchase request for the remaining items
 					if(type == 'pull') {
 						$.ajax({ 
@@ -868,6 +885,11 @@
 						success: function(result) { 
 							console.log(result);
 							location.reload();
+						},
+						error: function(xhr, status, error) {
+							var err = eval("(" + xhr.responseText + ")");
+							console.log(err.Message);
+							//alert('error');
 						} 
 					}); 
 				});
@@ -895,7 +917,8 @@
 						data: { 
 							"pulled_items":submit,
 							"order_number":order_number,
-							"repair_item_id":repair_item_id
+							"repair_item_id":repair_item_id,
+							"type":'pull',
 						}, 
 						dataType: 'json', 
 						success: function(result) { 

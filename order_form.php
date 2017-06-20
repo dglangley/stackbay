@@ -513,7 +513,7 @@
 						}
 
 						if($status && $o['type'] == 'Repair'){
-							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
+							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
 						}
 
 						if ($order_number!='New'){
@@ -524,7 +524,7 @@
 					} else if ($o['rtv']){
 						echo("RTV FROM PO #$origin");
 					}
-					if (strtolower($status) == 'void' || strtolower($status) == 'voided'){
+					if ((strtolower($status) == 'void' || strtolower($status) == 'voided') && $o['type'] != 'Repair'){
 						echo ("<b><span style='color:red;'> [".strtoupper($status)."]</span></b>");
 					}
 					echo"</h2>";
