@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/import_aid.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setProfits.php';
 
 	/*****
 		Brian's commissions table fields:
@@ -82,12 +83,13 @@ echo $query.'<BR>';
 		if ($paid_date) { $paid_date = "'".$paid_date." 09:00:00'"; }
 		else { $paid_date = 'NULL'; }
 		$rep_id = mapUser($r['rep_id']);
-		$inventoryid = 'NULL';
+		$inventoryid = 0;
 
 		// BDB data points
 		$serial = '';
 		$inventory_id = 0;
 		$avg_cost = 0;
+		$sale_price = 0;
 		if (! $r['sold_item_id']) {
 die("Wait what happened here?!");
 continue;
@@ -95,19 +97,21 @@ continue;
 			if (! isset($sold_items[$r['sold_item_id']])) {
 				$sold_items[$r['sold_item_id']] = array('serial'=>'');
 
-				$query2 = "SELECT serial, inventory_id, avg_cost FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
+				$query2 = "SELECT serial, inventory_id, avg_cost, price FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
 				$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) { continue; }//need to resolve these missing records, by my count there are 14 on 6/7/17
 				$r2 = mysqli_fetch_assoc($result2);
 				$serial = trim($r2['serial']);
 				$inventory_id = $r2['inventory_id'];
 				$avg_cost = $r2['avg_cost'];
+				$sale_price = $r2['price'];
 
-				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$r2['inventory_id'],'avg_cost'=>$avg_cost);
+				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$r2['inventory_id'],'avg_cost'=>$avg_cost,'sale_price'=>$sale_price);
 			} else {
 				$serial = $sold_items[$r['sold_item_id']]['serial'];
 				$inventory_id = $sold_items[$r['sold_item_id']]['inventory_id'];
 				$avg_cost = $sold_items[$r['sold_item_id']]['avg_cost'];
+				$sale_price = $sold_items[$r['sold_item_id']]['sale_price'];
 			}
 
 			if ($serial=='000' OR $serial=='0') {
@@ -153,16 +157,42 @@ continue;
 			}
 		}
 
-		$cogs = 'NULL';
-		if ($avg_cost>0) { $cogs = "'".$avg_cost."'"; }
+		$sales_item_id = 0;
+		if ($inventoryid) {
+			$query2 = "SELECT si.id FROM inventory i, inventory_history h, sales_items si ";
+			$query2 .= "WHERE si.so_number = '".$r2['so_id']."' AND si.id = h.value AND h.field_changed = 'sales_item_id' ";
+			$query2 .= "AND h.invid = i.id AND i.id = $inventoryid; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$sales_item_id = "'".$r2['id']."'";
+			}
+		}
+
+		$cogs = 0;
+		if ($avg_cost>0) {
+			$cogs = "'".$avg_cost."'";
+			$profit = "'".($sale_price-$avg_cost)."'";
+		} else {
+			$profit = "'".$sale_price."'";
+		}
+
+		$profitid = 0;
 		$commissionid = 0;
-		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, datetime, cogs, profit, ";
+
+		if ($sales_item_id OR $inventoryid) {
+			$profitid = setProfits($inventoryid,$sales_item_id,$cogs,$profit);
+echo $serial.' '.$query2.'<BR>';
+		}
+
+		if (! $inventoryid) { $inventoryid = 'NULL'; }
+		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, datetime, ";
 		$query2 .= "rep_id, commission_rate, commission_amount) ";
-		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, $cogs, NULL, ";
+		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, ";
 		$query2 .= "'$rep_id', NULL, '".$r['amount']."'); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$commissionid = qid();
-echo $serial.' '.$query2.'<BR>';
+echo $query2.'<BR>';
 
 		if (! $r['canceled'] AND $paid_date<>'NULL') {
 			$query2 = "INSERT INTO commission_payouts (commissionid, paid_date, amount, userid) ";

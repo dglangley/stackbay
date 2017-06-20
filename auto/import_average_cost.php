@@ -2,7 +2,9 @@
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/pipe.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPartId.php';
+    include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setAverageCost.php';
 
+	$costs = array();
     $query = "SELECT i.id, part_number, heci, clei, avg_cost, count(il.id) qty  ";
     $query .= "FROM inventory_inventory i, inventory_itemlocation il ";
     $query .= "WHERE i.id = il.inventory_id AND i.id > 2 AND i.id <> 226870 AND i.id <> 240882 AND i.id <> 247080 AND i.id <> 230438 ";
@@ -21,7 +23,13 @@ $query .= "AND location_id <> 125 ";
             $partid = getPartId($r['part_number']);
         }
 
-        if (! $partid) { continue; }
+		if (! isset($costs[$partid])) { $costs[$partid] = array('qty'=>0,'cost'=>0); }
+		$costs[$partid]['qty'] += $r['qty'];
+		$costs[$partid]['cost'] += ($r['avg_cost']*$r['qty']);
+	}
+
+	foreach ($costs as $partid => $r) {
+        if (! $partid) { die("Could not import ".$r['part_number']); }
 
         $query2 = "SELECT * FROM parts WHERE id = '".res($partid)."'; ";
         $result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -56,10 +64,11 @@ if ($r3['qty']>0) { $qty += $r3['qty']; }
 else if ($r3['serial_no']) { $qty++; }
         }
 
-        if ($r['qty']<>$qty) {
-echo $r['part_number'].' '.$r['clei'].' with qty '.$r['qty'].' = partid '.$partid.' with qty '.$qty.'<BR>';
-        }
+//        if ($r['qty']<>$qty) {
+//echo $r['part_number'].' '.$r['clei'].' with qty '.$r['qty'].' = partid '.$partid.' with qty '.$qty.'<BR>';
+//        }
 
-        setAverageCost($partid,$r['avg_cost'],true);
+		$avg_cost = $r['cost']/$r['qty'];
+        setAverageCost($partid,$avg_cost,true);
     }
 ?>
