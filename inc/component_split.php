@@ -76,7 +76,7 @@
                 $o = array();
                 if($id_type){
                     $o = o_params($id_type); //If there is an instigating type, then take in the id type so we know which field we are lookin at
-                    $inv_id_update = "UPDATE `inventory` SET ".$o['inv_item_id']." = ".prep($id_number)." WHERE id = $pnew_invid;";//Automatically updates the inventory_history table
+                    $inv_id_update = "UPDATE `inventory` SET `".$o['inv_item_id']."` = ".prep($id_number)." WHERE id = $pnew_invid;";//Automatically updates the inventory_history table
                     qdb($inv_id_update) or die(qe()." | $inv_id_update");
                     echo($inv_id_update."<br>");
                 }

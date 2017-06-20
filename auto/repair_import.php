@@ -286,8 +286,7 @@ if(mysqli_num_rows($check_result) == 0){
 //Adding our record to the repair items insert
     $item_insert = "INSERT INTO `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
     `due_date`,`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,`notes`, `warrantyid`) VALUES (
-    ".prep($partid).",
-    $ro_number,1,1,".prep($r['price_per_unit']).",".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
+    ".prep($partid).",$ro_number,1,1,".prep($r['price_per_unit']).",".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
     ".prep($invid).",".prep($line['ref_1']).",".prep($line['ref_1_label']).",".prep($line['ref_2']).",".prep($line['ref_2_label']).",".prep($r['notes']).",".prep($line['warranty']).");";
     // exit($item_insert);
     qdb($item_insert) or die(qe()." | $item_insert");
@@ -297,7 +296,7 @@ if(mysqli_num_rows($check_result) == 0){
 //Package_creation (with freight if applicable)
     $package_insert = "
     INSERT INTO `packages`( `order_type`, `order_number`, `package_no`, `tracking_no`, `datetime`, `freight_amount`) 
-    VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_out']).", ".prep($r['freight_cost']).");";
+    VALUES ('Repair', $ro_number, 1, ".prep($r['tracking_no']).", ".prep($r['date_out']." 16:59:00").", ".prep($r['freight_cost']).");";
     qdb($package_insert) or die(qe()." | $package_insert");
     echo("$package_insert '\$package_insert'<br>");
     $packageid = qid();
