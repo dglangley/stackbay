@@ -37,7 +37,7 @@ AND ticket_number not in (
   WHERE r.ticket_number = rt.repair_id
   and rt.item_id = isi.id 
   AND created_at > '2014-11-10 12:58:46'
-  AND serials NOT IN ('02CYHL6Q','NNTM40108508','MC00AU006P','ALCLAAU37346', 'XTV2.44','X501','17-H60542')
+  AND serials NOT IN ('02CYHL6Q','NNTM40108508','MC00AU006P','ALCLAAU37346', 'XTV2.44','X501','17-H60542', '92MV07272904', 'FE4107002009', 'be0905011264', 'BE4904001250', 'FE4606004036','g29444','i21775','05VR17000001','G51565','AJP1600', 'TBD', '000', 'NA', 'n/a')
 )
 order by created_at asc;";
 
@@ -187,7 +187,7 @@ echo("------------------------------------------------------<br>")  ;
 echo("------------------------------------------------------<br>")  ;
 echo("------------------------------------------------------<br>")  ;
 
-  $pipe_select = "
+$pipe_select = "
 SELECT company_id, part_number, serials, r.status_id, date_in, date_out, purchase_order, notes, price_per_unit, ticket_number, tracking_no,
   date_due, datetime_test_in, datetime_test_out, r.cost, created_at, tech_id, external_out, external_in, shipped_pn, shipped_sn, shipped_clei,
   shipped_status_id, carrier_id, material_sap, ext_notes, warranty_id, r.freight_cost, source_cost, type_id, sales_rep_id, tpquote_id, external_tracking_no, third_party_success,
@@ -216,33 +216,67 @@ $locationid = $result['id'];
 
 foreach($results as $i => $r){
     $private_notes ="";
+    $ro_number = $r['ticket_number'];
+    $rma_number = $r['master_id'];
+    $prma_number = prep($rma_number);
+    $companyid = dbTranslate($r['company_id']);
+    $creator_id = prep(16);
+    $sales_rep_id = mapUser($r['sales_rep_id']);
+    $private_notes .= $r['ext_notes'];
+    $partid = translateID($r["inventory_id"]);
+    
+    
     //ALL of the above results already exist in the database, so we can merge them into records
     $inv = "SELECT * FROM `return_items` WHERE rma_number like ".prep($r['master_id']).";";
     $serial_match = qdb($inv) or die(qe()." | $inv");
     echo("$inv '\$inv'<br>");
     if(mysqli_num_rows($serial_match)){
         $inv_info = mysqli_fetch_assoc($serial_match);
+	    $invid = $inv_info['inventoryid'];
         print_r($inv_info);
     } else {
-        $inv = "INSERT INTO `inventory` (`partid`,`serial_no`,`qty`) VALUES (".prep(strtoupper($r['serials'])).", 0);";
-        echo("$i: $inv<br>");
-        continue;
-        qdb($inv) or die(qe()." | $inv");
+    	//If there is no RMA number in the database, then create a new RMA
+    	$rma_select = "
+    	SELECT * FROM inventory_rmaticket rt
+    	LEFT JOIN inventory_rmaticketmaster rtm on rt.master_id = rtm.id
+    	WHERE rt.id = $prma_number;";
+    	$rma_results = qdb($rma_select,"PIPE") or die(qe("PIPE")." | $rma_select");
+    	if(!mysqli_num_rows($rma_results)){continue;}
+    	$rma_array = mysqli_fetch_assoc($rma_results);
+    	$rma_creator = mapUser($rma_array['created_by_id']);
+    	$r_insert = "INSERT INTO `returns`(`rma_number`, `created`, `created_by`, `companyid`, `order_number`, `order_type`, `notes`, `status`) 
+    	VALUES ($prma_number, ".prep($rma_array['date']." 12:00:00").", ".prep($rma_creator).", ".prep($companyid).", ".prep($ro_number).", 'Repair', 'SPOOFED FROM THE REPAIRS IMPORT', 'Active');";
+    	qdb($r_insert) or die(qe()." | $r_insert");
+    	echo($r_insert."<br>");
+    	$ri_insert = "INSERT INTO `return_items`(`partid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) 
+    	VALUES (".prep($partid).", $prma_number, 1, ".prep($r['reason']).", 3, 1);";
+    	qdb($ri_insert) or die(qe()." | $ri_insert");
+    	echo($ri_insert."<br>");
+    	$reti_line = qid();
+        // exit("You're an idiot, aaron");
+        // continue;
+        $inv = "SELECT * FROM `inventory` WHERE serial_no like ".prep(strtoupper($r['serials']))." AND partid = ".prep($partid)." LIMIT 1;";
         echo("$inv '\$inv'<br>");
-        $inv = "SELECT * FROM `inventory` WHERE serial_no like ".prep(strtoupper($r['serials'])).";";
+        $inv_res = qdb($inv) or die(qe()." | $inv");
+        if(mysqli_num_rows($inv_res)){
+        	$inv = "INSERT INTO `inventory` (`partid`,`serial_no`,`qty`,`returns_item_id`) VALUES (".prep($partid).",".prep(strtoupper($r['serials'])).", 1, ".prep($reti_line).");";
+        	qdb($inv) or die(qe()." $inv");
+        	$invid = qid();
+        	$ri_update ="UPDATE `return_items` 
+        	SET inventoryid = ".prep($invid).";";
+        	qdb($ri_update) or die(qe()." | $ri_update");
+        } else {
+        	$update = "UPDATE `inventory` set returns_item_id = '".prep($reti_line)."'";
+        	qdb($update) or die(qe()." | $update");
+        	$inv_arr = mysqli_fetch_assoc($inv_res);
+        	$invid = $inv_arr['id'];
+        }
     }
     //Info From Brian's system (relevant for the RO);
-    $ro_number = $r['ticket_number'];
-    $companyid = dbTranslate($r['company_id']);
-    $creator_id = prep(16);
-    $sales_rep_id = mapUser($r['sales_rep_id']);
-    $private_notes .= $r['ext_notes'];
     $freight_service = prep($SERVICE_MAPS[$r['carrier_id']]);
     $freight_carrier = prep($CARRIER_MAPS[$r['carrier_id']]);
     $terms = prep($TERMS_MAPS[$R['terms_id']]);
     $line['warranty'] = $WARRANTY_MAPS[$r['warranty_id']]; //warranty_id
-    $partid = $inv_info['partid'];
-    $invid = $inv_info['inventoryid'];
     //status_id - Connects to the 'repairshippeddtatus' table, correlates to our condition table. will need to be mapped to conditions, most likely.
     $line['ref_1'] = null;
     $line['ref_1_label'] = null;
@@ -346,7 +380,7 @@ else{
       `status`,`locationid`,`userid`,`date_created`,`notes`,`repair_item_id`) 
       VALUES (
       ".prep(strtoupper($r['serials'])).",1,".prep($partid).",5,".prep($item_status).",".$locationid.",".$creator_id.",".prep($r['created_at']).",".prep("REPAIR IMPORT ".$r['notes']).",".prep($repair_item_id).")";
-      qdb($inv_insert) or die(qe()." | $inv_insert");
+      //qdb($inv_insert) or die(qe()." | $inv_insert");
       echo("$inv_insert '\$inv_insert'<br>");
       $invid = qid();
       //Inventory_history Correction
