@@ -260,7 +260,7 @@
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }
 //		$query .= "GROUP BY search_meta.datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
-		$query .= "GROUP BY availability.partid, datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
+		$query .= "GROUP BY availability.partid, datetime, search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);
@@ -319,6 +319,8 @@
 			$results[$key] = $r;
 		}
 
+/* dgl 6-20-17 because we don't really need this market (broker sites) data at this point
+
 		// legacy code/query
 		$query = "SELECT market.partid, name, datetime, SUM(qty) qty, price, source, market.companyid, ";
 		$query .= "'' rfq, '' searchid, '' id ";
@@ -365,7 +367,9 @@
 //			$result[] = $r;
 			$results[$key] = $r;
 		}
+*/
 
+/* dgl 6-20-17 because we're already getting this equivalent data above, and we're no longer using piped data
 		// get piped data
 		$pipe_results = getRecords($searches,'','','supply',$results_mode);
 		// re-group data into $results array as with other results above
@@ -390,6 +394,7 @@
 
 			$results[$key] = $r;
 		}
+*/
 
 		$min_price = false;
 		$max_price = false;

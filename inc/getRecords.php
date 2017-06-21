@@ -110,7 +110,7 @@
 				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
-				$query .= "ORDER BY datetime ASC; ";;
+				$query .= "ORDER BY datetime ASC; ";
 
 				//$unsorted = get_coldata($search_str,'supply');
 				break;
@@ -145,9 +145,11 @@
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
 				// if we're getting repid from the old db, cross-reference it using getRep() just to get the new db userid
+/*
 				if (isset($r['repid']) AND (! isset($r['userid']) OR ! $r['userid'])) {
 					$r['userid'] = getRep($r['repid'],'repid','id');
 				}
+*/
 				if (! $r['userid']) {
 					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
 					else { $r['userid'] = 2; }

@@ -56,7 +56,7 @@
 	// these conditions are non-negotiable
 	$query .= "WHERE c.source_id = s.id AND (orig_amount <> 0 OR amount <> 0) ";
 
-	$query .= "AND canceled = '0' AND (approved = '1' OR paid_date IS NOT NULL) ";
+	$query .= "AND canceled = '0' AND (approved = '0' OR (approved = '1' OR paid_date IS NOT NULL)) ";
 //	$query .= "AND canceled = '0' AND approved = '0' ";//AND (approved = '1' OR paid_date IS NOT NULL) ";
 $query .= "AND repair_id IS NULL AND ticket_id IS NULL AND sold_item_id IS NOT NULL ";
 //	$query .= "LIMIT 0,1000 ";
@@ -90,6 +90,7 @@ echo $query.'<BR>';
 		$inventory_id = 0;
 		$avg_cost = 0;
 		$sale_price = 0;
+		$so_id = 0;
 		if (! $r['sold_item_id']) {
 die("Wait what happened here?!");
 continue;
@@ -97,7 +98,7 @@ continue;
 			if (! isset($sold_items[$r['sold_item_id']])) {
 				$sold_items[$r['sold_item_id']] = array('serial'=>'');
 
-				$query2 = "SELECT serial, inventory_id, avg_cost, price FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
+				$query2 = "SELECT serial, inventory_id, avg_cost, price, so_id FROM inventory_solditem WHERE id = '".$r['sold_item_id']."'; ";
 				$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) { continue; }//need to resolve these missing records, by my count there are 14 on 6/7/17
 				$r2 = mysqli_fetch_assoc($result2);
@@ -105,13 +106,15 @@ continue;
 				$inventory_id = $r2['inventory_id'];
 				$avg_cost = $r2['avg_cost'];
 				$sale_price = $r2['price'];
+				$so_id = $r2['so_id'];
 
-				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$r2['inventory_id'],'avg_cost'=>$avg_cost,'sale_price'=>$sale_price);
+				$sold_items[$r['sold_item_id']] = array('serial'=>$serial,'inventory_id'=>$inventory_id,'avg_cost'=>$avg_cost,'sale_price'=>$sale_price,'so_id'=>$so_id);
 			} else {
 				$serial = $sold_items[$r['sold_item_id']]['serial'];
 				$inventory_id = $sold_items[$r['sold_item_id']]['inventory_id'];
 				$avg_cost = $sold_items[$r['sold_item_id']]['avg_cost'];
 				$sale_price = $sold_items[$r['sold_item_id']]['sale_price'];
+				$so_id = $sold_items[$r['sold_item_id']]['so_id'];
 			}
 
 			if ($serial=='000' OR $serial=='0') {
@@ -152,7 +155,7 @@ continue;
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
-					$inventoryid = "'".$r2['id']."'";
+					$inventoryid = $r2['id'];
 				}
 			}
 		}
@@ -160,21 +163,21 @@ continue;
 		$sales_item_id = 0;
 		if ($inventoryid) {
 			$query2 = "SELECT si.id FROM inventory i, inventory_history h, sales_items si ";
-			$query2 .= "WHERE si.so_number = '".$r2['so_id']."' AND si.id = h.value AND h.field_changed = 'sales_item_id' ";
+			$query2 .= "WHERE si.so_number = '".$so_id."' AND si.id = h.value AND h.field_changed = 'sales_item_id' ";
 			$query2 .= "AND h.invid = i.id AND i.id = $inventoryid; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				$sales_item_id = "'".$r2['id']."'";
+				$sales_item_id = $r2['id'];
 			}
 		}
 
 		$cogs = 0;
 		if ($avg_cost>0) {
-			$cogs = "'".$avg_cost."'";
-			$profit = "'".($sale_price-$avg_cost)."'";
+			$cogs = $avg_cost;
+			$profit = ($sale_price-$avg_cost);
 		} else {
-			$profit = "'".$sale_price."'";
+			$profit = $sale_price;
 		}
 
 		$profitid = 0;
@@ -186,10 +189,11 @@ echo $serial.' '.$query2.'<BR>';
 		}
 
 		if (! $inventoryid) { $inventoryid = 'NULL'; }
-		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, datetime, ";
+		if (! $sales_item_id) { $sales_item_id = 'NULL'; }
+		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, sales_item_id, datetime, ";
 		$query2 .= "rep_id, commission_rate, commission_amount) ";
-		$query2 .= "VALUES ('$invoice', NULL, $inventoryid, $comm_date, ";
-		$query2 .= "'$rep_id', NULL, '".$r['amount']."'); ";
+		$query2 .= "VALUES ($invoice, NULL, $inventoryid, $sales_item_id, $comm_date, ";
+		$query2 .= "$rep_id, NULL, '".$r['amount']."'); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$commissionid = qid();
 echo $query2.'<BR>';
