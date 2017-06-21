@@ -15,12 +15,12 @@
 			// add $diff, we'll likewise divide that by the number of total pieces
 			$pieces = 0;
 			$average_cost = 0;
-			$query = "SELECT SUM(qty) pieces FROM inventory ";
+			$query = "SELECT qty, serial_no FROM inventory ";
 			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$pieces = $r['pieces'];
+			while ($r = mysqli_fetch_assoc($result)) {
+				if ($r['qty']>0) { $pieces = $r['qty']; }
+				else if ($r['serial_no']) { $pieces = $r['serial_no']; }
 			}
 			if ($pieces>0) {
 				$ext_avg = $existing_avg*$pieces;

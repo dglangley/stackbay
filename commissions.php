@@ -419,14 +419,14 @@
 					$r2 = mysqli_fetch_assoc($result2);
 //					$cogs = $r2['cogs'];
 
-					// get cogs from sales_profits table with associated inventoryid and sales_item_id
-					$query3 = "SELECT cogs_avg FROM sales_profits WHERE inventoryid = '".$inventoryid."' AND sales_item_id ";
+					// get cogs from sales_cogs table with associated inventoryid and sales_item_id
+					$query3 = "SELECT SUM(cogs_avg) cogs FROM sales_profits WHERE inventoryid = '".$inventoryid."' AND sales_item_id ";
 					if ($r2['sales_item_id']) { $query3 .= "= '".$r2['sales_item_id']."' "; } else { $query3 .= "IS NULL "; }
 					$query3 .= "; ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					if (mysqli_num_rows($result3)>0) {
 						$r3 = mysqli_fetch_assoc($result3);
-						$cogs = round($r3['cogs_avg'],2);
+						$cogs = round($r3['cogs'],2);
 					}
 
 					$profit = $I['amount']-$cogs;

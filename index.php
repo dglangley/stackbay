@@ -83,7 +83,10 @@
 
 				$group_date = substr($r['datetime'],0,7);
 			}
-			if (! isset($grouped[$group_date])) { $grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array()); }
+			if (! isset($grouped[$group_date])) {
+				$grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array(),'status'=>'');
+				if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['order_num'] = ''; }
+			}
 
 			$fprice = format_price($r['price'],true,'',true);
 			$grouped[$group_date]['count']++;
@@ -97,6 +100,8 @@
 			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']]) AND array_search($r['name'],$grouped[$group_date]['companies'])===false) {
 				$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
 			}
+			if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['order_num'] = $r['order_num']; }
+			if ($r['status']=='Void') { $grouped[$group_date]['status'] = 'Void'; }
 		}
 		ksort($grouped);
 
@@ -146,15 +151,26 @@
 					$companies .= '<a href="profile.php?companyid='.$cid.'" class="market-company">'.$name.'</a>';
 				}
 			}
-			$price = '';
-			if ($r['sum_qty']>0) { $price = format_price(round($r['sum_price']/$r['sum_qty'])); }
+			$price_str = '';
+			if ($r['sum_qty']>0) {
+				$fprice = format_price(format_price(round($r['sum_price']/$r['sum_qty'])),false);
+				if ($market_table=='purchases') {
+					$price_str = '<a href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
+				} else if ($market_table=='sales') {
+					$price_str = '<a href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
+				} else {
+					$price_str = $fprice;
+				}
+			}
 
-			$line_str = '<div class="market-data">';
+			$cls_add = '';
+			if ($r['status']=='Void' OR $r['total_qty']==0) { $cls_add = ' strikeout'; }
+			$line_str = '<div class="market-data'.$cls_add.'">';
 			if (strlen($order_date)==7) {
 				$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
 			}
 			$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
-				$companies.' <span class="pa">'.format_price($price,false).'</span></div>';
+				$companies.' <span class="pa">'.$price_str.'</span></div>';
 
 			// append to column string
 			$market_str = $cls1.$line_str.$cls2.$market_str;

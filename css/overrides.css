@@ -733,6 +733,10 @@ textarea.freeform-text {
 	width:14px;
 	color:#555;
 }
+.market-data.strikeout, .market-data.strikeout a, .market-data.strikeout > .pa {
+	color:#555 !important;
+	text-decoration: line-through !important;
+}
 .market-company {
 	min-width:80px;
 	max-width:110px;

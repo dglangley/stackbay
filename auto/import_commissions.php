@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/import_aid.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/setProfits.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 
 	/*****
 		Brian's commissions table fields:
@@ -175,16 +175,16 @@ continue;
 		$cogs = 0;
 		if ($avg_cost>0) {
 			$cogs = $avg_cost;
-			$profit = ($sale_price-$avg_cost);
+//			$profit = ($sale_price-$avg_cost);
 		} else {
-			$profit = $sale_price;
+//			$profit = $sale_price;
 		}
 
 		$profitid = 0;
 		$commissionid = 0;
 
 		if ($sales_item_id OR $inventoryid) {
-			$profitid = setProfits($inventoryid,$sales_item_id,$cogs,$profit);
+			$profitid = setCogs($inventoryid,$sales_item_id,$cogs);
 echo $serial.' '.$query2.'<BR>';
 		}
 
