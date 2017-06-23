@@ -36,6 +36,15 @@
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getSalesCharges.php';
 	
+	// print_r(hecidb('ERB')); die;
+	// $query = "SELECT * FROM parts WHERE id = 343669;";
+ //            $result = qdb($query) or jsonDie(qe()." | $query");
+
+ //            if (mysqli_num_rows($result)) {
+ //                $result = mysqli_fetch_assoc($result);
+ //            }
+
+            //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
 	$rtv_array = array();
@@ -285,7 +294,7 @@
 
 	</head>
 	<!---->
-	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav forms <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'void-order' : '');?>" id = "order_body" data-order-type="<?=$o['type']?>" data-order-number="<?=$order_number?>" <?=($_REQUEST['repair'] ? 'data-type="repair"' : '')?>>
 		<div class="pad-wrapper">
 			<?php 
 				include 'inc/navbar.php';
@@ -513,7 +522,7 @@
 						}
 
 						if($status && $o['type'] == 'Repair'){
-							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
+							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false || strpos(strtolower($status), 'canceled') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
 						}
 
 						if ($order_number!='New'){
@@ -531,10 +540,10 @@
 					?>
 				</div>
 				<div class="col-md-3">
-					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
+					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
-					<?php if(strtolower($status) != 'voided' && $status) { ?>
+					<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { ?>
 						<?php if($sales_order && $o['type'] == 'Repair') { ?>
 							<a href="/shipping.php?on=<?=$sales_order;
 							?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>

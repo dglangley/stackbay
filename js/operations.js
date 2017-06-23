@@ -113,6 +113,7 @@
 
 			// This is our global for all functions, all day baby
 			var order_type = '';
+			var search = '';
 			order_type = $("body").attr("data-order-type");
 			if(order_type == "Purchase"){
 				var receiver_companyid = '25';//ventel id
@@ -132,6 +133,11 @@
 					mode = 'load';
 				}
 
+				if($('body').data('type') == 'repair') {
+					search = getUrlParameter('s');
+					mode = 'repair';
+				}
+
 				console.log(window.location.origin+"/json/order-table-out.php?mode=load&number="+order_number+"&type="+order_type);
 
 				$.ajax({
@@ -141,7 +147,8 @@
 						"type": order_type,
 						"number": order_number,
 						"rtv_array": rtv_array,
-		   		    	"mode": mode
+		   		    	"mode": mode,
+		   		    	"search": search
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
@@ -551,6 +558,7 @@
 					$(".search_loading").show();
 					var search = $("#go_find_me").val();
 					var order_type = $("#order_body").attr("data-order-type");
+					var type = $("#order_body").attr("data-type");
 					//Ajax Call the new paradigm
 					console.log(window.location.origin+"/json/new_paradigm.php?mode=search&item="+search+"&page="+order_type);
 					$.ajax({
@@ -560,6 +568,7 @@
 							"mode" : "search",
 							"item": search,
 							"page" : order_type,
+							"type" : type,
 						}, // serializes the form's elements.
 						dataType: 'json',
 						success: function(result) {

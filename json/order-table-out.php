@@ -255,6 +255,8 @@
 				$table .= build_row($new_row);
 				//$table .= key($item) . "<br>";
 			}
+		} else if ($mode == 'repair') {
+			//$grab_repair = "SELECT * FROM purchase_requests WHERE ;";
 		}
 		
 		echo json_encode($table); 

@@ -211,8 +211,19 @@
         $order_number = qid();
 
         if($repair_order && $o['purchase']) {
-			$query = "UPDATE purchase_requests SET po_number =".prep($order_number)." WHERE ro_number = ".prep($repair_order).";";
-			$result = qdb($query) OR die(qe());
+        	$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($repair_order).";";
+			$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+
+			foreach ($form_rows as $r){
+	            $item_id = prep($r['part']);
+	            break;
+	        }
+
+			if(mysqli_num_rows($repair_result)) {
+				$repair_item = mysqli_fetch_assoc($repair_result);
+				$query = "UPDATE purchase_requests SET po_number =".prep($order_number)." WHERE ro_number = ".prep($repair_item['ro_number'])." AND partid = $item_id;";
+				$result = qdb($query) OR die(qe());
+			} 
 		}
         
     }else{
@@ -316,18 +327,32 @@
 				$rows[$partkey]['qty'] += $r['qty'];
 			}
             if ($record == 'new'){
-                //Build the insert statements
-                $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
-                // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
-                $line_insert .=  " `line_number`, `qty`, `price` ";
-                $line_insert .= (!$o['repair'] ? ", `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`  , `warranty`, `conditionid` " : "");
-                $line_insert .= ") VALUES ";
-                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice ";
-                $line_insert .= (!$o['repair'] ? " , $ref_1, $ref_1_label, NULL, NULL ,$warranty, $conditionid " : "");
-                $line_insert .= ");";
+
+            	if($order_type == "Purchase" && $repair_order) {
+	                //Build the insert statements
+	                $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
+	                // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
+	                $line_insert .=  " `line_number`, `qty`, `price` ";
+	                $line_insert .= ", `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`  , `warranty`, `conditionid` ";
+	                $line_insert .= ") VALUES ";
+	                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice ";
+	                $line_insert .= " , ".prep($repair_order).", 'repair_item_id', NULL, NULL ,$warranty, $conditionid ";
+	                $line_insert .= ");";
+            	} else {
+            		//Build the insert statements
+	                $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
+	                // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
+	                $line_insert .=  " `line_number`, `qty`, `price` ";
+	                $line_insert .= (!$o['repair'] ? ", `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`  , `warranty`, `conditionid` " : "");
+	                $line_insert .= ") VALUES ";
+	                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice ";
+	                $line_insert .= (!$o['repair'] ? " , $ref_1, $ref_1_label, NULL, NULL ,$warranty, $conditionid " : "");
+	                $line_insert .= ");";
+            	}
                 
-                
-				$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
+                if($line_insert) {
+					$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
+                }
             }
             else{
                 $update = "UPDATE ".$o['item']." SET 

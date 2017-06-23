@@ -89,7 +89,7 @@
         	    }
         	    $output .= "</select>";
         }
-        else if ($type == "instance") {
+        else if ($type == "instance" || $type =="bin") {
             // 
             if ($selected){
                 $locations = mysqli_fetch_assoc(getLocation($selected));
@@ -103,19 +103,22 @@
             
             $output .= "<select name='$type' class='form-control input-sm $type' style='padding-left:0px;'>";
             if(!$selected and !$default and !$locations){
-                    $output .= "<option selected value = 'null'> </option>";
+                    $output .= "<option selected value = 'null'>".($type == "instance" ? '' : 'Bin')."</option>";
     	        }  else if($locations) {
     	            $output .= "<option selected value = 'null'></option>";
     	        }
             //Takes in the location ID and returns the 
-    	    if ($results){
+    	    if ($results && $type == "instance"){
         	    foreach($results as $row){
         	        $output .= "<option data-place = '".$row['place']."' 
         	        ".(($row['instance'] == $selected && $row['instance'])? " selected" : "")."
         	        ".(($limit != $row['place'])? "style='display:none;'" : "")."
         	        value = '".strtoupper($row['instance'])."'> ".strtoupper($row['instance'])."</option>";
         	    }
-    	    }
+    	    } else {
+                for($i = 1; $i <= 10; $i++)
+                    $output .= "<option value='".$i."''>".$i."</option>";
+            }
     	    $output .= "
     			    </select>
     			    ";

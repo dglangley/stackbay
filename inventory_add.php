@@ -41,9 +41,7 @@
 
 
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
-	function getPOParts () {
-		global $order_number;
-		
+	function getPOParts ($order_number) {		
 		$listParts = array();
 		if($order_number){
 			$query = "SELECT * FROM purchase_items WHERE po_number = ". res($order_number) ." AND qty != qty_received;";
@@ -60,6 +58,20 @@
 			}
 		}
 		return $listParts;
+	}
+
+	function getClassification($partid) {
+		$classification;
+
+		$query = "SELECT classification FROM parts WHERE id = ".prep($partid).";";
+		$result = qdb($query) or die(qe() . ' ' . $query);
+
+		if (mysqli_num_rows($result)){
+			$row = mysqli_fetch_assoc($result);
+			$classification = $row['classification'];
+		}
+
+		return $classification;
 	}
 	
 	function getHistory($partid, $order_number) {
@@ -113,9 +125,15 @@
 		return $serial;
 	}
 
-	$partsListing = getPOParts();
+	$partsListing = getPOParts($order_number);
 	$status = getOrderStatus($order_type,$order_number);
 	$RMA_history = getRMA($order_number, 'Purchase');
+
+	$first = reset($partsListing);
+	$classification = '';
+	if($first['ref_1_label'] == 'repair_item_id') {
+		$classification = 'component';
+	}
 ?>
 
 <!DOCTYPE html>
@@ -152,15 +170,19 @@
 	
 	<body class="sub-nav" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		
-	<!----------------------- Begin the header output  ----------------------->
+	<!-- Begin the header output  -->
 	<div class="pad-wrapper">
 		<?php 
 			include 'inc/navbar.php';
 			include_once $rootdir.'/modal/package.php';
 		?>
 		
-		<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
-			
+		<?php if($classification != 'component') { ?>
+			<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
+		<?php } else { ?>
+			<form action="/component_add.php" method="post" style="height: 100%;">
+		<?php } ?>
+
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 				<div class="col-sm-4">
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
@@ -257,7 +279,7 @@
 									Condition
 					        	</th>
 								<th class="col-sm-2">
-					            	Serial
+					            	Serial / Component
 					            </th>
 					            <th class="col-sm-1 text-center">
 									Ordered
@@ -282,21 +304,32 @@
 							//Grab all the parts from the specified PO #
 							if($partsListing) {
 								foreach($partsListing as $part): 
-									$item = getPart($part['partid'],'part');
+									$classification = getClassification($part['partid']);
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?=$item?>">
 										<?=display_part(current(hecidb($part['partid'],'id')));?>
+										<?php if($classification == 'component') { ?>
+											<input class="hidden" type="text" name="order_num" value="<?=$order_number;?>" readonly>
+											<input class="hidden" type="text" name="partid" value="<?=$part['partid'];?>" readonly>
+											<input class="hidden" type="text" name="purchase_item_id" value="<?=$part['id'];?>" readonly>
+											<input class="hidden" type="text" name="repair_item_id" value="<?=$part['ref_1'];?>" readonly>
+										<?php } ?>
 									</td>
 									<td  class="infiniteLocations">
 										<div class="row row-fluid">
 											<div class="locations_tracker" data-serial="">
-												<div class="col-md-6 locations" style="padding: 0 0 0 5px;">
-													<?=loc_dropdowns('place')?>
+												<div class="col-md-<?=($classification != 'component' ? '6' : '4');?> locations" style="padding: 0 0 0 5px;">
+													<?=loc_dropdowns('place'); ?>
 												</div>
-												<div class="col-md-6 instances" style="padding: 0 0 0 5px">
+												<div class="col-md-<?=($classification != 'component' ? '6' : '4');?> instances" style="padding: 0 0 0 5px">
 													<?=loc_dropdowns('instance')?>
 												</div>
+												<?php if($classification == 'component') { ?>
+													<div class="col-md-4 bin" style="padding: 0 0 0 5px">
+														<?=loc_dropdowns('bin')?>
+													</div>
+												<?php } ?>
 											</div>
 										</div>
 									</td>
@@ -310,15 +343,26 @@
 											<?php endforeach; ?>
 										</select>
 									</td>
-									<td class="infiniteSerials">
-										<div class="input-group" style="margin-bottom: 6px;">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-item-id="<?php echo $part['id']; ?>" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
-										    <span class="input-group-addon">
-										        <button class="btn btn-secondary deleteSerialRow" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
-										        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
-										    </span>
-							            </div>
-									</td>
+									<?php if($classification != 'component') { ?>
+										<td class="infiniteSerials">
+											<div class="input-group" style="margin-bottom: 6px;">
+											    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-item-id="<?php echo $part['id']; ?>" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
+											    <span class="input-group-addon">
+											        <button class="btn btn-secondary deleteSerialRow" type="button" style='display: none;' disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
+											        <button class="btn btn-secondary updateSerialRow" type="button"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
+											    </span>
+								            </div>
+										</td>
+									<?php } else { ?>
+										<td class="componentColumn">
+											<div class="input-group" style="margin-bottom: 6px;">
+											    <input class="form-control input-sm" type="text" name="componentQTY" placeholder="QTY">
+											    <span class="input-group-addon">
+											        <button class="btn btn-secondary" type="submit"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
+											    </span>
+								            </div>
+										</td>
+									<?php } ?>
 									<td class="text-center" style="padding-top: 15px !important;">
 										<?=$part['qty'];?>
 									</td>
@@ -330,7 +374,7 @@
 										</div>
 									</td>
 									<td>
-										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>">
+										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>" <?=($classification != 'component' ? '' : 'disabled')?>>
 									</td>
 									<td>
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>

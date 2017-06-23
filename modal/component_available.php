@@ -28,7 +28,7 @@
                                     <th class='col-md-10'>Item Information</th>
                                     <!-- <th class='col-md-2'></th>
                                     <th class='col-md-2'></th> -->
-                                    <th class='col-md-2'>Outstanding</th>
+                                    <th class='col-md-2'>Requested</th>
                                 </thead>
                                 <tbody id="stock_component_avail" style = "font-size:13px;">
                                 </tbody>

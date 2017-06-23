@@ -50,32 +50,39 @@ function not_component($row){return ($row['classification'] != "component");}
 
 function search_as_heci($search_str){
 		$page = grab('page');
+        $type = grab('type');
 		$heci7_search = false;
-		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
-			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'";
-// 			$query .= (? " AND classification = 'component'" : "");
-			$query .= "; ";
-			$result = qdb($query);
-			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
-		} else {
-		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'";
-		  //  $query .= (($page =="Repair" || $page == "Tech")? " AND classification = 'component'" : "");
-		    $query .= "; ";
-			$result = qdb($query) or jsonDie(qe()." | $query");
-			if (mysqli_num_rows($result)) {
-			    $result = mysqli_fetch_assoc($result);
-			    $search_str = $result['heci'];
-			    $heci7_search = true;
-			}
-		}
-		
 
-		if ($heci7_search) {
-			$results = hecidb(substr($search_str,0,7));
-		} else {
-			$results = hecidb(format_part($search_str));
-		}
-        if($page =="Repair" || $page=="Tech" ){
+        if($type =="repair") {
+            $results = hecidb($search_str, 'id');
+        } else {
+
+    		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
+    			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'";
+    // 			$query .= (? " AND classification = 'component'" : "");
+    			$query .= "; ";
+    			$result = qdb($query);
+    			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
+    		} else {
+    		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'";
+    		  //  $query .= (($page =="Repair" || $page == "Tech")? " AND classification = 'component'" : "");
+    		    $query .= "; ";
+    			$result = qdb($query) or jsonDie(qe()." | $query");
+    			if (mysqli_num_rows($result)) {
+    			    $result = mysqli_fetch_assoc($result);
+    			    $search_str = $result['heci'];
+    			    $heci7_search = true;
+    			}
+    		}
+
+    		if ($heci7_search) {
+    			$results = hecidb(substr($search_str,0,7));
+    		} else {
+    			$results = hecidb(format_part($search_str));
+    		}
+        }
+
+        if($page =="Repair" || $page=="Tech" || $type =="repair"){
             $results = array_filter($results, "is_component");
         } else {
             $results = array_filter($results, "not_component");
@@ -212,7 +219,7 @@ function sub_rows($search = ''){
                     if(array_key_exists($id, $stock)){
                         $sellable = true;
                         $text .= $stock[$id];
-                        $qty_in = $stock[$id];
+                        $qty_in = (is_numeric($stock[$id]) ? $stock[$id] : '0');
                     }
                     else{
                         $text .= "&nbsp;";

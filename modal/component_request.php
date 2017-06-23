@@ -80,9 +80,9 @@
                             <br>
                         </div>
                         <div class="pull-right">
-                            <button class="btn btn-success btn-sm component_request_pull add_component" data-component="fulfill">Fulfill From Stock</button>
-                            <button class="btn btn-warning btn-sm component_request_submit_pull add_component" data-component="pull">Pull & Request</button>
-                            <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Request Order</button>
+                            <!-- <button class="btn btn-success btn-sm component_request_pull add_component" data-component="fulfill">Fulfill From Stock</button> -->
+                            <button class="btn btn-success btn-sm component_request_submit_pull add_component" data-component="pull">Fulfill From Stock</button>
+                            <button type="submit" class="btn btn-primary btn-sm component_request_submit" data-dismiss="modal">Request Purchase Order</button>
                         </div>
                     </div>
 

@@ -4,6 +4,7 @@
 	include_once '../inc/format_date.php';
 	include_once '../inc/format_price.php';
 	include_once '../inc/getUser.php';
+	include_once '../inc/getPart.php';
 	header("Content-Type: application/json", true);
 
 	function reportError($err) {
@@ -79,17 +80,18 @@
 			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 		}
 		
+		//Hack notification for purchase request to create a PO
 		if($U['id'] == '6') {
 			//Code generated specifically for Notifications of Purchase Requests
-			$query = "SELECT * FROM notifications n, purchase_requests r, parts, contacts, users WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid ORDER BY requested DESC LIMIT 0,20;";
+			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND po_number IS NULL AND ri.ro_number = r.ro_number ORDER BY requested DESC LIMIT 0,20;";
 			$result = qdb($query) OR reportError(qe().' '.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				$r['part_label'] = 'Part# ' . trim($r['partid']);
+				$r['part_label'] = 'Part: ' . $r['part'];
 				if ($r['heci']) {
-					$r['search'] = $r['part'];
+					$r['search'] = $r['part_string'];
 				} else {
 					$parts = explode(' ',$r['part']);
-					$r['search'] = $parts[0];
+					$r['search'] = $r['part_string'];
 				}
 				$name = explode(' ',$r['name']);
 				$r['name'] = $name[0];
@@ -98,7 +100,7 @@
 				if ($r['read_datetime']) { $r['read'] = 'T'; }
 				$r['viewed'] = '';
 				if ($r['click_datetime']) { $r['viewed'] = 'T'; }
-				$r['note'] = utf8_encode('requested for Repair #' . $r['ro_number']);
+				$r['note'] = utf8_encode('requested for Repair# ' . $r['ro_number']);
 
 				$secs_diff = strtotime($now)-strtotime($r['datetime']);
 				if ($secs_diff>$days_sec) {
@@ -113,7 +115,61 @@
 					$r['since'] = floor($secs_diff/60).' mins';//mins
 				}
 
+				//$r['repair_item_id'] = $r['ro_number'];
+
 				$r['type'] = "purchase_request";
+				//dispose of unneeded fields
+				unset($r['part']);
+				unset($r['heci']);
+				unset($r['datetime']);
+				unset($r['read_datetime']);
+				unset($r['click_datetime']);
+				$notes[] = $r;
+
+				// mark this notification as read, but do not mark it as clicked
+				$query2 = "UPDATE notifications SET read_datetime = '".$now."' WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+			}
+		}
+
+		//Rathna = 16
+		//Hack notification to tell the tech who requested an item that the order has been ordered and received into stock
+		if($U['id'] == '6') {
+			//Code generated specifically for Notifications of Purchase Requests
+			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND ri.ro_number = r.ro_number ORDER BY requested DESC LIMIT 0,20;";
+			$result = qdb($query) OR reportError(qe().' '.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$r['part_label'] = 'Component: ' . $r['part'];
+				if ($r['heci']) {
+					$r['search'] = $r['part_string'];
+				} else {
+					$parts = explode(' ',$r['part']);
+					$r['search'] = $r['part_string'];
+				}
+				$name = explode(' ',$r['name']);
+				$r['name'] = $name[0];
+				$r['datetime'] = utf8_encode($r['requested']);
+				$r['read'] = '';
+				if ($r['read_datetime']) { $r['read'] = 'T'; }
+				$r['viewed'] = '';
+				if ($r['click_datetime']) { $r['viewed'] = 'T'; }
+				$r['note'] = utf8_encode('received for Repair# ' . $r['ro_number']);
+
+				$secs_diff = strtotime($now)-strtotime($r['datetime']);
+				if ($secs_diff>$days_sec) {
+					$date1 = new DateTime(substr($r['datetime'],0,10));
+					$date2 = new DateTime($today);
+					$r['since'] = $date2->diff($date1)->format("%d");
+					if ($r['since']==1) { $r['since'] .= ' day'; }
+					else { $r['since'] .= ' days'; }
+				} else if ($secs_diff>$hours_sec) {
+					$r['since'] = floor($secs_diff/$hours_sec).' hours';
+				} else {
+					$r['since'] = floor($secs_diff/60).' mins';//mins
+				}
+
+				$r['repair_item_id'] = $r['ro_number'];
+				$r['type'] = "purchase_received";
 				//dispose of unneeded fields
 				unset($r['part']);
 				unset($r['heci']);

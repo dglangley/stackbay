@@ -249,7 +249,7 @@
 							if (row.read=='') { read_class = ' unread'; }
 							else if (row.viewed=='') { read_class = ' unviewed'; }
 
-							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\',\''+row.ro_number+'\')" class="item'+read_class+'">'+
+							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\',\''+row.repair_item_id+'\')" class="item'+read_class+'">'+
 								'<div class="user fa-stack fa-lg">'+
 									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
 								'</div> '+
@@ -1610,10 +1610,12 @@
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					if(type != "purchase_request") {
+					if(type != "purchase_request" && type != "purchase_received") {
 						document.location.href = '/?s='+search;
-					} else {
+					} else if(type == "purchase_request") {
 						document.location.href = '/order_form.php?ps=Purchase&s='+search + '&repair=' +order_number;
+					} else if(type == "purchase_received") {
+						document.location.href = '/repair.php?on=' +order_number;
 					}
 				} else {
 					var message = 'There was an error processing your request!';

@@ -56,7 +56,7 @@
 		$html = "";
 		$inventory = array();
 
-		$query = "SELECT *, SUM(qty) as total FROM inventory WHERE partid = ".prep($partid)." AND (status = 'shelved' OR status = 'received') GROUP BY locationid AND conditionid;";
+		$query = "SELECT *, SUM(qty) as total FROM inventory WHERE partid = ".prep($partid)." AND (status = 'shelved' OR status = 'received') GROUP BY locationid;";
 		$result = qdb($query) or die(qe());
 
 		$html .= '<tr>
@@ -73,7 +73,7 @@
 			//$inventory[] = $row;
 			$location = display_location($row["locationid"]);
 			$html .= "<tr class='part' data-invid='".$row["id"]."' data-partid='".$partid."'>
-						<td class='col-md-6'>".$location."</td>
+						<td class='col-md-6'>".$location. " " .($row["id"] ? "(Bin# " . $row["bin"] . ')' : '')."</td>
 						<td class='col-md-3'>".getCondition($row["conditionid"])."</td>
 						<td class='col-md-1'>".$row["total"]."</td>
 						<td class='col-md-2'><input type='text' class='input-sm form-control inventory_pull' value=''></td>

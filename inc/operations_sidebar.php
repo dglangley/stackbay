@@ -105,7 +105,13 @@ include_once $rootdir.'/inc/default_addresses.php';
 		}
 
 		if($_REQUEST['repair']) {
-			$private = "Purchase Request for Repair# " . $_REQUEST['repair'];
+			$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
+			$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+
+			if(mysqli_num_rows($repair_result)) {
+				$repair_item = mysqli_fetch_assoc($repair_result);
+				$private = "Purchase Request for Repair# " . $repair_item['ro_number'];
+			}
 		}
 		
 		if($o['rtv']){
