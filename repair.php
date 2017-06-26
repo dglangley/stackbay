@@ -605,7 +605,7 @@
 												<td><?=$comp['totalOrdered'];?></td>
 												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style="">'.$comp['po_number'].'</span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
 												<!-- <td><?=$ordered;?></td> -->
-												<td><?=getQuantity($comp['partid']);?></td> 
+												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
 												<td>
 													<div class="row">

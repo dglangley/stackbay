@@ -61,7 +61,7 @@
 
 		$html .= '<tr>
 						<td>'.format($partid).'</td>
-						<td>'.($request - $received).'</td>
+						<td>'.($request).'</td>
 						
 					</tr>';
 
@@ -72,12 +72,14 @@
 		while ($row = $result->fetch_assoc()) {
 			//$inventory[] = $row;
 			$location = display_location($row["locationid"]);
-			$html .= "<tr class='part' data-invid='".$row["id"]."' data-partid='".$partid."'>
-						<td class='col-md-6'>".$location. " " .($row["id"] ? "(Bin# " . $row["bin"] . ')' : '')."</td>
-						<td class='col-md-3'>".getCondition($row["conditionid"])."</td>
-						<td class='col-md-1'>".$row["total"]."</td>
-						<td class='col-md-2'><input type='text' class='input-sm form-control inventory_pull' value=''></td>
-					</tr>";
+			if($row["total"]) {
+				$html .= "<tr class='part' data-invid='".$row["id"]."' data-partid='".$partid."'>
+							<td class='col-md-6'>".$location. " " .($row["id"] ? "(Bin# " . $row["bin"] . ')' : '')."</td>
+							<td class='col-md-3'>".getCondition($row["conditionid"])."</td>
+							<td class='col-md-1'>".$row["total"]."</td>
+							<td class='col-md-2'><input type='text' class='input-sm form-control inventory_pull' value=''></td>
+						</tr>";
+			}
 		}
 		$html .= '</table></td></tr>';
 
