@@ -256,7 +256,38 @@
 				//$table .= key($item) . "<br>";
 			}
 		} else if ($mode == 'repair') {
-			//$grab_repair = "SELECT * FROM purchase_requests WHERE ;";
+			$qty = 1;
+
+			$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
+			$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+
+			if(mysqli_num_rows($repair_result)) {
+				$repair_item = mysqli_fetch_assoc($repair_result);
+				$query = "SELECT * FROM purchase_requests WHERE partid = ".prep($_REQUEST['search'])." AND ro_number = ".prep($repair_item['ro_number'])." ORDER BY requested DESC LIMIT 1;";
+				$result_request = qdb($query);
+
+				if(mysqli_num_rows($result_request)) {
+					$request_item = mysqli_fetch_assoc($result_request);
+					$qty = $request_item['qty'];
+					//print_r($request_item);
+				}
+			}
+
+			//echo $qty . 'test';
+
+			$new_row = array(
+				'id' => 'new',
+				'line' => '',
+				'search' => $_REQUEST['search'],
+				'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+				'qty' => $qty,
+				'uPrice' => 0.00,
+				'warranty' => 0,
+				'conditionid' => 2,
+				//'ref_1' => $r['ref_1'],
+				'ref_1_label' => 'repair_item_id',
+			);
+			$table .= build_row($new_row);	
 		}
 		
 		echo json_encode($table); 
@@ -267,7 +298,7 @@
 //------------------------------------------------------------------------------
 	if ($mode == "append" || $mode == "update"){
 		append_row($mode);
-	} else if ($mode == "load" || $mode == "rtv") {
+	} else if ($mode == "load" || $mode == "rtv" || $mode == "repair") {
 		initialTableOutput($mode);
 	} else {
 		"Permanent";

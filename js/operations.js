@@ -114,6 +114,7 @@
 			// This is our global for all functions, all day baby
 			var order_type = '';
 			var search = '';
+			var repair_id = '';
 			order_type = $("body").attr("data-order-type");
 			if(order_type == "Purchase"){
 				var receiver_companyid = '25';//ventel id
@@ -122,7 +123,7 @@
 				var receiver_companyid = $("#companyid").val();
 			}
 
-			if ($("#right_side_main").length > 0) {
+			if ($("#right_side_main").length > 0 || $('body').data('type') == 'repair') {
 				var order_number = $("#order_body").data("order-number");
 				var rtv_array = $("#right_side_main").data("rtvarray");
 				var mode = '';
@@ -136,6 +137,7 @@
 				if($('body').data('type') == 'repair') {
 					search = getUrlParameter('s');
 					mode = 'repair';
+					repair_id = getUrlParameter('repair');
 				}
 
 				console.log(window.location.origin+"/json/order-table-out.php?mode=load&number="+order_number+"&type="+order_type);
@@ -148,7 +150,8 @@
 						"number": order_number,
 						"rtv_array": rtv_array,
 		   		    	"mode": mode,
-		   		    	"search": search
+		   		    	"search": search,
+		   		    	"repair": repair_id
 						}, // serializes the form's elements.
 					dataType: 'json',
 					success: function(result) {
