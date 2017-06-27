@@ -52,6 +52,7 @@
 	$query = "SELECT * FROM `inventory_repair` ";
 	$query .= "WHERE inventory_id is not null/*test record*/ ";
 //	$query .= "AND purchase_order not like 'RMA%' ";
+//	$query .= "AND ticket_number >= 328381 ";
 	$query .= "ORDER BY ticket_number ASC; ";// LIMIT 1000,100; ";
 	$results = qdb($query, "PIPE") or die(qe("PIPE")." $query");
 	echo($query."<br><br>");
@@ -91,6 +92,7 @@
 			$line['ref_2'] = $r['verizon_ref'];
 			$line['ref_2_label'] = 'Verizon Ref';
 		}
+		$status = '';
 
 		// separate handling of RMA repairs, including a diff terms id; note that RMA results are
 		// known, existing-inventory units, as opposed to billable repairs that should be customer-owned,
@@ -146,8 +148,8 @@ continue;
 			$query3 .= "WHERE rma.repair_id = '".res($ro_number)."'; ";
 			$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
 			if (mysqli_num_rows($result3)==0) {
-//echo $query3.'<BR>';
 				if ($r2['status_id']==12 AND $r3['shipped_status_id']==8) {//Closed and "Canceled - Not Received" = "Void"
+					$status = 'Void';
 				} else if ($ro_number==327533) {
 				} else {/*328660-328667*/
 				}
@@ -162,28 +164,30 @@ continue;
 				$order_type = 'Repair';
 			}
 
-			$query4 = "SELECT rma_number FROM returns WHERE rma_number = '".res($master_rma)."'; ";
-			$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
-			if (mysqli_num_rows($result4)==0) {
-				$rma_status = 'Active';
-				$dispositionid = $DISPOSITIONS[$r3['action_id']];
-
-				// Need to create RMA but without overlapping on existing RMA's. Possible? Anything is possible.
-				$master_rma = setRMA($master_rma,$r['created_at'],$creator_id,$companyid,$order_number,$order_type,'',$rma_status);
-				$return_item_id = setRMAitem($master_rma,$partid,$invid,$dispositionid,substr($r3['reason'],0,255),1);
-			} else {
-				$query4 = "SELECT id FROM return_items WHERE rma_number = '".$master_rma."' AND inventoryid = '".res($invid)."'; ";
+			if ($master_rma) {
+				$query4 = "SELECT rma_number FROM returns WHERE rma_number = '".res($master_rma)."'; ";
 				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
-				$r4 = mysqli_fetch_assoc($result4);
-				$return_item_id = $r4['id'];
-			}
+				if (mysqli_num_rows($result4)==0) {
+					$rma_status = 'Active';
+					$dispositionid = $DISPOSITIONS[$r3['action_id']];
 
-			if (! $line['ref_1']) {
-				$line['ref_1'] = $return_item_id;
-				$line['ref_1_label'] = 'return_item_id';
-			} else {
-				$line['ref_2'] = $return_item_id;
-				$line['ref_2_label'] = 'return_item_id';
+					// Need to create RMA but without overlapping on existing RMA's. Possible? Anything is possible.
+					$master_rma = setRMA($master_rma,$r['created_at'],$creator_id,$companyid,$order_number,$order_type,'',$rma_status);
+					$return_item_id = setRMAitem($master_rma,$partid,$invid,$dispositionid,substr($r3['reason'],0,255),1);
+				} else {
+					$query4 = "SELECT id FROM return_items WHERE rma_number = '".$master_rma."' AND inventoryid = '".res($invid)."'; ";
+					$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+					$r4 = mysqli_fetch_assoc($result4);
+					$return_item_id = $r4['id'];
+				}
+
+				if (! $line['ref_1']) {
+					$line['ref_1'] = $return_item_id;
+					$line['ref_1_label'] = 'return_item_id';
+				} else {
+					$line['ref_2'] = $return_item_id;
+					$line['ref_2_label'] = 'return_item_id';
+				}
 			}
 		} else {
 			$termsid = prep($TERMS_MAPS[$r['terms_id']]);
@@ -192,7 +196,7 @@ continue;
 
 		//status_id - Connects to the 'inventory_status' table (Aaron's prev note was: 'repairshippeddtatus' table, correlates to our condition table. will need to be mapped to conditions, most likely.)
 		if($r['status_id'] == "11" || $r['status_id'] == "12"){//In Shipping or Closed
-			$status = 'Completed';
+			if ($status<>'Void') { $status = 'Completed'; }
 			$item_status = "manifest";
 			$qty = 0;
 			$conditionid = 5;//repaired (untested)
@@ -228,6 +232,9 @@ continue;
 		if (! $debug) { qdb($query2) or die(qe()." | $query2"); }
 		echo($query2."<br>");
 		if ($debug) { $repair_item_id = 88888; } else { $repair_item_id = qid(); }
+
+		// nothing further needed for this item beyond this point
+		if ($status=='Void') { continue; }
 
 		// check for existing inventory record of this item if we didn't already under RMA section above
 		if (! $invid) {

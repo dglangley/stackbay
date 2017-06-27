@@ -60,7 +60,9 @@
 				$query = "SELECT id FROM repair_activities WHERE ro_number = '".$ro_number."' ";
 				if ($repair_item_id) { $query .= "AND repair_item_id = '".$repair_item_id."' "; }
 				else { $query .= "AND repair_item_id IS NULL "; }
-				$query .= "AND datetime = '".$datetime."' AND techid = '".$techid."'; ";
+				$query .= "AND datetime = '".$datetime."' ";
+				if ($techid) { $query .= "AND techid = '".$techid."' "; } else { $query .= "AND techid IS NULL "; }
+				$query .= "; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				if (mysqli_num_rows($result)>0) {
 					$r = mysqli_fetch_assoc($result);
@@ -71,8 +73,9 @@
 				if ($activityid) { $query .= ", id"; }
 				$query .= ") VALUES ('".$ro_number."',";
 				if ($repair_item_id) { $query .= "'".$repair_item_id."',"; } else { $query .= "NULL,"; }
-				$query .= "'".$datetime."','".$techid."',";
-				if ($notes) { $query .= "'".$notes."'"; } else { $query .= "NULL"; }
+				$query .= "'".$datetime."',";
+				if ($techid) { $query .= "'".$techid."',"; } else { $query .= "NULL,"; }
+				if ($notes) { $query .= "'".res($notes)."'"; } else { $query .= "NULL"; }
 				if ($activityid) { $query .= ",'".$activityid."'"; }
 				$query .= "); ";
 				if (! $GLOBALS['debug']) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
@@ -82,9 +85,17 @@ echo $query.'<BR>';
 	}
 
 	function updateInventory($inventoryid,$field,$value,$datetime,$userid=0) {
+		if (! $userid) {
+			$equals = 'IS';
+			$user = 'NULL';
+		} else {
+			$equals = '=';
+			$user = "'".$userid."'";
+		}
+
 		// check for existing entry in inventory_history for this serial
 		$query = "SELECT * FROM inventory_history ";
-		$query .= "WHERE date_changed = '".$datetime."' AND userid = '".$userid."' ";
+		$query .= "WHERE date_changed = '".$datetime."' AND userid $equals $user ";
 		$query .= "AND invid = '".$inventoryid."' AND field_changed = '".res($field)."' AND value = '".res($value)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
@@ -92,7 +103,7 @@ echo $query.'<BR>';
 			$query .= "WHERE `id` = '".$inventoryid."'; ";
 			if (! $GLOBALS['debug']) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
-			$query = "UPDATE inventory_history SET date_changed = '".res($datetime)."', userid = '".res($userid)."' ";
+			$query = "UPDATE inventory_history SET date_changed = '".res($datetime)."', userid = $user ";
 			$query .= "WHERE invid = '".$inventoryid."' AND field_changed = '".$field."' AND value = '".res($value)."'; ";
 			if (! $GLOBALS['debug']) { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 		}
