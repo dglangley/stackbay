@@ -21,7 +21,7 @@
           <select class="form-control" name="repair_code">
             <?php 
               foreach($repair_codes as $code):
-                echo "<option value='".$code['id']."'>".$code['code']."</option>";
+                echo "<option value='".$code['id']."'>".$code['description']."\t".$code['code']."</option>";
               endforeach;
             ?>
           </select>
