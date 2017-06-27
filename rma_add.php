@@ -128,6 +128,29 @@
 		
 		header("Location: /shipping.php?on=".$new_so."&exchange=true");
 		//print_r($exchangeid); die;
+	} else if(grab('repair_trigger')){
+		$insert = "INSERT INTO repair_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, bill_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, repair_code_id, status) VALUES (
+			".prep($now).",
+			".prep($U['id']).",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			".prep().",
+			);";
+		qdb($insert);
+		$ro_number = qid();
+
+		header("Location: /order_form.php?ps=repair&on=" . $ro_number);
 	}
 	
 	//Check if the page has invoked a success in saving
@@ -240,12 +263,27 @@
 
 		return $result;
 	}
+
+	function getOrderNum($number) {
+		$ro_number;
+
+		$query = "SELECT order_number FROM returns WHERE rma_number = ".prep($number).";";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$ro_number = $result['order_number'];
+		}
+
+		return $ro_number;
+	}
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
 	
 
 	//Grab all parts of the RMA
 	$partsListing = getRMAParts($order_number);
+	$ro_number = getOrderNum($order_number);
 ?>
 
 <!DOCTYPE html>
@@ -344,73 +382,87 @@
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-						<?=sidebar_out($order_number,"RMA","RMA_display")?>
+						<?=sidebar_out($ro_number,"RMA","RMA_display")?>
 			</div>
 				
 			<div class="col-sm-10">
 				<form method="post">
-				<div class="row" style="margin: 20px 0;">
-					
-					
-						<div class="col-md-7" style="padding-left: 0px !important;">
-							<div class="col-md-6 location">
-								<div class="row">
-									<div class="col-md-6" style="padding-left: 0px !important;">
-										<?=loc_dropdowns('place', $itemLocation)?>
-										<?=$locationid;?>
-									</div>
-									
-									<div class="col-md-6">
-										<?=loc_dropdowns('instance', $itemLocation)?>
+				<?php 
+					//Grab all the parts from the specified PO #
+					$init = true;
+					$rma_status = true;
+					if(!empty($partsListing)) {
+						foreach($partsListing as $part): 
+							$serials = getRMAitems($part['partid'],$order_number);
+
+						if($init):
+							foreach($serials as $item){
+								if(!$item['returns_item_id']) {
+									$rma_status = false;
+									break;
+								}
+
+							}
+
+				?>
+					<div class="row" style="margin: 20px 0;">
+						
+						
+							<div class="col-md-7" style="padding-left: 0px !important;">
+								<div class="col-md-6 location">
+									<div class="row">
+										<div class="col-md-6" style="padding-left: 0px !important;">
+											<?=loc_dropdowns('place', $itemLocation)?>
+											<?=$locationid;?>
+										</div>
+										
+										<div class="col-md-6">
+											<?=loc_dropdowns('instance', $itemLocation)?>
+										</div>
 									</div>
 								</div>
-							</div>
-							
-							<div class="col-md-6" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
+								
+								<div class="col-md-6" style="padding: 0 0 0 5px;">
+								    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($rma_status ? 'disabled' : '')?>>
+					            </div>
 				            </div>
-			            </div>
-				</div>
-			
-				<div class="table-responsive">
-					<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
-						<thead>
-					         <tr>
-					            <th class="col-sm-2">
-					            	PART	
-					            </th>
-					            <th class="text-center col-sm-1">
-									RMA Serial
-					        	</th>
-					        	<th class="text-center col-sm-1">
-									Warr Exp
-					        	</th>
-					        	<th class="text-center col-sm-1">
-									Disposition
-					        	</th>
-					        	<th class="col-sm-3">
-									Reason
-					        	</th>
-					        	<th class="text-center col-sm-2">
-									Location
-					        	</th>
-					        	<th class="text-center col-sm-1">
-									Vendor Warr Exp
-					        	</th>
-					        	<th class="text-right col-sm-1">
-					        		Receive
-					        	</th>
-					         </tr>
-						</thead>
-						
-						<tbody>
-						<?php 
-							//Grab all the parts from the specified PO #
-							if(!empty($partsListing)) {
-								foreach($partsListing as $part): 
-									$serials = getRMAitems($part['partid'],$order_number);
+					</div>
+				
+					<div class="table-responsive">
+						<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
+							<thead>
+						         <tr>
+						            <th class="col-sm-2">
+						            	PART	
+						            </th>
+						            <th class="text-center col-sm-1">
+										RMA Serial
+						        	</th>
+						        	<th class="text-center col-sm-1">
+										Warr Exp
+						        	</th>
+						        	<th class="text-center col-sm-1">
+										Disposition
+						        	</th>
+						        	<th class="col-sm-3">
+										Reason
+						        	</th>
+						        	<th class="text-center col-sm-2">
+										Location
+						        	</th>
+						        	<th class="text-center col-sm-1">
+										Vendor Warr Exp
+						        	</th>
+						        	<th class="text-right col-sm-1">
+						        		Action
+						        	</th>
+						         </tr>
+							</thead>
+							
+							<tbody>
 
-						?>
+						<?php endif; ?>
+
 								<tr>
 									<td>
 										<?php 
@@ -512,14 +564,20 @@
 											foreach($serials as $item) { 
 										?>
 										<div class="row text-center">
-											
-												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive" <?=($item['returns_item_id'] ? 'disabled' : '');?>>
+											<?php if(!$item['returns_item_id']) { ?>
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive">
 													<i class="fa fa-truck"></i>
 													</button>
+											<?php } else if(getDisposition($item['dispositionid']) == 'Repair') { ?>
 											<!--</form>-->
+												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" type="submit" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></button>
 											
+											<?php }?>
+											<?php if(getDisposition($item['dispositionid']) == 'Exchange') { ?>
 											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
-												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' data-toggle="tooltip"data-placement="bottom" title="Exchange" value="<?=$item['inventoryid'];?>"><i class="fa fa-exchange" aria-hidden="true"></i></button>
+												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exc
+												hange_trigger' data-toggle="tooltip" data-placement="bottom" title="Send Replacement" value="<?=$item['inventoryid'];?>"><i class="fa fa-share" aria-hidden="true"></i></button>
+											<?php } ?>
 											
 										</div>
 										<?php 

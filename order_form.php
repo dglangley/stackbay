@@ -304,7 +304,7 @@
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
 			?>
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['type'] == 'Repair') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['type'] == 'Repair' && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
 				<div class="col-md-3">
 					<?php
@@ -316,22 +316,25 @@
 							if($o['type'] == 'Repair'){
 								echo '<a href="/repair.php?on='. $order_number .'" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
 							}
-							echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							if($o['type'] != 'Repair') {
+								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							}
 						}
-						if($order_number != "New" && $o['type'] == 'Sales'){
+						if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair')){
 							$rows = get_assoc_invoices($order_number);
 
 							//Get packages pertaining to this order
 							//$packages = getPackagesFix($order_number);
 
-							//if($rows){
-							$output = '
-							<div class ="btn-group">
-								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-	                              <i class="fa fa-credit-card"></i>
-	                              <span class="caret"></span>
-	                            </button>';
-	                            
+							if($o['type'] != 'Repair') {
+								//if($rows){
+								$output = '
+								<div class ="btn-group">
+									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
+		                              <i class="fa fa-credit-card"></i>
+		                              <span class="caret"></span>
+		                            </button>';
+		                            
 								$output .= '<ul class="dropdown-menu">';
 								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 								// if($rows) {
@@ -365,10 +368,14 @@
 	                            $output .= "</ul>";
 								$output .= "</div>";
 								echo $output;
-								
+							}
 					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 					// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
-					$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+					if($o['type'] == 'Sales') { 
+						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+					} else if($o['type'] == 'Repair') { 
+						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
+					}
 					$rows = qdb($rma_select) or die(qe().$rma_select);
 						$output = '
 						<div class ="btn-group">
@@ -404,7 +411,7 @@
 							}
 						}
 						$output .= '<li>
-										<a href="/rma.php?on='.$order_number.'">
+										<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : '').'">
 											ADD RMA <i class ="fa fa-plus"></i>
 										</a>
 									</li>';
@@ -521,7 +528,7 @@
 							echo "# $order_number";
 						}
 
-						if($status && $o['type'] == 'Repair'){
+						if($status && $o['type'] == 'Repair' && $order_number!='New'){
 							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false || strpos(strtolower($status), 'canceled') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
 						}
 
@@ -551,7 +558,7 @@
 							<div class="pull-right" style="margin-top: 15px;">
 								<b>Shipped Tracking#</b> <?=$tracking;?>
 							</div>
-						<?php } else if($o['type'] == 'Repair') { ?>
+						<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
 							<form action="repair_shipping.php" method="POST">
 								<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
 							</form>

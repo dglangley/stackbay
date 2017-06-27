@@ -81,8 +81,9 @@ function search_as_heci($search_str){
     			$results = hecidb(format_part($search_str));
     		}
         }
+        //$page =="Repair" || $order_number!='New'
 
-        if($page =="Repair" || $page=="Tech" || $type =="repair"){
+        if($page=="Tech" ){
             $results = array_filter($results, "is_component");
         } else {
             $results = array_filter($results, "not_component");

@@ -17,7 +17,7 @@
         if($type != 'Repair') {
             $query = "SELECT status FROM ".$o['order']." WHERE ".$o['id']." = $number;";
         } else {
-           $query = "SELECT repaircodeid as status FROM ".$o['order']." WHERE ".$o['id']." = $number;"; 
+           $query = "SELECT repair_code_id as status FROM ".$o['order']." WHERE ".$o['id']." = $number;"; 
         }
         $result = qdb($query);
         
@@ -30,7 +30,7 @@
     //echo $status; die;
     if($type == 'Repair') {
         $status = ($status == '18' ? '' : '18');
-        $update = "UPDATE ".$o['order']." SET `repaircodeid` = '$status' WHERE ".$o['id']." = $number;";
+        $update = "UPDATE ".$o['order']." SET `repair_code_id` = '$status' WHERE ".$o['id']." = $number;";
         $result = qdb($update);
     } else if($number && $type){
         $status = ($status == 'Void' ? 'Active' : 'Void');

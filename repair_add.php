@@ -101,9 +101,7 @@
 		$query = "
 		SELECT i.serial_no, i.locationid, i.repair_item_id, i.conditionid, i.notes, i.id
 		FROM inventory i 
-		WHERE id in (
-			SELECT DISTINCT invid FROM inventory_history WHERE field_changed = 'repair_item_id' AND value = ".prep($line_id)."
-		) or i.repair_item_id = ".prep($line_id).";";
+		WHERE i.repair_item_id = ".prep($line_id)." AND i.serial_no IS NOT NULL;";
 		$result = qdb($query) or die(qe()." | $query");
 		
 	    if (mysqli_num_rows($result)>0) {
@@ -168,6 +166,17 @@
 	$sel_instance = $_REQUEST["instance"];
 	$sel_condition = $_REQUEST["condition"];
 	$partsListing = getRepairParts($order_number);
+
+	$outstanding = 0;
+
+	if(!empty($partsListing)) {
+		$results = count($partsListing);
+		foreach($partsListing as $part): 
+			$serials = getRepairItems($repair_item_id);
+		 	$outstanding = $part['qty'] - count($serials);
+			break;
+		endforeach;
+	}
 ?>
 
 
@@ -322,10 +331,10 @@
 							</div>
 							
 							<div class="col-md-5" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
+							    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($outstanding ? '' : 'disabled');?>>
 				            </div>
 				            <div class="col-md-1" style="padding: 0 0 0 5px;">
-								<button class="btn btn-sm btn-primary" type='submit'>Submit</button>
+								<button class="btn btn-sm btn-primary" type='submit' <?=($outstanding ? '' : 'disabled');?>>Submit</button>
 							</div>
 						    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
 			            </div>
@@ -362,7 +371,7 @@
 								if(!empty($partsListing)) {
 									$results = count($partsListing);
 									foreach($partsListing as $part): 
-										$serials = getRepairItems($part['id']);
+										$serials = getRepairItems($repair_item_id);
 	
 							?>
 									<tr>
@@ -378,7 +387,7 @@
 											</div>
 										</td>
 										<td>
-											<?=$part['qty'] - count($serials)?>
+											<?=$part['qty'] - count($serials);?>
 										</td>
 										<td class="serials_col">
 											<?php 
