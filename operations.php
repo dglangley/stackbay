@@ -453,8 +453,8 @@
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 					} else if($order == 'ro') {
-						$status = ($r['repaircodeid'] ? 'complete_item' : 'active_item');
-						$status_name = ($r['repaircodeid'] ? getRepairCode($r['repaircodeid']) : 'Active');
+						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
+						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 						//print_r($r['status'] );
 					}
 				

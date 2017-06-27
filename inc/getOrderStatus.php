@@ -12,7 +12,7 @@
             if($type != 'Repair') {
                 $select = "SELECT `status` FROM ".$o['order']." WHERE ".$o['id']." = $number;";
             } else {
-                $select = "SELECT rc.`description` as status FROM ".$o['order']." ro, repair_codes as rc  WHERE ".$o['id']." = $number AND ro.repaircodeid = rc.id;";
+                $select = "SELECT rc.`description` as status FROM ".$o['order']." ro, repair_codes as rc  WHERE ".$o['id']." = $number AND ro.repair_code_id = rc.id;";
             }
             $result = qdb($select) or die(qe()." $select");
             if(mysqli_num_rows($result)){

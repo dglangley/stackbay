@@ -215,7 +215,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 									<button class='btn btn-info btn-sm btn-order-upload' type='button' for='assoc_order_upload'><i class='fa fa-paperclip'></i></button>
 								</span>
 							</div><!-- /input-group -->
-							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' value='https://aaronventel-aaronventel.c9users.io/docs/PO506016.pdf'/>
+							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' value=''/>
 				";
 			}
 			$right .= "</div>";

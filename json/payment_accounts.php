@@ -39,7 +39,7 @@
         	$invoice_items[] = $rows;
         }
     	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.companyid = '".res(25)."';";
+    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = $order_number AND i.order_type = 'Sale'; ";//AND i.companyid = '".res(25)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     

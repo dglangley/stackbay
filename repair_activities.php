@@ -56,7 +56,7 @@
 		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
 		$result = qdb($query) OR die(qe());
 
-		$query = "UPDATE repair_orders SET repaircodeid = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
+		$query = "UPDATE repair_orders SET repair_code_id = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
 		$result = qdb($query) OR die(qe());
 	}
 

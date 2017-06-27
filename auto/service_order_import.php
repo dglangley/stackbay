@@ -37,11 +37,11 @@
         $ro_info = mysqli_fetch_assoc($result);
         
         $ss_insert = "
-        INSERT INTO `service_orders`(`companyid`, `datetime`, `ship_to_id`, `bill_to_id`, `order_type`, `order_number`, `userid`, `notes`) 
-        VALUES (".prep($companyid).",".prep($r['external_out']).",".prep(address_translate($r['ship_to'])).", ".prep().", 'ro_number', $ro_number,".prep($creator_id)." , ".prep($r['ship_to']).");";
+        INSERT INTO `service_orders`(`companyid`, `datetime`, `ship_to_id`, `bill_to_id`, `order_number`, `order_type`, `userid`, `notes`) 
+        VALUES (".prep($companyid).",".prep($r['external_out']).",".prep(address_translate($r['ship_to'])).", ".prep().", $ro_number, 'Repair', ".prep($creator_id)." , ".prep($r['ship_to']).");";
         
         $ssi_insert = "
-        INSERT INTO `service_items`(`partid`, `ss_number`, `qty`, `price`, `notes`, `invid`) 
+        INSERT INTO `service_items`(`partid`, `ss_number`, `qty`, `price`, `notes`, `inventoryid`) 
         VALUES (".prep($ro_info['partid']).", '$ro_number', 1, ".prep($r['cost']).", ".$r['notes'].", ".$ro_info['invid'].");
         ";
         

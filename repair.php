@@ -64,7 +64,7 @@
 		$repair_order = $result['ro_number'];
 		$notes = $result['public_notes'];
 		$sales_rep_id = $result['sales_rep_id'];
-		$ticketStatus = getRepairCode($result['repaircodeid']);
+		$ticketStatus = getRepairCode($result['repair_code_id']);
 	}
 	
 	function getItems($ro_number = 0) {

@@ -87,7 +87,7 @@
 					if (mysqli_num_rows($si_result)){
 						$si_result = mysqli_fetch_assoc($si_result);
 						$so_number = $si_result['so_number'];
-						if(all_credit_recieved($order_number)){
+						if(all_credit_received($order_number)){
 							credit_creation($so_number, "sales",$order_number);
 						}
 					}
@@ -231,6 +231,7 @@
 		
 		if (mysqli_num_rows($receive_check)>0) {
 			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
+			//$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
 			//Query or pass back error
 			$result = (qdb($query) ? '' : qe());
 		} else {

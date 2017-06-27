@@ -52,9 +52,14 @@
             $rma_results = qdb($rma_select) or die(qe()." | $rma_select | ");
             $rma_meta = mysqli_fetch_assoc($rma_results);
         }
+
+		$otype = 'Sale';
+		if ($o['type']=='Sales') { $otype = 'Sale'; }
+		else { $otype = $o['type']; }
+
         $meta_insert = 
         "INSERT INTO `sales_credits`(`companyid`, `date_created`, `order_num`, `order_type`, `rma`, `repid`, `contactid`) 
-        VALUES ($company,NOW(),".prep($origin_number).",'".$o['type']."',".prep($rma).",".$GLOBALS['U']['id'].",$contact);";
+        VALUES ($company,'".$GLOBALS['now']."',".prep($origin_number).",'".$otype."',".prep($rma).",".$GLOBALS['U']['id'].",$contact);";
         
         qdb($meta_insert) or die(qe()." $meta_insert");
         $scid = qid();
@@ -64,12 +69,12 @@
         
         $line_item_select = "
         SELECT ".$o["item"].".* ".(($rma_meta['items_ids'])?", `returns_item_id` ":"")."
-        FROM `".$o["item"]."`".(($rma_meta['items_ids'])?" LEFT JOIN `inventory` ON `sales_item_id` ":"")."
+        FROM `".$o["item"]."`".(($rma_meta['items_ids'])?" LEFT JOIN `inventory` ON `sales_item_id` =`".$o["item"]."`.`id` ":"")."
         WHERE ".$o['id']." = ".prep($origin_number).(($item_number)?" AND id = ".prep($item_number):"")."
         ".(($rma_meta['items_ids'])?"AND `returns_item_id` NOT in (".$rma_meta['items_ids'].")":"")."
         AND `sales_item_id` in ($si_ids);";
         // exit($line_item_select);
-        exit($line_item_select);
+//        exit($line_item_select);
         $line_items = qdb($line_item_select) or die(qe()."| ".$line_item_select);
 
         foreach($line_items as $row){
@@ -80,7 +85,7 @@
 
     }
     //Grab the order origin and 
-    function all_credit_recieved($rma_number){
+    function all_credit_received($rma_number){
         
         //Reciece
         $received_select = "
@@ -91,8 +96,8 @@
             AND disposition = 'Credit'
             AND invid = inventoryid
             AND ih.value = ri.id
-            AND ih.field_changed = 'returns_item_id'
-            ;";
+            AND ih.field_changed = 'returns_item_id';
+            ";
         
         //Total
         $total_select = "
@@ -100,7 +105,7 @@
             FROM  return_items ri, dispositions
             WHERE rma_number = ".prep($rma_number)."
             AND dispositions.id = dispositionid
-            AND disposition = 'Credit'
+            AND disposition = 'Credit';
         ";
         // exit($received_select."<br>".$total_select);
         //Eventual Spot to check (Maybe in query) that there has been no similar credit applied

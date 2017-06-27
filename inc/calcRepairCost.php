@@ -3,17 +3,31 @@
 		if (! $ro_number) { return (0); }
 
 		$cost = 0;
-		$query = "SELECT ri.id FROM repair_orders ro, repair_items ri ";
-		$query .= "WHERE ro.ro_number = '".res($ro_number)."' AND ro.ro_number = ri.ro_number; ";
+		$query = "SELECT rc.qty, pi.price FROM repair_components rc, inventory i, purchase_items pi ";
+		$query .= "WHERE rc.ro_number = '".res($ro_number)."' AND rc.invid = i.id ";
+		$query .= "AND i.purchase_item_id = pi.id; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$query2 = "SELECT rc.qty, pi.price FROM repair_components rc, inventory i, purchase_items pi ";
-			$query2 .= "WHERE rc.ro_number = '".res($ro_number)."' AND rc.invid = i.id ";
-			$query2 .= "AND i.purchase_item_id = pi.id; ";
+			$ext = $r['qty']*$r['price'];
+			$cost += $ext;
+		}
+
+		$query = "SELECT ri.id repair_items ri ";
+		$query .= "WHERE ri.ro_number = '".res($ro_number)."'; ";// AND ro.ro_number = ri.ro_number; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+
+			$query2 = "SELECT ss_number FROM service_orders so ";
+			$query2 .= "WHERE order_number = '".res($ro_number)."' AND order_type = 'Repair'; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$ext = $r2['qty']*$r2['price'];
-				$cost += $ext;
+				$so = $r2['ss_number'];
+
+				$query3 = "SELECT qty, price FROM service_items si WHERE si.ss_number = $so; ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				while ($r3 = mysqli_fetch_assoc($result3)) {
+					$cost += ($r3['qty']*$r3['price']);
+				}
 			}
 
 			// get freight cost per unit based on the package's freight that it was in, divided by #pcs inside

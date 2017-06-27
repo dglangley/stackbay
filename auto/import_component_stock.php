@@ -13,8 +13,8 @@
 //Steps for import:
 //TABLES TOUCHED: `inventory`, `inventory_history`, `repair_components`, `purchase_requests`, 
 
-global $GLOBALS;
 
+/*
 $select ="
 SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
 	FROM inventory_componentstock cs
@@ -51,8 +51,10 @@ foreach($prq as $r){
 	//Component_order_mapping
 	$partid = translateComponent($r['component_id']);
 	$companyid = dbTranslate($r['supplier_id']);
-	$freight_carrier_id = $CARRIER_MAPS[$r['shipping_method_id']];
-	$freight_service_id = $SERVICE_MAPS[$r['shipping_method_id']];
+	$ship_method_id = $r['shipping_method_id'];
+	if (! $ship_method_id) { $ship_method_id = 1; }
+	$freight_carrier_id = $CARRIER_MAPS[$ship_method_id];
+	$freight_service_id = $SERVICE_MAPS[$ship_method_id];
 	$freight_account = "NULL"; //For now this is null, he has a bunch of information in his freight instructions
 	$public = prep($r['freight_instructions']);
 	$quantity = "";
@@ -125,6 +127,7 @@ foreach($prq as $r){
 	
 	
 }
+*/
 
 
 $component_stock = "
@@ -157,7 +160,7 @@ foreach($results as $r){
 	VALUES (".($r['quantity']).", ".prep($partid).", 5, 'shelved', ".prep($r['location_id']).", ".prep($r['subloc_id']).", 16, ".prep($GLOBALS['now']).", 'IMPORTED ON COMPONENTS IMPORT',".prep($lstring).");";
 	qdb($insert) or die(qe());
 	echo("$insert<br>");
-	$invid = prep(qid());
+	$invid = qid();
 	
 	$amount = $r['cost_per_unit']*$r['quantity'];
 	$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 

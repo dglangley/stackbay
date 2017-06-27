@@ -240,6 +240,13 @@
 		13 => 6,
 		14 => 9,
 	);
+	$DISPOSITIONS = array(
+		3=>1,/*credit*/
+		4=>1,/*credit and refund*/
+		1=>2,/*replace/exchange*/
+		2=>3,/*repair*/
+		5=>0,/*tbd*/
+	);
 	
 	function mapFreight($id){
 		global $FREIGHT_MAPS;
