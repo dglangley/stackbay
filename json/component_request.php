@@ -28,10 +28,11 @@
 	$techid = $U['id'];
 	$requested = $now;
 	$repair_item_id = $_REQUEST['repair_item_id'];
+	$total_pr = $_REQUEST['total_pr'];
 
 	$notes = $_REQUEST['notes'];
 	
-	function saveReq($techid, $order_number, $requested, $components, $repair_item_id, $notes) {
+	function saveReq($techid, $order_number, $requested, $components, $repair_item_id, $notes, $total_pr) {
 		global $SEND_ERR;
 		global $_SERVER;
 		$query;
@@ -39,7 +40,7 @@
 
 		foreach($components as $item) {
 
-			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($item['qty']).", ".prep($notes).");";
+			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($total_pr).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
@@ -47,7 +48,7 @@
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result) {
-				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".getPart($item['part'])."$repair=".$order_number."'>Part# ".$item['part']."</a> Qty ".$item['qty']." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
+				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$item['part']."&repair=".$repair_item_id."'>Part# ".getPart($item['part'])."</a> Qty ".$total_pr." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				$recipients = 'andrew@ven-tel.com';
 				//$recipients = 'ssabedra@ven-tel.com';
@@ -60,12 +61,14 @@
 				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 				}
 			}
+
+			break;
 		}
 
 		return $result;
 	}
 
-	$result = saveReq($techid, $order_number, $requested, $components, $repair_item_id, $notes);
+	$result = saveReq($techid, $order_number, $requested, $components, $repair_item_id, $notes, $total_pr);
 		
 	echo json_encode($result);
     exit;

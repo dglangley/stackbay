@@ -263,7 +263,7 @@
 			$receive_check = trim($receive_check,", ");
 			//This Query will search the history to see if the parts were ever received against the line item record
 			$receive_query = "SELECT * FROM `inventory_history` where field_changed = 'returns_item_id' and value IN ($receive_check);";
-			$receive_result = qdb($receive_query);
+			$receive_result = qdb($receive_query) or die(qe()." $receive_query");
 			//If there are more rows (Or equivalent rows) in the receive row result, then all items have been received)
 			if (mysqli_num_rows($rma_micro) <= mysqli_num_rows($receive_result) && mysqli_num_rows($rma_micro) > 0){
 				$mode = 'view';

@@ -314,7 +314,7 @@ echo $query2.'<BR>';
 		// $sales['ship_date'] = $r['date_out'];
 		//date_out dateshiipped
     
-		//QUOTES innfo
+		//QUOTES info
 
 		echo("<br><br>");
 	}
