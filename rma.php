@@ -64,18 +64,25 @@
 	$mode = grab("mode");
 	$so_number = grab("on");
 	$rma_number = grab("rma",'');
+	$repair = grab("repair");
 
 	//If this record has a rma number, find the RMA
-	if ($rma_number && !$so_number){
-		$query = "SELECT order_number FROM `returns` WHERE rma_number = ".prep($rma_number)." AND order_type = 'Sale';";
+	if ($rma_number){
+		$query = "SELECT order_number, order_type FROM `returns` WHERE rma_number = ".prep($rma_number).";";
 		// echo($query);
 		$result = qdb($query) or die(qe()." $query");
 		// exit;
 		if (mysqli_num_rows($result)){
 			$result = mysqli_fetch_assoc($result);
 			$so_number = $result['order_number'];
+
+			if($result['order_type'] == 'Repair') {
+				$repair = true;
+			}
 		}
 	}
+
+	//echo $so_number;
 	
 	//Check for any post data from save
 	//Array = [counter] = invid
@@ -101,8 +108,13 @@
 		//New RMA
 		if (!$rma_number){
 			
-	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
-	        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).",".prep($rma_notes).");";
+			if($repair) {
+		        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
+		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Repair',".prep($contactid).",".prep($rma_notes).");";
+		    } else {
+		    	$insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
+		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).",".prep($rma_notes).");";
+		    }
 	        qdb($insert) OR die();
 	        $rma_number = qid();
 	    	
@@ -134,13 +146,22 @@
 	    //Tis an RMA Update or Delete
 		} else { 
         	foreach($checkedItems as $invid) {
-	        	$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
+        		if($repair) {
+        			$partidQuery = "SELECT partid, repair_item_id FROM inventory WHERE id = ".res($invid).";";
+        		} else {
+	        		$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
+	        	}
 	        	$rmaSave = qdb($partidQuery) or die(qe());
 	        	
 	        	if (mysqli_num_rows($rmaSave)) {
 					$rmaSave = mysqli_fetch_assoc($rmaSave);
 					$partid = $rmaSave['partid'];
-					$so_line_id = $rmaSave['sales_item_id'];
+					if($repair) {
+	        			$so_line_id = $rmaSave['repair_item_id'];
+	        		} else {
+		        		$so_line_id = $rmaSave['sales_item_id'];
+		        	}
+					
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
@@ -198,11 +219,10 @@
 		$sidebar_number = $rma_number;
 		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
 		$rma_select = qdb($rma_select);
-		
 		//Verify there are Rows from this returns/get meta information
 		if (mysqli_num_rows($rma_select)){
 			//Date Created
-			
+
 			//Should only be one row
 			$rma = mysqli_fetch_assoc($rma_select);
 			
@@ -211,7 +231,7 @@
 			$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
 			if($date_created >= $yesterday){
 				//If order was within last day, load Available sales order rows (allowing the user to edit them)
-				if($rma['order_type'] == "Sale"){
+				if($rma['order_type'] == "Sale" || $rma['order_type'] == "Repair"){
 					$so_number = $rma['order_number'];
 				}
 				else{
@@ -276,23 +296,48 @@
 	
 	//If there is an so_number set, and we are not just looking at an existing record, here I would pull the SO items for addition
 	if($so_number && $mode != 'view' && $mode != 'old'){
+
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
-		$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
+
+		if($repair) {
+			$sales_macro = "SELECT companyid, contactid, ro_number FROM repair_orders where `ro_number` = ".prep($so_number).";";
+		} else {
+			$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
+		}
+
+		//echo $sales_macro;
 		$sales_macro = mysqli_fetch_assoc(qdb($sales_macro));
 		
-		//Check to see if these items have already been RMA'd off this particular sales order
-		$limiter = "SELECT `inventoryid`
-		FROM `returns` r , `return_items` ri, inventory i
-		WHERE order_number=".prep($so_number)." 
-		AND order_type = 'Sale' 
-		AND r.`rma_number` = ri.`rma_number`
-		AND i.id = `inventoryid`
-		AND i.`qty` > 0;";
+		if($repair) {
+			//Check to see if these items have already been RMA'd off this particular sales order
+			$limiter = "SELECT `inventoryid`
+			FROM `returns` r , `return_items` ri, inventory i
+			WHERE order_number=".prep($so_number)." 
+			AND order_type = 'Repair' 
+			AND r.`rma_number` = ri.`rma_number`
+			AND i.id = `inventoryid`
+			AND i.`qty` > 0;";
+		} else {
+			//Check to see if these items have already been RMA'd off this particular sales order
+			$limiter = "SELECT `inventoryid`
+			FROM `returns` r , `return_items` ri, inventory i
+			WHERE order_number=".prep($so_number)." 
+			AND order_type = 'Sale' 
+			AND r.`rma_number` = ri.`rma_number`
+			AND i.id = `inventoryid`
+			AND i.`qty` > 0;";
+		}
 		
 		$limit_result = qdb($limiter) or die(qe()." | $limiter");
 		$limit = '';
 		$limit_arr = array();
-		$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+
+		if($repair) {
+			//Check to see if these items have already been RMA'd off this particular sales order
+			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND `repair_item_id` = `ri`.`id` AND i.serial_no IS NOT NULL";
+		} else {
+			$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+		}
 		
 		//here is where I take out the results of the serials I have already RMA'ed
 		if (mysqli_num_rows($limit_result)){
@@ -382,7 +427,11 @@
 				<div class="col-md-4">
 					<?php
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$order_type[0].'O'.$rma_number.'.pdf"
-						echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO #'.$so_number.')</a>';
+						if(!$repair) {
+							echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO# '.$so_number.')</a>';
+						} else {
+							echo '<a class="btn-flat pull-left" href="/repair_add.php?on='.$so_number.'"><i class="fa fa-truck"></i> (RO# '.$so_number.')</a>';
+						}
 						if($rma_number){
 							// echo '<a class="btn-flat pull-left" target="_new" href="/docs/RMA'.$rma_number.'.pdf"><i class="fa fa-file-pdf-o"></i></a>';
 							echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
@@ -414,7 +463,7 @@
 					
 				</div>
 				<div class="col-md-4 text-center"><h2 class = "minimal" style ="margin-top:10px;;">
-				    <?=($rma_number)? "RMA #$rma_number" :'New RMA';?>
+				    <?=($rma_number)? "RMA# $rma_number" :'New RMA';?>
 				    </h2>
 				</div>
 				<!--<?=($rma_number=="New")?'success':'success'?>-->

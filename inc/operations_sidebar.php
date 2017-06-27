@@ -330,7 +330,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$repair_item_id = $repair_results['id'];
 			}
 
-	    	$query = "SELECT date_created FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).");";
+	    	$query = "SELECT date_created FROM inventory WHERE repair_item_id = ".prep($repair_item_id)." AND serial_no IS NOT NULL;";
 	    	$result = qdb($query) OR die(qe());
 	    	
 			if (mysqli_num_rows($result)>0) {
@@ -341,7 +341,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 		
 		
 		//Output the void button to the bottom left side of the collumn
-		if ($order_number != 'New' && $status == 'Active' || ($order_number != 'New' && $order_type == "Repair" && !$received)) {
+		if ($order_number != 'New' && $status == 'Active' && !$received || ($order_number != 'New' && $order_type == "Repair" && !$received)) {
 			$right .= "
 				<div class='row'>
 					<div class='col-sm-12'>
@@ -444,10 +444,25 @@ include_once $rootdir.'/inc/default_addresses.php';
 						</div>";
 						*/
 			}else if ($o['rma']){
+				$repair = $_REQUEST['repair'];
+				if (!$repair){
+					$query = "SELECT order_number, order_type FROM `returns` WHERE order_number = ".prep($order_number).";";
+					// echo($query);
+					$result = qdb($query) or die(qe()." $query");
+					// exit;
+					if (mysqli_num_rows($result)){
+						$result = mysqli_fetch_assoc($result);
+						$so_number = $result['order_number'];
+
+						if($result['order_type'] == 'Repair') {
+							$repair = true;
+						}
+					}
+				}
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
-								Created from SO #$order_number
+								Created from ".(!$repair ? 'SO' : 'RO')." #$order_number
 							</div>
 						</div>";
 			}
