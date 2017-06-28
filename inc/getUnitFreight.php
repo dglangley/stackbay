@@ -1,4 +1,6 @@
 <?php
+	// this function calculates total number of pieces per package associated with item + order, and allocates
+	// cost-per-unit in that item's package based on overall costs / number of pieces
 	function getUnitFreight($inventoryid,$order_number,$order_type) {
 		$freight_cost = 0;
 

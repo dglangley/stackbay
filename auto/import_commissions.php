@@ -184,7 +184,7 @@ continue;
 		$commissionid = 0;
 
 		if ($sales_item_id OR $inventoryid) {
-			$profitid = setCogs($inventoryid,$sales_item_id,$cogs);
+			$profitid = setCogs($inventoryid,$sales_item_id,'sales_item_id',$cogs);
 echo $serial.' '.$query2.'<BR>';
 		}
 

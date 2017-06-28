@@ -14,7 +14,6 @@
 //TABLES TOUCHED: `inventory`, `inventory_history`, `repair_components`, `purchase_requests`, 
 
 
-/*
 $select ="
 SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
 	FROM inventory_componentstock cs
@@ -88,16 +87,17 @@ foreach($prq as $r){
 		echo($pi_insert."<br>");
 		$pline = qid(); 
 			
-		$inv_insert = "	INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `userid`, `date_created`,`notes`, `purchase_item_id`) 
+		$inv_insert = "INSERT INTO `inventory`(`qty`, `partid`, `conditionid`, `status`, `userid`, `date_created`,`notes`, `purchase_item_id`) 
 			VALUES (".prep($quantity).", ".prep($partid).", 5, 'manifest', 16, ".prep($r['date']." 13:00:00").", 'IMPORTED ON COMPONENTS IMPORT',".$pline.");"; 
 		qdb($inv_insert) or die(qe()." | $inv_insert");
 		echo($inv_insert."<br>");
 		$invid = qid();
 		
 		$amount = $r['price'] * $quantity;
-		$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
-		VALUES ($invid, NOW(), $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
-		qdb($cost);
+		$cost_query = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
+		VALUES ($invid, '".$GLOBALS['now']."', $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
+		qdb($cost_query) OR die(qe().'<BR>'.$cost_query);
+		echo $cost_query.'<BR>';
 		setCostsLog($invid,$pline,"purchase_item_id",$amount);
 		
 		if($ro_number){
@@ -127,7 +127,6 @@ foreach($prq as $r){
 	
 	
 }
-*/
 
 
 $component_stock = "
@@ -163,10 +162,10 @@ foreach($results as $r){
 	$invid = qid();
 	
 	$amount = $r['cost_per_unit']*$r['quantity'];
-	$cost = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
+	$cost_query = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
 	VALUES ($invid, ".prep($GLOBALS['now']).", $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
-	qdb($cost);
-	echo("$cost<br><br>");
+	qdb($cost_query);
+	echo("$cost_query<br><br>");
 	setCostsLog($invid,$lstring,$event_type,$amount);
 }
 

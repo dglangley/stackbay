@@ -52,7 +52,7 @@
 	$query = "SELECT * FROM `inventory_repair` ";
 	$query .= "WHERE inventory_id is not null/*test record*/ ";
 //	$query .= "AND purchase_order not like 'RMA%' ";
-//	$query .= "AND ticket_number >= 328381 ";
+//	$query .= "AND ticket_number = 328637 ";
 	$query .= "ORDER BY ticket_number ASC; ";// LIMIT 1000,100; ";
 	$results = qdb($query, "PIPE") or die(qe("PIPE")." $query");
 	echo($query."<br><br>");
@@ -109,6 +109,7 @@
 
 			// unit was NOT in stock previously, even though this is an RMA for a pre-existing SO/RO...
 			$query2 = "SELECT id FROM inventory WHERE serial_no = '".res($pserial)."' AND partid = '".res($partid)."'; ";
+//			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) {
 				//update exception partids here
@@ -146,6 +147,7 @@ continue;
 			$query3 = "SELECT si.so_id, si.repair_id, rma.reason, rma.action_id, rma.master_id ";
 			$query3 .= "FROM inventory_rmaticket rma LEFT JOIN inventory_solditem si ON rma.item_id = si.id ";
 			$query3 .= "WHERE rma.repair_id = '".res($ro_number)."'; ";
+			echo $query3.'<BR>';
 			$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').'<BR>'.$query3);
 			if (mysqli_num_rows($result3)==0) {
 				if ($r2['status_id']==12 AND $r3['shipped_status_id']==8) {//Closed and "Canceled - Not Received" = "Void"
@@ -165,7 +167,9 @@ continue;
 			}
 
 			if ($master_rma) {
-				$query4 = "SELECT rma_number FROM returns WHERE rma_number = '".res($master_rma)."'; ";
+				$query4 = "SELECT rma_number FROM returns WHERE rma_number = '".res($master_rma)."' ";
+				$query4 .= "AND order_number = '".$order_number."' AND order_type = '".$order_type."'; ";
+//				echo 'Master RMA# '.$master_rma.' '.$order_type.' '.$order_number.': '.$query4.'<BR>';
 				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 				if (mysqli_num_rows($result4)==0) {
 					$rma_status = 'Active';
@@ -218,16 +222,26 @@ continue;
 		if (! $debug) { qdb($query2) or die(qe(). " | $query2"); }
 		echo (++$INSERTED).'. '.$query2.'<br>';
 
+		$rid_field = '';
+		$rid_value = '';
+		$query2 = "SELECT id FROM repair_items WHERE partid = '".res($partid)."' AND ro_number = $ro_number; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$rid_field = ", `id`";
+			$rid_value = ", '".$r2['id']."'";
+		}
+
 		// leave invid NULL for now until we get the inventory record below
 		$query2 = "REPLACE `repair_items`(`partid`,`ro_number`,`line_number`,`qty`,`price`,
 				`due_date`,
 				`invid`,`ref_1`,`ref_1_label`,`ref_2`,`ref_2_label`,
-				`notes`, `warrantyid`)
+				`notes`, `warrantyid` $rid_field)
 				VALUES (
 				".prep($partid).",$ro_number,NULL,1,".prep($r['price_per_unit']).",
 				".prep(format_date($r['date_due'],"Y-m-d"), "'".format_date($r['created_at'],"Y-m-d",array("d"=>30))."'").",
 				NULL,".prep($line['ref_1']).",".prep($line['ref_1_label']).",".prep($line['ref_2']).",".prep($line['ref_2_label']).",
-				NULL,".prep($line['warranty']).");
+				NULL,".prep($line['warranty'])." $rid_value);
 		";
 		if (! $debug) { qdb($query2) or die(qe()." | $query2"); }
 		echo($query2."<br>");
