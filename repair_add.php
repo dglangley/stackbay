@@ -310,35 +310,37 @@
 				<!--</div>-->
 			</div>
 			
-			<div class="col-sm-10">
+			<div class="col-sm-10"  style="margin-top: 20px;">
 				<form method="post">
-					<div class="row" style="margin: 20px 0;">
-						<div class="col-md-7" style="padding-left: 0px !important;">
-							<div class="col-md-6 location">
-								<div class="row">
-									<div class="col-md-4" style="padding-left: 0px !important;">
-										<?=loc_dropdowns('place', $sel_place)?>
-									</div>
-									
-									<div class="col-md-3">
-										<?=loc_dropdowns('instance', $sel_instance, $sel_place)?>
-									</div>
+					<?php if($outstanding): ?>
+						<div class="row" style="margin-bottom: 20px; margin-left: 0;">
+							<div class="col-md-7" style="padding-left: 0px !important;">
+								<div class="col-md-6 location">
+									<div class="row">
+										<div class="col-md-4" style="padding-left: 0px !important;">
+											<?=loc_dropdowns('place', $sel_place)?>
+										</div>
+										
+										<div class="col-md-3">
+											<?=loc_dropdowns('instance', $sel_instance, $sel_place)?>
+										</div>
 
-									<div class="col-md-5">
-										<?=dropdown('conditionid', $sel_condition, '', '',false)?>
+										<div class="col-md-5">
+											<?=dropdown('conditionid', $sel_condition, '', '',false)?>
+										</div>
 									</div>
 								</div>
-							</div>
-							
-							<div class="col-md-5" style="padding: 0 0 0 5px;">
-							    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($outstanding ? '' : 'disabled');?>>
+								
+								<div class="col-md-5" style="padding: 0 0 0 5px;">
+								    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($outstanding ? '' : 'disabled');?>>
+					            </div>
+					            <div class="col-md-1" style="padding: 0 0 0 5px;">
+									<button class="btn btn-sm btn-primary" type='submit' <?=($outstanding ? '' : 'disabled');?>>Submit</button>
+								</div>
+							    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
 				            </div>
-				            <div class="col-md-1" style="padding: 0 0 0 5px;">
-								<button class="btn btn-sm btn-primary" type='submit' <?=($outstanding ? '' : 'disabled');?>>Submit</button>
-							</div>
-						    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
-			            </div>
-					</div>
+						</div>
+					<?php endif; ?>
 			
 					<div class="table-responsive">
 						<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">

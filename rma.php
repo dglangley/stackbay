@@ -334,9 +334,11 @@
 
 		if($repair) {
 			//Check to see if these items have already been RMA'd off this particular sales order
-			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND `repair_item_id` = `ri`.`id` AND i.serial_no IS NOT NULL";
+			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND i.`id` = `ri`.`invid` AND i.serial_no IS NOT NULL;";
+
+			//echo $sales_micro;
 		} else {
-			$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`";
+			$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`;";
 		}
 		
 		//here is where I take out the results of the serials I have already RMA'ed
@@ -420,7 +422,7 @@
 		include_once $rootdir.'/modal/history.php';
 		?>
 		
-		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
+		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : '');?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				

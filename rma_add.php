@@ -48,6 +48,8 @@
 	// print_r($_REQUEST);
 	$ro_number = getOrderNum($order_number);
 	$partid;
+
+	//echo $ro_number;
 	
 	//If this is a form which sumbits upon itself
 	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
@@ -95,7 +97,7 @@
 						}
 					}
 				}else{
-					exit('This part was never sold');
+					//exit('This part was never sold');
 				}
 				
 				//Clear values after save
@@ -134,6 +136,7 @@
 	} else if(grab('repair_trigger')){
 		$ro_number;
 		$order_result = array();
+
 		//Grab from RO data that is populated from there
 		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($order_number).";";
 
@@ -153,6 +156,14 @@
 				if (mysqli_num_rows($order_result)) {
 					$order_result = mysqli_fetch_assoc($order_result);
 				}
+
+			} else {
+				$query = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($ro_number).";";
+
+				$order_result = qdb($query) OR die(qe() . ' ' . $query);
+				if (mysqli_num_rows($order_result)) {
+					$order_result = mysqli_fetch_assoc($order_result);
+				}
 			}
 
 			//print_r($order_result);
@@ -163,13 +174,13 @@
 				".prep($order_result['sales_rep_id']).",
 				".prep($result['companyid']).",
 				".prep($result['contactid']).",
-				".prep($order_result['cust_ref']).",
+				".prep('RMA#' . $order_number).",
 				".prep($order_result['bill_to_id']).",
 				".prep($order_result['ship_to_id']).",
 				".prep($order_result['freight_carrier_id']).",
 				".prep($order_result['freight_services_id']).",
 				".prep($order_result['freight_account_id']).",
-				".prep($order_result['termsid']).",
+				".prep('15').",
 				".prep($order_result['public_notes']).",
 				".prep($order_result['private_notes']).",
 				NULL,
@@ -214,8 +225,8 @@
 			qdb($insert);
 			$repair_item_id = qid();
 
-			$update = "UPDATE inventory SET repair_item_id = ".prep($repair_item_id).", status = 'in repair' WHERE id = ".prep($result['inventoryid']).";";
-			qdb($update);
+			// $update = "UPDATE inventory SET repair_item_id = ".prep($repair_item_id).", status = 'in repair' WHERE id = ".prep($result['inventoryid']).";";
+			// qdb($update);
 		}
 
 		header("Location: /order_form.php?ps=repair&on=" . $ro_number);
@@ -305,6 +316,8 @@
 	}
 	
 	function savetoDatabase($locationid, $data, $invid = ''){
+		global $ro_number;
+
 		$result;
 		$receive_check;
 		$query;
@@ -321,7 +334,11 @@
 		$receive_check = qdb($query);
 		
 		if (mysqli_num_rows($receive_check)>0) {
-			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
+			if($ro_number) {
+				$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '8' WHERE id = '". res($id) ."';";
+			} else {
+				$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
+			}
 			//$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
 			//Query or pass back error
 			$result = (qdb($query) ? '' : qe());
@@ -453,7 +470,7 @@
 			</div>
 				
 			<div class="col-sm-10">
-				<form method="post">
+				<form id="rma_add" method="post">
 				<?php 
 					//Grab all the parts from the specified PO #
 					$init = true;
@@ -474,6 +491,7 @@
 				?>
 					<div class="row" style="margin: 20px 0;">
 						
+						<?php if(!$rma_status) { ?>
 						
 							<div class="col-md-7" style="padding-left: 0px !important;">
 								<div class="col-md-6 location">
@@ -490,9 +508,12 @@
 								</div>
 								
 								<div class="col-md-6" style="padding: 0 0 0 5px;">
-								    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($rma_status ? 'disabled' : '')?>>
+								    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
 					            </div>
 				            </div>
+
+				        <?php } ?>
+
 					</div>
 				
 					<div class="table-responsive">
@@ -658,8 +679,7 @@
 											<?php endif; }?>
 											<?php if(getDisposition($item['dispositionid']) == 'Exchange') { ?>
 											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
-												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exc
-												hange_trigger' data-toggle="tooltip" data-placement="bottom" title="Send Replacement" value="<?=$item['inventoryid'];?>"><i class="fa fa-share" aria-hidden="true"></i></button>
+												<button id="exchange" style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' data-toggle="tooltip" data-placement="bottom" title="Send Replacement" value="<?=$item['inventoryid'];?>"><i class="fa fa-share" aria-hidden="true"></i></button>
 											<?php } ?>
 											
 										</div>
@@ -683,6 +703,15 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js"></script>
+		<script type="text/javascript">
+			$("#exchange").click(function(event){
+				if (confirm("Confirm to Send Replacement")){
+					$('form#rma_add').submit();
+				} else {
+					event.preventDefault();
+				}
+			});
+		</script>
 	
 	</body>
 </html>

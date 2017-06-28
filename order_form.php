@@ -76,6 +76,18 @@
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
 	} else if($o['type'] == "Repair") {
+
+		$repair_billable = true;
+
+		$query = "SELECT ro.termsid, ri.price FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ".prep($order_number).";";
+		$result = qdb($query) or die(qe());
+
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			if($result['termsid'] == '15' && $result['price'] == '0.00')
+				$repair_billable = false;
+		}
+
 	 	//Check to see if a sales_item record has been created for this item
 	 	//echo $status . 'test';
 		if($status) {
@@ -376,87 +388,88 @@
 					} else if($o['type'] == 'Repair') { 
 						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
 					}
-					$rows = qdb($rma_select) or die(qe().$rma_select);
-						$output = '
-						<div class ="btn-group">
-							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-                              <i class="fa fa-question-circle-o"></i>
-                              <span class="caret"></span>
-                            </button>';
-                        
-						$output .= '<ul class="dropdown-menu">';
-						// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-						if(mysqli_num_rows($rows)>0){
-							foreach ($rows as $rma) {
-								$output .= '
-									<li>
-										<div class = "row rma-list-items">
-											<div class = "col-md-3">
-												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-													<i class="fa fa-list"></i>
-												</a>
-											</div>
-											<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
-												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-													RMA #'.$rma['rma_number'].'
-												</a>	
-											</div>
-											<div class = "col-md-3 pull-left">
-												<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
-													<i class="fa fa-truck"></i>
-												</a>
-											</div>
-										</div>
-									</li>';
-							}
-						}
-						$output .= '<li>
-										<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : '').'">
-											ADD RMA <i class ="fa fa-plus"></i>
-										</a>
-									</li>';
-                        $output .= "</ul>";
-						$output .= "</div>";
-						echo $output;
 
-							//}
-						}
-						if($order_number != "New" && $o['type'] == 'Purchase'){
-							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
-							$rows = qdb($bills_selector);
+					if(!$repair_billable && $o['type'] == 'Repair') {
+
+					} else {
+						$rows = qdb($rma_select) or die(qe().$rma_select);
 							$output = '
 							<div class ="btn-group">
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-	                              <i class="fa fa-credit-card"></i>
+	                              <i class="fa fa-question-circle-o"></i>
 	                              <span class="caret"></span>
 	                            </button>';
-	                            
-								$output .= '<ul class="dropdown-menu">';
-								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-								if(mysqli_num_rows($rows) > 0){
-									foreach ($rows as $bill) {
-										$output .= '
-											<li>
-												<a href="/bill.php?bill='.$bill['bill_no'].'">
-												Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
-												</a>
-											</li>';
-									}
+	                        
+							$output .= '<ul class="dropdown-menu">';
+							// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+							if(mysqli_num_rows($rows)>0){
+								foreach ($rows as $rma) {
+									$output .= '
+										<li>
+											<div class = "row rma-list-items">
+												<div class = "col-md-3">
+													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+														<i class="fa fa-list"></i>
+													</a>
+												</div>
+												<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
+													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+														RMA #'.$rma['rma_number'].'
+													</a>	
+												</div>
+												<div class = "col-md-3 pull-left">
+													<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
+														<i class="fa fa-truck"></i>
+													</a>
+												</div>
+											</div>
+										</li>';
 								}
-								$output .= '<li>
-									<a href="/bill.php?on='.$order_number.'&bill=new">
-										<i class="fa fa-plus"></i> Add New Bill
-									</a>
-									</li>';
-	                            $output .= "</ul>";
-								$output .= "</div>";
-								echo $output;
-						} elseif ($o['type'] == 'Invoice') {
-							
-						}
-					?>
-					
-					<?php
+							}
+							$output .= '<li>
+											<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : '').'">
+												ADD RMA <i class ="fa fa-plus"></i>
+											</a>
+										</li>';
+	                        $output .= "</ul>";
+							$output .= "</div>";
+							echo $output;
+
+
+					if($order_number != "New" && $o['type'] == 'Purchase'){
+						$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
+						$rows = qdb($bills_selector);
+						$output = '
+						<div class ="btn-group">
+							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
+                              <i class="fa fa-credit-card"></i>
+                              <span class="caret"></span>
+                            </button>';
+                            
+							$output .= '<ul class="dropdown-menu">';
+							// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
+							if(mysqli_num_rows($rows) > 0){
+								foreach ($rows as $bill) {
+									$output .= '
+										<li>
+											<a href="/bill.php?bill='.$bill['bill_no'].'">
+											Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
+											</a>
+										</li>';
+								}
+							}
+							$output .= '<li>
+								<a href="/bill.php?on='.$order_number.'&bill=new">
+									<i class="fa fa-plus"></i> Add New Bill
+								</a>
+								</li>';
+                            $output .= "</ul>";
+							$output .= "</div>";
+							echo $output;
+					} elseif ($o['type'] == 'Invoice') {
+						
+					}
+				
 					
 						if($order_number != "New"){
 							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sales' ? 'so' : 'po').'";';
@@ -508,6 +521,8 @@
 								$output .= "</div>";
 								echo $output;
 						}
+					}
+				}
 					?>
 					
 					

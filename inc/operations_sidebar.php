@@ -462,7 +462,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$right.="
 						<div class='row'>
 							<div class='col-sm-12' style='padding-bottom: 10px;font-size:14pt; '>						
-								Created from ".(!$repair ? 'SO' : 'RO')." #$order_number
+								Created from ".(!$repair ? 'SO' : 'RO')."# $order_number
 							</div>
 						</div>";
 			}
@@ -563,7 +563,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 			
 			if($public){
 				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES";
-				if($page == "RMA"){$right .= " FROM SO #$order_number";}
+				if($page == "RMA"){$right .= " FROM SO# $order_number";}
 				$right .= "</b><br>";
 				$right .= $public;
 				$right .= "<br><br>";
@@ -572,7 +572,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 			if($private){
 				
 				$right .= "<b style='color: #526273;font-size: 14px;'>PRIVATE NOTES";
-				if($page == "RMA"){$right .= " FROM SO #$order_number";}
+				if($page == "RMA"){$right .= " FROM SO# $order_number";}
 				$right .="</b><br>";
 				$right .= $private;
 				$right .= "<br>";
