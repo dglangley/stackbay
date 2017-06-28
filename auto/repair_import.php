@@ -1,4 +1,7 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+
 	$rootdir = $_SERVER["ROOT_DIR"];
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
