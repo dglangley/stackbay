@@ -49,7 +49,7 @@
 											<span class="input-group-btn">
 												<a href="#" class="btn btn-default btn-xs bg-returns" title="Start New Return"><i class="fa fa-plus"></i></a>
 											</span>
-											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="PO">
+											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="RMA">
 											<span class="input-group-btn">
 												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
 											</span>

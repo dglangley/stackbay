@@ -1095,13 +1095,26 @@
 		$(".order-search").on("keypress",function(e) {
 			if (e.keyCode == 13) {
 				e.preventDefault();
-				document.location.href = '/'+$(this).data('type')+$(this).val();
+				if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
+					document.location.href = '/'+$(this).data('type')+$(this).val();
+				} else if($(this).data('type') == 'RO'){
+					document.location.href = '/order_form.php?ps=ro&on='+$(this).val();
+				} else {
+					document.location.href = '/rma.php?rma='+$(this).val();
+				}
 			}
 		});
 		$(".order-search-button").on("click",function(e) {
 			e.preventDefault();
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
-			document.location.href = '/'+search_field.data('type')+search_field.val();
+			if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
+				document.location.href = '/'+search_field.data('type')+search_field.val();
+			} else if(search_field.data('type') == 'RO') {
+				document.location.href = '/order_form.php?ps=ro&on='+search_field.val();
+			} else {
+				document.location.href = '/rma.php?rma='+search_field.val();
+			}
+			
 		});
 
     });/* close $(document).ready */
