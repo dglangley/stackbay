@@ -26,6 +26,8 @@
 	$so_updated = $_REQUEST['so'];
 	
 	$filter = $_REQUEST['filter'];
+	if (! isset($table_filter)) { $table_filter = ''; }
+	if (isset($_REQUEST['table_filter'])) { $table_filter = $_REQUEST['table_filter']; }
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
@@ -62,23 +64,24 @@
 		
 		switch ($type) {
 		    case 's':
-        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
+        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
 		        break;
 		    case 'p':
-        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number;";
+        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number ";
 		        break;
 		    //Holder for future RMA and RO
 			case 'rma':
-        		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number;";
+        		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number ";
 		        break;
 			case 'ro':
-        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number;";
+        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
 		        break;
 			default:
 				//Should rarely ever happen
-				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number;";
+				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
 				break;
 		}
+		$query .= "AND status <> 'Void'; ";
 		
 		if(empty($query)) {
 			return '';
@@ -94,21 +97,22 @@
 			
 			switch ($type) {
 			    case 's':
-	        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.so_number = i.so_number;";
+	        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.so_number = i.so_number ";
 			        break;
 			    case 'p':
-	        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.po_number = i.po_number;";
+	        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.po_number = i.po_number ";
 			        break;
 			    case 'rma':
-	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number;";
+	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number ";
 			        break;
 			    case 'ro':
-			    	$query = "";
+	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
 			        break;
 			    default:
 					//Should rarely ever happen
 					break;
 			}
+			$query .= "AND status <> 'Void'; ";
 
 			if($query) {
 				$result = qdb($query) OR die(qe());
@@ -121,25 +125,27 @@
 		
 		switch ($type) {
 		    case 's':
-		    	$query = "SELECT * FROM inventory inv, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND inv.sales_item_id = i.id AND o.so_number = i.so_number;";
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'sales_item_id' AND o.so_number = i.so_number ";
 		        break;
 		    case 'p':
-		    	$query = "SELECT * FROM inventory inv, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND inv.purchase_item_id = i.id AND o.po_number = i.po_number;";
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'purchase_item_id' AND o.po_number = i.po_number ";
 		        break;
 		    case 'rma':
-		    	$query = "SELECT * FROM inventory inv, return_items i, returns o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND inv.returns_item_id = i.id AND o.rma_number = i.rma_number;";
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, return_items i, returns o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'returns_item_id' AND o.rma_number = i.rma_number ";
 		        break;
 		    case 'ro':
-		    	$query = "";
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
 		        break;
 		    default:
 				//Should rarely ever happen
 				break;
 		}
-		
+		$query .= "AND h.value = i.id AND inv.id = h.invid AND o.status <> 'Void'; ";
+
 		if($query){
 			$result = qdb($query) OR die(qe());
 			
@@ -278,28 +284,30 @@
 			$type = 'RO';
 			$order_out = 'Repair';
 		}
-		echo"
-			<div class='col-lg-6 pad-wrapper data-load' style='margin: 15px 0 20px 0; display: none;'>
-			<div class='shipping-dash'>
-				<div class='shipping_section_head' data-title='".$order_out." Orders'>";
-		echo $status_out.$order_out.' Orders';
-		// echo "<a href = '/order_form.php?ps=$order_out' ><div class = 'btn btn-sm btn-standard pull-right' style = 'color:white;margin-top:-5px;display:block;'>
-		// <i class='fa fa-plus'></i> 
-		// </div></a>";
-		echo	'</div>
+		echo '
+		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
+			<div class="shipping-dash" id="'.$order_out.'_panel">
+				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
+					'.$status_out.$order_out.' Orders
+				</div>
 				<div class="table-responsive">
-		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">';
-		            output_header($order,$type);
-		echo	'<tbody>';
-        			output_rows($order, $search);
-		echo '	</tbody>
+		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">
+		';
+		echo output_header($order,$type);
+		echo '
+						<tbody>
+		';
+		echo output_rows($order, $search);
+		echo '
+						</tbody>
 		            </table>
 		    	</div>
 		    	<div class="col-sm-12 text-center shipping_section_foot shipping_section_foot_lock more" style="padding:0px !important; vertical-align:bottom !important">
 	            	<a class="show_more_link" href="#">Show more</a>
 	            </div>
             </div>
-        </div>';
+        </div>
+		';
 	}
 	
 	function output_header($order,$type='Order'){
@@ -403,14 +411,14 @@
 					// 			CASE WHEN (cast(i.qty_received as signed) - cast(i.qty as signed)) < 0 THEN i.receive_date END ASC LIMIT 0 , 200;";
 				} else if ($order == 's') {
 					$query .= "sales_orders o, sales_items i ";
-					$query .= "WHERE o.so_number = i.so_number ";
+					$query .= "WHERE o.so_number = i.so_number AND o.status <> 'Void' ";
 					$query .= "ORDER BY o.so_number DESC LIMIT 0, 200; ";
 				} else if ($order == 'rma') {
-					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id ";
+					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id AND o.status <> 'Void' ";
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				}
 				
@@ -793,6 +801,7 @@
 		//Triggering Aaron 2017
 		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
 		var filter = "<?=$filter;?>";
+		var table_filter = "<?=$table_filter;?>";
 		
 		var levenshtein = "<?=$levenshtein;?>";
 		var searched = "<?=$nothingFound;?>";
@@ -898,91 +907,67 @@
         //Prefilter if loaded with a parameter in url
 		if(filter != '') {
 			var type = filter;
-			//alert(filter);
-			$('.filter_item').hide();
 
-			if(type == 'complete') {
-				$('.show_more').hide();
-				sortTheTable('complete');
-				$('.p_table .complete_item:lt(10)').show();
-				$('.s_table .complete_item:lt(10)').show();
-				$('.rma_table .complete_item:lt(10)').show();
-				$('.ro_table .complete_item:lt(10)').show();
-			} else if(type == 'active') {
-				$('.show_more').hide();
-				sortTheTable('active');
-				$('.p_table .active_item:lt(10)').show();
-				$('.s_table .active_item:lt(10)').show();
-				$('.rma_table .active_item:lt(10)').show();
-				$('.ro_table .active_item:lt(10)').show();
+			$('.filter_item').hide();
+			$('.show_more').hide();
+
+			if (type=='complete' || type=='active') {
+				sortTheTable(type);
 			} else {
-				$('.show_more').hide();
 				sortTheTable('all');
-				$('.p_table .filter_item:lt(10)').show();
-				$('.s_table .filter_item:lt(10)').show();
-				$('.rma_table .filter_item:lt(10)').show();
-				$('.ro_table .filter_item:lt(10)').show();
 				$('.status_label').show();
 				$('.status-column').show();
+				type = 'filter';
 			}
+			$('.p_table .'+type+'_item:lt(10)').show();
+			$('.s_table .'+type+'_item:lt(10)').show();
+			$('.rma_table .'+type+'_item:lt(10)').show();
+			$('.ro_table .'+type+'_item:lt(10)').show();
+		}
+		if (table_filter != '') {
+			zoomPanel($("#"+table_filter+"_panel").find(".shipping_section_foot a"),'in');
 		}
 
 		$(document).on("click onload", ".filter_status", function(){
 			var type = $(this).data('filter');
-			//alert($('.show_more_link:first').text() == "Show more");
 
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
-
 			$('.filter_status').removeClass('btn-warning');
 			$('.filter_status').removeClass('btn-success');
 			$('.filter_status').removeClass('btn-info');
-
 			$('.filter_status').addClass('btn-default');
 
-			if(type == 'complete') {
-				$('.filter_status[data-filter="complete"]').addClass('btn-success');
-				sortTheTable('complete');
-				if($('.show_more_link:visible:first').text() == "Show more") {
-					$('.p_table .complete_item:lt(10)').show();
-					$('.s_table .complete_item:lt(10)').show();
-					$('.rma_table .complete_item:lt(10)').show();
-					$('.ro_table .complete_item:lt(10)').show();
-				} else {
-					$('.complete_item').show();
-				}
+			var btn,type2;
+			if (type=='complete') {
+				btn = 'success';
+				type2 = type;
 				$('.active_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
-				//alert("here");
-			} else if(type == 'active') {
-				$('.filter_status[data-filter="active"]').addClass('btn-warning');
-				sortTheTable('active');
-				if($('.show_more_link:visible:first').text() == "Show more") {
-					$('.p_table .active_item:lt(10)').show();
-					$('.s_table .active_item:lt(10)').show();
-					$('.rma_table .active_item:lt(10)').show();
-					$('.ro_table .active_item:lt(10)').show();
-				} else {
-					$('.active_item ').show();
-				}
+			} else if (type=='active') {
+				btn = 'warning';
+				type2 = type;
 				$('.complete_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {
-				$('.filter_status[data-filter="all"]').addClass('btn-info');
-				sortTheTable('all');
-				//$('.filter_item').show();
-				if($('.show_more_link:visible:first').text() == "Show more") {
-					$('.p_table .filter_item:lt(10)').show();
-					$('.s_table .filter_item:lt(10)').show();
-					$('.rma_table .filter_item:lt(10)').show();
-					$('.ro_table .filter_item:lt(10)').show();
-				} else {
-					$('.filter_item').show();
-				}
-				$('.status_label').show();
+				type = 'all';
+				type2 = 'filter';
+				btn = 'info';
 				$('.status-column').show();
+				$('.status_label').show();
+			}
+
+			$('.filter_status[data-filter="'+type+'"]').addClass('btn-'+btn);
+			sortTheTable(type);
+			if ($('.show_more_link:visible:first').text() == "Show more") {
+				$('.p_table .'+type2+'_item:lt(10)').show();
+				$('.s_table .'+type2+'_item:lt(10)').show();
+				$('.rma_table .'+type2+'_item:lt(10)').show();
+				$('.ro_table .'+type2+'_item:lt(10)').show();
+			} else {
+				$('.'+type2+'_item').show();
 			}
 			
 			if(search != '') {
