@@ -19,6 +19,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/jsonDie.php';
 
 	//This is a list of everything
 	$partid = grab('partid');
@@ -55,6 +56,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			} else {
 				$query = "UPDATE inventory SET qty = qty + 1, sales_item_id = NULL, status = 'received' WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
 				$result['query'] = qdb($query);
+				
+				//Remove the package from package contents
+				$invid = qid();
+				$pc_delete ="DELETE FROM `package_contents` WHERE `packageid` in (SELECT `id` FROM packages where `order_type` = 'Sale' and order_number = ".prep($po_number).") and `serialid` = $invid;";
+				qdb($pc_delete) or jsonDie(qe()." | $pc_delete");
 	
 				//If the item is deleted from the inventory then increment the purchase items back to original state, before the serial was scanned
 				if($result['query']) {
