@@ -478,7 +478,7 @@
 												$item_row = '';
 												if(!empty($items)){
 													foreach($items as $item){
-														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id']).";";
+														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
 														$result = qdb($query) or die(qe() . ' ' . $query);
 		
 														if (mysqli_num_rows($result)>0) {

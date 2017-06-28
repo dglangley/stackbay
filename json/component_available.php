@@ -74,7 +74,7 @@
 			$location = display_location($row["locationid"]);
 			if($row["total"]) {
 				$html .= "<tr class='part' data-invid='".$row["id"]."' data-partid='".$partid."'>
-							<td class='col-md-6'>".$location. " " .($row["id"] ? "(Bin# " . $row["bin"] . ')' : '')."</td>
+							<td class='col-md-6'>".$location. " " .($row["bin"] ? "(Bin# " . $row["bin"] . ')' : '')."</td>
 							<td class='col-md-3'>".getCondition($row["conditionid"])."</td>
 							<td class='col-md-1'>".$row["total"]."</td>
 							<td class='col-md-2'><input type='text' class='input-sm form-control inventory_pull' value=''></td>
