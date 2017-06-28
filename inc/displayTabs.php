@@ -20,6 +20,7 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">
@@ -40,6 +41,7 @@
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/returns.php">Returns</a></h4>
                                     <h4 class="megamenu-block-title">
 <!--
 										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Returns</a> <span class="pull-right"><a href="/order_form.php?ps=Return" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
@@ -49,7 +51,7 @@
 											<span class="input-group-btn">
 												<a href="#" class="btn btn-default btn-xs bg-returns" title="Start New Return"><i class="fa fa-plus"></i></a>
 											</span>
-											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="PO">
+											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="RMA">
 											<span class="input-group-btn">
 												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
 											</span>
@@ -82,6 +84,7 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales.php">Sales</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">
@@ -102,6 +105,7 @@
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchases.php">Purchases</a></h4>
                                     <h4 class="megamenu-block-title">
 <!--
 										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Purchases</a> <span class="pull-right"><a href="/order_form.php?ps=Purchase" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>

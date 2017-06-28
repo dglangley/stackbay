@@ -948,7 +948,7 @@ h1 a, h2 a, h3 a {
 	text-decoration:none;
 	color:black;
 }
-h1.minimal, h2.minimal, h3.minimal {
+h1.minimal, h2.minimal, h3.minimal, h4.minimal {
 	line-height:1;
 	margin:0px;
 	padding:0px;
