@@ -180,11 +180,11 @@ continue;
 //			$profit = $sale_price;
 		}
 
-		$profitid = 0;
+		$cogsid = 0;
 		$commissionid = 0;
 
 		if ($sales_item_id OR $inventoryid) {
-			$profitid = setCogs($inventoryid,$sales_item_id,$cogs);
+			$cogsid = setCogs($inventoryid,$sales_item_id,'sales_item_id',$cogs);
 echo $serial.' '.$query2.'<BR>';
 		}
 
