@@ -54,7 +54,7 @@
 			if(mysqli_num_rows($request_result)) {
 				$request_item = mysqli_fetch_assoc($request_result);
 				//$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", ".$request_item['techid'].");";
-				$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", '15');";
+				$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", '16');";
 				$result = qdb($query) or die(qe() . ' ' . $query);
 			}
 		}

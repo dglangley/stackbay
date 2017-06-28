@@ -80,8 +80,9 @@
 			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 		}
 		
+		//Sabedra = 13
 		//Hack notification for purchase request to create a PO
-		if($U['id'] == '6') {
+		if($U['id'] == '13') {
 			//Code generated specifically for Notifications of Purchase Requests
 			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND po_number IS NULL AND ri.ro_number = r.ro_number ORDER BY requested DESC LIMIT 0,20;";
 			$result = qdb($query) OR reportError(qe().' '.$query);
@@ -134,7 +135,7 @@
 
 		//Rathna = 16
 		//Hack notification to tell the tech who requested an item that the order has been ordered and received into stock
-		if($U['id'] == '6') {
+		if($U['id'] == '16') {
 			//Code generated specifically for Notifications of Purchase Requests
 			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND ri.ro_number = r.ro_number ORDER BY requested DESC LIMIT 0,20;";
 			$result = qdb($query) OR reportError(qe().' '.$query);
