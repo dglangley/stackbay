@@ -1,5 +1,5 @@
 <?php
-	function setAverageCost($partid,$diff,$setAbsolute=false) {
+	function setAverageCost($partid,$diff,$setAbsolute=false,$setDatetime='') {
 		if ($setAbsolute) {
 			$average_cost = $diff;
 		} else {
@@ -28,8 +28,11 @@
 			}
 		}
 
+		$datetime = $GLOBALS['now'];
+		if ($setDatetime) { $datetime = $setDatetime; }
+
 		$query = "INSERT INTO average_costs (partid, amount, datetime) ";
-		$query .= "VALUES ('".res($partid)."','".$average_cost."','".$GLOBALS['now']."'); ";
+		$query .= "VALUES ('".res($partid)."','".$average_cost."','".$datetime."'); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 		return ($average_cost);
