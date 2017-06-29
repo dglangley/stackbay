@@ -3,6 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
 	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in){
 		if ($_REQUEST['type'] == 'test_changer'){
@@ -27,9 +28,18 @@
 			$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", 'Checked Out');";
 			$result = qdb($query) OR die(qe());
 		}
-		
 		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
 		$result = qdb($query) OR die(qe());
+		
+		if($trigger == "complete"){
+			$select = "SELECT `id` FROM `inventory` where repair_item_id = '$repair_item_id';";
+			$invid_result = qdb($select) or die(qe()." | $select");
+			if(mysqli_num_rows($invid_result)){
+				$invid_arr = mysqli_fetch_assoc($invid_result);
+				setCost($invid_arr['id']);
+			}
+		}
+		
 	}
 
 	function stockUpdate($repair_item_id, $ro_number, $repair_code){
@@ -97,7 +107,7 @@
 				$repair_text = "";
 
 				$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
-				$results = qdb($select);
+				$results = qdb($select) or die(qe()." | $select");
 		
 				if (mysqli_num_rows($results)>0) {
 					$results = mysqli_fetch_assoc($results);

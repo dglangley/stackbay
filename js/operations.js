@@ -1616,11 +1616,82 @@
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
 
-				if ($(this).text()=='Show more') {
-					zoomPanel($(this),'in');
-				} else {
-					zoomPanel($(this),'out');
+				//Get current filter type
+				var type = $('.filter_status.active').data('filter');
+
+				if ($(this).text() == "Show more"){
+					$('.col-lg-6.data-load').hide();
+					//$(this).closest("body").children(".table-header").show();
+					//$(this).closest("body").children(".initial-header").hide();
+					$(this).closest(".col-lg-6").addClass("shipping-dash-full");
+					
+					//Show everything
+					if(type == 'active') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.active_item').show();
+					} else if(type == 'complete') {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.complete_item').show();
+					} else {
+						$(this).closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
+					}
+					
+					$(this).closest(".shipping-dash").addClass("shipping-dash-remove");
+					$(this).closest(".shipping-dash").removeClass("shipping-dash");
+					
+					$(".shipping-dash-full").fadeIn('fast');
+					$('body').scrollTop('fast');
+					
+					var title = $(".shipping-dash-full .shipping_section_head").attr('data-title');
+					$(".shipping_section_head").hide();
+					
+					//$("#view-head-text").text(title);
+					$("#filter-title").text(title);
+					
+					$(this).closest("table").find(".overview").show();
+					$(this).text("Show Less");
+					$(this).parent().removeClass("shipping_section_foot_lock");
+					//$(this).closest("body").children("#view-head").show();
+
 				}
+				else{
+					//$(this).closest("body").children(".table-header").hide();
+					//$(this).closest("body").children(".initial-header").show();
+					$(".shipping-dash-full").removeClass("shipping-dash-full");
+					$(this).closest("table").find(".overview").hide();
+					$(this).parents("body").find(".shipping_section_head").fadeIn("fast");
+					$('.col-lg-6').show();
+					
+					$(this).closest(".shipping-dash-remove").addClass("shipping-dash");
+					
+					//Hide all elements over the count of 10
+					$('.filter_item').hide();
+
+					if(type == 'active') {
+						$('.p_table .active_item:lt(10)').show();
+						$('.s_table .active_item:lt(10)').show();
+						$('.rma_table .active_item:lt(10)').show();
+						$('.ro_table .active_item:lt(10)').show();
+					} else if(type == 'complete') {
+						$('.p_table .complete_item:lt(10)').show();
+						$('.s_table .complete_item:lt(10)').show();
+						$('.rma_table .complete_item:lt(10)').show();
+						$('.ro_table .complete_item:lt(10)').show();
+					} else {
+						$('.p_table .filter_item:lt(10)').show();
+						$('.s_table .filter_item:lt(10)').show();
+						$('.rma_table .filter_item:lt(10)').show();
+						$('.ro_table .filter_item:lt(10)').show();
+					}
+					
+					$(this).closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
+					$("#filter-title").text('Operations Dashboard');
+					
+					//$(this).closest("div").siblings(".shipping-dash").fadeIn("slow");
+					$(this).parents("body").find(".overview").hide();
+					//$(this).parents("body").children("#view-head").hide();
+					$(this).parent().addClass("shipping_section_foot_lock");
+					$(this).parents("body").find(".shipping_section_foot a").text("Show more");
+				}
+				headerOffset();
 			});
 			
 			$("#sales").click(function() {
@@ -1764,117 +1835,117 @@
 			}
 		});
 		
-		$(document).on('click',"#save_button_inventory",function() {
-			//Save to reactivate button if needed
-			$click = $(this);
-			//Prevent Button Spamming
-			$click.removeAttr('id');
+		// $(document).on('click',"#save_button_inventory",function() {
+		// 	//Save to reactivate button if needed
+		// 	$click = $(this);
+		// 	//Prevent Button Spamming
+		// 	$click.removeAttr('id');
 			
-			//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-			//Include location in the near future
-			var items = [];
-			var po_number = getUrlParameter('on');
+		// 	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
+		// 	//Include location in the near future
+		// 	var items = [];
+		// 	var po_number = getUrlParameter('on');
 			
-			//check if anything at all was changed on the page, including a scanned / entered item
-			var checkSaved = false;
+		// 	//check if anything at all was changed on the page, including a scanned / entered item
+		// 	var checkSaved = false;
 			
-			//Get everything from the form and place it into its own array
-			$('.inventory_add').children('tbody').children('tr').each(function() {
-				var partid = $(this).find('.part_id').attr('data-partid');
-				var serials = [];
-				var savedSerials = [];
-				var ids = [];
-				var place = [];
-				var instance = [];
-				var conditions = [];
-				var lot = false;
-				var qty;
+		// 	//Get everything from the form and place it into its own array
+		// 	$('.inventory_add').children('tbody').children('tr').each(function() {
+		// 		var partid = $(this).find('.part_id').attr('data-partid');
+		// 		var serials = [];
+		// 		var savedSerials = [];
+		// 		var ids = [];
+		// 		var place = [];
+		// 		var instance = [];
+		// 		var conditions = [];
+		// 		var lot = false;
+		// 		var qty;
 				
-				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
-					place.push($(this).val());
-				});
+		// 		$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
+		// 			place.push($(this).val());
+		// 		});
 				
-				$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
-					instance.push(($(this).val() != '' ? $(this).val() : ''));
-				});
+		// 		$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
+		// 			instance.push(($(this).val() != '' ? $(this).val() : ''));
+		// 		});
 				
-				$(this).find('.infiniteCondition').children('select').each(function() {
-					conditions.push($(this).val());
-				});
+		// 		$(this).find('.infiniteCondition').children('select').each(function() {
+		// 			conditions.push($(this).val());
+		// 		});
 				
-				$(this).find('.infiniteSerials').find('input').each(function() {
-					// added by david 2-28-17
-					ids.push($(this).attr('data-item-id'));
-					serials.push($(this).val());
-					savedSerials.push($(this).attr('data-saved'));
+		// 		$(this).find('.infiniteSerials').find('input').each(function() {
+		// 			// added by david 2-28-17
+		// 			ids.push($(this).attr('data-item-id'));
+		// 			serials.push($(this).val());
+		// 			savedSerials.push($(this).attr('data-saved'));
 					
-					//If an item was saved previously then mark the page as soemthing was edited
-					if($(this).attr('data-saved') != '') {
-						checkSaved = true;
-					}
+		// 			//If an item was saved previously then mark the page as soemthing was edited
+		// 			if($(this).attr('data-saved') != '') {
+		// 				checkSaved = true;
+		// 			}
 					
-					//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
-					//if($(this).attr('data-saved') == '')
-					//$(this).attr("data-saved", $(this).val());
-				});
+		// 			//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
+		// 			//if($(this).attr('data-saved') == '')
+		// 			//$(this).attr("data-saved", $(this).val());
+		// 		});
 				
-				//Check if the lot is checked or not
-				if($(this).find('.lot_inventory').prop('checked') == true) {
-					lot = true;
-				} else {
-					lot = false;
-				}
-				qty = $(this).find('.remaining_qty').children('input').val();
+		// 		//Check if the lot is checked or not
+		// 		if($(this).find('.lot_inventory').prop('checked') == true) {
+		// 			lot = true;
+		// 		} else {
+		// 			lot = false;
+		// 		}
+		// 		qty = $(this).find('.remaining_qty').children('input').val();
 				
-				items.push(partid);
-				items.push(savedSerials);
-				items.push(serials);
-				items.push(conditions);
-				items.push(lot);
-				items.push(qty);
-				items.push(place);
-				items.push(instance);
-				items.push(ids);
-			});
+		// 		items.push(partid);
+		// 		items.push(savedSerials);
+		// 		items.push(serials);
+		// 		items.push(conditions);
+		// 		items.push(lot);
+		// 		items.push(qty);
+		// 		items.push(place);
+		// 		items.push(instance);
+		// 		items.push(ids);
+		// 	});
 			
-			console.log(items);
-			//console.log(po_number);
+		// 	console.log(items);
+		// 	//console.log(po_number);
 			
-			$.ajax({
-				type: "POST",
-				url: '/json/inventory-add.php',
-				data: {
-					 'productItems' : items, 'po_number' : po_number
-				},
-				dataType: 'json',
-				success: function(result) {
-					console.log(result);
+		// 	$.ajax({
+		// 		type: "POST",
+		// 		url: '/json/inventory-add.php',
+		// 		data: {
+		// 			 'productItems' : items, 'po_number' : po_number
+		// 		},
+		// 		dataType: 'json',
+		// 		success: function(result) {
+		// 			console.log(result);
 					
-					//Error handler or success handler
-					if(result['query'] || checkSaved) {
-						//In case a warning is triggered but data is still saved successfully
-						if(result['error'] != undefined)
-							alert(result['error']);
-						window.onbeforeunload = null;
-						window.location = "/operations.php?po=true";
-					//Error occured enough to stop the page from continuing
-					} else if(result['error'] != undefined) {
-						alert(result['error']);
-						$click.attr('id','save_button_inventory');
-					//Nothing was change
-					} else {
-						//alert('No changes have been made.');
-						$click.attr('id','save_button_inventory');
-						window.location = "/operations.php?po=true";
-					}
-				},
-				error: function(xhr, status, error) {
-					//alert(error+" | "+status+" | "+xhr);
-					window.location = "/operations.php?po=true";
-					console.log("inventory-add-complete.php: ERROR");
-				},	
-			});
-		});
+		// 			//Error handler or success handler
+		// 			if(result['query'] || checkSaved) {
+		// 				//In case a warning is triggered but data is still saved successfully
+		// 				if(result['error'] != undefined)
+		// 					alert(result['error']);
+		// 				window.onbeforeunload = null;
+		// 				window.location = "/operations.php?po=true";
+		// 			//Error occured enough to stop the page from continuing
+		// 			} else if(result['error'] != undefined) {
+		// 				alert(result['error']);
+		// 				$click.attr('id','save_button_inventory');
+		// 			//Nothing was change
+		// 			} else {
+		// 				//alert('No changes have been made.');
+		// 				$click.attr('id','save_button_inventory');
+		// 				window.location = "/operations.php?po=true";
+		// 			}
+		// 		},
+		// 		error: function(xhr, status, error) {
+		// 			//alert(error+" | "+status+" | "+xhr);
+		// 			window.location = "/operations.php?po=true";
+		// 			console.log("inventory-add-complete.php: ERROR");
+		// 		},	
+		// 	});
+		// });
 		
 		
 //Handle if the user deletes a serial from inventory add or shipping (Undoes a line item)
@@ -2970,65 +3041,6 @@
 					}
 			});
 		}
-
-	// created by david because this needs to be called globally rather than just a local method for a very finely-focused purpose
-	function zoomPanel(panel,zoom_direction) {
-		//Get current filter type
-		var type = $('.filter_status.active').data('filter');
-
-		if (zoom_direction=='in') {
-			$('.col-lg-6.data-load').hide();
-			panel.closest(".col-lg-6").addClass("shipping-dash-full");
-					
-			//Show everything
-			if(type == 'active' || type=='complete') {
-				panel.closest('.shipping-dash').children('.table-responsive').find('.'+type+'_item').show();
-			} else {
-				panel.closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
-			}
-					
-			panel.closest(".shipping-dash").addClass("shipping-dash-remove");
-			panel.closest(".shipping-dash").removeClass("shipping-dash");
-					
-			$(".shipping-dash-full").fadeIn('fast');
-			$('body').scrollTop('fast');
-			
-			var title = $(".shipping-dash-full .shipping_section_head").attr('data-title');
-			$(".shipping_section_head").hide();
-			
-			$("#filter-title").text(title);
-			
-			panel.closest("table").find(".overview").show();
-			panel.text("Show Less");
-			panel.parent().removeClass("shipping_section_foot_lock");
-		} else{
-			$(".shipping-dash-full").removeClass("shipping-dash-full");
-			panel.closest("table").find(".overview").hide();
-			panel.parents("body").find(".shipping_section_head").fadeIn("fast");
-			$('.col-lg-6').show();
-			
-			panel.closest(".shipping-dash-remove").addClass("shipping-dash");
-			
-			//Hide all elements over the count of 10
-			$('.filter_item').hide();
-
-			if(type != 'complete' && type != 'active') {
-				type = 'filter';
-			}
-			$('.p_table .'+type+'_item:lt(10)').show();
-			$('.s_table .'+type+'_item:lt(10)').show();
-			$('.rma_table .'+type+'_item:lt(10)').show();
-			$('.ro_table .'+type+'_item:lt(10)').show();
-
-			panel.closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
-			$("#filter-title").text('Operations Dashboard');
-			
-			panel.parents("body").find(".overview").hide();
-			panel.parent().addClass("shipping_section_foot_lock");
-			panel.parents("body").find(".shipping_section_foot a").text("Show more");
-		}
-		headerOffset();
-	}
 
 
 

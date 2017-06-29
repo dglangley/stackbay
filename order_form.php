@@ -369,19 +369,6 @@
 		                            </button>';
 		                            
 								$output .= '<ul class="dropdown-menu">';
-								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-								// if($rows) {
-								// 	$counter = 1;
-								// 	foreach ($rows as $invoice) {
-								// 		$output .= '
-								// 			<li>
-								// 				<a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf">
-								// 					Shipment '.$counter.' Invoice '.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/Y').') 
-								// 				</a>
-								// 			</li>';
-								// 		$counter++;
-								// 	}
-								// } 
 
 								$output .= getPackagesFix($order_number);
 
@@ -390,16 +377,17 @@
 
 									}
 								}
-									//Check to see if this order has a valid package to create an invoice
+								//Check to see if this order has a valid package to create an invoice
 
-									$output .= '<li>
-										<a target="_blank" href="/invoice.php?on='.$order_number.'">
-											<i class="fa fa-plus"></i> Proforma Invoice
-										</a>
-										</li>';
-								// }
-	                            $output .= "</ul>";
-								$output .= "</div>";
+								$output .= '
+										<li>
+											<a target="_blank" href="/invoice.php?on='.$order_number.'">
+												<i class="fa fa-plus"></i> Proforma Invoice
+											</a>
+										</li>
+	                            	</ul>
+								</div>
+								';
 								echo $output;
 							}
 					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
@@ -419,13 +407,13 @@
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-question-circle-o"></i>
 	                              <span class="caret"></span>
-	                            </button>';
+	                            </button>
+								';
 	                        
-							$output .= '<ul class="dropdown-menu">';
-							// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-							if(mysqli_num_rows($rows)>0){
-								foreach ($rows as $rma) {
-									$output .= '
+								$output .= '<ul class="dropdown-menu">';
+								if(mysqli_num_rows($rows)>0){
+									foreach ($rows as $rma) {
+										$output .= '
 										<li>
 											<div class = "row rma-list-items">
 												<div class = "col-md-3">
@@ -444,31 +432,36 @@
 													</a>
 												</div>
 											</div>
-										</li>';
+										</li>
+										';
+									}
 								}
 							}
 							$output .= '<li>
 											<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
 												ADD RMA <i class ="fa fa-plus"></i>
 											</a>
-										</li>';
-	                        $output .= "</ul>";
-							$output .= "</div>";
-							echo $output;
+										</li>
+		                        	</ul>
+								</div>
+								';
+								echo $output;
 
+							}
+						}/* end if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair'))*/
 
-					if($order_number != "New" && $o['type'] == 'Purchase'){
-						$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
-						$rows = qdb($bills_selector);
-						$output = '
+						if($order_number != "New" && $o['type'] == 'Purchase'){
+							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
+							$rows = qdb($bills_selector);
+							$output = '
 						<div class ="btn-group">
 							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
                               <i class="fa fa-credit-card"></i>
                               <span class="caret"></span>
-                            </button>';
+                            </button>
+							';
                             
 							$output .= '<ul class="dropdown-menu">';
-							// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 							if(mysqli_num_rows($rows) > 0){
 								foreach ($rows as $bill) {
 									$output .= '
@@ -479,19 +472,19 @@
 										</li>';
 								}
 							}
-							$output .= '<li>
-								<a href="/bill.php?on='.$order_number.'&bill=new">
-									<i class="fa fa-plus"></i> Add New Bill
-								</a>
-								</li>';
-                            $output .= "</ul>";
-							$output .= "</div>";
+							$output .= '
+										<li>
+											<a href="/bill.php?on='.$order_number.'&bill=new">
+												<i class="fa fa-plus"></i> Add New Bill
+											</a>
+										</li>
+									</ul>
+								</div>
+							';
 							echo $output;
-					} elseif ($o['type'] == 'Invoice') {
-						
-					}
-				
-					
+						} elseif ($o['type'] == 'Invoice') {
+						}
+
 						if($order_number != "New"){
 							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sales' ? 'so' : 'po').'";';
 							$rows = qdb($query);
@@ -502,49 +495,48 @@
 	                              <span class="caret"></span>
 	                            </button>';
 	                            
-								$output .= '<ul class="dropdown-menu">';
-								if(mysqli_num_rows($rows) > 0){
-									foreach ($rows as $payment) {
-										$number = 0;
-										$amount = 0;
-										$type = '';
-										$notes = '';
-										$date = '';
-										
-										$query = 'SELECT * FROM payments p, payment_details d WHERE id = '.$payment['paymentid'].' AND paymentid = p.id;';
-										$result = qdb($query) OR die(qe().' '.$query);
-		
-										if (mysqli_num_rows($result)>0) {
-								        	$r = mysqli_fetch_assoc($result);
-											$number = $r['number'];
-											$amount = $r['amount'];
-											$type = $r['payment_type'];
-											$notes = $r['notes'];
-											$ref = $r['ref_type'].' '.$r['ref_number'];
-											$date = format_date($r['date']);
-								        }
-										
-										$output .= '
+							$output .= '<ul class="dropdown-menu">';
+							if(mysqli_num_rows($rows) > 0){
+								foreach ($rows as $payment) {
+									$number = 0;
+									$amount = 0;
+									$type = '';
+									$notes = '';
+									$date = '';
+									
+									$query = 'SELECT * FROM payments p, payment_details d WHERE id = '.$payment['paymentid'].' AND paymentid = p.id;';
+									$result = qdb($query) OR die(qe().' '.$query);
+	
+									if (mysqli_num_rows($result)>0) {
+							        	$r = mysqli_fetch_assoc($result);
+										$number = $r['number'];
+										$amount = $r['amount'];
+										$type = $r['payment_type'];
+										$notes = $r['notes'];
+										$ref = $r['ref_type'].' '.$r['ref_number'];
+										$date = format_date($r['date']);
+							        }
+									
+									$output .= '
 											<li>
 												<a style="cursor: pointer" class="paid-data" data-date="'.$date.'" data-ref="'.$ref.'" data-notes="'.$notes.'" data-type="'.$type.'" data-number="'.$number.'" data-amount="'.$amount.'" data-toggle="modal" data-target="#modal-payment">
 													Payment #'.$payment['paymentid'].'
 												</a>
 											</li>';
-									}
 								}
-								$output .= '<li>
-									<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
-										<i class="fa fa-plus"></i> Add New Payment
-									</a>
-									
-									</li>';
-	                            $output .= "</ul>";
-								$output .= "</div>";
-								echo $output;
+							}
+							$output .= '
+											<li>
+												<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
+													<i class="fa fa-plus"></i> Add New Payment
+												</a>
+											</li>
+										</ul>
+									</div>
+							';
+							echo $output;
 						}
-					}
-				}
-					?>
+?>
 					
 					
 					

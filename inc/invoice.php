@@ -4,6 +4,7 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
     include_once $rootdir.'/inc/form_handle.php';
+    include_once $rootdir.'/inc/order_parameters.php';
     include_once $rootdir.'/inc/packages.php';
     
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
@@ -84,6 +85,9 @@
 			";
 			qdb($insert) or die(qe()." ".$insert);
 			$line = qid();
+
+			setCommission($invoice_id,$line);
+
 			$package_insert = "
 				INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`)
 					SELECT $line AS line, packages.id
@@ -149,8 +153,8 @@
 		}
 	}
 	
-	function getInvoicedInventory($in_no){
-	    $in_no = prep($in_no,$selector = '*');
+	function getInvoicedInventory($in_no,$selector = '*'){
+	    $in_no = prep($in_no);
 	    $select = "
 	    SELECT $selector
 	    FROM `invoice_items`, `invoice_shipments`, `package_contents`, inventory

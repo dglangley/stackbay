@@ -12,6 +12,7 @@
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/form_handle.php';
+    include_once $rootdir.'/inc/setCost.php';
     
 	function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
 		$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
@@ -68,6 +69,15 @@
         $update .= "id = $row_id;";
         
         qdb($update) or die(qe()." $update");
+        
+        $pc = "SELECT * FROM package_contents where `packageid` = $row_id;";
+        $pc_results = qdb($pc) or die(qe()." | $pc");
+        if(mysqli_num_rows($pc_results)){
+            foreach($pc_results as $invid){
+                setCost($invid);
+            }
+        }
+        
         return $update;
     }
     elseif($action == "change"){

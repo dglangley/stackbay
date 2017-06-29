@@ -20,6 +20,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/packages.php';
+	include_once $rootdir.'/inc/setCost.php';
 
 	//This is a list of everything
 	$partid = grab('partid');
@@ -38,6 +39,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$locationid;
 		$query;
 		$result['partid'] = $partid;
+		$inventory_id = '';
 		
 		//Get the location ID based on the preset ones in the table
 		if($instance != '') {
@@ -80,9 +82,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 				$result['query'] = qdb($query) or die(qe());
 				$result['saved'] = $serial;
+				$inventory_id = qid();
 				
 			}
 		}
+		setCost($inventory_id);
 		
 		return $result;
 	}
