@@ -280,16 +280,19 @@
 		} else if($order =="rma") {
 			$order_out = 'RMA';
 			$type = 'RMA';
-		} else {
+		} else if($order =="ro") {
 			$type = 'RO';
 			$order_out = 'Repair';
+		} else {
+			$type = 'BO';
+			$order_out = 'Builds';
 		}
 		echo '
 		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
 			<div class="shipping-dash" id="'.$order_out.'_panel">
 				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
-					'.$status_out.$order_out.' Orders
-				</div>
+					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').
+				'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">
 		';
@@ -313,7 +316,7 @@
 	function output_header($order,$type='Order'){
 			echo'<thead>';
 			echo'<tr>';
-			if($type != 'RO') {
+			if($type != 'RO' && $type != 'BO') {
 				echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
@@ -347,7 +350,11 @@
 				echo'	</th>';
 				echo'	<th class="col-sm-1 company_col">';
 				echo'	<span class="line"></span>';
-				echo'		Repair#';
+				if($type == 'RO') {
+					echo'		Repair#';
+				} else {
+					echo'		Build#';
+				}
 				echo'	</th>';
 	            echo'	<th class="col-sm-4">';
 	            echo'		<span class="line"></span>';
@@ -418,7 +425,12 @@
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
+					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
+				} else if($order == 'bo') {
+					$query = "SELECT o.*,i.*, b.id as bid FROM ";
+					$query .= "repair_orders o, repair_items i, builds b ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND b.ro_number = o.ro_number ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				}
 				
@@ -446,6 +458,10 @@
 					else if ($order == 'p'){ $order_num = $r['po_number']; }
 					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
 					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
+					else if ($order == 'bo'){ 
+						$order_num = $r['bid']; 
+						//$build = $r['bid'];
+					}
 					
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
@@ -460,7 +476,7 @@
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
-					} else if($order == 'ro') {
+					} else if($order == 'ro' || $order == 'bo') {
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 						//print_r($r['status'] );
@@ -474,8 +490,10 @@
 
 					echo'        <td>'.$date.'</td>';
 
-					if($order != 'ro') {
+					if($order != 'ro' && $order != 'bo') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+					} else if($order == 'bo'){
+						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					} else {
 						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
@@ -498,7 +516,7 @@
 					}
 
 					echo'        <td><div class="desc">'.$item.'</div></td>';
-					if($order != 'ro') {
+					if($order != 'ro' && $order != 'bo') {
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
 						$serial;
@@ -515,7 +533,7 @@
 						//echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
-					if($order == 'ro') {
+					if($order == 'ro' || $order == 'bo') {
 						global $now;
 						echo'    	<td>'.format_date($r['due_date']).'</td>';
 						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-'.($status_name == "Not Reparable" ? 'danger' : ($status_name == 'NTF' ? 'info' : 'success')).' complete_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).'</td>';
@@ -523,7 +541,7 @@
 						
 						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					}
-					if($order != 'ro' && $order != 'rma') {
+					if($order != 'ro' && $order != 'rma' && $order != 'bo') {
 						echo'    	<td class="status text-right">';		
 						if($order == 's') {
 							echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
@@ -790,6 +808,12 @@
 			output_module("ro",$search);
 		?>
     </div> 
+    <div class="row table-holder">
+		<?php 
+			output_module("bo",$search);
+			//output_module("ro",$search);
+		?>
+    </div> 
     <?php //print_r($serialDetection);?>
 
 <?php include_once 'inc/footer.php'; ?>
@@ -923,6 +947,7 @@
 			$('.s_table .'+type+'_item:lt(10)').show();
 			$('.rma_table .'+type+'_item:lt(10)').show();
 			$('.ro_table .'+type+'_item:lt(10)').show();
+			$('.bo_table .'+type+'_item:lt(10)').show();
 		}
 		if (table_filter != '') {
 			zoomPanel($("#"+table_filter+"_panel").find(".shipping_section_foot a"),'in');
@@ -966,6 +991,7 @@
 				$('.s_table .'+type2+'_item:lt(10)').show();
 				$('.rma_table .'+type2+'_item:lt(10)').show();
 				$('.ro_table .'+type2+'_item:lt(10)').show();
+				$('.bo_table .'+type2+'_item:lt(10)').show();
 			} else {
 				$('.'+type2+'_item').show();
 			}

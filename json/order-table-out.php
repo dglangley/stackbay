@@ -68,28 +68,33 @@
 		
 		//Build the display row
 	   	$row_out = "<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>";
-	   	if(!$o['tech']){
+	   	if(!$o['tech'] && !$o['build']){
 	   		$row_out .= "
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>";
 	    }
-	    $row_out .= "<td class = 'line_part' data-search='".$partid."' data-record='".$row['id']."'>".$display."</td>";
-	    if(!$o['tech']){
+
+	    $row_out .= "<td class = 'line_part' ".($o['build'] ? 'name ="partid" value="'.$partid.'"' : '')." data-search='".$partid."' data-record='".$row['id']."'>".$display;
+	    if($o['build']){
+	    	$row_out .= "<input class='hidden' name='partid' value='".$partid."'>";
+	    }
+	    $row_out .= "</td>";
+	    if(!$o['tech'] && !$o['build']){
         	$row_out .= "<td class = 'line_date' data-date = '$date'>".$date."</td>";
         }
-		if(!$o['repair'] && !$o['tech']){
+		if(!$o['repair'] && !$o['tech'] && !$o['build']){
 			$row_out .= "
 			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
-	   	$row_out .= "<td class = 'line_qty' data-stock=".$row['available']." data-qty = ".$row['qty'].">".$row['qty']."</td>";
+	   	$row_out .= "<td class = 'line_qty' data-stock=".($row['available'] ? $row['available'] : '0')." data-qty = ".$row['qty'].">".$row['qty']."</td>";
 
-	   	if(!$o['tech']){
+	   	if(!$o['tech'] && !$o['build']){
 	   		$row_out .= "
             <td class = 'line_price'>".format_price($row['uPrice'])."</td>
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
             <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>";
         }
-		if(!$o['repair'] && !$o['tech']){
+		if(!$o['repair'] && !$o['tech'] && !$o['build']){
     		$row_out .= "<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>";
 		} else {
 			$row_out .= "<td></td>";
@@ -183,15 +188,15 @@
 		
 		//Prep the initial 
 		$table = '';
-		
 		//Determine from the post to the page what we are working on. Assume new if there is no number.
 	    
 	    
 	    $order_type = grab("type","purchase");// $order_type = isset($_REQUEST['type']) ? trim($_REQUEST['type']) : 'Purchase';
 	    $order_number = grab("number","new"); // $order_number = isset($_REQUEST['number']) ? trim($_REQUEST['number']) : 'New';
 		$o = o_params($order_type);
+
 	    //If this is not a new order, load the already existing information from the table.
-	    if ($order_number != 'New'){
+	    if ($order_number != 'New' && $mode != 'build'){
 				$q_form = "SELECT * FROM ".$o['item']." WHERE ".$o['id']." = '$order_number';";
 				$old = qdb($q_form);
 				
@@ -288,6 +293,32 @@
 				'ref_1_label' => 'repair_item_id',
 			);
 			$table .= build_row($new_row);	
+		} else if ($mode == 'build') {
+			$qty = 1;
+
+			$query_build = "SELECT * FROM builds WHERE id = ".prep($_REQUEST['number']).";";
+			$build_result = qdb($query_build) or die(qe() . ' ' . $query_build);
+
+			if(mysqli_num_rows($build_result)) {
+				$build_item = mysqli_fetch_assoc($build_result);
+				$partid = $build_item['partid'];
+			}
+
+			if($partid) {
+				$new_row = array(
+					'id' => 'new',
+					'line' => '',
+					'search' => $partid,
+					'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+					'qty' => $qty,
+					'uPrice' => 0.00,
+					'warranty' => 0,
+					'conditionid' => 2,
+					//'ref_1' => $r['ref_1'],
+					// 'ref_1_label' => 'repair_item_id',
+				);
+				$table .= build_row($new_row);	
+			}
 		}
 		
 		echo json_encode($table); 
@@ -298,7 +329,7 @@
 //------------------------------------------------------------------------------
 	if ($mode == "append" || $mode == "update"){
 		append_row($mode);
-	} else if ($mode == "load" || $mode == "rtv" || $mode == "repair") {
+	} else if ($mode == "load" || $mode == "rtv" || $mode == "repair" || $mode == "build") {
 		initialTableOutput($mode);
 	} else {
 		"Permanent";
