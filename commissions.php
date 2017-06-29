@@ -412,17 +412,17 @@
 				$comm_amount = 0;
 				$chk = ' checked';
 				$cls = ' warning';
-				$query2 = "SELECT commission_amount, commission_rate, sales_item_id FROM commissions c ";
+				$query2 = "SELECT commission_amount, commission_rate, cogsid, item_id, item_id_label FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
-//					$cogs = $r2['cogs'];
+					$cogsid = $r2['cogsid'];
 
 					// get cogs from sales_cogs table with associated inventoryid and sales_item_id
-					$query3 = "SELECT SUM(cogs_avg) cogs FROM sales_profits WHERE inventoryid = '".$inventoryid."' AND sales_item_id ";
-					if ($r2['sales_item_id']) { $query3 .= "= '".$r2['sales_item_id']."' "; } else { $query3 .= "IS NULL "; }
-					$query3 .= "; ";
+					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";//inventoryid = '".$inventoryid."' AND sales_item_id ";
+					//if ($r2['sales_item_id']) { $query3 .= "= '".$r2['sales_item_id']."' "; } else { $query3 .= "IS NULL "; }
+					//$query3 .= "; ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					if (mysqli_num_rows($result3)>0) {
 						$r3 = mysqli_fetch_assoc($result3);

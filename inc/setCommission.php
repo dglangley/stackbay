@@ -6,6 +6,8 @@
 		$COMM_REPS[$r['id']] = $r['commission_rate'];
 	}
 
+	if (! isset($debug)) { $debug = 0; }
+
 	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0) {
 		global $COMM_REPS;
 
@@ -61,7 +63,7 @@
 				$cogs = 0;
 				$cogsid = 0;
 				$query4 = "SELECT cogs_avg, id FROM sales_cogs WHERE inventoryid = '".$r2['inventoryid']."' ";
-				$query4 .= "AND ref_1 = '".$r3['id']."' AND ref_1_label = '".$id_field."'; ";
+				$query4 .= "AND item_id = '".$r3['id']."' AND item_id_label = '".$id_field."'; ";
 				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 				if (mysqli_num_rows($result4)>0) {
 					$r4 = mysqli_fetch_assoc($result4);
@@ -83,6 +85,7 @@
 					$query4 .= "$rep_id, '".$rate."', '".$comm."'); ";
 					$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 					$commissionid = qid();
+					if ($GLOBALS['debug']) { echo $commissionid.': '.$query4.'<BR>'; }
 				}
 			}
 		}
