@@ -14,7 +14,8 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/jsonDie.php';
-	
+	include_once $rootdir.'/inc/filter.php';
+	include_once $rootdir.'/inc/order_parameters.php';
 //==============================================================================
 //================== Function Delcaration (Declaration?) =======================
 //==============================================================================
@@ -50,11 +51,11 @@
 		global $found, $levenshtein, $nothingFound;
 		$trigger;
 		$triggerArray = array();
+		$o = o_params($type);
 		
 		$initial = array();
 		$arrayID = array();
 		$query;
-		
 		$parts = hecidb($search);
 		
 		//If Heci DB detects anything from the search then create a trigger to also search through the parts ID
@@ -64,29 +65,29 @@
 			}
 			$trigger = 'parts';
 		}
-		
-		switch ($type) {
-		    case 's':
-        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
-		        break;
-		    case 'p':
-        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number ";
-		        break;
-		    //Holder for future RMA and RO
-			case 'rma':
-        		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number ";
-		        break;
-			case 'ro':
-        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
-		        break;
-		    case 'bo':
-        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
-		        break;
-			default:
-				//Should rarely ever happen
-				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
-				break;
-		}
+		$query = "SELECT * FROM ".$o['tables']." AND i.".$o['id'].' = '.prep(strtoupper($search)).";";
+		// switch ($type) {
+		//     case 's':
+  //      		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
+		//         break;
+		//     case 'p':
+  //      		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number ";
+		//         break;
+		//     //Holder for future RMA and RO
+		// 	case 'rma':
+  //      		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number ";
+		//         break;
+		// 	case 'ro':
+  //      		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
+		//         break;
+		//     case 'bo':
+  //      		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
+		//         break;
+		// 	default:
+		// 		//Should rarely ever happen
+		// 		//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
+		// 		break;
+		// }
 		$query .= "AND status <> 'Void'; ";
 		
 		if(empty($query)) {

@@ -199,7 +199,7 @@
 			
 			$info['rep_type'] = "Sales";
 			$info['date_label'] = "RMA";
-// 			$info['tables'] = " sales_orders o, sales_items i WHERE o.so_number = i.so_number ";
+			$info['tables'] = " return_items i, returns o WHERE o.rma_number = i.rma_number ";
 			$info['short'] = "RMA";
 			$info['event'] = 'returned';
 			$info['id'] = "rma_number";
@@ -284,7 +284,7 @@
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Tech";
 			$info['date_label'] = "PO";
-			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
+			$info['tables'] = " repair_orders o, repair_items i WHERE o.ro_number = i.ro_number ";
 			$info['short'] = "ro";
 			$info['event'] = 'ordered for repair';
 			$info['id'] = "ro_number";
@@ -359,7 +359,7 @@
 			$info['rtv'] = false;
 			$info['rma'] = false;
 			$info['credit'] = false;
-			$info['repair'] = true;
+			$info['repair'] = false;
 			$info['builds'] = true;
 			$info['bill'] = false;
 			
