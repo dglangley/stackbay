@@ -367,9 +367,9 @@
 		';
 
 		$inventories = array();
-		$query2 = "SELECT i.id, i.partid, i.purchase_item_id, ii.amount, i.serial_no ";
+		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no ";
 		$query2 .= "FROM invoice_items ii, inventory i, inventory_history h, sales_items si, invoices inv ";
-		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = i.partid AND i.id = h.invid ";
+		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = si.partid AND i.id = h.invid ";
 		$query2 .= "AND h.field_changed = 'sales_item_id' AND h.value = si.id ";
 		$query2 .= "AND si.so_number = inv.order_number AND inv.order_type = 'Sale' AND inv.invoice_no = ii.invoice_no; ";
 		$result2 = qdb($query2) OR die("Could not pull comm/inventory records for invoice ".$r['invoice_no']);

@@ -23,11 +23,13 @@
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT i.id, i.amount, serialid inventoryid FROM invoice_items i, invoice_shipments s, package_contents c ";
-		$query2 .= "WHERE i.invoice_no = '".res($invoice)."' ";
-		if ($invoice_item_id) { $query2 .= "AND i.id = '".res($invoice_item_id)."' "; }
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid ";
+		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
+		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
+		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
 		if ($inventoryid) { $query2 .= "AND serialid = '".res($inventoryid)."' "; }
-		$query2 .= "AND i.id = s.invoice_item_id AND s.packageid = c.packageid ";
+		$query2 .= "AND ii.id = s.invoice_item_id AND s.packageid = c.packageid ";
+		$query2 .= "AND c.serialid = i.id AND i.partid = ii.partid ";
 		$query2 .= "; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -52,8 +54,9 @@
 			// cross-reference against tables as determined above ("Sale" or "Repair") to get that table's id, and,
 			// subsequently, COGS from the records in those tables; the COGS helps us determine profits, and ultimately, commissions
 			$query3 = "SELECT $id_table.price, $id_table.id FROM inventory_history h, $id_table ";
-			$query3 .= "WHERE invid = '".$r2['inventoryid']."' AND h.value = $id_table.id AND h.field_changed = '".$id_field."' ";
-			$query3 .= "AND $order_field = '".$order_number."'; ";
+			$query3 .= "WHERE h.invid = '".$r2['inventoryid']."' AND h.value = $id_table.id AND h.field_changed = '".$id_field."' ";
+			$query3 .= "AND $order_field = '".$order_number."' ";
+			$query3 .= "GROUP BY h.invid, h.value; ";
 			$result3 = qdb($query3) OR die(qe()."<BR>".$query3);
 			while ($r3 = mysqli_fetch_assoc($result3)) {
 				$item_id = $r3['id'];

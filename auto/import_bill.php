@@ -91,27 +91,6 @@ echo("<br>".$lines);
     
     //Prep the sum for each of the line totals to do the SUM audit
     $lines_sum = 0.00;
-    
-    // if(!mysqli_num_rows($line_results)){
-    //     // $failed_message = "| No Rows ";
-    //     $p_line["bill_no"] = $meta["id"];
-    //     $p_line["memo"] = "Not an original line: added to fix amount";
-    //     $p_line["amount"] = $meta['amount'];
-    //     $p_line["quantity"] = 1;
-    //     if ($meta['memo']){
-    //         $memo_parts = memo_walk($line['memo']);
-    //         if($memo_parts["po#"]){
-    //             $insert_row['po_number'] = $memo_parts["po#"];
-    //         }
-    //     }
-    //     if(!$insert_row['po_number']){
-    //         $insert_row = array();
-    //         continue;
-    //     }
-
-    //     $lines_sum = $meta["amount"];
-    //     $insert_row['lines'][] = $p_line;
-    // } else {
     if(mysqli_num_rows($line_results) > 0){
         foreach($line_results as $line){
             $p_line = array();
