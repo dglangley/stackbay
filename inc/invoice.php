@@ -85,6 +85,9 @@
 			";
 			qdb($insert) or die(qe()." ".$insert);
 			$line = qid();
+
+			setCommission($invoice_id,$line);
+
 			$package_insert = "
 				INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`)
 					SELECT $line AS line, packages.id

@@ -350,7 +350,93 @@
 			//Field header information
 			// $info['due_date'] = true;
 			// $info['warranty'] = true;
-		} else{
+		} else if (strtolower($type) == "builds" || strtolower($type) == "bo" || strtolower($type) == "build_id"){
+			$info['type'] = "Builds";
+			//convenient type check
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = true;
+			$info['builds'] = true;
+			$info['bill'] = false;
+			
+			$info['billing'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
+			$info['ship'] = 'ship_to_id';
+			$info['order'] = "repair_orders";
+			$info['contact_col'] = "Sales Rep";
+			$info['header'] = "Repair";
+			$info['inv_item_id'] = "repair_item_id";
+			$info['item'] = "repair_items";
+			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['price'] = 'Price';
+			$info['ext'] = 'Ext Price';
+			$info['rep_type'] = "Tech";
+			$info['date_label'] = "PO";
+			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
+			$info['short'] = "build";
+			$info['event'] = 'ordered for repair';
+			$info['id'] = "ro_number";
+			$info['item_id'] = $info['id'];
+			$info['active'] = " status = 'Active' ";
+			$info['inactive'] = " status = 'Completed' ";
+			$info['status_empty'] = "Void";
+			$info['url'] = "repair_add";
+			$info['color'] = '#b9bfd8';
+			$info['edit_mode'] = 'order';
+			$info['date_field'] = 'due_date';
+			//$info['create_date'] = "created";
+			//Field header information
+			$info['due_date'] = true;
+			$info['warranty'] = true;
+		} else if (strtolower($type) == "build" || strtolower($type) == "bo" || strtolower($type) == "build_id"){
+			$info['type'] = "build";
+			//convenient type check
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = true;
+			$info['build'] = true;
+			$info['bill'] = false;
+			
+			$info['billing'] = 'bill_to_id';
+			$info['bill_label'] = 'Bill To';
+			$info['ship'] = 'ship_to_id';
+			$info['order'] = "repair_orders";
+			$info['contact_col'] = "Sales Rep";
+			$info['header'] = "Repair";
+			$info['inv_item_id'] = "repair_item_id";
+			$info['item'] = "repair_items";
+			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['price'] = 'Price';
+			$info['ext'] = 'Ext Price';
+			$info['rep_type'] = "Tech";
+			$info['date_label'] = "PO";
+			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
+			$info['short'] = "build";
+			$info['event'] = 'ordered for repair';
+			$info['id'] = "ro_number";
+			$info['item_id'] = $info['id'];
+			$info['active'] = " status = 'Active' ";
+			$info['inactive'] = " status = 'Completed' ";
+			$info['status_empty'] = "Void";
+			$info['url'] = "repair_add";
+			$info['color'] = '#b9bfd8';
+			$info['edit_mode'] = 'order';
+			$info['date_field'] = 'due_date';
+			//$info['create_date'] = "created";
+			//Field header information
+			$info['due_date'] = true;
+			$info['warranty'] = true;
+		} else {
 			$info['case'] = $type;
 		}
 		return $info;

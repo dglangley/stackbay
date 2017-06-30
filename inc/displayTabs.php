@@ -18,7 +18,7 @@
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+							<div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -39,7 +39,7 @@
                                     </ul>
                                 </div>
                             </div>
-							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+							<div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/returns.php">Returns</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -59,6 +59,26 @@
 									  </div>
 									</h4>
                                     <ul id="return-orders-list">
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px; border-right: 0;">
+                                <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/builds.php">Builds</a></h4>
+                                    <h4 class="megamenu-block-title">
+									  <div class="form-group">
+										<div class="input-group pull-left">
+											<span class="input-group-btn">
+												<a href="/builds_management.php" class="btn btn-default btn-xs bg-returns" title="Start New Build"><i class="fa fa-plus"></i></a>
+											</span>
+											<input type="text" class="form-control input-xs order-search" placeholder="Builds..." data-type="BO">
+											<span class="input-group-btn">
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+											</span>
+										</div>
+									  </div>
+									</h4>
+                                    <ul id="build-orders-list">
                                     </ul>
                                 </div>
                             </div>

@@ -51,6 +51,30 @@
 	$sales_order;
 	$tracking;
 
+	$build = $_REQUEST['build'];
+
+	if($build) {
+		//get the build # for usage
+		$build = $order_number;
+		//Get the real number aka the RO number
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$order_number = $result['ro_number'];
+		} else {
+			$query = "SELECT id FROM builds WHERE ro_number=".prep($order_number).";";
+
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$build = $result['id'];
+			}
+		}
+
+		$o = o_params("bo");
+	}
+
 	$query = "SELECT status, id as repair_item_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
 	$result = qdb($query) or die(qe());
 	if (mysqli_num_rows($result)) {
@@ -187,7 +211,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
-		<title>Repair Receive <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title><?=($build?'Build':'Repair')?> Receive <?=($order_number != 'New' ? '#' . ($build?$build:$order_number) : '')?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.table td {
@@ -268,11 +292,11 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php?ps=repair&on=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage Repair</a></div>
+			<div class="col-sm-4"><a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active'){
 							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
-						}?> Repair #<?= $order_number.' Receiving'; ?></h2>
+						}?> <?=($build ? 'Build':'Repair');?> #<?= ($build?$build:$order_number).' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
 				<?php if($status != "Active") { ?>

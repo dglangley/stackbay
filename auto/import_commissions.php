@@ -189,10 +189,16 @@ echo $serial.' '.$query2.'<BR>';
 		}
 
 		if (! $inventoryid) { $inventoryid = 'NULL'; }
-		if (! $sales_item_id) { $sales_item_id = 'NULL'; }
-		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, sales_item_id, datetime, ";
-		$query2 .= "rep_id, commission_rate, commission_amount) ";
-		$query2 .= "VALUES ($invoice, NULL, $inventoryid, $sales_item_id, $comm_date, ";
+		$item_id = $sales_item_id;
+		$item_id_label = "'sales_item_id'";
+		if (! $item_id) {
+			$item_id = 'NULL';
+			$item_id_label = 'NULL';
+		}
+		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, item_id, item_id_label, datetime, ";
+		$query2 .= "cogsid, rep_id, commission_rate, commission_amount) ";
+		$query2 .= "VALUES ($invoice, NULL, $inventoryid, $item_id, $item_id_label, $comm_date, ";
+		if ($cogsid) { $query2 .= "$cogsid, "; } else { $query2 .= "NULL, "; }
 		$query2 .= "$rep_id, NULL, '".$r['amount']."'); ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		$commissionid = qid();

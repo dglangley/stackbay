@@ -3,10 +3,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCostsLog.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setAverageCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
 
 	if (! isset($debug)) { $debug = 0; }
 
-	function setCost($inventoryid=0) {
+	function setCost($inventoryid=0,$force_avg=false,$force_datetime='') {
 		if (! $inventoryid) { return false; }
 
 		$debug = $GLOBALS['debug'];
@@ -32,7 +33,7 @@
 
 			$query2 = "SELECT price, po_number FROM purchase_items WHERE id = '".res($pi_id)."'; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-			if (mysqli_fetch_assoc($result2)==0) { continue; }
+			if (mysqli_num_rows($result2)==0) { continue; }
 			$r2 = mysqli_fetch_assoc($result2);
 			$po_number = $r2['po_number'];
 			// use this for reference below in case there's an RTV
@@ -91,8 +92,17 @@
 			$r = mysqli_fetch_assoc($result);
 			$actual = $r['actual'];
 		}
-		$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
-		setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
+
+		if ($force_avg) {
+			if ($force_datetime) {
+				setAverageCost($partid,$force_avg,true,$force_datetime);
+			} else {
+				setAverageCost($partid,$force_avg,true);
+			}
+		} else {
+			$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+			setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
+		}
 
 		// reset inventory costs with latest cost data
 		$query = "DELETE FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
@@ -103,6 +113,8 @@
 		$query .= "VALUES ('".$inventoryid."','".$GLOBALS['now']."','".$cost."','".$cost."'); ";
 		if ($debug==1) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+
+		return true;
 
 		// until we've migrated repairs completely, this will stand in as our cost calculator for repairs
 //		calcLegacyRepair($serial);

@@ -38,6 +38,7 @@
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
+	$build = $_REQUEST['build'];
 	$order_type = "Tech";
 	
 	$so_updated = $_REQUEST['success'];
@@ -52,7 +53,18 @@
 		//header("Location: /shipping_home.php");
 		//die();
 	}
-	
+
+	if($build) {
+		//Get the real RO
+		$build = $order_number;
+		//Get the real number aka the RO number
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$order_number = $result['ro_number'];
+		} 
+	}
 	
 	$repair_order;
 	$notes;
@@ -104,7 +116,15 @@
 	    return $display;
 	}
 
-	function grabActivities($ro_number, $repair_item_id){
+	function grabActivities($ro_number, $repair_item_id, $build){
+		$type;
+
+		if($build) {
+			$type = 'Build';
+		} else {
+			$type = 'Repair';
+		}
+
 		$repair_activities = array();
 		$query;
 		$invid = '';
@@ -123,9 +143,9 @@
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
 				UNION
-				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
+				SELECT created_by as techid, created as datetime, CONCAT('$type Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
 				UNION
-				SELECT userid as techid, date_created as datetime, CONCAT('Received Repair Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
+				SELECT userid as techid, date_created as datetime, CONCAT('Received $type Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
 				UNION
 				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				ORDER BY datetime DESC;";
@@ -265,7 +285,7 @@
 		break;
 	endforeach;
 
-	$activities = grabActivities($repair_order, $repair_item_id);
+	$activities = grabActivities($repair_order, $repair_item_id, $build);
 
 	$status = ""; 
 	$claimed = "";
@@ -291,7 +311,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Repair <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title><?=($build ? 'Build':'Repair');?><?=($order_number != ' New' ? '# ' . ($build ? $build : $order_number) : '')?></title>
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
@@ -391,18 +411,25 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
-					<?php } ?>
+					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { 
+						if($build): ?>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<?php else: ?>
+						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<?php endif; } ?>
 				</div>
 				
 				<div class="col-md-4 text-center">
 					<?php
 						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 
-						echo "Repair Ticket ";
+						if($build) {
+							echo "Build";
+						} else {
+							echo "Repair Ticket";
+						}
 						if ($order_number!='New'){
-							echo "#$order_number";
+							echo "# " . ($build ? $build : $order_number);
 						}
 						if (strtolower($status) == 'void'){
 							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
