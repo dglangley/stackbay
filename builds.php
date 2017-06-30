@@ -1,4 +1,4 @@
 <?php
-	$table_filter = 'Build';
+	$table_filter = 'Builds';
 	include 'operations.php';
 ?>
