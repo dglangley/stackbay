@@ -1098,7 +1098,9 @@
 				if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
-					document.location.href = '/order_form.php?ps=ro&on='+$(this).val();
+					document.location.href = '/order_form.php?ps='+$(this).data('type')+'&on='+$(this).val();
+				} else if($(this).data('type') == 'BO') {
+					document.location.href = '/builds_management.php?on='+$(this).val();
 				} else {
 					document.location.href = '/rma.php?rma='+$(this).val();
 				}
@@ -1110,7 +1112,9 @@
 			if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
-				document.location.href = '/order_form.php?ps=ro&on='+search_field.val();
+				document.location.href = '/order_form.php?ps='+search_field.data('type')+'&on='+search_field.val();
+			} else if(search_field.data('type') == 'BO') {
+				document.location.href = '/builds_management.php?on='+search_field.val();
 			} else {
 				document.location.href = '/rma.php?rma='+search_field.val();
 			}
@@ -1643,7 +1647,7 @@
         }); // end ajax call
 	}
 	function loadOrders() {
-		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0 && $("#repair-orders-list").length==0 && $("#return-orders-list").length==0) { return; }
+		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0 && $("#repair-orders-list").length==0 && $("#return-orders-list").length==0 && $("#build-orders-list").length==0) { return; }
 
 		// do the thing
 		refreshOrders();
@@ -1686,6 +1690,14 @@
 				});
 				$.each(json.returns, function(key, order) {
 					returns.append('<li><a href="/rma.php?rma='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var builds = $("#build-orders-list");
+				builds.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.builds, function(key, order) {
+					builds.append('<li><a href="/builds_management.php?on='+order.build_number+'">'+order.build_number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

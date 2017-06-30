@@ -140,7 +140,11 @@
 					repair_id = getUrlParameter('repair');
 				}
 
-				console.log(window.location.origin+"/json/order-table-out.php?mode=load&number="+order_number+"&type="+order_type);
+				if($('body').data('order-type') == 'build') {
+					mode = 'build';
+				}
+
+				console.log(window.location.origin+"/json/order-table-out.php?mode="+mode+"&number="+order_number+"&type="+order_type);
 
 				$.ajax({
 					type: "POST",

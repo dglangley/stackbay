@@ -28,6 +28,9 @@
 	$filter = $_REQUEST['filter'];
 	if (! isset($table_filter)) { $table_filter = ''; }
 	if (isset($_REQUEST['table_filter'])) { $table_filter = $_REQUEST['table_filter']; }
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	if (isset($_REQUEST['START_DATE'])) { $start = $_REQUEST['START_DATE']; }
+	if (isset($_REQUEST['END_DATE'])) { $endif = $_REQUEST['END_DATE']; }
 
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
@@ -76,6 +79,9 @@
 			case 'ro':
         		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
 		        break;
+		    case 'bo':
+        		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
+		        break;
 			default:
 				//Should rarely ever happen
 				//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
@@ -106,6 +112,9 @@
 	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number ";
 			        break;
 			    case 'ro':
+	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
+			        break;
+			    case 'bo':
 	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
 			        break;
 			    default:
@@ -140,6 +149,10 @@
 		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
 				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
 		        break;
+		    case 'bo':
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
+		        break;
 		    default:
 				//Should rarely ever happen
 				break;
@@ -157,7 +170,7 @@
 			}
 		}
 		//If the initial search is empty populate the data with close alternates
-		if(empty($initial) && $type != 'rma' && $type != 'ro') {
+		if(empty($initial) && $type != 'rma' && $type != 'ro' && $type != 'bo') {
 			$initial = soundsLike($search, $type);
 		} else if (!empty($initial)) {
 			//Items were found so remove any warning messages ever
@@ -280,16 +293,19 @@
 		} else if($order =="rma") {
 			$order_out = 'RMA';
 			$type = 'RMA';
-		} else {
+		} else if($order =="ro") {
 			$type = 'RO';
 			$order_out = 'Repair';
+		} else {
+			$type = 'BO';
+			$order_out = 'Builds';
 		}
 		echo '
 		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
 			<div class="shipping-dash" id="'.$order_out.'_panel">
 				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
-					'.$status_out.$order_out.' Orders
-				</div>
+					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').
+				'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">
 		';
@@ -313,7 +329,7 @@
 	function output_header($order,$type='Order'){
 			echo'<thead>';
 			echo'<tr>';
-			if($type != 'RO') {
+			if($type != 'RO' && $type != 'BO') {
 				echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
@@ -345,22 +361,26 @@
 	        	echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
+				echo'	<th class="col-sm-2 company_col">';
+				echo'	<span class="line"></span>';
+				echo'		Company';
+				echo'	</th>';
 				echo'	<th class="col-sm-1 company_col">';
 				echo'	<span class="line"></span>';
-				echo'		Repair#';
+				if($type == 'RO') {
+					echo'		Repair#';
+				} else {
+					echo'		Build#';
+				}
 				echo'	</th>';
 	            echo'	<th class="col-sm-4">';
 	            echo'		<span class="line"></span>';
 	            echo'		Item';
 	            echo'	</th>';
-	        	echo'   <th class="col-sm-3 item_col">';
+	        	echo'   <th class="col-sm-2 item_col">';
 	            echo'   	<span class="line"></span>';
 	            echo'       Serial';
 	            echo'	</th>';
-	            // echo'   <th class="col-sm-3 item_col">';
-	            // echo'   	<span class="line"></span>';
-	            // echo'       Notes';
-	            // echo'	</th>';
 	            echo'   <th class="col-sm-1">';
 	            echo'   	<span class="line"></span>';
 	            echo'   	Due';
@@ -418,7 +438,12 @@
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
+					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
+				} else if($order == 'bo') {
+					$query = "SELECT o.*,i.*, b.id as bid FROM ";
+					$query .= "repair_orders o, repair_items i, builds b ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND b.ro_number = o.ro_number ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				}
 				
@@ -446,6 +471,10 @@
 					else if ($order == 'p'){ $order_num = $r['po_number']; }
 					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
 					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
+					else if ($order == 'bo'){ 
+						$order_num = $r['bid']; 
+						//$build = $r['bid'];
+					}
 					
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
@@ -460,7 +489,7 @@
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
-					} else if($order == 'ro') {
+					} else if($order == 'ro' || $order == 'bo') {
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 						//print_r($r['status'] );
@@ -474,9 +503,12 @@
 
 					echo'        <td>'.$date.'</td>';
 
-					if($order != 'ro') {
+					//if($order != 'ro' && $order != 'bo') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
-					} else {
+					//} 
+					if($order == 'bo'){
+						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					} else if($order == 'ro') {
 						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
@@ -498,7 +530,7 @@
 					}
 
 					echo'        <td><div class="desc">'.$item.'</div></td>';
-					if($order != 'ro') {
+					if($order != 'ro' && $order != 'bo') {
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
 						$serial;
@@ -515,15 +547,18 @@
 						//echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
-					if($order == 'ro') {
+					if($order == 'ro' || $order == 'bo') {
 						global $now;
 						echo'    	<td>'.format_date($r['due_date']).'</td>';
+					}
+
+					if($order == 'ro') {
 						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-'.($status_name == "Not Reparable" ? 'danger' : ($status_name == 'NTF' ? 'info' : 'success')).' complete_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).'</td>';
 					} else {
 						
 						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">Active</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-success complete_label status_label" style="display: none;">Complete</span> ' : '' ).'</td>';
 					}
-					if($order != 'ro' && $order != 'rma') {
+					if($order != 'ro' && $order != 'rma' && $order != 'bo') {
 						echo'    	<td class="status text-right">';		
 						if($order == 's') {
 							echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
@@ -543,9 +578,13 @@
 						echo'		</td>'; 
 					} else {
 						echo'    	<td class="status text-right">';		
-						echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
-						echo'			<a href="/repair_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-						echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+						echo'			<a href="/repair_add.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						if($order != 'bo') {
+							echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						} else {
+							echo'			<a href="/builds_management.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+						}
 						echo'		</td>'; 							
 					}
 
@@ -666,6 +705,24 @@
 
 			</div>
 			<div class = "col-md-3">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="input-group date datetime-picker-filter">
+				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
+				            <span class="input-group-addon">
+				                <span class="fa fa-calendar"></span>
+				            </span>
+				        </div>
+					</div>
+					<div class="col-md-6">
+						<div class="input-group date datetime-picker-filter">
+				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
+				            <span class="input-group-addon">
+				                <span class="fa fa-calendar"></span>
+				            </span>
+				    	</div>
+					</div>
+				</div>
 			</div>
 			<div class="col-md-4 text-center">
             	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
@@ -674,10 +731,25 @@
 			<!--This Handles the Search Bar-->
 
 			<div class="col-md-2 col-sm-2">
+
 			</div>
 			
 
 			<div class="col-md-2 col-sm-2">
+				<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
+					<select id="" class="company-selector">
+						<option value="">- Select a Company -</option>
+						<?php 
+							if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+							else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+						?>
+					</select>
+					<span class="input-group-btn">
+						<button class="btn btn-primary btn-sm">
+							<i class="fa fa-filter" aria-hidden="true"></i>
+						</button>
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -697,7 +769,7 @@
 	<?php endif; ?>
 	
 
-	<table class="" style="display:none;">
+	<!-- <table class="" style="display:none;">
 		<tr id = "filterTableOutput">
 			<td class = "col-md-2">
 	
@@ -776,7 +848,7 @@
 				</div>
 			</td>
 		</tr>
-	</table>
+	</table> -->
 	
 	<div class="row table-holder">
 		<?php 
@@ -788,6 +860,12 @@
 		<?php 
 			output_module("rma",$search);
 			output_module("ro",$search);
+		?>
+    </div> 
+    <div class="row table-holder">
+		<?php 
+			output_module("bo",'');
+			//output_module("ro",$search);
 		?>
     </div> 
     <?php //print_r($serialDetection);?>
@@ -923,6 +1001,7 @@
 			$('.s_table .'+type+'_item:lt(10)').show();
 			$('.rma_table .'+type+'_item:lt(10)').show();
 			$('.ro_table .'+type+'_item:lt(10)').show();
+			$('.bo_table .'+type+'_item:lt(10)').show();
 		}
 		if (table_filter != '') {
 			zoomPanel($("#"+table_filter+"_panel").find(".shipping_section_foot a"),'in');
@@ -966,6 +1045,7 @@
 				$('.s_table .'+type2+'_item:lt(10)').show();
 				$('.rma_table .'+type2+'_item:lt(10)').show();
 				$('.ro_table .'+type2+'_item:lt(10)').show();
+				$('.bo_table .'+type2+'_item:lt(10)').show();
 			} else {
 				$('.'+type2+'_item').show();
 			}

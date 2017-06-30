@@ -58,11 +58,10 @@
 		$keyword = $_REQUEST['s'];
 	}
 	
-	
 	//High level order parameters
 	$o = o_params(grab('ps',"s"));
 	$order_number = grab('on','New');
-	$status = getOrderStatus($o['type'],$order_number);
+	$build_number;
 	$sales_order;
 	$tracking;
 	
@@ -106,7 +105,26 @@
 			}
 		}
 		//echo $query;
+	} else if($o['type'] == "Builds") {
+		$build_number = $order_number;
+		//Get the real number aka the RO number
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$order_number = $result['ro_number'];
+		} else {
+			$query = "SELECT id FROM builds WHERE ro_number=".prep($order_number).";";
+
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$build_number = $result['id'];
+			}
+		}
 	}
+
+	$status = getOrderStatus($o['type'],$order_number);
 
  	function getPackagesFix($order_number) {
  	 	$output = '';
@@ -281,7 +299,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
-		<title><?=($order_number != 'New')? (strtoupper($o['short'])." #".$order_number) : ('New '.strtoupper($o['short']) )?></title>
+		<title><?=($order_number != 'New')? ($o['short'] == 'build' ? ucfirst($o['short'])."# ".($build_number ? $build_number : $order_number) : strtoupper($o['short'])."# ".$order_number) : ('New '.($o['short'] == 'build' ? ucfirst($o['short']) : strtoupper($o['short'])) )?></title>
 
 		<style>
 			tr.strikeout td:before {
@@ -324,19 +342,25 @@
 							if($o['type'] == 'Invoice'){
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
-							echo '<a href="/'.$o['url'].'.php?on=' . (($origin)? $origin : $order_number) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
-							if($o['type'] == 'Repair'){
-								echo '<a href="/repair.php?on='. $order_number .'" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
+							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+							if($o['type'] == 'Repair' || $o['type'] == 'Builds'){
+								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'&build=true" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
 							}
-							if($o['type'] != 'Repair') {
-								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
+								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left"><i class="fa fa-file-pdf-o"></i></a>';
+							}
+							if($o['type'] == 'Builds'){
+								echo '<a href="/builds_management.php?on='.$build_number.'" class="btn-flat pull-left">Manage</a>';
 							}
 						}
-
-						if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair')){
+						if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair' || $o['type'] == 'Builds')){
 							$rows = get_assoc_invoices($order_number);
 
-							if($o['type'] != 'Repair') {
+							//Get packages pertaining to this order
+							//$packages = getPackagesFix($order_number);
+
+							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
+								//if($rows){
 								$output = '
 								<div class ="btn-group">
 									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
@@ -366,15 +390,19 @@
 								';
 								echo $output;
 							}
-							if($o['type'] == 'Sales') { 
-								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
-							} else if($o['type'] == 'Repair') { 
-								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
-							}
+					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+					// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+					if($o['type'] == 'Sales') { 
+						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+					} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
+						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
+					}
 
-							if(!$repair_billable && $o['type'] == 'Repair') {
-								$rows = qdb($rma_select) or die(qe().$rma_select);
-								$output = '
+					if(!$repair_billable && $o['type'] == 'Repair') {
+						//If the repair  is not billable don't allow the user to create an RMA for this order
+					} else {
+						$rows = qdb($rma_select) or die(qe().$rma_select);
+							$output = '
 							<div class ="btn-group">
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-question-circle-o"></i>
@@ -408,8 +436,9 @@
 										';
 									}
 								}
-								$output .= '<li>
-											<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : '').'">
+							}
+							$output .= '<li>
+											<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
 												ADD RMA <i class ="fa fa-plus"></i>
 											</a>
 										</li>
@@ -522,9 +551,11 @@
 						} else {
 							//echo getCompany($ORDER['companyid']);
 						}
-						echo " ".strtoupper($o['short']);
-						if ($order_number!='New'){
+						echo " ".($o['short'] == 'build' ? ucfirst($o['short']) : strtoupper($o['short']));
+						if ($order_number!='New' && !$build_number){
 							echo "# $order_number";
+						} else {
+							echo "# $build_number";
 						}
 
 						if($status && $o['type'] == 'Repair' && $order_number!='New'){

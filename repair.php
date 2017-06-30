@@ -26,6 +26,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	// include_once $rootdir.'/inc/getUser.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getFreight.php';
@@ -37,15 +38,33 @@
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
+	$build = $_REQUEST['build'];
 	$order_type = "Tech";
 	
 	$so_updated = $_REQUEST['success'];
+
+	
+	function getSalesUser($userid, $return = 'name'){
+	    $select = "SELECT $return FROM users u, contacts c where u.contactid = c.id AND u.id = ".prep($userid).";";
+	    return rsrq($select);
+	}
 	
 	if(empty($order_number)) {
 		//header("Location: /shipping_home.php");
 		//die();
 	}
-	
+
+	if($build) {
+		//Get the real RO
+		$build = $order_number;
+		//Get the real number aka the RO number
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$order_number = $result['ro_number'];
+		} 
+	}
 	
 	$repair_order;
 	$notes;
@@ -82,17 +101,8 @@
 	}
 	
 	function getDateStamp($order_number) {
-		$datestamp = '';
-		
-		$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
-		$results = qdb($select);
-		
-		if (mysqli_num_rows($results)>0) {
-			$results = mysqli_fetch_assoc($results);
-			$datestamp = $results['datetime'];
-		}
-		
-		return $datestamp;
+		$select = "SELECT `datetime` FROM `packages`  WHERE  `order_number` = '$order_number' AND datetime is not null limit 1;";
+		return rsrq($select);
 	}
 
 	function format($partid, $desc = true){
@@ -106,37 +116,74 @@
 	    return $display;
 	}
 
-	function grabActivities($ro_number, $repair_item_id){
+	function grabActivities($ro_number, $repair_item_id, $build){
+		$type;
+
+		if($build) {
+			$type = 'Build';
+		} else {
+			$type = 'Repair';
+		}
+
 		$repair_activities = array();
 		$query;
+		$invid = '';
 		
-		$query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.part, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
-				UNION
+		$inv_query = "SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id)." LIMIT 1;";
+		$invid = rsrq($inv_query);
+		if(!$invid){
+			$inv_query = "SELECT id FROM inventory where `repair_item_id` = ".prep($repair_item_id)." LIMIT 1;";
+			$invid = rsrq($inv_query);
+		}
+		
+		$query = "
+				/*SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.part, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
+				UNION*/
 				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
-				
 				UNION
-				SELECT created_by as techid, created as datetime, CONCAT('Repair Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
+				SELECT created_by as techid, created as datetime, CONCAT('$type Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
 				UNION
-				SELECT userid as techid, date_created as datetime, CONCAT('Received Repair Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
+				SELECT userid as techid, date_created as datetime, CONCAT('Received $type Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
 				UNION
 				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				ORDER BY datetime DESC;";
 
-				// UNION
-				// SELECT `userid` as techid, `date_changed` as datetime, CONCAT('Status changed from ', `changed_from`, ' to ', `value` ) as notes FROM `inventory_history` where `field_changed` = 'status' AND `invid` in (
-				// 	SELECT `invid` FROM `inventory_history` where `field_changed` = 'repair_item_id' and `value` = ".prep($repair_item_id)."
-				// 	)
-		// $query = "SELECT techid, requested as datetime, CONCAT('Component Requested Part #', partid, ' Qty: ', qty) as notes FROM purchase_requests WHERE ro_number = ".prep($ro_number)." 
-		// 		UNION
-		// 		SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." ORDER BY datetime DESC";
 		$result = qdb($query) OR die(qe());
-				
-		while ($row = $result->fetch_assoc()) {
+		foreach($result as $row){
 			$repair_activities[] = $row;
 		}
-
+		
+		if($invid){
+			$invhis = "
+			SELECT DISTINCT * 
+			FROM inventory_history ih, repair_activities ra 
+			where field_changed = 'status' 
+			and ra.datetime = ih.date_changed 
+			and ra.notes is null
+			and invid = ".prep($invid)."
+			order by date_changed asc;
+			";
+			$history = qdb($invhis) or die(qe()." | $invhis");
+			foreach($history as $h){
+				$status = '';
+				if($h['value'] == "in repair" && ($h['changed_from'] == "shelved" || $h['changed_from'] == "manifest")){
+					$status = 'Checked In';	
+				} else if($h['changed_from'] == "in repair" && ($h['value'] == "shelved" || $h['value'] == "manifest")){
+					$status = 'Checked Out';	
+				} else if($h['changed_from'] == "testing" && ($h['value'] == "shelved" || $h['value'] == "manifest")){				
+					$status = 'Out of Test Lab';	
+				} else if($h['value'] == "testing" && ($h['changed_from'] == "shelved" || $h['changed_from'] == "manifest")){				
+					$status = 'In Test Lab';	
+				}
+				foreach($repair_activities as $count => $row){
+					if(!$row['notes']){
+						$repair_activities[$count]['notes'] = $status;
+					}
+				}
+			}
+		}
 		return $repair_activities;
 	}
 
@@ -163,19 +210,8 @@
 				$qty = $receivedr['totalReceived'];
 			}
 
-			//echo $row['totalOrdered'] . ' ' . $qty . '<br>';
 
 			$row['totalReceived'] = $qty;
-
-			// if($qty > $row['totalOrdered']) {
-			// 	$row['totalOrdered'] = abs($qty + $row['totalOrdered']);
-			// } else if ($qty == $row['totalOrdered']) {
-			// 	$row['totalOrdered'] = $row['totalOrdered'];
-			// } 
-			// else {
-			// 	$row['totalOrdered'] = abs($qty + $row['totalOrdered']);
-			// }
-
 			$purchase_requests[] = $row;
 		}
 
@@ -200,28 +236,13 @@
 		$query;
 		
 		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." AND (status = 'shelved' OR status = 'received') GROUP BY partid;";
-		$result = qdb($query) OR die(qe());
-				
-		if (mysqli_num_rows($result)>0) {
-			$results = mysqli_fetch_assoc($result);
-			$qty = $results['sum'];
-		}
-
+		$qty = rsrq($query);
 		return $qty;
 	}
 
 	function getRepairCode($repair_code){
-		$repair_text = "";
-				
 		$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
-		$results = qdb($select) or die(qe()." | $select");
-
-		if (mysqli_num_rows($results)>0) {
-			$results = mysqli_fetch_assoc($results);
-			$repair_text = $results['description'];
-		}
-
-		return $repair_text;
+		return rsrq($select);
 	}
 
 	function getRepairQty($partid, $ro_number) {
@@ -238,19 +259,26 @@
 		return $qty;
 	}
 	
+	function getRepairRMA($ro_number){
+		$query = "SELECT `rma_number` FROM `returns` where `order_type` = 'Repair' and `order_number` = ".prep($ro_number).";";
+		return rsrq($query);
+	}
+	
 	$items = getItems($repair_order);
-
+	
+	$rma_number = '';
+	$rma_number = getRepairRMA($repair_order);
 	foreach($items as $item):
 		$due_date = format_date($item['due_date']);
 		$repair_item_id = $item['id'];
 		break;
 	endforeach;
 
-	$activities = grabActivities($repair_order, $repair_item_id);
+	$activities = grabActivities($repair_order, $repair_item_id, $build);
 
 	$status = ""; 
 	$claimed = "";
-
+	if(isset($activities)){
 	foreach($activities as $activity):
 		if(strpos($activity['notes'], 'Checked') !== false && !$status) {
 			if(strtolower($activity['notes']) == 'checked in') {
@@ -264,7 +292,7 @@
 			$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid'], 'userid') . "</b>";
 		}
 	endforeach; 
-
+	}
 	//print_r($U);
 ?>
 	
@@ -272,7 +300,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Repair <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title><?=($build ? 'Build':'Repair');?><?=($order_number != ' New' ? '# ' . ($build ? $build : $order_number) : '')?></title>
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
@@ -372,18 +400,25 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-					<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
-					<?php } ?>
+					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { 
+						if($build): ?>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<?php else: ?>
+						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+					<?php endif; } ?>
 				</div>
 				
 				<div class="col-md-4 text-center">
 					<?php
 						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 
-						echo "Repair Ticket ";
+						if($build) {
+							echo "Build";
+						} else {
+							echo "Repair Ticket";
+						}
 						if ($order_number!='New'){
-							echo "#$order_number";
+							echo "# " . ($build ? $build : $order_number);
 						}
 						if (strtolower($status) == 'void'){
 							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
@@ -445,11 +480,14 @@
 
 								<div class="row">
 									<div class="col-md-12" style="padding-bottom: 10px; margin-top: 15px;">
-										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getContact($sales_rep_id)?><br><br>
+										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getSalesUser($sales_rep_id)?><br><br>
 										<b style="color: #526273;font-size: 14px;">Due</b><br><?=$due_date;?><br><br>
 										<b style="color: #526273;font-size: 14px;">Notes</b><br>
 										<?=$notes;?>
 										<br>
+										<?php if($rma_number): ?>
+										<br><b style="color: #526273;font-size: 14px;">Returned on:</b>&nbsp;<a href="/rma.php?rma=<?=$rma_number?>">RMA# <?=$rma_number?></a><br><br>
+										<?php endif; ?>
 									</div>
 								</div>
 							</div>
@@ -467,8 +505,31 @@
 										<table class="table table-hover table-striped table-condensed" style="margin-top: 15px;">
 											<thead>
 												<tr>
-													<th class="col-md-6">DESCRIPTION</th>
-													<th class="col-md-4">SERIAL</th>
+													<th class="col-md-5">DESCRIPTION</th>
+													<th class="col-md-2">SERIAL</th>
+													<th class="col-md-1">
+														<?php
+															$label;
+															foreach($items as $item){
+																if($item['ref_1_label']){
+																	if($item['ref_1_label'] == "return_item_id"){echo("RMA #");break;}
+																	$label = $item['label'];
+																	echo($item['ref_1_label']);
+																	break;
+																}
+															};
+														?>
+													</th>
+													<th class="col-md-1">
+														<?php
+															foreach($items as $item){
+																if($item['ref_2_label']){
+																	echo($item['ref_2_label']);
+																	break;
+																}
+															};
+														?>
+													</th>
 													<th class="col-md-1">PRICE</th>
 													<th class="col-md-1"></th>
 												</tr>
@@ -476,23 +537,41 @@
 											<?php
 												$serial;
 												$item_row = '';
+												$ref1 = '';
 												if(!empty($items)){
 													foreach($items as $item){
 														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
 														$result = qdb($query) or die(qe() . ' ' . $query);
 		
-														if (mysqli_num_rows($result)>0) {
+														if (!mysqli_num_rows($result)) {
+															$query = "SELECT serial_no, id, status FROM inventory WHERE id = (SELECT `invid` FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($item['id'])." limit 1);";
+															$result = qdb($query) or die(qe() . ' ' . $query);
+														}
+														
+														if(mysqli_num_rows($result)){
 															$r = mysqli_fetch_assoc($result);
 															$serial = $r['serial_no'];
-															$invid = $r['id'];
+															// $invid = $r['id']; // From what I can tell this is never used
 															$status = $r['status'];
 														}
 														echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
-														
+														$ref1 = $item['ref_1'];
+														if($item['ref_1_label'] == "return_item_id"){
+															if(!$rma_number){
+																$select = "SELECT `rma_number` from `return_items` where id = ".prep($ref1).";";
+																$rma_number = rsrq($select);
+															}
+															$ref1 = '
+															<b style="color: #526273;font-size: 14px;">
+															</b>&nbsp;<a href="/rma.php?rma='.$rma_number.'">'.$rma_number.'</a>
+															<br><br>';
+														}
 														$item_row .= '
 														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 															<td>'.format($item['partid'], true).'</td>
 															<td>'.$serial.'</td>
+															<td>'.$ref1.'</td>
+															<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
 															<td>'.format_price($item['price']).'</td>
 															<td>
 																<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
@@ -547,7 +626,7 @@
 											foreach($activities as $activity):
 										?>
 											<tr class="" style = "padding-bottom:6px;">
-												<td><?=format_date($activity['datetime'], 'n/j/y, H:i:s');?></td>
+												<td><?=format_date($activity['datetime'], 'n/j/y, h:i a');?></td>
 												<td><?=getContact($activity['techid'], 'userid');?></td>
 												<td><?=$activity['notes'];?></td>
 											</tr>
@@ -569,6 +648,8 @@
 												<!-- <th>Ordered</th> -->
 												<th>Available</th>
 												<th>Pulled</th>
+												<th>Price Per Unit</th>
+												<th>EXT Price</th>
 				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
@@ -576,6 +657,7 @@
 										</thead>
 										<?php
 											$components = getComponents($repair_order, $repair_item_id);
+											$total = 0.00;
 											if($components)
 												foreach($components as $comp):
 													// echo $comp['partid'];
@@ -583,21 +665,38 @@
 													//Get the current status of the PO
 													$status;
 													$ordered = 0;
+													$ext = 0;
 
 													if($comp['po_number']) {
-														$query = "SELECT * FROM purchase_orders po, purchase_items pi WHERE po.po_number = ".prep($comp['po_number'])." AND ref_1 = ".prep($repair_item_id)." AND ref_1_label = 'repair_item_id' AND pi.po_number = po.po_number;";
+														$price = 0;
+														// $query = "
+														// SELECT po.*, pi.* FROM purchase_orders po, purchase_items pi, inventory i
+														// WHERE po.po_number = ".prep($comp['po_number'])." 
+														// AND i.purchase_item_id = pi.id
+														// AND pi.po_number = po.po_number;";
+														$query = "
+														SELECT price, pi.qty, po.status 
+														FROM purchase_requests pr, purchase_items pi, purchase_orders po
+														Where pr.po_number = pi.po_number 
+														and pr.partid = pi.partid 
+														and po.po_number = pi.po_number
+														AND po.po_number = ".prep($comp['po_number'])."
+														AND pr.partid = ".prep($comp['partid']).";
+														";
 														$result = qdb($query) OR die(qe().'<BR>'.$query);
-
-														//echo $query;
+														
+														// echo $query;
 
 														if (mysqli_num_rows($result)>0) {
 										                    $query_row = mysqli_fetch_assoc($result);
 										                    $status = $query_row['status'];
-
+										                    $price = $query_row['price'];
 										                    if($status == 'Active') {
 										                    	$ordered = $query_row['qty'];
 										                    }
 										                }
+										                $ext = ($price * $ordered);
+										                $total += $ext;
 													}
 										?>
 											<tr class="" style = "padding-bottom:6px;">
@@ -607,32 +706,25 @@
 												<!-- <td><?=$ordered;?></td> -->
 												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
+												<td><?=format_price($price)?></td>
+												<td><?=format_price($ext)?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-12">
-															<?php //if($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0): ?>
-																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
-																	<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
-														        </button>
-														    <?php //endif; ?>
+															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+																<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
+													        </button>
 														</div>
-
-														<!-- <div class="col-md-6"> -->
-															<!-- <form action="repair_activities.php" method="post">
-																<input class="form-control input-sm hidden" type="text" name="partid" value="<?=$comp['partid'];?>">
-																<div class="input-group">
-													                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
-												                	<span class="input-group-btn">
-													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="used" data-datestamp="" <?=($ticketStatus ? 'disabled' : '');?>><i class="fa fa-wrench" aria-hidden="true"></i></button>
-													                </span>
-												                </div>
-											                </form> -->
-											            <!-- </div> -->
 									                </div>
 												</td>
 											</tr>
 											
 										<?php endforeach; ?>
+										<tr>
+											<td colspan=6 class="text-right"><b>Total:</b></td>
+											<td class = "total-column"><?=format_price($total);?></td>
+											<td>&nbsp;</td>
+										</tr>
 									</table>
 								</div>
 							</div>
@@ -1011,3 +1103,5 @@
 		</script>
 	</body>
 </html>
+
+

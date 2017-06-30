@@ -238,18 +238,18 @@
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
-			<select name="companyid" id="companyid" class="company-selector">
+				<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>
-				<?php 
-				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-				?>
+					<?php 
+						if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+						else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+					?>
 				</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
+				<button class="btn btn-primary btn-sm" type="submit" >
+					<i class="fa fa-filter" aria-hidden="true"></i>
+				</button>
 			</div>
-			</td>
+		</td>
 		</tr>
 	</table>
 	<!-- If the summary button is pressed, inform the page and depress the button -->

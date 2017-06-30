@@ -65,6 +65,9 @@
 	$so_number = grab("on");
 	$rma_number = grab("rma",'');
 	$repair = grab("repair");
+	$build = grab("build");
+
+	$build_number;
 
 	//If this record has a rma number, find the RMA
 	if ($rma_number){
@@ -78,6 +81,26 @@
 
 			if($result['order_type'] == 'Repair') {
 				$repair = true;
+			}
+		}
+	}
+
+	if($build) {
+		//get the build # for usage
+		$build_number = $so_number;
+		//Get the real number aka the RO number
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($so_number).";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$order_number = $result['ro_number'];
+		} else {
+			$query = "SELECT id FROM builds WHERE ro_number=".prep($so_number).";";
+
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$build_number = $result['id'];
 			}
 		}
 	}
@@ -108,7 +131,7 @@
 		//New RMA
 		if (!$rma_number){
 			
-			if($repair) {
+			if($repair || $build) {
 		        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
 		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Repair',".prep($contactid).",".prep($rma_notes).");";
 		    } else {
@@ -146,7 +169,7 @@
 	    //Tis an RMA Update or Delete
 		} else { 
         	foreach($checkedItems as $invid) {
-        		if($repair) {
+        		if($repair || $build) {
         			$partidQuery = "SELECT partid, repair_item_id FROM inventory WHERE id = ".res($invid).";";
         		} else {
 	        		$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
@@ -156,7 +179,7 @@
 	        	if (mysqli_num_rows($rmaSave)) {
 					$rmaSave = mysqli_fetch_assoc($rmaSave);
 					$partid = $rmaSave['partid'];
-					if($repair) {
+					if($repair  || $build) {
 	        			$so_line_id = $rmaSave['repair_item_id'];
 	        		} else {
 		        		$so_line_id = $rmaSave['sales_item_id'];
@@ -299,7 +322,7 @@
 
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 
-		if($repair) {
+		if($repair  || $build) {
 			$sales_macro = "SELECT companyid, contactid, ro_number FROM repair_orders where `ro_number` = ".prep($so_number).";";
 		} else {
 			$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
@@ -308,7 +331,7 @@
 		//echo $sales_macro;
 		$sales_macro = mysqli_fetch_assoc(qdb($sales_macro));
 		
-		if($repair) {
+		if($repair  || $build) {
 			//Check to see if these items have already been RMA'd off this particular sales order
 			$limiter = "SELECT `inventoryid`
 			FROM `returns` r , `return_items` ri, inventory i
@@ -422,17 +445,20 @@
 		include_once $rootdir.'/modal/history.php';
 		?>
 		
-		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : '');?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
+		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : ($build ? '&build=true' : ''));?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
 				
 				<div class="col-md-4">
 					<?php
 	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$order_type[0].'O'.$rma_number.'.pdf"
-						if(!$repair) {
+						if(!$repair && !$build) {
 							echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO# '.$so_number.')</a>';
-						} else {
+						} else if($repair) {
 							echo '<a class="btn-flat pull-left" href="/repair_add.php?on='.$so_number.'"><i class="fa fa-truck"></i> (RO# '.$so_number.')</a>';
+						} else {
+							//It's a build mask
+							echo '<a class="btn-flat pull-left" href="/repair_add.php?on='.$so_number.'"><i class="fa fa-truck"></i> (Build# '.$build_number.')</a>';
 						}
 						if($rma_number){
 							// echo '<a class="btn-flat pull-left" target="_new" href="/docs/RMA'.$rma_number.'.pdf"><i class="fa fa-file-pdf-o"></i></a>';

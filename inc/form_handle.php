@@ -19,5 +19,19 @@
         }
         return $return;
     }
+    function rsrq($query){
+    	//Return a single result query;
+    	$result = qdb($query) or die(qe()." $query");
+    	$return = false;
+    	if (mysqli_num_rows($result) == 1 && mysqli_num_fields($result) == 1){
+    		$fetched = mysqli_fetch_assoc($result);
+    		$return = current($fetched);
+    	} else if(mysqli_num_fields($result) > 1) {
+    	    die("RSRQ: too many collumns returned, be more specific | $query");
+    	} else if (mysqli_num_rows($result) > 1){
+    	    die("RSRQ: too many rows returned: try using a key to limit results | $query");
+    	}
+    	return($return);
+    }
     
 ?>

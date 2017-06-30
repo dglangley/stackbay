@@ -164,7 +164,7 @@ function sub_rows($search = ''){
             
             //Get all the currently in hand
             $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string)
-            ".($page =="Repair" || $page=="Tech" ?" AND (`status` = 'shelved' OR `status` = 'received') ":"")."
+            ".($page =="Repair" || $page=="Tech" || $page=='build' ?" AND (`status` = 'shelved' OR `status` = 'received') ":"")."
             GROUP BY partid;";
             $in_stock  = qdb($inventory) or jsonDie(qe()." | $inventory");
             if (mysqli_num_rows($in_stock)){
@@ -195,20 +195,20 @@ function sub_rows($search = ''){
                 $rows = "
                     <!-- Created from $search -->
                     <tr class = 'items_label'>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page =="Repair" || $page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page =="Repair" || $page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                         <td></td>
                         <td></td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"").">
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"").">
                             <div class='row-fluid'>
-                                <div class='".($page=="Tech" ?"col-md-12":"col-md-6")."' style='padding:0%;text-align:center;'>Stock</div>
-                                <div ".($page=="Tech" ?"style='display:none;'":"")." class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
+                                <div class='".($page=="Tech" || $page=='build' ?"col-md-12":"col-md-6")."' style='padding:0%;text-align:center;'>Stock</div>
+                                <div ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")." class='col-md-6' style='padding:0%;text-align:center;'>Order</div>
                             </div>
                         </td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                     </tr>";
     
                 foreach ($items as $id => $info){
@@ -246,18 +246,18 @@ function sub_rows($search = ''){
                     }
                     $rows .= "
                     <tr class = 'search_lines' data-line-id = $id>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                         <td>";
 
                     $rows .=(display_part($info));
                     $rows .= "</td>
-                        <td".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page =="Repair" || $page =="Tech" ?"style='display:none;'":"")."></td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
+                        <td".($page =="Repair" || $page =="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page =="Repair" || $page =="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                         <td><input class='form-control input-sm search_line_qty' type='text' name='ni_qty' placeholder='QTY' value = ''></td>
-                        <td ".($page=="Tech" ?"style='display:none;'":"")."></td>
-                        <td class='data_stock' data-stock='$qty_in'>". $text."</td>
-                        <td></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=='build' ?"style='display:none;'":"")." class='data_stock' data-stock='$qty_in'>". $text."</td>
+                        <td ".($page=='build' ?"style='display:none;'":"")."></td>
                     </tr>
                     ";
                 //Ask David about the line-level control with each of these.
