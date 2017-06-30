@@ -649,6 +649,7 @@
 												<th>Available</th>
 												<th>Pulled</th>
 												<th>Price Per Unit</th>
+												<th>EXT Price</th>
 				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
@@ -664,6 +665,7 @@
 													//Get the current status of the PO
 													$status;
 													$ordered = 0;
+													$ext = 0;
 
 													if($comp['po_number']) {
 														$price = 0;
@@ -693,7 +695,8 @@
 										                    	$ordered = $query_row['qty'];
 										                    }
 										                }
-										                $total += ($price * $ordered);
+										                $ext = ($price * $ordered);
+										                $total += $ext;
 													}
 										?>
 											<tr class="" style = "padding-bottom:6px;">
@@ -704,6 +707,7 @@
 												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
 												<td><?=format_price($price)?></td>
+												<td><?=format_price($ext)?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-12">
@@ -717,7 +721,7 @@
 											
 										<?php endforeach; ?>
 										<tr>
-											<td colspan=5 class="text-right"><b>Total:</b></td>
+											<td colspan=6 class="text-right"><b>Total:</b></td>
 											<td class = "total-column"><?=format_price($total);?></td>
 											<td>&nbsp;</td>
 										</tr>
