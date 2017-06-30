@@ -61,17 +61,8 @@
 	}
 
 	function getClassification($partid) {
-		$classification;
-
 		$query = "SELECT classification FROM parts WHERE id = ".prep($partid).";";
-		$result = qdb($query) or die(qe() . ' ' . $query);
-
-		if (mysqli_num_rows($result)){
-			$row = mysqli_fetch_assoc($result);
-			$classification = $row['classification'];
-		}
-
-		return $classification;
+		return rsrq($query);
 	}
 	
 	function getHistory($partid, $order_number) {
@@ -86,7 +77,7 @@
 			AND ih.value = p.id AND ih.invid = i.id;
 		";
 
-		$result = qdb($query);
+		$result = qdb($query) or die(qe());
 
 	    
 	    if($result)
@@ -113,16 +104,8 @@
 	}
 
 	function getSerial($invid) {
-		$serial;
-
 		$query = "SELECT serial_no FROM inventory WHERE id = ".prep($invid).";";
-		$result = qdb($query) or die(qe());
-		if (mysqli_num_rows($result)){
-			$row = mysqli_fetch_assoc($result);
-			$serial = $row['serial_no'];
-		}
-
-		return $serial;
+		return rsrq($query);
 	}
 
 	$partsListing = getPOParts($order_number);

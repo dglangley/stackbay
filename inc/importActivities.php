@@ -25,7 +25,7 @@
 			if ($r['datetime_in']) {
 				updateInventory($inventoryid,'status','shelved',$r['datetime_in'],$TECHS[$r['checkin_by_id']]);
 			}
-
+			//Notes from the checkout/in. Pull this from 
 			$activities[$r['datetime_out']][] = array('notes'=>$r['notes'],'techid'=>$TECHS[$r['tech_id']]);
 		}
 
