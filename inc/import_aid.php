@@ -84,8 +84,8 @@
     	function memo_walk($memo){
         //Brian has Item/Description values parsing through his memo column
             $result = array();
-            //$desc = explode(";",$memo);
-            $desc = explode("\n",$memo);
+            $desc = explode(";",$memo);
+            // $desc = explode("\n",$memo);
             foreach($desc as $label){
             	$instance = explode(":", $label);
             	$result[trim(strtolower($instance[0]))] = trim($instance[1]);
