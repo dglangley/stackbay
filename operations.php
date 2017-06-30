@@ -45,7 +45,7 @@
 	$levenshtein = false;
 	$nothingFound = true;
 	$found = false;
-	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false');
+	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false', "bo" => 'false');
 	
 	function searchQuery($search, $type) {
 		global $found, $levenshtein, $nothingFound;
@@ -65,29 +65,6 @@
 			}
 			$trigger = 'parts';
 		}
-		$query = "SELECT * FROM ".$o['tables']." AND i.".$o['id'].' = '.prep(strtoupper($search)).";";
-		// switch ($type) {
-		//     case 's':
-  //      		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
-		//         break;
-		//     case 'p':
-  //      		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.po_number = '".res(strtoupper($search))."' AND o.po_number = i.po_number ";
-		//         break;
-		//     //Holder for future RMA and RO
-		// 	case 'rma':
-  //      		$query = "SELECT * FROM return_items i, returns r WHERE i.rma_number = '".res(strtoupper($search))."' AND r.rma_number = i.rma_number ";
-		//         break;
-		// 	case 'ro':
-  //      		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
-		//         break;
-		//     case 'bo':
-  //      		$query = "SELECT * FROM repair_items i, repair_orders r WHERE i.ro_number = '".res(strtoupper($search))."' AND r.ro_number = i.ro_number ";
-		//         break;
-		// 	default:
-		// 		//Should rarely ever happen
-		// 		//$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.so_number = '".res(strtoupper($search))."' AND o.so_number = i.so_number ";
-		// 		break;
-		// }
 		$query .= "AND status <> 'Void'; ";
 		
 		if(empty($query)) {
@@ -116,7 +93,8 @@
 	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
 			        break;
 			    case 'bo':
-	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
+	        		$query = "SELECT * FROM builds b, repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") ";
+					$query .= "AND o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
 			        break;
 			    default:
 					//Should rarely ever happen
@@ -151,8 +129,8 @@
 				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
 		        break;
 		    case 'bo':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
+		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o, builds b WHERE serial_no = '".res(strtoupper($search))."' ";
+				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
 		        break;
 		    default:
 				//Should rarely ever happen
@@ -304,9 +282,9 @@
 		echo '
 		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
 			<div class="shipping-dash" id="'.$order_out.'_panel">
-				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
-					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').
-				'</div>
+				<div class="shipping_section_head" data-title="'.$order_out. (($order=="bo")?'':' Orders').'">
+					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').'
+				</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">
 		';
@@ -439,13 +417,12 @@
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";// AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				} else if($order == 'bo') {
-					$query = "SELECT o.*,i.*, b.id as bid FROM ";
-					$query .= "repair_orders o, repair_items i, builds b ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND b.ro_number = o.ro_number ";
-					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
+					$query = "SELECT o.*,i.*, b.id as bid FROM builds b, repair_orders o LEFT JOIN repair_items i ";
+					$query .= "ON o.ro_number = i.ro_number WHERE o.status <> 'Void' AND b.ro_number = o.ro_number ";
+					$query .= "ORDER BY b.id DESC LIMIT 0, 200; ";
 				}
 				
 				$results = qdb($query);
@@ -472,10 +449,7 @@
 					else if ($order == 'p'){ $order_num = $r['po_number']; }
 					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
 					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
-					else if ($order == 'bo'){ 
-						$order_num = $r['bid']; 
-						//$build = $r['bid'];
-					}
+					else if ($order == 'bo'){ $order_num = $r['bid']; }
 					
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
@@ -549,7 +523,6 @@
 					}
 
 					if($order == 'ro' || $order == 'bo') {
-						global $now;
 						echo'    	<td>'.format_date($r['due_date']).'</td>';
 					}
 
