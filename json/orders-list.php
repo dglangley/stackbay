@@ -40,11 +40,11 @@
 	}
 
 	$builds = array();
-	$query = "SELECT repair_orders.ro_number, companies.name, builds.id as bid FROM builds, repair_orders, companies ";
-	$query .= "WHERE repair_orders.companyid = companies.id AND builds.ro_number = repair_orders.ro_number ORDER BY repair_orders.ro_number DESC LIMIT 0,10; ";
+	$query = "SELECT repair_orders.ro_number, builds.id as bid FROM builds, repair_orders ";
+	$query .= "WHERE builds.ro_number = repair_orders.ro_number ORDER BY repair_orders.ro_number DESC LIMIT 0,10; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$builds[] = array('number'=>$r['ro_number'],'company'=>$r['name'], 'build_number'=>$r['bid']);
+		$builds[] = array('number'=>$r['bid'],'company'=>'', 'build_number'=>$r['bid']);
 	}
 
 	echo json_encode(array('sales'=>$sales,'purchases'=>$purchases, 'repairs'=>$repairs, 'returns'=>$returns, 'builds'=>$builds,'message'=>''));

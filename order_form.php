@@ -353,6 +353,7 @@
 								echo '<a href="/builds_management.php?on='.$build_number.'" class="btn-flat pull-left">Manage</a>';
 							}
 						}
+
 						if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair' || $o['type'] == 'Builds')){
 							$rows = get_assoc_invoices($order_number);
 
@@ -360,15 +361,14 @@
 							//$packages = getPackagesFix($order_number);
 
 							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
-								//if($rows){
 								$output = '
 								<div class ="btn-group">
 									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 		                              <i class="fa fa-credit-card"></i>
 		                              <span class="caret"></span>
-		                            </button>';
-		                            
-								$output .= '<ul class="dropdown-menu">';
+		                            </button>
+									<ul class="dropdown-menu">
+								';
 
 								$output .= getPackagesFix($order_number);
 
@@ -390,19 +390,20 @@
 								';
 								echo $output;
 							}
-					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
-					// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
-					if($o['type'] == 'Sales') { 
-						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
-					} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
-						$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
-					}
 
-					if(!$repair_billable && $o['type'] == 'Repair') {
-						//If the repair  is not billable don't allow the user to create an RMA for this order
-					} else {
-						$rows = qdb($rma_select) or die(qe().$rma_select);
-							$output = '
+							// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+							// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+							if($o['type'] == 'Sales') { 
+								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+							} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
+								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
+							}
+
+							if(!$repair_billable && $o['type'] == 'Repair') {
+								//If the repair  is not billable don't allow the user to create an RMA for this order
+							} else {
+								$rows = qdb($rma_select) or die(qe().$rma_select);
+								$output = '
 							<div class ="btn-group">
 								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-question-circle-o"></i>
@@ -444,10 +445,8 @@
 										</li>
 		                        	</ul>
 								</div>
-								';
-								echo $output;
-
-							}
+							';
+							echo $output;
 						}/* end if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair'))*/
 
 						if($order_number != "New" && $o['type'] == 'Purchase'){

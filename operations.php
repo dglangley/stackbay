@@ -438,12 +438,11 @@
 					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
 				} else if($order == 'ro') {
 					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
+					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";// AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				} else if($order == 'bo') {
-					$query = "SELECT o.*,i.*, b.id as bid FROM ";
-					$query .= "repair_orders o, repair_items i, builds b ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' AND b.ro_number = o.ro_number ";
+					$query = "SELECT o.*,i.*, b.id as bid FROM builds b, repair_orders o LEFT JOIN repair_items i ";
+					$query .= "ON o.ro_number = i.ro_number WHERE o.status <> 'Void' AND b.ro_number = o.ro_number ";
 					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
 				}
 				

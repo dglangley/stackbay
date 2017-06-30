@@ -18,9 +18,9 @@
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a> - <a href="/builds.php">Builds</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">
@@ -39,7 +39,7 @@
                                     </ul>
                                 </div>
                             </div>
-							<div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/returns.php">Returns</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -62,6 +62,7 @@
                                     </ul>
                                 </div>
                             </div>
+<!--
                             <div class="col-lg-4 col-md-4 col-sm-4 col-megamenu" style="height: 340px; border-right: 0;">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/builds.php">Builds</a></h4>
@@ -82,6 +83,7 @@
                                     </ul>
                                 </div>
                             </div>
+-->
 						</div>
 					  </div>
 					</li>
