@@ -210,19 +210,8 @@
 				$qty = $receivedr['totalReceived'];
 			}
 
-			//echo $row['totalOrdered'] . ' ' . $qty . '<br>';
 
 			$row['totalReceived'] = $qty;
-
-			// if($qty > $row['totalOrdered']) {
-			// 	$row['totalOrdered'] = abs($qty + $row['totalOrdered']);
-			// } else if ($qty == $row['totalOrdered']) {
-			// 	$row['totalOrdered'] = $row['totalOrdered'];
-			// } 
-			// else {
-			// 	$row['totalOrdered'] = abs($qty + $row['totalOrdered']);
-			// }
-
 			$purchase_requests[] = $row;
 		}
 
