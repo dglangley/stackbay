@@ -26,7 +26,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
-	include_once $rootdir.'/inc/getUser.php';
+	// include_once $rootdir.'/inc/getUser.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getFreight.php';
@@ -41,6 +41,12 @@
 	$order_type = "Tech";
 	
 	$so_updated = $_REQUEST['success'];
+
+	
+	function getUser($userid, $return = 'name'){
+	    $select = "SELECT $return FROM users u, contacts c where u.contactid = c.id AND u.id = ".prep($userid).";";
+	    return rsrq($select);
+	}
 	
 	if(empty($order_number)) {
 		//header("Location: /shipping_home.php");
