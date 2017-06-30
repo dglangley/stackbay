@@ -626,7 +626,7 @@
 											foreach($activities as $activity):
 										?>
 											<tr class="" style = "padding-bottom:6px;">
-												<td><?=format_date($activity['datetime'], 'n/j/y, H:i:s');?></td>
+												<td><?=format_date($activity['datetime'], 'n/j/y, h:i a');?></td>
 												<td><?=getContact($activity['techid'], 'userid');?></td>
 												<td><?=$activity['notes'];?></td>
 											</tr>
