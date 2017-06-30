@@ -44,7 +44,7 @@
 	$so_updated = $_REQUEST['success'];
 
 	
-	function getUser($userid, $return = 'name'){
+	function getSalesUser($userid, $return = 'name'){
 	    $select = "SELECT $return FROM users u, contacts c where u.contactid = c.id AND u.id = ".prep($userid).";";
 	    return rsrq($select);
 	}
@@ -260,7 +260,7 @@
 	}
 	
 	function getRepairRMA($ro_number){
-		$query = "SELECT `rma_number` FROM `returns` where `order_type` = 'Repair' and order_number = ".prep($ro_number).";";
+		$query = "SELECT `rma_number` FROM `returns` where `order_type` = 'Repair' and `order_number` = ".prep($ro_number).";";
 		return rsrq($query);
 	}
 	
@@ -480,13 +480,13 @@
 
 								<div class="row">
 									<div class="col-md-12" style="padding-bottom: 10px; margin-top: 15px;">
-										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getUser($sales_rep_id)?><br><br>
+										<b style="color: #526273;font-size: 14px;">Rep</b><br><?=getSalesUser($sales_rep_id)?><br><br>
 										<b style="color: #526273;font-size: 14px;">Due</b><br><?=$due_date;?><br><br>
 										<b style="color: #526273;font-size: 14px;">Notes</b><br>
 										<?=$notes;?>
 										<br>
 										<?php if($rma_number): ?>
-										<b style="color: #526273;font-size: 14px;">Returned on:</b>&nbsp;<a href="/rma.php?rma=<?=$rma_number?>">RMA# <?=$rma_number?></a><br><br>
+										<br><b style="color: #526273;font-size: 14px;">Returned on:</b>&nbsp;<a href="/rma.php?rma=<?=$rma_number?>">RMA# <?=$rma_number?></a><br><br>
 										<?php endif; ?>
 									</div>
 								</div>
@@ -509,8 +509,11 @@
 													<th class="col-md-2">SERIAL</th>
 													<th class="col-md-1">
 														<?php
+															$label;
 															foreach($items as $item){
 																if($item['ref_1_label']){
+																	if($item['ref_1_label'] == "return_item_id"){echo("RMA #");break;}
+																	$label = $item['label'];
 																	echo($item['ref_1_label']);
 																	break;
 																}
@@ -534,6 +537,7 @@
 											<?php
 												$serial;
 												$item_row = '';
+												$ref1 = '';
 												if(!empty($items)){
 													foreach($items as $item){
 														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
@@ -551,12 +555,22 @@
 															$status = $r['status'];
 														}
 														echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
-														
+														$ref1 = $item['ref_1'];
+														if($item['ref_1_label'] == "return_item_id"){
+															if(!$rma_number){
+																$select = "SELECT `rma_number` from `return_items` where id = ".prep($ref1).";";
+																$rma_number = rsrq($select);
+															}
+															$ref1 = '
+															<b style="color: #526273;font-size: 14px;">
+															</b>&nbsp;<a href="/rma.php?rma='.$rma_number.'">'.$rma_number.'</a>
+															<br><br>';
+														}
 														$item_row .= '
 														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 															<td>'.format($item['partid'], true).'</td>
 															<td>'.$serial.'</td>
-															<td>'.(($item['ref_1']) ? $item['ref_1'] : "").'</td>
+															<td>'.$ref1.'</td>
 															<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
 															<td>'.format_price($item['price']).'</td>
 															<td>
@@ -634,6 +648,7 @@
 												<!-- <th>Ordered</th> -->
 												<th>Available</th>
 												<th>Pulled</th>
+												<th>Price Per Unit</th>
 				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
 											        </button></th>
@@ -641,6 +656,7 @@
 										</thead>
 										<?php
 											$components = getComponents($repair_order, $repair_item_id);
+											$total = 0.00;
 											if($components)
 												foreach($components as $comp):
 													// echo $comp['partid'];
@@ -650,19 +666,34 @@
 													$ordered = 0;
 
 													if($comp['po_number']) {
-														$query = "SELECT * FROM purchase_orders po, purchase_items pi WHERE po.po_number = ".prep($comp['po_number'])." AND ref_1 = ".prep($repair_item_id)." AND ref_1_label = 'repair_item_id' AND pi.po_number = po.po_number;";
+														$price = 0;
+														// $query = "
+														// SELECT po.*, pi.* FROM purchase_orders po, purchase_items pi, inventory i
+														// WHERE po.po_number = ".prep($comp['po_number'])." 
+														// AND i.purchase_item_id = pi.id
+														// AND pi.po_number = po.po_number;";
+														$query = "
+														SELECT price, pi.qty, po.status 
+														FROM purchase_requests pr, purchase_items pi, purchase_orders po
+														Where pr.po_number = pi.po_number 
+														and pr.partid = pi.partid 
+														and po.po_number = pi.po_number
+														AND po.po_number = ".prep($comp['po_number'])."
+														AND pr.partid = ".prep($comp['partid']).";
+														";
 														$result = qdb($query) OR die(qe().'<BR>'.$query);
-
-														//echo $query;
+														
+														// echo $query;
 
 														if (mysqli_num_rows($result)>0) {
 										                    $query_row = mysqli_fetch_assoc($result);
 										                    $status = $query_row['status'];
-
+										                    $price = $query_row['price'];
 										                    if($status == 'Active') {
 										                    	$ordered = $query_row['qty'];
 										                    }
 										                }
+										                $total += ($price * $ordered);
 													}
 										?>
 											<tr class="" style = "padding-bottom:6px;">
@@ -672,32 +703,24 @@
 												<!-- <td><?=$ordered;?></td> -->
 												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
+												<td><?=format_price($price)?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-12">
-															<?php //if($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0): ?>
-																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
-																	<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
-														        </button>
-														    <?php //endif; ?>
+															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
+																<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
+													        </button>
 														</div>
-
-														<!-- <div class="col-md-6"> -->
-															<!-- <form action="repair_activities.php" method="post">
-																<input class="form-control input-sm hidden" type="text" name="partid" value="<?=$comp['partid'];?>">
-																<div class="input-group">
-													                <input class="form-control input-sm" type="text" name="repair_components" value="" placeholder="Used for Repair">
-												                	<span class="input-group-btn">
-													                	<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="used" data-datestamp="" <?=($ticketStatus ? 'disabled' : '');?>><i class="fa fa-wrench" aria-hidden="true"></i></button>
-													                </span>
-												                </div>
-											                </form> -->
-											            <!-- </div> -->
 									                </div>
 												</td>
 											</tr>
 											
 										<?php endforeach; ?>
+										<tr>
+											<td colspan=5 class="text-right"><b>Total:</b></td>
+											<td class = "total-column"><?=format_price($total);?></td>
+											<td>&nbsp;</td>
+										</tr>
 									</table>
 								</div>
 							</div>
