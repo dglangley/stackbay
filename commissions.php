@@ -445,6 +445,9 @@
 						$comm_amount = $profit*($RATES[$c['rep_id']]/100);
 					}
 				}
+				// No negative commissions allowed on negative profit sales
+				if ($profit<0 AND $comm_amount<0) { $comm_amount = 0; }
+
 				$comm_amount = round($comm_amount,2);
 				// sum comm amount for this rep
 				if (! isset($comm_reps[$c['rep_id']])) { $comm_reps[$c['rep_id']] = 0; }

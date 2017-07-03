@@ -314,15 +314,15 @@
 				echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
-				echo'	<th class="col-sm-2 company_col">';
+				echo'	<th class="col-sm-3 company_col">';
 				echo'	<span class="line"></span>';
 				echo'		Company';
 				echo'	</th>';
-	            echo'	<th class="col-sm-1">';
+	            echo'	<th class="col-sm-2">';
 	            echo'		<span class="line"></span>';
 	            echo'		'.$type.'#';
 	            echo'	</th>';
-	        	echo'   <th class="col-sm-5 item_col">';
+	        	echo'   <th class="col-sm-3 item_col">';
 	            echo'   	<span class="line"></span>';
 	            echo'       Item';
 	            echo'	</th>';
@@ -334,7 +334,7 @@
 	            echo'   	<span class="line"></span>';
 	            echo'   	Status';
 	            echo'  	</th>';
-				echo'  	<th class="col-sm-2">';
+				echo'  	<th class="col-sm-1">';
 	            echo'   	<span class="line"></span>';
 	            echo'  		Action';
 	            echo'  	</th>';
@@ -346,7 +346,7 @@
 				echo'	<span class="line"></span>';
 				echo'		Company';
 				echo'	</th>';
-				echo'	<th class="col-sm-1 company_col">';
+				echo'	<th class="col-sm-2">';
 				echo'	<span class="line"></span>';
 				if($type == 'RO') {
 					echo'		Repair#';
@@ -354,7 +354,7 @@
 					echo'		Build#';
 				}
 				echo'	</th>';
-	            echo'	<th class="col-sm-4">';
+	            echo'	<th class="col-sm-3">';
 	            echo'		<span class="line"></span>';
 	            echo'		Item';
 	            echo'	</th>';
@@ -402,8 +402,9 @@
 		// }
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
-				$query = "
-				SELECT * FROM ".$o['mq_base']." 
+				$query = "SELECT * ";
+				if ($order=='bo') { $query .= ", b.id bid "; }
+				$query .= "FROM ".$o['mq_base']." 
 				AND o.status <> 'Void' 
 				and o.status <> 'Processed' 
 				".sFilter("o.companyid",$f['coid'])."
@@ -439,11 +440,14 @@
 					// 	$order_num = $r['bid']; 
 					// 	//$build = $r['bid'];
 					// }
+					if ($order=='bo') { $order_num = $r['bid']; }
 
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
+					$company_ln = '';
+					if ($company) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-arrow-right"></i></a>'; }
 					$item = display_part($r['partid'], true);
 					$qty = $r['qty'];
 					
@@ -468,7 +472,7 @@
 					echo'        <td>'.$date.'</td>';
 
 					//if($order != 'ro' && $order != 'bo') {
-						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
+						echo'        <td>'.$company_ln.'</td>';
 					//} 
 					if($o['build']){
 						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
@@ -482,9 +486,9 @@
 						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
 							$base = 'order_form.php';
 						}
-						echo'    <td><a href="/'.$base.'?on='.$order_num.'&ps='.$order.'">'.$order_num.'</a></td>';
+						echo'    <td>'.$order_num.'&nbsp;<a href="/'.$base.'?on='.$order_num.'&ps='.$order.'"><i class="fa fa-arrow-right"></i></a></td>';
 					} else if($order == 'rma') {
-						echo'        <td><a href="/rma.php?rma='.$order_num.'">'.$order_num.'</a></td>';
+						echo'        <td>'.$order_num.' <a href="/rma.php?rma='.$order_num.'"><i class="fa fa-arrow-right"></i></a></td>';
 					}
 
 					echo'        <td><div class="desc">'.$item.'</div></td>';
@@ -501,7 +505,7 @@
 								$serial = $rq['serial_no'];
 							}
 						}
-						echo'        <td>'.($serial ? $serial : 'TBA').'</td>';
+						echo'        <td>'.($serial ? $serial : '').'</td>';
 						//echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
@@ -630,6 +634,15 @@
 			.date-options {
 				position: relative;
 			}
+		}
+		.company-overflow {
+			vertical-align:bottom;
+			padding-right:3px;
+			display:inline-block;
+			white-space:nowrap;
+			overflow:hidden;
+			max-width:120px;
+			text-overflow:ellipsis;
 		}
 		
 	</style>
