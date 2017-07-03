@@ -2349,6 +2349,7 @@
 			error: function(xhr, status, error) {
 				alert(error+" | "+status+" | "+xhr);
 				console.log("JSON packages.php: Error");
+				console.log(window.location.origin+"/json/packages.php?"+"action="+"update&"+"&width="+width+"&height="+height+"&length="+length+"&weight="+weight+"&tracking="+tracking+"&freight="+freight+"&type="+order_type+"&id="+id);
 			},				
 			
 		});
