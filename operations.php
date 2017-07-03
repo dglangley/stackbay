@@ -310,71 +310,60 @@
 			$o = o_params($order);
 			echo'<thead>';
 			echo'<tr>';
-			if(!$o['build'] && !$o['repair']) {
-				echo'	<th class="col-sm-1">';
-				echo'		Date';
-				echo'	</th>';
+			$order_label = $type.'#';
+			$date_w = '1';
+			$item_w = '3';
+
+			if ($type=='RO') {
+				$order_label = 'Repair#';
+			} else if ($type=='BO') {
+				$order_label = 'Build#';
+				$date_w = '2';
+				$item_w = '5';
+			}
+
+			echo'	<th class="col-sm-'.$date_w.'">';
+			echo'		Date';
+			echo'	</th>';
+			if ($type<>'BO') {
 				echo'	<th class="col-sm-3 company_col">';
 				echo'	<span class="line"></span>';
 				echo'		Company';
 				echo'	</th>';
-	            echo'	<th class="col-sm-2">';
-	            echo'		<span class="line"></span>';
-	            echo'		'.$type.'#';
-	            echo'	</th>';
-	        	echo'   <th class="col-sm-3 item_col">';
-	            echo'   	<span class="line"></span>';
-	            echo'       Item';
-	            echo'	</th>';
+			}
+            echo'	<th class="col-sm-2">';
+            echo'		<span class="line"></span>';
+            echo'		'.$order_label;
+            echo'	</th>';
+        	echo'   <th class="col-sm-'.$item_w.' item_col">';
+            echo'   	<span class="line"></span>';
+            echo'       Item';
+            echo'	</th>';
+			if($type=='BO' OR $type=='PO' OR $type=='SO') {
 	            echo'   <th class="col-sm-1 qty_col '.($order == 's' || $order == 'p' ? $order.'o': $order).'-column">';
 	            echo'   	<span class="line"></span>';
 	            echo'   	Qty';
 	            echo'  	</th>';
-	            echo'   <th class="col-sm-1 status-column" style="display: none;">';
-	            echo'   	<span class="line"></span>';
-	            echo'   	Status';
-	            echo'  	</th>';
-				echo'  	<th class="col-sm-1">';
-	            echo'   	<span class="line"></span>';
-	            echo'  		Action';
-	            echo'  	</th>';
 	        } else {
-	        	echo'	<th class="col-sm-1">';
-				echo'		Date';
-				echo'	</th>';
-				echo'	<th class="col-sm-2 company_col">';
-				echo'	<span class="line"></span>';
-				echo'		Company';
-				echo'	</th>';
-				echo'	<th class="col-sm-2">';
-				echo'	<span class="line"></span>';
-				if($type == 'RO') {
-					echo'		Repair#';
-				} else {
-					echo'		Build#';
-				}
-				echo'	</th>';
-	            echo'	<th class="col-sm-3">';
-	            echo'		<span class="line"></span>';
-	            echo'		Item';
-	            echo'	</th>';
 	        	echo'   <th class="col-sm-2 item_col">';
 	            echo'   	<span class="line"></span>';
 	            echo'       Serial';
 	            echo'	</th>';
-	            echo'   <th class="col-sm-1">';
-	            echo'   	<span class="line"></span>';
-	            echo'   	Due';
-	            echo'  	</th>';
-	            echo'   <th class="col-sm-1 status-column" style="display: none;">';
-	            echo'   	<span class="line"></span>';
-	            echo'   	Status';
-	            echo'  	</th>';
-				echo'  	<th class="col-sm-2">';
-	            echo'   	<span class="line"></span>';
-	            echo'  		Action';
-	            echo'  	</th>';
+				if ($type=='RO') {
+		            echo'   <th class="col-sm-1">';
+		            echo'   	<span class="line"></span>';
+		            echo'   	Due';
+		            echo'  	</th>';
+				}
 	        }
+            echo'   <th class="col-sm-1 status-column" style="display: none;">';
+            echo'   	<span class="line"></span>';
+            echo'   	Status';
+            echo'  	</th>';
+			echo'  	<th class="col-sm-1">';
+            echo'   	<span class="line"></span>';
+            echo'  		Action';
+            echo'  	</th>';
 	        echo'</tr>';
 			echo'</thead>';
 	}
@@ -443,7 +432,7 @@
 					if ($order=='bo') { $order_num = $r['bid']; }
 
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
-					$date = date("m/d/Y", strtotime($r['created']));
+					$date = date("n/j/y", strtotime($r['created']));
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
 					$company_ln = '';
@@ -471,11 +460,11 @@
 
 					echo'        <td>'.$date.'</td>';
 
-					//if($order != 'ro' && $order != 'bo') {
+					if ($order<>'bo') {
 						echo'        <td>'.$company_ln.'</td>';
-					//} 
+					} 
 					if($o['build']){
-						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="/repair.php?on='.$order_num.'&build=true"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					} else if($o['ro']) {
 						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
@@ -509,7 +498,7 @@
 						//echo'        <td>'.$r['public_notes'].'</td>';
 					}
 
-					if($order == 'ro' || $order == 'bo') {
+					if($order == 'ro') {
 						global $now;
 						echo'    	<td>'.format_date($r['due_date']).'</td>';
 					}
@@ -540,9 +529,9 @@
 						echo'		</td>'; 
 					} else {
 						echo'    	<td class="status text-right">';		
-						echo'			<a href="/repair.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
-						echo'			<a href="/repair_add.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
 						if($order != 'bo') {
+							echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+							echo'			<a href="/repair_add.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
 							echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						} else {
 							echo'			<a href="/builds_management.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
@@ -641,7 +630,7 @@
 			display:inline-block;
 			white-space:nowrap;
 			overflow:hidden;
-			max-width:120px;
+			max-width:130px;
 			text-overflow:ellipsis;
 		}
 		
@@ -885,7 +874,7 @@
 
 		for (var key in serialDetection) {
 		    if(serialDetection[key] == 'true') {
-				$('.'+key+'-column').html('<span class="line"></span> Serial');
+//				$('.'+key+'-column').html('<span class="line"></span> Serial');
 				//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
 				$('.'+key+'-column').closest(".qty_col").addClass('col-sm-2').removeClass('col-sm-1');
 				$('.'+key+'-column').closest(".item_col").addClass('col-sm-4').removeClass('col-sm-5');
