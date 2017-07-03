@@ -1610,8 +1610,14 @@
   /*===========================================================================*/
  /*=========================== BEGIN SHIPPING HOME ===========================*/
 /*===========================================================================*/
-			
-			$('.date').initDatetimePicker("MM/DD/YYYY");
+			$('.date').each(function(){
+				var dv = $(this).val();
+				$(this).initDatetimePicker("MM/DD/YYYY");
+				if(dv){
+					$(this).val(dv);
+				}
+			});
+				
 			
 			$(".shipping_section_foot a").click(function(e) {
 				e.preventDefault();
@@ -2833,6 +2839,7 @@
 	function zoomPanel(panel,zoom_direction) {
 		//Get current filter type
 		var type = $('.filter_status.active').data('filter');
+		var url = '';
 
 		if (zoom_direction=='in') {
 			$('.col-lg-6.data-load').hide();
@@ -2859,6 +2866,20 @@
 			panel.closest("table").find(".overview").show();
 			panel.text("Show Less");
 			panel.parent().removeClass("shipping_section_foot_lock");
+			
+			
+			var zoom = panel.closest(".shipping-dash-remove").attr("id");
+			if(zoom == 'Purchase_panel'){
+				url = 'purchases.php';
+			} else if (zoom == 'Sales_panel'){
+				url = 'sales.php';
+			} else if (zoom == 'RMA_panel'){
+				url = 'returns.php';
+			} else if (zoom == 'Repair_panel'){
+				url = 'repairs.php';
+			} else if (zoom == 'Builds_panel'){
+				url = 'builds.php';
+			}
 		} else{
 			$(".shipping-dash-full").removeClass("shipping-dash-full");
 			panel.closest("table").find(".overview").hide();
@@ -2884,7 +2905,9 @@
 			panel.parents("body").find(".overview").hide();
 			panel.parent().addClass("shipping_section_foot_lock");
 			panel.parents("body").find(".shipping_section_foot a").text("Show more");
+			url = 'operations.php';
 		}
+		$("#filter_form").attr("action",url);
 		headerOffset();
 	}
 

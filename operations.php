@@ -15,6 +15,7 @@
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/jsonDie.php';
 	include_once $rootdir.'/inc/filter.php';
+	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 //==============================================================================
 //================== Function Delcaration (Declaration?) =======================
@@ -29,13 +30,16 @@
 	$filter = $_REQUEST['filter'];
 	if (! isset($table_filter)) { $table_filter = ''; }
 	if (isset($_REQUEST['table_filter'])) { $table_filter = $_REQUEST['table_filter']; }
-	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
-	if (isset($_REQUEST['START_DATE'])) { $start = $_REQUEST['START_DATE']; }
-	if (isset($_REQUEST['END_DATE'])) { $endif = $_REQUEST['END_DATE']; }
-
+	
+	// if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	// if (isset($_REQUEST['START_DATE'])) { $start = $_REQUEST['START_DATE']; }
+	// if (isset($_REQUEST['END_DATE'])) { $endif = $_REQUEST['END_DATE']; }
+	
 	//Search first by the global seach if it is set or by the parameter after if global is not set
 	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
-
+	if(!$search && grab("form_search")){
+		$search = grab("form_search");
+	}
 	if(!$filter && !$_REQUEST['s']) { 
 		$filter = 'active';
 	} else if(!$filter && $_REQUEST['s']) {
@@ -45,13 +49,46 @@
 	$levenshtein = false;
 	$nothingFound = true;
 	$found = false;
-	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false', "bo" => 'false');
+	$serialDetection = array("po" => 'false', "so" => 'false', "rma" => 'false', "ro" => 'false');
+	
+	function grabDashFilters(){
+		global $GLOBALS;
+		//Returns an array of the filters from the dash
+		$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
+		if(!$search && grab("form_search")){
+			$search = grab("form_search");
+		}
+		$filter = $_REQUEST['filter'];
+		if(!$filter && grab("form_filter")){
+			$filter = grab("form_filter");
+		}
+		if(!$filter && !$search) { 
+			$filter = 'active';
+		} else if(!$filter && $search) {
+			$filter = 'all';
+		}
+		$table_filter = $_REQUEST['table_filter'];
+		if(!$table_filter && grab("form_table_filter")){
+			$table_filter = grab("form_table_filter");
+		}
+		$f = array(
+			"start" => grab("START_DATE"),
+			"end" => format_date(grab("END_DATE",$GLOBALS['now']),"Y-m-d"),
+			"coid" => grab("coid"),
+			"table_filter" => $table_filter,
+			"filter" => $filter,
+			"search" => $search
+			);
+		return ($f);
+	}
 	
 	function searchQuery($search, $type) {
 		global $found, $levenshtein, $nothingFound;
 		$trigger;
 		$triggerArray = array();
 		$o = o_params($type);
+		$f = grabDashFilters();
+
 		
 		$initial = array();
 		$arrayID = array();
@@ -65,11 +102,14 @@
 			}
 			$trigger = 'parts';
 		}
-		$query .= "AND status <> 'Void'; ";
-		
-		if(empty($query)) {
-			return '';
-		}
+		$query = "
+		SELECT * FROM ".$o['tables']." 
+		AND i.".$o['id'].' = '.prep(strtoupper($search))." 
+		AND status <> 'Void'
+		".dFilter("created",$f['start'],$f['end'])."
+		".sFilter("o.`companyid`",$f['coid'])."
+		;";
+		// echo($query);
 		
 		$result = qdb($query) OR die(qe());
 		
@@ -78,29 +118,13 @@
 		}
 		
 		if($trigger == 'parts') {
-			
-			switch ($type) {
-			    case 's':
-	        		$query = "SELECT * FROM sales_items i, sales_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.so_number = i.so_number ";
-			        break;
-			    case 'p':
-	        		$query = "SELECT * FROM purchase_items i, purchase_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.po_number = i.po_number ";
-			        break;
-			    case 'rma':
-	        		$query = "SELECT * FROM return_items i, returns o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.rma_number = i.rma_number ";
-			        break;
-			    case 'ro':
-	        		$query = "SELECT * FROM repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") AND o.ro_number = i.ro_number ";
-			        break;
-			    case 'bo':
-	        		$query = "SELECT * FROM builds b, repair_items i, repair_orders o WHERE i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") ";
-					$query .= "AND o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
-			        break;
-			    default:
-					//Should rarely ever happen
-					break;
-			}
-			$query .= "AND status <> 'Void'; ";
+			$query = "
+			SELECT * FROM ".$o['tables']. " 
+			AND i.partid IN (" . implode(',', array_map('intval', $arrayID)) . ") 
+			AND status <> 'Void'
+			".dFilter("created",$f['start'],$f['end'])."
+			".sFilter("o.`companyid`",$f['coid'])."
+			;";
 
 			if($query) {
 				$result = qdb($query) OR die(qe());
@@ -110,44 +134,21 @@
 				}
 			}
 		}
-		
-		switch ($type) {
-		    case 's':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, sales_items i, sales_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'sales_item_id' AND o.so_number = i.so_number ";
-		        break;
-		    case 'p':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, purchase_items i, purchase_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'purchase_item_id' AND o.po_number = i.po_number ";
-		        break;
-		    case 'rma':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, return_items i, returns o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'returns_item_id' AND o.rma_number = i.rma_number ";
-		        break;
-		    case 'ro':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number ";
-		        break;
-		    case 'bo':
-		    	$query = "SELECT * FROM inventory inv, inventory_history h, repair_items i, repair_orders o, builds b WHERE serial_no = '".res(strtoupper($search))."' ";
-				$query .= "AND h.field_changed = 'repair_item_id' = i.id AND o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
-		        break;
-		    default:
-				//Should rarely ever happen
-				break;
-		}
-		$query .= "AND h.value = i.id AND inv.id = h.invid AND o.status <> 'Void'; ";
+		$query = "SELECT * FROM inventory inv, inventory_history h, ".$o['item']." i, `".$o['order']."` o WHERE inv.serial_no = ".prep(strtoupper($search))." ";
+		$query .= "AND h.field_changed = '".$o['inv_item_id']."' AND o.".$o['id']." = i.".$o['id']." ";
+		$query .= "AND h.value = i.id AND inv.id = h.invid AND o.status <> 'Void'
+		".dFilter("created",$f['start'],$f['end'])."
+		".sFilter("o.`companyid`",$f['coid'])."
+		; ";
 
-		if($query){
-			$result = qdb($query) OR die(qe());
-			
-			while ($row = $result->fetch_assoc()) {
-				//Checks if the array row already exists within the array, if not add it to the list
-				if (!in_array($row, $initial)) {
-				    $initial[] = $row;
-				}
+		$result = qdb($query) OR die(qe());
+		while ($row = $result->fetch_assoc()) {
+			//Checks if the array row already exists within the array, if not add it to the list
+			if (!in_array($row, $initial)) {
+			    $initial[] = $row;
 			}
 		}
+		
 		//If the initial search is empty populate the data with close alternates
 		if(empty($initial) && $type != 'rma' && $type != 'ro' && $type != 'bo') {
 			$initial = soundsLike($search, $type);
@@ -282,9 +283,9 @@
 		echo '
 		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
 			<div class="shipping-dash" id="'.$order_out.'_panel">
-				<div class="shipping_section_head" data-title="'.$order_out. (($order=="bo")?'':' Orders').'">
-					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').'
-				</div>
+				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
+					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').
+				'</div>
 				<div class="table-responsive">
 		            <table class="table heighthover heightstriped table-condensed '.$order.'_table">
 		';
@@ -306,9 +307,10 @@
 	}
 	
 	function output_header($order,$type='Order'){
+			$o = o_params($order);
 			echo'<thead>';
 			echo'<tr>';
-			if($type != 'RO' && $type != 'BO') {
+			if(!$o['build'] && !$o['repair']) {
 				echo'	<th class="col-sm-1">';
 				echo'		Date';
 				echo'	</th>';
@@ -385,47 +387,30 @@
 		$results;
 		$status;
 		$type = '';
-		if ($order == 'p') {
-			$type = 'po';
-		} else if ($order == 's') {
-			$type = 'so';
-		} 
-		else if ($order == 'rma') {
-			$type = 'rma';
-		} else {
-			$type = 'ro';
-		}
+		$o = o_params($order);
+		$type = $o['short'];
+		$f = grabDashFilters();
+		// if ($order == 'p') {
+		// 	$type = 'po';
+		// } else if ($order == 's') {
+		// 	$type = 'so';
+		// } 
+		// else if ($order == 'rma') {
+		// 	$type = 'rma';
+		// } else {
+		// 	$type = 'ro';
+		// }
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
-				//Select a joint summary query of the order we are requesting
-				$query = "SELECT * FROM ";
-				if ($order == 'p') {
-					$query .= "purchase_orders o, purchase_items i ";
-					$query .= "WHERE o.po_number = i.po_number AND o.status <> 'Void' AND o.status <> 'Processed' ";
-					$query .= "ORDER BY o.po_number DESC LIMIT 0, 200; ";
-					// $query .= "purchase_orders o, purchase_items i 
-					// 			WHERE o.po_number = i.po_number 
-					// 			ORDER BY 
-					// 			CASE WHEN (cast(i.qty_received as signed) - cast(i.qty as signed)) >= 0 THEN o.po_number END DESC, 
-					// 			CASE WHEN (cast(i.qty_received as signed) - cast(i.qty as signed)) < 0 THEN i.receive_date END ASC LIMIT 0 , 200;";
-				} else if ($order == 's') {
-					$query .= "sales_orders o, sales_items i ";
-					$query .= "WHERE o.so_number = i.so_number AND o.status <> 'Void' ";
-					$query .= "ORDER BY o.so_number DESC LIMIT 0, 200; ";
-				} else if ($order == 'rma') {
-					$query .= "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id AND o.status <> 'Void' ";
-					$query .= "ORDER BY o.rma_number DESC LIMIT 0, 200; ";
-				} else if($order == 'ro') {
-					$query .= "repair_orders o, repair_items i ";
-					$query .= "WHERE o.ro_number = i.ro_number AND o.status <> 'Void' ";// AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
-					$query .= "ORDER BY o.created DESC LIMIT 0, 200; ";
-				} else if($order == 'bo') {
-					$query = "SELECT o.*,i.*, b.id as bid FROM builds b, repair_orders o LEFT JOIN repair_items i ";
-					$query .= "ON o.ro_number = i.ro_number WHERE o.status <> 'Void' AND b.ro_number = o.ro_number ";
-					$query .= "ORDER BY b.id DESC LIMIT 0, 200; ";
-				}
-				
-				$results = qdb($query);
+				$query = "
+				SELECT * FROM ".$o['mq_base']." 
+				AND o.status <> 'Void' 
+				and o.status <> 'Processed' 
+				".sFilter("o.companyid",$f['coid'])."
+				".dFilter("created",$f['start'],$f['end'])."
+				ORDER BY ".$o['order_by']." 
+				DESC LIMIT 0, 200;";
+				$results = qdb($query) or die(qe()." | $query");
 			} else {
 				$results = searchQuery($search, $order);
 				//print_r($results); //die;
@@ -445,17 +430,21 @@
 					//echo $type . " " .($r['serial_no'] != '' ? 'true' : 'false');
 					
 					$count++;
-					if ($order == 's'){ $order_num = $r['so_number']; }
-					else if ($order == 'p'){ $order_num = $r['po_number']; }
-					else if ($order == 'rma'){ $order_num = $r['rma_number']; }
-					else if ($order == 'ro'){ $order_num = $r['ro_number']; }
-					else if ($order == 'bo'){ $order_num = $r['bid']; }
-					
+					$order_num = $r[$o['id']];
+					// if ($order == 's'){ $order_num = $r['so_number']; }
+					// else if ($order == 'p'){ $order_num = $r['po_number']; }
+					// else if ($order == 'rma'){ $order_num = $r['rma_number']; }
+					// else if ($order == 'ro'){ $order_num = $r['ro_number']; }
+					// else if ($order == 'bo'){ 
+					// 	$order_num = $r['bid']; 
+					// 	//$build = $r['bid'];
+					// }
+
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
 					$date = date("m/d/Y", strtotime($r['created']));
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
-					$item = format($r['partid'], true);
+					$item = display_part($r['partid'], true);
 					$qty = $r['qty'];
 					
 					if ($order != 's' && $order != 'rma' && $order != 'ro'){
@@ -481,21 +470,15 @@
 					//if($order != 'ro' && $order != 'bo') {
 						echo'        <td><a href="/profile.php?companyid='. $r['companyid'] .'">'.$company.'</a></td>';
 					//} 
-					if($order == 'bo'){
+					if($o['build']){
 						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
-					} else if($order == 'ro') {
+					} else if($o['ro']) {
 						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
-					if($order == 'p') {
-						$base = 'inventory_add.php';
-						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
-							$base = 'order_form.php';
-						}
-						echo'    <td><a href="/'.$base.'?on='.$order_num.'&ps='.$order.'">'.$order_num.'</a></td>';
-					} else if($order == 's') {
-						$base = 'shipping.php';
+					if($o['po'] || $o['so']) {
+						$base = $o['url'].'.php';
 						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
 							$base = 'order_form.php';
 						}
@@ -523,10 +506,11 @@
 					}
 
 					if($order == 'ro' || $order == 'bo') {
+						global $now;
 						echo'    	<td>'.format_date($r['due_date']).'</td>';
 					}
 
-					if($order == 'ro') {
+					if($o['ro']) {
 						echo'    	<td style="display: none;" class="status-column">'.(($status == 'active_item') ? '<span class="label label-warning active_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).(($status == 'complete_item') ? '<span class="label label-'.($status_name == "Not Reparable" ? 'danger' : ($status_name == 'NTF' ? 'info' : 'success')).' complete_label status_label" style="display: none;">'.$status_name.'</span> ' : '' ).'</td>';
 					} else {
 						
@@ -568,15 +552,10 @@
 		}
 	}
 	
-	function format($partid, $desc = true){
-		$r = reset(hecidb($partid, 'id'));
-		$parts = explode(' ',$r['part']);
-	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
-	    if($desc)
-    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
-				'</span> <span class="description-label">'.dictionary(substr($r['description'],0,30)).'</span></div>';
-
-	    return $display;
+	
+	$f = grabDashFilters();
+	if(!$table_filter){
+		$table_filter = $f['table_filter'];
 	}
 ?>
 
@@ -662,71 +641,78 @@
 <!----------------------------------------------------------------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-	<div class="table-header" style="width: 100%; min-height: 48px;">
-		<div class="row" style="padding: 8px;" id = "filterBar">
-			<div class="col-md-1">
-			    <div class="btn-group medium" data-toggle="buttons">
-			        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
-			        	<i class="fa fa-sort-numeric-desc"></i>	
-			        </button>
-			        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
-			        	<i class="fa fa-history"></i>	
-			        </button>
-					<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
-			        	All
-			        </button>
-			    </div>
-
-			</div>
-			<div class = "col-md-3">
-				<div class="row">
-					<div class="col-md-6">
-						<div class="input-group date datetime-picker-filter">
-				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				        </div>
+		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
+			
+			<div class="row" style="padding: 8px;" id = "filterBar">
+				<div class="col-md-1">
+				    <div class="btn-group medium" data-toggle="buttons">
+				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
+				        	<i class="fa fa-sort-numeric-desc"></i>	
+				        </button>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
+				        	<i class="fa fa-history"></i>	
+				        </button>
+						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
+				        	All
+				        </button>
+				    </div>
+				</div>
+				<form id = 'filter_form' action='operations.php' method = 'post'>
+				<div class ='hidden'>
+					<!--<input type="text" name="form_search" class="form-control input-sm" value="<?=$f['search']?>" style = "min-width:50px;"/>-->
+					<!--<input type="text" name="form_filter" class="form-control input-sm" value="<?=$f['filter']; ?>" style = "min-width:50px;"/>-->
+					<!--<input type="text" name="form_table_filter" class="form-control input-sm" value="<?=$table_filter?>" style = "min-width:50px;"/>-->
+				</div>
+				<div class = "col-md-3">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="input-group date datetime-picker-filter">
+					            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:50px;"/>
+					            <span class="input-group-addon">
+					                <span class="fa fa-calendar"></span>
+					            </span>
+					        </div>
+						</div>
+						<div class="col-md-6">
+							<div class="input-group date datetime-picker-filter">
+					            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:50px;"/>
+					            <span class="input-group-addon">
+					                <span class="fa fa-calendar"></span>
+					            </span>
+					    	</div>
+						</div>
 					</div>
-					<div class="col-md-6">
-						<div class="input-group date datetime-picker-filter">
-				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				    	</div>
+				</div>
+				<div class="col-md-4 text-center">
+	            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
+				</div>
+				
+				<!--This Handles the Search Bar-->
+	
+				<div class="col-md-2 col-sm-2">
+	
+				</div>
+				
+	
+				<div class="col-md-2 col-sm-2">
+					<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
+						<select name ='coid' class="company-selector">
+							<option value="">- Select a Company -</option>
+							<?php 
+								if ($f['coid']) {echo '<option value="'.$f['coid'].'" selected>'.(getCompany($f['coid'])).'</option>'.chr(10);} 
+								else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+							?>
+						</select>
+						<span class="input-group-btn">
+							<button class="btn btn-primary btn-sm" type = 'submit'>
+								<i class="fa fa-filter" aria-hidden="true"></i>
+							</button>
+						</span>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4 text-center">
-            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
-			</div>
-			
-			<!--This Handles the Search Bar-->
-
-			<div class="col-md-2 col-sm-2">
-
-			</div>
-			
-
-			<div class="col-md-2 col-sm-2">
-				<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
-					<select id="" class="company-selector">
-						<option value="">- Select a Company -</option>
-						<?php 
-							if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-							else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-						?>
-					</select>
-					<span class="input-group-btn">
-						<button class="btn btn-primary btn-sm">
-							<i class="fa fa-filter" aria-hidden="true"></i>
-						</button>
-					</span>
-				</div>
-			</div>
+			</form>
 		</div>
-	</div>
 	
 	<?php //if($levenshtein || $nothingFound): ?>
 	<div id="item-warning-timer" class="alert alert-warning fade in text-center" style="display: none; position: fixed; width: 100%; z-index: 9999; top: 94px;">
@@ -742,90 +728,10 @@
 		</div>
 	<?php endif; ?>
 	
-
-	<!-- <table class="" style="display:none;">
-		<tr id = "filterTableOutput">
-			<td class = "col-md-2">
-	
-			    <div class="btn-group">
-			        <button class="glow left large btn-report <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary">
-			        	<i class="fa fa-sort-numeric-desc"></i>	
-			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail">
-			        	<i class="fa fa-history"></i>	
-			        </button>
-			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
-			    </div>
-				<div class="btn-group">
-			        <button class="glow left large btn-report" type="submit" data-value="Sales" id = "sales">
-			        	Sales	
-			        </button>
-					<input type="radio" name="market_table" value="Sales" class="hidden"<?php if ($market_table=='Sales') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-report<?php if ($market_table=='Purchases') { echo ' active'; } ?>" id="purchases" type="submit" data-value="Purchases">
-			        	Purchases
-			        </button>
-			        <input type="radio" name="market_table" value="Purchases" class="hidden"<?php if ($market_table=='Purchases') { echo ' checked'; } ?>>
-			    </div>
-			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>" style = "min-width:50px;"/>
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</td>
-			<td class = "col-md-1">
-				<div class="input-group date datetime-picker-filter">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>" style = "min-width:50px;"/>
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-			    </div>
-			</td>
-			<td class = "col-md-1 btn-group" data-toggle="buttons" id="shortDateRanges">
-				<div class="date-options">
-					<div class="btn btn-default btn-sm">&gt;</div>
-			        <button class="btn btn-sm btn-default left large btn-report" id = "MTD" type="radio">MTD</button>
-	    			<button class="btn btn-sm btn-default center small btn-report" id = "Q1" type="radio">Q1</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q2" type="radio">Q2</button>
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q3" type="radio">Q3</button>		
-					<button class="btn btn-sm btn-default center small btn-report" id = "Q4" type="radio">Q4</button>	
-					<button class="btn btn-sm btn-default right small btn-report" id = "YTD" type="radio">YTD</button>
-				</div>
-			</td>
-			<td class = "col-md-2">
-				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
-			</td>
-			<td class = "col-md-2">
-				<div class="input-group">
-					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
-					<span class="input-group-addon">-</span>
-					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
-				</div>
-			</td>
-			<td class = "col-md-3">
-				<div class="pull-right form-inline">
-					<div class="input-group">
-						<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					<?php 
-					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-					?>
-					</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
-					</div>
-				</div>
-			</td>
-		</tr>
-	</table> -->
 	
 	<div class="row table-holder">
 		<?php 
+			// print_r(grabDashFilters());
 			output_module("p",$search);
 			output_module("s",$search);
 		?>
@@ -849,27 +755,110 @@
 <script>
 	(function($){
 		$('#item-updated-timer').delay(3000).fadeOut('fast');
-	
+		function getUrlParameter(sParam) {
+		    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		        sURLVariables = sPageURL.split('&'),
+		        sParameterName,
+		        i;
+		
+		    for (i = 0; i < sURLVariables.length; i++) {
+		        sParameterName = sURLVariables[i].split('=');
+		
+		        if (sParameterName[0] === sParam) {
+		            return sParameterName[1] === undefined ? true : sParameterName[1];
+		        }
+		    }
+		}
+		
+		// function grabFilterArray(){
+		// 	var f = {
+		// 		start : $("#filter_bar").find("input[name='START_DATE']").val(),
+		// 		end : $("#filter_bar").find("input[name='END_DATE']").val(),
+		// 		coid : $("#filter_bar").find(".company-selector").val(),
+		// 		filter : $("#filter_bar").find(".filter_status.active").data("filter"),
+		// 		table_filter : "<?=$table_filter;?>",
+		// 		search : $("#s").val()
+		// 	}
+		// 	var form_search = '<?=$_REQUEST['form_search']?>';
+		// 	if (!f['search'] && form_search){
+		// 		f['search'] = form_search;
+		// 		$("#s").val(form_search);
+		// 	}
+		// 	if(f['search'] || f['coid']){
+		// 		f['filter'] = 'all';
+		// 	}
+		// 	if(!f['start']){
+		// 		f['start'] = getUrlParameter("start");
+		// 	}
+		// 	if(!f['end']){
+		// 		f['end'] = getUrlParameter("end");
+		// 	}
+		// 	if(!f['coid']){
+		// 		f['coid'] = getUrlParameter("coid");
+		// 	}
+		// 	if(!f['table_filter']){
+		// 		f['table_filter'] = getUrlParameter("table_filter");
+		// 	}
+		// 	// if (f['table_filter'] != '') {
+		// 	// 	zoomPanel($("#"+f['table_filter']+"_panel").find(".shipping_section_foot a"),'in');
+		// 	// }
+		// 	console.log(f);
+		// 	return f;
+		// }
+		// function processFilterUrl(){
+		// 	var f = grabFilterArray();
+		// 	var urlstring = "";
+		// 	if(f['start']){
+		// 		urlstring += "&start="+f['start'];
+		// 	}
+		// 	if(f['end']){
+		// 		urlstring += "&end="+f['end'];
+		// 	}
+		// 	if(f['coid']){
+		// 		urlstring += "&coid="+f['coid'];
+		// 	}
+		// 	if(f['filter']){
+		// 		urlstring += "&filter="+f['filter'];
+		// 	}
+		// 	if(f['search']){
+		// 		urlstring += "&search="+f['search'];
+		// 	}
+		// 	if(f['table_filter']){
+		// 		urlstring += "&table_filter="+f['table_filter'];
+		// 	}
+		// 	if(urlstring){
+		// 		urlstring = urlstring.slice(1);
+		// 		urlstring = "?"+urlstring;
+		// 	}
+		// 	window.history.replaceState(null, null, "/operations.php"+urlstring);
+		// }
+		
+		
 		//Triggering Aaron 2017
 		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
+		if(!search){
+			search = "<?=$_REQUEST['form_search']?>";
+		}
 		var filter = "<?=$filter;?>";
 		var table_filter = "<?=$table_filter;?>";
-		
 		var levenshtein = "<?=$levenshtein;?>";
 		var searched = "<?=$nothingFound;?>";
 		var serialDetection = <?= json_encode($serialDetection) ?>;
-
+		// grabFilterArray();
 		//Load in the objects after the page is loaded for less jumpy frenziness
 		$('.data-load').fadeIn();
 		
 		//Search parameter has been passed in that case show the search results
-		if(search != '') {
-			if(filter != '') {
-				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
-			} else {
-				window.history.replaceState(null, null, "/operations.php?search=" + search);
-			}
+		
+
+		// alert("Here");
+		// 	if(filter != '') {
+		// 		window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
+		// 	} else {
+		// 		window.history.replaceState(null, null, "/operations.php?search=" + search);
+		// 	}
 			
+		if(search != '') {
 			if(levenshtein) {
 				$('.warning-message').html("No items found for <b>" + search + "</b>. Listed are similar results.");
 				$('#item-warning-timer').show().delay(3000).fadeOut('fast');
@@ -956,6 +945,7 @@
 	        }
         }
 		
+		// alert(table_filter);
         //Prefilter if loaded with a parameter in url
 		if(filter != '') {
 			var type = filter;
@@ -980,10 +970,10 @@
 		if (table_filter != '') {
 			zoomPanel($("#"+table_filter+"_panel").find(".shipping_section_foot a"),'in');
 		}
-
+		// processFilterUrl();
+		
 		$(document).on("click onload", ".filter_status", function(){
 			var type = $(this).data('filter');
-
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
 			$('.filter_status').removeClass('btn-warning');
@@ -1024,12 +1014,13 @@
 				$('.'+type2+'_item').show();
 			}
 			
-			if(search != '') {
-				window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
-			} else {
-				window.history.replaceState(null, null, "/operations.php?filter=" + type);
-			}
-			$(this.element).addClass('active');
+			// if(search != '') {
+			// 	window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
+			// } else {
+			// 	window.history.replaceState(null, null, "/operations.php?filter=" + type);
+			// }
+			$(this).addClass('active');
+			// processFilterUrl();
 		});
 		
 	})(jQuery);

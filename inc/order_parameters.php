@@ -44,6 +44,12 @@
 			$info['due_date'] = true;
 			$info['warranty'] = true;
 			
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
+			
 		}
 		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
 			$info['type'] = "Sales";
@@ -87,6 +93,12 @@
 			$info['due_date'] = true;
 			$info['warranty'] = true;
 			
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
+			
 
 		}
 		else if (strtolower($type) == "invoice" || strtolower($type) == "inv" || strtolower($type) == "i"){
@@ -128,6 +140,12 @@
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = true;
+            
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
             
 		}
 		else if (strtolower($type) == "rtv"){
@@ -172,6 +190,12 @@
             $info['due_date'] = true;
             $info['warranty'] = true;
             
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
+            
 		}
 		else if (strtolower($type) == "rma" || strtolower($type) == "return" || strtolower($type) == "returns" || strtolower($type) == "returns_item_id"){
 			//RMA acts as a purchase order
@@ -207,7 +231,7 @@
 // 			$info['active'] = " AND i.ship_date IS NULL ";
 // 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
 			$info['status_empty'] = "Void";
-			$info['url'] = "inventory_add";
+			$info['url'] = "rma";
             $info['color'] = '#f5dfba';
             $info['edit_mode'] = 'order';
             $info['date_field'] = 'receive_date';
@@ -215,6 +239,12 @@
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = false;
+            
+//Operations Modules Limits
+			$info['order_by'] = "o.created";
+			$info['mq_base'] = "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id";
+			$info[strtolower($info['short'])] = true;
+			
             
 
 		}
@@ -256,6 +286,12 @@
             //Field header information
             $info['due_date'] = false;
             $info['warranty'] = false;
+            
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
             
 		}
 		else if (strtolower($type) == "repair" || strtolower($type) == "ro" || strtolower($type) == "repair_item_id"){
@@ -300,6 +336,12 @@
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
+			
+//Operations Modules Limits
+			$info['order_by'] = "o.created";
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
 		} else if (strtolower($type) == "bill"){
 			$info['purchase'] = false;
 			$info['sales'] = false;
@@ -350,7 +392,13 @@
 			//Field header information
 			// $info['due_date'] = true;
 			// $info['warranty'] = true;
-		} else if (strtolower($type) == "builds" || strtolower($type) == "bo" || strtolower($type) == "build_id"){
+			
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables']." AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
+			$info[strtolower($info['short'])] = true;
+			
+		} else if (strtolower($type) == "builds" || strtolower($type) == "bo" || strtolower($type) == "build_id" || strtolower($type) == "build"){
 			$info['type'] = "Builds";
 			//convenient type check
 			$info['purchase'] = false;
@@ -360,49 +408,6 @@
 			$info['rma'] = false;
 			$info['credit'] = false;
 			$info['repair'] = false;
-			$info['builds'] = true;
-			$info['bill'] = false;
-			
-			$info['billing'] = 'bill_to_id';
-			$info['bill_label'] = 'Bill To';
-			$info['ship'] = 'ship_to_id';
-			$info['order'] = "repair_orders";
-			$info['contact_col'] = "Sales Rep";
-			$info['header'] = "Repair";
-			$info['inv_item_id'] = "repair_item_id";
-			$info['item'] = "repair_items";
-			$info['client'] = "Customer";
-			$info['address_type'] = '';
-			$info['price'] = 'Price';
-			$info['ext'] = 'Ext Price';
-			$info['rep_type'] = "Tech";
-			$info['date_label'] = "PO";
-			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
-			$info['short'] = "build";
-			$info['event'] = 'ordered for repair';
-			$info['id'] = "ro_number";
-			$info['item_id'] = $info['id'];
-			$info['active'] = " status = 'Active' ";
-			$info['inactive'] = " status = 'Completed' ";
-			$info['status_empty'] = "Void";
-			$info['url'] = "repair_add";
-			$info['color'] = '#b9bfd8';
-			$info['edit_mode'] = 'order';
-			$info['date_field'] = 'due_date';
-			//$info['create_date'] = "created";
-			//Field header information
-			$info['due_date'] = true;
-			$info['warranty'] = true;
-		} else if (strtolower($type) == "build" || strtolower($type) == "bo" || strtolower($type) == "build_id"){
-			$info['type'] = "build";
-			//convenient type check
-			$info['purchase'] = false;
-			$info['sales'] = false;
-			$info['invoice'] = false;
-			$info['rtv'] = false;
-			$info['rma'] = false;
-			$info['credit'] = false;
-			$info['repair'] = true;
 			$info['build'] = true;
 			$info['bill'] = false;
 			
@@ -420,10 +425,10 @@
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Tech";
 			$info['date_label'] = "PO";
-			$info['tables'] = " repair_orders o, repair_items i WHERE o.po_number = i.po_number ";
-			$info['short'] = "build";
+			$info['tables'] = " repair_orders o, repair_items i, builds b WHERE o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
+			$info['short'] = "ro";
 			$info['event'] = 'ordered for repair';
-			$info['id'] = "ro_number";
+			$info['id'] = "bid";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
@@ -436,6 +441,13 @@
 			//Field header information
 			$info['due_date'] = true;
 			$info['warranty'] = true;
+			
+//Operations Modules Limits
+			$info['order_by'] = "o.created";
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
+			
 		} else {
 			$info['case'] = $type;
 		}
