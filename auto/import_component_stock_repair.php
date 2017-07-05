@@ -75,20 +75,16 @@ foreach($prq as $r){
 		} 
 
 		if($pr_id) {
-			$pr_insert = "
+			echo "<b>Purchase Request ID:</b> " .$pr_id. "<br>";
+			echo "Search Script: " . $pr_query . "<br>";
+			$pr_update = "
 			UPDATE `purchase_requests` SET po_number = ".prep($po_number)." WHERE id = ".$pr_id.";";
-			//qdb($pr_insert) or die(qe()." | $pr_insert");
-			echo($pr_insert."<br><br>");
+			//qdb($pr_update) or die(qe()." | $pr_update");
+			echo("Update Script: ".$pr_update."<br><br>");
 		} else {
 			echo "<b>Query Failed to find Purchase Request:</b><br>";
 			echo $pr_query . "<br><br>";
 		}
-
-	// 	$pr_insert = "
-	// INSERT INTO `purchase_requests`(`techid`, `ro_number`, `repid`, `requested`, `po_number`, `partid`, `qty`, `notes`) 
-	// VALUES (16, ".$ro_number.", ".prep($rep_id).", ".prep($r['date']).",".prep($po_number).", ".prep($partid).", $quantity, 'IMPORTED FROM OLD CPO TABLE');";
-	// //qdb($pr_insert) or die(qe()." | $pr_insert");
-	// echo($pr_insert."<br>");
 
 	} 	
 	
