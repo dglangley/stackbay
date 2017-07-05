@@ -183,6 +183,9 @@
 		.comm-item {
 			margin-left:5px !important;
 		}
+		tr.active td, tr.success td {
+			text-transform:uppercase;
+		}
 	</style>
 </head>
 
@@ -370,8 +373,13 @@
 		$paid_amt = getPaidAmount($r['invoice_no']);
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
 
+		$row_cls = 'active';
+		if ($paid_amt>=$inv_amt) {
+			$row_cls = 'success';
+		}
+
 		$comm_rows .= '
-			<tr class="success">
+			<tr class="'.$row_cls.'">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
 				<td> '.$r['so_number'].' <a href="/order_form.php?on='.$r['so_number'].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
