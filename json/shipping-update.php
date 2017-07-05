@@ -35,9 +35,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// $productItems = json_decode($productItems);
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
-		
 		foreach($item_split as $product) {
 			//This query updates and saves the box as closed only if there are no errors in the order
+				// exit(print_r($product,true));
 				foreach($product[6] as $box) {
 					$check;
 					//Check and only ship boxes that have something placed into them
@@ -193,13 +193,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					}
 				}
 				
-				$result['timestamp'] = $date;
-				$result['on'] = $so_number;
 				
 				//Invoice Creation based off shipping
 		}
+		$result['timestamp'] = $date;
+		$result['on'] = $so_number;
 		
-		create_invoice($so_number, $date, "Sale");
+		$result['invoice_created'] = create_invoice($so_number, $date, "Sale");
 		
 		return $result;
 	}

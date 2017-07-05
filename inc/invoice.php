@@ -10,21 +10,27 @@
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-
+		
+		if($type != 'Sale'){return null;}
+		
 		//Check to see there are actually invoice-able items on the order
+		//Assuming a closed package would make the 
 		$invoice_item_select = "
-			Select partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, sales_items.id sales_item
-			FROM packages, package_contents, inventory_history, sales_items
+			Select si.partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, si.id sales_item, packages.id packid
+			FROM packages, package_contents, sales_items si, inventory i 
 			WHERE package_contents.packageid = packages.id
-			AND package_contents.serialid = inventory_history.invid
-			AND inventory_history.field_changed = 'sales_item_id'
-			AND inventory_history.value = sales_items.id
-			AND order_number = $order_number AND sales_items.so_number = order_number
+			AND package_contents.serialid = i.id
+			AND order_number = $order_number
+			AND order_type = ".prep($type)."
+			AND i.sales_item_id = si.id
+			AND si.so_number = order_number
+			AND packages.datetime = ".prep($shipment_datetime)."
 			AND price > 0.00
-			GROUP BY sales_items.id;
+			GROUP BY si.id;
 		";
+		// exit($invoice_item_select);
 		//Type field accepts ['Sale','Repair' ]
-		$invoice_item_prepped = qdb($invoice_item_select);
+		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
 			return null;
 		}
@@ -49,7 +55,7 @@
 			}
 
 		}else{
-			echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; exit;
+			// echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; return null;
 		}
 		$invoice_macro = mysqli_fetch_assoc(qdb($macro));
 		if (strtolower($invoice_macro['type']) == 'prepaid'){
@@ -87,20 +93,7 @@
 			$line = qid();
 
 			setCommission($invoice_id,$line);
-
-			$package_insert = "
-				INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`)
-					SELECT $line AS line, packages.id
-					FROM packages, package_contents, inventory_history, sales_items
-					WHERE package_contents.packageid = packages.id
-					AND package_contents.serialid = inventory_history.invid
-					AND inventory_history.field_changed = 'sales_item_id'
-					AND inventory_history.value = sales_items.id
-					AND order_number = $order_number
-					/*AND order_type = $type*/
-					AND sales_items.id = ".$row['sales_item']."
-					Group By packageid;
-			";
+			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($line,".prep($row['packid']).");";
 			qdb($package_insert) or die(qe()." ".$package_insert);
 		}/* end foreach */
 

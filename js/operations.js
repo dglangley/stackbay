@@ -332,7 +332,7 @@
 						}
 						most = true;
 
-						if (typeof right.ship !== 'undefined') {
+						if (typeof right.ship !== 'undefined' && right) {
 							$.each(right.ship, function(id, info) {
 								var option = $('<option></option>').
 									text(info.street).
@@ -2055,7 +2055,8 @@
 				data: {'so_number' : so_number, 'items' : items},
 				dataType: 'json',
 				success: function(data) {
-					console.log('test ' + data['timestamp']);
+					console.log('TimeStamp: ' + data['timestamp']);
+					console.log("Invoice "+data['invoice']);
 					
 					if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully

@@ -32,7 +32,7 @@
 		if ($cogs_avg) { $query .= ",'".res($cogs_avg)."'"; }
 		if ($cogs_actual) { $query .= ",'".res($cogs_actual)."'"; }
 		$query .= "); ";
-echo $query.'<BR>';
+// echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		return (qid());
 	}

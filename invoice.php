@@ -43,7 +43,7 @@
         if ($o['invoice']){
             $added_order = ", `sales_orders`, `terms` ";
             $added_order_join = " AND `sales_orders`.so_number = order_number AND termsid = terms.id";
-            $serials = getInvoicedInventory($order_number, "`serial_no`, ``");
+            $serials = getInvoicedInventory($order_number, "`serial_no`");
         }
         
 		$order = "SELECT * FROM `".$o['order']."`$added_order WHERE `".$o['id']."` = $order_number $added_order_join;";
