@@ -32,23 +32,23 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
 		$result = [];
-		
+		// $productItems = json_decode($productItems);
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
-		
 		foreach($item_split as $product) {
 			//This query updates and saves the box as closed only if there are no errors in the order
+				// exit(print_r($product,true));
 				foreach($product[6] as $box) {
 					$check;
 					//Check and only ship boxes that have something placed into them
 					$query = "SELECT * FROM package_contents WHERE packageid = '".res($box)."';";
-					$data = qdb($query);
+					$data = qdb($query) or die(qe()." | $data");
 					if (mysqli_num_rows($data)>0) {
 						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
-						$check = qdb($query);
+						$check = qdb($query) or die(qe()." $query");
 					}
 					// added by david 6-21-17 to set profits and cogs on each unit being shipped
-					while ($r = mysqli_fetch_assoc($result)) {
+					while ($r = mysqli_fetch_assoc($data)) {
 						$inventoryid = $r['serialid'];
 						$query2 = "SELECT si.* FROM inventory i, sales_items si ";
 						$query2 .= "WHERE si.so_number = '".res($so_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
@@ -193,13 +193,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					}
 				}
 				
-				$result['timestamp'] = $date;
-				$result['on'] = $so_number;
 				
 				//Invoice Creation based off shipping
 		}
+		$result['timestamp'] = $date;
+		$result['on'] = $so_number;
 		
-		create_invoice($so_number, $date, "Sale");
+		$result['invoice_created'] = create_invoice($so_number, $date, "Sale");
 		
 		return $result;
 	}

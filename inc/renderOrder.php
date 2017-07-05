@@ -92,7 +92,7 @@
         if ($o['invoice']){
             $added_order = ", `sales_orders`, `terms` ";
             $added_order_join = " AND `sales_orders`.so_number = order_number AND termsid = terms.id";
-            $serials = getInvoicedInventory($order_number, "`serial_no`");
+            $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
         } else if ($o['credit']){
             $added_order = ", `sales_orders` ";
             $added_order_join = " AND sales_orders.so_number = order_num and order_type = 'Sales'";
@@ -164,7 +164,9 @@
                                 if ($serials && !$o['credit']){
                                     //Add Serials label
                                     foreach($serials as $serial){
-                                        $item_rows .= "<li>".$serial['serial_no']."</li>";       
+                                        if($serial['invoice_item_id'] == $item['id']){
+                                            $item_rows .= "<li>".$serial['serial_no']."</li>";
+                                        }
                                     }
                                 }
                             $item_rows .='</ul>

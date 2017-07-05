@@ -68,13 +68,13 @@
         $update .= " WHERE ";
         $update .= "id = $row_id;";
         
-        qdb($update) or die(qe()." $update");
+        qdb($update) or jsonDie(qe()." $update");
         
-        $pc = "SELECT * FROM package_contents where `packageid` = $row_id;";
-        $pc_results = qdb($pc) or die(qe()." | $pc");
+        $pc = "SELECT `id` FROM package_contents where `packageid` = $row_id;";
+        $pc_results = qdb($pc) or jsonDie(qe()." | $pc");
         if(mysqli_num_rows($pc_results)){
             foreach($pc_results as $invid){
-                setCost($invid);
+                setCost($invid['id']);
             }
         }
         

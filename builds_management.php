@@ -196,7 +196,9 @@
 					?>
 				</div>
 				<div class="col-md-4">
+				<?php if($order_number=='New'): ?>
 					<button class="btn-flat success pull-right" <?=($order_number=='New' ? '' : 'name="build_id" value="'.$order_number.'"')?> style="margin-top: 10px; margin-right: 10px;"><?=($order_number=='New' ? 'Create' : 'Edit')?></button>
+				<?php endif; ?>
 				</div>
 			</div>
 
