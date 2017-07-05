@@ -39,6 +39,7 @@
 	
 	$order_number = $_REQUEST['on'];
 	$build = $_REQUEST['build'];
+	$build_name = '';
 	$order_type = "Tech";
 	
 	$so_updated = $_REQUEST['success'];
@@ -58,11 +59,12 @@
 		//Get the real RO
 		$build = $order_number;
 		//Get the real number aka the RO number
-		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
+		$query = "SELECT ro_number, name FROM builds WHERE id=".prep($order_number).";";
 		$result = qdb($query) or die(qe());
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
 			$order_number = $result['ro_number'];
+			$build_name = $result['name'];
 		} 
 	}
 	
@@ -402,9 +404,9 @@
 				<div class="col-md-4">
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { 
 						if($build): ?>
-						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
 					<?php else: ?>
-						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
 					<?php endif; } ?>
 				</div>
 				
@@ -413,12 +415,12 @@
 						echo"<h2 class='minimal shipping_header' style='padding-top: 10px;' data-so='". $order_number ."'>";
 
 						if($build) {
-							echo "Build";
+							//echo "Build";
 						} else {
 							echo "Repair Ticket";
 						}
 						if ($order_number!='New'){
-							echo "# " . ($build ? $build : $order_number);
+							echo ($build ? $build_name : "# " . $order_number);
 						}
 						if (strtolower($status) == 'void'){
 							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");

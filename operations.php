@@ -475,7 +475,7 @@
 						echo'        <td>'.$company_ln.'</td>';
 					//} 
 					if($o['build']){
-						echo'        <td>'.$order_num.' <a href="/builds_management.php?on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="repair.php?build=true&on='.$order_num.'&ps=bo"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					} else if($o['ro']) {
 						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
@@ -539,10 +539,12 @@
 						}
 						echo'		</td>'; 
 					} else {
-						echo'    	<td class="status text-right">';		
-						echo'			<a href="/repair.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
-						echo'			<a href="/repair_add.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-						if($order != 'bo') {
+
+						echo'    	<td class="status text-right">';
+						if($order != 'bo') {		
+							echo'			<a href="/repair.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+							echo'			<a href="/repair_add.php?on='.$order_num.($order == 'bo' ? '&build=true' : '').'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						
 							echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						} else {
 							echo'			<a href="/builds_management.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
@@ -614,7 +616,12 @@
 		    position: absolute;
 		    bottom: 0px;
 		}
-		
+		.desc {
+            max-width:320px;
+            overflow:hidden;
+            white-space:nowrap;
+            text-overflow:ellipsis;
+        }
 		.descr-label {
 			white-space:nowrap;
     		overflow:hidden;
