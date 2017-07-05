@@ -414,6 +414,7 @@
 			if(!empty($results)) {
 				//print_r($results);
 				foreach ($results as $r){
+					if ($order=='bo') { unset($r['serial_no']); }
 					//set if a serial is present or not
 					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
 					
@@ -604,6 +605,12 @@
 		    bottom: 0px;
 		}
 		
+		.desc {
+			max-width:320px;
+			overflow:hidden;
+			white-space:nowrap;
+			text-overflow:ellipsis;
+		}
 		.descr-label {
 			white-space:nowrap;
     		overflow:hidden;
@@ -877,7 +884,7 @@
 //				$('.'+key+'-column').html('<span class="line"></span> Serial');
 				//If a serial is detected then change the table headers and sizes or anything else that needs to be altered
 				$('.'+key+'-column').closest(".qty_col").addClass('col-sm-2').removeClass('col-sm-1');
-				$('.'+key+'-column').closest(".item_col").addClass('col-sm-4').removeClass('col-sm-5');
+//				$('.'+key+'-column').closest(".item_col").addClass('col-sm-4').removeClass('col-sm-5');
 		    }
 		}
 
