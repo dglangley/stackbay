@@ -343,8 +343,11 @@
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
 							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
-							if($o['type'] == 'Repair' || $o['type'] == 'Builds'){
+							if($o['type'] == 'Builds'){
 								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'&build=true" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
+							}
+							if($o['type'] == 'Repair'){
+								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
 							}
 							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
 								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left"><i class="fa fa-file-pdf-o"></i></a>';
