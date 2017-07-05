@@ -22,11 +22,22 @@
 		return($due_estimate);
 	}
 	
+	$TERMS_INFO = array();
 	function getTermsInfo($value,$input = 'terms',$return = "id"){
+		global $TERMS_INFO;
+
+		if (isset($TERMS_INFO[$value]) AND isset($TERMS_INFO[$value][$input])) {
+			return ($TERMS_INFO[$value][$input][$return]);
+		}
+		$TERMS_INFO[$value][$input] = array($return=>false);
+
 		$select = "SELECT * FROM `terms` where `$input` LIKE ".prep($value).";"; //Assume days
 		$result = qdb($select) or die(qe()." | $select");
-		$result = mysqli_fetch_assoc($result);
-		return $result[$return];
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$TERMS_INFO[$value][$input] = $r;
+		}
+		return ($TERMS_INFO[$value][$input][$return]);
 	}
 
 ?>

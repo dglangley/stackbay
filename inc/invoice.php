@@ -11,7 +11,8 @@
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		
+		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `date_invoiced` = ".prep($shipment_datetime)."");
+		if($already_invoiced){return null;}
 		if($type != 'Sale'){return null;}
 		//Check to see there are actually invoice-able items on the order
 		//Assuming a closed package would make the 
