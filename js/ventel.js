@@ -1121,6 +1121,51 @@
 			
 		});
 
+//==============================================================================
+//=================================== HISTORY ================================== 
+//==============================================================================
+
+		$(document).on("click",".history_button",function() {
+			
+			var invid = $(this).attr('data-id');
+			if(invid){
+				$("#history_items").html("");
+				//Call the AJAX
+				$.ajax({
+						type: "POST",
+						url: '/json/item_history.php',
+						data: {
+							'inventory' : invid,
+							'mode' : 'display'
+						},
+						dataType: 'json',
+						success: function(lines) {
+							//Clear the modal
+							$(".history_line").remove();
+							console.log(lines);
+							//Populate the modal
+							$.each(lines, function(i, phrase){
+								//$("#history_items").append("<li class = 'history_line'>"+phrase+"</li>");
+								$("#history_items").append("\
+									<div class='row history_meta'>\
+										<div class='col-sm-4' style='vertical-align: middle;'>"+i+"</div>\
+										<div class='col-sm-8'>"+phrase+"</div>\
+									</div>");
+							});
+							//Show the modal
+							$("#modal-history").modal("show");
+							
+							console.log("JSON history_modal | Success | /json/item_history.php?inventory="+invid+"&mode=display");
+						},
+						error: function(xhr, status, error) {
+							alert(error+" | "+status+" | "+xhr);
+							console.log("JSON history_modal | Failure | /json/item_history.php?inventory="+invid+"&mode=display");
+						}
+				});
+			}
+		});
+//=================================== END HISTORY ================================== 
+
     });/* close $(document).ready */
 
 	

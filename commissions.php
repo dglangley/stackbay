@@ -8,6 +8,7 @@
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/terms.php';
 
 	function getSource($pi_id) {
 		if (! $pi_id) { return (''); }
@@ -17,7 +18,7 @@
 		if (mysqli_num_rows($result)==0) { return (''); }
 		$r = mysqli_fetch_assoc($result);
 
-		return ($r['po_number'].' <a href="/order_form.php?on='.$r['po_number'].'&ps=p" target="_new"><i class="fa fa-arrow-right"></i></a>');
+		return ('PO'.$r['po_number'].' <a href="/order_form.php?on='.$r['po_number'].'&ps=p" target="_new"><i class="fa fa-arrow-right"></i></a>');
 	}
 
 	$RATES = array();
@@ -183,6 +184,9 @@
 		.comm-item {
 			margin-left:5px !important;
 		}
+		tr.order-header td {
+			text-transform:uppercase;
+		}
 	</style>
 </head>
 
@@ -329,9 +333,9 @@
 <?php
 	//Establish a blank array for receiving the results from the table
 	$orders = array();
-	$query = "SELECT so.so_number, so.created, so.sales_rep_id, so.companyid, i.invoice_no, i.date_invoiced ";
+	$query = "SELECT so.so_number, so.created, so.sales_rep_id, so.companyid, i.invoice_no, i.date_invoiced, so.termsid, i.status ";
 	$query .= "FROM sales_orders so, invoices i ";
-	$query .= "WHERE so.so_number = i.order_number AND i.order_type = 'Sale' ";
+	$query .= "WHERE so.so_number = i.order_number AND i.order_type = 'Sale' AND i.status <> 'Voided' ";
    	if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d');
    		$dbEndDate = format_date($endDate, 'Y-m-d');
@@ -364,19 +368,39 @@
 		$orders[] = $r;
 	}
 
+	$date_today = strtotime($now);
+	$secs_per_day = 60*60*24;
 	$comm_reps = array();
 	$comm_rows = '';
+	$pending_comms = array();
 	foreach ($orders as $r) {
 		$paid_amt = getPaidAmount($r['invoice_no']);
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
 
+		// calculate 'on time' of payment within scope of terms based on termsid
+		$order_date = strtotime($r['created']);
+		$days = floor(($date_today-$order_date)/($secs_per_day));
+		$due_days = 0;
+		if ($r['termsid']) {
+			$due_days = getTermsInfo($r['termsid'],'id','days');
+		}
+
+		$paid = false;//trips when paid so we can default to checked or not
+		$row_cls = 'active';
+		if ($paid_amt>=$inv_amt) {
+			$row_cls = 'success';
+			$paid = true;
+		} else if ($days>$due_days) {
+			$row_cls = 'danger';
+		}
+
 		$comm_rows .= '
-			<tr class="success">
+			<tr class="order-header '.$row_cls.'">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
-				<td> '.$r['so_number'].' <a href="/order_form.php?on='.$r['so_number'].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
-				<td> '.getCompany($r['companyid']).' </td>
-				<td> '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> SO'.$r['so_number'].' <a href="/order_form.php?on='.$r['so_number'].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>
 				<td class="text-right"> '.format_price($paid_amt).' </td>
 			</tr>
@@ -426,7 +450,8 @@
 			foreach ($inventories as $inventoryid => $I) {
 				$cogs = 0;
 				$comm_amount = 0;
-				$chk = ' checked';
+				//$chk = ' checked';
+				$chk = '';
 				$cls = ' warning';
 				$query2 = "SELECT commission_amount, commission_rate, cogsid, item_id, item_id_label FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
@@ -434,6 +459,7 @@
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
 					$cogsid = $r2['cogsid'];
+					if ($paid) { $chk = ' checked'; }
 
 					// get cogs from sales_cogs table with associated inventoryid and sales_item_id
 					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";//inventoryid = '".$inventoryid."' AND sales_item_id ";
@@ -448,7 +474,7 @@
 					$profit = $I['amount']-$cogs;
 					$comm_amount = $r2['commission_amount'];
 				} else {
-					$chk = '';
+					//$chk = '';
 					$cls = '';
 					$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
 					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -469,6 +495,9 @@
 				if (! isset($comm_reps[$c['rep_id']])) { $comm_reps[$c['rep_id']] = 0; }
 				if ($chk) { $comm_reps[$c['rep_id']] += $comm_amount; }
 
+				if (! isset($pending_comms[$c['rep_id']])) { $pending_comms[$c['rep_id']] = 0; }
+				$pending_comms[$c['rep_id']] += $comm_amount;
+
 				$serial = $I['serial_no'];
 				$sale_amount = $I['amount'];
 				$pi_id = $I['purchase_item_id'];
@@ -488,7 +517,7 @@
 								<input type="checkbox" name="comm['.$inventoryid.']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'"'.$chk.'>
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
-							<td class="col-md-2"> '.$serial.' </td>
+							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="history_button"><i class="fa fa-history"></i></a> </td>
 							<td class="col-md-1">
 								'.$source_ln.'
 							</td>
@@ -523,12 +552,16 @@
 	$num_reps = count($comm_reps);
 	$col_width = floor(12/$num_reps);
 	foreach ($comm_reps as $rep_id => $rep_amt) {
+		$pending_amt = 0;
+		if (isset($pending_comms[$rep_id])) { $pending_amt = $pending_comms[$rep_id]; }
+
 		$comm_stats .= '
                 <div class="col-md-'.$col_width.' col-sm-'.$col_width.' stat">
                     <div class="data" id="'.$rep_id.'">
                         <span class="number text-brown">'.format_price(round($rep_amt,2),true,'').'</span>
 						<span class="info"><label><input type="checkbox" class="comm-master" checked> '.getRep($rep_id).'</label></span>
                     </div>
+					<span class="aux">'.format_price($pending_amt,true,'').' total pending</span>
                 </div>
 		';
 	}
@@ -579,6 +612,7 @@
 		</form>
 	</div>
 
+<?php include_once 'modal/history.php'; ?>
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
