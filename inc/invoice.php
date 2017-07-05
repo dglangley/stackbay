@@ -6,13 +6,13 @@
     include_once $rootdir.'/inc/form_handle.php';
     include_once $rootdir.'/inc/order_parameters.php';
     include_once $rootdir.'/inc/packages.php';
-    
+    include_once $rootdir.'/inc/setCommission.php';
+
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
 		
 		if($type != 'Sale'){return null;}
-		
 		//Check to see there are actually invoice-able items on the order
 		//Assuming a closed package would make the 
 		$invoice_item_select = "
@@ -28,6 +28,7 @@
 			AND price > 0.00
 			GROUP BY si.id;
 		";
+		
 		// exit($invoice_item_select);
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
@@ -70,7 +71,7 @@
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".$invoice_macro['companyid'].", ".prep($order_number).", ".prep($type).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($type).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
 		$result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
 		$invoice_id =  qid();
@@ -99,20 +100,15 @@
 
 		//Prevent breaks in the foreach loop
 		if($sales_charge_holder) {
-			foreach ($sales_charge_holder as $row) {
+			foreach ($sales_charge_holder as $sch) {
 				//first check if the sales_charge_id (unique to ref 1 exists) and labeled to sales_charge_id
-				$query = "SELECT * FROM `invoice_items` WHERE ref_1 = ".prep($row['id'])." AND ref_1_label = 'sales_charge_id';";
+				$query = "SELECT * FROM `invoice_items` WHERE ref_1 = ".prep($sch['id'])." AND ref_1_label = 'sales_charge_id';";
 				$result = qdb($query) OR die(qe().": ".$query);
 
 				//If record does no exists at all
 				if (mysqli_num_rows($result) == 0) {
-					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
-						VALUES (".$invoice_id.
-							", ".$row['partid'].
-							", ".$row['qty'].
-							", ".$row['price'].
-							", ".prep($row['id']).
-							", 'sales_charge_id');
+					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`,`memo`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
+					VALUES (".$invoice_id.", NULL,".prep($sch['memo']).", ".$sch['qty'].", ".prep($sch['price']).",".prep($sch['id']).", 'sales_charge_id');
 					";
 					qdb($insert) or die(qe()." ".$insert);
 				}
@@ -149,12 +145,13 @@
 	function getInvoicedInventory($in_no,$selector = '*'){
 	    $in_no = prep($in_no);
 	    $select = "
-	    SELECT $selector
-	    FROM `invoice_items`, `invoice_shipments`, `package_contents`, inventory
-	    WHERE `invoice_no` = $in_no
-	    AND `invoice_items`.`id` = `invoice_shipments`.invoice_item_id
-	    AND `invoice_shipments`.`packageid` = `package_contents`.`packageid`
-	    AND `package_contents`.`serialid` = `inventory`.`id`
+			SELECT $selector
+			FROM  `invoice_items` ,  `invoice_shipments` ,  `package_contents` , inventory
+			WHERE  `invoice_no` = $in_no
+			AND  `invoice_items`.`id` =  `invoice_shipments`.invoice_item_id
+			AND  `invoice_shipments`.`packageid` =  `package_contents`.`packageid` 
+			AND  `inventory`.`partid` = `invoice_items`.`partid`
+			AND  `package_contents`.`serialid` = `inventory`.`id` 
 	    ;";
 	    $result = qdb($select) or die(qe());
 	    return $result;
