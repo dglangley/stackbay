@@ -101,12 +101,20 @@
 		$order = "SELECT * FROM `".$o['order']."`$added_order WHERE `".$o['id']."` = $order_number $added_order_join;";
 		
 // 		echo $order;exit;
-		$order_result = qdb($order);
+		$order_result = qdb($order) or die(qe()." | $order");
     
 		$oi = array();
+		$due_date = "";
 		if (mysqli_num_rows($order_result) > 0){
 			$oi = mysqli_fetch_assoc($order_result);
-			if($o['type'] == 'Invoice'){ $freight = $oi["freight"]; }
+			if($o['invoice']){ 
+			    $freight = $oi["freight"]; 
+			    if ($oi['days'] < 0){
+			        $due_date = format_date($oi['date_invoiced'],'F j, Y');
+			    } else {
+			        $due_date = format_date($oi['date_invoiced'],'F j, Y',array("d"=>$oi['days']));
+			    }
+			}
             // echo("<pre>");
             // print_r($oi);
             // echo("</pre>");
@@ -442,7 +450,7 @@ $html_page_str .='
                 if($o['invoice']){
                     $html_page_str .= '
                     <td class="text-center">
-                        '.(($oi['credit'])? format_date($oi['date_invoiced'],'F j, Y',array("d" => $oi['days'])) : format_date($oi['date_invoiced'],'F j, Y')).'
+                        '.(($oi['credit'])? format_date($oi['date_invoiced'],'F j, Y',array("d" => $oi['days'])) : $due_date).'
                     </td>
                     <td>'.$oi['so_number'].'</td>
                     ';            

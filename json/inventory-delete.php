@@ -59,7 +59,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				//Remove the package from package contents
 				$invid = qid();
-				$pc_delete ="DELETE FROM `package_contents` WHERE `packageid` in (SELECT `id` FROM packages where `order_type` = 'Sale' and order_number = ".prep($po_number).") and `serialid` = $invid;";
+				$pc_delete  ="DELETE FROM `package_contents` WHERE `packageid` in (SELECT `id` FROM packages where `order_type` = 'Sale' and order_number = ".prep($po_number).") and `serialid` = $invid;";
 				qdb($pc_delete) or jsonDie(qe()." | $pc_delete");
 	
 				//If the item is deleted from the inventory then increment the purchase items back to original state, before the serial was scanned

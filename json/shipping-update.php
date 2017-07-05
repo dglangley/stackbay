@@ -31,7 +31,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
-		$result = [];
+		$result = array(
+			"success" => array(),
+			"error" => ''
+			);
 		// $productItems = json_decode($productItems);
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
@@ -196,10 +199,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				
 				//Invoice Creation based off shipping
 		}
-		$result['timestamp'] = $date;
-		$result['on'] = $so_number;
+		$result['success']['timestamp'] = $date;
+		$result['success']['so'] = $so_number;
 		
-		$result['invoice_created'] = create_invoice($so_number, $date, "Sale");
+		$type = 'Sale'; //Eventually we will need to allow for us to ship repairs
+		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND order_type = ".prep($type)." AND `date_invoiced` = ".prep($date)."");
+		if(!$already_invoiced){
+			$result['success']['invoice_created'] = create_invoice($so_number, $date, "Sale");
+		} else {
+			$result['error'] = "Double Created Invoice Value";
+		}
 		
 		return $result;
 	}

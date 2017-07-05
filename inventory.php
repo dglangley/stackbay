@@ -118,7 +118,7 @@
 <!----------------------------------------------------------------------------->
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'modal/history.php'?>
-	<?php include_once 'modal/rm.php'?>
+	<?php include_once 'modal/rm.php'?>L
 	
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
