@@ -1949,6 +1949,8 @@
 		//Shipping update button, mainly used for lot and serial redirection
 		$('.btn_update').click(function(e){
 			e.preventDefault();
+			$('#loader-message').html('Saving and Creating Invoice');
+			$("#loader").show();
 			//Save to reactivate button if needed
 			$click = $(this);
 			//Prevent Button Spamming
@@ -2055,10 +2057,11 @@
 				data: {'so_number' : so_number, 'items' : items},
 				dataType: 'json',
 				success: function(data) {
+					$("#loader").hide();
 					console.log('TimeStamp: ' + data['timestamp']);
 					console.log("Invoice "+data['invoice']);
-					
-					if((data['query'] || checkChanges) && data['error'] == undefined) {
+					if(!data['error'] && checkChanges){
+					// if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
 						if(print != '' && data['timestamp'] != null) {
@@ -2076,15 +2079,17 @@
 						}
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
-						alert(data['error']);
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Pop-up Blocked",data['error'], false);
 						$click.attr('id','btn_update');
-					//Nothing was change
+					//Nothing was changed
 					} else {
 						$click.attr('id','btn_update');
 						window.location.href = window.location.href + "&success=true";
 					}
 				},
 				error: function(xhr, status, error) {
+					$("#loader").hide();
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team!", false);
 					console.log("JSON shipping-update.php: ERROR " + error);
 					console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
 				},	

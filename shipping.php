@@ -305,7 +305,7 @@
 
 	<body class="sub-nav" id = "order_body" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 		<?php 
-			include 'inc/navbar.php'; 
+			include_once $rootdir.'/inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
 			include_once $rootdir.'/modal/iso.php';
 		?>
