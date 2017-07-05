@@ -22,14 +22,14 @@
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 	
-    function getPackageTracking($so_number) {
+    function getPackageTracking($invoice_number) {
         $tracking = array();
         $html = '';
 
-        $packages = "SELECT * from invoices i, invoice_items ii, invoice_shipments s, packages p, package_contents pc 
-                WHERE i.order_number = ".prep($so_number)."
-                AND i.invoice_no = ii.invoice_no and ii.id = s.invoice_item_id
-                AND s.packageid = p.id and p.id = pc.packageid
+        $packages = "SELECT * from invoice_items ii, invoice_shipments s, packages p
+                WHERE ii.invoice_no = ".prep($invoice_number)."
+                and ii.id = s.invoice_item_id
+                AND s.packageid = p.id
                 GROUP BY s.packageid;";
         //$packages = "SELECT package_no, tracking_no FROM packages WHERE order_number = ".prep($so_number).";";
         $result = qdb($packages) OR die(qe().'<BR>'.$packages);
@@ -523,7 +523,7 @@ $html_page_str .= '
                 </td>
             </tr>
         </table>';
-$package_list = getPackageTracking($oi['so_number']);
+$package_list = getPackageTracking($order_number);
 if($o['type'] == 'Invoice'){
         $html_page_str .='  <table class="table-full table-striped table-condensed">
                     <tr>
