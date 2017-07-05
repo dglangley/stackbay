@@ -65,6 +65,20 @@
 		return ($sale_amount);
 	}
 
+	function getPaidAmount($invoice_no=0) {
+		$paid_amt = 0;
+		if (! $invoice_no) { return ($paid_amt); }
+		$query2 = "SELECT SUM(amount) amount FROM payment_details ";
+		$query2 .= "WHERE (order_number = '".$invoice_no."' AND order_type = 'Invoice') ";
+		$query2 .= "OR (ref_number = '".$invoice_no."' AND ref_type = 'invoice'); ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$paid_amt += $r2['amount'];
+		}
+		return ($paid_amt);
+	}
+
 	function getInvoiceAmount($invoice_no=0) {
 		$inv_amt = 0;
 		if (! $invoice_no) { return ($inv_amt); }
@@ -76,7 +90,7 @@
 		}
 		return ($inv_amt);
 	}
-	
+
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
 	//=========================================================================================
@@ -353,6 +367,7 @@
 	$comm_reps = array();
 	$comm_rows = '';
 	foreach ($orders as $r) {
+		$paid_amt = getPaidAmount($r['invoice_no']);
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
 
 		$comm_rows .= '
@@ -363,6 +378,7 @@
 				<td> '.getCompany($r['companyid']).' </td>
 				<td> '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>
+				<td class="text-right"> '.format_price($paid_amt).' </td>
 			</tr>
 		';
 
@@ -381,7 +397,7 @@
 		if ($num_comms>0) {
 			$comm_rows .= '
 			<tr class="comm-row">
-				<td colspan="6">
+				<td colspan="7">
 					<table class="table table-condensed">
 			';
 		}
@@ -552,6 +568,10 @@
 				<th class="text-right">
 					<span class="line"></span>
 					Total Sale
+				</th>
+				<th class="text-right">
+					<span class="line"></span>
+					Payments
 				</th>
 			</tr>
 			<?php echo $comm_rows; ?>

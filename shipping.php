@@ -312,7 +312,7 @@
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage Order</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
 				<?php
 						$isoq = "SELECT * FROM iso WHERE so_number = ".prep($order_number).";";
 						$isor = qdb($isoq) OR die(qe() . ' ' . $isoq);
