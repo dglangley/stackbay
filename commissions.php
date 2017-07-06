@@ -194,13 +194,6 @@
 	
 	<?php include 'inc/navbar.php'; ?>
 
-	<?php if($_REQUEST['payment']): ?>
-		<div id="item-updated-timer" class="alert alert-success fade in text-center" style="position: fixed; width: 100%; z-index: 9999; top: 48px;">
-		    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-		    <strong>Success!</strong> Payment has been updated.
-		</div>
-	<?php endif; ?>
-
 	<form class="form-inline" method="get" action="/commissions.php">
     <table class="table table-header table-filter">
 		<tr>
@@ -407,7 +400,7 @@
 		';
 
 		$inventories = array();
-		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no ";
+		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no, ii.id invoice_item_id ";
 		$query2 .= "FROM invoice_items ii, inventory i, inventory_history h, sales_items si, invoices inv ";
 		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = si.partid AND i.id = h.invid ";
 		$query2 .= "AND h.field_changed = 'sales_item_id' AND h.value = si.id ";
@@ -453,13 +446,15 @@
 				//$chk = ' checked';
 				$chk = '';
 				$cls = ' warning';
+				$comm_push = '';
+
 				$query2 = "SELECT commission_amount, commission_rate, cogsid, item_id, item_id_label FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
 					$cogsid = $r2['cogsid'];
-					if ($paid) { $chk = ' checked'; }
+					if ($paid) { $chk = 'checked'; }
 
 					// get cogs from sales_cogs table with associated inventoryid and sales_item_id
 					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";//inventoryid = '".$inventoryid."' AND sales_item_id ";
@@ -475,6 +470,9 @@
 					$comm_amount = $r2['commission_amount'];
 				} else {
 					//$chk = '';
+					$chk = 'disabled';
+					$comm_push = '<a href="javascript:void(0);" class="calc-comm" data-invoice="'.$r['invoice_no'].'" data-invoiceitemid="'.$I['invoice_item_id'].'" data-inventoryid="'.$inventoryid.'" data-repid="'.$c['rep_id'].'">'.
+						'<i class="fa fa-calculator"></i></a>';
 					$cls = '';
 					$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
 					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -493,7 +491,7 @@
 				$comm_amount = round($comm_amount,2);
 				// sum comm amount for this rep
 				if (! isset($comm_reps[$c['rep_id']])) { $comm_reps[$c['rep_id']] = 0; }
-				if ($chk) { $comm_reps[$c['rep_id']] += $comm_amount; }
+				if ($chk=='checked') { $comm_reps[$c['rep_id']] += $comm_amount; }
 
 				if (! isset($pending_comms[$c['rep_id']])) { $pending_comms[$c['rep_id']] = 0; }
 				$pending_comms[$c['rep_id']] += $comm_amount;
@@ -514,7 +512,8 @@
 				$comm_rows .= '
 						<tr class="'.$cls.'">
 							<td class="col-md-1" style="padding:0px !important">
-								<input type="checkbox" name="comm['.$inventoryid.']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'"'.$chk.'>
+								<input type="checkbox" name="comm['.$inventoryid.']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'" '.$chk.'>
+								'.$comm_push.'
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
 							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="history_button"><i class="fa fa-history"></i></a> </td>
@@ -622,7 +621,7 @@
 			});
 			// calc commissions based on checked items
 			$(".comm-item").on("click",function() {
-				calcCommissions();
+				updateCommissions();
 			});
 			$(".comm-master").on("click",function() {
 				var repid = $(this).closest(".data").attr('id');
@@ -631,10 +630,48 @@
 					if ($(this).data('repid')!=repid) { return; }
 					$(this).prop('checked',rep_checked);
 				});
-				calcCommissions();
+				updateCommissions();
+			});
+			$(".calc-comm").on("click",function() {
+				var invoice = $(this).data("invoice");
+				var invoice_item_id = $(this).data("invoiceitemid");
+				var inventoryid = $(this).data("inventoryid");
+				var repid = $(this).data("repid");
+				var modal_msg = 'I can re-calculate this Commission for you, but I have to reload your page. Are you sure that\'s okay?<br/><br/>'+
+					'Invoice '+invoice+'<br/>'+
+					'Invoice Item ID '+invoice_item_id+'<br/>'+
+					'Inventory ID '+inventoryid+'<br/>'+
+					'Rep ID '+repid;
+				modalAlertShow('<i class="fa fa-female"></i> A message from Améa...',modal_msg,true,'calcCommission',$(this));
+//alert(invoice+':'+inventoryid+':'+repid);
 			});
 		});
-		function calcCommissions() {
+		function calcCommission(e) {
+			var invoice = e.data("invoice");
+			var invoice_item_id = e.data("invoiceitemid");
+			var inventoryid = e.data("inventoryid");
+			var repid = e.data("repid");
+
+        	console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&repid="+repid);
+	        $.ajax({
+				url: 'json/calc-comm.php',
+				type: 'get',
+				data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'repid': repid},
+				dataType: 'json',
+				cache: false,
+				success: function(json, status) {
+					if (json.message=='Success') {
+						location.reload();
+					} else {
+						alert(json.message);
+					}
+				},
+				error: function(xhr, desc, err) {
+//					console.log(xhr);
+				},
+			});
+		}
+		function updateCommissions() {
 			$(".stat .data").each(function() {
 				var repid = $(this).attr('id');
 				var rep_comm = $(this).find(".number");

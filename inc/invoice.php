@@ -92,11 +92,12 @@
 					", ".prep($row['warranty']).");
 			";
 			qdb($insert) or die(qe()." ".$insert);
-			$line = qid();
+			$invoice_item_id = qid();
 
-			setCommission($invoice_id,$line);
-			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($line,".prep($row['packid']).");";
+			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
 			qdb($package_insert) or die(qe()." ".$package_insert);
+
+			setCommission($invoice_id,$invoice_item_id);
 		}/* end foreach */
 
 		//Prevent breaks in the foreach loop
