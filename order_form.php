@@ -334,7 +334,7 @@
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
 			?>
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['type'] == 'Repair' && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['repair'] && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
 				<div class="col-md-3">
 					<?php
@@ -357,7 +357,7 @@
 							}
 						}
 
-						if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair' || $o['type'] == 'Builds')){
+						if($order_number != "New" && ($o['sales'] || $o['repair'] || $o['type'] == 'Builds')){
 							$rows = get_assoc_invoices($order_number);
 
 							//Get packages pertaining to this order
@@ -402,7 +402,7 @@
 								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
 							}
 
-							if(!$repair_billable && $o['type'] == 'Repair') {
+							if(!$repair_billable && $o['repair']) {
 								//If the repair  is not billable don't allow the user to create an RMA for this order
 							} else {
 								$rows = qdb($rma_select) or die(qe().$rma_select);
@@ -414,8 +414,8 @@
 	                            </button>
 								';
 	                        
-								$output .= '<ul class="dropdown-menu">';
-								if(mysqli_num_rows($rows)>0){
+							$output .= '<ul class="dropdown-menu">';
+							if(mysqli_num_rows($rows)>0){
 									foreach ($rows as $rma) {
 										$output .= '
 										<li>
@@ -440,31 +440,31 @@
 										';
 									}
 								}
+								$output .= '<li>
+												<a href="/rma.php?on='.$order_number.''.($o['repair'] ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
+													ADD RMA <i class ="fa fa-plus"></i>
+												</a>
+											</li>
+			                        	</ul>
+									</div>
+								';
 							}
-							$output .= '<li>
-											<a href="/rma.php?on='.$order_number.''.($o['type'] == 'Repair' ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
-												ADD RMA <i class ="fa fa-plus"></i>
-											</a>
-										</li>
-		                        	</ul>
-								</div>
-							';
 							echo $output;
 						}/* end if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair'))*/
 
-						if($order_number != "New" && $o['type'] == 'Purchase'){
+						if($order_number != "New" && $o['purchase']){
 							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
 							$rows = qdb($bills_selector);
 							$output = '
-						<div class ="btn-group">
-							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-                              <i class="fa fa-credit-card"></i>
-                              <span class="caret"></span>
-                            </button>
-							';
+								<div class ="btn-group">
+									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
+		                              <i class="fa fa-credit-card"></i>
+		                              <span class="caret"></span>
+		                            </button>
+									';
                             
 							$output .= '<ul class="dropdown-menu">';
-							if(mysqli_num_rows($rows) > 0){
+							if(mysqli_num_rows($rows)){
 								foreach ($rows as $bill) {
 									$output .= '
 										<li>
@@ -484,7 +484,8 @@
 								</div>
 							';
 							echo $output;
-						} elseif ($o['type'] == 'Invoice') {
+						} elseif ($o['invoice']) {
+							
 						}
 
 						if($order_number != "New"){

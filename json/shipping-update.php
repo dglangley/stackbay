@@ -35,7 +35,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			"success" => array(),
 			"error" => ''
 			);
-		// $productItems = json_decode($productItems);
+		$productItems = json_decode($productItems);
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
 		foreach($item_split as $product) {
@@ -202,8 +202,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$result['success']['timestamp'] = $date;
 		$result['success']['so'] = $so_number;
 		
-		$type = 'Sale'; //Eventually we will need to allow for us to ship repairs
-		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND order_type = ".prep($type)." AND `date_invoiced` = ".prep($date)."");
+		// $type = 'Sale'; //Eventually we will need to allow for us to ship repairs
+		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($date)."");
 		if(!$already_invoiced){
 			$result['success']['invoice_created'] = create_invoice($so_number, $date, "Sale");
 			if(!$result['success']['invoice_created']){
