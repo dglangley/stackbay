@@ -9,27 +9,34 @@
     include_once $rootdir.'/inc/setCommission.php';
 
     function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
+		//Variable Declarations
+		$warranty = '';
+		$macro = '';
+		$already_invoiced = false;
+		
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
 		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `date_invoiced` = ".prep($shipment_datetime)."");
 		if($already_invoiced){return null;}
-		if($type != 'Sale'){return null;}
+		// if($type != 'Sale'){return null;}
+		$o = o_params($type);
 		//Check to see there are actually invoice-able items on the order
 		//Assuming a closed package would make the 
+		$warranty = ($o['sales'] ? "warranty" : "warrantyid");
 		$invoice_item_select = "
-			Select si.partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty, si.id sales_item, packages.id packid
-			FROM packages, package_contents, sales_items si, inventory i 
+			Select i.partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, $warranty as warr, it.id item_id, packages.id packid
+			FROM packages, package_contents, ".$o['item']." it, inventory i 
 			WHERE package_contents.packageid = packages.id
 			AND package_contents.serialid = i.id
-			AND order_number = $order_number
-			AND order_type = ".prep($type)."
-			AND i.sales_item_id = si.id
-			AND si.so_number = order_number
+			AND `packages`.order_number = $order_number
+			AND `packages`.order_type = ".prep($type)."
+			AND i.".$o['inv_item_id']." = it.id
+			AND it.".$o['id']." = `packages`.order_number
 			AND packages.datetime = ".prep($shipment_datetime)."
 			AND price > 0.00
-			GROUP BY si.id;
+			GROUP BY it.id;
 		";
-		
+		// exit($invoice_item_select);
 		// exit($invoice_item_select);
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
@@ -58,8 +65,10 @@
 
 		}else{
 			// echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; return null;
+			// ASK DAVID HERE WHAT EXTRANEOUS CHARGES WE NEED ASSOCIATED WITH THE 
 		}
-		$invoice_macro = mysqli_fetch_assoc(qdb($macro));
+		
+		$invoice_macro = mysqli_fetch_assoc(qdb($macro) or die(qe()." $macro"));
 		if (strtolower($invoice_macro['type']) == 'prepaid'){
 			// $pay_day = $GLOBALS['today'];
 			$status = 'Paid';
@@ -80,17 +89,9 @@
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
 			$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
-				VALUES (".$invoice_id.
-					", ".$row['partid'].
-					", ".$row['qty'].
-					", ".$row['price'].
-					", ".prep($row['line_number']).
-					", ".prep($row['ref_1']).
-					", ".prep($row['ref_1_label']).
-					", ".prep($row['ref_2']).
-					", ".prep($row['ref_2_label']).
-					", ".prep($row['warranty']).");
-			";
+				VALUES (".$invoice_id.", ".prep($row['partid']).", ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
+				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
+			
 			qdb($insert) or die(qe()." ".$insert);
 			$line = qid();
 
@@ -125,7 +126,7 @@
         WHERE `order_number` = ".prep($order_number)." 
         AND `order_type` = ".prep($type)."
         ;";
-        $results = qdb($select);
+        $results = qdb($select) or die(qe()." $select");
         if (mysqli_num_rows($results) > 0){
             return $results;
         } else {
