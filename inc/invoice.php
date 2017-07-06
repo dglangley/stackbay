@@ -37,7 +37,6 @@
 			GROUP BY it.id;
 		";
 		// exit($invoice_item_select);
-		// exit($invoice_item_select);
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
