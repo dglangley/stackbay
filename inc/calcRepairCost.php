@@ -15,7 +15,7 @@
 		}
 
 		/***** GET ALL 3RD PARTY REPAIRS AND REPLACEMENT-FREIGHT COSTS *****/
-		$query = "SELECT ri.id repair_items ri ";
+		$query = "SELECT ri.id FROM repair_items ri ";
 		$query .= "WHERE ri.ro_number = '".res($ro_number)."'; ";// AND ro.ro_number = ri.ro_number; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {

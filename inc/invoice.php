@@ -16,7 +16,7 @@
 		
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `date_invoiced` = ".prep($shipment_datetime)."");
+		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($shipment_datetime)."");
 		if($already_invoiced){return null;}
 		// if($type != 'Sale'){return null;}
 		$o = o_params($type);
@@ -42,18 +42,8 @@
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
 			return null;
 		}
-
-		//Create an array for all the sales credit data
 		$sales_charge_holder = array();
-
 		if ($type == 'Sale'){
-			$macro = "
-				SELECT `companyid`, `created`, `days`, `type`
-				FROM sales_orders, terms
-				WHERE sales_orders.so_number = ".prep($order_number)." AND
-				sales_orders.termsid = termsid;
-			";
-
 			//Add in sales_charges rows into the invoice item
 			$sales_charges = "SELECT * FROM sales_charges WHERE so_number = ".prep($order_number).";";
 			$sales_result = qdb($sales_charges) OR die(qe());
@@ -62,10 +52,15 @@
 				$sales_charge_holder[] = $row;
 			}
 
-		}else{
-			// echo "We haven't built repairs yet. Double check you don't mean 'Sale' "; return null;
-			// ASK DAVID HERE WHAT EXTRANEOUS CHARGES WE NEED ASSOCIATED WITH THE 
 		}
+
+		//Create an array for all the sales credit data
+		$macro = "
+			SELECT `companyid`, `created`, `days`, `type`
+			FROM ".$o['order'].", terms
+			WHERE ".$o['order'].".".$o['id']." = ".prep($order_number)." AND
+			".$o['order'].".termsid = terms.id;
+		";
 		
 		$invoice_macro = mysqli_fetch_assoc(qdb($macro) or die(qe()." $macro"));
 		if (strtolower($invoice_macro['type']) == 'prepaid'){
@@ -158,3 +153,5 @@
 	    return $result;
 	}
 ?>
+
+
