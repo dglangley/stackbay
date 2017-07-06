@@ -326,39 +326,51 @@
 <?php
 	//Establish a blank array for receiving the results from the table
 	$orders = array();
-	$query = "SELECT so.so_number, so.created, so.sales_rep_id, so.companyid, i.invoice_no, i.date_invoiced, so.termsid, i.status ";
-	$query .= "FROM sales_orders so, invoices i ";
-	$query .= "WHERE so.so_number = i.order_number AND i.order_type = 'Sale' AND i.status <> 'Voided' ";
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		$query .= "AND so.created between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
-	}
-	if ($order) { $query .= "AND (so.so_number = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
-	$query .= "GROUP BY so.so_number, i.invoice_no ORDER BY so.so_number ASC; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$commissionid = $r['id'];
-//		$r['sale_amount'] = getSalesAmount($r['so_number']);
-		$r['inv_amount'] = getInvoiceAmount($r['invoice_no']);
-//		if (! $r['inv_amount']) { continue; }
-		$r['amount'] = $r['commission_amount'];
-
-		// get amount already paid out
-		$r['commissions'] = array();
-
-		$query2 = "SELECT rep_id, SUM(c.commission_amount) commission_amount, SUM(p.amount) paid_amount FROM commissions c ";
-		$query2 .= "LEFT JOIN commission_payouts p ON c.id = p.commissionid ";
-		$query2 .= "WHERE c.invoice_no = '".$r['invoice_no']."' ";
-		if ($rep_filter) { $query2 .= "AND rep_id = '".res($rep_filter)."' "; }
-		$query2 .= "GROUP BY rep_id HAVING paid_amount IS NULL OR commission_amount <> paid_amount; ";
-		$result2 = qdb($query2) OR die("Problem pulling commissions for invoice# ".$r['invoice_no']);
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$r['commissions'][] = $r2;
+	$charge_types = array('Sale','Repair');
+	foreach ($charge_types as $type) {
+		$order_type = '';
+		$order_table = '';
+		if ($type=='Sale') {
+			$order_type = 'so_number';
+			$order_table = 'sales_orders';
+		} else if ($type=='Repair') {
+			$order_type = 'ro_number';
+			$order_table = 'repair_orders';
 		}
-		if (count($r['commissions'])==0) { continue; }
+		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status ";
+		$query .= "FROM ".$order_table." o, invoices i ";
+		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
+   		if ($startDate) {
+   			$dbStartDate = format_date($startDate, 'Y-m-d');
+   			$dbEndDate = format_date($endDate, 'Y-m-d');
+   			$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
+		}
+		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
+		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$commissionid = $r['id'];
+			$r['inv_amount'] = getInvoiceAmount($r['invoice_no']);
+			$r['amount'] = $r['commission_amount'];
 
-		$orders[] = $r;
+			$r['charge_type'] = $type;
+
+			// get amount already paid out
+			$r['commissions'] = array();
+
+			$query2 = "SELECT rep_id, SUM(c.commission_amount) commission_amount, SUM(p.amount) paid_amount FROM commissions c ";
+			$query2 .= "LEFT JOIN commission_payouts p ON c.id = p.commissionid ";
+			$query2 .= "WHERE c.invoice_no = '".$r['invoice_no']."' ";
+			if ($rep_filter) { $query2 .= "AND rep_id = '".res($rep_filter)."' "; }
+			$query2 .= "GROUP BY rep_id HAVING paid_amount IS NULL OR commission_amount <> paid_amount; ";
+			$result2 = qdb($query2) OR die("Problem pulling commissions for invoice# ".$r['invoice_no']);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$r['commissions'][] = $r2;
+			}
+			if (count($r['commissions'])==0) { continue; }
+
+			$orders[] = $r;
+		}
 	}
 
 	$date_today = strtotime($now);
@@ -369,6 +381,22 @@
 	foreach ($orders as $r) {
 		$paid_amt = getPaidAmount($r['invoice_no']);
 		$inv_amt = getInvoiceAmount($r['invoice_no']);
+
+		$order_abbrev = '';
+		$item_type = '';
+		$item_field = '';
+		$order_type = '';
+		if ($r['charge_type']=='Sale') {
+			$order_abbrev = 'SO';
+			$item_type = 'sales_items';
+			$item_field = 'sales_item_id';
+			$order_type = 'so_number';
+		} else if ($r['charge_type']=='Repair') {
+			$order_abbrev = 'RO';
+			$item_type = 'repair_items';
+			$item_field = 'repair_item_id';
+			$order_type = 'ro_number';
+		}
 
 		// calculate 'on time' of payment within scope of terms based on termsid
 		$order_date = strtotime($r['created']);
@@ -391,7 +419,7 @@
 			<tr class="order-header '.$row_cls.'">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
-				<td> SO'.$r['so_number'].' <a href="/order_form.php?on='.$r['so_number'].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> '.$order_abbrev.$r[$order_type].' <a href="/order_form.php?on='.$r[$order_type].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
 				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'"><i class="fa fa-arrow-right"></i></a> </td>
 				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>
@@ -400,11 +428,11 @@
 		';
 
 		$inventories = array();
-		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no, ii.id invoice_item_id ";
-		$query2 .= "FROM invoice_items ii, inventory i, inventory_history h, sales_items si, invoices inv ";
-		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = si.partid AND i.id = h.invid ";
-		$query2 .= "AND h.field_changed = 'sales_item_id' AND h.value = si.id ";
-		$query2 .= "AND si.so_number = inv.order_number AND inv.order_type = 'Sale' AND inv.invoice_no = ii.invoice_no; ";
+		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no, ii.id invoice_item_id, item.id item_id, '".$item_field."' item_id_label ";
+		$query2 .= "FROM invoice_items ii, inventory i, inventory_history h, ".$item_type." item, invoices inv ";
+		$query2 .= "WHERE ii.invoice_no = '".$r['invoice_no']."' AND ii.partid = item.partid AND i.id = h.invid ";
+		$query2 .= "AND h.field_changed = '".$item_field."' AND h.value = item.id ";
+		$query2 .= "AND item.".$order_type." = inv.order_number AND inv.order_type = '".$r['charge_type']."' AND inv.invoice_no = ii.invoice_no; ";
 		$result2 = qdb($query2) OR die("Could not pull comm/inventory records for invoice ".$r['invoice_no']);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$inventories[$r2['id']] = $r2;
@@ -425,7 +453,7 @@
 							<td class="col-md-2"> <strong>'.getRep($c['rep_id']).'</strong> </td>
 							<td class="col-md-2"> </td>
 							<td class="col-md-1"> </td>
-							<td class="col-md-1 text-right"> <strong>Sale Price</strong> </td>
+							<td class="col-md-1 text-right"> <strong>'.$r['charge_type'].' Price</strong> </td>
 							<td class="col-md-1 text-right"> <strong>COGS (Avg)</strong> </td>
 							<td class="col-md-1 text-right"> <strong>Profit</strong> </td>
 							<td class="col-md-1"> </td>
@@ -443,10 +471,10 @@
 			foreach ($inventories as $inventoryid => $I) {
 				$cogs = 0;
 				$comm_amount = 0;
-				//$chk = ' checked';
 				$chk = '';
 				$cls = ' warning';
-				$comm_push = '';
+				$comm_edit = '';
+				$comm_cls = '';
 
 				$query2 = "SELECT commission_amount, commission_rate, cogsid, item_id, item_id_label FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
@@ -456,10 +484,8 @@
 					$cogsid = $r2['cogsid'];
 					if ($paid) { $chk = 'checked'; }
 
-					// get cogs from sales_cogs table with associated inventoryid and sales_item_id
-					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";//inventoryid = '".$inventoryid."' AND sales_item_id ";
-					//if ($r2['sales_item_id']) { $query3 .= "= '".$r2['sales_item_id']."' "; } else { $query3 .= "IS NULL "; }
-					//$query3 .= "; ";
+					// get cogs from sales_cogs table with associated inventoryid and item_id
+					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					if (mysqli_num_rows($result3)>0) {
 						$r3 = mysqli_fetch_assoc($result3);
@@ -469,21 +495,35 @@
 					$profit = $I['amount']-$cogs;
 					$comm_amount = $r2['commission_amount'];
 				} else {
-					//$chk = '';
 					$chk = 'disabled';
-					$comm_push = '<a href="javascript:void(0);" class="calc-comm" data-invoice="'.$r['invoice_no'].'" data-invoiceitemid="'.$I['invoice_item_id'].'" data-inventoryid="'.$inventoryid.'" data-repid="'.$c['rep_id'].'">'.
-						'<i class="fa fa-calculator"></i></a>';
 					$cls = '';
-					$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
+
+					// check first for cogs that may have been generated without initializing this rep's comms
+					$query2 = "SELECT cogs_avg cogs FROM sales_cogs WHERE inventoryid = '".res($inventoryid)."' ";
+					$query2 .= "AND item_id = '".$I['item_id']."' AND item_id_label = '".$I['item_id_label']."'; ";
 					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 					if (mysqli_num_rows($result2)>0) {
 						$r2 = mysqli_fetch_assoc($result2);
-						if ($r2['average']>0) { $cogs = $r2['average']; }
-						else { $cogs = $r2['actual']; }
-						$cogs = round($cogs,2);
-						$profit = $I['amount']-$cogs;
-						$comm_amount = $profit*($RATES[$c['rep_id']]/100);
+						$cogs = $r2['cogs'];
+					} else {
+						$comm_cls = 'info em';
+
+/* dl 7-6-17 I think we don't want to fix the actual cost for this view
+						$query2 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						if (mysqli_num_rows($result2)>0) {
+							$r2 = mysqli_fetch_assoc($result2);
+							$cogs = $r2['actual'];
+						}
+*/
 					}
+					$cogs = round($cogs,2);
+					$profit = $I['amount']-$cogs;
+					$comm_amount = $profit*($RATES[$c['rep_id']]/100);
+					$comm_edit = '<a href="javascript:void(0);" class="calc-comm" '.
+						'data-cogs="'.$cogs.'" data-invoice="'.$r['invoice_no'].'" data-invoiceitemid="'.$I['invoice_item_id'].'" data-inventoryid="'.$inventoryid.'" '.
+						'data-repid="'.$c['rep_id'].'" data-itemid="'.$I['item_id'].'" data-itemidlabel="'.$I['item_id_label'].'">'.
+						'<i class="fa fa-calculator"></i></a>';
 				}
 				// No negative commissions allowed on negative profit sales
 				if ($profit<0 AND $comm_amount<0) { $comm_amount = 0; }
@@ -513,7 +553,6 @@
 						<tr class="'.$cls.'">
 							<td class="col-md-1" style="padding:0px !important">
 								<input type="checkbox" name="comm['.$inventoryid.']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'" '.$chk.'>
-								'.$comm_push.'
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
 							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="history_button"><i class="fa fa-history"></i></a> </td>
@@ -524,16 +563,18 @@
 								'.format_price($sale_amount).'
 							</td>
 							<td class="col-md-1 text-right">
-								'.format_price($cogs).'
+								<span class="'.$comm_cls.'">'.format_price($cogs).'</span>
 							</td>
 							<td class="col-md-1 text-right">
-								'.format_price($profit).'
+								<span class="'.$comm_cls.'">'.format_price($profit).'</span>
 							</td>
 							<td class="col-md-1"> </td>
 							<td class="col-md-1 text-right">
-								'.format_price($comm_amount).'
+								<span class="'.$comm_cls.'">'.format_price($comm_amount).'</span>
 							</td>
-							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right" style="padding-right:5px !important">
+								'.$comm_edit.'
+							</td>
 						</tr>
 				';
 			}
@@ -587,7 +628,7 @@
 				</th>
 				<th>
 					<span class="line"></span>
-					Sales Order
+					Order No.
 				</th>
 				<th>
 					<span class="line"></span>
@@ -599,7 +640,7 @@
 				</th>
 				<th class="text-right">
 					<span class="line"></span>
-					Total Sale
+					Total Charges
 				</th>
 				<th class="text-right">
 					<span class="line"></span>
@@ -633,15 +674,47 @@
 				updateCommissions();
 			});
 			$(".calc-comm").on("click",function() {
+				var cogs = $(this).data("cogs");
 				var invoice = $(this).data("invoice");
 				var invoice_item_id = $(this).data("invoiceitemid");
 				var inventoryid = $(this).data("inventoryid");
 				var repid = $(this).data("repid");
+				var item_id = $(this).data("itemid");
+				var item_id_label = $(this).data("itemidlabel");
+
+				// don't allow the user to edit if the cogs is known/calculated
+				var field_state = ' disabled';
+				var cogs_helper = '';
+				if (cogs=='' || cogs=='0' || cogs=='0.00') {
+					field_state = '';
+					cogs_helper = '<span class="info em">adjust if necessary</span></div>';
+				}
 				var modal_msg = 'I can re-calculate this Commission for you, but I have to reload your page. Are you sure that\'s okay?<br/><br/>'+
-					'Invoice '+invoice+'<br/>'+
-					'Invoice Item ID '+invoice_item_id+'<br/>'+
-					'Inventory ID '+inventoryid+'<br/>'+
-					'Rep ID '+repid;
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>COGS</strong></div>'+
+						'<div class="col-sm-3"><input type="text" class="form-control input-xs" name="item_cogs_'+inventoryid+'_'+repid+'" id="item-cogs-'+inventoryid+'-'+repid+'" value="'+cogs+'" '+field_state+'/></div>'+
+						'<div class="col-sm-6">'+cogs_helper+'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>Invoice</strong></div>'+
+						'<div class="col-sm-9">'+invoice+'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>Invoice Item ID</strong></div>'+
+						'<div class="col-sm-9">'+invoice_item_id+'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>'+item_id_label+'</strong></div>'+
+						'<div class="col-sm-9">'+item_id+'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>Inventory ID</strong></div>'+
+						'<div class="col-sm-9">'+inventoryid+'</div>'+
+					'</div>'+
+					'<div class="row">'+
+						'<div class="col-sm-3 text-right"><strong>Rep ID</strong></div>'+
+						'<div class="col-sm-9">'+repid+'</div>'+
+					'</div>';
 				modalAlertShow('<i class="fa fa-female"></i> A message from Améa...',modal_msg,true,'calcCommission',$(this));
 //alert(invoice+':'+inventoryid+':'+repid);
 			});
@@ -651,12 +724,15 @@
 			var invoice_item_id = e.data("invoiceitemid");
 			var inventoryid = e.data("inventoryid");
 			var repid = e.data("repid");
+			var item_id = e.data("itemid");
+			var item_id_label = e.data("itemidlabel");
+			var cogs = $("#item-cogs-"+inventoryid+"-"+repid).val();
 
-        	console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&repid="+repid);
+        	console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&repid="+repid+"&cogs="+cogs+"&item_id="+item_id+"&item_id_label="+item_id_label);
 	        $.ajax({
 				url: 'json/calc-comm.php',
 				type: 'get',
-				data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'repid': repid},
+				data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'repid': repid, 'cogs': cogs, 'item_id': item_id, 'item_id_label': item_id_label},
 				dataType: 'json',
 				cache: false,
 				success: function(json, status) {
