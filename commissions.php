@@ -475,26 +475,12 @@
 				$cls = ' warning';
 				$comm_edit = '';
 				$comm_cls = '';
+				$profit = 0;
 
 				$query2 = "SELECT commission_amount, commission_rate, cogsid, item_id, item_id_label FROM commissions c ";
 				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-				if (mysqli_num_rows($result2)>0) {
-					$r2 = mysqli_fetch_assoc($result2);
-					$cogsid = $r2['cogsid'];
-					if ($paid) { $chk = 'checked'; }
-
-					// get cogs from sales_cogs table with associated inventoryid and item_id
-					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";
-					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-					if (mysqli_num_rows($result3)>0) {
-						$r3 = mysqli_fetch_assoc($result3);
-						$cogs = round($r3['cogs'],2);
-					}
-
-					$profit = $I['amount']-$cogs;
-					$comm_amount = $r2['commission_amount'];
-				} else {
+				if (mysqli_num_rows($result2)==0) {
 					$chk = 'disabled';
 					$cls = '';
 
@@ -525,8 +511,26 @@
 						'data-repid="'.$c['rep_id'].'" data-itemid="'.$I['item_id'].'" data-itemidlabel="'.$I['item_id_label'].'">'.
 						'<i class="fa fa-calculator"></i></a>';
 				}
+				while ($r2 = mysqli_fetch_assoc($result2)) {
+					$cogsid = $r2['cogsid'];
+					if ($paid) { $chk = 'checked'; }
+
+					// get cogs from sales_cogs table with associated inventoryid and item_id
+					$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$cogs = round($r3['cogs'],2);
+					}
+
+					$profit = $I['amount']-$cogs;
+					// add comm amount so long as it's a positive number (can't lose money on a sale), or a return
+					if ($r2['item_id_label']=='return_item_id' OR $r2['commission_amount']>0) {
+						$comm_amount += $r2['commission_amount'];
+					}
+				}
 				// No negative commissions allowed on negative profit sales
-				if ($profit<0 AND $comm_amount<0) { $comm_amount = 0; }
+//				if ($profit<0 AND $comm_amount<0) { $comm_amount = 0; }
 
 				$comm_amount = round($comm_amount,2);
 				// sum comm amount for this rep
