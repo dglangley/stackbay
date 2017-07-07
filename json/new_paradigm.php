@@ -83,9 +83,9 @@ function search_as_heci($search_str){
         }
         //$page =="Repair" || $order_number!='New'
 
-        if($page=="Tech"){
-            $results = array_filter($results, "is_component");
-        } 
+        // if($page=="Tech"){
+        //     $results = array_filter($results, "is_component");
+        // } 
         // else {
         //     $results = array_filter($results, "not_component");
         // }

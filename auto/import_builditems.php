@@ -13,6 +13,8 @@
 $inventoryid;
 $projectid;
 
+
+//Grab all data with project_id from sold and unsold items that matches the id from inventory_project
 $select ="
 SELECT si.serial, p.id project_id FROM inventory_solditem si, inventory_project p WHERE si.project_id = p.id
 UNION
