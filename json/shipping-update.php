@@ -205,7 +205,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// $type = 'Sale'; //Eventually we will need to allow for us to ship repairs
 		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($date)."");
 		if(!$already_invoiced){
-			$result['success']['invoice_created'] = create_invoice($so_number, $date, "Sale");
+			$result['success']['invoice_created'] = create_invoice($so_number, $date);
 			if(!$result['success']['invoice_created']){
 				$result['error'] = 'Something broke in the creation of the invoice';
 			}
