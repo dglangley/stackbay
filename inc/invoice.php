@@ -8,18 +8,18 @@
     include_once $rootdir.'/inc/packages.php';
     include_once $rootdir.'/inc/setCommission.php';
 
-    function create_invoice($order_number, $shipment_datetime, $type = 'Sale'){
+    function create_invoice($order_number, $shipment_datetime, $type ='Sale'){
 		//Variable Declarations
 		$warranty = '';
 		$macro = '';
 		$already_invoiced = false;
-		
+		$ro_number = '';
+		$o = o_params($type);
+
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($shipment_datetime)."");
-		if($already_invoiced){return null;}
-		// if($type != 'Sale'){return null;}
-		$o = o_params($type);
+		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($shipment_datetime).";");
+		if($already_invoiced){return $already_invoiced;}
 		//Check to see there are actually invoice-able items on the order
 		//Assuming a closed package would make the 
 		$warranty = ($o['sales'] ? "warranty" : "warrantyid");
@@ -29,14 +29,14 @@
 			WHERE package_contents.packageid = packages.id
 			AND package_contents.serialid = i.id
 			AND `packages`.order_number = $order_number
-			AND `packages`.order_type = ".prep($type)."
+			AND `packages`.order_type = '".$o['type']."'
 			AND i.".$o['inv_item_id']." = it.id
-			AND it.".$o['id']." = `packages`.order_number
-			AND packages.datetime = ".prep($shipment_datetime)."
+			AND it.`".$o['id']."` = `packages`.`order_number`
+			AND packages.datetime = ".prep(format_date($shipment_datetime, "Y-m-d H:i:s"))."
 			AND price > 0.00
 			GROUP BY it.id;
 		";
-		// exit($invoice_item_select);
+		
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
@@ -75,7 +75,7 @@
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($type).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
 		$result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
 		$invoice_id =  qid();
@@ -152,6 +152,17 @@
 	    $result = qdb($select) or die(qe());
 	    return $result;
 	}
-?>
+	
+	function import_may_invoice(){
 
+		$sel = 'select * from inventory_invoice i
+		where i.date >= "2017-05-01" and amount > 0;';
+		$res = qdb($sel,"PIPE") or die(qe("PIPE")." | $sel");
+		echo("\t |\tNew Inv\t |\tOld Inv\t\t|\tRep No\t\t|<br>");
+		foreach($res as $count => $r){
+			$return = create_invoice($r['ref_no'],$r['date']." 00:00:00", "Repair");
+			echo("$count\t |\t".$return."\t\t |\t".$r['id']."\t\t|\t".$r['ref_no']."\t\t|<br>");
+		}
+	}
+?>
 
