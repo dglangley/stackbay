@@ -35,7 +35,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			"success" => array(),
 			"error" => ''
 			);
-		$productItems = json_decode($productItems);
+		// $productItems = json_decode($productItems);
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
 		foreach($item_split as $product) {

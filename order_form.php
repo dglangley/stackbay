@@ -126,10 +126,10 @@
 
 	$status = getOrderStatus($o['type'],$order_number);
 
- 	function getPackagesFix($order_number) {
+ 	function getPackagesFix($order_number, $type = 'Sale') {
  	 	$output = '';
 	 	$invoices = array();
-
+		$o = o_params($type);
 	 	//Stores all the packages that have been accounted for in an invoice
 	 	$packages_accounted = array();
 
@@ -140,6 +140,7 @@
 	 	$query = "SELECT GROUP_CONCAT(DISTINCT package_no SEPARATOR ' & ') as package_no, tracking_no, i.invoice_no, i.date_invoiced FROM packages p, invoices i
 					WHERE p.order_number = $order_number
 					AND i.order_number = p.order_number
+					AND i.order_type = ".prep($o['type'])."
 					AND p.id NOT IN (SELECT packageid FROM invoice_shipments)
 					AND DATE(i.date_invoiced) = DATE(p.datetime)";
 	 	$result = qdb($query) or die(qe() . $query);
@@ -156,6 +157,7 @@
 	 	$query = "SELECT package_no, tracking_no, i.invoice_no, i.date_invoiced FROM packages p, invoice_shipments sp, invoice_items ii, invoices i
 					WHERE p.order_number = $order_number
 					AND i.order_number = p.order_number
+					AND i.order_type = ".prep($o['type'])."
 					AND sp.packageid = p.id
 					AND ii.id = sp.invoice_item_id
 					AND ii.invoice_no = i.invoice_no;";
@@ -358,12 +360,11 @@
 						}
 
 						if($order_number != "New" && ($o['sales'] || $o['repair'] || $o['type'] == 'Builds')){
-							$rows = get_assoc_invoices($order_number);
+							$rows = get_assoc_invoices($order_number, $o['type']);
 
 							//Get packages pertaining to this order
 							//$packages = getPackagesFix($order_number);
 
-							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
 								$output = '
 								<div class ="btn-group">
 									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
@@ -373,13 +374,13 @@
 									<ul class="dropdown-menu">
 								';
 
-								$output .= getPackagesFix($order_number);
+								$output .= getPackagesFix($order_number, $o['type']);
 
-								if($packages) {
-									foreach($packages as $item){
+								// if($packages) {
+								// 	foreach($packages as $item){
 
-									}
-								}
+								// 	}
+								// }
 								//Check to see if this order has a valid package to create an invoice
 
 								$output .= '
@@ -392,7 +393,6 @@
 								</div>
 								';
 								echo $output;
-							}
 
 							// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 							// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
