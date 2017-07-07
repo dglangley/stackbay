@@ -14,6 +14,7 @@
 	else if ($order_type=='SO') { $order_type = 'Sales'; }
 	else if ($order_type=='RMA') { $order_type = 'RMA'; }
 	else if ($order_type=='PS') { $order_type = 'PS'; }
+	else if ($order_type=='INV') { $order_type = 'INV'; }
 	$order_number = $file_split[1];
 
     if($order_type != "PS"){

@@ -126,87 +126,7 @@
 
 	$status = getOrderStatus($o['type'],$order_number);
 
- 	function getPackagesFix($order_number, $type = 'Sale') {
- 	 	$output = '';
-	 	$invoices = array();
-		$o = o_params($type);
-	 	//Stores all the packages that have been accounted for in an invoice
-	 	$packages_accounted = array();
 
-	 	$order_number_prep = prep($order_number);
-
-	 	//A check because instances were found where the invoice_shipment 'id' was not set nor was anything found using the item_id nor packageid that led to an invoice
-	 	//even though an actual invoice was created for the packages (Using datetime found the resulting invoice for the packages)
-	 	$query = "SELECT GROUP_CONCAT(DISTINCT package_no SEPARATOR ' & ') as package_no, tracking_no, i.invoice_no, i.date_invoiced FROM packages p, invoices i
-					WHERE p.order_number = $order_number
-					AND i.order_number = p.order_number
-					AND i.order_type = ".prep($o['type'])."
-					AND p.id NOT IN (SELECT packageid FROM invoice_shipments)
-					AND DATE(i.date_invoiced) = DATE(p.datetime)";
-	 	$result = qdb($query) or die(qe() . $query);
-
-	 	while ($row = $result->fetch_assoc()) {
-	 		//Check to see if the row is actually populated (Had issues with inserting 1 blank row)
-	 		if($row['package_no']){
-				$invoices[] = $row;
-				$packages_accounted = explode(" & ", $row['package_no']);
-			}
-		}
-
-	 	//This grabs all the shipments on the order with a valid invoice to package relationship
-	 	$query = "SELECT package_no, tracking_no, i.invoice_no, i.date_invoiced FROM packages p, invoice_shipments sp, invoice_items ii, invoices i
-					WHERE p.order_number = $order_number
-					AND i.order_number = p.order_number
-					AND i.order_type = ".prep($o['type'])."
-					AND sp.packageid = p.id
-					AND ii.id = sp.invoice_item_id
-					AND ii.invoice_no = i.invoice_no;";
-	 	$result = qdb($query) or die(qe() . $query);
-
-	 	while ($row = $result->fetch_assoc()) {
-			$invoices[] = $row;
-			$packages_accounted[] = $row['package_no'];
-		}
-
-		//This grabs all the current shipments on the order
-		$query = "Select package_no From packages WHERE order_number = $order_number;";
-		$result = qdb($query);
-
-	 	while ($row = $result->fetch_assoc()) {
-			$package_data[] = $row['package_no'];
-		}
-
-		 //check to see if there are any shipments not linked to an invoice
-		if($package_data && $packages_accounted){
-			$missing_ship_invoices = array_diff($package_data, $packages_accounted);
-		}
-
-		 foreach($invoices as $shipment) {
-		 	$output .= "
-		 		<li>
-	 				<a target='_blank' href='/docs/INV".$shipment['invoice_no'].".pdf'>
-	 					Shipment ".$shipment['package_no']." Invoice ".$shipment['invoice_no']. " (".format_date($shipment['date_invoiced'],'n/j/Y').")
-	 				</a>
-	 			</li>
-		 	";
-		 }
-
-		if(!empty($missing_ship_invoices)) {
-			foreach($missing_ship_invoices as $missing){
-				$output .= "
-			 		<li>
-		 				<a href='#' class='create_invoice' data-order='".$order_number."'>
-		 					Shipment ".$missing." Create Invoice
-		 				</a>
-		 			</li>
-			 	";
-			}
-		} 
-
-
-	 	return $output;
-	 }
-	 
 	function getFreightTotal($order_number) {
 	 	$total = 0;
 	 	
@@ -289,6 +209,39 @@
 	if ($o['type'] == "Purchases"){
 	 	$RMA_history = getRMA($order_number, 'Purchase');
 	}
+
+ 	function getPackagesFix($order_number, $type = 'Sale') {
+ 	 	$output = '';
+	 	$invoices = array();
+		$o = o_params($type);
+	 	//Stores all the packages that have been accounted for in an invoice
+	 	$packages_accounted = array();
+
+	 	$porder_number = prep($order_number);
+		
+		$query = "
+		SELECT GROUP_CONCAT(package_no) as package_no, tracking_no, i.invoice_no, i.date_invoiced 
+			FROM  `packages` p,  `invoice_shipments` sp, invoice_items ii, invoices i
+			WHERE p.id = sp.packageid
+			AND ii.id = sp.invoice_item_id
+			AND i.invoice_no = ii.invoice_no
+			AND p.order_number = $order_number
+			AND p.order_type = ".prep($o['ptype'])."
+			GROUP BY package_no;
+		";
+	 	$invoices = qdb($query) or die(qe()." | $query");
+		foreach($invoices as $shipment) {
+		 	$output .= "
+		 		<li>
+	 				<a target='_blank' href='/docs/INV".$shipment['invoice_no'].".pdf'>
+	 					Shipment ".$shipment['package_no']." Invoice ".$shipment['invoice_no']. " (".format_date($shipment['date_invoiced'],'n/j/Y').")
+	 				</a>
+	 			</li>
+		 	";
+		 }
+
+	 	return $output;
+	 }
 
 	//print_r($RMA_history);
 
