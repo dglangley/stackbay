@@ -18,6 +18,7 @@
       <div class="modal-body" id="modalAlertBody">
       <div class="row">
         <div class="col-md-12">
+        <?php if(!$build): ?>
           <select class="form-control" name="repair_code">
             <?php 
               foreach($repair_codes as $code):
@@ -25,6 +26,7 @@
               endforeach;
             ?>
           </select>
+        <?php endif; ?>
         </div>
 
         <!-- <div class="col-md-6">
@@ -37,7 +39,7 @@
       </div>
       <div class="row">
       <div class="col-md-12">
-        <button  style="margin-top: 10px" class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
+        <button  style="margin-top: 10px" class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="<?=($build ? 'complete_build':'complete_ticket');?>" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
         </div>
         </div>
       </div>

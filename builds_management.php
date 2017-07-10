@@ -174,6 +174,7 @@
 		<form id="build_form" action="build_add.php" method="post">
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #b9bfd8">
 				<div class="col-md-4">
+				 	<a href="/repair_add.php?on=<?=$order_number . '&build=true';?>" class="btn-flat pull-left"><i class="fa fa-truck"></i></a>
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
 						<a href="/repair.php?build=true&on=<?php echo $build_num; ?>&ps=bo" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-wrench" aria-hidden="true"></i></a>
 					<?php } ?>

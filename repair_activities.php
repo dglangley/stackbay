@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
 
 	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in){
 		if ($_REQUEST['type'] == 'test_changer'){
@@ -43,30 +44,21 @@
 	}
 
 	function stockUpdate($repair_item_id, $ro_number, $repair_code){
-		$REPAIR_MAP = array(
-			1=>"Completed",
-			2=>"NTF",
-			3=>"",
-			4=>"",
-			5=>"",
-			6=>"",
-			7=>"",
-			8=>"",
-			9=>"",
-			10=>"",
-			11=>"",
-			12=>"",
-			13=>"",
-			14=>"",
-			15=>"",
-			16=>"",
-			17=>"",
-		);
-
 		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
 		$result = qdb($query) OR die(qe());
 
 		$query = "UPDATE repair_orders SET repair_code_id = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
+		$result = qdb($query) OR die(qe());
+	}
+
+	function buildUpdate($repair_item_id, $ro_number, $build_number){
+		// $query = "UPDATE repair_orders SET repair_code_id = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
+		// $result = qdb($query) OR die(qe());
+
+		$cost = calcRepairCost($ro_number, 0, 0, true);
+
+		//Update the build ticket to completed
+		$query = "UPDATE builds SET status = 'Completed', price = ".prep($cost)." WHERE id = ".prep($build_number).";";
 		$result = qdb($query) OR die(qe());
 	}
 
@@ -76,6 +68,7 @@
 	
 	//Declare variables
 	$ro_number;
+	$build_number;
 	$repair_item_id;
 	$notes;
 	$techid;
@@ -86,6 +79,7 @@
 	$trigger;
 	
 	if (isset($_REQUEST['ro_number'])) { $ro_number = $_REQUEST['ro_number']; }
+	if (isset($_REQUEST['build_number'])) { $build_number = $_REQUEST['build_number']; }
 	if (isset($_REQUEST['repair_item_id'])) { $repair_item_id = $_REQUEST['repair_item_id']; }
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
@@ -123,13 +117,19 @@
 
 		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
 
-		if($trigger == "complete") {
+		if($trigger == "complete" && $_REQUEST['repair_type'] != 'build') {
 			stockUpdate($repair_item_id, $ro_number, $repair_code);
+		} else if($trigger == "complete") {
+			//Create a function for build
+			buildUpdate($repair_item_id, $ro_number, $repair_code, $build_number);
 		}
 	} else {
 
 	}
-	
-	header('Location: /repair.php?on=' . $ro_number);
+	if($_REQUEST['repair_type'] != 'build'){
+		header('Location: /repair.php?on=' . $ro_number);
+	} else {
+		header('Location: /repair.php?build=true&on=' . $build_number);
+	}
 
 	exit;

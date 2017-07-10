@@ -86,7 +86,11 @@
 			<td class = 'line_cond'  data-cond = '".$row['conditionid']."'>".getCondition($row['conditionid'])."</td>
         	<td class = 'line_war'  data-war = ".$row['warranty'].">".($row['warranty'] == '0' ? 'N/A' : getWarranty($row['warranty'],'name'))."</td>";
 		}
-	   	$row_out .= "<td class = 'line_qty' data-stock=".($row['available'] ? $row['available'] : '0')." data-qty = ".$row['qty'].">".$row['qty']."</td>";
+	   	$row_out .= "<td class = 'line_qty' name='item_qty' value=".$row['qty']." data-stock=".($row['available'] ? $row['available'] : '0')." data-qty = ".$row['qty'].">".$row['qty'];
+	   	if($o['build']){
+	    	$row_out .= "<input class='hidden' name='item_qty' value='".$row['qty']."'>";
+	    }
+	    $row_out .= "</td>";
 
 	   	if(!$o['tech'] && !$o['build']){
 	   		$row_out .= "
@@ -302,6 +306,7 @@
 			if(mysqli_num_rows($build_result)) {
 				$build_item = mysqli_fetch_assoc($build_result);
 				$partid = $build_item['partid'];
+				$qty = $build_item['qty'];
 			}
 
 			if($partid) {

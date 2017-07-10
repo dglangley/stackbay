@@ -435,6 +435,10 @@
 				<div class="col-md-4">
 					<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
 					<input type="text" name="techid" value="<?=$U['id'];?>" class="hidden">
+					<input type="text" name="repair_type" value="<?=($build ? 'build' : 'repair');?>" class="hidden">
+					<?php if($build) { ?>
+						<input type="text" name="build_number" value="<?=($build ? $build : '');?>" class="hidden">
+					<?php } ?>
 					<?php if(!empty($items))
 						foreach($items as $item): ?>
 						<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
@@ -450,12 +454,17 @@
 
 					<?php if(!$claimed){ ?>
 						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
-					<?php } else { ?>
+					<?php } else if(!$build) { ?>
 						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
 							Complete Ticket
 						</button>
 						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
-					<?php } ?>		
+					<?php } else { ?>	
+						<button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
+							Complete Build
+						</button>
+						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
+					<?php } ?>	
 				</div>
 			</div>
 			

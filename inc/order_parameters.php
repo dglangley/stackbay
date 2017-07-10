@@ -428,7 +428,7 @@
 			$info['tables'] = " repair_orders o, repair_items i, builds b WHERE o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
 			$info['short'] = "bo";
 			$info['event'] = 'ordered for repair';
-			$info['id'] = "bid";
+			$info['id'] = "id";
 			$info['item_id'] = $info['id'];
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
