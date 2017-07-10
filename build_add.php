@@ -25,12 +25,11 @@
 		);";
 		qdb($insert) or die(qe());
 
-		$insert = "INSERT INTO builds (name, partid, ro_number, status, qty) VALUES (
+		$insert = "INSERT INTO builds (name, partid, ro_number, status) VALUES (
 			".prep($name).",
 			".prep($partid).",
 			".prep($ro_number).",
-			".prep($status).",
-			".prep($qty)."
+			".prep($status)."
 		);";
 		qdb($insert) or die(qe());
 		$bo_number = qid();
@@ -39,20 +38,20 @@
 	}
 
 	function editBuild($name, $partid, $qty, $status, $id) {
-		$insert = "UPDATE builds SET name = ".prep($name).", partid = ".prep($partid).", status = ".prep($status)." , qty = ".prep($qty)." WHERE id = ".prep($id).";";
+		$insert = "UPDATE builds SET name = ".prep($name).", partid = ".prep($partid).", status = ".prep($status)." WHERE id = ".prep($id).";";
 		qdb($insert) or die(qe());
 	}
 	
 	//Declare variables
 	$partid;
-	$qty;
+	$qty = 1;
 	$name; 
 	$status; 
 	$id;
 	$bo_number;
 	
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
-	if (isset($_REQUEST['item_qty'])) { $qty = $_REQUEST['item_qty']; }
+	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
 	if (isset($_REQUEST['name'])) { $name = $_REQUEST['name']; }
 	if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
 	if (isset($_REQUEST['build_id'])) { $id = $_REQUEST['build_id']; }

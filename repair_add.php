@@ -138,8 +138,7 @@
 	}
 
 	function process_repair_to_db(){
-			global $build;
-
+			
 			$place = grab("place");
 			$instance = grab("instance");
 			$condition = prep(grab("condition"));
@@ -167,17 +166,9 @@
 				if(!mysqli_num_rows($res)){
 					$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
 					`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
-					VALUES ($serial,1,$partid,$condition,".prep($build?'shelved':'in repair').",$location_id,$rlineid,".$GLOBALS['U']['id'].",NOW(),NULL)";
+					VALUES ($serial,1,$partid,$condition,'in repair',$location_id,$rlineid,".$GLOBALS['U']['id'].",NOW(),NULL)";
 					
 					qdb($insert) or die(qe()." $insert");
-					$invid = qid();
-
-					if($build) {
-						$insert = "INSERT INTO build_items (buildid, inventoryid) 
-						VALUES (".prep($build).", ".prep($invid).");";
-						
-						qdb($insert) or die(qe()." $insert");	
-					}
 				} else {
 					return"ALREADY SCANNED THIS PART FOR THIS RECORD";
 				}
@@ -301,7 +292,7 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/<?=($build?'builds_management.php?on='.$build:'order_form.php?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a></div>
+			<div class="col-sm-4"><a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active'){
 							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
