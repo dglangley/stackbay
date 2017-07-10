@@ -8,6 +8,8 @@
     include_once $rootdir.'/inc/packages.php';
     include_once $rootdir.'/inc/setCommission.php';
 
+	if (! isset($debug)) { $debug = 0; }
+
     function create_invoice($order_number, $shipment_datetime, $type ='Sale'){
 		//Variable Declarations
 		$warranty = '';
@@ -77,7 +79,8 @@
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
 			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
-		$result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation);
+		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
+		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }
 		$invoice_id =  qid();
 
 		// Select packages.id, serialid, sales_items.partid, price
@@ -86,11 +89,13 @@
 				VALUES (".$invoice_id.", ".prep($row['partid']).", ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
 				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
 			
-			qdb($insert) or die(qe()." ".$insert);
+			if ($GLOBALS['debug']) { echo $insert.'<BR>'; }
+			else { qdb($insert) or die(qe()." ".$insert); }
 			$invoice_item_id = qid();
 
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
-			qdb($package_insert) or die(qe()." ".$package_insert);
+			if ($GLOBALS['debug']) { echo $package_insert.'<BR>'; }
+			else { qdb($package_insert) or die(qe()." ".$package_insert); }
 
 			setCommission($invoice_id,$invoice_item_id);
 		}/* end foreach */
@@ -107,7 +112,8 @@
 					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`,`memo`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
 					VALUES (".$invoice_id.", NULL,".prep($sch['memo']).", ".$sch['qty'].", ".prep($sch['price']).",".prep($sch['id']).", 'sales_charge_id');
 					";
-					qdb($insert) or die(qe()." ".$insert);
+					if ($GLOBALS['debug']) { echo $insert.'<BR>'; }
+					else { qdb($insert) or die(qe()." ".$insert); }
 				}
 			}/* end foreach */
 		}
@@ -152,18 +158,6 @@
 	    ;";
 	    $result = qdb($select) or die(qe());
 	    return $result;
-	}
-	
-	function import_may_invoice(){
-
-		$sel = 'select * from inventory_invoice i
-		where i.date >= "2017-05-01" and amount > 0;';
-		$res = qdb($sel,"PIPE") or die(qe("PIPE")." | $sel");
-		echo("\t |\tNew Inv\t |\tOld Inv\t\t|\tRep No\t\t|<br>");
-		foreach($res as $count => $r){
-			$return = create_invoice($r['ref_no'],$r['date']." 00:00:00", "Repair");
-			echo("$count\t |\t".$return."\t\t |\t".$r['id']."\t\t|\t".$r['ref_no']."\t\t|<br>");
-		}
 	}
 ?>
 

@@ -169,7 +169,7 @@
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                 <div class="col-md-10">
-                    <form class="form-inline" method="POST" action="/save-commission.php">
+                    <form class="form-inline" method="POST" action="/save-usercomm.php">
                         <div style="display: inline-block; width: 100%;">
                             <h2>Commissions</h2>
                             
