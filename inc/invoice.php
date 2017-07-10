@@ -15,21 +15,20 @@
 		$already_invoiced = false;
 		$ro_number = '';
 		$o = o_params($type);
-
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($type)." AND `shipmentid` = ".prep($shipment_datetime).";");
+		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['type'])." AND `shipmentid` = ".prep($shipment_datetime).";");
 		if($already_invoiced){return $already_invoiced;}
 		//Check to see there are actually invoice-able items on the order
 		//Assuming a closed package would make the 
 		$warranty = ($o['sales'] ? "warranty" : "warrantyid");
 		$invoice_item_select = "
-			Select i.partid, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, $warranty as warr, it.id item_id, packages.id packid
+			Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, $warranty as warr, it.id item_id, packages.id packid
 			FROM packages, package_contents, ".$o['item']." it, inventory i 
 			WHERE package_contents.packageid = packages.id
 			AND package_contents.serialid = i.id
 			AND `packages`.order_number = $order_number
-			AND `packages`.order_type = '".$o['type']."'
+			AND `packages`.order_type = '".$o['ptype']."'
 			AND i.".$o['inv_item_id']." = it.id
 			AND it.`".$o['id']."` = `packages`.`order_number`
 			AND packages.datetime = ".prep(format_date($shipment_datetime, "Y-m-d H:i:s"))."
@@ -37,10 +36,11 @@
 			GROUP BY it.id;
 		";
 		
+		exit($invoice_item_select);
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
-			return null;
+			return "Nothing found in invoice_item_select";
 		}
 		$sales_charge_holder = array();
 		if ($type == 'Sale'){
