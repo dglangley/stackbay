@@ -2051,6 +2051,7 @@
 			//Testing purposes
 			console.log(items);
 			
+			$("#modal-iso").modal("hide");
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
