@@ -668,9 +668,9 @@
 													$status;
 													$ordered = 0;
 													$ext = 0;
+													$price = 0;
 
 													if($comp['po_number']) {
-														$price = 0;
 														// $query = "
 														// SELECT po.*, pi.* FROM purchase_orders po, purchase_items pi, inventory i
 														// WHERE po.po_number = ".prep($comp['po_number'])." 

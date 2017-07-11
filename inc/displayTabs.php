@@ -1,6 +1,16 @@
 <?php
 	/***** this function outputs tabs for use in navbar, $pos is used as 'left' or 'right' of central search field *****/
 
+	$inventory_sub = '';
+	//if user is sales or management, they have a manage inventory link
+	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES)) {
+		$inventory_sub = '
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
+				</ul>
+		';
+	}
+
 	// list of all tabs for iterative display to be able to match selected tab ($selected_tab) with appropriate tab
 	$TABS = array(
 		'left' =>
@@ -90,7 +100,13 @@
 				</ul>
 					',
 				),
-				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory','aliases'=>array(),'sub'=>'',),
+				array(
+					'action'=>'/inventory.php',
+					'image'=>'<i class="fa fa-qrcode"></i>',
+					'title'=>'Inventory',
+					'aliases'=>array('/manage_inventory.php'),
+					'sub' => $inventory_sub,
+				),
 			),
 		'right' =>
 			array(

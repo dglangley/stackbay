@@ -14,12 +14,14 @@
 //TABLES TOUCHED: `inventory`, `inventory_history`, `repair_components`, `purchase_requests`, 
 
 
+/*
 $select ="
 SELECT cs.component_id, cs.location_id as loc, cs.quantity as qty, co.date
 	FROM inventory_componentstock cs
 		LEFT JOIN inventory_componentorder co ON cs.order_id = co.id;";
 $results = qdb($select,"PIPE") or die(qe("PIPE"));
 echo($select."<br><BR>");
+*/
 
 //Check the componentorder table for alll the historical order records
 	$prq_select = "
@@ -93,12 +95,14 @@ foreach($prq as $r){
 		echo($inv_insert."<br>");
 		$invid = qid();
 		
+/*
 		$amount = $r['price'] * $quantity;
 		$cost_query = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
 		VALUES ($invid, '".$GLOBALS['now']."', $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
 		qdb($cost_query) OR die(qe().'<BR>'.$cost_query);
 		echo $cost_query.'<BR>';
 		setCostsLog($invid,$pline,"purchase_item_id",$amount);
+*/
 		
 		if($ro_number){
 			$fill = "";
@@ -123,9 +127,6 @@ foreach($prq as $r){
 	VALUES (16, ".$ro_number.", ".prep($rep_id).", ".prep($r['date']).",".prep($po_number).", ".prep($partid).", $quantity, 'IMPORTED FROM OLD CPO TABLE');";
 	qdb($pr_insert) or die(qe()." | $pr_insert");
 	echo($pr_insert."<br>");
-	
-	
-	
 }
 
 
@@ -141,17 +142,18 @@ foreach($results as $r){
 	$po_id = "";
 	$partid = translateComponent($r['component_id']);
 	$event_type ="imported cost";
+	$lstring = "";
 	if($r['order_id']){
 		$cpo_q = "SELECT `cpo_id` FROM `inventory_componentorder` co WHERE id = ".prep($r['order_id']).";";
 		$co = qdb($cpo_q,"PIPE") or die(qe("PIPE"));
 		echo($cpo_q."<br>");
 		$ca = mysqli_fetch_assoc($co);
 		$po_id = $ca['cpo_id'];
-		$lstring = "";
 		$lresults = getLineItemIDs("purchase",$po_id,$partid);
 		if(count($lresults)){
 			$event_type = "purchase_item_id";
 			$lstring = $lresults[0];
+echo 'lstring: '.$lstring.'<BR>';
 		}
 	}
 	
@@ -160,11 +162,12 @@ foreach($results as $r){
 	qdb($insert) or die(qe());
 	echo("$insert<br>");
 	$invid = qid();
+continue;
 	
 	$amount = $r['cost_per_unit']*$r['quantity'];
 	$cost_query = "INSERT INTO `inventory_costs`(`inventoryid`, `datetime`, `actual`, `average`, `notes`) 
 	VALUES ($invid, ".prep($GLOBALS['now']).", $amount, $amount, 'IMPORTED ON COMPONENTS IMPORT')";
-	qdb($cost_query);
+	//qdb($cost_query);
 	echo("$cost_query<br><br>");
 	setCostsLog($invid,$lstring,$event_type,$amount);
 }

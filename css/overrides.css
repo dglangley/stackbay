@@ -844,6 +844,9 @@ tr.info td, td.info {
 tr.info:hover td, td.info:hover {
 	background-color:#e9fbff !important;
 }
+.info.em {
+	font-style:italic;
+}
 
 /***** NOTIFICATIONS *****/
 .navbar-inverse .notification-dropdown .count {

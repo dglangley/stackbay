@@ -2081,7 +2081,7 @@
 						}
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
-						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Pop-up Blocked",data['error'], false);
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Yikes!",data['error'], false);
 						$click.attr('id','btn_update');
 					//Nothing was changed
 					} else {
