@@ -3,7 +3,7 @@
 
 	$inventory_sub = '';
 	//if user is sales or management, they have a manage inventory link
-	if (in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES)) {
+	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES)) {
 		$inventory_sub = '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
                     <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
