@@ -39,5 +39,8 @@
 		}
 		return ($TERMS_INFO[$value][$input][$return]);
 	}
+	function getDays($id){
+		return rsrq("SELECT `days` FROM `terms` where `id` = ".prep($id).";");
+	}
 
 ?>

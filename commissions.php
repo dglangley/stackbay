@@ -338,12 +338,22 @@
 		$order_type = '';
 		$order_table = '';
 		if ($type=='Sale') {
+			$order_abbrev = 'SO';
 			$order_type = 'so_number';
 			$order_table = 'sales_orders';
+			$item_type = 'sales_items';
+			$item_field = 'sales_item_id';
+			$order_type = 'so_number';
 		} else if ($type=='Repair') {
 			$order_type = 'ro_number';
 			$order_table = 'repair_orders';
+			$order_abbrev = 'RO';
+			$item_type = 'repair_items';
+			$item_field = 'repair_item_id';
+			$order_type = 'ro_number';
 		}
+
+		// get all invoices which are commissioned against
 		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status ";
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
@@ -358,17 +368,63 @@
 		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$comm_invoiced = 0;
 			$commissionid = $r['id'];
-			$r['inv_amount'] = getInvoiceAmount($r['invoice_no']);
-			$r['amount'] = $r['commission_amount'];
-
-			$r['charge_type'] = $type;
+			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
 
 			// get amount already paid out
 			$r['commissions'] = array();
 
-			// this is just to get the reps with outstanding commissions, but we get details in a later process
+			// get invoice items, which we will use to compare for commissions against each invoiced item
+			$query2 = "SELECT qty, amount, partid, id FROM invoice_items WHERE invoice_no = '".$invoice_no."'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$item_amt = $r2['qty']*$r2['amount'];
+				$inv_amt += $item_amt;
+
+				$r['commissions'][$r2['id']] = array('qty'=>$r2['qty'],'amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
+
+				$query3 = "SELECT s.invoice_item_id FROM inventory_history h, ".$item_type." t, packages p, package_contents pc, invoice_shipments s ";
+				$query3 .= "WHERE h.invid = '".res($r2['inventoryid'])."' AND h.invid = pc.serialid ";
+				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id ";
+				$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
+				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND s.invoice_item_id IS NOT NULL; ";
+				$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					$inv_item_id = $r3['invoice_item_id'];
+				}
+
+
+			// get commissioned items on this invoice
+			$query2 = "SELECT * ";
+			$query2 .= "FROM commissions c WHERE c.invoice_no = '".$r['invoice_no']."' ";
+			if ($rep_filter) { $query2 .= "AND rep_id = '".res($rep_filter)."' "; }
+			$query2 .= "ORDER BY rep_id ASC, IF(item_id_label='sales_item_id',0,1); ";
+			$result2 = qdb($query2) OR die("Problem pulling commissions for invoice# ".$r['invoice_no']);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$inv_item_id = 0;
+				// determine invoice item id if there's an inventoryid
+				if (! $r2['invoice_item_id'] AND $r2['inventoryid']) {
+					$query3 = "SELECT s.invoice_item_id FROM inventory_history h, ".$item_type." t, packages p, package_contents pc, invoice_shipments s ";
+					$query3 .= "WHERE h.invid = '".res($r2['inventoryid'])."' AND h.invid = pc.serialid ";
+					$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id ";
+					$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
+					$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND s.invoice_item_id IS NOT NULL; ";
+					$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$inv_item_id = $r3['invoice_item_id'];
+					}
+				}
+
+				if (! isset($r['commissions'][$inv_item_id])) { $r['commissions'][$inv_item_id] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
+				$r['commissions'][$inv_item_id]['comms'][$r2['rep_id']][] = $r2;
+			}
+
+			$r['amount'] = $r['commission_amount'];
+
+			$r['charge_type'] = $type;
+
 			$comm_sales = array();
 			$query2 = "SELECT rep_id, commission_amount, id, item_id, item_id_label, inventoryid ";
 			$query2 .= "FROM commissions c WHERE c.invoice_no = '".$r['invoice_no']."' ";
@@ -382,6 +438,7 @@
 
 				/***** VERIFY THAT COMMS WERE PAID OUT ON ALL ITEMS ON INVOICE *****/
 
+/*
 				$item_id = 0;
 				$item_id_label = '';
 				if ($r2['cogsid'] AND (! $r2['item_id'] OR ! $r2['item_id_label'])) {
@@ -424,9 +481,11 @@
 						$comm_invoiced += $sale_amount;
 					}
 				}
+*/
 
 				/***** END VERIFY *****/
 
+/*
 				$query3 = "SELECT SUM(amount) amount FROM commission_payouts WHERE commissionid = '".$r2['id']."'; ";
 				$result3 = qdb($query3) OR die("Problem pulling associated commission payouts for id ".$r2['id']);
 				if (mysqli_num_rows($result3)>0) {
@@ -439,12 +498,15 @@
 				}
 
 				$r['commissions'][] = $r2;
+*/
 			}
-			if (count($r['commissions'])==0 AND $comm_invoiced==$r['inv_amount']) { continue; }
+//			if (count($r['commissions'])==0 AND $comm_invoiced==$r['inv_amount']) { continue; }
 
 			$orders[] = $r;
 		}
 	}
+echo '<BR><BR>';
+print_r($orders);
 
 	$date_today = strtotime($now);
 	$secs_per_day = 60*60*24;
@@ -500,6 +562,7 @@
 			</tr>
 		';
 
+/*
 		$inventories = array();
 		$query2 = "SELECT i.id, ii.partid, i.purchase_item_id, ii.amount, i.serial_no, ii.id invoice_item_id, item.id item_id, '".$item_field."' item_id_label ";
 		$query2 .= "FROM invoices inv, inventory i, inventory_history h, ".$item_type." item, invoice_items ii ";
@@ -517,6 +580,7 @@
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$inventories[$r2['id']] = $r2;
 		}
+*/
 
 		$num_comms = count($r['commissions']);
 		if ($num_comms>0) {
@@ -526,11 +590,15 @@
 					<table class="table table-condensed">
 			';
 		}
-		if (count($r['commissions'])>0) {
-			$comm_rows .= '
+		foreach ($r['commissions'] as $invoice_item_id => $invoice_item) {
+			$partid = $invoice_item['partid'];
+			$sale_amount = $invoice_item['amount'];
+
+			foreach ($invoice_item['comms'] as $comm_repid => $a) {
+				$comm_rows .= '
 						<tr>
 							<td class="col-md-1"> </td>
-							<td class="col-md-2"> <strong>'.getRep($c['rep_id']).'</strong> </td>
+							<td class="col-md-2"> <strong>'.getRep($comm_repid).'</strong> </td>
 							<td class="col-md-2"> </td>
 							<td class="col-md-1"> </td>
 							<td class="col-md-1 text-right"> <strong>'.$r['charge_type'].' Price</strong> </td>
@@ -546,11 +614,23 @@
 -->
 							</td>
 						</tr>
-			';
-		}
-		foreach ($r['commissions'] as $c) {
+				';
 
-			foreach ($inventories as $inventoryid => $I) {
+//			foreach ($inventories as $inventoryid => $I) {
+			foreach ($a as $c) {
+				$inventoryid = $c['inventoryid'];
+				$serial = '';
+				$pi_id = 0;
+				if ($c['inventoryid']) {
+					$query3 = "SELECT serial_no, purchase_item_id FROM inventory i WHERE i.id = '".$inventoryid."'; ";
+					$result3 = qdb($query3) OR die("Could not find inventoryid ".$c['inventoryid']);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						$serial = $r3['serial_no'];
+						$pi_id = $r3['purchase_item_id'];
+					}
+				}
+
 				$cogs = 0;
 				$comm_amount = 0;
 				$chk = '';
@@ -562,12 +642,12 @@
 				$comm_cls = '';
 				$profit = 0;
 
-				$serial = $I['serial_no'];
-				$sale_amount = $I['amount'];
-				$pi_id = $I['purchase_item_id'];
+//				$serial = $I['serial_no'];
+//				$sale_amount = $I['amount'];
+//				$pi_id = $I['purchase_item_id'];
 				$source_ln = getSource($pi_id);
 
-				$query3 = "SELECT * FROM parts WHERE id = '".$I['partid']."'; ";
+				$query3 = "SELECT * FROM parts WHERE id = '".$partid."'; ";
 				$result3 = qdb($query3);
 				$r3 = mysqli_fetch_assoc($result3);
 				$parts = explode(' ',$r3['part']);
@@ -576,7 +656,7 @@
 
 				$results = array();
 				$query2 = "SELECT commission_amount, commission_rate, cogsid, id, item_id, item_id_label FROM commissions c ";
-				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$c['rep_id']."' AND invoice_no = '".$r['invoice_no']."'; ";
+				$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$comm_repid."' AND invoice_no = '".$r['invoice_no']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) {
 					$chk = 'disabled';
@@ -603,10 +683,10 @@
 					}
 					$cogs = round($cogs,2);
 					$profit = $I['amount']-$cogs;
-					$comm_amount = $profit*($RATES[$c['rep_id']]/100);
+					$comm_amount = $profit*($RATES[$comm_repid]/100);
 					$comm_edit = '<a href="javascript:void(0);" class="calc-comm" '.
 						'data-cogs="'.$cogs.'" data-invoice="'.$r['invoice_no'].'" data-invoiceitemid="'.$I['invoice_item_id'].'" data-inventoryid="'.$inventoryid.'" '.
-						'data-repid="'.$c['rep_id'].'" data-itemid="'.$I['item_id'].'" data-itemidlabel="'.$I['item_id_label'].'">'.
+						'data-repid="'.$comm_repid.'" data-itemid="'.$I['item_id'].'" data-itemidlabel="'.$I['item_id_label'].'">'.
 						'<i class="fa fa-calculator"></i></a>';
 
 					$results[] = array(
@@ -662,16 +742,16 @@
 
 					$comm_amount = round($comm_amount,2);
 					// sum comm amount for this rep
-					if (! isset($comm_reps[$c['rep_id']])) { $comm_reps[$c['rep_id']] = 0; }
-					if ($chk=='checked') { $comm_reps[$c['rep_id']] += $comm_amount; }
+					if (! isset($comm_reps[$comm_repid])) { $comm_reps[$comm_repid] = 0; }
+					if ($chk=='checked') { $comm_reps[$comm_repid] += $comm_amount; }
 
-					if (! isset($pending_comms[$c['rep_id']])) { $pending_comms[$c['rep_id']] = 0; }
-					$pending_comms[$c['rep_id']] += $comm_amount;
+					if (! isset($pending_comms[$comm_repid])) { $pending_comms[$comm_repid] = 0; }
+					$pending_comms[$comm_repid] += $comm_amount;
 
 					$comm_rows .= '
 						<tr class="'.$cls.'">
 							<td class="col-md-1" style="padding:0px !important">
-								<input type="checkbox" name="comm['.$C['id'].']" class="comm-item" data-repid="'.$c['rep_id'].'" data-amount="'.$comm_amount.'" value="'.$comm_amount.'" '.$chk.'>
+								<input type="checkbox" name="comm['.$C['id'].']" class="comm-item" data-repid="'.$comm_repid.'" data-amount="'.$comm_amount.'" value="'.$comm_amount.'" '.$chk.'>
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
 							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="history_button"><i class="fa fa-history"></i></a> </td>
@@ -697,6 +777,7 @@
 						</tr>
 					';
 				}
+			}
 			}
 		}
 		if ($num_comms>0) {

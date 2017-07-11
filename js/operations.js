@@ -2051,6 +2051,7 @@
 			//Testing purposes
 			console.log(items);
 			
+			$("#modal-iso").modal("hide");
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
@@ -2060,6 +2061,7 @@
 					$("#loader").hide();
 					console.log('TimeStamp: ' + data['timestamp']);
 					console.log("Invoice "+data['invoice']);
+					console.log(data);
 					if(!data['error'] && checkChanges){
 					// if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully

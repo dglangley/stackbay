@@ -33,5 +33,11 @@
     	}
     	return($return);
     }
-    
+  function prexit($array){
+      // Alias for pretty printing a record for debug purposes;
+      echo("<pre>");
+      print_r($array);
+      echo("</pre>");
+      exit;
+  }
 ?>
