@@ -106,9 +106,9 @@
 	if (isset($_REQUEST['repid']) AND is_numeric($_REQUEST['repid']) AND $_REQUEST['repid']>0) { 
 		$rep_filter = $_REQUEST['repid']; 
 	}
-	// restrict user access to other rep's info if they don't have admin or management roles
+	// restrict user access to other rep's info if they don't have management privileges
 	$user_admin = false;
-	if (!in_array("1", $USER_ROLES) AND !in_array("4", $USER_ROLES)) {
+	if (!in_array("4", $USER_ROLES)) {
 		$rep_filter = $U['id'];
 		$reps_list = getSalesReps($rep_filter,true);
 	} else {

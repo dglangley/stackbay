@@ -29,12 +29,14 @@ echo($bdb_select."<br>");
 
 $arr_check = array();
 $translation_array = array();
+/*
 if($debug){
-qdb("DELETE FROM `bills` WHERE notes like 'COMP BILLS%';");
-qdb("DELETE FROM `bill_items` where memo like 'COMP BILLS%';");
-qdb("DELETE FROM `payments` where number like 'Bill%';");
-qdb("DELETE FROM `payment_details` where order_type like 'bill';");
+    qdb("DELETE FROM `bills` WHERE notes like 'COMP BILLS%';");
+    qdb("DELETE FROM `bill_items` where memo like 'COMP BILLS%';");
+    qdb("DELETE FROM `payments` where number like 'Bill%';");
+    qdb("DELETE FROM `payment_details` where order_type like 'bill';");
 }
+*/
 
 foreach($bdb_results as $r){
     //Var dec

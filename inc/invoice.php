@@ -64,6 +64,7 @@
 			".$o['order'].".termsid = terms.id;
 		";
 		
+		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = mysqli_fetch_assoc(qdb($macro) or die(qe()." $macro"));
 		if (strtolower($invoice_macro['type']) == 'prepaid'){
 			// $pay_day = $GLOBALS['today'];
