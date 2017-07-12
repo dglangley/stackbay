@@ -94,7 +94,7 @@
             <td class = 'line_linext'>".format_price($row['qty']*$row['uPrice'])."</td>
             <td class = 'line_ref' style='display: none;' data-label='".$row['ref_1_label']."'>".$row['ref_1']."</td>";
         }
-		if(!$o['repair'] && !$o['tech'] && !$o['build']){
+		if(!$o['tech'] && !$o['build']){
     		$row_out .= "<td class='forms_edit' style='cursor: pointer;'><i class='fa fa-pencil fa-4' aria-hidden='true'></i></td>";
 		} else {
 			$row_out .= "<td></td>";

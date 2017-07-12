@@ -30,19 +30,13 @@
 	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getSalesCharges.php';
 	
-	// print_r(hecidb('ERB')); die;
-	// $query = "SELECT * FROM parts WHERE id = 343669;";
- //            $result = qdb($query) or jsonDie(qe()." | $query");
-
- //            if (mysqli_num_rows($result)) {
- //                $result = mysqli_fetch_assoc($result);
- //            }
 
             //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
@@ -64,6 +58,10 @@
 	$build_number;
 	$sales_order;
 	$tracking;
+
+	$repair_billable;
+	$repair_item_id;
+	$received_inventory;
 	
 	if(strtolower($o['type']) == 'rtv'){
 	 	$status = 'Active';
@@ -78,20 +76,25 @@
 
 		$repair_billable = true;
 
-		$query = "SELECT ro.termsid, ri.price FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ".prep($order_number).";";
+		$query = "SELECT ro.termsid, ri.price, ri.id, ro.ro_number FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ".prep($order_number)." AND ro.ro_number = ri.ro_number;";
 		$result = qdb($query) or die(qe());
 
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
+			$repair_item_id = $result['id'];
+
+			//print_r($result);
 			if($result['termsid'] == '15' && $result['price'] == '0.00')
 				$repair_billable = false;
 		}
 
 	 	//Check to see if a sales_item record has been created for this item
 	 	//echo $status . 'test';
-		if($status) {
+		if($status || $o['type'] == "Repair") {
 			$query = "SELECT so_number FROM sales_items s, repair_items r WHERE s.ref_1_label = 'repair_item_id' AND s.ref_1 = r.id AND r.ro_number = ".prep($order_number).";";
 			$result = qdb($query) or die(qe());
+
+			//echo $query;
 			if (mysqli_num_rows($result)) {
 				$result = mysqli_fetch_assoc($result);
 				$sales_order = $result['so_number'];
@@ -101,6 +104,14 @@
 				if (mysqli_num_rows($result)) {
 					$result = mysqli_fetch_assoc($result);
 					$tracking = ($result['tracking_no'] ? $result['tracking_no'] : 'N/A');
+				} else {
+					$query = "SELECT id inventoryid FROM inventory WHERE repair_item_id = ".prep($repair_item_id)." AND status <> 'in repair';";
+					$result = qdb($query) or die(qe());
+
+					if (mysqli_num_rows($result)) {
+						$result = mysqli_fetch_assoc($result);
+						$received_inventory = $result['inventoryid'];
+					}
 				}
 			}
 		}
@@ -288,16 +299,75 @@
 				include_once $rootdir.'/modal/alert.php';
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
+				include_once $rootdir.'/modal/repair_receive.php';
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['repair'] && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
-				<div class="col-md-3">
+				<div class="col-md-4">
 					<?php
 						if($order_number != "New"){
 							if($o['type'] == 'Invoice'){
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
-							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i></a> ';
+							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i> Receive</a> ';
+							
+							if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { ?>
+								<?php if($sales_order && $o['type'] == 'Repair') { ?>
+									<div class ="btn-group pull-left">
+										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-truck"></i> Ship
+											<span class="caret"></span>
+			                            </button>
+			                            <ul class="dropdown-menu">
+			                            	<li>
+												<a href="/shipping.php?on=<?=$sales_order;?>"><i class="fa fa-truck"></i> Ship</a>
+											</li>
+										</ul>
+									</div>
+								<?php } else if($tracking && $o['type'] == 'Repair') { ?>
+									<div class ="btn-group pull-left">
+										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-truck"></i> Ship
+											<span class="caret"></span>
+			                            </button>
+			                            <ul class="dropdown-menu">
+			                            	<li>
+												<span style="padding: 3px 20px;">Tracking# <?=$tracking;?></span>
+											</li>
+										</ul>
+									</div>
+								<?php } else if($received_inventory && $o['type'] == 'Repair') { ?>
+									<div class ="btn-group pull-left">
+										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-truck"></i> Ship
+											<span class="caret"></span>
+			                            </button>
+			                            <ul class="dropdown-menu">
+			                            	<li>
+												<span style="padding: 3px 20px;">Returned to Stock</span>
+											</li>
+										</ul>
+									</div>
+								<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
+									<form id="repair_ship" action="repair_shipping.php" method="POST">
+										<div class ="btn-group pull-left">
+											<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+												<i class="fa fa-truck"></i> Ship
+												<span class="caret"></span>
+				                            </button>
+				                            <ul class="dropdown-menu">
+				                            	<li>
+													<a class="ship" data-ship="ship" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-truck"></i> Ship</a>
+												</li>
+												<li>
+													<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-list"></i> Return to Stock</a>
+												</li>
+											</ul>
+										</div>
+										<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
+									</form>
+								<?php } ?>
+							<?php }
 							if($o['type'] == 'Builds'){
 								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'&build=true" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
 							}
@@ -498,7 +568,7 @@
 					
 				</div>
 				
-				<div class="col-md-6 text-center">
+				<div class="col-md-5 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if(!$o['invoice'] && !$o['rtv']){
@@ -536,20 +606,6 @@
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
-					<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { ?>
-						<?php if($sales_order && $o['type'] == 'Repair') { ?>
-							<a href="/shipping.php?on=<?=$sales_order;
-							?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
-						<?php } else if($tracking && $o['type'] == 'Repair') { ?>
-							<div class="pull-right" style="margin-top: 15px;">
-								<b>Shipped Tracking#</b> <?=$tracking;?>
-							</div>
-						<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
-							<form action="repair_shipping.php" method="POST">
-								<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
-							</form>
-						<?php } ?>
-					<?php } ?>
 				</div>
 			</div>
 			
@@ -948,6 +1004,34 @@
 					$('textarea[name="notes"]').val('');
 					
 					$('input[name="reference_button"]').prop('checked', false);
+		        });
+
+		        $(document).on("click", ".ship", function(e) {
+		        	e.preventDefault();
+		        	var type = $(this).data("ship");
+		        	//alert(type);
+		        	$('#modal-repair-receive .alert').hide();
+
+		        	if(type == 'ship') {
+		        		$("#receive_form").attr("action", "repair_shipping.php");
+		        		//if (confirm("Confirm item will be shipped.<br><br>A Sales Order will be Generated upon confirming.")){
+		        		//$('form#repair_ship').submit();
+		        		$('#modal-repair-receive .alert-ship').show();
+		        		$('#modal-repair-receive .ship_option').show();
+		        		$('#modalshipTitle span').html('Ship to Customer');
+        				$('.modal_message').html('Sales Order will be generated for this item upon confirmation.');
+	        			$('#modal-repair-receive').modal('show');
+		        		//}
+		        	} else {
+		        		$("#receive_form").attr("action", "repair_activities.php");
+		        		//if (confirm("Confirm item will be sent to stock.")){
+		        		$('#modal-repair-receive .alert-receive').show();
+	        			$('#modal-repair-receive .ship_option').hide();
+	        			$('#modalshipTitle span').html('Receive to Stock');
+	        			$('.modal_message').html('Item will be received to selected location upon confirmation.');
+	        			$('#modal-repair-receive').modal('show');
+		        		//}
+		        	}
 		        });
 		        
 		        //$(document).load(function(){
