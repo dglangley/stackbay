@@ -309,7 +309,7 @@
 							if($o['type'] == 'Invoice'){
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
 							}
-							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i> Receive</a> ';
+							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i> '.($o['type'] == 'Repair' || $build_number ? "Receive" : '').'</a> ';
 							
 							if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { ?>
 								<?php if($sales_order && $o['type'] == 'Repair') { ?>

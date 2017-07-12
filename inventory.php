@@ -569,10 +569,8 @@
 												// parts += "<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>";
 											parts += '</li>';
 											parts += '<li>';
-											parts += "<a class='repair_button pointer text-left' data-invid="+serial[0]+" data-status='"+serial[3]+"'>";
-											if(serial[3] == 'in repair') {
-												parts += "<i style='margin-right: 5px;' class='fa fa-truck' aria-hidden='true'></i> Mark as Repaired";
-											} else {
+											if(serial[3] != 'in repair') {
+											parts += "<a class='repair_button pointer text-left' data-partid="+partid+" data-invid="+serial[0]+" data-status='"+serial[3]+"'>";
 												parts += "<i style='margin-right: 5px;' class='fa fa-wrench' aria-hidden='true'></i> Send to Repair";
 											}
 											parts += '</li>';
@@ -653,7 +651,8 @@
 					},
 					error: function(xhr, status, error) {
 						//$(".loading_element_listing").hide();
-					   	alert("Error on the parts receipt: "+error);
+						if(error)
+					   		alert("Error on the parts receipt: "+error);
 					},			
 			});
 		}
@@ -720,8 +719,11 @@
 		// $('.disabled_input').find('select').prop('disabled', true)
 		
 		//============================ Side buttons ============================
-		$(document).on('click','.repair_button, .save_button, .delete_button, .scrap_button',function(){
+		$(document).on('click','.repair_button, .save_button, .delete_button, .scrap_button',function(e){
+			//e.preventDefault();
 			//Variable Delcarations
+			var partid;
+			var indiv;
 			var $save =$(this);
 			var id = $save.closest('tr').data('invid');
 			var newSerial = $save.closest('tr').find('.newSerial').val();
@@ -735,6 +737,8 @@
 			if($(this).hasClass("repair_button")){
 				action = 'repair';
 				status = $(this).data("status");
+				partid = $(this).data("partid");
+				invid = $(this).data("invid");
 			}else if($(this).hasClass("delete_button")){
 				action = 'delete';
 				valid = false;
@@ -750,51 +754,54 @@
 			console.log(window.location.origin+'/json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&place='+newPlace+'&instance='+newInstance+'&conditionid='+newCondition);
 			if (valid){
 				$.ajax({
-				type: "POST",
-				url: '/json/inventory-edit.php',
-				data: {
-					"id": id,
-					"serial_no": newSerial,
-					"place": newPlace,
-					"instance": newInstance,
-					"conditionid": newCondition,
-					"notes" : newNotes,
-					"status": status,
-					"action": action
-				},
-				dataType: 'json',
-				success: function(result) {
-					console.log(result);
-					if(result && action == 'save') {
-						$save.closest('tr').find('.edit').hide();
-						$save.closest('tr').find('.data').show();
-						$save.closest('table').find('th span.edit').hide();
-						$save.closest('tr').find('.edit_button').show();
-						$save.closest('tr').find('.delete_button').show();
-						
-						$save.hide();
-						// $('.alert-success').show();
-						// $('.alert-success').delay(6000).fadeOut('fast');
-						
-						$save.closest('tr').find('.serial_original').html(newSerial);
-						$save.closest('tr').find('.notes_original').text(newNotes);
-					} else if (action == 'repair') {
-						location.reload();
+					type: "POST",
+					url: '/json/inventory-edit.php',
+					data: {
+						"id": id,
+						"serial_no": newSerial,
+						"place": newPlace,
+						"instance": newInstance,
+						"conditionid": newCondition,
+						"notes" : newNotes,
+						"status": status,
+						"invid" : invid,
+						"partid" : partid,
+						"action": action
+					},
+					dataType: 'json',
+					success: function(result) {
 						console.log(result);
-					} else{
-						$save.closest('tr').remove();
+						if(action == 'repair') {
+							//alert('ok');
+							window.location = "/order_form.php?ps=repair&on="+result;
+						}
+						if(result && action == 'save') {
+							$save.closest('tr').find('.edit').hide();
+							$save.closest('tr').find('.data').show();
+							$save.closest('table').find('th span.edit').hide();
+							$save.closest('tr').find('.edit_button').show();
+							$save.closest('tr').find('.delete_button').show();
+							
+							$save.hide();
+							// $('.alert-success').show();
+							// $('.alert-success').delay(6000).fadeOut('fast');
+							
+							$save.closest('tr').find('.serial_original').html(newSerial);
+							$save.closest('tr').find('.notes_original').text(newNotes);
+						} else{
+							$save.closest('tr').remove();
+						}
+						console.log('inv')
+					},
+					error: function(xhr, status, error) {
+						// $(".loading_element_listing").hide();
+					   	alert("No Parts Found with those parameters: "+error);
+					},
+					complete: function(result){
+						$("tbody").html("");
+						inventory_history();
 					}
-					console.log('inv')
-				},
-				error: function(xhr, status, error) {
-					// $(".loading_element_listing").hide();
-				   	alert("No Parts Found with those parameters: "+error);
-				},
-				complete: function(result){
-					$("tbody").html("");
-					inventory_history();
-				}
-			});
+				});
 			}
 		});
 		
