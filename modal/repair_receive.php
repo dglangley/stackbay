@@ -32,9 +32,9 @@
                         <!-- </div> -->
                     </div>
 
-                    <br>
+                    <br class="locations_selector">
 
-    				<div class="row" style="margin: 0;">
+    				<div class="row locations_selector" style="margin: 0;">
                         <div class="col-md-4" style="padding-left: 0px !important;">
                             <?=loc_dropdowns('place')?>
                         </div>

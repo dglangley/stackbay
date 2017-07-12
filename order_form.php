@@ -1020,6 +1020,7 @@
 		        		//$('form#repair_ship').submit();
 		        		$('#modal-repair-receive .alert-ship').show();
 		        		$('#modal-repair-receive .ship_option').hide();
+		        		$('#modal-repair-receive .locations_selector').hide();
 		        		$('#modalshipTitle span').html('Ship to Customer');
         				$('.modal_message').html('Repair Shipping Order will be generated for this item upon confirmation.');
 	        			$('#modal-repair-receive').modal('show');
@@ -1028,6 +1029,7 @@
 		        		$("#receive_form").attr("action", "repair_activities.php");
 		        		//if (confirm("Confirm item will be sent to stock.")){
 		        		$('#modal-repair-receive .alert-receive').show();
+		        		$('#modal-repair-receive .locations_selector').show();
 	        			$('#modal-repair-receive .ship_option').show();
 	        			$('#modalshipTitle span').html('Receive to Stock');
 	        			$('.modal_message').html('Item will be received to selected location upon confirmation.');
