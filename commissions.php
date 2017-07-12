@@ -413,13 +413,14 @@
 					);
 
 					$query4 = "SELECT *, '0' paid_amount FROM commissions c WHERE invoice_no = '".$r['invoice_no']."' AND inventoryid = '".$r3['invid']."' ";
+					if ($rep_filter) { $query4 .= "AND rep_id = '".res($rep_filter)."' "; }
 					$query4 .= "ORDER BY rep_id ASC; ";
 //					echo $query4.'<BR>';
 					$result4 = qdb($query4) OR die("Could not pull commissions for invoice ".$r['invoice_no']." AND inventoryid ".$r3['invid']);
 					// if no results from commissions table, supplement them with reps based on $RATES
 					if (mysqli_num_rows($result4)==0) {
 						foreach ($RATES as $comm_repid => $comm_rate) {
-							if (! $comm_rate) { continue; }
+							if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
 							$comm['rep_id'] = $comm_repid;
 
 							if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
