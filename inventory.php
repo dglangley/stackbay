@@ -752,56 +752,87 @@
 				}
 			}
 			console.log(window.location.origin+'/json/inventory-edit.php?id='+id+'&serial_no='+newSerial+'&place='+newPlace+'&instance='+newInstance+'&conditionid='+newCondition);
-			if (valid){
-				$.ajax({
-					type: "POST",
-					url: '/json/inventory-edit.php',
-					data: {
-						"id": id,
-						"serial_no": newSerial,
-						"place": newPlace,
-						"instance": newInstance,
-						"conditionid": newCondition,
-						"notes" : newNotes,
-						"status": status,
-						"invid" : invid,
-						"partid" : partid,
-						"action": action
-					},
-					dataType: 'json',
-					success: function(result) {
-						console.log(result);
-						if(action == 'repair') {
-							//alert('ok');
-							window.location = "/order_form.php?ps=repair&on="+result;
-						}
-						if(result && action == 'save') {
-							$save.closest('tr').find('.edit').hide();
-							$save.closest('tr').find('.data').show();
-							$save.closest('table').find('th span.edit').hide();
-							$save.closest('tr').find('.edit_button').show();
-							$save.closest('tr').find('.delete_button').show();
-							
-							$save.hide();
-							// $('.alert-success').show();
-							// $('.alert-success').delay(6000).fadeOut('fast');
-							
-							$save.closest('tr').find('.serial_original').html(newSerial);
-							$save.closest('tr').find('.notes_original').text(newNotes);
-						} else{
-							$save.closest('tr').remove();
-						}
-						console.log('inv')
-					},
-					error: function(xhr, status, error) {
-						// $(".loading_element_listing").hide();
-					   	alert("No Parts Found with those parameters: "+error);
-					},
-					complete: function(result){
-						$("tbody").html("");
-						inventory_history();
+			if(action == 'repair') {
+				if(confirm("Please confirm you want to send this part to repair.")) {
+					if (valid){
+						$.ajax({
+							type: "POST",
+							url: '/json/inventory-edit.php',
+							data: {
+								"id": id,
+								"serial_no": newSerial,
+								"place": newPlace,
+								"instance": newInstance,
+								"conditionid": newCondition,
+								"notes" : newNotes,
+								"status": status,
+								"invid" : invid,
+								"partid" : partid,
+								"action": action
+							},
+							dataType: 'json',
+							success: function(result) {
+								console.log(result);
+								if(action == 'repair') {
+									//alert('ok');
+									window.location = "/order_form.php?ps=repair&on="+result;
+								}
+							}
+						});
 					}
-				});
+				}
+			} else {
+				if (valid){
+					$.ajax({
+						type: "POST",
+						url: '/json/inventory-edit.php',
+						data: {
+							"id": id,
+							"serial_no": newSerial,
+							"place": newPlace,
+							"instance": newInstance,
+							"conditionid": newCondition,
+							"notes" : newNotes,
+							"status": status,
+							"invid" : invid,
+							"partid" : partid,
+							"action": action
+						},
+						dataType: 'json',
+						success: function(result) {
+							console.log(result);
+							if(action == 'repair') {
+								//alert('ok');
+								window.location = "/order_form.php?ps=repair&on="+result;
+							}
+							if(result && action == 'save') {
+								$save.closest('tr').find('.edit').hide();
+								$save.closest('tr').find('.data').show();
+								$save.closest('table').find('th span.edit').hide();
+								$save.closest('tr').find('.edit_button').show();
+								$save.closest('tr').find('.delete_button').show();
+								
+								$save.hide();
+								// $('.alert-success').show();
+								// $('.alert-success').delay(6000).fadeOut('fast');
+								
+								$save.closest('tr').find('.serial_original').html(newSerial);
+								$save.closest('tr').find('.notes_original').text(newNotes);
+							} else{
+								$save.closest('tr').remove();
+							}
+							console.log('inv')
+						},
+						error: function(xhr, status, error) {
+							// $(".loading_element_listing").hide();
+						   	alert("No Parts Found with those parameters: "+error);
+						},
+						complete: function(result){
+							$("tbody").html("");
+							inventory_history();
+						}
+					});
+				}
 			}
 		});
 		
