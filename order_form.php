@@ -728,6 +728,7 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
+					            <?php if($o['sale']):?>
 					            <tr id = 'first_fee_field' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
@@ -754,7 +755,6 @@
 						                </div>
 					                <td></td>
 					            </tr>
-					            
 					            <tr id = 'second_fee_field' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
@@ -781,7 +781,7 @@
 						                </div>
 					                <td></td>
 					            </tr>
-					            
+					            <?php endif; ?>
 					            <tr id = 'freight_row' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
