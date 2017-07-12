@@ -367,6 +367,7 @@
 		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
 		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
+//		echo '<BR><BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
 			$commissionid = $r['id'];
 			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
@@ -392,7 +393,8 @@
 				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id ";
 				$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
 				$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
-				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid; ";
+				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid ";
+				$query3 .= "GROUP BY h.invid, t.id; ";
 				$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
 				while ($r3 = mysqli_fetch_assoc($result3)) {
 					$comm = array(
@@ -412,11 +414,13 @@
 
 					$query4 = "SELECT *, '0' paid_amount FROM commissions c WHERE invoice_no = '".$r['invoice_no']."' AND inventoryid = '".$r3['invid']."' ";
 					$query4 .= "ORDER BY rep_id ASC; ";
+//					echo $query4.'<BR>';
 					$result4 = qdb($query4) OR die("Could not pull commissions for invoice ".$r['invoice_no']." AND inventoryid ".$r3['invid']);
 					// if no results from commissions table, supplement them with reps based on $RATES
 					if (mysqli_num_rows($result4)==0) {
 						foreach ($RATES as $comm_repid => $comm_rate) {
 							if (! $comm_rate) { continue; }
+							$comm['rep_id'] = $comm_repid;
 
 							if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
 							$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
@@ -572,16 +576,17 @@
 					$heci = $r3['heci'];
 
 					$results = array();
-					$query2 = "SELECT commission_amount, commission_rate, cogsid, id, item_id, item_id_label FROM commissions c ";
-					$query2 .= "WHERE inventoryid = '".$inventoryid."' AND rep_id = '".$comm_repid."' AND invoice_no = '".$r['invoice_no']."'; ";
-					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-					if (mysqli_num_rows($result2)==0) {
+//					print "<pre>".print_r($c,true)."</pre>";
+					// no datetime means no commission records from originating query on commissions table, which basically means
+					// that we never created a meaningful commissions record for this invoice (thank you, brian)
+					if (! $c['datetime']) {
 						$chk = 'disabled';
 						$cls = '';
 
 						// check first for cogs that may have been generated without initializing this rep's comms
 						$query2 = "SELECT cogs_avg cogs FROM sales_cogs WHERE inventoryid = '".res($inventoryid)."' ";
 						$query2 .= "AND item_id = '".$item_id."' AND item_id_label = '".$item_id_label."'; ";
+//						echo $query2.'<BR>';
 						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 						if (mysqli_num_rows($result2)>0) {
 							$r2 = mysqli_fetch_assoc($result2);
@@ -612,22 +617,15 @@
 							'comm_amount'=>$comm_amount,
 							'id'=>0,
 						);
-					}
-					while ($r2 = mysqli_fetch_assoc($result2)) {
+					} else {
 						// subtract paid amount against this commission
-						$paid_amount = 0;
-						$query3 = "SELECT SUM(amount) amount FROM commission_payouts WHERE commissionid = '".$r2['id']."'; ";
-						$result3 = qdb($query3) OR die("Problem pulling associated commission payouts for id ".$r2['id']);
-						if (mysqli_num_rows($result3)>0) {
-							$r3 = mysqli_fetch_assoc($result3);
-							$paid_amount = $r3['amount'];
-						}
+						$paid_amount = $c['paid_amount'];
 						if (! $history_date) {
-							$r2['commission_amount'] -= $paid_amount;
-							if ($r2['commission_amount']==0) { continue; }
+							$c['commission_amount'] -= $paid_amount;
+							if ($c['commission_amount']==0) { continue; }
 						}
 
-						$cogsid = $r2['cogsid'];
+						$cogsid = $c['cogsid'];
 						if ($cogsid) {
 							// get cogs from sales_cogs table with associated inventoryid and item_id
 							$query3 = "SELECT cogs_avg cogs FROM sales_cogs WHERE id = $cogsid; ";
@@ -640,15 +638,15 @@
 						$profit = $invoice_amount-$cogs;
 
 						// add comm amount so long as it's a positive number (can't lose money on a sale), or a return
-						if ($r2['item_id_label']=='return_item_id' OR $r2['commission_amount']>0) {
-							$comm_amount = $r2['commission_amount'];
+						if ($c['item_id_label']=='return_item_id' OR $c['commission_amount']>0) {
+							$comm_amount = $c['commission_amount'];
 						}
 
 						$results[] = array(
 							'cogs'=>$cogs,
 							'profit'=>$profit,
 							'comm_amount'=>$comm_amount,
-							'id'=>$r2['id'],
+							'id'=>$c['id'],
 						);
 					}
 
