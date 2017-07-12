@@ -508,10 +508,12 @@
 							//echo getCompany($ORDER['companyid']);
 						}
 						echo " ".($o['short'] == 'build' ? ucfirst($o['short']) : strtoupper($o['short']));
-						if ($order_number!='New' && !$build_number){
-							echo "# $order_number";
-						} else {
-							echo "# $build_number";
+						if ($order_number!='New') {
+							if (!$build_number){
+								echo "# $order_number";
+							} else {
+								echo "# $build_number";
+							}
 						}
 
 						if($status && $o['type'] == 'Repair' && $order_number!='New'){
