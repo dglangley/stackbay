@@ -316,7 +316,7 @@
 				// $invid = $r['id']; // From what I can tell this is never used
 				$status = $r['status'];
 			}
-			echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
+			//echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
 			$ref1 = $item['ref_1'];
 			if($item['ref_1_label'] == "return_item_id"){
 				if(!$rma_number){
@@ -336,6 +336,7 @@
 				<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
 				<td>'.format_price($item['price']).'</td>
 				<td>
+					<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
 					<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
 				</td>
 			</tr>';
