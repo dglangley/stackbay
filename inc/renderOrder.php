@@ -475,7 +475,8 @@ $html_page_str .='
         //End of the shipping information table
 }
 
-	$total = $subtotal+$freight;
+	$subtotal = round($subtotal,2);
+	$total = round($subtotal+$freight,2);
 
 $html_page_str .= '
 <!-- Items Table -->
