@@ -295,6 +295,52 @@
 		}
 	endforeach; 
 	}
+
+	$serial;
+	$item_row = '';
+	$ref1 = '';
+
+	if(!empty($items)){
+		foreach($items as $item){
+			$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
+			$result = qdb($query) or die(qe() . ' ' . $query);
+
+			if (!mysqli_num_rows($result)) {
+				$query = "SELECT serial_no, id, status FROM inventory WHERE id = (SELECT `invid` FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($item['id'])." limit 1);";
+				$result = qdb($query) or die(qe() . ' ' . $query);
+			}
+			
+			if(mysqli_num_rows($result)){
+				$r = mysqli_fetch_assoc($result);
+				$serial = $r['serial_no'];
+				// $invid = $r['id']; // From what I can tell this is never used
+				$status = $r['status'];
+			}
+			echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
+			$ref1 = $item['ref_1'];
+			if($item['ref_1_label'] == "return_item_id"){
+				if(!$rma_number){
+					$select = "SELECT `rma_number` from `return_items` where id = ".prep($ref1).";";
+					$rma_number = rsrq($select);
+				}
+				$ref1 = '
+				<b style="color: #526273;font-size: 14px;">
+				</b>&nbsp;<a href="/rma.php?rma='.$rma_number.'">'.$rma_number.'</a>
+				<br><br>';
+			}
+			$item_row .= '
+			<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
+				<td>'.format($item['partid'], true).'</td>
+				<td>'.$serial.'</td>
+				<td>'.$ref1.'</td>
+				<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
+				<td>'.format_price($item['price']).'</td>
+				<td>
+					<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+				</td>
+			</tr>';
+		}
+	}
 	//print_r($U);
 ?>
 	
@@ -537,51 +583,7 @@
 												</tr>
 											</thead>
 											<?php
-												$serial;
-												$item_row = '';
-												$ref1 = '';
-												if(!empty($items)){
-													foreach($items as $item){
-														$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
-														$result = qdb($query) or die(qe() . ' ' . $query);
-		
-														if (!mysqli_num_rows($result)) {
-															$query = "SELECT serial_no, id, status FROM inventory WHERE id = (SELECT `invid` FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($item['id'])." limit 1);";
-															$result = qdb($query) or die(qe() . ' ' . $query);
-														}
-														
-														if(mysqli_num_rows($result)){
-															$r = mysqli_fetch_assoc($result);
-															$serial = $r['serial_no'];
-															// $invid = $r['id']; // From what I can tell this is never used
-															$status = $r['status'];
-														}
-														echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
-														$ref1 = $item['ref_1'];
-														if($item['ref_1_label'] == "return_item_id"){
-															if(!$rma_number){
-																$select = "SELECT `rma_number` from `return_items` where id = ".prep($ref1).";";
-																$rma_number = rsrq($select);
-															}
-															$ref1 = '
-															<b style="color: #526273;font-size: 14px;">
-															</b>&nbsp;<a href="/rma.php?rma='.$rma_number.'">'.$rma_number.'</a>
-															<br><br>';
-														}
-														$item_row .= '
-														<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
-															<td>'.format($item['partid'], true).'</td>
-															<td>'.$serial.'</td>
-															<td>'.$ref1.'</td>
-															<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
-															<td>'.format_price($item['price']).'</td>
-															<td>
-																<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
-															</td>
-														</tr>';
-													}
-													echo($item_row);
-												}
+												echo($item_row);
 											?>
 												
 										</table>
