@@ -15,7 +15,7 @@
                 <?php if((getCompany($ORDER['companyid']) != 'Ventura Telephone')) { ?>
                     <div id="alert_message" class="alert alert-warning fade in text-center alert-receive" style="display: none; width: 100%; z-index: 9999; top: 95px;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
-                        <strong id="alert_title">Warning</strong>: Attempting to Receive an External Item. 
+                        <strong id="alert_title">Warning</strong>: You are receiving a customer unit into our stock. Are you sure?!?
                     </div>
                 <?php } ?>
                 <?php if((getCompany($ORDER['companyid']) == 'Ventura Telephone')) { ?>
@@ -27,8 +27,8 @@
                 <form id="receive_form" action="repair_activities.php" method="post">
                     <div class="row ship_option" style="margin: 0;">
                         <!-- <div class="radio"> -->
-                            <label class="radio-inline"><input type="radio" name="optradio">Billed</label>
-                            <label class="radio-inline"><input type="radio" name="optradio">Credited</label>
+                            <label class="radio-inline"><input type="radio" name="optradio" disabled>Billable</label>
+                            <label class="radio-inline"><input type="radio" name="optradio" checked>Non-Billable / Relinquished</label>
                         <!-- </div> -->
                     </div>
 

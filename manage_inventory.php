@@ -82,7 +82,7 @@
 			<td class="col-md-1"></td>
 			<td class="col-md-2">
 				<div class="pull-right form-group">
-		    		<button class="btn btn-primary btn-sm" type="submit">Save Page</button>
+		    		<button class="btn btn-primary btn-sm" type="submit">Save Inventory</button>
 				</div>
 			</td>
 		</tr>
