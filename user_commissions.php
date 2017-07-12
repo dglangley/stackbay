@@ -1,9 +1,13 @@
 <?php 
-
     //Must have db file otherwise site will break
     require_once 'inc/dbconnect.php';
     require_once 'inc/user_access.php';
     require_once 'inc/user_edit.php';
+
+	if (!in_array("4", $USER_ROLES)) {
+		header('Location: /permission.php');
+		exit;
+	}
 
     $edited = false;
     
@@ -169,7 +173,7 @@
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                 <div class="col-md-10">
-                    <form class="form-inline" method="POST" action="/save-commission.php">
+                    <form class="form-inline" method="POST" action="/save-usercomm.php">
                         <div style="display: inline-block; width: 100%;">
                             <h2>Commissions</h2>
                             

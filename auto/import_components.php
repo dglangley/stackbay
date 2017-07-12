@@ -8,6 +8,7 @@
     include_once $rootdir.'/inc/indexer.php';
     
     
+/*
     qdb("DELETE FROM `purchase_items` WHERE line_number = 999;");
     qdb("DELETE FROM `purchase_orders` WHERE private_notes = 'Component History Import';");
     qdb("TRUNCATE `purchase_requests`;");
@@ -18,6 +19,7 @@
     qdb("TRUNCATE TABLE `parts_component_map`;");
     qdb("TRUNCATE TABLE `repair_activities`;");
     qdb("DELETE FROM `parts` WHERE `classification` = 'component';");
+*/
     
     $component_query = "SELECT * FROM inventory_component;";
     $result = qdb($component_query,"PIPE") or die(qe("PIPE")." | $component_query");

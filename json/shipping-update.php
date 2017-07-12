@@ -1,7 +1,7 @@
 <?php
 
 //Prepare the page as a JSON type
-header('Content-Type: application/json');
+// header('Content-Type: application/json');
 
 $rootdir = $_SERVER['ROOT_DIR'];
 	
@@ -27,15 +27,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
+	$datetime = format_date($GLOBALS['now'], "Y-m-d H:i:s");
 	
-
+	if (! isset($debug)) { $debug = 0; }
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
-		$result = array(
-			"success" => array(),
-			"error" => ''
-			);
-		// $productItems = json_decode($productItems);
+		$result = array();
+		$debug = $GLOBALS['debug'];
+		if($debug){
+			$productItems = json_decode($productItems);
+		}
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
 		foreach($item_split as $product) {
@@ -48,10 +49,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$data = qdb($query) or die(qe()." | $data");
 					if (mysqli_num_rows($data)>0) {
 						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
-						$check = qdb($query) or die(qe()." $query");
+						if(!$debug){$check = qdb($query) or die(qe()." $query");} 
+						else {echo($query);}
+					} else {
+						$result['error'] = 'no package set';
 					}
 					// added by david 6-21-17 to set profits and cogs on each unit being shipped
-					while ($r = mysqli_fetch_assoc($data)) {
+					if($debug){continue;}
+						while ($r = mysqli_fetch_assoc($data)) {
 						$inventoryid = $r['serialid'];
 						$query2 = "SELECT si.* FROM inventory i, sales_items si ";
 						$query2 .= "WHERE si.so_number = '".res($so_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
@@ -197,14 +202,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				//Invoice Creation based off shipping
 		}
-		$result['success']['timestamp'] = $date;
-		$result['success']['so'] = $so_number;
+		$result['timestamp'] = $date;
+		$result['so_number'] = $so_number;
 		
 		// $type = 'Sale'; //Eventually we will need to allow for us to ship repairs
-		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND `shipmentid` = ".prep($date)."");
+		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND `shipmentid` = ".prep($date).";");
 		if(!$already_invoiced){
-			$result['success']['invoice_created'] = create_invoice($so_number, $date);
-			if(!$result['success']['invoice_created']){
+			$result['success'] = create_invoice($so_number, $date);
+			if(!$result['success']){
 				$result['error'] = 'Something broke in the creation of the invoice';
 			}
 		} else {
@@ -214,7 +219,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($productItems, $so_number, $now);
+	$result = savetoDatabase($productItems, $so_number, $datetime);
 	
 	echo json_encode($result);
     exit;

@@ -2051,6 +2051,7 @@
 			//Testing purposes
 			console.log(items);
 			
+			$("#modal-iso").modal("hide");
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
@@ -2066,7 +2067,7 @@
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
 						if(print != '' && data['timestamp'] != null) {
-							var newWin = window.open('/docs/PS'+data['on']+'D'+data['timestamp']+'.pdf', '_blank');
+							var newWin = window.open('/docs/PS'+data['so_number']+'D'+data['timestamp']+'.pdf', '_blank');
 							if (newWin) {
 							    //Browser has allowed it to be opened
 							    newWin.focus();
@@ -2080,7 +2081,7 @@
 						}
 					//Error occured enough to stop the page from continuing
 					} else if(data['error'] != undefined) {
-						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Pop-up Blocked",data['error'], false);
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Yikes!",data['error'], false);
 						$click.attr('id','btn_update');
 					//Nothing was changed
 					} else {
@@ -2092,6 +2093,8 @@
 					$("#loader").hide();
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team!", false);
 					console.log("JSON shipping-update.php: ERROR " + error);
+					console.log(xhr);
+					console.log(status);
 					console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
 				},	
 			});

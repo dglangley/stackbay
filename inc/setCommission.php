@@ -1,4 +1,7 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
+
 	$COMM_REPS = array();
 	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0; ";
 	$result = qdb($query);
@@ -8,8 +11,10 @@
 
 	if (! isset($debug)) { $debug = 0; }
 
-	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0) {
+	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0,$comm_repid=0) {
 		global $COMM_REPS;
+
+		$comm_output = '';
 
 		// get order# and order type (ie, "110101"/"Sale")
 		$query = "SELECT order_number, order_type FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
@@ -23,7 +28,7 @@
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid ";
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, i.partid ";
 		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
 		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
 		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
@@ -67,17 +72,25 @@
 				$cogsid = 0;
 				$query4 = "SELECT cogs_avg, id FROM sales_cogs WHERE inventoryid = '".$r2['inventoryid']."' ";
 				$query4 .= "AND item_id = '".$r3['id']."' AND item_id_label = '".$id_field."'; ";
+				if ($GLOBALS['debug']) { $comm_output .= $query4.' <br/>'.chr(10); }
 				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 				if (mysqli_num_rows($result4)>0) {
 					$r4 = mysqli_fetch_assoc($result4);
 					$cogs = $r4['cogs_avg'];
 					$cogsid = $r4['id'];
+				} else {
+					// calculate it cuz it's missing, yeah?
+					$cogs = getCost($r2['partid']);//get existing avg cost at this point in time
+					$cogsid = setCogs($r2['inventoryid'], $item_id, $item_id_label, $cogs);
 				}
 
 				$q_id = "NULL";
 				if ($r2['inventoryid']) { $q_id = $r2['inventoryid']; }
 
 				foreach ($COMM_REPS as $rep_id => $rate) {
+					// only calculate for selected rep, if passed in
+					if ($comm_repid AND $rep_id<>$comm_repid) { continue; }
+
 					$profit = $r2['amount']-$cogs;
 					$comm = ($profit*($rate/100));
 
@@ -88,11 +101,11 @@
 					$query4 .= "$rep_id, '".$rate."', '".$comm."'); ";
 					$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
 					$commissionid = qid();
-					if ($GLOBALS['debug']) { echo $commissionid.': '.$query4.'<BR>'; }
+					if ($GLOBALS['debug']) { $comm_output .= $commissionid.': '.$query4.'<BR>'; }
 				}
 			}
 		}
 
-		return (true);
+		return ($comm_output);
 	}
 ?>

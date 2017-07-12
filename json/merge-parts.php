@@ -56,6 +56,10 @@
 		$masterid = $temp_master;
 	}
 
+	if (! $masterid OR ! $slaveid) {
+		reportError("Missing one or more partids");
+	}
+
 	/*** PART ***/
 	$part = $parts[$masterid];
 	// parse second part number and if any terms overlap, discard
