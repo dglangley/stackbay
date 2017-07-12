@@ -33,12 +33,10 @@
 			AND `packages`.order_type = '".$o['ptype']."'
 			AND i.".$o['inv_item_id']." = it.id
 			AND it.`".$o['id']."` = `packages`.`order_number`
-			AND packages.datetime = ".prep(format_date($shipment_datetime, "Y-m-d H:i:s"))."
 			AND price > 0.00
 			GROUP BY it.id;
 		";
-		
-		//exit($invoice_item_select);
+		if($GLOBALS['debug']){echo($invoice_item_select);}
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
@@ -86,6 +84,9 @@
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
+			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s")){
+				continue;	
+			}
 			$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
 				VALUES (".$invoice_id.", ".prep($row['partid']).", ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
 				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
@@ -161,4 +162,5 @@
 	    return $result;
 	}
 ?>
+
 

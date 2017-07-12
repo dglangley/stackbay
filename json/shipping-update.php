@@ -27,15 +27,19 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
+	$datetime = $GLOBALS['now'];
 	
-
+	if (! isset($debug)) { $debug = 0; }
+	// $debug = 1;
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
 		$result = array(
 			"success" => array(),
 			"error" => ''
 			);
-		//$productItems = json_decode($productItems);
+		if($GLOBALS['debug']){
+			$productItems = json_decode($productItems);
+		}
 		//This is splitting each product from mass of items
 		$item_split = array_chunk($productItems,7);
 		foreach($item_split as $product) {
@@ -49,6 +53,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					if (mysqli_num_rows($data)>0) {
 						$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
 						$check = qdb($query) or die(qe()." $query");
+					} else {
+						$result['error'] = 'no package set';
 					}
 					// added by david 6-21-17 to set profits and cogs on each unit being shipped
 					while ($r = mysqli_fetch_assoc($data)) {
@@ -214,7 +220,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($productItems, $so_number, $now);
+	$result = savetoDatabase($productItems, $so_number, $datetime);
 	
 	echo json_encode($result);
     exit;
