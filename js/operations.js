@@ -2067,7 +2067,7 @@
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
 						if(print != '' && data['timestamp'] != null) {
-							var newWin = window.open('/docs/PS'+data['on']+'D'+data['timestamp']+'.pdf', '_blank');
+							var newWin = window.open('/docs/PS'+data['so_number']+'D'+data['timestamp']+'.pdf', '_blank');
 							if (newWin) {
 							    //Browser has allowed it to be opened
 							    newWin.focus();
@@ -2093,6 +2093,8 @@
 					$("#loader").hide();
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team!", false);
 					console.log("JSON shipping-update.php: ERROR " + error);
+					console.log(xhr);
+					console.log(status);
 					console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
 				},	
 			});
