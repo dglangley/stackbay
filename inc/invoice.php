@@ -9,13 +9,15 @@
     include_once $rootdir.'/inc/setCommission.php';
 
 	if (! isset($debug)) { $debug = 0; }
-
+// $debug = 1;
     function create_invoice($order_number, $shipment_datetime, $type ='Sale'){
 		//Variable Declarations
 		$warranty = '';
 		$macro = '';
 		$already_invoiced = false;
 		$ro_number = '';
+		$invoice_id = '';
+		$invoice_item_id = '';
 		$o = o_params($type);
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
@@ -33,12 +35,10 @@
 			AND `packages`.order_type = '".$o['ptype']."'
 			AND i.".$o['inv_item_id']." = it.id
 			AND it.`".$o['id']."` = `packages`.`order_number`
-			AND packages.datetime = ".prep(format_date($shipment_datetime, "Y-m-d H:i:s"))."
 			AND price > 0.00
 			GROUP BY it.id;
 		";
-		
-		//exit($invoice_item_select);
+		if($GLOBALS['debug']){ echo($invoice_item_select);}
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
@@ -65,7 +65,8 @@
 		";
 		
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
-		$invoice_macro = mysqli_fetch_assoc(qdb($macro) or die(qe()." $macro"));
+		$invoice_macro = qdb($macro) or die(qe()." $macro");
+		$invoice_macro = mysqli_fetch_assoc($invoice_macro);
 		if (strtolower($invoice_macro['type']) == 'prepaid'){
 			// $pay_day = $GLOBALS['today'];
 			$status = 'Paid';
@@ -78,7 +79,7 @@
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($o['ptype']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
 		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
 		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }
@@ -86,7 +87,17 @@
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
-			$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
+			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s")){
+				// echo(format_date($row['datetime'],"Y-m-d H:i:s"));
+				// echo("<br>");
+				// echo(format_date($shipment_datetime, "Y-m-d H:i:s"));
+				// echo("<br>");
+				// echo("wtf???");
+				// echo("<br>");
+				continue;	
+			}
+			$insert = "
+				INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
 				VALUES (".$invoice_id.", ".prep($row['partid']).", ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
 				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
 			
@@ -97,8 +108,9 @@
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
 			if ($GLOBALS['debug']) { echo $package_insert.'<BR>'; }
 			else { qdb($package_insert) or die(qe()." ".$package_insert); }
-
-			setCommission($invoice_id,$invoice_item_id);
+			if($invoice_id && $invoice_item_id){
+				setCommission($invoice_id,$invoice_item_id);
+			}
 		}/* end foreach */
 
 		//Prevent breaks in the foreach loop
@@ -161,4 +173,5 @@
 	    return $result;
 	}
 ?>
+
 

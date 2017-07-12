@@ -109,7 +109,7 @@
 		".dFilter("created",$f['start'],$f['end'])."
 		".sFilter("o.`companyid`",$f['coid'])."
 		;";
-		// echo($query);
+		//echo($query);
 		
 		$result = qdb($query) OR die(qe());
 		
@@ -391,16 +391,23 @@
 		// }
 		//if($order != 'rma' && $order != 'ro') {
 			if($search =='') {
-				$query = "SELECT * ";
-				if ($order=='bo') { $query .= ", b.id bid "; }
-				$query .= "FROM ".$o['mq_base']." 
-				AND o.status <> 'Void' 
-				and o.status <> 'Processed' 
-				".sFilter("o.companyid",$f['coid'])."
+				if($order != 'ro') {
+					$query = "SELECT * ";
+					if ($order=='bo') { $query .= ", b.id bid "; }
+					$query .= "FROM ".$o['mq_base']." 
+					AND o.status <> 'Void'";
+					$query .= "AND o.status <> 'Processed'";
+					//if ($order=='ro') { $query .= ", b.id bid "; }
+				} else {
+					$query = "SELECT DISTINCT o.*, i.* FROM repair_orders o, repair_items i, builds WHERE o.ro_number = i.ro_number AND o.status <> 'Void'AND o.status <> 'Processed' AND o.ro_number <> builds.ro_number";
+				}
+				$query .= sFilter("o.companyid",$f['coid'])."
 				".dFilter("created",$f['start'],$f['end'])."
 				ORDER BY ".$o['order_by']." 
 				DESC LIMIT 0, 200;";
+				//echo $query;
 				$results = qdb($query) or die(qe()." | $query");
+
 			} else {
 				$results = searchQuery($search, $order);
 				//print_r($results); //die;
@@ -408,13 +415,20 @@
 			
 			//display only the first N rows, but output all of them
 			$count = 0;
-			$active = 1;
-			$complete = 1;
+			// $active = 1;
+			// $complete = 1;
+
 			//Loop through the results.
 			if(!empty($results)) {
 				//print_r($results);
 				foreach ($results as $r){
 					if ($order=='bo') { unset($r['serial_no']); }
+
+					//Clear variables
+					$status = '';
+					$status_name = '';
+					$pending = true;
+
 					//set if a serial is present or not
 					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
 					
@@ -443,20 +457,52 @@
 					
 					if ($order != 's' && $order != 'rma' && $order != 'ro'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
+						$pending = false;
 					} else if ($order == 's') {
 						$status = ($r['qty_shipped'] >= $r['qty'] ? 'complete_item' : 'active_item');
+						$pending = false;
 					} else if($order == 'rma') {
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
+						$pending = false;
 					} else if($order == 'ro' || $order == 'bo') {
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
-						//print_r($r['status'] );
+
+						//If repair code exists then check if the order has already been shipped out or not
+						if($r['repair_code_id'] && $status != 'active_item') {
+							$query = "SELECT * FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_num).";";
+							$result = qdb($query);
+		
+							if (mysqli_num_rows($result)) {
+								$pending = false;
+							} else {
+								//Check if a sales order has been created but npot yet shipped
+								// $query = "SELECT * FROM sales_items si, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND (si.ref_1 = ri.id AND si.ref_1_label = 'repair_item_id') OR (si.ref_2 = ri.id AND si.ref_2_label = 'repair_item_id');";
+								// $result = qdb($query);
+			
+								//No sales order found so check the invetory status
+								// if (!mysqli_num_rows($result)) {
+									//Now check if it has been returned into the invetory instead
+									$query = "SELECT i.* FROM inventory i, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND i.repair_item_id = ri.id AND i.status = 'in repair';";
+									$result = qdb($query);
+
+									if (mysqli_num_rows($result)) {
+										$pending = true;
+									} else {
+										$pending = false;
+									}
+								// } 
+							}
+
+						} else {
+							$pending = false;
+						}
 					}
 				
 					if($count<=10){
-						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item '.$status.'">';
+						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item '.$status.' '.($pending ? 'pending_item' : '').'">';
 					} else{
-						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item show_more '.$status.'" style="display:none;">';
+						echo'	<tr data-order="'.$order_num.'" data-date="'.$due_date.'" class="filter_item show_more '.$status.' '.($pending ? 'pending_item' : '').'" style="display:none;">';
 					}
 
 					echo'        <td>'.$date.'</td>';
@@ -652,13 +698,16 @@
 		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
 			
 			<div class="row" style="padding: 8px;" id = "filterBar">
-				<div class="col-md-1">
+				<div class="col-md-1" style="padding-right: 0;">
 				    <div class="btn-group medium" data-toggle="buttons">
 				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
 				        	<i class="fa fa-sort-numeric-desc"></i>	
 				        </button>
 				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
 				        	<i class="fa fa-history"></i>	
+				        </button>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Pending" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" type="submit" data-filter="pending">
+				        	<i class="fa fa-envelope-open-o" aria-hidden="true"></i>
 				        </button>
 						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
 				        	All
@@ -987,19 +1036,28 @@
 			$('.filter_status').removeClass('btn-warning');
 			$('.filter_status').removeClass('btn-success');
 			$('.filter_status').removeClass('btn-info');
+			$('.filter_status').removeClass('btn-danger');
 			$('.filter_status').addClass('btn-default');
 
 			var btn,type2;
 			if (type=='complete') {
 				btn = 'success';
 				type2 = type;
+				$('.pending_item').hide();
 				$('.active_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else if (type=='active') {
 				btn = 'warning';
 				type2 = type;
+				$('.pending_item').hide();
 				$('.complete_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='pending') {
+				btn = 'danger';
+				type2 = type;
+				$('.active_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {
@@ -1021,14 +1079,7 @@
 			} else {
 				$('.'+type2+'_item').show();
 			}
-			
-			// if(search != '') {
-			// 	window.history.replaceState(null, null, "/operations.php?search=" + search + "&filter=all");
-			// } else {
-			// 	window.history.replaceState(null, null, "/operations.php?filter=" + type);
-			// }
-			$(this).addClass('active');
-			// processFilterUrl();
+
 		});
 		
 	})(jQuery);

@@ -47,6 +47,36 @@
 
 function is_component($row){return ($row['classification'] == "component");}
 function not_component($row){return ($row['classification'] != "component");}
+// function getOrderedQty($match_string){
+//     $results = array();
+//     //for a given partid or partid string, find the number of ordered items not yet received
+//     $purchased = "
+//     SELECT SUM(`pi`.`qty`)total, pi.partid
+//     FROM purchase_items pi
+//     WHERE pi.partid in ($match_string)
+// 	GROUP BY pi.partid;";
+	
+// 	$received = "
+// 	SELECT ifnull(sum(`qty`),0) rec, partid 
+// 	FROM inventory i where `partid` in ($match_string) 
+// 	AND i.id IN (
+// 	    SELECT invid 
+// 	    FROM inventory_history, purchase_items pi 
+// 	    where field_changed = 'purchase_item_id' 
+// 	    AND pi.id = value 
+// 	    AND pi.partid IN ($match_string)
+//     ) GROUP BY `partid`;";
+
+//     $pur_res = qdb($purchased) or die(qe()." | $purchased");
+//     $rec_res = qdb($received) or die(qe()." | $received");
+//     foreach($pur_res as $row){
+//         $results[$row['partid']] = $row['total'];
+//     }
+//     foreach($rec_res as $rrow){
+//         $results[$rrow['partid']] -= $rrow['rec'];
+//     }
+//     return $results;
+// }
 
 function search_as_heci($search_str){
 		$page = grab('page');
@@ -138,6 +168,7 @@ function sub_rows($search = ''){
     $stock = array();
     $inc = array();
     $matches = array();
+    $p = o_params($page);
     //General Collumn information
         //Item information
         
@@ -165,6 +196,7 @@ function sub_rows($search = ''){
             //Get all the currently in hand
             $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string)
             ".($page =="Repair" || $page=="Tech" || $page=='build' ?" AND (`status` = 'shelved' OR `status` = 'received') ":"")."
+            AND `status` != 'manifest'
             GROUP BY partid;";
             $in_stock  = qdb($inventory) or jsonDie(qe()." | $inventory");
             if (mysqli_num_rows($in_stock)){
@@ -180,7 +212,7 @@ function sub_rows($search = ''){
             WHERE pi.partid in ($match_string) 
             GROUP BY pi.partid LIMIT 10;"; //All values ever purchased
             //Use an inventory join method here at some point
-                
+
             $incoming = qdb($purchased) or jsonDie(qe()." | $purchased");
             if (mysqli_num_rows($incoming)){
                 foreach ($incoming as $i){
@@ -189,7 +221,7 @@ function sub_rows($search = ''){
                     }
                 }
             }
-                
+
             if(mysqli_num_rows($in_stock) || mysqli_num_rows($incoming) || (! mysqli_num_rows($in_stock) && ! mysqli_num_rows($in_stock))){
                 //build the results rows
                 $rows = "
