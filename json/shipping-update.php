@@ -32,8 +32,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	if (! isset($debug)) { $debug = 0; }
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
-		$result = array();
+		$result = array(
+			"timestamp" => "",
+			"so_number" => "",
+			"invoice" => "",
+			"error" => ""
+			);
 		$debug = $GLOBALS['debug'];
+		$return_arr = array();
 		if($debug){
 			$productItems = json_decode($productItems);
 		}
@@ -208,9 +214,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		// $type = 'Sale'; //Eventually we will need to allow for us to ship repairs
 		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND `shipmentid` = ".prep($date).";");
 		if(!$already_invoiced){
-			$result['success'] = create_invoice($so_number, $date);
-			if(!$result['success']){
-				$result['error'] = 'Something broke in the creation of the invoice';
+			$return_arr = create_invoice($so_number, $date);
+			if($return_arr['error']){
+				$result['error'] = $return_arr['error'];
+			} else {
+				$result['invoice'] = $return_arr['invoice_no'];
 			}
 		} else {
 			$result['error'] = "Attempted To Create Duplicate Invoice";

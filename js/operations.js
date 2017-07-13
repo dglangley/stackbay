@@ -2062,7 +2062,7 @@
 					console.log('TimeStamp: ' + data['timestamp']);
 					console.log("Invoice "+data['invoice']);
 					console.log(data);
-					if(!data['error'] && checkChanges){
+					if(!data['error']){
 					// if((data['query'] || checkChanges) && data['error'] == undefined) {
 						//In case a warning is triggered but data is still saved successfully
 						window.onbeforeunload = null;
