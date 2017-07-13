@@ -284,6 +284,5 @@
 	function component_use_array($component_id){
 		$oc_select = "SELECT * FROM `invenory_component_order` WHERE `component_id` = ".prep($component_id).";";
 		$oc = qdb($oc_select) or die(qe()." | $oc_select");
-		
 	}
 ?>
