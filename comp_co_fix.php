@@ -16,7 +16,7 @@
     order by co.cpo_id asc;";
     $bdb_results = qdb($bdb_select, "PIPE") or die(qe("PIPE")." | $bdb_select");
     
-    if(!isset($debug)){$debug = 0;}
+	$debug = 1;
     
     $check_package = array();
     foreach($bdb_results as $r){
@@ -26,7 +26,7 @@
         $partid = '';
         $new_price = 0.00;
         $datetime = '';
-        $package_id = '';
+        $package_id = 0;
         $inventoryid = '';
         $purchase_item_id = '';
         /////
