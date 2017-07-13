@@ -2,6 +2,9 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/renderOrder.php';
     include_once $_SERVER["ROOT_DIR"].'/dompdf/autoload.inc.php';
 
+    // instantiate and use the dompdf class
+	use Dompdf\Dompdf;
+
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 	function attachInvoice($invoice) {
@@ -9,9 +12,6 @@
 
 		// get html-rendered invoice for passing to dompdf
         $invoice_html = renderOrder($invoice,'INV');
-
-	    // instantiate and use the dompdf class
-		use Dompdf\Dompdf;
 
 		$dompdf = new Dompdf();
 		$dompdf->loadHtml($html);

@@ -10,6 +10,7 @@
 	include_once $rootdir.'/inc/send_gmail.php';
 	include_once $rootdir.'/inc/renderOrder.php';
 	include_once $rootdir.'/inc/attachInvoice.php';
+    include_once $rootdir.'/dompdf/autoload.inc.php';
 
 	if (! isset($debug)) { $debug = 0; }
 // $debug = 1;
