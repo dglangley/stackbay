@@ -131,6 +131,7 @@
 			}
 		}
 
+	$query = "SELECT * FROM parts, inventory ";
 		$results[$partid] = array('partid'=>$partid,'visible_qty'=>$r['visible_qty'],'part'=>$part,'heci'=>$heci,'manf'=>$manf,'descr'=>$descr,'aliases'=>$aliases,'system'=>$system);
 	}
 

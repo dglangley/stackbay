@@ -32,12 +32,31 @@
 		$results[$partid] += $r['visible_qty'];
 	}
 
-	foreach ($results as $partid => $qty) {
+	foreach ($results as $partid => $visible_qty) {
 		$stk_qty = getQty($partid);
-		if ($stk_qty<>$qty) {
-			echo '<strong>qty '.$qty.'- (stock: '.$stk_qty.') &nbsp; '.$parts[$partid]['part'].' '.$parts[$partid]['heci'].'</strong><BR>';
+		if ($stk_qty<>$visible_qty) {
+			echo '<strong>qty '.$visible_qty.'- (stock: '.$stk_qty.') &nbsp; '.$parts[$partid]['part'].' '.$parts[$partid]['heci'].'</strong><BR>';
 		} else {
-			echo 'qty '.$qty.'- (stock: '.$stk_qty.') &nbsp; '.$parts[$partid]['part'].' '.$parts[$partid]['heci'].'<BR>';
+			echo 'qty '.$visible_qty.'- (stock: '.$stk_qty.') &nbsp; '.$parts[$partid]['part'].' '.$parts[$partid]['heci'].'<BR>';
 		}
+
+		$hidden_qty = false;
+		if ($stk_qty<$visible_qty) {
+			$visible_qty = $stk_qty;
+		}
+
+		// hide all qtys indefinitely
+		if ($visible_qty==0 AND $stk_qty>0) {
+			$hidden_qty = 0;
+		} else if ($visible_qty>0 AND $stk_qty>$visible_qty) {
+			$hidden_qty = ($stk_qty-$visible_qty);
+		}
+
+		$query = "REPLACE qtys (partid, qty, hidden_qty, visible_qty) ";
+		$query .= "VALUES ('".res($partid)."','".res($stk_qty)."',";
+		if ($hidden_qty===false) { $query .= "NULL,"; } else { $query .= "'".res($hidden_qty)."',"; }
+		$query .= "'".res($visible_qty)."'); ";
+echo $query.'<BR>';
+//		$result = qdb($query) OR die(qe().'<BR>'.$query);
 	}
 ?>
