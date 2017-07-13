@@ -7,6 +7,8 @@
     include_once $rootdir.'/inc/order_parameters.php';
     include_once $rootdir.'/inc/packages.php';
     include_once $rootdir.'/inc/setCommission.php';
+	include_once $rootdir.'/inc/send_gmail.php';
+	include_once $rootdir.'/inc/renderOrder.php';
 
 	if (! isset($debug)) { $debug = 0; }
 // $debug = 1;
@@ -18,6 +20,10 @@
 		$ro_number = '';
 		$invoice_id = '';
 		$invoice_item_id = '';
+		$return = array(
+			"invoice_no" => 0,
+			"error" => ''
+			);
 		$o = o_params($type);
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
@@ -42,7 +48,8 @@
 		//Type field accepts ['Sale','Repair' ]
 		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_select");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
-			return "Nothing found in invoice_item_select: ".$invoice_item_select;
+			$return['error'] = "Nothing found in invoice_item_select: ".$invoice_item_select;
+			return $return;
 		}
 		$sales_charge_holder = array();
 		if ($type == 'Sale'){
@@ -62,7 +69,8 @@
 			}
 		}
 		if(!$one){
-			return "No Shipments on this date";
+			$return['error'] = "No Shipments on this date";
+			return $return;
 		}
 		//Create an array for all the sales credit data
 		$macro = "
@@ -92,6 +100,7 @@
 		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
 		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }
 		$invoice_id =  qid();
+		$return['invoice_no'] = $invoice_id;
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
@@ -132,8 +141,26 @@
 				}
 			}/* end foreach */
 		}
+		if($invoice_id){
+			setGoogleAccessToken(5);
+			// create temp file name in temp directory for each file
+		    // instantiate and use the dompdf class
+			$pdf_address = file_get_contents("https://stackbay.com/docs/INV$invoice_id.pdf");
+		    
+			$attachment = sys_get_temp_dir()."/invoice_attatchment_".$invoice_id.".pdf";
+			$handle = fopen($attachment, "w");
+			// add contents from file
+			fwrite($handle, $pdf_address);
+			fclose($handle);
+			$attachment = "";
+			$send_success = send_gmail('Invoice '.$invoice_id.' Attached','Invoice '.$invoice_id,'aaron@ven-tel.com','','',$attachment);
+			
+			if(!$send_success){
+				$return['error'] = "Email not sent ".$GLOBALS['SEND_ERR'];
+			}
+		}
 
-		return $invoice_id;
+		return $return;
 	}
     
     function get_assoc_invoices($order_number, $type ="Sale"){
@@ -174,6 +201,9 @@
 	    $result = qdb($select) or die(qe());
 	    return $result;
 	}
+	
+
+
 ?>
 
 
