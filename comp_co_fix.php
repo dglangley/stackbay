@@ -17,7 +17,7 @@
     $bdb_results = qdb($bdb_select, "PIPE") or die(qe("PIPE")." | $bdb_select");
     
     if(!isset($debug)){$debug = 0;}
-
+    
     $check_package = array();
     foreach($bdb_results as $r){
         //Variable Declarations
@@ -32,13 +32,10 @@
         /////
         
         
-        echo("<pre>");
-        print_r($r);
         //Info from BDB
         $po_number = $r['cpo_id'];
         $partid = translateComponent($r['component_id']);
         $datetime = prep(format_date($r['datetime']." 12:00:00", "Y-m-d H:i:s"));
-        
         //Grab info from ours
         $select = "
         SELECT i.id invid, pi.id pid FROM purchase_items pi, inventory i 
@@ -49,19 +46,23 @@
         AND pi.po_number = ".prep($po_number)."
         AND pi.partid = ".prep($partid)."
         order by pi.po_number DESC;";
-        echo($select);
         $result = qdb($select) or die(qe()." | $select");
         
         //Was breaking on local because my data is less complete than the live
         if(!mysqli_num_rows($result)){continue;}
         $result = mysqli_fetch_assoc($result);
+
+        echo($select."<br>");
+        echo("<pre>"."<br>");
+        print_r($r);
         print_r($result);
+        echo("</pre>"."<br>");
         
         //Prep information from ours
         $inventoryid = prep($result['invid']);
         $purchase_item_id = prep($result['pid']);
         $new_price = $r['price'] - $r['freight_cost'];
-        echo($new_price);
+        echo($new_price."<br>");
         
         //Make sure we don't get redundant package numbers.
         if(isset($check_package[$po_number])){
@@ -69,22 +70,24 @@
         } else {
             $check_package[$po_number] = 1;
         }
-        $package_insert = "INSERT INTO `packages` (`order_number`, `order_type`, `package_no`, `datetime`, `freight_amount`) VALUES
-                            (".prep($po_number).", 'Purchase', ".prep($check_package[$po_number]).", ".prep($datetime).", ".prep($r['freight_cost']).");";
+        $package_insert = "
+        INSERT INTO `packages` (`order_number`, `order_type`, `package_no`, `datetime`, `freight_amount`) VALUES
+                            (".prep($po_number).", 'Purchase', ".prep($check_package[$po_number]).", $datetime, ".prep($r['freight_cost']).");";
         if(!$debug){
             qdb($package_insert) or die(qe()." | $package_insert"); 
             $package_id = qid();
         }
-        else{echo($package_insert);}
+        echo($package_insert."<br>");
+        $pc_insert = "INSERT INTO `package_contents` (serialid, packageid) VALUES ($inventoryid, $package_id);";
         if($package_id){
-            $pc_insert = "INSERT INTO `package_contents` (serialid, packageid) VALUES ($inventoryid, $package_id);";
             qdb($pc_insert) or die(qe()." | $pc_insert");
-        }
+        } 
+        echo($pc_insert."<br>");
         
-        $update = "UPDATE purchase_items SET price = ".prep($new_price)." WHERE id = ".prep($purchase_item_id).";";
+        $update = "UPDATE purchase_items SET price = ".prep($new_price)." WHERE id = $purchase_item_id;";
+        if(!$debug){qdb($update) or die(qe()." | $update");}
+        echo($update."<br>");
         
-        //
-        echo("</pre>");
     }
     
 ?>
