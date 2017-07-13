@@ -17,6 +17,14 @@
 	  </div>
       <div class="modal-body" id="modalAlertBody">
       <div class="row">
+        <?php if(!$serial) { ?>
+            <div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+                <strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
+            </div>
+        <?php } ?>
+      </div>
+      <div class="row">
         <div class="col-md-12">
           <select class="form-control" name="repair_code">
             <?php 
@@ -37,7 +45,7 @@
       </div>
       <div class="row">
       <div class="col-md-12">
-        <button  style="margin-top: 10px" class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
+        <button  style="margin-top: 10px" class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="complete_ticket" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus || !$serial == "Completed" ? 'disabled' : '');?>>Complete Ticket</button>
         </div>
         </div>
       </div>

@@ -30,6 +30,7 @@
 	
 	//Function Declarations
 	function updateToDatabase($id,$action) {
+		global $now;
 		$query = '';
 		
 		//Grab all the line item parts from the inventory submission
@@ -38,6 +39,8 @@
 		$instance = $_REQUEST['instance'];
 		$conditionid = $_REQUEST['conditionid'];
 		$status = $_REQUEST['status'];
+		$invid = $_REQUEST['invid'];
+		$partid = $_REQUEST['partid'];
 		$notes = grab('notes');
 		
 		//Handle the repair toggle
@@ -58,21 +61,76 @@
 		$notes = prep($notes);
 		$id = prep($id);
 		
-		//Some reason, this was still updating with no id
-	    if($id) {
-		    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes";
-			if($status){
-				$status = prep($status, '');
-				$query .= " ,status = $status";
-			}
-			if($locationid){
-				$query .= " ,locationid = $locationid";
-			}
-		    $query .= " WHERE id = $id;";
-	    } else {
-	    	return 'Failed to Update';
-	    }
-		$result = qdb($query) or die(qe()."$query");
+		if($action != 'repair') {
+			//Some reason, this was still updating with no id
+		    if($id) {
+			    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes";
+				if($status){
+					$status = prep($status, '');
+					$query .= " ,status = $status";
+				}
+				if($locationid){
+					$query .= " ,locationid = $locationid";
+				}
+			    $query .= " WHERE id = $id;";
+		    } else {
+		    	return 'Failed to Update';
+		    }
+			$result = qdb($query) or die(qe()."$query");
+		} else {
+			//We are going to generate a new Repair Order for this
+			//if(grab('repair_trigger')){
+			$ro_number;
+			$insert = "INSERT INTO repair_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, bill_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, repair_code_id, status) VALUES (
+				".prep($now).",
+				".prep($U['id']).",
+				NULL,
+				'25',
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				".prep('15').",
+				NULL,
+				NULL,
+				NULL,
+				'Active'
+				);";
+			//echo $insert . '<br><br>';
+			qdb($insert);
+			$ro_number = qid();
+
+			//$result = $insert;
+
+			$insert = "INSERT INTO repair_items (partid, ro_number, line_number, qty, price, due_date, invid, warrantyid, notes) VALUES (
+				".prep($partid).",
+				".prep($ro_number).",
+				'1',
+				".prep('1').",
+				".prep('0.00').",
+				NULL,
+				".prep($invid).",";
+
+			$insert .=	prep('14').",
+				NULL
+				);";
+
+				$result = $insert;
+
+			//echo $insert;
+			qdb($insert);
+			$repair_item_id = qid();
+
+			$update = "UPDATE inventory SET repair_item_id = ".prep($repair_item_id).", status = 'in repair' WHERE id = ".prep($invid).";";
+			qdb($update);
+
+				//header("Location: /order_form.php?ps=repair&on=" . $ro_number);
+			//}
+			$result = $ro_number;
+		}
 		// echo $query;exit;
 		return $result;
 	}

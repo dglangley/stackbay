@@ -45,7 +45,7 @@
 					".prep($order_number).",
 					'1',
 					".prep($item['qty']).",
-					".prep($item['price']).",
+					'0.00',
 					".prep($item['due_date']).",
 					".prep($item['id']).",
 					'repair_item_id',
@@ -63,13 +63,53 @@
 		return $order_number;
 
 	}
+
+	function getLocation($place, $instance) {
+		$locationid;
+		$query;
+		
+		//Get the location ID based on the preset ones in the table
+		if($instance != '') {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance = '". res($instance) ."';";
+		} else {
+			$query = "SELECT id FROM locations WHERE place = '". res($place) ."' AND instance is NULL;";
+		}
+		
+		$locationResult = qdb($query);
+		
+		if (mysqli_num_rows($locationResult)>0) {
+			$locationResult = mysqli_fetch_assoc($locationResult);
+			$locationid = $locationResult['id'];
+		}
+		
+		return $locationid;
+	}
+
+	function updatetoStock($place, $instance, $condition, $serial_no){
+		$locationid = getLocation($place, $instance);
+		foreach ($serial_no as $serial) {
+			$query = "UPDATE inventory SET conditionid = '5', qty = '1' WHERE serial_no = ".prep($serial).";";
+			//echo $query . "<br>";
+		}
+		qdb($query) OR die(qe());
+	}
 	
 	//Declare variables
 	$ro_number;
-	$order_number;
+	$place;
+	$instance;
+	$condition;
+	$serial_no = array();
+
+	if (isset($_REQUEST['place'])) { $place = $_REQUEST['place']; }
+	if (isset($_REQUEST['instance'])) { $instance = $_REQUEST['instance']; }
+	if (isset($_REQUEST['condition'])) { $condition = $_REQUEST['condition']; }
+	if (isset($_REQUEST['serial_no'])) { $serial_no = $_REQUEST['serial_no']; }
+	//if (isset($_REQUEST['bill_option'])) { $bill_option = $_REQUEST['bill_option']; }
 	
 	if (isset($_REQUEST['ro_number'])) { 
 		$ro_number = $_REQUEST['ro_number']; 
+		updatetoStock($place, $instance, $condition, $serial_no);
 		$order_number = triggerNewSO($ro_number, $now);
 	}
 	
