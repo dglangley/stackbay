@@ -88,7 +88,7 @@
 	function updatetoStock($place, $instance, $condition, $serial_no){
 		$locationid = getLocation($place, $instance);
 		foreach ($serial_no as $serial) {
-			$query = "UPDATE inventory SET locationid =".prep($locationid).", conditionid = ".prep($condition).", status = 'shelved', qty = 1 WHERE serial_no = ".prep($serial).";";
+			$query = "UPDATE inventory SET conditionid = '5', qty = '1' WHERE serial_no = ".prep($serial).";";
 			//echo $query . "<br>";
 		}
 		qdb($query) OR die(qe());
