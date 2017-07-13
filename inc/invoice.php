@@ -9,6 +9,7 @@
     include_once $rootdir.'/inc/setCommission.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 	include_once $rootdir.'/inc/renderOrder.php';
+	include_once $rootdir.'/inc/attachInvoice.php';
 
 	if (! isset($debug)) { $debug = 0; }
 // $debug = 1;
@@ -142,19 +143,15 @@
 			}/* end foreach */
 		}
 		if($invoice_id){
+			// set google session to amea for sending email below
 			setGoogleAccessToken(5);
-			// create temp file name in temp directory for each file
-		    // instantiate and use the dompdf class
-			$pdf_address = file_get_contents("https://stackbay.com/docs/INV$invoice_id.pdf");
-		    
-			$attachment = sys_get_temp_dir()."/invoice_attatchment_".$invoice_id.".pdf";
-			$handle = fopen($attachment, "w");
-			// add contents from file
-			fwrite($handle, $pdf_address);
-			fclose($handle);
-			$attachment = "";
-			$send_success = send_gmail('Invoice '.$invoice_id.' Attached','Invoice '.$invoice_id,'aaron@ven-tel.com','','',$attachment);
-			
+
+			// render invoice and attach to a temp file, we get attachment as a temp file pointer
+			$attachment = attachInvoice($invoice_id);
+
+			// bcc david for now, so I can see what Joe is seeing
+			$send_success = send_gmail('See attached Invoice '.$invoice_id,'Invoice '.$invoice_id,'aaron@ven-tel.com','david@ven-tel.com','',$attachment);
+
 			if(!$send_success){
 				$return['error'] = "Email not sent ".$GLOBALS['SEND_ERR'];
 			}
