@@ -40,7 +40,7 @@
 		";
 		if($GLOBALS['debug']){ echo($invoice_item_select);}
 		//Type field accepts ['Sale','Repair' ]
-		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_prepped");
+		$invoice_item_prepped = qdb($invoice_item_select) or die(qe()." | $invoice_item_select");
 		if (mysqli_num_rows($invoice_item_prepped) == 0){
 			return "Nothing found in invoice_item_select: ".$invoice_item_select;
 		}
@@ -55,7 +55,15 @@
 			}
 
 		}
-
+		$one = false;
+		foreach ($invoice_item_prepped as $row) {
+			if(format_date($row['datetime'],"Y-m-d H:i:s") == format_date($shipment_datetime, "Y-m-d H:i:s")){
+				$one = true;
+			}
+		}
+		if(!$one){
+			return "No Shipments on this date";
+		}
 		//Create an array for all the sales credit data
 		$macro = "
 			SELECT `companyid`, `created`, `days`, `type`
@@ -88,12 +96,6 @@
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($invoice_item_prepped as $row) {
 			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s")){
-				// echo(format_date($row['datetime'],"Y-m-d H:i:s"));
-				// echo("<br>");
-				// echo(format_date($shipment_datetime, "Y-m-d H:i:s"));
-				// echo("<br>");
-				// echo("wtf???");
-				// echo("<br>");
 				continue;	
 			}
 			$insert = "
