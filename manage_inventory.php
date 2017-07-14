@@ -32,7 +32,7 @@
             if($visible < 0 || $r['h'] === 0){
                 $visible = 0;
             }
-            $replace = "REPLACE `qtys` (`partid`,`qty`, `hidden_qty`, `visible_qty`) VALUES ($partid, ".$r['stock'].", ".$hidden_qty.", ".prep($visible,0).");";
+            $replace = "REPLACE `qtys` (`partid`,`qty`, `hidden_qty`, `visible_qty`) VALUES ($partid, ".$r['s'].", ".$hidden_qty.", ".prep($visible,0).");";
             qdb($replace) or die(qe()." $replace");
         }
     }

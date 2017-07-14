@@ -31,7 +31,6 @@
                 and ii.id = s.invoice_item_id
                 AND s.packageid = p.id
                 GROUP BY s.packageid;";
-        //$packages = "SELECT package_no, tracking_no FROM packages WHERE order_number = ".prep($so_number).";";
         $result = qdb($packages) OR die(qe().'<BR>'.$packages);
         while ($r = mysqli_fetch_assoc($result)) {
             $tracking[] = $r;
@@ -83,42 +82,52 @@
         $o = o_params($order_type);
 	    $prep = prep($order_number);
         
+		$due_date = "";
 		$subtotal = 0;
 		$freight = 0;
 		$total = 0;
-        $added_order ="";
-        $added_order_join = "";
         $serials = array();
         if ($o['invoice']){
-            $added_order = ", `sales_orders`, `terms` ";
-            $added_order_join = " AND `sales_orders`.so_number = order_number AND termsid = terms.id";
             $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
-        } else if ($o['credit']){
-            $added_order = ", `sales_orders` ";
-            $added_order_join = " AND sales_orders.so_number = order_num and order_type = 'Sales'";
         }
         
-		$order = "SELECT * FROM `".$o['order']."`$added_order WHERE `".$o['id']."` = $order_number $added_order_join;";
-		
-// 		echo $order;exit;
+		$orig_order = $order_number;
+		$order = "SELECT * FROM `".$o['order']."` WHERE `".$o['id']."` = $order_number;";
 		$order_result = qdb($order) or die(qe()." | $order");
-    
-		$oi = array();
-		$due_date = "";
-		if (mysqli_num_rows($order_result) > 0){
-			$oi = mysqli_fetch_assoc($order_result);
-			if($o['invoice']){ 
-			    $freight = $oi["freight"]; 
-			    if ($oi['days'] < 0){
-			        $due_date = format_date($oi['date_invoiced'],'F j, Y');
-			    } else {
-			        $due_date = format_date($oi['date_invoiced'],'F j, Y',array("d"=>$oi['days']));
-			    }
+// 		echo $order;exit;
+
+		if (mysqli_num_rows($order_result) == 0) {
+			die("Could not pull record");
+		}
+		$oi = mysqli_fetch_assoc($order_result);
+
+		// is order a sale or repair?
+		if ($o["invoice"] OR $o["credit"]) {
+			if ($oi["order_type"]=='Sale') {
+				$query2 = "SELECT * FROM sales_orders, terms WHERE so_number = '".$oi["order_number"]."' AND termsid = terms.id; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			} else if ($oi["order_type"]=='Repair') {
+				$query2 = "SELECT ro.*, t.* FROM repair_orders ro, terms t, repair_items ri ";
+				$query2 .= "WHERE ro.ro_number = '".$oi["order_number"]."' AND t.id = ro.termsid AND ro.ro_number = ri.ro_number; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			}
-            // echo("<pre>");
-            // print_r($oi);
-            // echo("</pre>");
-            // exit;
+			if (mysqli_num_rows($result2)==0) {
+				die("Could not pull originating record for this invoice");
+			}
+			$r2 = mysqli_fetch_assoc($result2);
+			$orig_order = $r2['order_number'];
+			foreach ($r2 as $k => $v) {
+				$oi[$k] = $v;
+			}
+		}
+
+		if($o['invoice']){ 
+		    $freight = $oi["freight"]; 
+		    if ($oi['days'] < 0){
+		        $due_date = format_date($oi['date_invoiced'],'F j, Y');
+		    } else {
+		        $due_date = format_date($oi['date_invoiced'],'F j, Y',array("d"=>$oi['days']));
+		    }
 		}
 
 		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
@@ -421,6 +430,8 @@ $contact_name = getContact($oi['contactid']);
 $contact_phone = getContact($oi['contactid'],'id','phone');
 $contact_email = getContact($oi['contactid'],'id','email');
 
+$order_date = $oi['created'];
+if ($o['invoice']) { $order_date = $oi['date_invoiced']; }
 
 //Shipping information table
 if(!$o['credit']){
@@ -445,14 +456,14 @@ $html_page_str .='
                     '.$rep_email.'
                 </td>
                 <td class="text-center">
-                    '.format_date($oi['created'],'F j, Y').'
+                    '.format_date($order_date,'F j, Y').'
                 </td>';
                 if($o['invoice']){
                     $html_page_str .= '
                     <td class="text-center">
                         '.(($oi['credit'])? format_date($oi['date_invoiced'],'F j, Y',array("d" => $oi['days'])) : $due_date).'
                     </td>
-                    <td>'.$oi['so_number'].'</td>
+                    <td>'.$orig_order.'</td>
                     ';            
                 }else{
                     $html_page_str .= '<td class="text-center">

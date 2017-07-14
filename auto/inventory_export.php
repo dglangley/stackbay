@@ -22,7 +22,7 @@
 
 	$results = array();//contains all parts data that will be consolidated between db's for export
 
-	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id ORDER BY part ASC, heci ASC LIMIT 0,50; ";
+	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id ORDER BY part ASC, heci ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$results[$r['partid']] = $r;
