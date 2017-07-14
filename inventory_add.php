@@ -223,7 +223,7 @@
 									$init = true;
 									$package_no = 0;
 									
-									$masters = master_packages($order_number,$o['type']);
+									$masters = master_packages($order_number,$order_type);
 									foreach($results as $b){
 										$package_no = $b['package_no'];
 										$box_button = "<button type='button' class='btn ";
@@ -250,7 +250,7 @@
 									
 
 								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`package_no`,`datetime`) VALUES ($order_number, '1',NOW());";
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'$order_type','1',NOW());";
 									qdb($insert) or die(qe());
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
