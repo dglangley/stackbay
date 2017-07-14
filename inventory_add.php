@@ -304,12 +304,12 @@
 								foreach($partsListing as $part): 
 									$classification = getClassification($part['partid']);
 
-									$parts = explode(' ',getPartName($part['partid']));
-									$part = $parts[0];
+									$part_string = explode(' ',getPartName($part['partid']));
+									$part_name = $part_string[0];
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?=$item?>">
-										<div class="product-img"><img class="img" src="/img/parts/<?=$part;?>.jpg" alt="pic" data-part="<?=$part;?>"></div>
+										<div class="product-img"><img class="img" src="/img/parts/<?=$part_name;?>.jpg" alt="pic" data-part="<?=$part_name;?>"></div>
 										<div class="product-descr"><?=display_part(current(hecidb($part['partid'],'id')));?></div>
 										<?php if($classification == 'component') { ?>
 											<input class="hidden" type="text" name="order_num" value="<?=$order_number;?>" readonly>
