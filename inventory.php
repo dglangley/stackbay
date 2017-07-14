@@ -536,9 +536,9 @@
 											}
 											
 											if(info.qty > 0 && info.conditionid > 0 && interpreted != 'Sold'){
-												search_sum['stock'] += line_qty;
-											} else if (info.qty > 0){
-												search_sum['bad']++;
+												search_sum['stock']++;
+											} else if (info.qty > 0  && interpreted != 'Sold'){
+												search_sum['bad'] ++ ;
 											} else {
 												search_sum['non_stock']++;
 											}
