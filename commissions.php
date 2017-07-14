@@ -369,7 +369,7 @@
 		}
 
 		// get all invoices which are commissioned against
-		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status ";
+		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
 		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
@@ -395,6 +395,7 @@
 
 			// get invoice items, which we will use to compare for commissions against each invoiced item
 			$query2 = "SELECT qty, amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+//			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$item_amt = $r2['qty']*$r2['amount'];
@@ -438,13 +439,22 @@
 					// if no results from commissions table, supplement them with reps based on $RATES
 					$num_results = mysqli_num_rows($result4);
 					if ($num_results==0) {
-						foreach ($RATES as $comm_repid => $comm_rate) {
-							if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
-							$comm['rep_id'] = $comm_repid;
+						// check now that the items weren't invoiced on another invoice for the same billable order
+						$query4 = "SELECT * FROM commissions c, invoices i ";
+						$query4 .= "WHERE c.inventoryid = '".$r3['invid']."' AND c.invoice_no <> '".$r['invoice_no']."' ";
+						$query4 .= "AND c.invoice_no = i.invoice_no AND order_number = '".$r['order_number']."' AND order_type = '".$r['order_type']."'; ";
+//						echo $query4.'<BR>';
+						$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+						// if there's not another invoice for this inventoryid, then it didn't get logged in commissions so we should populate below
+						if (mysqli_num_rows($result4)==0) {
+							foreach ($RATES as $comm_repid => $comm_rate) {
+								if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
+								$comm['rep_id'] = $comm_repid;
 
-							if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
-							$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
-							$pending_comms += $qty;
+								if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
+								$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
+								$pending_comms += $qty;
+							}
 						}
 					}
 					while ($r4 = mysqli_fetch_assoc($result4)) {
