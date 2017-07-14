@@ -802,12 +802,12 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
-					            <?php if($o['sale']):?>
+					            <?php if($o['sales']):?>
 					            <tr id = 'first_fee_field' style=''>
-				        		<?php if(!$o['repair']):?>
+					        		<?php if(!$o['repair']):?>
 					                <td></td>
 					                <td></td>
-								<?php endif; ?>
+									<?php endif; ?>
 					                <td></td>
 					                <td></td>
 					                <td colspan="2">

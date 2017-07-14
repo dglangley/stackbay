@@ -22,6 +22,7 @@
 		$ro_number = '';
 		$invoice_id = '';
 		$invoice_item_id = '';
+		$package_order_number = $order_number;
 		$type = 'Sale';
 		$return = array(
 			"invoice_no" => 0,
@@ -41,7 +42,6 @@
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
 			$meta = mysqli_fetch_assoc($results);
-			$package_order_number = $order_number;
 			$order_number = $meta['ro_number'];
 		} else {
 			$type = 'Sale';
