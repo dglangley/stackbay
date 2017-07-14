@@ -49,7 +49,8 @@
 			$info['order_by'] = "o.".$info['id'];
 			$info['mq_base'] = $info['tables'];
 			$info[strtolower($info['short'])] = true;
-			
+//Charges
+			$info['charges'] = "purchase_charges";
 			
 		}
 		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
@@ -99,8 +100,10 @@
 			$info['order_by'] = "o.".$info['id'];
 			$info['mq_base'] = $info['tables'];
 			$info[strtolower($info['short'])] = true;
-			
-			
+
+//Charges
+			$info['charges'] = "sales_charges";
+	
 
 		}
 		else if (strtolower($type) == "invoice" || strtolower($type) == "inv" || strtolower($type) == "i"){

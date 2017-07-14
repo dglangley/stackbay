@@ -34,7 +34,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
-	include_once $rootdir.'/inc/getSalesCharges.php';
+	include_once $rootdir.'/inc/getCharges.php';
 
             //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
@@ -213,7 +213,7 @@
 			$ORDER['fcreated'] = format_date($ORDER['created'],"D n/j/y g:ia");
 		}
 	
-		$charges = getSalesCharges($order_number);
+		$charges = getCharges($order_number, $o['type']);
 		
 		if ($charges){
 			$i = 0;
@@ -802,7 +802,7 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
-					            <?php if($o['sales']):?>
+		            	<?php if($o['sales'] || $o['purchase']):?>
 					            <tr id = 'first_fee_field' style=''>
 					        		<?php if(!$o['repair']):?>
 					                <td></td>
@@ -855,7 +855,7 @@
 						                </div>
 					                <td></td>
 					            </tr>
-					            <?php endif; ?>
+		            <?php endif; ?>
 					            <tr id = 'freight_row' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>
