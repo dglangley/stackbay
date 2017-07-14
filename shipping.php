@@ -308,7 +308,9 @@
 			include_once $rootdir.'/inc/navbar.php'; 
 			include_once $rootdir.'/modal/package.php';
 			include_once $rootdir.'/modal/iso.php';
+			include_once $rootdir. '/modal/image.php';
 		?>
+
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
@@ -523,7 +525,7 @@
 							?>
 								<tr class="<?= (!empty($item['ship_date']) ? 'order-complete' : ''); ?> <?= (!empty($item['ref_2']) ? 'order-exchange' : ''); ?>" style = "padding-bottom:6px;">
 									<td class="part_id col-md-3" data-partid="<?php echo $item['partid']; ?>" data-part="<?php echo $part; ?>" style="padding-top: 15px !important;">
-										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic"></div>
+										<div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic" data-part="<?php echo $part; ?>"></div>
 										<div class="product-descr"><?= display_part(current(hecidb($item['partid'],'id'))) ?></div>
 									</td>
 									<td class="text-center" style="padding-top: 15px !important;">
