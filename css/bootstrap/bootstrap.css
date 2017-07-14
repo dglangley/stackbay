@@ -4050,6 +4050,12 @@ textarea.input-group-sm > .input-group-btn > .btn {
 .label:empty {
   display: none;
 }
+.label-clear{
+  color: #333333;
+  background-color: #ffffff;
+  border: solid thin #adadad;
+  /*border-color: #adadad;*/
+}
 .label-default {
   background-color: #999999;
 }

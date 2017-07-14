@@ -107,6 +107,18 @@
 		.label-in-repair{
 			background-color: rgb(156,106,65);
 		}
+		.good_stock.in_stock {
+
+		}
+		.bad_stock.in_stock {
+			background-color:rgba(239, 172, 77, 0.52);
+		}
+		.no_stock,.out_stock_item{
+			background-color:rgba(153, 153, 153, 0.5);
+		}
+		.out_stock_item{
+			background-color:rgba(153, 153, 153, 0.5);
+		}
 	</style>
 
 </head>
@@ -195,18 +207,18 @@
 			<div class="col-md-1 col-sm-1">
 				<div class="row">
 				    <div class="btn-group condition_filters">
-				        <button class="glow filter_cond left large btn-radio<?php if ($cond_filter=='good') { echo ' active'; } ?>" type="submit" data-filter="good" data-toggle="tooltip" data-placement="bottom" title="Good">
+				        <button class="glow filter_cond left large btn-radio<?php if ($cond_filter=='good') { echo ' active'; } ?>" id='cond_good' type="submit" data-filter="good" data-toggle="tooltip" data-placement="bottom" title="Good">
 				        	<i class="fa fa-thumbs-up"></i>					        
 				        </button>
-				        <button class="glow right filter_cond large btn-radio<?php if ($cond_filter=='all') { echo ' active'; } ?>" type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
+				        <button class="glow right filter_cond large btn-radio<?php if ($cond_filter=='all') { echo ' active'; } ?>" id='cond_all' type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
 				        	<i class="fa fa-square"></i>
 			        	</button>
 				    </div>
 					<div class="btn-group qty_filters">
-				        <button class="glow left large btn-radio filter_qty<?php if ($qty_filter=='in_stock') { echo ' active'; } ?>" type="submit" data-filter="in_stock" data-toggle="tooltip" data-placement="bottom" title="In Stock">
+				        <button class="glow left large btn-radio filter_qty<?php if ($qty_filter=='in_stock') { echo ' active'; } ?>" id='qty_in_stock' type="submit" data-filter="in_stock" data-toggle="tooltip" data-placement="bottom" title="In Stock">
 				        	<i class="fa fa-tag"></i>
 				        </button>
-				        <button class="glow right large btn-radio filter_qty<?php if ($qty_filter=='all') { echo ' active'; } ?>" type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
+				        <button class="glow right large btn-radio filter_qty<?php if ($qty_filter=='all') { echo ' active'; } ?>" id='qty_all' type="submit" data-filter="all" data-toggle="tooltip" data-placement="bottom" title="All">
 				        	<i class="fa fa-tags"></i>
 			        	</button>
 				    </div>
@@ -254,26 +266,30 @@
 -->
 	
 	<div class="loading_element_listing" style="display: none;">
-		
-		<div class='col-sm-3' style='padding-top: 20px'>
+		<div class="row-fluid">
+			
+		<div class='col-sm-8' style='padding-top: 20px'>
 			<select class='revisions' multiple>
 				
 			</select>
 			<img class='img-responsive' src='/img/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
 		</div>
-		<div class='col-sm-9 search_summary' style='padding-top: 20px'>
+		<div class='col-sm-4 search_summary ' style='padding-top: 20px;text-align:right;'>
 			
 		</div>
-		<div class='col-sm-12'>
-			<div class='table-responsive'>
-				<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
-					<thead class = 'headers'>
-						
-					</thead>
-					<tbody class='parts'>
-
-					</tbody>
-				</table>
+		</div>
+		<div class="row-fluid">
+			<div class='col-sm-12'>
+				<div class='table-responsive'>
+					<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>
+						<thead class = 'headers'>
+							
+						</thead>
+						<tbody class='parts'>
+	
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -518,16 +534,15 @@
 											});
 											var color = '';
 											var interpreted = status;
-											if (status == "Manifest" || status == "Outbound"){
+											if (status == "Manifest" || status == "Outbound" || info.qty == 0){
 												interpreted = "Sold";
 												color = "label-success";
-											} else if (status == "Scrapped"){
+											} else if (status == "Scrapped" || status == "In Repair" || info.conditionid < 0){
 												color = "label-danger";
-											} else if (status == "In Repair"){
-												color = "label-in-repair";
+												interpreted = "Non-Sellable ("+status+")";
 											} else {
-												color = "label-warning";
-												interpreted = "Active"
+												color = "label-clear";
+												interpreted = "In Stock"
 											}
 											var line_qty = serial[2];
 											parts += "<tr class='serial_listing_"+info.unique;
@@ -536,9 +551,9 @@
 											}
 											
 											if(info.qty > 0 && info.conditionid > 0 && interpreted != 'Sold'){
-												search_sum['stock'] += line_qty;
-											} else if (info.qty > 0){
-												search_sum['bad']++;
+												search_sum['stock']++;
+											} else if (info.qty > 0  && interpreted != 'Sold'){
+												search_sum['bad'] ++ ;
 											} else {
 												search_sum['non_stock']++;
 											}
@@ -633,7 +648,16 @@
 							} 
 							$('.revisions').append(revisions);
 							$('.headers').append(headers);
-							$('.search_summary').append("Test: "+search_sum['stock']+" | "+search_sum['bad']+" | "+search_sum['non_stock']);
+							$('.search_summary').html("").append('\
+							<span class="label label-clear complete_label status_label text-right" style="font-size:12pt;">Stock: '+search_sum['stock']+'</span> \
+							<span class="label label-warning complete_label status_label text-right" style="font-size:12pt;">Non-Sellable: '+search_sum['bad']+'</span> \
+							<span class="label label-default complete_label status_label text-right" style="font-size:12pt;">Non-Stock: '+search_sum['non_stock']+'</span>');
+							if(search_sum['stock']==0 && search_sum['bad'] > 0){
+								$("#cond_all").trigger("click");
+							}
+							if(search_sum['stock']==0 && search_sum['non_stock'] > 0){
+								$("#qty_all").trigger("click");
+							}
 							// $('.location_holder').append(locations);
 							// $('.condition_holder').append(conditions);
 							// $('.status_holder').append(status);

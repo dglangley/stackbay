@@ -3,6 +3,15 @@
 	font-size:12px;
 }
 
+/***BX Slider Possible Fix *****/
+.imageSliderBody .bx-viewport {
+	min-height: 435px !important;
+}
+
+.product-img img {
+	cursor: pointer;
+}
+
 /*** NAVBAR ***/
 .navbar {
 	position:fixed;
@@ -1011,7 +1020,7 @@ hr.no-margin {
 /*** BXSLIDER/MODAL IMAGE HANDLING ***/
 .imageSlider {
 	text-align:center;
-	height:576px;
+	/*height:576px;*/
 }
 .imageSliderBody {
 	height:500px;
@@ -1034,7 +1043,7 @@ hr.no-margin {
 	width:100%;
 }
 #imagePager {
-	height:86px;
+	/*height:86px;*/
 }
 #imagePager a {
 	border:1px solid gray;

@@ -65,6 +65,20 @@
 		return rsrq($query);
 	}
 	
+	function getPartName($partid) {
+		$part;
+		
+		$query = "SELECT part FROM parts WHERE id = ". res($partid) .";";
+		$result = qdb($query) OR die(qe());
+	
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$part = $result['part'];
+		}
+	
+		return $part;
+	}
+
 	function getHistory($partid, $order_number) {
 		$listSerials;
 		
@@ -158,6 +172,7 @@
 		<?php 
 			include 'inc/navbar.php';
 			include_once $rootdir.'/modal/package.php';
+			include_once $rootdir. '/modal/image.php';
 		?>
 		
 		<?php if($classification != 'component') { ?>
@@ -208,7 +223,7 @@
 									$init = true;
 									$package_no = 0;
 									
-									$masters = master_packages($order_number,$o['type']);
+									$masters = master_packages($order_number,$order_type);
 									foreach($results as $b){
 										$package_no = $b['package_no'];
 										$box_button = "<button type='button' class='btn ";
@@ -235,7 +250,7 @@
 									
 
 								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`package_no`,`datetime`) VALUES ($order_number, '1',NOW());";
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'$order_type','1',NOW());";
 									qdb($insert) or die(qe());
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
@@ -288,10 +303,14 @@
 							if($partsListing) {
 								foreach($partsListing as $part): 
 									$classification = getClassification($part['partid']);
+
+									$part_string = explode(' ',getPartName($part['partid']));
+									$part_name = $part_string[0];
 						?>
 								<tr class="<?php echo ($part['qty'] - $part['qty_received'] <= 0 ? 'order-complete' : ''); ?>">
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?=$item?>">
-										<?=display_part(current(hecidb($part['partid'],'id')));?>
+										<div class="product-img"><img class="img" src="/img/parts/<?=$part_name;?>.jpg" alt="pic" data-part="<?=$part_name;?>"></div>
+										<div class="product-descr"><?=display_part(current(hecidb($part['partid'],'id')));?></div>
 										<?php if($classification == 'component') { ?>
 											<input class="hidden" type="text" name="order_num" value="<?=$order_number;?>" readonly>
 											<input class="hidden" type="text" name="partid" value="<?=$part['partid'];?>" readonly>
