@@ -140,11 +140,14 @@
 	
 	$keyword = '';
 	$part_string = '';
-
-	$filter = $_REQUEST['filter'];
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$keyword = $_REQUEST['s'];
 		$order = $keyword;
+	}
+
+	$filter = '';
+	if (isset($_REQUEST['filter']) AND $_REQUEST['filter']) {
+		$filter = $_REQUEST['filter'];
 	}
 
 	if ($keyword) {
@@ -381,7 +384,7 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 //		echo '<BR><BR><BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
-			$commissionid = $r['id'];
+//			$commissionid = $r['id'];
 			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
 			//$r['amount'] = $r['commission_amount'];
 			$r['charge_type'] = $type;
@@ -395,7 +398,6 @@
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$item_amt = $r2['qty']*$r2['amount'];
-				$inv_amt += $item_amt;
 
 				$r['commissions'][$r2['id']] = array('qty'=>$r2['qty'],'amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
 
