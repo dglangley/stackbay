@@ -449,12 +449,15 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { 
-						if($build): ?>
+					<?php if($build): ?>
 						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
-					<?php else: ?>
+					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
 						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
-					<?php endif; } ?>
+					<?php endif; ?>
+
+					<?php if(!$build) { ?>
+						<a href="/repair_add.php?on=<?=$order_number;?>" class="btn-flat pull-left"><i class="fa fa-truck"></i> Receive</a>
+					<?php } ?>
 				</div>
 				
 				<div class="col-md-4 text-center">

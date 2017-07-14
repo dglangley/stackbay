@@ -34,9 +34,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
-	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getSalesCharges.php';
-	
 
             //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
@@ -62,6 +60,23 @@
 	$repair_billable;
 	$repair_item_id;
 	$received_inventory;
+
+	//3 is consider Operations in the user_privilege table
+	if(in_array("3", $USER_ROLES)){
+		if($o['type'] == "Sales"){
+		 	header('Location: /shipping.php?on='.$order_number.'&ps=s');
+		}
+		if($o['type'] == "Purchase"){
+		 	header('Location: /inventory_add.php?on='.$order_number.'&ps=p');
+		}
+		if($o['type'] == "Repair"){
+		 	header('Location: /repair_add.php?on='.$order_number);
+		}
+		exit;
+	}
+
+	include_once $rootdir.'/inc/invoice.php';
+
 	
 	if(strtolower($o['type']) == 'rtv'){
 	 	$status = 'Active';
@@ -426,6 +441,7 @@
 							}
 
 							if(!$repair_billable && $o['repair']) {
+								$output = '';
 								//If the repair  is not billable don't allow the user to create an RMA for this order
 							} else {
 								$rows = qdb($rma_select) or die(qe().$rma_select);
