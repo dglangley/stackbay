@@ -168,8 +168,8 @@
 
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 				<div class="col-sm-4">
-					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-					<a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i></a>
+					<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
+					<a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
 					<?php } ?>
 					<button type="submit" class="btn-flat btn-sm primary pull-left" id = "rtv_button" data-validation="left-side-main" style="margin-top:10px;display:none;">RTV</button>
 					

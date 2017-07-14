@@ -141,21 +141,25 @@
           </ul>
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
-                    <i class="fa fa-tasks"></i>
-                    <span>Reports</span>
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
-                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
-                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
-                    <li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
-<!--
-                    <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>
--->
-				</ul>
-			</li>
+			<?php if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) { ?>
+	            <li class="dropdown">
+	                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
+	                    <i class="fa fa-tasks"></i>
+	                    <span>Reports</span>
+	                    <b class="caret"></b>
+	                </a>
+	                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+	                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
+	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
+	                    <?php if(in_array("4", $USER_ROLES)) { ?>
+	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
+	                    <?php } ?>
+	<!--
+	                    <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>
+	-->
+					</ul>
+				</li>
+			<?php } ?>
             <li class="notification-dropdown hidden-xs hidden-sm">
 <?php
 	$num_notifications = count($NOTIFICATIONS);
@@ -186,10 +190,12 @@
                     <b class="caret"></b>
 				</a>
                 <ul class="dropdown-menu">
-		            <li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
+                	<?php if(in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) { ?>
+		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
+		            <?php } ?>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
-	                <?php if($USER_ROLES[array_search(array_search('Administration', $ROLES), $USER_ROLES)] == array_search('Administration', $ROLES)) { ?>
+	                <?php if($USER_ROLES[array_search(array_search('Management', $ROLES), $USER_ROLES)] == array_search('Management', $ROLES)) { ?>
 		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
                         <li><a class="<?php echo ($pageName == 'user_commissions.php' ? 'active' : ''); ?>" href="user_commissions.php">Commissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
