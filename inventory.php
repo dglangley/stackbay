@@ -255,11 +255,14 @@
 	
 	<div class="loading_element_listing" style="display: none;">
 		
-		<div class='col-sm-12' style='padding-top: 20px'>
+		<div class='col-sm-3' style='padding-top: 20px'>
 			<select class='revisions' multiple>
 				
 			</select>
 			<img class='img-responsive' src='/img/125x75.png' style='padding-right: 10px; float:left; padding-bottom: 10px;'>
+		</div>
+		<div class='col-sm-9 search_summary' style='padding-top: 20px'>
+			
 		</div>
 		<div class='col-sm-12'>
 			<div class='table-responsive'>
@@ -323,6 +326,11 @@
 		};
 		var inventory_history = function () {
 			var s = filter_grab();
+			var search_sum = {
+				"stock":0,
+				"bad":0,
+				"non_stock":0
+			};
 			var place = $("#filterBar").find(".place").val();
 			var location = $("#filterBar").find(".instance").val();
 			var start = $("#filterBar").find("input[name='START_DATE']").val();
@@ -436,11 +444,13 @@
 									parts += "<tr class='parts-list parts-"+counter;
 									if(info.qty == 0){
 										parts += " no_stock ";
+
 									} else {
 										parts += " in_stock ";
 									}
 									if(info.conditionid > 0){
 										parts += " good_stock ";
+
 									} else {
 										parts += " bad_stock ";
 									}
@@ -493,6 +503,7 @@
 										} else {
 											parts += " bad_stock ";
 										}
+										
 									
 										parts += "' style='display: none;'>\
 													<td colspan='12'>";
@@ -522,7 +533,15 @@
 											parts += "<tr class='serial_listing_"+info.unique;
 											if(info.conditionid < 0){
 												parts += " bad_stock_item ";
-											} 
+											}
+											
+											if(info.qty > 0 && info.conditionid > 0 && interpreted != 'Sold'){
+												search_sum['stock'] += line_qty;
+											} else if (info.qty > 0){
+												search_sum['bad']++;
+											} else {
+												search_sum['non_stock']++;
+											}
 											
 											if(interpreted == "Sold"){
 												parts += " out_stock_item ";
@@ -614,7 +633,7 @@
 							} 
 							$('.revisions').append(revisions);
 							$('.headers').append(headers);
-							
+							$('.search_summary').append("Test: "+search_sum['stock']+" | "+search_sum['bad']+" | "+search_sum['non_stock']);
 							// $('.location_holder').append(locations);
 							// $('.condition_holder').append(conditions);
 							// $('.status_holder').append(status);
