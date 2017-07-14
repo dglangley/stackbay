@@ -11,7 +11,7 @@
 		global $temp_dir;
 
 		// get html-rendered invoice for passing to dompdf
-        $invoice_html = renderOrder($invoice,'INV');
+        $html = renderOrder($invoice,'INV');
 
 		$dompdf = new Dompdf();
 		$dompdf->loadHtml($html);

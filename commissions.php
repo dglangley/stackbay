@@ -842,7 +842,8 @@
 				var modal_msg = 'I can re-calculate this Commission for you, but I have to reload your page. Are you sure that\'s okay?<br/><br/>'+
 					'<div class="row">'+
 						'<div class="col-sm-3 text-right"><strong>COGS</strong></div>'+
-						'<div class="col-sm-3"><input type="text" class="form-control input-xs" name="item_cogs_'+inventoryid+'_'+repid+'" id="item-cogs-'+inventoryid+'-'+repid+'" value="'+cogs+'" '+field_state+'/></div>'+
+						'<div class="col-sm-3"><input type="text" class="form-control input-xs" name="item_cogs_'+inventoryid+'_'+repid+'" '+
+							'id="item-cogs-'+inventoryid+'-'+repid+'" value="'+cogs+'" onFocus="this.select()" '+field_state+'/></div>'+
 						'<div class="col-sm-6">'+cogs_helper+'</div>'+
 					'</div>'+
 					'<div class="row">'+

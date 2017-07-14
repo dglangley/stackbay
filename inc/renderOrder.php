@@ -103,6 +103,7 @@
 
 		// is order a sale or repair?
 		if ($o["invoice"] OR $o["credit"]) {
+			$orig_order = $oi['order_number'];
 			if ($oi["order_type"]=='Sale') {
 				$query2 = "SELECT * FROM sales_orders, terms WHERE so_number = '".$oi["order_number"]."' AND termsid = terms.id; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -115,7 +116,6 @@
 				die("Could not pull originating record for this invoice");
 			}
 			$r2 = mysqli_fetch_assoc($result2);
-			$orig_order = $r2['order_number'];
 			foreach ($r2 as $k => $v) {
 				$oi[$k] = $v;
 			}
@@ -441,8 +441,8 @@ $html_page_str .='
             <tr>
                 <th>'.$o['rep_type'].' Rep</th>
                 <th>'.$o['date_label'].' Date</th>
-                '.(($o['invoice'])? "<th>Payment Due Date </th>" : '').'
-                <th>'.$o['contact_col'].'</th>
+                '.(($o['invoice'])? "<th>Payment Due</th>" : '').'
+                <th>'.$oi['order_type'].'</th>
                 <th class="'.($o['rma'] ? 'remove' : '').'">Terms</th>
                 <th class="'.($o['rma'] ? 'remove' : '').'">Shipping</th>
                 <th class="'.($o['rma']  ? 'remove' : '').'">Freight Terms</th>
