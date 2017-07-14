@@ -826,9 +826,20 @@
 			//New Multi-line insertion 			
 			$(document).on("click",".multipart_sub",function(e) {
 				var isValid = nonFormCase($(this), e);
-				
+				var page = $("body").data("order-type");
 				if(isValid) {
 					var qty = 0;
+					if (page == "Repair"){
+		    			$(".search_lines").each(function() {
+		    				qty += $(this).find("input[name=ni_qty]").val();
+		    			});
+		    			if(qty > 1){
+		    				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Cannot add multiple quantities to a repair order. If you intend to receive multiple parts, make multiple repair orders");
+		    				return;
+		    			}
+					}
+	    			
+	    			qty = 0;
 	    			$(".search_lines").each(function() {
 						$(".items_label").html("").remove();
 						populateSearchResults($(".multipart_sub"),$(this).attr("data-line-id"),$(this).find("input[name=ni_qty]").val(), $(this).find('.data_stock').data('stock'));
@@ -1435,6 +1446,7 @@
 					var submit = [];
 					console.log("first_fee_label:"+first_fee_label+" | first_fee_amount:"+first_fee_amount+" | first_fee_id:"+first_fee_id+" | second_fee_label:"+second_fee_label+" | second_fee_amount:"+second_fee_amount+" | second_fee_id:"+second_fee_id);
 					//This loop runs through the right-hand side and parses out the general values from the page
+					var sum_qty = 0;
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
 							var line_ref_1 = '';
 							var line_ref_1_label = '';
@@ -1443,7 +1455,7 @@
 								line_ref_1_label = 'purchase_item_id';
 								order_number = 'New';
 							}
-							
+							sum_qty += $(this).find(".line_qty").attr("data-qty");
 						var row = {
 							"line_number" : $(this).find(".line_line").attr("data-line-number"),
 							"part" : $(this).find(".line_part").attr("data-search"),
@@ -1470,6 +1482,11 @@
 
 						submit.push(row);
 					});
+					
+					if(order_type == "Repair" && sum_qty > 1){
+						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Cannot add multiple quantities to a repair order. If you intend to receive multiple parts, make multiple repair orders");
+						return;
+					}
 					console.log(submit);
 					console.log(order_number+" | "+order_type);
 					console.log("/json/order-form-submit.php?"+

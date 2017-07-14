@@ -292,7 +292,12 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a></div>
+			<div class="col-sm-4">
+				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
+					<a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
+				<?php } ?>
+					<a href="/repair.php?on=<?=($build ? $build : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
+			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active'){
 							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';

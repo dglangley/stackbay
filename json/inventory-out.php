@@ -264,9 +264,7 @@
 		if ($f['conditionid'] == ""){
 			$f['conditionid'] = '';
 		}
-*/
-
-		
+*/	
 		$filter_count = count(array_filter($f));
 		if (! $f['search'] AND ! $filter_count) {
 			return ("Please enter a search parameter");

@@ -451,7 +451,10 @@
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
 					$company_ln = '';
-					if ($company) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-arrow-right"></i></a>'; }
+					if ($company && (in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES))) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-arrow-right"></i></a>'; 
+					} else if($company) {
+						$company_ln = '<div class="company-overflow">'.$company.'</div>';
+					}
 					$item = display_part($r['partid'], true);
 					$qty = $r['qty'];
 					
@@ -519,7 +522,7 @@
 					//Either go to inventory add or PO or shipping for SO
 					if($o['po'] || $o['so']) {
 						$base = $o['url'].'.php';
-						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
 							$base = 'order_form.php';
 						}
 						echo'    <td>'.$order_num.'&nbsp;<a href="/'.$base.'?on='.$order_num.'&ps='.$order.'"><i class="fa fa-arrow-right"></i></a></td>';
@@ -563,23 +566,26 @@
 						}
 
 						echo'			<a href="/'.($order == 'p' ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+						//if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
 							echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						}
 						echo'		</td>'; 			
 					} else if($order == 'rma'){
 						echo'    	<td class="status text-right">';	
 						echo'			<a href="/rma_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-						if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
 							echo'		<a href="/rma.php?rma='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						}
 						echo'		</td>'; 
 					} else {
 						echo'    	<td class="status text-right">';		
 						if($order != 'bo') {
-							echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-user-circle-o" aria-hidden="true"></i></a>';
+							echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-wrench" aria-hidden="true"></i></a>';
 							echo'			<a href="/repair_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-							echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+							if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
+								echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+							}
 						} else {
 							echo'			<a href="/builds_management.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						}
