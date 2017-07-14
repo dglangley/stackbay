@@ -21,6 +21,7 @@
 
 	<!-- bxSlider Javascript file -->
 	<script src="js/jquery.bxslider.min.js"></script>
+	<script src="js/imageSlider.js"></script>
 
     <script src="js/ventel.js?id=<?php echo $V; ?>"></script>
 

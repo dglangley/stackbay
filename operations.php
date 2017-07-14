@@ -702,7 +702,6 @@
 
 	<?php include 'inc/navbar.php'; ?>
 		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
-			
 			<div class="row" style="padding: 8px;" id = "filterBar">
 				<div class="col-md-1" style="padding-right: 0;">
 				    <div class="btn-group medium" data-toggle="buttons">

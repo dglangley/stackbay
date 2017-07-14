@@ -235,7 +235,7 @@
 
 			$tabs .= '
             <li class="hidden-xs hidden-sm'.$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
-				<a href="'.$tab['action'].'" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
+				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
 				'.$tab['sub'].'
 			</li>
 			';
