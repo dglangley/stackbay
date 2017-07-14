@@ -30,13 +30,13 @@
 		//Repairs_check
 		$invoice_item_select = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
-		ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
-		FROM sales_items si, packages, repair_items ri 
-		where si.ref_1_label = 'repair_item_id' 
-		and order_number = so_number 
-		and order_number = ".prep($order_number)."
-		and ri.id = si.ref_1 
-		and ri.price > 0;";
+			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
+			FROM sales_items si, packages, repair_items ri 
+			where si.ref_1_label = 'repair_item_id' 
+			and order_number = so_number 
+			and order_number = ".prep($order_number)."
+			and ri.id = si.ref_1 
+			and ri.price > 0;";
 		$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
@@ -105,14 +105,14 @@
 		
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
-		$invoice_macro = mysqli_fetch_assoc($invoice_macro);
-		if (strtolower($invoice_macro['type']) == 'prepaid'){
-			$status = 'Paid';
-			//THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
-		} else {
-			// $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
-			$status = 'Pending';
-		}
+		// $invoice_macro = mysqli_fetch_assoc($invoice_macro);
+		// if (strtolower($invoice_macro['type']) == 'prepaid'){
+		// 	$status = 'Completed';
+		// 	//THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
+		// } else {
+		// 	// $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
+		$status = 'Pending';
+		// }
 		$freight = prep(shipment_freight($package_order_number, "Sales", $shipment_datetime));
 
 		$invoice_creation = "
