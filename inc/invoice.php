@@ -105,7 +105,9 @@
 		
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
-		// $invoice_macro = mysqli_fetch_assoc($invoice_macro);
+		$invoice_macro = mysqli_fetch_assoc($invoice_macro);
+		
+		
 		// if (strtolower($invoice_macro['type']) == 'prepaid'){
 		// 	$status = 'Completed';
 		// 	//THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
