@@ -51,6 +51,7 @@
 			$info[strtolower($info['short'])] = true;
 //Charges
 			$info['charges'] = "purchase_charges";
+			$info['credit_items'] = "purchase_credit_items";
 			
 		}
 		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
@@ -103,6 +104,7 @@
 
 //Charges
 			$info['charges'] = "sales_charges";
+			$info['credit_items'] = "sales_credit_items";
 	
 
 		}
