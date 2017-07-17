@@ -296,7 +296,25 @@
 				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
 					<a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
 				<?php } ?>
-					<a href="/repair.php?on=<?=($build ? $build : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
+				<a href="/repair.php?on=<?=($build ? $build : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
+
+				<form id="repair_ship" action="repair_shipping.php" method="POST">
+					<div class ="btn-group pull-left">
+						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-truck"></i> Ship
+							<span class="caret"></span>
+                           </button>
+                           <ul class="dropdown-menu">
+                           	<li>
+								<a class="ship" data-ship="ship" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-truck"></i> Ship</a>
+							</li>
+							<li>
+								<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-list"></i> Return to Stock</a>
+							</li>
+						</ul>
+					</div>
+					<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
+				</form>
 			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active'){
