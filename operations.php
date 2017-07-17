@@ -412,7 +412,7 @@
 				$results = searchQuery($search, $order);
 				//print_r($results); //die;
 			}
-			
+
 			//display only the first N rows, but output all of them
 			$count = 0;
 			// $active = 1;
@@ -471,6 +471,17 @@
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 
+						$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Checked%' ";
+						$query2 .= "AND techid = '".$U['id']."' ";
+						$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						if (mysqli_num_rows($result2)>0) {
+							$r2 = mysqli_fetch_assoc($result2);
+							if ($r2['notes']=='Checked Out') {
+								$status .= ' checked-out_item';
+							}
+						}
+
 						//If repair code exists then check if the order has already been shipped out or not
 						if($r['repair_code_id'] && $status != 'active_item') {
 							$query = "SELECT * FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_num).";";
@@ -479,13 +490,13 @@
 							if (mysqli_num_rows($result)) {
 								$pending = false;
 							} else {
-								//Check if a sales order has been created but npot yet shipped
+								//Check if a sales order has been created but not yet shipped
 								// $query = "SELECT * FROM sales_items si, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND (si.ref_1 = ri.id AND si.ref_1_label = 'repair_item_id') OR (si.ref_2 = ri.id AND si.ref_2_label = 'repair_item_id');";
 								// $result = qdb($query);
 			
-								//No sales order found so check the invetory status
+								//No sales order found so check the inventory status
 								// if (!mysqli_num_rows($result)) {
-									//Now check if it has been returned into the invetory instead
+									//Now check if it has been returned into the inventory instead
 									$query = "SELECT i.* FROM inventory i, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND i.repair_item_id = ri.id AND i.status = 'in repair';";
 									$result = qdb($query);
 
@@ -703,7 +714,7 @@
 	<?php include 'inc/navbar.php'; ?>
 		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id = "filterBar">
-				<div class="col-md-1" style="padding-right: 0;">
+				<div class="col-md-2" style="padding-right: 0;">
 				    <div class="btn-group medium" data-toggle="buttons">
 				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
 				        	<i class="fa fa-sort-numeric-desc"></i>	
@@ -711,8 +722,14 @@
 				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
 				        	<i class="fa fa-history"></i>	
 				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" type="submit" data-filter="pending">
-				        	<i class="fa fa-sign-out" aria-hidden="true"></i>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" type="submit" data-filter="pending">
+				        	<i class="fa fa-shopping-cart" aria-hidden="true"></i>
+				        </button>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm btn-status right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" type="submit" data-filter="checked-out">
+				        	<i class="fa fa-unlock" aria-hidden="true"></i>
+				        </button>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm btn-status right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" type="submit" data-filter="testing">
+				        	<i class="fa fa-terminal" aria-hidden="true"></i>
 				        </button>
 						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
 				        	All
@@ -725,11 +742,11 @@
 					<!--<input type="text" name="form_filter" class="form-control input-sm" value="<?=$f['filter']; ?>" style = "min-width:50px;"/>-->
 					<!--<input type="text" name="form_table_filter" class="form-control input-sm" value="<?=$table_filter?>" style = "min-width:50px;"/>-->
 				</div>
-				<div class = "col-md-3">
+				<div class = "col-md-2">
 					<div class="row">
 						<div class="col-md-6">
 							<div class="input-group date datetime-picker-filter">
-					            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:50px;"/>
+					            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:100px;"/>
 					            <span class="input-group-addon">
 					                <span class="fa fa-calendar"></span>
 					            </span>
@@ -737,7 +754,7 @@
 						</div>
 						<div class="col-md-6">
 							<div class="input-group date datetime-picker-filter">
-					            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:50px;"/>
+					            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:100px;"/>
 					            <span class="input-group-addon">
 					                <span class="fa fa-calendar"></span>
 					            </span>
@@ -1041,6 +1058,9 @@
 			$('.filter_status').removeClass('btn-warning');
 			$('.filter_status').removeClass('btn-success');
 			$('.filter_status').removeClass('btn-info');
+			$('.filter_status').removeClass('btn-flat info');
+			$('.filter_status').removeClass('btn-flat gray');
+			$('.filter_status').removeClass('btn-flat danger');
 			$('.filter_status').removeClass('btn-danger');
 			$('.filter_status').addClass('btn-default');
 
@@ -1060,9 +1080,23 @@
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else if (type=='pending') {
-				btn = 'danger';
+				btn = 'flat gray';
 				type2 = type;
 				$('.active_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='checked-out') {
+				btn = 'flat danger';
+				type2 = type;
+				$('.pending_item').hide();
+				$('.complete_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='testing') {
+				btn = 'flat info';
+				type2 = type;
+				$('.pending_item').hide();
+				$('.complete_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {
