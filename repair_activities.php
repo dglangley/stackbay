@@ -13,7 +13,7 @@
 			if(mysqli_num_rows($result)){
 				$result = mysqli_fetch_assoc($result);
 				$status = $result['status'];
-				if($status == 'in repair'){
+				if(strtolower($status) == 'in repair'){
 					$status = 'in testing';
 				} else {
 					$status = 'in repair';

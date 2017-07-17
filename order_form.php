@@ -196,6 +196,7 @@
 
 	$ORDER = array('fcreated'=>'','companyid'=>0);
 	$dataid = array();
+	$charges = array();
 	$dataid[0]['id'] = "New";
 	$dataid[0]['text'] = "";
 	$dataid[0]['memo'] = "";
@@ -212,9 +213,10 @@
 			$ORDER = mysqli_fetch_assoc($result);
 			$ORDER['fcreated'] = format_date($ORDER['created'],"D n/j/y g:ia");
 		}
-	
-		$charges = getCharges($order_number, $o['type']);
 		
+		if($o['sales'] || $o['purchase']){
+			$charges = getCharges($order_number, $o['type']);
+		}
 		if ($charges){
 			$i = 0;
 			foreach($charges as $charge){

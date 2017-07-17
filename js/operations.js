@@ -1746,6 +1746,8 @@
 					}
 				}	
 			});
+			
+			
 //=========== END OF FUNCTION FOR THE SHIPPING DASHBOARD =======================
 
 		
