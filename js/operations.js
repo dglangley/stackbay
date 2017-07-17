@@ -377,7 +377,7 @@
 					error: function(xhr, status, error) {
 						alert(error+" | "+status+" | "+xhr);
 						console.log("JSON warranty-default.php: Error");
-	    				console.log('/json/warranty-default.php?company='+company+'&order_type='+order_type);
+	    				console.log(window.location.origin+'/json/warranty-default.php?company='+company+'&order_type='+order_type);
 					},
 				});
 //
@@ -446,7 +446,7 @@
 							console.log("JSON Services limited dropPop.php: Success");
 							},					
 							error: function(xhr, status, error) {
-								alert(error+" | "+status+" | "+xhr);
+										alert(error+" | "+status+" | "+xhr);
 								console.log("JSON Services limited dropPop.php: Error");
 							}
 						});
@@ -595,7 +595,7 @@
 							$(".search_lines input[name='ni_qty']:first").focus();
 						},
 						error: function(xhr, status, error) {
-						   	alert(error+" | "+status+" | "+xhr);
+							   	alert(error+" | "+status+" | "+xhr);
 						},					
 					});
 				}
@@ -1429,7 +1429,7 @@
 								console.log("Order-upload:Success");
 							},
 							error: function(data, textStatus, errorThrown) {
-								console.log("Order-upload: Failure");
+										console.log("Order-upload: Failure");
 								alert(errorThrown);
 								return;
 							},
@@ -1582,7 +1582,7 @@
 							}
 						},
 						error: function(xhr, status, error) {
-						   	console.log("Order-form-submission Error:");
+							console.log("Order-form-submission Error:");
 						   	console.log(error);
 //						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
 							
@@ -1897,7 +1897,7 @@
 		// 			}
 		// 		},
 		// 		error: function(xhr, status, error) {
-		// 			//alert(error+" | "+status+" | "+xhr);
+			// 			//alert(error+" | "+status+" | "+xhr);
 		// 			window.location = "/operations.php?po=true";
 		// 			console.log("inventory-add-complete.php: ERROR");
 		// 		},	
@@ -2109,7 +2109,7 @@
 					}
 				},
 				error: function(xhr, status, error) {
-					$("#loader").hide();
+									$("#loader").hide();
 					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team!", false);
 					console.log("JSON shipping-update.php: ERROR " + error);
 					console.log(xhr);
@@ -2296,7 +2296,7 @@
 				}
 			},
 			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
+							alert(error+" | "+status+" | "+xhr);
 				console.log("JSON iso.php: ERROR");
 			},
 		});
@@ -2318,7 +2318,7 @@
 				$('.nav-tabs a[href="#iso_match"]').tab('show');
 			},
 			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
+							alert(error+" | "+status+" | "+xhr);
 				console.log("JSON iso.php: ERROR");
 			},
 		});
@@ -2376,7 +2376,7 @@
 				console.log(update);
 			},
 			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
+							alert(error+" | "+status+" | "+xhr);
 				console.log("JSON packages.php: Error");
 				console.log(window.location.origin+"/json/packages.php?"+"action="+"update&"+"&width="+width+"&height="+height+"&length="+length+"&weight="+weight+"&tracking="+tracking+"&freight="+freight+"&type="+order_type+"&id="+id);
 			},				
@@ -2433,7 +2433,7 @@
 					console.log("JSON package addition packages.php: Success");
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
+									alert(error+" | "+status+" | "+xhr);
 					console.log("JSON package addition packages.php: Error");
 					console.log("/packages.php?action=addition&order="+order_number+"&name="+autoinc+"&type="+order_type);
 				}
@@ -2527,6 +2527,7 @@
 				},
 				error: function(xhr, status, error) {
 					alert(error+" | "+status+" | "+xhr);
+					submitProblem("SYSTEM","JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
 					console.log("JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
 				}
 			});
@@ -2576,10 +2577,25 @@
 
 
 //================================== END RMA ===================================
-		
+
+
+//==============================================================================
+//==================================== Trello ==================================
+//==============================================================================
+
+    $("#trello-continue").click(function(){
+        var page = $("#modalTrelloBody").data("page");
+        var user = $("#modalTrelloBody").data("user");
+        var feedback = $("#tfeedback").val();
+        submitProblem(user, feedback);
+        $("#tfeedback").val('');
+    });
+    $("#leave_feedback").click(function(){
+		$("#modal-trello").modal("show");
+    });
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
-			
+	
 			
 	function box_edit(package_number){
 		var order_number = $("body").attr('data-order-number');
@@ -2633,8 +2649,9 @@
 						$("#modal-package").modal("show");
 				},
 				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
+									alert(error+" | "+status+" | "+xhr);
 					console.log("JSON packages_contents.php: Error");
+					submitProblem("SYSTEM",'/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
 				},				
 				complete: function(){
@@ -2661,6 +2678,7 @@
 			},
 			error: function(xhr, status, error) {
 				alert(error+" | "+status+" | "+xhr);
+				submitProblem("SYSTEM","JSON Package Delete | packages.php: Error");
 				console.log("JSON Package Delete | packages.php: Error");
 			}
 		});
@@ -2995,7 +3013,7 @@
 					}
 				},
 				error: function(xhr, status, error) {
-					console.log("Error populating search results: "+error);
+									console.log("Error populating search results: "+error);
 				},
 				complete: function() {
 //					$(".line_war").each(function() {
@@ -3180,7 +3198,7 @@
 							
 						},
 						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
+								alert(error+" | "+status+" | "+xhr);
 							console.log("Inventory-add-dynamic.php: ERROR");
 						},
 						
@@ -3263,7 +3281,7 @@
 							
 						},
 						error: function(xhr, status, error) {
-							alert(error+" | "+status+" | "+xhr);
+								alert(error+" | "+status+" | "+xhr);
 							console.log("Shipping-add-dynamic.php: ERROR");
 							console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid);
 							},	
@@ -3276,3 +3294,42 @@
 		    } 
 		
 		}
+
+//==============================================================================
+//==============================================================================
+//==============================================================================
+    function authenticateTrello(){
+        var authenticationSuccess = function() { console.log('Successful authentication'); };
+        var authenticationFailure = function() { console.log('Failed authentication'); };
+        Trello.authorize({
+          type: 'popup',
+          name: 'Getting Started Application',
+          scope: {
+            read: 'true',
+            write: 'true' },
+          expiration: 'never',
+          success: authenticationSuccess,
+          error: authenticationFailure
+        });
+    }
+    function submitProblem(user, feedback){
+        authenticateTrello();
+        var myList = "596d1cc89de495732a9cf1ae";
+        var creationSuccess = function(data) {
+          console.log('Card created successfully. Data returned:' + JSON.stringify(data));
+        };
+        var now = new Date();
+        var month = now.getMonth() + 1;
+        var date = now.getDate();
+        var year = now.getFullYear();
+        var newCard = {
+          name: user+" reported an error on "+month+"/"+date+"/"+year, 
+          desc: feedback,
+          // Place this card at the top of our list 
+          idList: myList,
+          pos: 'top',
+          labels:"55bfb4b019ad3a5dc2fde0a9",
+          urlSource:window.location.href
+        };
+        Trello.post('/cards/', newCard, creationSuccess);
+    }

@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/getUser.php';
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getDisposition.php';
@@ -317,6 +318,7 @@
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
 				include_once $rootdir.'/modal/repair_receive.php';
+				include_once $rootdir.'/modal/trello.php';
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['repair'] && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
