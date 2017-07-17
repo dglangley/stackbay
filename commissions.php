@@ -676,7 +676,7 @@
 						$profit = $invoice_amount-$cogs;
 
 						// add comm amount so long as it's a positive number (can't lose money on a sale), or a return
-						if ($c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0) {
+						if ($c['item_id_label']=='return_item_id' OR $c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0) {
 							$comm_amount = $c['commission_amount'];
 						}
 

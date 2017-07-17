@@ -45,6 +45,16 @@
 	// build data for population into lists
 	foreach ($results as $partid => $r) {
 		$qty = $r['visible_qty'];
+		$hidden_qty = false;
+		if (isset($r['hidden_qty']) AND ($r['hidden_qty']==='0' OR $r['hidden_qty']>0)) {
+			$hidden_qty = $r['hidden_qty'];
+		}
+		// 0 = do not show
+		if ($hidden_qty!==false) {
+			if ($hidden_qty==='0') { continue; }
+			$qty -= $hidden_qty;
+			if ($qty<0) { continue; }
+		}
 
 		$part_numbers = explode(' ',$r['part']);
 		$part = strtoupper(str_replace('"','',trim(str_replace('MERGEME','',$part_numbers[0]))));

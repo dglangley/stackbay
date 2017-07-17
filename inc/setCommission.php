@@ -50,7 +50,7 @@
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, i.partid ";
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.partid, i.partid inventory_partid ";
 		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
 		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
 		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
@@ -65,11 +65,15 @@
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			// assume we don't have a match on partid, which would exclude us from proceeding below
 			$partid_match = false;
-			$query3 = "SELECT value, changed_from FROM inventory_history h WHERE field_changed = 'partid' AND invid = ".$r2['inventoryid'].";";
-			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-			while ($r3 = mysqli_fetch_assoc($result3)) {
-				// either current or past partid is acceptable; so long as it has been this partid at some point
-				if ($r3['value']==$r2['partid'] OR $r3['changed_from']==$r2['partid']) { $partid_match = $r2['partid']; }
+			if ($r2['inventory_partid']==$r2['partid']) {
+				$partid_match = true;
+			} else {
+				$query3 = "SELECT value, changed_from FROM inventory_history h WHERE field_changed = 'partid' AND invid = ".$r2['inventoryid'].";";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				while ($r3 = mysqli_fetch_assoc($result3)) {
+					// either current or past partid is acceptable; so long as it has been this partid at some point
+					if ($r3['value']==$r2['partid'] OR $r3['changed_from']==$r2['partid']) { $partid_match = $r2['partid']; }
+				}
 			}
 			if (! $partid_match) { continue; }
 
