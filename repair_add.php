@@ -287,6 +287,8 @@
 		</style>
 	</head>
 	
+	<?php include_once $rootdir.'/modal/repair_receive.php'; ?>
+
 	<body class="sub-nav" id="rma-add" >
 	<!-- Begin the header output  -->
 		<div class="container-fluid pad-wrapper data-load">

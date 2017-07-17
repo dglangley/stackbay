@@ -711,8 +711,8 @@
 				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
 				        	<i class="fa fa-history"></i>	
 				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Pending" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" type="submit" data-filter="pending">
-				        	<i class="fa fa-envelope-open-o" aria-hidden="true"></i>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" type="submit" data-filter="pending">
+				        	<i class="fa fa-sign-out" aria-hidden="true"></i>
 				        </button>
 						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
 				        	All
