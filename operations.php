@@ -695,7 +695,7 @@
 	</style>
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav operations-body">
 
 <!----------------- Output the navigation bar ---------------------->
 
@@ -711,20 +711,22 @@
 				<form id = 'filter_form' action='operations.php' method ='post'>
 					<div class="col-md-4 remove-pad">
 					 	<div class="row">
-						    <div class="btn-group medium col-md-4 remove-pad" data-toggle="buttons">
-						        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" type="button" class="btn btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" data-filter="active">
-						        	<i class="fa fa-sort-numeric-desc"></i>	
-						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" type="button" class="btn btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" data-filter="complete">
-						        	<i class="fa fa-history"></i>	
-						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Pending" type="button" class="btn btn-sm right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" data-filter="pending">
-						        	<i class="fa fa-envelope-open-o" aria-hidden="true"></i>
-						        </button>
-								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" type="button" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">
-						        	All
-						        </button>
-						    </div>
+					 		<div class="col-sm-4 remove-pad">
+							    <div class="btn-group medium" data-toggle="buttons">
+							        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" type="button" class="btn btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" data-filter="active">
+							        	<i class="fa fa-sort-numeric-desc"></i>	
+							        </button>
+							        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" type="button" class="btn btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" data-filter="complete">
+							        	<i class="fa fa-history"></i>	
+							        </button>
+							        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Pending" type="button" class="btn btn-sm right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" data-filter="pending">
+							        	<i class="fa fa-envelope-open-o" aria-hidden="true"></i>
+							        </button>
+									<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" type="button" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">
+							        	All
+							        </button>
+							    </div>
+							</div>
 
 							<div class="col-sm-4 remove-pad">
 								<div class="input-group date datetime-picker-filter">
