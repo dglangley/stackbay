@@ -445,7 +445,7 @@
 	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
-		<?php include 'inc/navbar.php';?>
+		<?php include 'inc/navbar.php'; include 'modal/package.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
@@ -489,6 +489,63 @@
 							}
 
 				?>
+				<div class = 'row' style='padding-top:10px;'>
+					<div class="col-sm-12">
+						<div class="btn-group box_group" style = "padding-bottom:16px;">
+							<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
+								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
+							</button>
+							<?php
+
+								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+								$results = qdb($select) or die(qe()." ".$select);
+								
+								//Check for any open items to be shipped
+								if (mysqli_num_rows($results) > 0){
+									//Initialize
+									$init = true;
+									$package_no = 0;
+									
+									$masters = master_packages($order_number,$order_type);
+									foreach($results as $b){
+										$package_no = $b['package_no'];
+										$box_button = "<button type='button' class='btn ";
+										
+										//Build classes for the box buttons based off data-options
+										$box_button .= 'btn-grey'; //If the button has been shipped
+										$box_button .= (($b['datetime'] == '' && $init) ? ' active' : ''); //If the box is active, indicate that
+										$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
+										$box_button .= " box_selector'";
+										
+										//Add Data tags for the future population of modals
+										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
+										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
+										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
+										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
+										$box_button .= " data-order-number='" . $order_number . "'";
+										$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."' >".$b['package_no']."</button>";
+										echo($box_button);
+			                        	
+			                        	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+			                        	if($b['datetime'] == '' && $init)
+			                        		$init = false;
+									}
+									
+
+								} else {
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'$order_type','1',NOW());";
+									qdb($insert) or die(qe());
+									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
+								}
+	
+							?>
+							<button type="button" class="btn btn-primary box_addition" title = "">
+						  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+					  		</button>
+						</div>
+
+					</div>
+				</div>
 					<div class="row" style="margin: 20px 0;">
 						
 						<?php if(!$rma_status) { ?>

@@ -268,7 +268,8 @@ body.modal-open.accounts-body, #order_body.modal-open {
 /* David additions */
 
 #order_header .btn-flat {
-	margin:10px;
+	margin-top:10px;
+	margin-right:10px;
 }
 .order-upload {
 	width: 0.1px;
@@ -334,5 +335,11 @@ body.modal-open.accounts-body, #order_body.modal-open {
 @media only screen and (max-width: 767px) {
 	.company_meta{
 		height:auto;
+	}
+}
+
+@media only screen and (max-width: 991px) {
+	#order_header{
+		height:auto !important;
 	}
 }
