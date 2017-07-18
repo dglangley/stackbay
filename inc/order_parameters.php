@@ -1,7 +1,13 @@
 <?php
     function o_params($type){
 		$info = array();
-		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id" || strtolower($type) == "purchased"){
+		if(strtolower($type) == "p" || 
+		    strtolower($type) == "purchase" || 
+		    strtolower($type) == "purchases" || 
+		    strtolower($type) == "po" || 
+		    strtolower($type) == "purchase_item_id" || 
+		    strtolower($type) == "purchased" || 
+		    strtolower($type) == "purchase_orders"){
 			$info['type'] = "Purchase";
 			$info['ptype'] = $info['type'];
 			//convenient type check
@@ -54,7 +60,13 @@
 			$info['credit_items'] = "purchase_credit_items";
 			
 		}
-		else if ($type == "s" || strtolower($type) == "sale" || strtolower($type) == "sales" || strtolower($type) == "so" || strtolower($type) == "sales_item_id" || strtolower($type) == "sold"){
+		else if ($type == "s" 
+		|| strtolower($type) == "sale" 
+		|| strtolower($type) == "sales" 
+		|| strtolower($type) == "so" 
+		|| strtolower($type) == "sales_item_id" 
+		|| strtolower($type) == "sold" 
+		|| strtolower($type) == "sales_orders"){
 			$info['type'] = "Sales";
 			$info['ptype'] = "Sale";
 			//convenient type check
@@ -104,11 +116,16 @@
 
 //Charges
 			$info['charges'] = "sales_charges";
-			$info['credit_items'] = "sales_credit_items";
+			$info['credit_items'] = "sales_credit_items"; 
 	
 
 		}
-		else if (strtolower($type) == "invoice" || strtolower($type) == "inv" || strtolower($type) == "i"){
+		else if (
+		    strtolower($type) == "invoice" 
+		    || strtolower($type) == "invoices" 
+		    || strtolower($type) == "inv" 
+		    || strtolower($type) == "i" 
+		    || strtolower($type) == "invoices"){
 			// Remember: Invoice has few edits, but is built from a Sales Order
 			$info['type'] = "Invoice";
 			$info['ptype'] = $info['type'];
@@ -203,10 +220,13 @@
 			$info['order_by'] = "o.".$info['id'];
 			$info['mq_base'] = $info['tables'];
 			$info[strtolower($info['short'])] = true;
-			
-            
 		}
-		else if (strtolower($type) == "rma" || strtolower($type) == "return" || strtolower($type) == "returns" || strtolower($type) == "returns_item_id"){
+		else if (
+		    strtolower($type) == "rma" 
+		    || strtolower($type) == "return" 
+		    || strtolower($type) == "returns" 
+		    || strtolower($type) == "returns_item_id" 
+		    || strtolower($type) == "returns"){
 			//RMA acts as a purchase order
 			$info['type'] = "RMA";
 			$info['ptype'] = $info['type'];
@@ -254,11 +274,15 @@
 			$info['order_by'] = "o.created";
 			$info['mq_base'] = "returns o, return_items i, inventory c WHERE o.rma_number = i.rma_number AND i.inventoryid = c.id";
 			$info[strtolower($info['short'])] = true;
-			
+
             
 
 		}
-		else if (strtolower($type) == "credit" || strtolower($type) == "cm" || strtolower($type) == "c"){
+		else if (
+		    strtolower($type) == "credit" 
+		    || strtolower($type) == "cm" 
+		    || strtolower($type) == "c" 
+		    || strtolower($type) == "sales_credits"){
 			// Remember: Invoice has few edits, but is built from a Sales Order
 			$info['type'] = "Credit";
 			$info['ptype'] = $info['type'];
@@ -302,10 +326,13 @@
 			$info['order_by'] = "o.".$info['id'];
 			$info['mq_base'] = $info['tables'];
 			$info[strtolower($info['short'])] = true;
-			
-            
+		    
 		}
-		else if (strtolower($type) == "repair" || strtolower($type) == "ro" || strtolower($type) == "repair_item_id"){
+		else if (
+		    strtolower($type) == "repair" 
+		    || strtolower($type) == "ro" 
+		    || strtolower($type) == "repair_item_id" 
+		    || strtolower($type) == "repair_orders"){
 			$info['type'] = "Repair";
 			$info['ptype'] = $info['type'];
 			//convenient type check
@@ -363,7 +390,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = true;
-		} else if (strtolower($type) == "tech"){
+		} else if (strtolower($type) == "tech" || strtolower($type) == "repair_orders"){
 			$info['type'] = "Tech";
 			$info['ptype'] = $info['type'];
 			//convenient type check
@@ -411,7 +438,7 @@
 			$info['mq_base'] = $info['tables']." AND NOT EXISTS (SELECT o.ro_number FROM builds b WHERE o.ro_number = b.ro_number) ";
 			$info[strtolower($info['short'])] = true;
 			
-		} else if (strtolower($type) == "builds" || strtolower($type) == "bo" || strtolower($type) == "build_id" || strtolower($type) == "build"){
+		} else if (strtolower($type) == "builds" || strtolower($type) == "bo" || strtolower($type) == "build_id" || strtolower($type) == "build" || strtolower($type) == "builds"){
 			$info['type'] = "Builds";
 			$info['ptype'] = $info['type'];
 			//convenient type check
