@@ -343,3 +343,18 @@ body.modal-open.accounts-body, #order_body.modal-open {
 		height:auto !important;
 	}
 }
+
+@media only screen and (max-width: 520px) {
+	.logo{
+		display: none;
+	}
+
+	.search-center {
+		width: auto;
+		position: relative;
+	}
+
+	.search-form .search-group {
+		width: 100%;
+	}
+}

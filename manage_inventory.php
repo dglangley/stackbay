@@ -74,14 +74,14 @@
 
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
-<!----------------------------------------------------------------------------->
+<!---------------------------------------------------------------------------->
 	<table class="table table-header table-filter">
 		<tr>
-			<td class="col-md-2"></td>
-			<td class = "col-md-3"></td>
+			<td class="col-md-4"></td>
+			<!-- <td class = "col-md-3"></td> -->
 
 			<!-- TITLE -->
-			<td class="col-md-2 text-center">
+			<td class="col-md-4 text-center">
             	<h2 class="minimal">Inventory Manager</h2>
 			</td>
 			
@@ -89,9 +89,9 @@
 			
 			<!--Condition Drop down Handler-->
 			
-			<td class="col-md-2"></td>			
-			<td class="col-md-1"></td>
-			<td class="col-md-2">
+			<!-- <td class="col-md-2"></td>			
+			<td class="col-md-1"></td> -->
+			<td class="col-md-4">
 				<div class="pull-right form-group">
 		    		<button class="btn btn-primary btn-sm" type="submit">Save Inventory</button>
 				</div>

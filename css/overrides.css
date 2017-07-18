@@ -1228,12 +1228,12 @@ tr.grayout td a {
     display: none;
   }
 }
-@media screen and (max-width: 520px) {
+/*@media screen and (max-width: 520px) {
   .search-form .search-group {
 	width:140px;
   }
 }
-
+*/
 
 
 /***** CONTENT BOX (FROM ARTIFICIAL REASON) *****/
@@ -1450,7 +1450,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 .content-box.box-royal:hover {
   background-color: #a24cca;
 }
-.table-responsive {
+.operations-body .table-responsive {
     overflow-x: auto;
 }
 

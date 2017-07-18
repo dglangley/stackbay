@@ -706,7 +706,7 @@
 	</style>
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav operations-body">
 
 <!----------------- Output the navigation bar ---------------------->
 
