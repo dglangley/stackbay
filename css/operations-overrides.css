@@ -153,7 +153,7 @@ body.modal-open.accounts-body, #order_body.modal-open {
 
 }
 
-.accounts-body .row {
+.accounts-body .row, .operations-body .row {
 	margin: 0;	
 } 
 
@@ -341,20 +341,5 @@ body.modal-open.accounts-body, #order_body.modal-open {
 @media only screen and (max-width: 991px) {
 	#order_header{
 		height:auto !important;
-	}
-}
-
-@media only screen and (max-width: 520px) {
-	.logo{
-		display: none;
-	}
-
-	.search-center {
-		width: auto;
-		position: relative;
-	}
-
-	.search-form .search-group {
-		width: 100%;
 	}
 }

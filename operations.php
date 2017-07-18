@@ -720,25 +720,25 @@
 			<div class="row" style="padding: 8px;" id = "filterBar">
 
 				<form id = 'filter_form' action='operations.php' method ='post'>
-					<div class="col-md-4 remove-pad">
-					 	<div class="row">
+					<div class="col-md-4">
+						<div class="row">
 						    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
-						        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
+						        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" data-filter="active">
 						        	<i class="fa fa-sort-numeric-desc"></i>	
 						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" data-filter="complete">
 						        	<i class="fa fa-history"></i>	
 						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" type="submit" data-filter="pending">
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" data-filter="pending">
 						        	<i class="fa fa-shopping-cart" aria-hidden="true"></i>
 						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm btn-status right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" type="submit" data-filter="checked-out">
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" data-filter="checked-out">
 						        	<i class="fa fa-unlock" aria-hidden="true"></i>
 						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm btn-status right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" type="submit" data-filter="testing">
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" data-filter="testing">
 						        	<i class="fa fa-terminal" aria-hidden="true"></i>
 						        </button>
-								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
+								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">
 						        	All
 						        </button>
 						    </div>
