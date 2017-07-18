@@ -1224,9 +1224,13 @@ tr.grayout td a {
   }
 }
 @media (min-width: 992px) {
-  .navbar-toggle {
-    display: none;
-  }
+	.navbar-toggle {
+		display: none;
+	}
+
+  	.navbar-toggle {
+		z-index: 999;
+	}
 }
 /*@media screen and (max-width: 520px) {
   .search-form .search-group {
@@ -1234,6 +1238,21 @@ tr.grayout td a {
   }
 }
 */
+
+@media only screen and (max-width: 520px) {
+	.logo{
+		display: none;
+	}
+
+	.search-center {
+		width: auto;
+		position: relative;
+	}
+
+	.search-form .search-group {
+		width: 100%;
+	}
+}
 
 
 /***** CONTENT BOX (FROM ARTIFICIAL REASON) *****/
