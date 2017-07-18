@@ -383,6 +383,7 @@
 		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 //		echo '<BR><BR><BR>';
+//		echo $query.'<BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
 //			$commissionid = $r['id'];
 			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
