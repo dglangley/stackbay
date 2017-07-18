@@ -26,6 +26,7 @@
 	<script src="js/imageSlider.js"></script>
 
     <script src="js/ventel.js?id=<?php echo $V; ?>"></script>
+	<script src="js/operations.js?id=<?php echo $V; ?>"></script>
 	
 <?php
 	// build errors output to be alerted into modal
