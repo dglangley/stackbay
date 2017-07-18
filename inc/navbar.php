@@ -110,7 +110,7 @@
 	<input type="hidden" name="SEARCH_MODE" id="SEARCH_MODE" value="<?php echo $SEARCH_MODE; ?>">
 
     <!-- navbar -->
-    <header class="navbar navbar-inverse yamm" role="banner">
+    <header class="navbar navbar-inverse" role="banner">
         <div class="navbar-header">
             <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse"><!-- id="menu-toggler">-->
                 <span class="sr-only">Toggle navigation</span>
@@ -123,22 +123,23 @@
             </a>
 			<div class="search-center">
 			  <div class="form-group search-group">
-				<div class="input-group">
-					<span class="input-group-btn">
-						<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
-					</span>
-	                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php' AND $_SERVER["PHP_SELF"]<>'/services.php') { echo ''; } ?> />
-                	<span class="input-group-btn">
-	                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
-	                </span>
-                </div><!-- /input-group -->
-              </div><!-- /form-group -->
+			<div class="input-group">
+				<span class="input-group-btn">
+					<button class="btn btn-default advanced-search" type="button"><i class="fa fa-list-ol"></i> <sup><i class="fa fa-sort-desc options-toggle"></i></sup></button>
+				</span>
+                <input class="form-control" type="text" name="s" id="s" value="<?php echo trim($s); ?>" placeholder="Search..." <?php if ($_SERVER["PHP_SELF"]<>'/accounts.php' AND $_SERVER["PHP_SELF"]<>'/services.php') { echo ''; } ?> />
+            	<span class="input-group-btn">
+                	<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                </span>
+            </div><!-- /input-group -->
+          </div><!-- /form-group -->
 			</div>
         </div>
 		<div class="collapse navbar-collapse text-center">
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
+          
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>
 			<?php if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) { ?>
@@ -189,7 +190,7 @@
 					<i class="fa fa-user"></i><span> <?php echo $U['name']; ?></span>
                     <b class="caret"></b>
 				</a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-right">
                 	<?php if(in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) { ?>
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>

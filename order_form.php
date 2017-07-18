@@ -37,7 +37,6 @@
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getCharges.php';
 
-            //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
 	$rtv_array = array();
@@ -588,7 +587,7 @@
 					
 				</div>
 				
-				<div class="col-md-5 text-center">
+				<div class="col-md-4 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if(!$o['invoice'] && !$o['rtv']){
@@ -624,7 +623,7 @@
 					echo"</h2>";
 					?>
 				</div>
-				<div class="col-md-3">
+				<div class="col-md-4">
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
