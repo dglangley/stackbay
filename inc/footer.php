@@ -20,13 +20,13 @@
     <script src="js/select2.min.js"></script>
 
 	<script src="js/dropzone.js"></script>
+	<script src="js/trello.js"></script>
 
 	<!-- bxSlider Javascript file -->
 	<script src="js/jquery.bxslider.min.js"></script>
 	<script src="js/imageSlider.js"></script>
 
     <script src="js/ventel.js?id=<?php echo $V; ?>"></script>
-	<!--<script src="js/operations.js?id=<?php echo $V; ?>"></script>-->
 	
 <?php
 	// build errors output to be alerted into modal
