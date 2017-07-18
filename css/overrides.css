@@ -1155,6 +1155,13 @@ hr.no-margin {
 	width:36px;
 	position:relative;
 }
+.btn-flat.btn-sm {
+	padding:5px 10px !important;
+	line-height:1.5 !important;
+}
+.btn-flat.gray {
+	color:#fff;
+}
 #date-ranges {
    width:436px;
    height:30px;

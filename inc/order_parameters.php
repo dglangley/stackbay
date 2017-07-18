@@ -121,12 +121,13 @@
 
 		}
 		else if (
+			// Remember: Invoice has few edits, but is built from a Sales or Repair Order
 		    strtolower($type) == "invoice" 
 		    || strtolower($type) == "invoices" 
 		    || strtolower($type) == "inv" 
 		    || strtolower($type) == "i" 
-		    || strtolower($type) == "invoices"){
-			// Remember: Invoice has few edits, but is built from a Sales Order
+		    || strtolower($type) == "invoices")
+		{
 			$info['type'] = "Invoice";
 			$info['ptype'] = $info['type'];
 			$info['purchase'] = false;
@@ -144,7 +145,7 @@
 			$info['item'] = "invoice_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
-			$info['contact_col'] = 'SO #';
+			$info['contact_col'] = 'Order#';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";

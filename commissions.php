@@ -21,6 +21,18 @@
 		return ('PO'.$r['po_number'].' <a href="/order_form.php?on='.$r['po_number'].'&ps=p" target="_new"><i class="fa fa-arrow-right"></i></a>');
 	}
 
+	function getPartInfo($partid) {
+		$P = array();
+		$query3 = "SELECT * FROM parts WHERE id = '".$partid."'; ";
+		$result3 = qdb($query3) OR die("Failed getting parts info for partid ".$partid.", weird.");
+		if (mysqli_num_rows($result3)==0) {
+			die("Failed getting parts info for partid ".$partid.", weird.");
+		}
+		$P = mysqli_fetch_assoc($result3);
+
+		return ($P);
+	}
+
 	$RATES = array();
 	function getSalesReps($selected_repid=0,$force_selected=false) {
 		global $RATES;
@@ -128,11 +140,14 @@
 	
 	$keyword = '';
 	$part_string = '';
-
-	$filter = $_REQUEST['filter'];
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$keyword = $_REQUEST['s'];
 		$order = $keyword;
+	}
+
+	$filter = '';
+	if (isset($_REQUEST['filter']) AND $_REQUEST['filter']) {
+		$filter = $_REQUEST['filter'];
 	}
 
 	if ($keyword) {
@@ -354,7 +369,7 @@
 		}
 
 		// get all invoices which are commissioned against
-		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status ";
+		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
 		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
@@ -368,8 +383,9 @@
 		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 //		echo '<BR><BR><BR>';
+//		echo $query.'<BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
-			$commissionid = $r['id'];
+//			$commissionid = $r['id'];
 			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
 			//$r['amount'] = $r['commission_amount'];
 			$r['charge_type'] = $type;
@@ -380,10 +396,10 @@
 
 			// get invoice items, which we will use to compare for commissions against each invoiced item
 			$query2 = "SELECT qty, amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+//			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$item_amt = $r2['qty']*$r2['amount'];
-				$inv_amt += $item_amt;
 
 				$r['commissions'][$r2['id']] = array('qty'=>$r2['qty'],'amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
 
@@ -424,13 +440,22 @@
 					// if no results from commissions table, supplement them with reps based on $RATES
 					$num_results = mysqli_num_rows($result4);
 					if ($num_results==0) {
-						foreach ($RATES as $comm_repid => $comm_rate) {
-							if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
-							$comm['rep_id'] = $comm_repid;
+						// check now that the items weren't invoiced on another invoice for the same billable order
+						$query4 = "SELECT * FROM commissions c, invoices i ";
+						$query4 .= "WHERE c.inventoryid = '".$r3['invid']."' AND c.invoice_no <> '".$r['invoice_no']."' ";
+						$query4 .= "AND c.invoice_no = i.invoice_no AND order_number = '".$r['order_number']."' AND order_type = '".$r['order_type']."'; ";
+//						echo $query4.'<BR>';
+						$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+						// if there's not another invoice for this inventoryid, then it didn't get logged in commissions so we should populate below
+						if (mysqli_num_rows($result4)==0) {
+							foreach ($RATES as $comm_repid => $comm_rate) {
+								if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
+								$comm['rep_id'] = $comm_repid;
 
-							if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
-							$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
-							$pending_comms += $qty;
+								if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
+								$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
+								$pending_comms += $qty;
+							}
 						}
 					}
 					while ($r4 = mysqli_fetch_assoc($result4)) {
@@ -554,6 +579,7 @@
 						</tr>
 				';
 
+				// this breaks out each individual inventory item that's on this invoice item
 				foreach ($a as $c) {
 					$inventoryid = $c['inventoryid'];
 					$serial = '';
@@ -583,12 +609,10 @@
 
 					$source_ln = getSource($pi_id);
 
-					$query3 = "SELECT * FROM parts WHERE id = '".$partid."'; ";
-					$result3 = qdb($query3);
-					$r3 = mysqli_fetch_assoc($result3);
-					$parts = explode(' ',$r3['part']);
+					$P = getPartInfo($partid);
+					$parts = explode(' ',$P['part']);
 					$part = $parts[0];
-					$heci = $r3['heci'];
+					$heci = $P['heci'];
 
 					$results = array();
 //					print "<pre>".print_r($c,true)."</pre>";
@@ -653,7 +677,7 @@
 						$profit = $invoice_amount-$cogs;
 
 						// add comm amount so long as it's a positive number (can't lose money on a sale), or a return
-						if ($c['item_id_label']=='return_item_id' OR $c['commission_amount']>0) {
+						if ($c['item_id_label']=='return_item_id' OR $c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0 OR $history_date) {
 							$comm_amount = $c['commission_amount'];
 						}
 
@@ -839,10 +863,13 @@
 					field_state = '';
 					cogs_helper = '<span class="info em">adjust if necessary</span></div>';
 				}
-				var modal_msg = 'I can re-calculate this Commission for you, but I have to reload your page. Are you sure that\'s okay?<br/><br/>'+
+				var modal_msg = 'I can re-calculate this Commission for you, but I have to reload your page.<br/>'+
+					'Please note that this will re-calculate commissions for ALL affected sales reps on this sales item.<br/><br/>'+
+					'Are you sure that\'s okay?<br/><br/>'+
 					'<div class="row">'+
 						'<div class="col-sm-3 text-right"><strong>COGS</strong></div>'+
-						'<div class="col-sm-3"><input type="text" class="form-control input-xs" name="item_cogs_'+inventoryid+'_'+repid+'" id="item-cogs-'+inventoryid+'-'+repid+'" value="'+cogs+'" '+field_state+'/></div>'+
+						'<div class="col-sm-3"><input type="text" class="form-control input-xs" name="item_cogs_'+inventoryid+'_'+repid+'" '+
+							'id="item-cogs-'+inventoryid+'-'+repid+'" value="'+cogs+'" onFocus="this.select()" '+field_state+'/></div>'+
 						'<div class="col-sm-6">'+cogs_helper+'</div>'+
 					'</div>'+
 					'<div class="row">'+
@@ -860,11 +887,13 @@
 					'<div class="row">'+
 						'<div class="col-sm-3 text-right"><strong>Inventory ID</strong></div>'+
 						'<div class="col-sm-9">'+inventoryid+'</div>'+
-					'</div>'+
+					'</div>';
+/*
 					'<div class="row">'+
 						'<div class="col-sm-3 text-right"><strong>Rep ID</strong></div>'+
 						'<div class="col-sm-9">'+repid+'</div>'+
 					'</div>';
+*/
 				modalAlertShow('<i class="fa fa-female"></i> A message from Améa...',modal_msg,true,'calcCommission',$(this));
 //alert(invoice+':'+inventoryid+':'+repid);
 			});
@@ -897,11 +926,13 @@
 			var item_id_label = e.data("itemidlabel");
 			var cogs = $("#item-cogs-"+inventoryid+"-"+repid).val();
 
-        	console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&repid="+repid+"&cogs="+cogs+"&item_id="+item_id+"&item_id_label="+item_id_label);
+        	//console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&repid="+repid+"&cogs="+cogs+"&item_id="+item_id+"&item_id_label="+item_id_label);
+        	console.log(window.location.origin+"/json/calc-comm.php?invoice="+invoice+"&invoice_item_id="+invoice_item_id+"&inventoryid="+inventoryid+"&cogs="+cogs+"&item_id="+item_id+"&item_id_label="+item_id_label);
 	        $.ajax({
 				url: 'json/calc-comm.php',
 				type: 'get',
-				data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'repid': repid, 'cogs': cogs, 'item_id': item_id, 'item_id_label': item_id_label},
+				/*data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'repid': repid, 'cogs': cogs, 'item_id': item_id, 'item_id_label': item_id_label},*/
+				data: {'invoice': invoice, 'invoice_item_id': invoice_item_id, 'inventoryid': inventoryid, 'cogs': cogs, 'item_id': item_id, 'item_id_label': item_id_label},
 				dataType: 'json',
 				cache: false,
 				success: function(json, status) {

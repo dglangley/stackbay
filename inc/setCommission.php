@@ -26,18 +26,58 @@
 		$order_number = $r['order_number'];
 		$order_type = $r['order_type'];
 
+		// try to gather all partids for this inventory record from history so that we can match in shipments below
+/*
+		$csv_partid = '';
+		if ($inventoryid) {
+			$partids = array();
+			$query2 = "SELECT value, changed_from FROM inventory_history h WHERE field_changed = 'partid' AND invid = $inventoryid;";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				if ($r2['value']) {
+					$partids[$r2['value']] = $r2['value'];
+				}
+				if ($r2['changed_from']) {
+					$partids[$r2['changed_from']] = $r2['changed_from'];
+				}
+			}
+			foreach($partids as $pid) {
+				if ($csv_partid) { $csv_partid .= ','; }
+				$csv_partid .= $pid;
+			}
+		}
+*/
+
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, i.partid ";
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.partid, i.partid inventory_partid ";
 		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
 		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
 		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
 		if ($inventoryid) { $query2 .= "AND serialid = '".res($inventoryid)."' "; }
 		$query2 .= "AND ii.id = s.invoice_item_id AND s.packageid = c.packageid ";
-		$query2 .= "AND c.serialid = i.id AND i.partid = ii.partid ";
+		$query2 .= "AND c.serialid = i.id ";//AND i.partid = ii.partid ";
+		// match partids to weed out duplicate or bogus results in the same package from other records
+//changed method 7/14/17 as soon as I made it, so that we can catch ALL occasions, not just when $inventoryid is passed in (see commented query above)
+//		if ($csv_partid) { $query2 .= "AND ii.partid IN (".$csv_partid.") "; }
 		$query2 .= "; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
+			// assume we don't have a match on partid, which would exclude us from proceeding below
+			$partid_match = false;
+			if ($r2['inventory_partid']==$r2['partid']) {
+				$partid_match = true;
+			} else {
+				$query3 = "SELECT value, changed_from FROM inventory_history h WHERE field_changed = 'partid' AND invid = ".$r2['inventoryid'].";";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				while ($r3 = mysqli_fetch_assoc($result3)) {
+					// either current or past partid is acceptable; so long as it has been this partid at some point
+					if ($r3['value']==$r2['partid'] OR $r3['changed_from']==$r2['partid']) { $partid_match = $r2['partid']; }
+				}
+			}
+			if (! $partid_match) { continue; }
+
+
 			switch ($order_type) {
 				case 'Sale':
 					$id_field = 'sales_item_id';

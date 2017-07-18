@@ -61,6 +61,7 @@
 
 //	echo $results;
 	$favs_report = '';
+	$inv_report = '';
 	$num_favs = 0;
 	$rows = $results->getElementsByTagName('tr');
 	$n = $rows->length;
@@ -89,6 +90,7 @@
 			$favs_report .= 'qty '.$qty.'- '.$part.' '.$heci.'<BR>';
 			$num_favs++;// += count($favs);
 		}
+		$inv_report .= 'qty '.$qty.'- '.$part.' '.$heci.'<BR>';
 
 //dgl 10-20-16
 //		$partid = getPartId($part,$heci);
@@ -124,6 +126,16 @@
 		} else {
 			echo json_encode(array('message'=>$SEND_ERR));
 		}
+	}
+	if ($inv_report) {
+		$mail_msg = 'ngtinc.com inventory report:<BR><BR>'.$inv_report;
+
+		$send_success = send_gmail($mail_msg,'ngtinc.com inventory report '.date("D n/j/y"),'wtb@ven-tel.com');
+		if ($send_success) {
+			echo json_encode(array('message'=>'Success'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		} 
 	}
 	echo ('success!')
 ?>

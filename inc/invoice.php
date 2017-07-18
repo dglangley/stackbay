@@ -105,21 +105,15 @@
 		
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
-		$invoice_macro = mysqli_fetch_assoc($invoice_macro);
+		$macro_row = mysqli_fetch_assoc($invoice_macro);
 		
 		
-		// if (strtolower($invoice_macro['type']) == 'prepaid'){
-		// 	$status = 'Completed';
-		// 	//THERE WILL NEED TO BE A CHECK HERE TO ENSURE THE PRODUCT WAS ACTUALLY PAID FOR [VERIFIED BY DAVID 3/20/17]
-		// } else {
-		// 	// $pay_day = format_date($invoice_macro['created'],"Y-m-d",array("d"=>$invoice_macro['days']));
 		$status = 'Pending';
-		// }
 		$freight = prep(shipment_freight($package_order_number, "Sales", $shipment_datetime));
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".prep($invoice_macro['companyid']).", ".prep($order_number).", ".prep($o['ptype']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['ptype']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
 		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
 		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }

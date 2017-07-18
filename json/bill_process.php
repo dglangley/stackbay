@@ -49,7 +49,7 @@
                 `po_number`,
                 `companyid`) VALUES (
                 ".prep($data['invoice_no']).",
-                NOW(),
+                '".$GLOBALS['now']."',
                 ".prep($due_date,'NULL').",
                 ".prep($data['po_number']).",
                 ".prep($company_id,"NULL").");
