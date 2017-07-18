@@ -25,8 +25,8 @@
 	if (isset($_REQUEST['item_id']) AND is_numeric($_REQUEST['item_id']) AND $_REQUEST['item_id']>0) { $item_id = $_REQUEST['item_id']; }
 	if (isset($_REQUEST['item_id_label']) AND $_REQUEST['item_id_label']) { $item_id_label = $_REQUEST['item_id_label']; }
 
-	if (! $invoice OR ! $invoice_item_id OR ! $inventoryid OR ! $repid) {
-		reportError("Missing invoice or invoice item id or inventoryid or repid!");
+	if (! $invoice OR ! $invoice_item_id OR ! $inventoryid) {// OR ! $repid) {
+		reportError("Missing invoice or invoice item id or inventoryid!");// or repid!");
 	}
 	if (! $item_id OR ! $item_id_label) {
 		reportError("Missing sale/repair item id and/or label!");

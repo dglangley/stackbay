@@ -412,7 +412,7 @@
 				$results = searchQuery($search, $order);
 				//print_r($results); //die;
 			}
-			
+
 			//display only the first N rows, but output all of them
 			$count = 0;
 			// $active = 1;
@@ -471,6 +471,17 @@
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 
+						$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Checked%' ";
+						$query2 .= "AND techid = '".$U['id']."' ";
+						$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						if (mysqli_num_rows($result2)>0) {
+							$r2 = mysqli_fetch_assoc($result2);
+							if ($r2['notes']=='Checked Out') {
+								$status .= ' checked-out_item';
+							}
+						}
+
 						//If repair code exists then check if the order has already been shipped out or not
 						if($r['repair_code_id'] && $status != 'active_item') {
 							$query = "SELECT * FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_num).";";
@@ -479,13 +490,13 @@
 							if (mysqli_num_rows($result)) {
 								$pending = false;
 							} else {
-								//Check if a sales order has been created but npot yet shipped
+								//Check if a sales order has been created but not yet shipped
 								// $query = "SELECT * FROM sales_items si, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND (si.ref_1 = ri.id AND si.ref_1_label = 'repair_item_id') OR (si.ref_2 = ri.id AND si.ref_2_label = 'repair_item_id');";
 								// $result = qdb($query);
 			
-								//No sales order found so check the invetory status
+								//No sales order found so check the inventory status
 								// if (!mysqli_num_rows($result)) {
-									//Now check if it has been returned into the invetory instead
+									//Now check if it has been returned into the inventory instead
 									$query = "SELECT i.* FROM inventory i, repair_items ri WHERE ri.ro_number = ".prep($order_num)." AND i.repair_item_id = ri.id AND i.status = 'in repair';";
 									$result = qdb($query);
 
@@ -711,24 +722,28 @@
 				<form id = 'filter_form' action='operations.php' method ='post'>
 					<div class="col-md-4 remove-pad">
 					 	<div class="row">
-					 		<div class="col-sm-4 remove-pad">
-							    <div class="btn-group medium" data-toggle="buttons">
-							        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" type="button" class="btn btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" data-filter="active">
-							        	<i class="fa fa-sort-numeric-desc"></i>	
-							        </button>
-							        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" type="button" class="btn btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" data-filter="complete">
-							        	<i class="fa fa-history"></i>	
-							        </button>
-							        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Pending" type="button" class="btn btn-sm right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-danger' : 'btn-default');?>" data-filter="pending">
-							        	<i class="fa fa-envelope-open-o" aria-hidden="true"></i>
-							        </button>
-									<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" type="button" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">
-							        	All
-							        </button>
-							    </div>
-							</div>
+						    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
+						        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
+						        	<i class="fa fa-sort-numeric-desc"></i>	
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
+						        	<i class="fa fa-history"></i>	
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" type="submit" data-filter="pending">
+						        	<i class="fa fa-shopping-cart" aria-hidden="true"></i>
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm btn-status right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" type="submit" data-filter="checked-out">
+						        	<i class="fa fa-unlock" aria-hidden="true"></i>
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm btn-status right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" type="submit" data-filter="testing">
+						        	<i class="fa fa-terminal" aria-hidden="true"></i>
+						        </button>
+								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
+						        	All
+						        </button>
+						    </div>
 
-							<div class="col-sm-4 remove-pad">
+							<div class="col-sm-3 remove-pad">
 								<div class="input-group date datetime-picker-filter">
 						            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:50px;"/>
 						            <span class="input-group-addon">
@@ -736,7 +751,7 @@
 						            </span>
 						        </div>
 							</div>
-							<div class="col-sm-4 remove-pad">
+							<div class="col-sm-3 remove-pad">
 								<div class="input-group date datetime-picker-filter">
 						            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:50px;"/>
 						            <span class="input-group-addon">
@@ -747,9 +762,6 @@
 						</div>
 					</div>
 
-<!-- 					<div class = "col-md-3">
-						
-					</div> -->
 					<div class="col-md-4 text-center remove-pad">
 		            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
 					</div>
@@ -1049,6 +1061,9 @@
 			$('.filter_status').removeClass('btn-warning');
 			$('.filter_status').removeClass('btn-success');
 			$('.filter_status').removeClass('btn-info');
+			$('.filter_status').removeClass('btn-flat info');
+			$('.filter_status').removeClass('btn-flat gray');
+			$('.filter_status').removeClass('btn-flat danger');
 			$('.filter_status').removeClass('btn-danger');
 			$('.filter_status').addClass('btn-default');
 
@@ -1068,9 +1083,23 @@
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else if (type=='pending') {
-				btn = 'danger';
+				btn = 'flat gray';
 				type2 = type;
 				$('.active_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='checked-out') {
+				btn = 'flat danger';
+				type2 = type;
+				$('.pending_item').hide();
+				$('.complete_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='testing') {
+				btn = 'flat info';
+				type2 = type;
+				$('.pending_item').hide();
+				$('.complete_item').hide();
 				$('.status-column').hide();
 				$('.status_label').hide();
 			} else {

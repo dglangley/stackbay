@@ -27,8 +27,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
-	$datetime = format_date($GLOBALS['now'], "Y-m-d H:i:s");
-	
+
 	if (! isset($debug)) { $debug = 0; }
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
@@ -227,7 +226,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		return $result;
 	}
 	
-	$result = savetoDatabase($productItems, $so_number, $datetime);
+	$result = savetoDatabase($productItems, $so_number, $now);
 	
 	echo json_encode($result);
     exit;

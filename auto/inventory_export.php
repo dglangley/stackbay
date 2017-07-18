@@ -22,7 +22,7 @@
 
 	$results = array();//contains all parts data that will be consolidated between db's for export
 
-	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id ORDER BY part ASC, heci ASC LIMIT 0,50; ";
+	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id ORDER BY part ASC, heci ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$results[$r['partid']] = $r;
@@ -45,6 +45,16 @@
 	// build data for population into lists
 	foreach ($results as $partid => $r) {
 		$qty = $r['visible_qty'];
+		$hidden_qty = false;
+		if (isset($r['hidden_qty']) AND ($r['hidden_qty']==='0' OR $r['hidden_qty']>0)) {
+			$hidden_qty = $r['hidden_qty'];
+		}
+		// 0 = do not show
+		if ($hidden_qty!==false) {
+			if ($hidden_qty==='0') { continue; }
+			$qty -= $hidden_qty;
+			if ($qty<0) { continue; }
+		}
 
 		$part_numbers = explode(' ',$r['part']);
 		$part = strtoupper(str_replace('"','',trim(str_replace('MERGEME','',$part_numbers[0]))));
@@ -109,7 +119,7 @@
 			$url = '//ven-tel.com';
 			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).'.jpg width=34>';
 			// replace part# with this alias
-			if ($r['system'] AND isset($exts[2])) { $exts[2] = '/'.strtolower($alias); }
+			if ($system AND isset($exts[2])) { $exts[2] = '/'.strtolower($alias); }
 			foreach ($exts as $ext) {
 				$a_prep = '<a href='.$url.$ext.'>'.$img.'</a>';
 				// Condition max length: 130 chars

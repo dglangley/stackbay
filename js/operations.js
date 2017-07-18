@@ -2324,6 +2324,40 @@
 		});
 	});
 
+//==============================================================================
+//================================== PACKAGES ==================================
+//==============================================================================
+/* moved by dl 7-17-17 so Jr has this menu on his Receive view as well */
+		        $(document).on("click", ".ship", function(e) {
+		        	e.preventDefault();
+		        	var type = $(this).data("ship");
+		        	//alert(type);
+		        	$('#modal-repair-receive .alert').hide();
+
+		        	if(type == 'ship') {
+		        		$("#receive_form").attr("action", "repair_shipping.php");
+		        		//if (confirm("Confirm item will be shipped.<br><br>A Sales Order will be Generated upon confirming.")){
+		        		//$('form#repair_ship').submit();
+		        		$('#modal-repair-receive .alert-ship').show();
+		        		$('#modal-repair-receive .ship_option').hide();
+		        		$('#modal-repair-receive .locations_selector').hide();
+		        		$('#modalshipTitle span').html('Ship to Customer');
+        				$('.modal_message').html('Repair Shipping Order will be generated for this item upon confirmation.');
+	        			$('#modal-repair-receive').modal('show');
+		        		//}
+		        	} else {
+		        		$("#receive_form").attr("action", "repair_activities.php");
+		        		//if (confirm("Confirm item will be sent to stock.")){
+		        		$('#modal-repair-receive .alert-receive').show();
+		        		$('#modal-repair-receive .locations_selector').show();
+	        			$('#modal-repair-receive .ship_option').show();
+	        			$('#modalshipTitle span').html('Receive to Stock');
+	        			$('.modal_message').html('Item will be received to selected location upon confirmation.');
+	        			$('#modal-repair-receive').modal('show');
+		        		//}
+		        	}
+		        });
+
 
 //==============================================================================
 //================================== PACKAGES ==================================

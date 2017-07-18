@@ -137,6 +137,7 @@
 		'UMC1000'=>1,
 		'HI'=>1,
 		'5ESS'=>1,
+		'THIS'=>1,
 	);
 
 	// for every email...

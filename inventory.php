@@ -768,7 +768,7 @@
 			//e.preventDefault();
 			//Variable Delcarations
 			var partid;
-			var indiv;
+			var invid;
 			var $save =$(this);
 			var id = $save.closest('tr').data('invid');
 			var newSerial = $save.closest('tr').find('.newSerial').val();
