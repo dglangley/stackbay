@@ -12,6 +12,8 @@
 	<script src="js/moment.min.js"></script>
 	<script src="js/bootstrap-datetimepicker.js"></script>
     <script src="js/theme.js"></script>
+	<script src="https://api.trello.com/1/client.js?key=f7bebfb52058c4486f6cd4092fdb55a9"></script>
+	<script src="js/trello.js"></script>
     <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
 
 	<script src="js/DropdownHover.js"></script>
@@ -24,7 +26,7 @@
 	<script src="js/imageSlider.js"></script>
 
     <script src="js/ventel.js?id=<?php echo $V; ?>"></script>
-
+	
 <?php
 	// build errors output to be alerted into modal
 	if (count($ALERTS)>0) {

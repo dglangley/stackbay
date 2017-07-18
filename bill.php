@@ -228,7 +228,7 @@
 			</div>
 		<div class="row remove-margin">
 				<!--================== Begin Left Half ===================-->
-				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
+			<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
 					<!--'RMA'/$rma_number OR 'Sales'/$po_number-->
 					<?=sidebar_out($bill_number,"purchase",$sidebar_mode)?>
 				</div>
@@ -237,7 +237,7 @@
 			
 		
 				<!--===================== Begin Right half =====================-->
-				<div class="col-sm-10 shipping-list" style="padding-top: 20px">
+			<div class="col-sm-10 shipping-list" style="padding-top: 20px">
 					<div class="table-responsive">
 						<table  class = "table table-hover table-striped table-condensed" style="margin-top: 15px;">
 							<thead>
@@ -317,12 +317,12 @@
 									
 								echo($output);
 							?>
+							</tbody>
 						</table>
-						</tbody>
 					</div>
 				</div>
 			<!--====================== End Right half ======================-->
-			</div>
+		</div>
 
 	<?php include_once 'inc/footer.php';?>
 	<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>

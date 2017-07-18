@@ -384,7 +384,6 @@
 							console.log("Nothing_found");
 							//$(".loading_element_listing").hide();
 					  		//alert("No Parts Found with those parameters");
-							$("#item-none").show();
 							$(".loading_element_listing").hide();
 							$(".revisions").empty();
 							$(".headers").empty();
@@ -537,7 +536,7 @@
 											if (status == "Manifest" || status == "Outbound" || info.qty == 0){
 												interpreted = "Sold";
 												color = "label-success";
-											} else if (status == "Scrapped" || status == "In Repair" || info.conditionid < 0){
+											} else if (status == "In Repair" || info.conditionid < 0){
 												color = "label-danger";
 												interpreted = "Non-Sellable ("+status+")";
 											} else {
@@ -658,6 +657,9 @@
 							if(search_sum['stock']==0 && search_sum['non_stock'] > 0){
 								$("#qty_all").trigger("click");
 							}
+							if(search_sum['stock'] == 0 && search_sum['bad'] == 0 && search_sum['non_stock'] == 0){
+								$("#item-none").show();
+							}
 							// $('.location_holder').append(locations);
 							// $('.condition_holder').append(conditions);
 							// $('.status_holder').append(status);
@@ -766,7 +768,7 @@
 			//e.preventDefault();
 			//Variable Delcarations
 			var partid;
-			var indiv;
+			var invid;
 			var $save =$(this);
 			var id = $save.closest('tr').data('invid');
 			var newSerial = $save.closest('tr').find('.newSerial').val();

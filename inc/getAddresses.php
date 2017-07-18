@@ -7,7 +7,7 @@
         
         $result = array();
         
-        $result = qdb("Select * From addresses where id = '$addressid'");
+        $result = qdb("Select * From addresses where id = '$addressid';") or die(qe());
         foreach ($result as $row){
             if($field){
                 return $row[$field];

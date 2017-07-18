@@ -254,44 +254,43 @@
         //Query the database
 		$result = qdb($macro) OR jsonDie(qe().' '.$macro);
     }
-    if($o['sales'] && (($first_fee_label && $first_fee_amount) || ($second_fee_label && $second_fee_amount))){
-    	if ($first_fee_label && $first_fee_amount){
-    		$first_fee_label = prep($first_fee_label);
-    		$first_fee_amount = prep($first_fee_amount);
-    		if($first_fee_id == "New"){
-	    		$sales_charge_insert = "
-	    		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
-	    		VALUES ($order_number, $first_fee_label, 1, $first_fee_amount);";
-	    		qdb($sales_charge_insert) or jsonDie(qe()." $sales_charge_insert");
-	    	} else {
-	    		$sales_charge_update = "
-	    		UPDATE `sales_charges` SET 
-	    		price = $first_fee_amount,
-	    		memo = $first_fee_label
-	    		WHERE id = $first_fee_id;";
-	    		qdb($sales_charge_update) or jsonDie(qe()." $sales_charge_update");
-	    	}
+	if ($first_fee_label && $first_fee_amount){
+		$first_fee_label = prep($first_fee_label);
+		$first_fee_amount = prep($first_fee_amount);
+		if($first_fee_id == "New"){
+    		$charge_insert = "
+    		INSERT INTO `".$o['charges']."` (".$o['id'].", memo, qty, price) 
+    		VALUES ($order_number, $first_fee_label, 1, $first_fee_amount);";
+    		qdb($charge_insert) or jsonDie(qe()." $charge_insert");
+    	} else {
+    		$charge_update = "
+    		UPDATE `".$o['charges']."` SET 
+    		price = $first_fee_amount,
+    		memo = $first_fee_label
+    		WHERE id = $first_fee_id;";
+    		qdb($charge_update) or jsonDie(qe()." $charge_update");
     	}
-       	if ($second_fee_label && $second_fee_amount){
-    		$second_fee_label = prep($second_fee_label);
-    		$second_fee_amount = prep($second_fee_amount);
-    		if($second_fee_id == "New"){
-	    		$sales_charge_insert = "
-	    		INSERT INTO `sales_charges` (so_number, memo, qty, price) 
-	    		VALUES ($order_number, $second_fee_label, 1, $second_fee_amount);";
-	    		qdb($sales_charge_insert) or jsonDie(qe()." $sales_charge_insert");
-	    	} else {
-	    		$sales_charge_update = "
-	    		UPDATE `sales_charges` SET 
-	    		price = $second_fee_amount,
-	    		memo = $second_fee_label
-	    		WHERE id = $second_fee_id;";
-	    		qdb($sales_charge_update) or jsonDie(qe()." $sales_charge_update");
-	    	}
+	}
+   	if ($second_fee_label && $second_fee_amount){
+		$second_fee_label = prep($second_fee_label);
+		$second_fee_amount = prep($second_fee_amount);
+		if($second_fee_id == "New"){
+    		$sales_charge_insert = "
+    		INSERT INTO `".$o['charges']."` (".$o['id'].", memo, qty, price) 
+    		VALUES ($order_number, $second_fee_label, 1, $second_fee_amount);";
+    		qdb($sales_charge_insert) or jsonDie(qe()." $sales_charge_insert");
+    	} else {
+    		$sales_charge_update = "
+    		UPDATE `".$o['charges']."` SET 
+    		price = $second_fee_amount,
+    		memo = $second_fee_label
+    		WHERE id = $second_fee_id;";
+    		qdb($sales_charge_update) or jsonDie(qe()." $sales_charge_update");
     	}
-    }
+	}
+
     //RIGHT HAND SUBMIT
-    
+   
 	$rows = array();
 	// $form_rows = json_decode($form_rows,true);
     if(isset($form_rows)){

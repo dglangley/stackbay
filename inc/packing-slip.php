@@ -37,7 +37,16 @@
     // Grab the order number
     $porder_number = prep($order_number);
     $datetime = preg_replace('/%20/', ' ', $datetime);
-
+    $ro_number = '';
+ 	$repair_item_check = "
+		SELECT ro_number
+			FROM sales_items si, packages, repair_items ri 
+			where si.ref_1_label = 'repair_item_id' 
+			and order_number = so_number 
+			and order_number = ".prep($order_number)."
+			and ri.id = si.ref_1 LIMIT 1;";
+    
+    $ro_number = rsrq($repair_item_check);
     
     $order = "SELECT * FROM sales_orders WHERE so_number = $porder_number;";
     $items = "
@@ -162,6 +171,7 @@ $ps_string .= '
                 <td>Sales Rep</td>
                 <td>Freight Carrier</td>
                 <td>Customer PO</td>
+                '.(($ro_number)? "<td>Ticket #</td>" : "").'
                 <td width="30%">Public Notes</td>
             </tr>
             <tr>
@@ -173,6 +183,7 @@ $ps_string .= '
                 
                 <td>'.getFreight('carrier',$order_info['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$order_info['freight_services_id'],'method')).'</td>
                 <td>'.$order_info['cust_ref'].'</td>
+                '.(($ro_number)? "<td>".$ro_number."</td>" : "").'
                 <td>'.$public_notes.'</td>
             </tr>
         </table>

@@ -13,6 +13,8 @@
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/terms.php';
+	include_once $rootdir.'/inc/order_parameters.php';
+
 	
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -87,6 +89,7 @@
 
 	$orders_table = 'sales';
 	if (isset($_GET['orders_table']) AND $_GET['orders_table']=='purchases') { $orders_table = 'purchases'; }
+	$o = o_params($orders_table);
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -354,6 +357,7 @@
 	//print_r($result);
 	//if($report_type == 'summary'){
 	    foreach ($result as $row){
+
             $id = $row['order_num'];
 			$freight = 0;
             $invoiceid = array();
@@ -408,32 +412,15 @@
 
 	        $credit = 0;
 	        $credit_total = 0;
-	        if($item_id && $orders_table == 'sales') {
-	            $query = "SELECT amount, SUM(amount) as total FROM sales_credit_items WHERE sales_item_id = ".prep($id).";";
+	        if($item_id) {
+	            $query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($id).";";
 	            $result = qdb($query) OR die(qe().'<BR>'.$query);
                 if (mysqli_num_rows($result)>0) {
                     $query_row = mysqli_fetch_assoc($result);
                     $credit = $query_row['amount'];
                     $credit_total = $query_row['total'];
                 }
-	        } else if($orders_table == 'purchases') {
-				// $query = "SELECT i.amount FROM bills b, bill_items i WHERE po_number = ".prep($id)." AND b.bill_no = i.bill_no AND i.partid = ".prep($row['partid']).";";
-				// echo $query; 
-	   //          $result = qdb($query) OR die(qe().'<BR>'.$query);
-    //             if (mysqli_num_rows($result)>0) {
-    //                 $query_row = mysqli_fetch_assoc($result);
-    //                 $credit = $query_row['amount'];
-    //                 //$credit_total = $query_row['total'];
-    //             }
-				// david's purchase credits hack for now
-				$query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s WHERE po_number = ".prep($id)." AND s.ref_1 = p.id AND s.ref_1_label = 'purchase_item_id'; ";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$credit = $r['price'];
-					$credit_total = $r['total'];
-				}
-	        }
+	        } 
 
 	        if($row['qty'] > $qty_shipped) {
 	        	$status = 'active';

@@ -337,7 +337,7 @@
 				<td>'.format_price($item['price']).'</td>
 				<td>
 					<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-					<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.(($status == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+					<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.((strtolower($status) == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
 				</td>
 			</tr>';
 		}

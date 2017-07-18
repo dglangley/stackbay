@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/getUser.php';
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getDisposition.php';
@@ -34,9 +35,8 @@
 	include_once $rootdir.'/inc/operations_sidebar.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
-	include_once $rootdir.'/inc/getSalesCharges.php';
+	include_once $rootdir.'/inc/getCharges.php';
 
-            //print_r($result); die;
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
 	$rtv_array = array();
@@ -196,6 +196,7 @@
 
 	$ORDER = array('fcreated'=>'','companyid'=>0);
 	$dataid = array();
+	$charges = array();
 	$dataid[0]['id'] = "New";
 	$dataid[0]['text'] = "";
 	$dataid[0]['memo'] = "";
@@ -212,9 +213,10 @@
 			$ORDER = mysqli_fetch_assoc($result);
 			$ORDER['fcreated'] = format_date($ORDER['created'],"D n/j/y g:ia");
 		}
-	
-		$charges = getSalesCharges($order_number);
 		
+		if($o['sales'] || $o['purchase']){
+			$charges = getCharges($order_number, $o['type']);
+		}
 		if ($charges){
 			$i = 0;
 			foreach($charges as $charge){
@@ -315,6 +317,7 @@
 				include_once $rootdir.'/modal/contact.php';
 				include_once $rootdir.'/modal/payments.php';
 				include_once $rootdir.'/modal/repair_receive.php';
+				include_once $rootdir.'/modal/trello.php';
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['repair'] && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
 				
@@ -584,7 +587,7 @@
 					
 				</div>
 				
-				<div class="col-md-5 text-center">
+				<div class="col-md-4 text-center">
 					<?php
 					echo"<h2 class='minimal' style='margin-top: 10px;'>";
 					if(!$o['invoice'] && !$o['rtv']){
@@ -620,7 +623,7 @@
 					echo"</h2>";
 					?>
 				</div>
-				<div class="col-md-3">
+				<div class="col-md-4">
 					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
 						<?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
@@ -802,7 +805,7 @@
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
 					            </tr>
-					            <?php if($o['sales']):?>
+		            	<?php if($o['sales'] || $o['purchase']):?>
 					            <tr id = 'first_fee_field' style=''>
 					        		<?php if(!$o['repair']):?>
 					                <td></td>
@@ -855,7 +858,7 @@
 						                </div>
 					                <td></td>
 					            </tr>
-					            <?php endif; ?>
+		            <?php endif; ?>
 					            <tr id = 'freight_row' style=''>
 				        		<?php if(!$o['repair']):?>
 					                <td></td>

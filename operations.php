@@ -707,89 +707,91 @@
 </head>
 
 <body class="sub-nav accounts-body">
-<!----------------------------------------------------------------------------->
-<!------------------------- Output the navigation bar ------------------------->
-<!----------------------------------------------------------------------------->
+
+<!----------------- Output the navigation bar ---------------------->
 
 	<?php include 'inc/navbar.php'; ?>
 		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
-			<div class="row" style="padding: 8px;" id = "filterBar">
-				<div class="col-md-2" style="padding-right: 0;">
-				    <div class="btn-group medium" data-toggle="buttons">
-				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
-				        	<i class="fa fa-sort-numeric-desc"></i>	
-				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
-				        	<i class="fa fa-history"></i>	
-				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" type="submit" data-filter="pending">
-				        	<i class="fa fa-shopping-cart" aria-hidden="true"></i>
-				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm btn-status right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" type="submit" data-filter="checked-out">
-				        	<i class="fa fa-unlock" aria-hidden="true"></i>
-				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm btn-status right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" type="submit" data-filter="testing">
-				        	<i class="fa fa-terminal" aria-hidden="true"></i>
-				        </button>
-						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
-				        	All
-				        </button>
-				    </div>
-				</div>
-				<form id = 'filter_form' action='operations.php' method = 'post'>
-				<div class ='hidden'>
-					<!--<input type="text" name="form_search" class="form-control input-sm" value="<?=$f['search']?>" style = "min-width:50px;"/>-->
-					<!--<input type="text" name="form_filter" class="form-control input-sm" value="<?=$f['filter']; ?>" style = "min-width:50px;"/>-->
-					<!--<input type="text" name="form_table_filter" class="form-control input-sm" value="<?=$table_filter?>" style = "min-width:50px;"/>-->
-				</div>
-				<div class = "col-md-2">
-					<div class="row">
-						<div class="col-md-6">
-							<div class="input-group date datetime-picker-filter">
-					            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:100px;"/>
-					            <span class="input-group-addon">
-					                <span class="fa fa-calendar"></span>
-					            </span>
-					        </div>
-						</div>
-						<div class="col-md-6">
-							<div class="input-group date datetime-picker-filter">
-					            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:100px;"/>
-					            <span class="input-group-addon">
-					                <span class="fa fa-calendar"></span>
-					            </span>
-					    	</div>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4 text-center">
+<!-- 			<div class="row" style="padding: 8px;">
+				<div class="col-md-12 text-center">
 	            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
 				</div>
-				
-				<!--This Handles the Search Bar-->
-	
-				<div class="col-md-2 col-sm-2">
-	
-				</div>
-				
-	
-				<div class="col-md-2 col-sm-2">
-					<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
-						<select name ='coid' class="company-selector">
-							<option value="">- Select a Company -</option>
-							<?php 
-								if ($f['coid']) {echo '<option value="'.$f['coid'].'" selected>'.(getCompany($f['coid'])).'</option>'.chr(10);} 
-								else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-							?>
-						</select>
-						<span class="input-group-btn">
-							<button class="btn btn-primary btn-sm" type = 'submit'>
-								<i class="fa fa-filter" aria-hidden="true"></i>
-							</button>
-						</span>
+			</div> -->
+			<div class="row" style="padding: 8px;" id = "filterBar">
+
+				<form id = 'filter_form' action='operations.php' method ='post'>
+					<div class="col-md-4 remove-pad">
+					 	<div class="row">
+						    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
+						        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Active" class="btn btn-sm btn-status left filter_status <?=($filter == 'active' ? 'active btn-warning' : 'btn-default');?>" type="submit" data-filter="active">
+						        	<i class="fa fa-sort-numeric-desc"></i>	
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Completed" class="btn btn-sm btn-status middle filter_status <?=($filter == 'complete' ? 'active btn-success' : 'btn-default');?>" type="submit" data-filter="complete">
+						        	<i class="fa fa-history"></i>	
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Outbound" class="btn btn-sm btn-status right filter_status <?=(($filter == 'pending' || $filter == '') ? 'active btn-flat gray' : 'btn-default');?>" type="submit" data-filter="pending">
+						        	<i class="fa fa-shopping-cart" aria-hidden="true"></i>
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Checked Out" class="btn btn-sm btn-status right filter_status <?=(($filter == 'checked-out' || $filter == '') ? 'active btn-flat danger' : 'btn-default');?>" type="submit" data-filter="checked-out">
+						        	<i class="fa fa-unlock" aria-hidden="true"></i>
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm btn-status right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" type="submit" data-filter="testing">
+						        	<i class="fa fa-terminal" aria-hidden="true"></i>
+						        </button>
+								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-status right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" type="submit" data-filter="all">
+						        	All
+						        </button>
+						    </div>
+
+							<div class="col-sm-3 remove-pad">
+								<div class="input-group date datetime-picker-filter">
+						            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=format_date($f['start'],'m/d/Y')?>" style = "min-width:50px;"/>
+						            <span class="input-group-addon">
+						                <span class="fa fa-calendar"></span>
+						            </span>
+						        </div>
+							</div>
+							<div class="col-sm-3 remove-pad">
+								<div class="input-group date datetime-picker-filter">
+						            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=format_date($f['end'],'m/d/Y')?>" style = "min-width:50px;"/>
+						            <span class="input-group-addon">
+						                <span class="fa fa-calendar"></span>
+						            </span>
+						    	</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-4 text-center remove-pad">
+		            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
+					</div>
+					
+					<!--This Handles the Search Bar-->
+		
+					<div class="col-md-4 remove-pad">
+						<div class="col-md-6">
+			
+						</div>
+						
+			
+						<div class="col-md-6 remove-pad">
+							<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
+								<select name ='coid' class="company-selector">
+									<option value="">- Select a Company -</option>
+									<?php 
+										if ($f['coid']) {echo '<option value="'.$f['coid'].'" selected>'.(getCompany($f['coid'])).'</option>'.chr(10);} 
+										else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+									?>
+								</select>
+								<span class="input-group-btn">
+									<button class="btn btn-primary btn-sm" type = 'submit'>
+										<i class="fa fa-filter" aria-hidden="true"></i>
+									</button>
+								</span>
+							</div>
+						</div>
 					</div>
 				</div>
-			</div>
 			</form>
 		</div>
 	
@@ -1051,7 +1053,8 @@
 		}
 		// processFilterUrl();
 		
-		$(document).on("click onload", ".filter_status", function(){
+		$(document).on("click onload", ".filter_status", function(e){
+
 			var type = $(this).data('filter');
 			$('.filter_item').hide();
 			$('.filter_status').removeClass('active');
@@ -1126,3 +1129,4 @@
 
 </body>
 </html>
+

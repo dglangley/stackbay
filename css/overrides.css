@@ -37,6 +37,19 @@
 .navbar-nav {
 	z-index:1003;
 }
+
+.navbar-collapse {
+	padding: 0;
+}
+
+.remove-pad {
+	padding: 0;
+}
+
+.navbar-inverse .navbar-nav {
+	padding: 0;
+}
+
 .navbar-inverse .navbar-nav > .active > a {
 	font-weight:bold;
 	background-color:#ddd;
@@ -1436,6 +1449,9 @@ a > .icon-ar.icon-ar-inverse:hover {
 }
 .content-box.box-royal:hover {
   background-color: #a24cca;
+}
+.table-responsive {
+    overflow-x: auto;
 }
 
 
