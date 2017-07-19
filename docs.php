@@ -26,9 +26,14 @@
     }
     // reference the Dompdf namespace
     use Dompdf\Dompdf;
+    use Dompdf\Options;
+
+	//for external images
+	$options = new Options();
+	$options->set('isRemoteEnabled', TRUE);
 
     // instantiate and use the dompdf class
-    $dompdf = new Dompdf();
+    $dompdf = new Dompdf($options);
     $dompdf->loadHtml($html);
 
     // (Optional) Setup the paper size and orientation

@@ -6,7 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
 	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in){
-		if ($_REQUEST['type'] == 'test_changer'){
+		if ($_REQUEST['type'] == 'test_in' || $_REQUEST['type'] == 'test_out'){
 			$status = "in repair";
 			$select = "SELECT `status` FROM `inventory` where `repair_item_id` = ".prep($repair_item_id).";";
 			$result = qdb($select) OR die(qe()." | $select");
@@ -84,7 +84,7 @@
 	$ro_number;
 	if (isset($_REQUEST['ro_number'])) { $ro_number = $_REQUEST['ro_number']; }
 
-	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive') {
+	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive' || $notes) {
 		//Declare variables within this scope
 		$repair_item_id;
 		$notes;
@@ -103,27 +103,31 @@
 		if (isset($_REQUEST['check_in'])) { $check_in = $_REQUEST['check_in']; }
 		if (isset($_REQUEST['repair_code'])) { $repair_code = $_REQUEST['repair_code']; }
 
-		if($_REQUEST['type'] == 'claim'){
-			$notes = "Claimed Ticket";
-		} else if($_REQUEST['type'] == 'check_in'){
-			$notes = "Checked In";
-		} else if($_REQUEST['type'] == 'check_out'){
-			$notes = "Checked Out";
-		} else if($_REQUEST['type'] == 'complete_ticket'){
-			$repair_text = "";
+		if(!$notes) {
+			if($_REQUEST['type'] == 'claim'){
+				$notes = "Claimed Ticket";
+			} else if($_REQUEST['type'] == 'check_in'){
+				$notes = "Checked In";
+			} else if($_REQUEST['type'] == 'check_out'){
+				$notes = "Checked Out";
+			} else if($_REQUEST['type'] == 'complete_ticket'){
+				$repair_text = "";
 
-			$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
-			$results = qdb($select) or die(qe()." | $select");
-	
-			if (mysqli_num_rows($results)>0) {
-				$results = mysqli_fetch_assoc($results);
-				$repair_text = $results['description'];
+				$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
+				$results = qdb($select) or die(qe()." | $select");
+		
+				if (mysqli_num_rows($results)>0) {
+					$results = mysqli_fetch_assoc($results);
+					$repair_text = $results['description'];
+				}
+
+				$notes = "Repair Ticket Completed. Final Status: <b>" . $repair_text . "</b>";
+				$trigger = "complete";
+			} else if ($_REQUEST['type'] == 'test_in') {
+				$notes = "Marked as `In Testing`";
+			} else if($_REQUEST['type'] == 'test_out') {
+				$notes = "Marked as `Tested`";
 			}
-
-			$notes = "Repair Ticket Completed. Final Status: <b>" . $repair_text . "</b>";
-			$trigger = "complete";
-		} else if ($_REQUEST['type'] == 'test_changer'){
-			$notes = "Marked as `In Testing`";
 		}
 
 		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);

@@ -266,7 +266,7 @@
 -->
 	
 	<div class="loading_element_listing" style="display: none;">
-		<div class="row-fluid">
+		<div class="row" style="margin: 0;">
 			
 		<div class='col-sm-8' style='padding-top: 20px'>
 			<select class='revisions' multiple>
@@ -278,7 +278,7 @@
 			
 		</div>
 		</div>
-		<div class="row-fluid">
+		<div class="row" style="margin: 0;">
 			<div class='col-sm-12'>
 				<div class='table-responsive'>
 					<table class='shipping_update table table-hover table-condensed' style='margin-top: 15px;'>

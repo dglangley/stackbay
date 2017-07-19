@@ -140,6 +140,10 @@
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
+
+          <ul class="nav navbar-nav"><!-- pull-right hidden-xs">-->
+			<?php echo displayTabs('mobile',$SEARCH_MODE, true); ?>
+          </ul>
           
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>

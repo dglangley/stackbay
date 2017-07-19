@@ -8,8 +8,6 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/terms.php';
@@ -30,12 +28,10 @@
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
 	//This is saved as a cookie in order to cache the results of the button function within the same window
 	setcookie('report_type',$report_type);
-	//$report_type = 'detail';
 
-	//echo $_REQUEST['filter'] . 'test';
-
-	//For local testing
-	//$report_type = $_GET['report_type'];
+	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
+	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above
+	$master_report_type = $report_type;
 
 	$order = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
@@ -47,23 +43,10 @@
 	$part_string = '';
 
 	$filter = $_REQUEST['filter'];
-/*
-	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
-    	$keyword = $_REQUEST['part'];
-	}
-*/
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$report_type = 'detail';
 		$keyword = $_REQUEST['s'];
 		$order = $keyword;
-	}
-
-	if ($keyword) {
-    	$part_list = getPipeIds($keyword);
-    	foreach ($part_list as $id => $array) {
-    	    $part_string .= $id.',';
-    	}
-    	$part_string = rtrim($part_string, ",");
 	}
 
 	$startDate = '';
@@ -139,14 +122,14 @@
 		<td class = "col-md-2">
 			<div class="col-md-6">
 			    <div class="btn-group">
-			        <button class="glow left large btn-radio<?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
+			        <button class="glow left large btn-radio<?php if ($master_report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
 			        <i class="fa fa-ticket"></i>	
 			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
+					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($master_report_type=='summary') { echo ' checked'; } ?>>
+			        <button class="glow right large btn-radio<?php if ($master_report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
 			        	<i class="fa fa-list"></i>	
 		        	</button>
-					<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+					<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($master_report_type=='detail') { echo ' checked'; } ?>>
 			    </div>
 		    </div>
 
@@ -220,7 +203,7 @@
 		</td>
 		<td class="col-md-2 text-center">
 			<h2 class="minimal"><?=ucwords($orders_table);?></h2>
-			<a href="/accounts.php?report_type=<?=($report_type ? $report_type : 'detail');?><?=($_REQUEST['START_DATE'] ? '&START_DATE=' . $_REQUEST['START_DATE'] : '')?><?=($_REQUEST['END_DATE'] ? '&END_DATE=' . $_REQUEST['END_DATE'] : '')?><?=($order ? '&order=' . $order : '')?><?=($company_filter ? '&companyid=' . $company_filter : '')?>&filter=<?=$filter;?>&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
+			<a href="/accounts.php?report_type=<?=($master_report_type ? $master_report_type : 'detail');?><?=($_REQUEST['START_DATE'] ? '&START_DATE=' . $_REQUEST['START_DATE'] : '')?><?=($_REQUEST['END_DATE'] ? '&END_DATE=' . $_REQUEST['END_DATE'] : '')?><?=($order ? '&order=' . $order : '')?><?=($company_filter ? '&companyid=' . $company_filter : '')?>&filter=<?=$filter;?>&orders_table=<?=($orders_table == 'sales' ? 'purchases': 'sales');?>">Switch to <?=($orders_table == 'sales' ? 'Purchases': 'Sales');?></a>
 			<input type="radio" name="orders_table" value="<?=$orders_table;?>" class="hidden" checked>
 		</td>
 		<td class="col-md-2 text-center">
@@ -276,21 +259,23 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($company_filter) {
+		$total_span = 7;
+		$footer_span2 = 2;
+		if ($report_type=='summary') {
+			$footer_span1 = 1;
+			$widths = array(1,4,3,1,1,1,1,1);
+		} else {
+			$footer_span1 = 1;
+			$widths = array(1,4,3,1,1,1,1,1);
+		}
+	} else {
+		$total_span = 8;
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 2;
 			$widths = array(1,3,3,1,1,1,1,1);
 		} else {
-			$footer_span1 = 3;
-			$widths = array(1,3,3,1,1,1,1,1);
-		}
-	} else {
-		$footer_span2 = 2;
-		if ($report_type=='summary') {
-			$footer_span1 = 3;
-			$widths = array(1,3,3,1,1,1,1,1);
-		} else {
-			$footer_span1 = 4;
+			$footer_span1 = 2;
 			$widths = array(1,3,3,1,1,1,1,1);
 		}
 	}
@@ -316,319 +301,255 @@
 	$total_cred = 0;
 	$total_payments = 0;
 	
-	//Write the query for the gathering of Pipe data
+	//Write the query for the gathering of data
 	$record_start = $startDate;
 	$record_end = $endDate;
 	$result = getRecords($part_string,'','',$orders_table);
-
-/*
-	$query = "SELECT ";
-    $query .= "s.so_date 'datetime', c.`id` 'cid', c.name, q.company_id 'company', ";
-    $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id, q.price price ";
-    $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-   	//if ($endDate) { $query .= "AND s.so_date <'".$endDate."'  ";}
-    $query .= "Order By s.so_date DESC;";
-	
-##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
-	//$query = "SELECT * FROM sales_orders ";
-	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
-	//$query .= "ORDER BY datetime DESC, id DESC; ";
-#####
-
-//Search for the results. Leave the second parameter null if the pipe is not being used
-
-	$result = qdb($query,'PIPE');
-*/
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 	
-	//print_r($result);
-	//if($report_type == 'summary'){
-	    foreach ($result as $row){
+    foreach ($result as $row){
 
-            $id = $row['order_num'];
-			$freight = 0;
-            $invoiceid = array();
-            //if($_REQUEST['invoice']) {
-            	$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
-            	$result = qdb($query) OR die(qe());
+		$id = $row['order_num'];
+		$freight = 0;
+		$invoiceid = array();
+
+		$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
+		$result = qdb($query) OR die(qe());
 					
-				while ($rowInvoice = $result->fetch_assoc()) {
-					$freight += $rowInvoice['freight'];
-					$invoiceid[] = $rowInvoice['invoice_no'];
-				}
-            //}
+		while ($rowInvoice = $result->fetch_assoc()) {
+			$freight += $rowInvoice['freight'];
+			$invoiceid[] = $rowInvoice['invoice_no'];
+		}
 
-            $status = 'complete';
-			if ($order AND $order<>$id) { continue; }
+		$status = 'complete';
+		if ($order AND $order<>$id) { continue; }
 
-			$r['price'] = format_price($r['price'],true,'',true);
-			$ext_amt = $row['price']*$row['qty'];
-			$total_pcs += $row['qty'];
-			$total_sub += $ext_amt;
+		$r['price'] = format_price($r['price'],true,'',true);
+		$ext_amt = $row['price']*$row['qty'];
+		$total_pcs += $row['qty'];
+		$total_sub += $ext_amt;
 
-            if(!array_key_exists($id, $summary_rows)){
-                $summary_rows[$id] = array(
-                    'date' => '',
-                    'company' => '',
-                    'items' => '',
-                    'summed' => ''
-                    );
-            }
+		if(!array_key_exists($id, $summary_rows)){
+			$summary_rows[$id] = array(
+				'date' => '',
+				'company' => '',
+				'items' => '',
+				'summed' => '',
+			);
+		}
 
-            //Query to get the credit per item
-            //test for sales first
-            $item_id = 0;
-            $qty_shipped = 0;
-            if($orders_table == 'sales') {
-	            $query = "SELECT * FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
-	            $result = qdb($query) OR die(qe().'<BR>'.$query);
-                if (mysqli_num_rows($result)>0) {
-                    $query_row = mysqli_fetch_assoc($result);
-                    $item_id = $query_row['id'];
-                    $qty_shipped = $query_row['qty_shipped'];
-                }
-	        } else {
-	        	$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
-	            $result = qdb($query) OR die(qe().'<BR>'.$query);
-                if (mysqli_num_rows($result)>0) {
-                    $query_row = mysqli_fetch_assoc($result);
-                    $item_id = $query_row['id'];
-                    $qty_shipped = $query_row['qty_received'];
-                }
-	        }
+		//Query to get the credit per item
+		//test for sales first
+		$item_id = 0;
+		$qty_shipped = 0;
+		if($orders_table == 'sales') {
+			$query = "SELECT * FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$query_row = mysqli_fetch_assoc($result);
+				$item_id = $query_row['id'];
+				$qty_shipped = $query_row['qty_shipped'];
+			}
+		} else {
+			$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$query_row = mysqli_fetch_assoc($result);
+				$item_id = $query_row['id'];
+				$qty_shipped = $query_row['qty_received'];
+			}
+		}
 
-	        $credit = 0;
-	        $credit_total = 0;
-	        if($item_id) {
-	            $query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($id).";";
-	            $result = qdb($query) OR die(qe().'<BR>'.$query);
-                if (mysqli_num_rows($result)>0) {
-                    $query_row = mysqli_fetch_assoc($result);
-                    $credit = $query_row['amount'];
-                    $credit_total = $query_row['total'];
-                }
-	        } 
+        $credit = 0;
+        $credit_total = 0;
+        if($item_id) {
+			$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$query_row = mysqli_fetch_assoc($result);
+				$credit = $query_row['amount'];
+				$credit_total = $query_row['total'];
+			}
+        } 
 
-	        if($row['qty'] > $qty_shipped) {
-	        	$status = 'active';
-	        	$ext_amt - ($credit_total == '' ? 0 : $credit_total) - $paymentTotal;
-		    }
+        if($row['qty'] > $qty_shipped) {
+        	$status = 'active';
+			// not sure why this was added, makes no sense to reduce the subtotal of charges on an order by the payment or credit amount;
+			// these are taken AS credits and payments, not negative charges of items
+        	//$ext_amt - ($credit_total == '' ? 0 : $credit_total) - $paymentTotal;
+	    }
 
-		    //if(($filter && $filter == $status) || $filter == 'all' || !$filter) {
-				$summary_rows[$id]['date'] = $row['datetime'];
-				$summary_rows[$id]['cid'] = $row['cid'];
-	            $summary_rows[$id]['items'] += $row['qty'];
-	            $summary_rows[$id]['summed'] += ($ext_amt+$freight);
-	            $summary_rows[$id]['company'] = $row['name'];
-	            $summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
-	            $summary_rows[$id]['invoice'] = $invoiceid;
-	            $summary_rows[$id]['status'] = $status;
-	            $summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
-	        // } else {
-	        // 	unset($summary_rows[$id]);
-	        // }
+		$summary_rows[$id]['date'] = $row['datetime'];
+		$summary_rows[$id]['cid'] = $row['cid'];
+		$summary_rows[$id]['items'] += $row['qty'];
+		$summary_rows[$id]['summed'] += ($ext_amt+$freight);
+		$summary_rows[$id]['company'] = $row['name'];
+		$summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
+		$summary_rows[$id]['invoice'] = $invoiceid;
+		$summary_rows[$id]['status'] = $status;
+		$summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
+	}
 
-        }
+	$init = true;
 
-        //print_r($summary_rows);
-        $init = true;
+	foreach ($summary_rows as $id => $info) {
+    	$paymentTotal = 0;
 
-        foreach ($summary_rows as $id => $info) {
-	    	$paymentTotal = 0;
-/*
-        	$invoice_no = 0;
-
-	    	if($item_id && $orders_table == 'sales') {
-	         	//Grab the invoice number using the order number
-				$query = "SELECT invoice_no FROM invoices WHERE order_number = ".prep($id).";";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-	            if (mysqli_num_rows($result)>0) {
-	                $row = mysqli_fetch_assoc($result);
-	                $invoice_no = $row['invoice_no'];
-	            }
-	        } else {
-	        	//Grab the invoice number using the order number
-				$query = "SELECT bill_no FROM bills WHERE po_number = ".prep($id).";";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-	            if (mysqli_num_rows($result)>0) {
-	                $row = mysqli_fetch_assoc($result);
-	                $invoice_no = $row['bill_no'];
-	            }
-	        }
-
-            if($invoice_no && $orders_table == 'sales') {
-            	$query = "SELECT amount FROM payments WHERE number = ".prep("Invoice" . $invoice_no).";";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-                if (mysqli_num_rows($result)>0) {
-                    $row = mysqli_fetch_assoc($result);
-                    $payments = $row['amount'];
-                }
-            } else if($invoice_no) {
-            	$query = "SELECT amount FROM payments WHERE number = ".prep("Bill" . $invoice_no).";";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-                if (mysqli_num_rows($result)>0) {
-                    $row = mysqli_fetch_assoc($result);
-                    $payments = $row['amount'];
-                }
-            }
-*/
-
-            $query = 'SELECT * FROM payment_details WHERE order_number = '.prep($id).' AND order_type = "'.($orders_table == 'sales' ? 'so' : 'po').'";';
-            //echo $query;
-				$prows = qdb($query);
-				$output = '
+		$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($id).' AND order_type = "'.($orders_table == 'sales' ? 'so' : 'po').'";';
+		//echo $query;
+		$prows = qdb($query);
+		$output = '
 				<div class ="btn-group">
 					<button type="button" class="dropdown-toggle" data-toggle="dropdown">
                       <span class="caret"></span>
-                    </button>';
-                    
-					$output .= '<ul class="dropdown-menu">';
-					if(mysqli_num_rows($prows) > 0){
-						//echo $query;
-						foreach ($prows as $payment) {
-//								$p_number = $r['number'];
-								$p_amount = $payment['amount'];
-								$paymentTotal += $payment['amount'];
-//								$p_type = $r['payment_type'];
-//								$p_notes = $r['notes'];
-								$p_ref = $payment['ref_type'].' '.$payment['ref_number'];
-//								$p_date = format_date($r['date']);
-/*
-							$p_number = 0;
-							$p_amount = 0;
-							$p_type = '';
-							$p_notes = '';
-							$p_date = '';
-							
-							$query = 'SELECT * FROM payments p, payment_details d WHERE id = '.$payment['paymentid'].' AND paymentid = p.id;';
-							$result = qdb($query) OR die(qe().' '.$query);
+                    </button>
+					<ul class="dropdown-menu">
+		';
 
-							if (mysqli_num_rows($result)>0) {
-					        	$r = mysqli_fetch_assoc($result);
-								$p_number = $r['number'];
-								$p_amount = $r['amount'];
-								$paymentTotal += $r['amount'];
-								$p_type = $r['payment_type'];
-								$p_notes = $r['notes'];
-								$p_ref = $r['ref_type'].' '.$r['ref_number'];
-								$p_date = format_date($r['date']);
-					        }
-*/
-							
-							$output .= '
-								<li style="text-align: left;">
-									<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
-										<i class="fa fa-usd" aria-hidden="true"></i>
-										Payment #'.$payment['paymentid'].'
-									</a>
-								</li>';
-						}
-					}
-					$output .= '<li>
-						<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'">
-							<i class="fa fa-plus"></i> Add New Payment
-						</a>
-						
-						</li>';
-                    $output .= "</ul>";
-					$output .= "</div>";
-					//echo $output;
+		if (mysqli_num_rows($prows) > 0) {
+			foreach ($prows as $payment) {
+				$p_amount = $payment['amount'];
+				$paymentTotal += $payment['amount'];
+				$p_ref = $payment['ref_type'].' '.$payment['ref_number'];
 
-					//Remove output for live
-					//$output = '';
-			$total = ($info['summed'] - $info['credit'] - $paymentTotal);
-			$status  = ($total <= 0 ? 'complete' : 'active');
-			$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
-        	$rows .= '
-                <tr class="'.$status.' '.$filter_comb.'">
-                    <td>'.format_date($info['date'], 'M j, Y').'</td>';
-                    if(!$company_filter){$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';}
-            $rows .='
-            		<td><div class="row"><div class="col-md-6">'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
-            if($_REQUEST['invoice']) {		
-            	$rows .='<div class="col-md-6">'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>': 'N/A').'</div>';
-            }
+				$output .= '
+						<li style="text-align: left;">
+							<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
+								<i class="fa fa-usd" aria-hidden="true"></i>
+								Payment #'.$payment['paymentid'].'
+							</a>
+						</li>
+				';
+			}
+		}
 
-            $rows .='</div></td>
+		$output .= '
+						<li>
+							<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'">
+								<i class="fa fa-plus"></i> Add New Payment
+							</a>
+						</li>
+					</ul>
+				</div>
+		';
+
+		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
+		$status  = ($total <= 0 ? 'complete' : 'active');
+		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
+       	$rows .= '
+				<tr class="'.$status.' '.$filter_comb.'">
+					<td>'.format_date($info['date'], 'M j, Y').'</td>
+		';
+
+		if(!$company_filter){
+			$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+		}
+		$rows .='
+            		<td>
+						<div class="row">
+							<div class="col-md-6">'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
+		';
+
+		if($_REQUEST['invoice']) {		
+           	$rows .= '
+							<div class="col-md-6">
+								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>': 'N/A').'
+							</div>
+			';
+		}
+
+		$rows .= '
+						</div>
+					</td>
             		<td class="text-right">'.format_price($info['summed']).'</td>
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
-                    <td>'.terms_calc($id, $orders_table).'</td>
+                    <td class="text-right">'.terms_calc($id, $orders_table).'</td>
                     <td class="text-right total_cost">'.format_price($total).'</td>
                 </tr>
-            ';
-            //print_r($info['invoice']);
-            if($_REQUEST['invoice'] && count($info['invoice']) > 1) {
-            	$infoArr = array_slice($info['invoice'],1);
+		';
 
-            	foreach($infoArr as $another) {
-	            	$rows .='<tr class="'.$status.' '.$filter_comb.'">
-	            		<td></td>
-	            		<td></td>
-	            		<td><div class="row"><div class="col-md-6"></div><div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div></div></div></td>
-	            		<td></td>
-	            		<td></td>
-	            		<td></td>
-	            		<td></td>
-	            		<td></td>
-	            	</tr>';
-	            }
+		if ($_REQUEST['invoice'] && count($info['invoice']) > 1) {
+			$infoArr = array_slice($info['invoice'],1);
+
+			foreach($infoArr as $another) {
+				$rows .='
+				<tr class="'.$status.' '.$filter_comb.'">
+	           		<td></td>
+	           		<td></td>
+	           		<td>
+						<div class="row">
+							<div class="col-md-6"></div>
+							<div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
+						</div>
+					</td>
+	           		<td></td>
+	           		<td></td>
+	           		<td></td>
+	           		<td></td>
+	           		<td></td>
+	           	</tr>
+				';
             }
+		}
 
-            if(!$filter_comb) {
-	            $total_amt += ($total);
-	            $total_payments += $paymentTotal;
-	            $total_cred += $info['credit'];
-	        }
+		if(!$filter_comb) {
+			$total_amt += ($total);
+			$total_payments += $paymentTotal;
+			$total_cred += $info['credit'];
+		}
 
-            //Add in the dropdown element into the accounts page
-            $rows .= '<tr class="'.$status.' '.$filter_comb.'" style="'.($report_type=='summary' ? 'display: none;' : '').'">
-                <td colspan="12">
-                <table class="table table-condensed commission-table">
-                    <tbody>';
-            if($init)
-            	$rows .= '<tr>
-                            <th class="col-md-3">Part Description</th>
-                            <th class="col-md-1">Qty</th>
-                            <th class="col-md-1">'.($orders_table == 'sales' ? 'Shipped' : 'Received').'</th>
-                            <th class="col-md-2 text-right">Price (ea)</th>
-                            <th class="col-md-1 text-right">Ext Price</th>
-                            <th class="col-md-1 text-right">Credits</th>
-                            <th class="col-md-3 text-right"></th>
-            		</tr>';
+		//Add in the dropdown element into the accounts page
+		$rows .= '
+					<tr class="'.$status.' '.$filter_comb.'" style="'.($report_type=='summary' ? 'display: none;' : '').'">
+						<td colspan="'.$total_span.'">
+							<table class="table table-condensed commission-table">
+								<tbody>
+		';
+		if ($init) {
+			$init = false;
+			$rows .= '
+									<tr>
+										<th class="col-md-4">Part Description</th>
+										<th class="col-md-1">Qty</th>
+										<th class="col-md-1">'.($orders_table == 'sales' ? 'Shipped' : 'Received').'</th>
+										<th class="col-md-1 text-right">Price (ea)</th>
+										<th class="col-md-1 text-right">Ext Price</th>
+										<th class="col-md-1 text-right">Credits</th>
+										<th class="col-md-3 text-right"></th>
+									</tr>
+			';
+		}
 
-            $init = false;
+		foreach($info['partids'] as $part) {
+			$credit_col = '';
+			if ($part['credit']) {
+				$credit_col = '-'.format_price($part['credit']);
+			}
 
-            foreach($info['partids'] as $part) {
-            	$rows .= '<tr>
-            		<td class="col-md-3">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
-            		<td class="col-md-1">'.$part['qty'].'</td>
-            		<td class="col-md-1">'.$part['qty_shipped'].'</td>
-            		<td class="col-md-2 text-right">'.format_price($part['price']).'</td>
-            		<td class="col-md-1 text-right">'.format_price($part['price'] * $part['qty']).'</td>
-            		<td class="col-md-1 text-right">-'.format_price($part['credit']).'</td>
-            		<td class="col-md-3"></td>
-            	</tr>';
-            }
+			$rows .= '
+									<tr>
+										<td class="col-md-4">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
+										<td class="col-md-1">'.$part['qty'].'</td>
+										<td class="col-md-1">'.$part['qty_shipped'].'</td>
+										<td class="col-md-1 text-right"><span class="info">'.format_price($part['price']).'</span></td>
+										<td class="col-md-1 text-right"><span class="info">'.format_price($part['price'] * $part['qty']).'</span></td>
+										<td class="col-md-1 text-right"><span class="info">'.$credit_col.'</span></td>
+										<td class="col-md-3"></td>
+									</tr>
+			';
+		}
 
-            $rows .= '</tbody>
-                </table>
-                </td>
-            </tr>';
-        }
+		$rows .= '
+								</tbody>
+							</table>
+						</td>
+					</tr>
+		';
+	}
 
 	if ($keyword) {
 		echo '
@@ -683,7 +604,7 @@
                                 	<span class="line"></span>
                                     Payments
                                 </th>
-                                <th class="col-md-<?php echo $widths[$c++]; ?>">
+                                <th class="col-md-<?php echo $widths[$c++]; ?> text-right">
                                 	<span class="line"></span>
                                     Due Date
                                 </th>
@@ -698,13 +619,11 @@
 							<?php if ($rows) { ?>
                             <!-- row -->
                             <tr class="nohover" style="background: #EEE;">
-                            	<td colspan=""> </td>
-                            	<td colspan=""> </td>
+                            	<td colspan="<?php echo $footer_span1; ?>"> </td>
                             	<td colspan=""> </td>
                             	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
                             	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
                             	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_payments,true,' '); ?></strong></td>
-                                <td><strong></strong></td>
                                 <td class="text-right" colspan="<?php echo $footer_span2; ?>">
                                     <strong><?php echo format_price($total_amt,true,' '); ?></strong>
                                 </td>

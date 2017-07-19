@@ -62,17 +62,19 @@
 	$received_inventory;
 
 	//3 is consider Operations in the user_privilege table
-	if(in_array("3", $USER_ROLES)){
-		if($o['type'] == "Sales"){
-		 	header('Location: /shipping.php?on='.$order_number.'&ps=s');
+	if(!in_array("1", $USER_ROLES) && !in_array("5", $USER_ROLES) && !in_array("7", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
+		if(in_array("3", $USER_ROLES)){
+			if($o['type'] == "Sales"){
+			 	header('Location: /shipping.php?on='.$order_number.'&ps=s');
+			}
+			if($o['type'] == "Purchase"){
+			 	header('Location: /inventory_add.php?on='.$order_number.'&ps=p');
+			}
+			if($o['type'] == "Repair"){
+			 	header('Location: /repair_add.php?on='.$order_number);
+			}
+			exit;
 		}
-		if($o['type'] == "Purchase"){
-		 	header('Location: /inventory_add.php?on='.$order_number.'&ps=p');
-		}
-		if($o['type'] == "Repair"){
-		 	header('Location: /repair_add.php?on='.$order_number);
-		}
-		exit;
 	}
 
 	include_once $rootdir.'/inc/invoice.php';
