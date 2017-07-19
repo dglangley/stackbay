@@ -8,8 +8,6 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/terms.php';
@@ -49,14 +47,6 @@
 		$report_type = 'detail';
 		$keyword = $_REQUEST['s'];
 		$order = $keyword;
-	}
-
-	if ($keyword) {
-    	$part_list = getPipeIds($keyword);
-    	foreach ($part_list as $id => $array) {
-    	    $part_string .= $id.',';
-    	}
-    	$part_string = rtrim($part_string, ",");
 	}
 
 	$startDate = '';
@@ -272,20 +262,20 @@
 		$total_span = 7;
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
-			$footer_span1 = 2;
+			$footer_span1 = 1;
 			$widths = array(1,4,3,1,1,1,1,1);
 		} else {
-			$footer_span1 = 3;
+			$footer_span1 = 1;
 			$widths = array(1,4,3,1,1,1,1,1);
 		}
 	} else {
 		$total_span = 8;
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
-			$footer_span1 = 3;
+			$footer_span1 = 2;
 			$widths = array(1,3,3,1,1,1,1,1);
 		} else {
-			$footer_span1 = 4;
+			$footer_span1 = 2;
 			$widths = array(1,3,3,1,1,1,1,1);
 		}
 	}
@@ -311,7 +301,7 @@
 	$total_cred = 0;
 	$total_payments = 0;
 	
-	//Write the query for the gathering of Pipe data
+	//Write the query for the gathering of data
 	$record_start = $startDate;
 	$record_end = $endDate;
 	$result = getRecords($part_string,'','',$orders_table);
@@ -506,11 +496,6 @@
             }
 		}
 
-		$credit_col = '';
-		if ($part['credit']) {
-			$credit_col = '-'.format_price($part['credit']);
-		}
-
 		if(!$filter_comb) {
 			$total_amt += ($total);
 			$total_payments += $paymentTotal;
@@ -540,6 +525,11 @@
 		}
 
 		foreach($info['partids'] as $part) {
+			$credit_col = '';
+			if ($part['credit']) {
+				$credit_col = '-'.format_price($part['credit']);
+			}
+
 			$rows .= '
 									<tr>
 										<td class="col-md-4">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
@@ -629,8 +619,7 @@
 							<?php if ($rows) { ?>
                             <!-- row -->
                             <tr class="nohover" style="background: #EEE;">
-                            	<td colspan=""> </td>
-                            	<td colspan=""> </td>
+                            	<td colspan="<?php echo $footer_span1; ?>"> </td>
                             	<td colspan=""> </td>
                             	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
                             	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
