@@ -8,6 +8,7 @@
         if ($number == 'New'){
             return('Active');
         }else{
+            if(!$type){return null;}
             $o = o_params($type);
             if($type != 'Repair') {
                 $select = "SELECT `status` FROM ".$o['order']." WHERE ".$o['id']." = $number;";

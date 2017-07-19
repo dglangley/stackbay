@@ -228,7 +228,9 @@
 
 	$(".part-modal-show").click(function(){
 		var id = '';
-		id = $(this).data("partid");
+		if($(this).data("partid")){
+			id = $(this).data("partid");
+		}
 		part_open(id);
 	});
 	$("#parts-continue").click(function(){

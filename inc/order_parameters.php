@@ -1,13 +1,7 @@
 <?php
     function o_params($type){
 		$info = array();
-		if(strtolower($type) == "p" || 
-		    strtolower($type) == "purchase" || 
-		    strtolower($type) == "purchases" || 
-		    strtolower($type) == "po" || 
-		    strtolower($type) == "purchase_item_id" || 
-		    strtolower($type) == "purchased" || 
-		    strtolower($type) == "purchase_orders"){
+		if(strtolower($type) == "p" || strtolower($type) == "purchase" || strtolower($type) == "purchases" || strtolower($type) == "po" || strtolower($type) == "purchase_item_id" || strtolower($type) == "purchased" || strtolower($type) == "purchase_orders"){
 			$info['type'] = "Purchase";
 			$info['ptype'] = $info['type'];
 			//convenient type check
@@ -60,13 +54,7 @@
 			$info['credit_items'] = "purchase_credit_items";
 			
 		}
-		else if ($type == "s" 
-		|| strtolower($type) == "sale" 
-		|| strtolower($type) == "sales" 
-		|| strtolower($type) == "so" 
-		|| strtolower($type) == "sales_item_id" 
-		|| strtolower($type) == "sold" 
-		|| strtolower($type) == "sales_orders"){
+		else if ($type == "s" || strtolower($type) == "sale"  || strtolower($type) == "sales"  || strtolower($type) == "so"  || strtolower($type) == "sales_item_id"  || strtolower($type) == "sold"  || strtolower($type) == "sales_orders"){
 			$info['type'] = "Sales";
 			$info['ptype'] = "Sale";
 			//convenient type check
@@ -122,11 +110,7 @@
 		}
 		else if (
 			// Remember: Invoice has few edits, but is built from a Sales or Repair Order
-		    strtolower($type) == "invoice" 
-		    || strtolower($type) == "invoices" 
-		    || strtolower($type) == "inv" 
-		    || strtolower($type) == "i" 
-		    || strtolower($type) == "invoices")
+		    strtolower($type) == "invoice"  || strtolower($type) == "invoices"  || strtolower($type) == "inv"  || strtolower($type) == "i"  || strtolower($type) == "invoices")
 		{
 			$info['type'] = "Invoice";
 			$info['ptype'] = $info['type'];
@@ -223,11 +207,7 @@
 			$info[strtolower($info['short'])] = true;
 		}
 		else if (
-		    strtolower($type) == "rma" 
-		    || strtolower($type) == "return" 
-		    || strtolower($type) == "returns" 
-		    || strtolower($type) == "returns_item_id" 
-		    || strtolower($type) == "returns"){
+		    strtolower($type) == "rma"  || strtolower($type) == "return"  || strtolower($type) == "returns"  || strtolower($type) == "returns_item_id"  || strtolower($type) == "returns"){
 			//RMA acts as a purchase order
 			$info['type'] = "RMA";
 			$info['ptype'] = $info['type'];
@@ -280,10 +260,7 @@
 
 		}
 		else if (
-		    strtolower($type) == "credit" 
-		    || strtolower($type) == "cm" 
-		    || strtolower($type) == "c" 
-		    || strtolower($type) == "sales_credits"){
+		    strtolower($type) == "credit"  || strtolower($type) == "cm"  || strtolower($type) == "c"  || strtolower($type) == "sales_credits"){
 			// Remember: Invoice has few edits, but is built from a Sales Order
 			$info['type'] = "Credit";
 			$info['ptype'] = $info['type'];
@@ -330,11 +307,7 @@
 		    
 		}
 		else if (
-		    strtolower($type) == "repair" 
-		    || strtolower($type) == "ro" 
-		    || strtolower($type) == "repairs" 
-		    || strtolower($type) == "repair_item_id" 
-		    || strtolower($type) == "repair_orders"){
+		    strtolower($type) == "repair"  || strtolower($type) == "ro"  || strtolower($type) == "repairs"  || strtolower($type) == "repair_item_id"  || strtolower($type) == "repair_orders"){
 			$info['type'] = "Repair";
 			$info['ptype'] = $info['type'];
 			//convenient type check
