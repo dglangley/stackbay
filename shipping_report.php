@@ -95,13 +95,13 @@
 			<table class="table heighthover heightstriped table-condensed p_table">
 				<thead>
 					<tr>
-						<th>Customer</th>
-						<th>Order#</th>
-						<th>Customer PO#</th>
-						<th>Item</th>
-						<th>Due Date</th>
-						<th>Shipped</th>
-						<th>Tracking#</th>
+						<th class="col-md-2">Customer</th>
+						<th class="col-md-1">Order#</th>
+						<th class="col-md-1">Customer PO#</th>
+						<th class="col-md-4">Item</th>
+						<th class="col-md-1">Due Date</th>
+						<th class="col-md-1">Shipped</th>
+						<th class="col-md-2">Tracking#</th>
 
 					
 					</tr>
@@ -109,8 +109,8 @@
 				<tbody>
 					<?php foreach($itemList as $part): ?>
 						<tr>
-							<td class="col-md-2"><?= getCompany($part['companyid']); ?></td>
-							<td class="col-md-1">
+							<td><?= getCompany($part['companyid']); ?></td>
+							<td>
 								<?php 
 									$order;
 									
@@ -126,19 +126,19 @@
 									}
 								?>	
 							</td>
-							<td class="col-md-1">
+							<td>
 								<?php
 									
 										echo $part['cust_ref'];
 									//} 
 								?>
 							</td>
-							<td class="col-md-3"><?=display_part($part['partid'], true); ?></td>
+							<td><?=display_part($part['partid'], true); ?></td>
 
 							
-							<td class="col-md-1"><?= format_date($part['delivery_date']); ?></td>
-							<td class="col-md-1"><span class="<?=(($part['datetime'] <= $part['delivery_date'])?'alert-success':'alert-danger');?>"><?= format_date($part['datetime']); ?></span></td>
-							<td class="col-md-3" style="overflow-x: hidden; max-width: 400px;"><?=$part['tracking_no'];?></td>
+							<td><?= format_date($part['delivery_date']); ?></td>
+							<td><span class="<?=(($part['datetime'] <= $part['delivery_date'])?'alert-success':'alert-danger');?>"><?= format_date($part['datetime']); ?></span></td>
+							<td style="overflow-x: hidden; max-width: 400px;"><?=$part['tracking_no'];?></td>
 
 							
 						</tr>

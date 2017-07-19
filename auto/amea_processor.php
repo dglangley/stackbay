@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/imap_parsers.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
@@ -65,6 +66,7 @@
 
 	$commons = array(
 		'CARD'=>1,
+		'MODEL'=>1,
 		'POWER'=>1,
 		'FAN'=>1,
 		'PIC'=>1,

@@ -22,7 +22,7 @@
 
 	$results = array();//contains all parts data that will be consolidated between db's for export
 
-	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id ORDER BY part ASC, heci ASC; ";
+	$query = "SELECT * FROM parts p, qtys q WHERE q.partid = p.id AND p.classification = 'equipment' ORDER BY part ASC, heci ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$results[$r['partid']] = $r;
@@ -30,7 +30,7 @@
 
 	// get ghost inventory items
 	$query = "SELECT partid, SUM(vqty) visible_qty, parts.* FROM staged_qtys, parts ";
-	$query .= "WHERE staged_qtys.partid = parts.id ";
+	$query .= "WHERE staged_qtys.partid = parts.id AND p.classification = 'equipment' ";
 	$query .= "AND partid <> '292429' AND partid <> '29784' ";
 	$query .= "GROUP BY partid ORDER BY part ASC, heci ASC; ";
 	$result = qdb($query) OR die(qe().' '.$query);

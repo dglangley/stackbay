@@ -357,6 +357,9 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		
 		<style type="text/css">
+			.label a {
+				color:white;
+			}
 			.table td {
 				vertical-align: top !important;
 				/*padding-top: 10px !important;*/
@@ -711,7 +714,7 @@
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=(trim(format($comp['partid'], true)) != '' ? format($comp['partid'], true) : $comp['partid'] );?></td>
 												<td><?=$comp['totalOrdered'];?></td>
-												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style="">'.$comp['po_number'].'</span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
+												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
 												<!-- <td><?=$ordered;?></td> -->
 												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
