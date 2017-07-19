@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_parameters.php';
 	
 	function getWarranty($id = '%', $field = 'all'){
     
@@ -87,6 +88,7 @@
 		$result = mysqli_fetch_assoc($result);
 		return $result['id'];
 	}
+	
 	//Temporary function to calculate Purchase Receive (Inventory Add) Vendor Warranty
 	function calcPOWarranty($orderid, $warranty) {
 		$date;

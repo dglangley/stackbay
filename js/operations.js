@@ -2613,20 +2613,7 @@
 //================================== END RMA ===================================
 
 
-//==============================================================================
-//==================================== Trello ==================================
-//==============================================================================
 
-    $("#trello-continue").click(function(){
-        var page = $("#modalTrelloBody").data("page");
-        var user = $("#modalTrelloBody").data("user");
-        var feedback = $("#tfeedback").val();
-        submitProblem(user, feedback);
-        $("#tfeedback").val('');
-    });
-    $("#leave_feedback").click(function(){
-		$("#modal-trello").modal("show");
-    });
 
 }); //END OF THE GENERAL DOCUMENT READY TAG
 	
