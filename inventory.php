@@ -654,7 +654,7 @@
 							if(search_sum['stock']==0 && search_sum['bad'] > 0){
 								$("#cond_all").trigger("click");
 							}
-							if(search_sum['stock']==0 && search_sum['non_stock'] > 0){
+							if(search_sum['stock']==0 && search_sum['bad'] == 0 && search_sum['non_stock'] > 0){
 								$("#qty_all").trigger("click");
 							}
 							if(search_sum['stock'] == 0 && search_sum['bad'] == 0 && search_sum['non_stock'] == 0){
