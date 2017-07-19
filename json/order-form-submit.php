@@ -130,7 +130,7 @@
 		}
 	}
     //Created By will be the value of the current userid
-    $assoc_order = grab('assoc');
+    $assoc_order = strtoupper(grab('assoc'));
 /*
     //Process the contact, see if a new one was added
     if (!is_numeric($contact) && !is_null($contact) && ($contact)){

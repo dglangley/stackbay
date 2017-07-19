@@ -29,7 +29,7 @@
 
         $output = $dompdf->output();
 
-		$attachment = $temp_dir."invoice_attachment_".$invoice_id.".pdf";
+		$attachment = $temp_dir."Invoice_".$invoice.".pdf";
 		$handle = fopen($attachment, "w");
 		// add contents from file
 		fwrite($handle, $output);

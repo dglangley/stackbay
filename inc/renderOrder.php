@@ -360,7 +360,7 @@ $html_page_str .='
         ';
 $html_page_str .='
         <div id = "letter_head"><b>
-            <img src="img/logo.png" style="width:1in;"></img><br>
+            <img src="https://www.stackbay.com/img/logo.png" style="width:1in;"></img><br>
             Ventura Telephone, LLC <br>
             3037 Golf Course Drive <br>
             Unit 2 <br>
