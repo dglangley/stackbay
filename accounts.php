@@ -269,15 +269,17 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($company_filter) {
+		$total_span = 7;
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 2;
-			$widths = array(1,3,3,1,1,1,1,1);
+			$widths = array(1,4,3,1,1,1,1,1);
 		} else {
 			$footer_span1 = 3;
-			$widths = array(1,3,3,1,1,1,1,1);
+			$widths = array(1,4,3,1,1,1,1,1);
 		}
 	} else {
+		$total_span = 8;
 		$footer_span2 = 2;
 		if ($report_type=='summary') {
 			$footer_span1 = 3;
@@ -313,35 +315,6 @@
 	$record_start = $startDate;
 	$record_end = $endDate;
 	$result = getRecords($part_string,'','',$orders_table);
-
-/*
-	$query = "SELECT ";
-    $query .= "s.so_date 'datetime', c.`id` 'cid', c.name, q.company_id 'company', ";
-    $query .= "q.quantity 'qty', i.clei 'heci', q.inventory_id, i.part_number 'part', q.quote_id, q.price price ";
-    $query .= "From inventory_inventory i, inventory_salesorder s, inventory_outgoing_quote q, inventory_company c ";
-    $query .= "WHERE q.inventory_id = i.`id` AND q.quote_id = s.quote_ptr_id AND c.id = q.company_id AND q.quantity > 0 ";
-   	if ($company_filter) { $query .= "AND q.company_id = '".$oldid."' "; }
-   	if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND s.so_date between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";}
-   	if ($order){ $query .= "AND q.quote_id = '".$order."' ";}
-   	if ($part_string){ $query .= "AND i.id IN (".$part_string.") ";}
-   	//if ($endDate) { $query .= "AND s.so_date <'".$endDate."'  ";}
-    $query .= "Order By s.so_date DESC;";
-	
-##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
-	//$query = "SELECT * FROM sales_orders ";
-	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
-	//$query .= "ORDER BY datetime DESC, id DESC; ";
-#####
-
-//Search for the results. Leave the second parameter null if the pipe is not being used
-
-	$result = qdb($query,'PIPE');
-*/
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
@@ -547,7 +520,7 @@
 		//Add in the dropdown element into the accounts page
 		$rows .= '
 					<tr class="'.$status.' '.$filter_comb.'" style="'.($report_type=='summary' ? 'display: none;' : '').'">
-						<td colspan="8">
+						<td colspan="'.$total_span.'">
 							<table class="table table-condensed commission-table">
 								<tbody>
 		';
