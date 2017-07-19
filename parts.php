@@ -102,7 +102,7 @@
 							$part_name = $parts[0];
 					?>
 						<tr>
-							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
+							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
 							<td><?=display_part($part['id'], true); ?></td>
 							<td><?=ucwords($part['classification']);?></td>
 							<td><?=$part['id']?></td>
