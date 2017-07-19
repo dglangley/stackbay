@@ -69,9 +69,11 @@
 			</div>
 			
 			<div class="col-md-4">
+			<?php if($search): ?>
 				<button class="btn btn-sm btn-primary part-modal-show pull-right" style="cursor: pointer" data-partid="">
 					<i class="fa fa-plus" aria-hidden="true"></i>
 				</button>
+			<?php endif; ?>
 			</div>
 
 		</div>
@@ -96,7 +98,7 @@
 					?>
 						<tr>
 							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
-							<td><?=display_part($part['id'], true); ?></td>
+							<td><?=(display_part($part['id'], true) ? display_part($part['id'], true) : $part['part']); ?></td>
 							<td><?=ucwords($part['classification']);?></td>
 							<td><?=$part['id']?></td>
 							<td>
