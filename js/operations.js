@@ -171,7 +171,7 @@
 						}
 					},					
 					error: function(xhr, status, error) {
-						console.log("JSON | Initial table load | order table out.php: "+error);
+						submitProblem("SYSTEM","JSON | Initial table load | order table out.php: "+error);
 						console.log(window.location.origin+"/json/order-table-out.php?type="+order_type+"&number="+order_number+"&rtv_array="+JSON.stringify(rtv_array)+"&mode="+mode);
 					}
 				});
@@ -351,8 +351,7 @@
 			    		console.log("JSON address-default.php: Success");
 					},					
 					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON address-default.php: Error");
+						submitProblem("SYSTEM","JSON address-default.php: Error | "+error+" | "+xhr.responseText);
 						console.log(window.location.origin+"/json/address-default.php?company="+company+"&order="+order_type);
 					},
 					complete: function(jqXHR,textStatus) {
@@ -375,8 +374,7 @@
 						console.log("JSON warranty-default.php: Success");
 					},					
 					error: function(xhr, status, error) {
-						alert(error+" | "+status+" | "+xhr);
-						console.log("JSON warranty-default.php: Error");
+						submitProblem("SYSTEM","JSON warranty-default.php: Error | "+error+" | "+xhr.responseText);
 	    				console.log(window.location.origin+'/json/warranty-default.php?company='+company+'&order_type='+order_type);
 					},
 				});
