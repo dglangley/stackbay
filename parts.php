@@ -76,7 +76,7 @@
 			</div>
 			
 			<div class="col-md-4">
-				<button class="btn btn-sm btn-primary part-modal-show pull-right" style="cursor: pointer">
+				<button class="btn btn-sm btn-primary part-modal-show pull-right" style="cursor: pointer" data-partid="">
 					<i class="fa fa-plus" aria-hidden="true"></i>
 				</button>
 			</div>
