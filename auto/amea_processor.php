@@ -14,9 +14,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/phpmailer/PHPMailerAutoload.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeIds.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeQty.php';
 
 	$userid = 5;
 	setGoogleAccessToken($userid);
@@ -190,14 +187,14 @@
 			$DOM->loadHTML($message);
 			$tables = $DOM->getElementsByTagName('table');
 
-			$results = array();
+			$email_content = array();
 			if (($tables->length)>0) {
-				$results = parseHtmlTable($tables);
+				$email_content = parseHtmlTable($tables);
 			} else {/* if no html table in the email */
-				$results = parsePlainText($message);
-				if ($results===false) { continue; }
+				$email_content = parsePlainText($message);
+				if ($email_content===false) { continue; }
 			}
-//			print "<pre>".print_r($results,true)."</pre>";
+//			print "<pre>".print_r($email_content,true)."</pre>";
 
 			//reset
 			$metaid = 0;
@@ -209,14 +206,14 @@
 			// find patterns already stored for this contact
 			$query = "SELECT * FROM amea WHERE contactid = '".$contactid."'; ";
 //			echo $query.'<BR>';
-			$result = qdb($query);
-			if (mysqli_num_rows($result)==0) {
+			$patterns = qdb($query);
+			if (mysqli_num_rows($patterns)==0) {
 				// no patterns detected so send the email to a user as if it was hand-written
 				$results_body = 'Please see email below from '.$from_name.' at '.getCompany($companyid).'<BR>';
 			}
 
-			// use each pattern found in the db for this contact, and attempt to match against each of the $results rows from above
-			while ($r = mysqli_fetch_assoc($result)) {
+			// use each pattern found in the db for this contact, and attempt to match against each of the $email_content rows from above
+			while ($r = mysqli_fetch_assoc($patterns)) {
 				$part_col = $r['part'];
 				$part_from_end = $r['part_from_end'];
 				$qty_col = $r['qty'];
@@ -224,9 +221,10 @@
 				$heci_col = $r['heci'];
 				$heci_from_end = $r['heci_from_end'];
 
+				// handle email content against this pattern to look for possible matches
 				$last_fields = array();//used for looking back at previous row's fields, in case qty is on a subsequent row
 				$search_results = array();//consolidates results to avoid duplicates and to catch qtys on subsequent rows
-				foreach ($results as $ln => $rows) {
+				foreach ($email_content as $ln => $rows) {
 					$fields = array();
 					foreach ($rows as $cols) {
 						$words = preg_split('/[[:space:]]+/',$cols);
@@ -289,6 +287,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					}
 				}
 
+				// $search_results handles everything that could possibly be used as a search string - it's the match against the above patterns
 				foreach ($search_results as $base => $qty) {
 					$roots = explode('|',$base);
 					$part = format_part($roots[0]);
@@ -311,22 +310,12 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 
 					$match_results = '';
 					$stk_qty = 0;
-					$pipe_ids = array();
 					foreach ($matches as $partid) {
 						$part_str = getPart($partid,'part');
 						$heci_str = getPart($partid,'heci');
 
-						// get pipe ids for qty check
-						$ids = getPipeIds(format_part($part_str),'part');
-						foreach ($ids as $pipe_id => $arr) {
-							$pipe_ids[$pipe_id] = $pipe_id;
-						}
-						if ($heci_str) {
-							$ids = getPipeIds(substr($heci_str,0,7),'heci');
-							foreach ($ids as $pipe_id => $arr) {
-								$pipe_ids[$pipe_id] = $pipe_id;
-							}
-						}
+						// get qty per partid
+						$stk_qty += getQty($partid);
 						$match_results .= $part_str.' '.$heci_str.'<BR>';
 
 						// add first occurrence of this $partkey (part and 7-digit heci, if present) to $inserts for adding to db
@@ -335,17 +324,14 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 						}
 					}
 					$num_inserts += count($inserts);
-					if ($num_inserts>0) {
+
+					if ($num_matches>0) {
 						$results_body .= 'I ran <span style="color:#468847; font-weight:bold">'.$partkey.'</span> (qty '.$qty.')';
 					} else if (! strstr($failed_strings,$partkey)) {
 						if ($failed_strings) { $failed_strings .= ', '; }
 						$failed_strings .= $partkey;
 					}
 
-					// check stock against old db
-					foreach ($pipe_ids as $pipe_id) {
-						$stk_qty += getPipeQty($pipe_id);
-					}
 					// if we have stock (or at least looks that way), add a note to user to check stock
 					if ($stk_qty>0) { $results_body .= ' <strong>CHECK STOCK</strong>'; }
 					// end the line with a line break and then add the matched results
