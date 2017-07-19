@@ -19,6 +19,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getWarranty.php';
+	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
@@ -50,6 +51,7 @@
 	$repair_item_id;
 	$sales_order;
 	$tracking;
+	$received_inventory;
 
 	$build = $_REQUEST['build'];
 
@@ -84,7 +86,7 @@
 	}
 
 	//Check to see if a sales_item record has been created for this item
-	if($status != 'Active') {
+	//if($status != 'Active') {
 		$query = "SELECT so_number FROM sales_items WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id).";";
 		$result = qdb($query) or die(qe());
 		if (mysqli_num_rows($result)) {
@@ -96,11 +98,19 @@
 			if (mysqli_num_rows($result)) {
 				$result = mysqli_fetch_assoc($result);
 				$tracking = ($result['tracking_no'] ? $result['tracking_no'] : 'N/A');
+			} else {
+				$query = "SELECT id inventoryid FROM inventory WHERE repair_item_id = ".prep($repair_item_id)." AND status <> 'in repair';";
+				$result = qdb($query) or die(qe());
+
+				if (mysqli_num_rows($result)) {
+					$result = mysqli_fetch_assoc($result);
+					$received_inventory = $result['inventoryid'];
+				}
 			}
 		}
-	}
+		//echo 'hi';
+	//}
 
-	
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
 	function getRepairParts ($order_number) {		
 		$listPartid;
@@ -192,6 +202,7 @@
 	$partsListing = getRepairParts($order_number);
 
 	$outstanding = 0;
+	$status = getOrderStatus($o['type'],$order_number);
 
 	if(!empty($partsListing)) {
 		$results = count($partsListing);
@@ -300,44 +311,70 @@
 				<?php } ?>
 				<a href="/repair.php?on=<?=($build ? $build : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
 
-				<form id="repair_ship" action="repair_shipping.php" method="POST">
+				<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { 
+						if($sales_order && $o['type'] == 'Repair') { ?>
 					<div class ="btn-group pull-left">
 						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
 							<i class="fa fa-truck"></i> Ship
 							<span class="caret"></span>
-                           </button>
-                           <ul class="dropdown-menu">
-                           	<li>
-								<a class="ship" data-ship="ship" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-truck"></i> Ship</a>
-							</li>
-							<li>
-								<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-list"></i> Return to Stock</a>
+                        </button>
+                        <ul class="dropdown-menu">
+                        	<li>
+								<a href="/shipping.php?on=<?=$sales_order;?>"><i class="fa fa-truck"></i> Ship</a>
 							</li>
 						</ul>
 					</div>
-					<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
-				</form>
+				<?php } else if($tracking && $o['type'] == 'Repair') { ?>
+					<div class ="btn-group pull-left">
+						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-truck"></i> Ship
+							<span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        	<li>
+								<span style="padding: 3px 20px;">Tracking# <?=$tracking;?></span>
+							</li>
+						</ul>
+					</div>
+				<?php } else if($received_inventory && $o['type'] == 'Repair') { ?>
+					<div class ="btn-group pull-left">
+						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-truck"></i> Ship
+							<span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        	<li>
+								<span style="padding: 3px 20px;">Returned to Stock</span>
+							</li>
+						</ul>
+					</div>
+				<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
+					<form id="repair_ship" action="repair_shipping.php" method="POST">
+						<div class ="btn-group pull-left">
+							<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+								<i class="fa fa-truck"></i> Ship
+								<span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                            	<li>
+									<a class="ship" data-ship="ship" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-truck"></i> Ship</a>
+								</li>
+								<li>
+									<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-list"></i> Return to Stock</a>
+								</li>
+							</ul>
+						</div>
+						<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
+					</form>
+				<?php } } ?>
 			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php if($status != 'Active'){
+				<h2><?php if($status != 'Active' && $status){
 							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
 						}?> <?=($build ? 'Build':'Repair');?> #<?= ($build?$build:$order_number).' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
-				<?php if($status != "Active") { ?>
-					<?php if($sales_order) { ?>
-						<a href="/shipping.php?on=<?=$sales_order;
-						?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</a>
-					<?php } else if($tracking) { ?>
-						<div class="pull-right" style="margin-top: 15px;">
-							<b>Shipped Tracking#</b> <?=$tracking;?>
-						</div>
-					<?php } else { ?>
-						<form action="repair_shipping.php" method="POST">
-							<button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat success pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button>
-						</form>
-					<?php } ?>
-				<?php } ?>
+				
 			</div>
 		</div>
 		

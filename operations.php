@@ -483,6 +483,16 @@
 									$status .= ' checked-out_item';
 								}
 							}
+
+							$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Marked as%' ";
+							$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
+							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+							if (mysqli_num_rows($result2)>0) {
+								$r2 = mysqli_fetch_assoc($result2);
+								if ($r2['notes']=='Marked as `In Testing`') {
+									$status .= ' testing_item';
+								}
+							}
 						}
 
 						//If repair code exists then check if the order has already been shipped out or not

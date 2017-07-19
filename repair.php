@@ -278,15 +278,15 @@
 
 	$activities = grabActivities($repair_order, $repair_item_id, $build);
 
-	$status = ""; 
+	$check_status = ""; 
 	$claimed = "";
 	if(isset($activities)){
 	foreach($activities as $activity):
-		if(strpos($activity['notes'], 'Checked') !== false && !$status) {
+		if(strpos($activity['notes'], 'Checked') !== false && !$check_status) {
 			if(strtolower($activity['notes']) == 'checked in') {
-				$status = 'closed';
+				$check_status = 'closed';
 			} else if(strtolower($activity['notes']) == 'checked out') {
-				$status = 'opened';
+				$check_status = 'opened';
 			}
 		}
 
@@ -337,9 +337,10 @@
 				<td>'.format_price($item['price']).'</td>
 				<td>
 					<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-					<button class="btn btn-sm btn-primary" type="submit" name="type" value="test_changer" '.($ticketStatus ? 'disabled' : '').'>'.((strtolower($status) == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+					<button class="btn btn-sm btn-primary" type="submit" name="type" value="'.((strtolower($status) == 'in repair')? "test_in":"test_out").'" '.((!$serial || $ticketStatus) ? 'disabled' : '').'>'.((strtolower($status) == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
 				</td>
 			</tr>';
+			//'.((strtolower($status) == 'in repair')? "test_in":"test_out").'
 		}
 	}
 	//print_r($U);
@@ -490,7 +491,7 @@
 						<input type="text" name="repair_item_id" value="<?=$item['id'];?>" class="hidden">
 					<?php endforeach; ?>
 
-					<?php if($status == 'opened' || !$status) { ?>
+					<?php if($check_status == 'opened' || !$check_status) { ?>
 						<input type="text" name="check_in" value="check_in" class="hidden">
 						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
@@ -501,7 +502,7 @@
 					<?php if(!$claimed){ ?>
 						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
-						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 12px; margin-right: 0px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
+						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 11px; margin-right: 10px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
 							Complete Ticket
 						</button>
 						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
@@ -620,7 +621,7 @@
 														<div class="input-group">
 															<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
 															<span class="input-group-btn">
-																<button class="btn btn-sm btn-primary" id="submit" <?=($ticketStatus ? 'disabled' : '');?>>Log</button>
+																<button class="btn btn-sm btn-primary" name="type" value='note_log' id="submit" <?=($ticketStatus ? 'disabled' : '');?>>Log</button>
 															</span>
 														</div>
 													</div>
