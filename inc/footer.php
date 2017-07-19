@@ -1,5 +1,6 @@
 
 	<!-- scripts -->
+	
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery.dataTables.js"></script>
@@ -21,7 +22,8 @@
 
 	<script src="js/dropzone.js"></script>
 	<script src="js/trello.js"></script>
-
+	<script src="js/parts.js"></script>
+	
 	<!-- bxSlider Javascript file -->
 	<script src="js/jquery.bxslider.min.js"></script>
 	<script src="js/imageSlider.js"></script>

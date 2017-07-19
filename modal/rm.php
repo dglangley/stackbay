@@ -1,4 +1,5 @@
 <div class="modal modal-RM fade" id="modal-RM" role="dialog" aria-labelledby="modalRMTitle">
+  <!-- REMEMBER TO REMOVE TAB INDEX 0 FROM ANY FUTURE MODALS WITH SELECT2's -->
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">

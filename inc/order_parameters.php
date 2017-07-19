@@ -49,7 +49,7 @@
 			$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
-			$info['warranty'] = true;
+			$info['warranty'] = 'warranty';
 			
 //Operations Modules Limits
 			$info['order_by'] = "o.".$info['id'];
@@ -107,7 +107,7 @@
 			$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
-			$info['warranty'] = true;
+			$info['warranty'] = 'warranty';
 			
 //Operations Modules Limits
 			$info['order_by'] = "o.".$info['id'];
@@ -332,6 +332,7 @@
 		else if (
 		    strtolower($type) == "repair" 
 		    || strtolower($type) == "ro" 
+		    || strtolower($type) == "repairs" 
 		    || strtolower($type) == "repair_item_id" 
 		    || strtolower($type) == "repair_orders"){
 			$info['type'] = "Repair";
@@ -375,7 +376,7 @@
 			//$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
-			$info['warranty'] = true;
+			$info['warranty'] = 'warrantyid';
 			
 //Operations Modules Limits
 			$info['order_by'] = "o.created";
@@ -482,7 +483,7 @@
 			//$info['create_date'] = "created";
 			//Field header information
 			$info['due_date'] = true;
-			$info['warranty'] = true;
+			$info['warranty'] = 'warranty';
 			
 //Operations Modules Limits
 			$info['order_by'] = "o.created DESC, bid";
