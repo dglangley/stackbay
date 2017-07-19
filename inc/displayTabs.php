@@ -7,6 +7,7 @@
 		$inventory_sub = '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
                     <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
+                    <li><a href="/parts.php"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
 				</ul>
 		';
 	}

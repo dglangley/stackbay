@@ -128,8 +128,16 @@
 
 	$first = reset($partsListing);
 	$classification = '';
+
 	if($first['ref_1_label'] == 'repair_item_id') {
 		$classification = 'component';
+	}
+
+	if($partsListing && !$classification) {
+		foreach($partsListing as $part): 
+			$classification = getClassification($part['partid']);
+			break;
+		endforeach;
 	}
 ?>
 
