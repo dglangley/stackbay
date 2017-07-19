@@ -23,7 +23,7 @@
 					'title'=>'Operations',
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn dropdown-mega">
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
@@ -121,7 +121,7 @@
 					'title'=>'Sales',
 					'aliases'=>array('/order_form.php'),
 					'sub' => '
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                <ul class="dropdown-menu dropdown-menu-left text-left animated-2x animated fadeIn dropdown-mega">
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
@@ -193,9 +193,28 @@
 					'privilege'=>array(1,4,7),
 				),
 			),
+
+		'mobile' =>
+			array(
+				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
+				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7)),
+				array('action'=>'/operations.php','image'=>'<i class="fa fa-truck"></i>','title'=>'Operations',),
+				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
+				array(
+					'action'=>'/',
+					'image'=>'<i class="fa fa-cubes"></i>',
+					'title'=>'Sales',
+					),
+				array(
+					'action'=>'/accounts.php',
+					'image'=>'<i class="fa fa-building-o"></i>',
+					'title'=>'Accounts',
+					'privilege'=>array(1,4,7),
+				),
+			),
 	);
 
-	function displayTabs($pos='',$selected_tab='') {
+	function displayTabs($pos='',$selected_tab='', $mobile = false) {
 		global $TABS;
 		global $USER_ROLES;
 
@@ -224,7 +243,7 @@
 				$privilege = true;
 			}
 
-			if ($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) { $cls = ' active'; }
+			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
 				$clsA = ' dropdown-toggle';
@@ -234,7 +253,7 @@
 			}
 
 			$tabs .= '
-            <li class="hidden-xs hidden-sm'.$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
+            <li class="'.(!$mobile ? "hidden-xs hidden-sm" : "hidden-md hidden-lg") .$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
 				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
 				'.$tab['sub'].'
 			</li>

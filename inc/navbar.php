@@ -2,6 +2,7 @@
 	include_once 'dbconnect.php';
 	include_once 'format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
+	include_once $_SERVER["ROOT_DIR"].'/modal/trello.php';
 	include_once 'notifications.php';
 	include_once 'displayTabs.php';
 
@@ -138,6 +139,10 @@
 		<div class="collapse navbar-collapse text-center">
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
+          </ul>
+
+          <ul class="nav navbar-nav"><!-- pull-right hidden-xs">-->
+			<?php echo displayTabs('mobile',$SEARCH_MODE, true); ?>
           </ul>
           
           <ul class="nav navbar-nav pull-right"><!-- pull-right hidden-xs">-->
