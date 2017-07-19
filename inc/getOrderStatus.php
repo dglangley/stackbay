@@ -9,6 +9,9 @@
             return('Active');
         }else{
             $o = o_params($type);
+            if($o['case'] || !$type){
+                die("The page you are looking for doesn't exist. Please go back and try again");
+            }
             if($type != 'Repair') {
                 $select = "SELECT `status` FROM ".$o['order']." WHERE ".$o['id']." = $number;";
             } else {
