@@ -204,11 +204,15 @@
 					'action'=>'/',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
+					'aliases'=>array(),
+					'sub'=>'',
 					),
 				array(
 					'action'=>'/accounts.php',
 					'image'=>'<i class="fa fa-building-o"></i>',
 					'title'=>'Accounts',
+					'aliases'=>array(),
+					'sub'=>'',
 					'privilege'=>array(1,4,7),
 				),
 			),
@@ -244,6 +248,7 @@
 			}
 
 			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
+
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
 				$clsA = ' dropdown-toggle';
