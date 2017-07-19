@@ -156,7 +156,7 @@
 						$("#pm-manf").setDefault(hdb['manf'],hdb['manfid']);
 						$("#pm-system").setDefault(hdb['system'],hdb['systemid']);
 						$("#pm-class").val(hdb['classification']);
-						$("#modalPartsTitle").text("Editing Part "+hdb['Part']);
+						$("#modalPartsTitle").text(hdb['Part']);
 					}
 				}
 			});
@@ -185,6 +185,7 @@
 		manf = $("#pm-manf").val();
 		system = $("#pm-system").val();
 		classification = $("#pm-class").val();
+		console.log(window.location.origin+"/json/parts.php?action=update&partid="+id+"&name="+escape(name)+"&heci="+heci+"&desc="+escape(desc)+"&manf="+manf+"&system="+system+"&class="+classification);
 		
 		$.ajax({
 			type: "POST",
@@ -202,26 +203,30 @@
 			dataType: 'json',
 			success: function(result) {
 				if(!result['error']){
+/*
 					console.log("JSON parts.php: Success");
 					console.log(result);
 					console.log("partid: "+id+"| name: "+name+"| heci: "+heci+"| desc: "+desc+"| manf: "+manf+"| system: "+system+"| classification: "+classification);
+*/
+					var msg = '';
+					var res = JSON.parse(result.responseText)
+					if(res['insert']){
+						msg = " Inserted";
+					} else {
+						msg = " Updated"
+					}
+					toggleLoader("Part"+msg);
 				} else {
+					alert(result['error']);
 					submitProblem("System","Part Save had an error: "+result['error']);
 				}
 			},
 			error: function(xhr, status, error) {
-				alert("Part Save had an error: dev team has been notified already");
+				//alert(result['error']);
+				alert("Part Save had an error: dev team has been notified already "+result['error']);
 				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
 			},
 			complete: function(result){
-				var msg = '';
-				var res = JSON.parse(result.responseText)
-				if(res['insert']){
-					msg = " Inserted";
-				} else {
-					msg = " Updated"
-				}
-				toggleLoader("Part"+msg);
 			}
 		});
 	}

@@ -4,24 +4,16 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/display_part.php';
-	include_once $rootdir.'/inc/format_date.php';
-	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
-	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/terms.php';
-	include_once $rootdir.'/inc/order_parameters.php';
 	
-	$search = ($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
+	$search = trim($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 
-	$itemList = array();
-	$query = "";
-	//Query Sales items that also contains repair items
+	//Query items from parts table
+	$itemList = hecidb($search);
+/*
 	if(!$search) {
-		$query = "SELECT * FROM parts LIMIT 400;";
+		$query = "SELECT * FROM parts ;";
 		$result = qdb($query) OR die(qe());
 			
 		while ($row = $result->fetch_assoc()) {
@@ -30,6 +22,7 @@
 	} else {
 		$itemList = hecidb($search); 
 	}
+*/
 	
 ?>
 

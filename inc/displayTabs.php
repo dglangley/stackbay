@@ -6,8 +6,8 @@
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub = '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
-                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
-                    <li><a href="/parts.php"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
+                    <li><a href="/manage_inventory.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
+                    <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
 				</ul>
 		';
 	}
@@ -110,7 +110,7 @@
 					'action'=>'/inventory.php',
 					'image'=>'<i class="fa fa-qrcode"></i>',
 					'title'=>'Inventory',
-					'aliases'=>array('/manage_inventory.php'),
+					'aliases'=>array('/manage_inventory.php','/parts.php'),
 					'sub' => $inventory_sub,
 				),
 			),
@@ -248,7 +248,7 @@
 				$privilege = true;
 			}
 
-			// if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
+			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
 
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
