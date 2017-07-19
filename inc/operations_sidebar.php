@@ -561,6 +561,12 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$right .= "<br><br>";
 			}
 			
+			if($terms){
+				$right .= "<b style='color: #526273;font-size: 14px;'>Payment Terms</b><br>";
+				$right .= "Terms: ".getTermsInfo($terms, 'id', 'terms');
+				$right .= "<br><br>";
+			}
+			
 			if($public){
 				$right .= "<b style='color: #526273;font-size: 14px;'>PUBLIC NOTES";
 				if($page == "RMA"){$right .= " FROM SO# $order_number";}
