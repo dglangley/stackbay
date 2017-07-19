@@ -283,7 +283,7 @@
 		echo '
 		<div class="col-lg-6 pad-wrapper data-load" style="margin: 15px 0 20px 0; display: none;">
 			<div class="shipping-dash" id="'.$order_out.'_panel">
-				<div class="shipping_section_head" data-title="'.$order_out.' Orders">
+				<div class="shipping_section_head" data-title="'.$order_out.(($order=="bo") ? '':' Orders').'">
 					'.$status_out.$order_out. (($order =="bo") ? '':' Orders').
 				'</div>
 				<div class="table-responsive">
@@ -422,7 +422,9 @@
 			if(!empty($results)) {
 				//print_r($results);
 				foreach ($results as $r){
-					if ($order=='bo') { unset($r['serial_no']); }
+					if ($order=='bo') {
+						unset($r['serial_no']);
+					}
 
 					//Clear variables
 					$status = '';
@@ -436,14 +438,6 @@
 					
 					$count++;
 					$order_num = $r[$o['id']];
-					// if ($order == 's'){ $order_num = $r['so_number']; }
-					// else if ($order == 'p'){ $order_num = $r['po_number']; }
-					// else if ($order == 'rma'){ $order_num = $r['rma_number']; }
-					// else if ($order == 'ro'){ $order_num = $r['ro_number']; }
-					// else if ($order == 'bo'){ 
-					// 	$order_num = $r['bid']; 
-					// 	//$build = $r['bid'];
-					// }
 					if ($order=='bo') { $order_num = $r['bid']; }
 
 					//$date = date("m/d/Y", strtotime($r['ship_date'] ? $r['ship_date'] : $r['created']));
@@ -458,7 +452,7 @@
 					$item = display_part($r['partid'], true);
 					$qty = $r['qty'];
 					
-					if ($order != 's' && $order != 'rma' && $order != 'ro'){
+					if ($order != 's' && $order != 'rma' && $order != 'ro' && $order != 'bo'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 						$pending = false;
 					} else if ($order == 's') {
@@ -545,7 +539,7 @@
 					}
 
 					echo'        <td><div class="desc">'.$item.'</div></td>';
-					if($order != 'ro' && $order != 'bo') {
+					if($order != 'ro') {
 						echo'    	<td>'.($r['serial_no'] ? $r['serial_no'] : $qty).'</td>';
 					} else {
 						$serial;
