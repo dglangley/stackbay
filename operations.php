@@ -471,14 +471,17 @@
 						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
 						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
 
-						$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Checked%' ";
-						$query2 .= "AND techid = '".$U['id']."' ";
-						$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
-						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-						if (mysqli_num_rows($result2)>0) {
-							$r2 = mysqli_fetch_assoc($result2);
-							if ($r2['notes']=='Checked Out') {
-								$status .= ' checked-out_item';
+						// statuses of "Checked Out" and "In Test" can be subclasses of Active repairs, where there is no repair_code_id set
+						if (! $r['repair_code_id']) {
+							$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Checked%' ";
+							//$query2 .= "AND techid = '".$U['id']."' ";
+							$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
+							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+							if (mysqli_num_rows($result2)>0) {
+								$r2 = mysqli_fetch_assoc($result2);
+								if ($r2['notes']=='Checked Out') {
+									$status .= ' checked-out_item';
+								}
 							}
 						}
 

@@ -133,7 +133,7 @@
 		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
 		$freight_terms = ($oi["freight_account_id"])?getFreight('account','',$oi['freight_account_id'],'account_no') : 'Prepaid';
 
-		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY line_number ASC;";
+		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(line_number IS NOT NULL,0,1), line_number ASC;";
 		if($o['type'] == "Credit" && is_numeric($order_number)){
 		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
 		    FROM inventory_history ih, inventory i, '.$o['tables'].' 
@@ -157,15 +157,28 @@
                 $serials = explode(",",$item['serials']); 
             }
             
-            $price = 0.00;
-            if ($item['price']){
-                $price = $item['price'];
-            } else if ($item['amount']){
-                $price = $item['amount'];
-            }
+			$price = 0.00;
+			if ($item['price']){
+				$price = $item['price'];
+			} else if ($item['amount']){
+				$price = $item['amount'];
+			}
+			$lineTotal = $price*$item['qty'];
+
 			$part_details = current(hecidb($item['partid'],'id'));
 			$part_strs = explode(' ',$part_details['Part']);
-			$lineTotal = $price*$item['qty'];
+			$charge_descr = '';
+			if ($item['partid']) {
+				$part_details = current(hecidb($item['partid'],'id'));
+				$part_strs = explode(' ',$part_details['Part']);
+				$charge_descr = $part_strs[0].' &nbsp; '.$part_details['HECI'];
+			} else if (isset($item['memo']) AND $item['memo']) {
+				if ($item['memo']=='Freight') {
+					$freight += $lineTotal;
+					continue;
+				}
+				$charge_descr = $item['memo'];
+			}
 			$subtotal += $lineTotal;
 			
 			//FREIGHT CALCULATION HERE FOR INVOICE (based off the payment type/shipping account)
@@ -173,34 +186,33 @@
                 <tr>
                     <td class="text-center">'.(($o['credit'] || $o['rma']) ? ++$i : $item['line_number']).'</td>
                     <td>
-        	            '.$part_strs[0].' &nbsp; '.$part_details['HECI'].'
+        	            '.$charge_descr.'
                         <div class="description '.$part_details['manf'].' '.$part_details['system'].' '.$part_details['description'].'</div>
                         <div class="'.($o['rma'] || $o['invoice'] ? '' : 'remove').'" style = "padding-left:5em;">
-                            <br>
-                            <ul>';
-                                if ($serials && !$o['credit']){
-                                    //Add Serials label
-                                    foreach($serials as $serial){
-                                        if($serial['invoice_item_id'] == $item['id']){
-                                            $item_rows .= "<li>".$serial['serial_no']."</li>";
-                                        }
-                                    }
-                                }
-                            $item_rows .='</ul>
+			';
+			if ($serials && !$o['credit']){
+				//Add Serials label
+				foreach($serials as $serial){
+					if($serial['invoice_item_id'] == $item['id']){
+						$item_rows .= $serial['serial_no']."<br/>";
+					}
+				}
+			}
+			$item_rows .='</ul>
                         </div>
                     </td>
                     <td class="text-center '.(($o['due_date'])? '' : 'remove' ).'">'.format_date($item[$o['date_field']],'m/d/y').'</td>
                     <td class="text-center '.($o['warranty'] ? '' : 'remove').'">'.getWarranty($item['warranty'],'name').'</td> 
-                    ';
-                    $item_rows .= ($o['purchase']? '<td>'.getCondition($item['conditionid']).'</td>' : "");
-                    if($o['credit']){
-                        $item_rows .= "<td>";
-                        foreach($serials as $serial){
-                            $item_rows .= "$serial<br>";
-                        }
-                        $item_rows .= "</td>";
-                    }
-                    $item_rows .= '
+			';
+			$item_rows .= ($o['purchase']? '<td>'.getCondition($item['conditionid']).'</td>' : "");
+			if($o['credit']){
+				$item_rows .= "<td>";
+				foreach($serials as $serial){
+					$item_rows .= "$serial<br>";
+				}
+				$item_rows .= "</td>";
+			}
+			$item_rows .= '
                     <td class="text-center '.($o['rma'] ? 'remove' : '').'">'.$item['qty'].'</td>
                     <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($price).'</td>
                     <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($lineTotal).'</td>
@@ -272,9 +284,6 @@
 			.remove {
 			    display: none;
 			}
-            #footer{
-                display:none;
-            }
             table.table-full {
                 width:100%;
             }
@@ -311,9 +320,10 @@
                 font-size:9pt;
             }
             #footer{
+                display:none;
                 display:block;
                 position:absolute;
-                bottom:60px;
+                bottom:-10px;
                 text-align:left;
                 width:100%;
             }
@@ -489,7 +499,7 @@ $html_page_str .='
 	$subtotal = round($subtotal,2);
 	$total = round($subtotal+$freight,2);
 
-$html_page_str .= '
+	$html_page_str .= '
 <!-- Items Table -->
         <table class="table-full table-striped table-condensed">
             <tr>
@@ -534,28 +544,45 @@ $html_page_str .= '
                     <b>'.format_price($total).'</b>
                 </td>
             </tr>
-        </table>';
-$package_list = getPackageTracking($order_number);
-if($o['type'] == 'Invoice'){
-        $html_page_str .='  <table class="table-full table-striped table-condensed">
+        </table>
+	';
+	$package_list = getPackageTracking($order_number);
+	if($o['type'] == 'Invoice'){
+		$html_page_str .= '
+				<table class="table-full table-striped table-condensed">
                     <tr>
                         <th>Package #</th>
                        <th>Tracking</th>
-                    </tr>'
-                    .$package_list.
-                '</table>';
-}
+                    </tr>
+                    '.$package_list.'
+                </table>
+		';
+	}
 
         $html_page_str .=' <div id="footer">
             <p class="'.(!$o['rma'] && !$o['credit'] ? '' : 'remove').'">
                 Terms and Conditions:<br><br>
+		';
+
+		if ($o['type']=='Invoice') {
+			$html_page_str .= '
+Ventura Telephone LLC ("VenTel") provides a limited warranty ("Warranty") against defects, as related to the functionality of the item, that occur within the established term of the Warranty, as described in the aforementioned Warranty options (Premium, Plus or Economy). The term of the Warranty begins on the date as printed on VenTel\'s invoice(s).
+
+The Warranty also covers physical damage, only if discovered and reported to VenTel within five (5) business days from the delivery date, and so long as such claims can be established as pre-existing conditions prior to shipment. VenTel offers no insurance on damage to products during shipping transit, and VenTel is released from all liability of such damage to products after they leave VenTel\'s possession. Freight charges are not eligible for a credit or refund, or any other form of reimbursement, in the case a product is covered under this Warranty.
+
+Software licensing or similar compatibility problems (ie, software/firmware version mismatch) are not covered under this Warranty. Products covered under the Warranty can be replaced, credited or refunded at VenTel\'s sole discretion. RMA or order cancellation requests not covered under the Warranty can, and will be, declined at VenTel\'s sole discretion, and such items remain billable in full (or subject to a Restocking Fee at VenTel\'s sole discretion). VenTel reserves the right to require documentation of equipment defect to determine Warranty eligibility.
+</p>
+			';
+		} else {
+			$html_page_str .= '
                 Acceptance: Accept this order only in accordance with the prices, terms, delivery method and specifications
                 listed herein. Shipment of goods or execution of services against this PO specifies agreement with our
-                terms.<br><br>
+                terms.<!-- <br><br>
                 Invoicing: VenTel requires that vendors provide ONE invoice per purchase order. Items on the invoice must
                 match items on the purchase order. Due date for payment terms begins when the order is received
                 complete. Failure to abide by these terms may result in delayed payment at no fault by the purchaser.
                 Please communicate all questions regarding these conditions within 15 days.
+-->
             </p>
             <p class="'.($o['rma'] && !$o['credit'] ? '' : 'remove').'">
                 Return Instructions:<br><br>
@@ -572,6 +599,7 @@ if($o['type'] == 'Invoice'){
     </body>
 </html>
 		';
+	}
 
 	return ($html_page_str);
 }

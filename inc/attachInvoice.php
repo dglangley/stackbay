@@ -4,16 +4,21 @@
 
     // instantiate and use the dompdf class
 	use Dompdf\Dompdf;
+    use Dompdf\Options;
+
+	//for external images
+	$pdf_options = new Options();
+	$pdf_options->set('isRemoteEnabled', TRUE);
 
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 	function attachInvoice($invoice) {
-		global $temp_dir;
+		global $temp_dir,$pdf_options;
 
 		// get html-rendered invoice for passing to dompdf
         $html = renderOrder($invoice,'INV');
 
-		$dompdf = new Dompdf();
+		$dompdf = new Dompdf($pdf_options);
 		$dompdf->loadHtml($html);
 
 		// (Optional) Setup the paper size and orientation
