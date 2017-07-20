@@ -248,7 +248,7 @@
 				$privilege = true;
 			}
 			
-			// if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
+			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
 
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
