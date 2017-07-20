@@ -27,7 +27,7 @@
 	echo $start_date . ' ' . $end_date;
 
 	//Query Sales items that also contains repair items
-	$query = "SELECT r.created, r.rma_number, r.companyid, ri.partid, r.order_number, ri.inventoryid as invid, d.disposition, r.order_type FROM returns r, return_items ri, dispositions d WHERE r.rma_number = ri.rma_number AND ri.dispositionid = d.id ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
+	$query = "SELECT r.created, r.rma_number, r.companyid, ri.partid, r.order_number, ri.inventoryid as invid, d.disposition, r.order_type, ri.id as returns_item_id FROM returns r, return_items ri, dispositions d WHERE r.rma_number = ri.rma_number AND ri.dispositionid = d.id ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
 	$result = qdb($query) OR die(qe());
 
 	function getTracking($order_number) {
@@ -88,6 +88,21 @@
 		}
 
 		return $cust_ref;
+	}
+
+	function getReceiveDate($invid, $return_item_id) {
+		$date;
+
+		$query = "SELECT date_changed FROM inventory_history WHERE invid = ".prep($invid)." AND field_changed = 'returns_item_id' AND value=".prep($return_item_id).";";
+		//echo $query;
+		$results = qdb($query);
+
+		if (mysqli_num_rows($results)>0) {
+			$results = mysqli_fetch_assoc($results);
+			$date = $results['date_changed'];
+		}
+
+		return format_date($date);
 	}
 		
 	while ($row = $result->fetch_assoc()) {
@@ -226,7 +241,7 @@
 							<td><?=getInventorySerial($part['invid']); ?></td>
 							<td><?=$part['disposition']?></td>
 							<td><?=ucwords(getTicketStatus($part['invid'])); ?></td>
-							<td></td>
+							<td><?=getReceiveDate($part['invid'],$part['returns_item_id'])?></td>
 							<td style="overflow-x: hidden; max-width: 400px;"><?=getTracking($part['order_number']);?></td>
 
 							
