@@ -66,14 +66,15 @@
 		if(in_array("3", $USER_ROLES)){
 			if($o['type'] == "Sales"){
 			 	header('Location: /shipping.php?on='.$order_number.'&ps=s');
-			}
-			if($o['type'] == "Purchase"){
+			} else if($o['type'] == "Purchase"){
 			 	header('Location: /inventory_add.php?on='.$order_number.'&ps=p');
-			}
-			if($o['type'] == "Repair"){
+			} else if($o['type'] == "Repair"){
 			 	header('Location: /repair_add.php?on='.$order_number);
+			} else if($o['rtv']){
+			
+			} else {
+				exit;
 			}
-			exit;
 		}
 	}
 

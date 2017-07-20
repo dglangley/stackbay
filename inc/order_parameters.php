@@ -13,6 +13,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['billing'] = 'remit_to_id';
 			$info['bill_label'] = 'Remit To';
@@ -66,6 +67,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['order'] = "sales_orders";
 			$info['billing'] = 'bill_to_id';
@@ -122,6 +124,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 
 			$info['order'] = "invoices";
@@ -171,6 +174,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['ship'] = "ship_to_id";
 			$info['billing'] = "remit_to_id";
@@ -220,6 +224,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			
 			$info['order'] = "returns";
@@ -272,6 +277,7 @@
 			$info['credit'] = true;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['order'] = "sales_credits";
 			$info['id'] = "id";
@@ -319,6 +325,7 @@
 			$info['credit'] = false;
 			$info['repair'] = true;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['billing'] = 'bill_to_id';
 			$info['bill_label'] = 'Bill To';
@@ -365,6 +372,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = true;
+			$info['lump'] = false;
 		} else if (strtolower($type) == "tech" || strtolower($type) == "repair_orders"){
 			$info['type'] = "Tech";
 			$info['ptype'] = $info['type'];
@@ -377,6 +385,7 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			$info['tech'] = true;
 			
 			//$info['billing'] = 'bill_to_id';
@@ -426,6 +435,7 @@
 			$info['repair'] = false;
 			$info['build'] = true;
 			$info['bill'] = false;
+			$info['lump'] = false;
 			
 			$info['billing'] = 'bill_to_id';
 			$info['bill_label'] = 'Bill To';
@@ -464,7 +474,58 @@
 			$info[strtolower($info['short'])] = true;
 			
 			
-		} else {
+		} else if (strtolower($type) == "lump" ) {
+			$info['type'] = "Lump";
+			$info['ptype'] = $info['type'];
+			$info['purchase'] = false;
+			$info['sales'] = false;
+			$info['invoice'] = false;
+			$info['rtv'] = false;
+			$info['rma'] = false;
+			$info['credit'] = false;
+			$info['repair'] = false;
+			$info['bill'] = false;
+			$info['lump'] = false;
+			
+			
+
+			$info['order'] = "invoices";
+			$info['header'] = "Invoice ";
+			$info['item'] = "invoice_items";
+			$info['client'] = "Customer";
+			$info['address_type'] = '';
+			$info['contact_col'] = 'Order#';
+			$info['price'] = 'Price';
+			$info['ext'] = 'Ext Price';
+			$info['rep_type'] = "Sales";
+			$info['date_label'] = "Invoice";
+			$info['tables'] = " invoices i, invoice_items ii WHERE i.invoice_no = ii.invoice_no ";
+			$info['short'] = "INV";
+			//$info['event'] = '';
+			$info['id'] = "invoice_no";
+			$info['item_id'] = $info['id'];
+			$info['active'] = " AND i.status = 'Pending' ";
+			$info['inactive'] = " AND i.status = 'Completed' ";
+			$info['status_empty'] = "Void";
+			$info['url'] = "shipping";
+            $info['color'] = '#94b4b5';
+            $info['edit_mode'] = 'display';
+            $info['date_field'] = 'receive_date';
+            //$info['create_date'] = "created";
+            //Field header information
+            $info['due_date'] = false;
+            $info['warranty'] = true;
+            
+//Operations Modules Limits
+			$info['order_by'] = "o.".$info['id'];
+			$info['mq_base'] = $info['tables'];
+			$info[strtolower($info['short'])] = true;
+			
+            
+		}
+
+		
+		else {
 			$info['case'] = $type;
 		}
 		return $info;

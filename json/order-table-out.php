@@ -67,7 +67,7 @@
 		$date = date("m/d/Y",strtotime($row['date']));
 		
 		//Build the display row
-	   	$row_out = "<tr class='easy-output ".($row['qty'] == '0' || !$row['qty'] ? 'strikeout' : '')."' data-record='".$row['id']."'>";
+	   	$row_out = "<tr class='easy-output ".((($row['qty'] == '0' || !$row['qty']) && !$o['rtv']) ? 'strikeout' : '')."' data-record='".$row['id']."'>";
 	   	if(!$o['tech'] && !$o['build']){
 	   		$row_out .= "
 	        <td class = 'line_line' data-line-number = ".$row['line'].">".$row['line']."</td>";

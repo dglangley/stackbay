@@ -101,7 +101,7 @@
 				    </div>
 
 					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="07/19/2017" data-hposition="right">
+						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
 				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=$start_date;?>" style="min-width:50px;">
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
@@ -109,7 +109,7 @@
 				        </div>
 					</div>
 					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="07/19/2017" data-hposition="right">
+						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
 				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=$end_date;?>" style="min-width:50px;">
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
