@@ -67,6 +67,7 @@
 	$commons = array(
 		'CARD'=>1,
 		'MODEL'=>1,
+		'OSCILLATOR'=>1,
 		'POWER'=>1,
 		'FAN'=>1,
 		'PIC'=>1,

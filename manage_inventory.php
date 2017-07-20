@@ -36,7 +36,7 @@
             qdb($replace) or die(qe()." $replace");
         }
     }
-    $select = "SELECT q.* FROM qtys q, parts p WHERE q.partid = p.id ORDER BY part ASC, heci ASC; ";
+    $select = "SELECT q.* FROM qtys q, parts p WHERE q.partid = p.id AND q.qty > 0 ORDER BY part ASC, heci ASC; ";
     $result = qdb($select) or die(qe()." | $select");
     foreach($result as $r){
         $table_rows .="

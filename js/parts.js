@@ -164,6 +164,7 @@
 			});
 		} else {
 			$("#modalPartsTitle").text("Creating Part");
+			$("#pm-name").val($("#s").val());
 			$("#pm-class").val(classification);
 		}
 		$("#modal-parts").modal('show');
@@ -229,6 +230,7 @@
 				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
 			},
 			complete: function(result){
+				location.reload();
 			}
 		});
 	}
