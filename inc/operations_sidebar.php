@@ -128,28 +128,28 @@ include_once $rootdir.'/inc/default_addresses.php';
 			$result = qdb($query) or die(qe());
 			
 			if (mysqli_num_rows($result)) { 
-				$result = mysqli_fetch_assoc($result);
+				$rtv_result = mysqli_fetch_assoc($result);
+				$contact = $rtv_result['contactid'];
+				$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
+				$b_add = $rtv_result[$o['billing']];
+				$companyid = $rtv_result['companyid'];
+				$selected_carrier = $rtv_result['freight_carrier_id'];
+				$selected_service = $rtv_result['freight_services_id'];
+				$associated_order = $rtv_result['cust_ref'];
+				$ref_ln = $rtv_result['ref_ln'];
+				$rtv_po = $order_number;
+				$terms = getTermsInfo("N/A");
+				$private = 'RTV From PO #'.$order_number;
+				$b_name = getAddresses($b_add,'street');
+				//THE SHIP to works like the default ship to address.
+				$s_add_line = default_addresses($companyid,"sales");
+				$s_add = key($s_add_line['ship']);
+				$s_name = getAddresses($s_add,'street');
+				$selected_account = getDefaultAccount($companyid,$selected_carrier);
+				// $b_add = $data['remit_to_id'];
+				// $b_name = getAddresses($b_add,'street');
 			}
 			
-			$rtv_po = $order_number;
-			$terms = getTermsInfo("N/A");
-			$private = 'RTV From PO #'.$order_number;
-			$companyid = $result['companyid'];
-			$company_name = (isset($companyid) ? getCompany($companyid) : '- Select a Company -');
-			$contact = $result['contactid'];
-			$b_add = $result[$o['billing']];
-			$b_name = getAddresses($b_add,'street');
-			//THE SHIP to works like the default ship to address.
-			$s_add_line = default_addresses($companyid,"sales");
-			$s_add = key($s_add_line['ship']);
-			$s_name = getAddresses($s_add,'street');
-			$selected_carrier = $result['freight_carrier_id'];
-			$selected_service = $result['freight_services_id'];
-			$selected_account = getDefaultAccount($companyid,$selected_carrier);
-			$associated_order = $result['cust_ref'];
-			$ref_ln = $result['ref_ln'];
-			// $b_add = $data['remit_to_id'];
-			// $b_name = getAddresses($b_add,'street');
 		}
 		
 		//Account information (Similar to Drop Pop, but for a select2)
