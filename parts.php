@@ -108,6 +108,14 @@
 							</td>
 						</tr>
 					<?php endforeach; ?>
+
+					<?php if (count($itemList)==0) { ?>
+						<tr>
+							<td colspan="5" class="text-center">
+								- There are no results to your search "<?=$search;?>". Consider creating the part at the top right of this view. -
+							</td>
+						</tr>
+					<?php } ?>
 				</tbody>
 	        </table>
 		</div>

@@ -31,17 +31,22 @@ foreach($res as $r){
         $insert = "INSERT INTO `qtys`(`partid`, `qty`, `hidden_qty`, `visible_qty`) VALUES (".$r['partid'].", ".$r['qty'].", NULL, ".$r['qty'].");";
         qdb($insert) or die(qe()." | $insert");
     } else {
-        //otherwise, update the old value
-        $up = "UPDATE `qtys`SET 
-        `qty` = $ptotal,  
-        `visible_qty` = CASE
-             WHEN ((`hidden_qty` = 0 AND `hidden_qty` is not null) OR (`hidden_qty` >= $ptotal)) THEN 0
-             ELSE ($ptotal - ifnull(`hidden_qty`,0))
-           END
-           WHERE `partid` = ".prep($r['partid'])."
-        ;";
-        qdb($up) or die(qe());
-    }
+		if ($ptotal==0) {
+			$del = "DELETE FROM qtys WHERE partid = ".prep($r['partid'])."; ";
+			qdb($del) or die(qe());
+		} else {
+			//otherwise, update the old value
+			$up = "UPDATE `qtys`SET 
+				`qty` = $ptotal,  
+				`visible_qty` = CASE
+					WHEN ((`hidden_qty` = 0 AND `hidden_qty` is not null) OR (`hidden_qty` >= $ptotal)) THEN 0
+					ELSE ($ptotal - ifnull(`hidden_qty`,0))
+				END
+				WHERE `partid` = ".prep($r['partid'])."
+			;";
+			qdb($up) or die(qe());
+		}
+	}
 }
 
 ?>

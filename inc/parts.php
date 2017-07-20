@@ -28,28 +28,31 @@
 	            if(!$partid){
 					$insert = "
 						INSERT INTO `parts` (`part`, `rel`, `heci`, `manfid`, `systemid`, `description`, `classification`) VALUES 
-						(".prep($parr['name']).", NULL,".prep($parr['heci'])." , ".prep($parr['manf']).", ".prep($parr['system']).", ".prep($parr['desc']).", ".prep($parr['class']).") ";
-					$result['insert'] = $insert;
+						(".prep(strtoupper($parr['name'])).", NULL,".prep(strtoupper($parr['heci']))." , ".prep($parr['manf']).", ".prep($parr['system']).",
+						".prep(strtoupper($parr['desc'])).", ".prep(strtolower($parr['class'])).") ";
+					//$result['insert'] = $insert;
 					qdb($insert) or jsonDie(qe()." $insert");
-					$result['partid'] = qid();
+					$partid = qid();
+					$result['partid'] = $partid;
+					indexer($partid,'id');
 				} else if (is_numeric($partid)){
 					$update = "
 						UPDATE `parts` SET 
-						`part` = ".prep($parr['name']).",
+						`part` = ".prep(strtoupper($parr['name'])).",
 						`rel`  = NULL,
-						`heci` =  ".prep($parr['heci'])." ,
+						`heci` =  ".prep(strtoupper($parr['heci']))." ,
 						`manfid` = ".prep($parr['manf']).",
 						`systemid` = ".prep($parr['system']).",
-						`description` = ".prep($parr['desc']).",
-						`classification` = ".prep($parr['class'])."
+						`description` = ".prep(strtoupper($parr['desc'])).",
+						`classification` = ".prep(strtolower($parr['class']))."
 						WHERE `id` = ".prep($partid).";";
 					$result['update'] = $update;
 					qdb($update) or jsonDie(qe()." | $update");
 					$result['partid'] = $partid;
+					indexer($partid,'id');
 				} else {
 					$result['error'] = "Incorrect Partid Passed in to the part_action function: $partid";
 				}
-				indexer($partid);
 			}
         } 
         return $result;
