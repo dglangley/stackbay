@@ -16,20 +16,19 @@
 		return $string;
 	}
 	
-	function dFilter($field, $start = '', $end = '', $first = false){
-		$andwhere = ($first)?" WHERE ":" AND ";
+	function dFilter($field, $start = '', $end = '', $lead = "AND"){
 		if ($start and $end){
 	   		$start = prep(format_date($start, 'Y-m-d'));
 	   		$end = prep(format_date($end, 'Y-m-d'));
-	   		$string = " $andwhere $field between CAST($start AS DATE) and CAST($end AS DATE) ";
+	   		$string = " $lead $field between CAST($start AS DATE) and CAST($end AS DATE) ";
 		}
 		else if($start){
 			$start = prep(format_date($start, 'Y-m-d'));
-			$string = " $andwhere CAST($field AS DATE) >= CAST($start AS DATE) ";
+			$string = " $lead CAST($field AS DATE) >= CAST($start AS DATE) ";
 		}
 		else if($end){
 			$end = prep(format_date($end, 'Y-m-d'));
-			$string = " $andwhere CAST($field AS DATE) <= CAST($end AS DATE) ";
+			$string = " $lead CAST($field AS DATE) <= CAST($end AS DATE) ";
 		}
 		else{
 			$string = '';

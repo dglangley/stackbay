@@ -138,6 +138,8 @@
 		$(".pm-field").val('');
 		$("#pm-manf").initSelect2("/json/manfs.php","Manf");
 		$("#pm-system").initSelect2("/json/systems.php","System");
+		$("#pm-manf").setDefault('','');
+		$("#pm-system").setDefault('','');
 		if(id){
 			$.ajax({
 				type: "POST",
