@@ -24,7 +24,7 @@
 	$start_date = $_REQUEST['START_DATE'];
 	$end_date = $_REQUEST['END_DATE'];
 
-	//echo $start_date . ' ' . $end_date;
+	echo $start_date . ' ' . $end_date;
 
 	//Query Sales items that also contains repair items
 	$query = "SELECT datetime, companyid, partid, ref_1, ref_1_label, ref_2, ref_2_label, delivery_date, si.so_number as order_number, created, order_type, tracking_no, cust_ref FROM packages p, sales_items si, sales_orders so WHERE order_type = 'Sale' AND  p.order_number = si.so_number AND so.so_number = p.order_number AND si.price > 0 ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
@@ -97,7 +97,7 @@
 				    </div>
 
 					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="07/19/2017" data-hposition="right">
+						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
 				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=($start_date ? $start_date : '')?>" style="min-width:50px;">
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
@@ -105,7 +105,7 @@
 				        </div>
 					</div>
 					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="07/19/2017" data-hposition="right">
+						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
 				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=($end_date ? $end_date : '07/19/2017');?>" style="min-width:50px;">
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
