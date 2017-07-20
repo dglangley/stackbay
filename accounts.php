@@ -440,7 +440,7 @@
 		';
 
 		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
-		$status  = ($total <= 0 ? 'complete' : 'active');
+		$status  = ($total == 0 ? 'complete' : 'active');
 		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
        	$rows .= '
 				<tr class="'.$status.' '.$filter_comb.'">

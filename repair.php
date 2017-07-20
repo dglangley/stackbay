@@ -197,15 +197,21 @@
 		$purchase_requests = array();
 		$query;
 		
-		$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($ro_number) ." GROUP BY partid;";
+		$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($ro_number) ." GROUP BY partid, po_number;";
 		$result = qdb($query) OR die(qe());
 				
 		while ($row = $result->fetch_assoc()) {
 			$qty = 0;
 
+			$po_number = $row['po_number'];
+
 			//Check to see what has been received and sum it into the total Ordered
-			$query = "SELECT *, SUM(qty) as totalReceived FROM inventory WHERE repair_item_id = ". prep($repair_item_id) ." AND serial_no IS NULL AND partid = ".prep($row['partid']).";";
-			$received = qdb($query) OR die(qe());
+			$query = "SELECT *, SUM(i.qty) as totalReceived FROM inventory i ";
+			if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+			$query .= "WHERE i.repair_item_id = ". prep($repair_item_id) ." AND i.serial_no IS NULL AND i.partid = ".prep($row['partid'])." ";
+			if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+			$query .= "; ";
+			$received = qdb($query) OR die('<BR><BR><BR><BR>'.qe().'<BR>'.$query);
 
 			if (mysqli_num_rows($received)>0) {
 				$receivedr = mysqli_fetch_assoc($received);
@@ -233,11 +239,17 @@
 		return $purchase_requests;
 	}
 
-	function getQuantity($partid) {
+	function getQuantity($partid,$po_number) {
 		$qty = 0;
 		$query;
 		
-		$query = "SELECT SUM(qty) as sum FROM inventory WHERE partid = ". prep($partid) ." AND (status = 'shelved' OR status = 'received') GROUP BY partid;";
+		$query = "SELECT SUM(i.qty) as sum FROM inventory i ";
+		if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+		$query .= "WHERE i.partid = ". prep($partid) ." AND (i.status = 'shelved' OR i.status = 'received') ";
+		if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+		$query .= "GROUP BY i.partid ";
+		if ($po_number) { $query .= ", i.purchase_item_id "; }
+		$query .= "; ";
 		$qty = rsrq($query);
 		return $qty;
 	}
@@ -681,11 +693,6 @@
 													$price = 0;
 
 													if($comp['po_number']) {
-														// $query = "
-														// SELECT po.*, pi.* FROM purchase_orders po, purchase_items pi, inventory i
-														// WHERE po.po_number = ".prep($comp['po_number'])." 
-														// AND i.purchase_item_id = pi.id
-														// AND pi.po_number = po.po_number;";
 														$query = "
 														SELECT price, pi.qty, po.status 
 														FROM purchase_requests pr, purchase_items pi, purchase_orders po
@@ -710,21 +717,24 @@
 										                $ext = ($price * $ordered);
 										                $total += $ext;
 													}
+
+													$avail_qty = getQuantity($comp['partid'],$comp['po_number']);
+													$pulled_qty = getRepairQty($comp['partid'],$comp['po_number']);
 										?>
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=(trim(format($comp['partid'], true)) != '' ? format($comp['partid'], true) : $comp['partid'] );?></td>
 												<td><?=$comp['totalOrdered'];?></td>
-												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
+												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - $pulled_qty > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
 												<!-- <td><?=$ordered;?></td> -->
-												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
-												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
+												<td><?=($avail_qty ? $avail_qty : '0');?></td> 
+												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :($pulled_qty ? $pulled_qty : '0'))?></td>
 												<td><?=format_price($price)?></td>
 												<td><?=format_price($ext)?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-12">
-															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
-																<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
+															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=$pulled_qty?>" <?=($avail_qty > 0 ? '' : 'disabled');?>>
+																<?=($avail_qty > 0 ? 'Pull from Stock' : 'No Stock');?> 	
 													        </button>
 														</div>
 									                </div>

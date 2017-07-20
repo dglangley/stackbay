@@ -373,11 +373,14 @@
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
 		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
-		if ($history_date) { $query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' "; }
-   		if ($startDate) {
-   			$dbStartDate = format_date($startDate, 'Y-m-d');
-   			$dbEndDate = format_date($endDate, 'Y-m-d');
-   			$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
+		if ($history_date) {
+			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
+		} else {
+	   		if ($startDate) {
+   				$dbStartDate = format_date($startDate, 'Y-m-d');
+   				$dbEndDate = format_date($endDate, 'Y-m-d');
+   				$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+			}
 		}
 		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
 		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
@@ -439,7 +442,7 @@
 					$result4 = qdb($query4) OR die("Could not pull commissions for invoice ".$r['invoice_no']." AND inventoryid ".$r3['invid']);
 					// if no results from commissions table, supplement them with reps based on $RATES
 					$num_results = mysqli_num_rows($result4);
-					if ($num_results==0) {
+					if ($num_results==0 AND ! $history_date) {
 						// check now that the items weren't invoiced on another invoice for the same billable order
 						$query4 = "SELECT * FROM commissions c, invoices i ";
 						$query4 .= "WHERE c.inventoryid = '".$r3['invid']."' AND c.invoice_no <> '".$r['invoice_no']."' ";
