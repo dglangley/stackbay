@@ -27,13 +27,13 @@
 	echo $start_date . ' ' . $end_date;
 
 	//Query Sales items that also contains repair items
-	$query = "SELECT r.created, r.rma_number, r.companyid, ri.partid, r.order_number, ri.inventoryid as invid, d.disposition, r.order_type, ri.id as returns_item_id FROM returns r, return_items ri, dispositions d WHERE r.rma_number = ri.rma_number AND ri.dispositionid = d.id ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
+	$query = "SELECT r.created, r.rma_number, r.companyid, ri.partid, r.order_number, ri.inventoryid as invid, d.disposition, r.order_type, ri.id as returns_item_id, ri.reason FROM returns r, return_items ri, dispositions d WHERE r.rma_number = ri.rma_number AND ri.dispositionid = d.id ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
 	$result = qdb($query) OR die(qe());
 
 	function getTracking($order_number) {
 		$tracking_no;
 
-		$query = "SELECT tracking_no FROM packages WHERE order_number = ".(prep($order_number)).";";
+		$query = "SELECT tracking_no FROM packages WHERE order_number = ".(prep($order_number))." AND order_type = 'RMA';";
 		//echo $query;
 		$results = qdb($query);
 
@@ -204,12 +204,13 @@
 						<th class="col-md-1">Customer</th>
 						<th class="col-md-1">RMA#</th>
 						<th class="col-md-1">Customer PO#</th>
-						<th class="col-md-4">Item</th>
+						<th class="col-md-2">Item</th>
 						<th class="col-md-1">Serial</th>
 						<th class="col-md-1">Disposition</th>
 						<th class="col-md-1">Status</th>
 						<th class="col-md-1">Received</th>
 						<th class="col-md-1">Tracking#</th>
+						<th class="col-md-2">Reason</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -242,7 +243,8 @@
 							<td><?=$part['disposition']?></td>
 							<td><?=ucwords(getTicketStatus($part['invid'])); ?></td>
 							<td><?=getReceiveDate($part['invid'],$part['returns_item_id'])?></td>
-							<td style="overflow-x: hidden; max-width: 400px;"><?=getTracking($part['order_number']);?></td>
+							<td style="overflow-x: hidden; max-width: 400px;"><?=getTracking($part['rma_number']);?></td>
+							<td><?=$part['reason'];?></td>
 
 							
 						</tr>
