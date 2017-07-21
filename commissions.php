@@ -377,7 +377,7 @@
 		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
 		if ($history_date) {
 			$query .= ", c.invoice_item_id, c.inventoryid, c.item_id, c.item_id_label, c.datetime, c.cogsid, c.rep_id, ";
-			$query .= "c.commission_rate, c.commission_amount, c.id commissionid, p.amount paid_amount ";
+			$query .= "c.commission_rate, p.amount commission_amount, c.id commissionid, p.amount paid_amount ";
 		}
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
