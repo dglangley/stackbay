@@ -35,6 +35,7 @@
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
+	include_once $rootdir.'/inc/getRepairCode.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = $_REQUEST['on'];
@@ -260,10 +261,7 @@
 		return $qty;
 	}
 
-	function getRepairCode($repair_code){
-		$select = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code).";";
-		return rsrq($select);
-	}
+
 
 	function getRepairQty($partid, $ro_number) {
 		$qty = 0;

@@ -34,6 +34,7 @@
 			$info['event'] = 'purchased';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) > 0 ";
 			$info['inactive'] = " AND (CAST(i.qty AS SIGNED) - CAST(i.qty_received AS SIGNED)) <= 0 ";
 			$info['status_empty'] = "Void";
@@ -87,6 +88,7 @@
 			$info['event'] = 'sold';
 			$info['id'] = "so_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " AND i.ship_date IS NULL ";
 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
 			$info['status_empty'] = "Void";
@@ -142,6 +144,7 @@
 			//$info['event'] = '';
 			$info['id'] = "invoice_no";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " AND i.status = 'Pending' ";
 			$info['inactive'] = " AND i.status = 'Completed' ";
 			$info['status_empty'] = "Void";
@@ -193,6 +196,7 @@
 			//$info['event'] = '';
 			$info['id'] = "po_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " AND i.ship_date IS NULL ";
 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
 			$info['status_empty'] = "Void";
@@ -244,6 +248,7 @@
 			$info['event'] = 'returned';
 			$info['id'] = "rma_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 // 			$info['active'] = " AND i.ship_date IS NULL ";
 // 			$info['inactive'] = " AND i.ship_date IS NOT NULL  ";
 			$info['status_empty'] = "Void";
@@ -282,6 +287,7 @@
 			$info['order'] = "sales_credits";
 			$info['id'] = "id";
 			$info['item_id'] = 'rma';
+			$info['item_order'] = 'line_number';
 			$info['header'] = "Credit Memo ";
 			$info['item'] = "sales_credit_items";
 			$info['client'] = "Customer";
@@ -346,6 +352,7 @@
 			$info['event'] = 'ordered for repair';
 			$info['id'] = "ro_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
@@ -405,6 +412,7 @@
 			//$info['short'] = "ro";
 			$info['id'] = "ro_number";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
@@ -456,6 +464,7 @@
 			$info['event'] = 'ordered for repair';
 			$info['id'] = "bid";
 			$info['item_id'] = $info['id'];
+			$info['item_order'] = 'line_number';
 			$info['active'] = " status = 'Active' ";
 			$info['inactive'] = " status = 'Completed' ";
 			$info['status_empty'] = "Void";
@@ -474,7 +483,7 @@
 			$info[strtolower($info['short'])] = true;
 			
 			
-		} else if (strtolower($type) == "lump" ) {
+		} else if (strtolower($type) == "lump" || strtolower($type) == "lumps"  ) {
 			$info['type'] = "Lump";
 			$info['ptype'] = $info['type'];
 			$info['purchase'] = false;
@@ -485,32 +494,33 @@
 			$info['credit'] = false;
 			$info['repair'] = false;
 			$info['bill'] = false;
-			$info['lump'] = false;
+			$info['lump'] = true;
 			
 			
 
-			$info['order'] = "invoices";
+			$info['order'] = "invoice_lumps";
 			$info['header'] = "Invoice ";
-			$info['item'] = "invoice_items";
+			$info['item'] = "invoice_lump_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
 			$info['contact_col'] = 'Order#';
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";
-			$info['date_label'] = "Invoice";
+			$info['date_label'] = "Create";
 			$info['tables'] = " invoices i, invoice_items ii WHERE i.invoice_no = ii.invoice_no ";
 			$info['short'] = "INV";
 			//$info['event'] = '';
-			$info['id'] = "invoice_no";
-			$info['item_id'] = $info['id'];
+			$info['id'] = "id";
+			$info['item_id'] = "lumpid";
+			$info['item_order'] = 'lumpid';
 			$info['active'] = " AND i.status = 'Pending' ";
 			$info['inactive'] = " AND i.status = 'Completed' ";
 			$info['status_empty'] = "Void";
 			$info['url'] = "shipping";
             $info['color'] = '#94b4b5';
             $info['edit_mode'] = 'display';
-            $info['date_field'] = 'receive_date';
+            $info['date_field'] = 'lumpdate';
             //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = false;

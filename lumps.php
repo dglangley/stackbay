@@ -40,7 +40,7 @@
 			}
 			$lump_created_msg = "Lump #$lump_no Successfully Created!";
 		}
-		echo("<script>console.log(".prep($lump_no,'"Null"').")</script>");
+		// echo("<script>console.log(".prep($lump_no,'"Null"').")</script>");
 		if($companyid){
 			$invoice_select = "
 			SELECT i . * , max(il.id) AS lump, il.date as lumpdate, SUM( ii.amount ) AS total
@@ -55,10 +55,10 @@
 			group by i.invoice_no
 			order by i.invoice_no desc
 			;";
-			echo("<script>console.log(".prep($invoice_select,'"Null"').");</script>");
+			// echo("<script>console.log(".prep($invoice_select,'"Null"').");</script>");
 			$invoices = qdb($invoice_select) or die(qe()." | $invoice_select");
 			foreach($invoices as $invoice){
-				if($invoice['lump']){
+				if($invoice['lump'] && $invoice['lumpdate']){
 					if(!$lump_grouping[$invoice['lump']]){
 						$lump_options .= "<option value='".$invoice['lump']."'";
 						$lump_options .= (($lump_no==$invoice['lump'])?' selected':'').">LUMP #".$invoice['lump']." (".$invoice['lumpdate'].")</option>";

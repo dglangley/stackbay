@@ -1450,8 +1450,10 @@
 							var line_ref_1_label = '';
 							if(order_type == "RTV"){
 								line_ref_1 = $(this).find(".line_ref").text();
+								// if(!line_ref_1){alert("No Line Ref!")}
 								line_ref_1_label = 'purchase_item_id';
 								order_number = 'New';
+								// alert(line_ref_1);
 							}
 							sum_qty += $(this).find(".line_qty").attr("data-qty");
 						var row = {
@@ -3000,6 +3002,11 @@
    		    var lineNumber = sub_row.find("input[name=ni_line]").val();
    		    var warranty = sub_row.find(".warranty").val();
 			var conditionid = sub_row.find(".conditionid").val();
+			var line_ref_1 = 'test';
+			var line_ref_1_label = '';
+				line_ref_1 = sub_row.find(".line_ref_1").val();
+				line_ref_1_label = sub_row.find(".line_ref_1").parent().data('label');
+				alert(line_ref_1);
 //	    	var partid = row.attr("data-line-id");
 
 			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);
@@ -3016,6 +3023,8 @@
 			       	"unitPrice":price,
 					"warranty":warranty,
 					"conditionid":conditionid,
+					"line_ref_1":line_ref_1,
+					"line_ref_1_label":line_ref_1_label,
 			       	"id":line_item_id,
 			       	"type":order_type,
 			       	"mode":mode,
