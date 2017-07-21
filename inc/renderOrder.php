@@ -71,12 +71,115 @@
         }
         
     }
+    function printLumpedInvoices($lumpid){
+            $plumpid = prep($lumpid);
+            $select = "
+            SELECT il.date lumpdate, ili.invoice_no, ii.id invoice_item_id, il.id id, companyid, i.order_type, i.order_number, ii.partid, p.tracking_no, ii.ref_1, ii.ref_1_label, ii.ref_2, ii.ref_2_label, ii.qty, ii.amount, iss.*
+              FROM `invoice_lumps` il,`invoice_lump_items` ili, `invoices` i, `invoice_items` ii, invoice_shipments iss, packages p
+              WHERE il.id = ili.lumpid 
+              AND i.invoice_no = ili.invoice_no 
+              AND i.invoice_no = ii.invoice_no
+              AND p.order_number = i.order_number
+              AND i.order_type = p.order_type
+              AND iss.packageid = p.id
+              AND iss.invoice_item_id = ii.id
+              AND il.id = $plumpid
+              ORDER by ii.id ;";
+            $results = qdb($select) or die(qe()." | $select");
+            // echo("<pre>");
+            // echo($select);
+            $return = array();
+            $return['subtotal'] = 0.00;
+            $main_table_structure = array(
+                "line_no" => array(
+                    "title" => "Line #",
+                    "size" => ""
+                    ),
+                "item" => array(
+                    "title"=> "Item",
+                    "size" => "",
+                    ),
+                "description" => array(
+                    "title"=> "Description",
+                    "size" => "",
+                    ),
+                "qty" => array(
+                    "title"=> "Qty",
+                    "size" => "",
+                    ),
+                "price" => array(
+                    "title"=> "Price",
+                    "size" => "",
+                    ),
+                "ext" => array(
+                    "title"=> "Ext Price",
+                    "size" => "",
+                    ),
+                );
+            $return['main_table_structure'] = $main_table_structure;
+            
+            $already_entered = array();
+            $line_no = 0;
+            foreach($results as $i => $r){
+                //Var Dec
+                $repair_code = '';
+                $order_number = '';
+                $part = array();
+                $row = array();
+                // print_r($r);
+
+                //Get the order level information
+                $o = o_params($r['order_type']);
+                $order_number = $r['order_number'];
+                $macro_select = "
+                SELECT * FROM
+                ".$o['order']." o ,".$o['item']." i, inventory inv
+                WHERE o.".$o['id']." = ".prep($order_number)." 
+                AND o.".$o['id']." = i.".$o['id']." 
+                AND inv.".$o['inv_item_id']." = i.id;";
+                $macro = qdb($macro_select) or die(qe()." | $macro_select");
+                $return['order_info']= mysqli_fetch_assoc($macro);
+                // $part = current(hecidb($r['partid'],'id'));
+                if(!$already_entered[$r['order_type'].$r['order_number']]){
+                    $already_entered[$r['order_type'].$r['order_number']] = true;
+                    // echo($macro_select);
+                    foreach ($macro as $it => $mac) {
+                        //Normally we will only have one record per macro, but eventually RO/SOs will be lumped for multiple items, so foreach should work
+                        $item_status = '';
+                        if($o['repair']){
+                            $item_status = getRepairCode($mac['repair_code_id']);
+                        } else {
+                            $item_status = "Shipped";
+                        }
+                        $row['line_no'] = ++$line_no;
+                        $row['item'] = ucwords($o['type'])." Order # ".$order_number;
+                        $row['description'] = "
+                        P/N: ".getPart($r['partid'])."<br>
+                        S/N: ".$mac['serial_no']."<br>
+                        Tracking #: ".$r['tracking_no']."<br>
+                        Item Status: $item_status<br>
+                        ".($r['ref_1_label']? $r['ref_1_label'].": ".$r['ref_1'] : "")."<br>
+                        ".($r['ref_2_label']? $r['ref_2_label'].": ".$r['ref_2'] : "");
+                        $row['qty'] = $r['qty'];
+                        $row['price'] = format_price($r['amount']);
+                        $row['ext'] = $r['qty'] * $r['amount'];
+                        $return['main_table_rows'][] = $row;
+                        $return['subtotal'] += $row['ext'];
+                        // print_r($row);
+                    }
+                    $return['subtotal'] = format_price($return['subtotal']);
+                }
+            }
+            // echo("</pre>");
+            return $return;
+        }
     // Grab the order number
 //    $order_number = grab('on');
 //	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 
 	function renderOrder($order_number,$order_type='Purchase') {
 	    $o = array();
+	    $oi = array();
 	    //Switch statement to add in more features for now until we have a solid naming convention
 
         $o = o_params($order_type);
@@ -89,17 +192,23 @@
         $serials = array();
         if ($o['invoice']){
             $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
-        }
+        } 
+        
         
 		$orig_order = $order_number;
-		$order = "SELECT * FROM `".$o['order']."` WHERE `".$o['id']."` = $order_number;";
-		$order_result = qdb($order) or die(qe()." | $order");
+		if(!$o['lump']){
+    		$order = "SELECT * FROM `".$o['order']."` WHERE `".$o['id']."` = $order_number;";
+    		$order_result = qdb($order) or die(qe()." | $order");
+    		if (mysqli_num_rows($order_result) == 0) {
+    			die("Could not pull record");
+    		}
+    		$oi = mysqli_fetch_assoc($order_result);
+		} else { 
+		    $lumps = printLumpedInvoices($order_number);
+		    $oi = $lumps['order_info'];
+		}
 // 		echo $order;exit;
 
-		if (mysqli_num_rows($order_result) == 0) {
-			die("Could not pull record");
-		}
-		$oi = mysqli_fetch_assoc($order_result);
 
 		// is order a sale or repair?
 		if ($o["invoice"] OR $o["credit"]) {
@@ -133,8 +242,8 @@
 		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
 		$freight_terms = ($oi["freight_account_id"])?getFreight('account','',$oi['freight_account_id'],'account_no') : 'Prepaid';
 
-		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(line_number IS NOT NULL,0,1), line_number ASC;";
-		if($o['type'] == "Credit" && is_numeric($order_number)){
+		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
+		if($o['credit'] && is_numeric($order_number)){
 		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
 		    FROM inventory_history ih, inventory i, '.$o['tables'].' 
 		    AND sc.`'.$o['id'].'` = '.$order_number.' 
@@ -152,7 +261,8 @@
         //Process Item results of the credit to associate the serials into a nested array
 		$item_rows = '';
         $i = 0;
-		foreach($items_results as $item){
+        if(!$o['lump']){
+		    foreach($items_results as $item){
 		    if($o['type'] == "Credit"){
                 $serials = explode(",",$item['serials']); 
             }
@@ -222,7 +332,7 @@
 				</tr>
 			';
 		}
-
+        }
 		$html_page_str = '
 <!DOCTYPE html>
 <html>
@@ -379,7 +489,7 @@ $html_page_str .='
 if(!$o['credit']){
 $html_page_str .='
                 <th class="'.($o['rma'] ? 'hidden' : '').'">Bill To</th>
-                <th>'.($o['rma'] ? 'Return' : 'Ship').' To</th>';
+                <th class="'.($o['lump'] ? 'remove' : '').'">'.($o['rma'] ? 'Return' : 'Ship').' To</th>';
 } else {
     $html_page_str .= '
     <th>Customer</th>
@@ -396,7 +506,7 @@ $html_page_str .='
             <tr>
                 <td class="half '.($o['rma'] ? 'hidden' : '').'">';
 
-if(!$o['invoice'] && !$o['credit']){
+if(!$o['invoice'] && !$o['credit'] && !$o['lump']){
 $html_page_str .='
                     Please email invoices to:<br/>
 					<a href="mailto:accounting@ven-tel.com">accounting@ven-tel.com</a>
@@ -408,7 +518,7 @@ $html_page_str .='
 
 $html_page_str.='</td>';
 
-if(!$o['credit']){
+if(!$o['credit'] && !$o['lump']){
 $html_page_str .= '
                 <td class="half">
                     '.($o['rma'] ? 'Ventura Telephone, LLC <br>
@@ -417,7 +527,7 @@ $html_page_str .= '
                         Ventura, CA 93003' : address_out($oi['ship_to_id'])).'
                 </td>';
 }
-else{
+else if (!$o['lump']){
     $html_page_str .='
     <td class="text-center">'.format_date($oi['date_created'],"M j, Y").'</td>
     <td class="text-center">'.$oi['cust_ref'].'</td>';
@@ -454,8 +564,8 @@ $html_page_str .='
                 '.(($o['invoice'])? "<th>Payment Due</th>" : '').'
                 <th>'.$oi['order_type'].'</th>
                 <th class="'.($o['rma'] ? 'remove' : '').'">Terms</th>
-                <th class="'.($o['rma'] ? 'remove' : '').'">Shipping</th>
-                <th class="'.($o['rma']  ? 'remove' : '').'">Freight Terms</th>
+                <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Shipping</th>
+                <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Freight Terms</th>
                 '.(($o['invoice'])? "<th>PO # </th>" : '').'
                 '.(($o['rma'])? "<th>PO # </th>" : '').'
             </tr>
@@ -498,7 +608,7 @@ $html_page_str .='
 
 	$subtotal = round($subtotal,2);
 	$total = round($subtotal+$freight,2);
-
+if(!$o['lump']){
 	$html_page_str .= '
 <!-- Items Table -->
         <table class="table-full table-striped table-condensed">
@@ -546,8 +656,30 @@ $html_page_str .='
             </tr>
         </table>
 	';
+} else {
+    $main = "<table class ='table-full'>";
+    $main .="<thead>";
+    foreach($lumps['main_table_structure'] as $type => $info){
+        $main .="<th class='".$info['size']."'>".$info['title']."</th>";
+    }
+    $main .= "</thead>";
+    $main .= "<tbody>";
+    foreach($lumps['main_table_rows'] as $i => $info){
+        $main .= "<tr>";
+        foreach($info as $ordered){
+            $main .= "<td>$ordered</td>";
+        }
+        $main .= "</tr>";
+    }
+    $main .= "</tbody>";
+    $main .= "<tfoot>";
+    $main .= "<tr colspan=''></tr>";
+    $main .= "</tfoot>";
+    $main .= "</table>";
+    $html_page_str .= $main;
+}
 	$package_list = getPackageTracking($order_number);
-	if($o['type'] == 'Invoice'){
+	if($o['invoice']){
 		$html_page_str .= '
 				<table class="table-full table-striped table-condensed">
                     <tr>
@@ -564,7 +696,7 @@ $html_page_str .='
                 Terms and Conditions:<br><br>
 		';
 
-		if ($o['type']=='Invoice') {
+		if ($o['invoice']) {
 			$html_page_str .= '
 Ventura Telephone LLC ("VenTel") provides a limited warranty ("Warranty") against defects, as related to the functionality of the item, that occur within the established term of the Warranty, as described in the aforementioned Warranty options (Premium, Plus or Economy). The term of the Warranty begins on the date as printed on VenTel\'s invoice(s).
 

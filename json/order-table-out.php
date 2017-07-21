@@ -134,6 +134,7 @@
 		$row_out .="<td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm oto_price' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
 		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
+		            <td style='display: none;' data-label='".$row['ref_1_label']."'><input class='form-control input-sm line_ref_1' readonly='readonly' type='text' name='' placeholder='0.00' value ='".$row['ref_1']."'></td>
 					<td colspan='2' id = 'check_collumn'>
 						<div class='btn-group'>
 							<a class='btn-flat danger pull-right line_item_unsubmit' style='padding: 3px;margin-left:2px;'>
@@ -163,7 +164,8 @@
 		$warranty = grab('warranty','NULL');
 		$conditionid = grab('conditionid');
 		$available = grab('available');
-
+		$ref_1 = grab("line_ref_1");
+		$ref_1_label = grab("line_ref_1_label");
 		//Store all caught data into the standard array and build the row.
 		$row = array(
 			'id' => $id,
@@ -176,6 +178,8 @@
 			'warranty' => $warranty,
 			'conditionid' => $conditionid,
 			'available' => $available,
+			'ref_1' => $ref_1,
+			'ref_1_label' => $ref_1_label
 			);
 		$row_out = build_row($row);
 		
