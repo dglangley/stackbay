@@ -197,10 +197,10 @@
 
 		'mobile' =>
 			array(
-				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
-				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7)),
-				array('action'=>'/operations.php','image'=>'<i class="fa fa-truck"></i>','title'=>'Operations',),
-				array('action'=>'/inventory.php','image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
+				array('action'=>'/profile.php','aliases'=>array(),'image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
+				array('action'=>'/services.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7)),
+				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations',),
+				array('action'=>'/inventory.php','aliases'=>array(),'image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
 				array(
 					'action'=>'/',
 					'image'=>'<i class="fa fa-cubes"></i>',
@@ -220,8 +220,7 @@
 	);
 
 	function displayTabs($pos='',$selected_tab='', $mobile = false) {
-		global $TABS;
-		global $USER_ROLES;
+		global $TABS, $USER_ROLES;
 
 		$tabs_arr = array();
 		// if a position ($pos) is passed in, process only that portion; otherwise, get all from array
@@ -248,7 +247,7 @@
 				$privilege = true;
 			}
 			
-			// if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
+			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
 
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
