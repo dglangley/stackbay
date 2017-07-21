@@ -93,30 +93,36 @@
             $main_table_structure = array(
                 "line_no" => array(
                     "title" => "Line #",
-                    "size" => ""
+                    "size" => "",
+                    "it_style" => "",
                     ),
                 "item" => array(
                     "title"=> "Item",
                     "size" => "",
+                    "it_style" => "",
                     ),
                 "description" => array(
                     "title"=> "Description",
                     "size" => "",
+                    "it_style" => "text-align:left;",
                     ),
                 "qty" => array(
                     "title"=> "Qty",
                     "size" => "",
+                    "it_style" => "",
                     ),
                 "price" => array(
                     "title"=> "Price",
                     "size" => "",
+                    "it_style" => "text-align:right;",
                     ),
                 "ext" => array(
                     "title"=> "Ext Price",
                     "size" => "",
+                    "it_style" => "text-align:right;",
                     ),
                 );
-            $return['main_table_structure'] = $main_table_structure;
+            $return['mts'] = $main_table_structure;
             
             $already_entered = array();
             $line_no = 0;
@@ -132,7 +138,7 @@
                 $o = o_params($r['order_type']);
                 $order_number = $r['order_number'];
                 $macro_select = "
-                SELECT * FROM
+                SELECT *, '".$r['lumpdate']."' as lumpdate FROM
                 ".$o['order']." o ,".$o['item']." i, inventory inv
                 WHERE o.".$o['id']." = ".prep($order_number)." 
                 AND o.".$o['id']." = i.".$o['id']." 
@@ -162,7 +168,7 @@
                         ".($r['ref_2_label']? $r['ref_2_label'].": ".$r['ref_2'] : "");
                         $row['qty'] = $r['qty'];
                         $row['price'] = format_price($r['amount']);
-                        $row['ext'] = $r['qty'] * $r['amount'];
+                        $row['ext'] = format_price($r['qty'] * $r['amount']);
                         $return['main_table_rows'][] = $row;
                         $return['subtotal'] += $row['ext'];
                         // print_r($row);
@@ -206,6 +212,7 @@
 		} else { 
 		    $lumps = printLumpedInvoices($order_number);
 		    $oi = $lumps['order_info'];
+
 		}
 // 		echo $order;exit;
 
@@ -545,6 +552,7 @@ $contact_email = getContact($oi['contactid'],'id','email');
 
 $order_date = $oi['created'];
 if ($o['invoice']) { $order_date = $oi['date_invoiced']; }
+if($o['lump']){ $order_date = $oi['lumpdate']; }
 
 //Shipping information table
 if(!$o['credit']){
@@ -555,12 +563,11 @@ $html_page_str .='
                 <th>'.$o['rep_type'].' Rep</th>
                 <th>'.$o['date_label'].' Date</th>
                 '.(($o['invoice'])? "<th>Payment Due</th>" : '').'
-                <th>'.$oi['order_type'].'</th>
+                <th>'.($o['lump'] ? "Contact" : $oi['order_type']).'</th>
                 <th class="'.($o['rma'] ? 'remove' : '').'">Terms</th>
                 <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Shipping</th>
                 <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Freight Terms</th>
-                '.(($o['invoice'])? "<th>PO # </th>" : '').'
-                '.(($o['rma'])? "<th>PO # </th>" : '').'
+                '.(($o['invoice']|| $o['rma'])? "<th>PO # </th>" : '').'
             </tr>
             <tr>
                 <td>
@@ -590,9 +597,9 @@ $html_page_str .= '<td class="text-center '.($o['rma'] ? 'remove' : '').'">
                     '.display_terms($oi['termsid']).'
                 </td>';
 $html_page_str .='
-                <td class="text-center '.(($o['rma']) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
+                <td class="text-center '.(($o['rma'] || $o['lump']) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
 					'.$freight_services.'</td>
-                <td class="'.(($o['rma']) ? 'remove' : '').'">'.$freight_terms.'</td>
+                <td class="'.(($o['rma'] || $o['lump']) ? 'remove' : '').'">'.$freight_terms.'</td>
                 '.(($o['invoice'])? "<td>".$oi['cust_ref']."</td>" : '').'
             </tr>
         </table>';
@@ -650,23 +657,28 @@ if(!$o['lump']){
         </table>
 	';
 } else {
+    $cols = 0;
     $main = "<table class ='table-full'>";
     $main .="<thead>";
-    foreach($lumps['main_table_structure'] as $type => $info){
+    foreach($lumps['mts'] as $type => $info){
         $main .="<th class='".$info['size']."'>".$info['title']."</th>";
+        $cols++;
     }
     $main .= "</thead>";
     $main .= "<tbody>";
     foreach($lumps['main_table_rows'] as $i => $info){
         $main .= "<tr>";
-        foreach($info as $ordered){
-            $main .= "<td>$ordered</td>";
+        foreach($info as $type => $ordered){
+            $main .= "<td style='".$lumps['mts'][$type]['it_style']."'>$ordered</td>";
         }
         $main .= "</tr>";
     }
     $main .= "</tbody>";
     $main .= "<tfoot>";
-    $main .= "<tr colspan=''></tr>";
+    $main .= "<tr>
+                <td colspan='".($cols-1)."' style='text-align:right;'>Subtotal:</td>
+                <td>".$lumps['subtotal']."</td>
+            </tr>";
     $main .= "</tfoot>";
     $main .= "</table>";
     $html_page_str .= $main;

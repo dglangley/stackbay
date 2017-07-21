@@ -499,7 +499,7 @@
 			
 
 			$info['order'] = "invoice_lumps";
-			$info['header'] = "Invoice-L ";
+			$info['header'] = "Invoice ";
 			$info['item'] = "invoice_lump_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
@@ -507,7 +507,7 @@
 			$info['price'] = 'Price';
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";
-			$info['date_label'] = "Invoice";
+			$info['date_label'] = "Create";
 			$info['tables'] = " invoices i, invoice_items ii WHERE i.invoice_no = ii.invoice_no ";
 			$info['short'] = "INV";
 			//$info['event'] = '';
@@ -520,7 +520,7 @@
 			$info['url'] = "shipping";
             $info['color'] = '#94b4b5';
             $info['edit_mode'] = 'display';
-            $info['date_field'] = 'receive_date';
+            $info['date_field'] = 'lumpdate';
             //$info['create_date'] = "created";
             //Field header information
             $info['due_date'] = false;
