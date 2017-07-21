@@ -10,6 +10,10 @@
 	
 	//$search = trim($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 
+	if(!in_array("5", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
+	 	header('Location: /operations.php');
+	}
+
 	//Query items from parts table
 	$itemList = array();
 
@@ -97,7 +101,8 @@
 				<thead>
 					<tr>
 						<th class="col-md-1"></th>
-						<th class="col-md-4">Component</th>
+						<th class="col-md-1">Repair#</th>
+						<th class="col-md-3">Component</th>
 						<th class="col-md-1">QTY</th>
 						<th class="col-md-2">Order#</th>
 						<th class="col-md-2">Tech</th>
@@ -112,6 +117,7 @@
 					?>
 						<tr>
 							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
+							<td><?=$part['ro_number'];?> <a href="/order_form.php?ps=ro&on=<?=$part['ro_number'];?>"><i class="fa fa-arrow-right"></i></a></td>
 							<td><?=(display_part($part['partid'], true) ? display_part($part['partid'], true) : $part['part']); ?></td>
 							<td><?=$part['qty'];?></td>
 							<td><?=$part['po_number'];?> 
