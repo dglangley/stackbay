@@ -177,7 +177,7 @@
 //    $order_number = grab('on');
 //	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 
-	function renderOrder($order_number,$order_type='Purchase') {
+	function renderOrder($order_number,$order_type='Purchase', $email = false) {
 	    $o = array();
 	    $oi = array();
 	    //Switch statement to add in more features for now until we have a solid naming convention
@@ -429,14 +429,7 @@
 				margin-bottom:40px;
                 font-size:9pt;
             }
-            #footer{
-                display:none;
-                display:block;
-                position:absolute;
-                bottom:-10px;
-                text-align:left;
-                width:100%;
-            }
+            
             #vendor_add{
                 font-size:11px;
 				text-align:left;
@@ -454,7 +447,7 @@
 
 $html_page_str .='
         <div id = "ps_bold">
-            <h3>'.$o['header'].' #'.$order_number.'</h3>
+            <h3>'.($email ? 'PO# ' . $order_number . ' Received' : $o['header'].' #'.$order_number).'</h3>
             <table class="table-full" id = "vendor_add" '.($o['credit']? "style='display:none;'": "").'>
 				<tr>
 					<th class="text-center">'.$o['client'].'</th>
@@ -690,13 +683,13 @@ if(!$o['lump']){
                 </table>
 		';
 	}
-
+    if(!$email) {
         $html_page_str .=' <div id="footer">
             <p class="'.(!$o['rma'] && !$o['credit'] ? '' : 'remove').'">
                 Terms and Conditions:<br><br>
 		';
-
-		if ($o['invoice']) {
+    }
+        if ($o['invoice']) {
 			$html_page_str .= '
 Ventura Telephone LLC ("VenTel") provides a limited warranty ("Warranty") against defects, as related to the functionality of the item, that occur within the established term of the Warranty, as described in the aforementioned Warranty options (Premium, Plus or Economy). The term of the Warranty begins on the date as printed on VenTel\'s invoice(s).
 
@@ -705,7 +698,7 @@ The Warranty also covers physical damage, only if discovered and reported to Ven
 Software licensing or similar compatibility problems (ie, software/firmware version mismatch) are not covered under this Warranty. Products covered under the Warranty can be replaced, credited or refunded at VenTel\'s sole discretion. RMA or order cancellation requests not covered under the Warranty can, and will be, declined at VenTel\'s sole discretion, and such items remain billable in full (or subject to a Restocking Fee at VenTel\'s sole discretion). VenTel reserves the right to require documentation of equipment defect to determine Warranty eligibility.
 </p>
 			';
-		} else {
+		} else if(!$email) {
 			$html_page_str .= '
                 Acceptance: Accept this order only in accordance with the prices, terms, delivery method and specifications
                 listed herein. Shipment of goods or execution of services against this PO specifies agreement with our
