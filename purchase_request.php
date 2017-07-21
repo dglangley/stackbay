@@ -14,7 +14,7 @@
 	$itemList = array();
 
 	//if(!$search) {
-		$query = "SELECT * FROM purchase_requests ORDER BY requested DESC LIMIT 100;";
+		$query = "SELECT pr.*, p.part FROM purchase_requests pr, parts p WHERE p.id = pr.partid ORDER BY requested DESC LIMIT 100;";
 		$result = qdb($query) OR die(qe());
 			
 		while ($row = $result->fetch_assoc()) {
@@ -112,15 +112,13 @@
 					?>
 						<tr>
 							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
-							<td><?=(display_part($part['id'], true) ? display_part($part['id'], true) : $part['part']); ?></td>
+							<td><?=(display_part($part['partid'], true) ? display_part($part['partid'], true) : $part['part']); ?></td>
 							<td><?=$part['qty'];?></td>
 							<td><?=$part['po_number'];?> 
 								<?php if($part['po_number']) { ?> <a href="/order_form.php?on=<?=$part['po_number'];?>&amp;ps=p"><i class="fa fa-arrow-right"></i></a><?php } ?> </td>
 							<td><?=getUser($part['techid']);?></td>
 							<td>
-								<?php if($part['po_number']) { ?>
-
-								<? } else { ?>
+								<?php if(!$part['po_number']) { ?>
 									<a href="/order_form.php?ps=Purchase&s=<?=$part['partid'];?>&repair=<?=getRepairItemId($part['ro_number'], $part['partid']);?>">
 										<i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i>
 									</a>
@@ -128,14 +126,6 @@
 							</td>
 						</tr>
 					<?php endforeach; ?>
-
-					<?php if (count($itemList)==0) { ?>
-						<!-- <tr>
-							<td colspan="5" class="text-center">
-								- There are no results to your search "<?=$search;?>". Consider creating the part at the top right of this view. -
-							</td>
-						</tr> -->
-					<?php } ?>
 				</tbody>
 	        </table>
 		</div>
