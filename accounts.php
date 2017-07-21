@@ -307,13 +307,13 @@
 	//Write the query for the gathering of data
 	$record_start = $startDate;
 	$record_end = $endDate;
-	$result = getRecords($part_string,'','',$orders_table);
+	$results = getRecords($part_string,'','',$orders_table);
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 	
-    foreach ($result as $row){
+    foreach ($results as $row){
 
 		$id = $row['order_num'];
 		$freight = 0;
@@ -356,6 +356,13 @@
 				$item_id = $query_row['id'];
 				$qty_shipped = $query_row['qty_shipped'];
 			}
+
+			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r2 = mysqli_fetch_assoc($result);
+				$total_sub += $r2['qty']*$r2['price'];
+			}
 		} else {
 			$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -363,6 +370,13 @@
 				$query_row = mysqli_fetch_assoc($result);
 				$item_id = $query_row['id'];
 				$qty_shipped = $query_row['qty_received'];
+			}
+
+			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r2 = mysqli_fetch_assoc($result);
+				$total_sub += $r2['qty']*$r2['price'];
 			}
 		}
 
