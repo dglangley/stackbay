@@ -206,11 +206,11 @@
 						<th class="col-md-1">Customer PO#</th>
 						<th class="col-md-2">Item</th>
 						<th class="col-md-1">Serial</th>
+						<th class="col-md-2">Reason</th>
 						<th class="col-md-1">Disposition</th>
 						<th class="col-md-1">Status</th>
 						<th class="col-md-1">Received</th>
 						<th class="col-md-1">Tracking#</th>
-						<th class="col-md-2">Reason</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -240,11 +240,11 @@
 							</td>
 							<td><?=display_part($part['partid'], true); ?></td>
 							<td><?=getInventorySerial($part['invid']); ?></td>
+							<td><?=$part['reason'];?></td>
 							<td><?=$part['disposition']?></td>
 							<td><?=ucwords(getTicketStatus($part['invid'])); ?></td>
 							<td><?=getReceiveDate($part['invid'],$part['returns_item_id'])?></td>
 							<td style="overflow-x: hidden; max-width: 400px;"><?=getTracking($part['rma_number']);?></td>
-							<td><?=$part['reason'];?></td>
 
 							
 						</tr>

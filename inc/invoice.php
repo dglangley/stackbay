@@ -71,7 +71,8 @@
 		//Type field accepts ['Sale','Repair' ]
 		
 		if (mysqli_num_rows($results) == 0){
-			$return['error'] = "Nothing found in invoice_item_select: ".$invoice_item_select;
+//commented 7-21-17 by dl; we don't need to tell the user when they're shipping a non-invoiceable order
+//			$return['error'] = "Nothing found in invoice_item_select: ".$invoice_item_select;
 			return $return;
 		}
 		$sales_charge_holder = array();

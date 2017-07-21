@@ -369,13 +369,26 @@
         $credit = 0;
         $credit_total = 0;
         if($item_id) {
-			$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$query_row = mysqli_fetch_assoc($result);
-				$credit = $query_row['amount'];
-				$credit_total = $query_row['total'];
-			}
+			if ($orders_table=='sales') {
+				$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				if (mysqli_num_rows($result)>0) {
+					$query_row = mysqli_fetch_assoc($result);
+					$credit = $query_row['amount'];
+					$credit_total = $query_row['total'];
+				}
+			} else if($orders_table == 'purchases') {
+                // david's purchase credits hack for now; updated 7-21-17 now that we have purchase_credits, we need to adopt above method (under 'sales')
+				// but we first need to implement a mechanism that generates credits from the RTV process...
+                $query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s ";
+				$query .= "WHERE po_number = ".prep($id)." AND s.ref_1 = p.id AND s.ref_1_label = 'purchase_item_id'; ";
+                $result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $r = mysqli_fetch_assoc($result);
+                    $credit = $r['price'];
+                    $credit_total = $r['total'];
+                }
+            }
         } 
 
         if($row['qty'] > $qty_shipped) {
