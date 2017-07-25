@@ -78,9 +78,21 @@
 			$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['repair_item_id']."'; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
-				$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
-				$cost += $repair_cost;
-				setCostsLog($inventoryid,$r['repair_item_id'],'repair_item_id',$repair_cost);
+				$r2 = mysqli_fetch_assoc($result2);
+
+				$query3 = "SELECT b.price, b.id FROM builds b WHERE b.ro_number = ".$r2['ro_number'].";";
+				$result3 = qdb($query3) or die(qe()." | $query3");
+
+				if(mysqli_num_rows($result3)){
+					$r3 = mysqli_fetch_assoc($result3);
+					//$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
+					$cost += $r3['price'];
+					setCostsLog($inventoryid,$r3['id'],'buildid',$r3['price']);
+				} else {
+					$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
+					$cost += $repair_cost;
+					setCostsLog($inventoryid,$r['repair_item_id'],'repair_item_id',$repair_cost);
+				}
 			}
 		}
 

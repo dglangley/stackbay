@@ -16,15 +16,16 @@
 			$pieces = 0;
 			$average_cost = 0;
 			$query = "SELECT qty, serial_no FROM inventory ";
-			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0; ";
+			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0 AND qty > 0; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['qty']>0) { $pieces = $r['qty']; }
-				else if ($r['serial_no']) { $pieces = $r['serial_no']; }
+				if ($r['qty']>0) { $pieces += $r['qty']; }
+				else if ($r['serial_no']) { $pieces++; }
 			}
-			if ($pieces>0) {
-				$ext_avg = $existing_avg*$pieces;
-				$average_cost = ($ext_avg+$diff)/$pieces;
+
+			if ($pieces > 0) {
+				$ext_avg = $existing_avg * $pieces;
+				$average_cost = ($ext_avg+($diff - $existing_avg)) / $pieces;
 			}
 		}
 

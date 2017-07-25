@@ -69,7 +69,6 @@
 		} 
 	}
 	
-	$repair_order;
 	$notes;
 	$sales_rep_id;
 	$status;
@@ -350,11 +349,21 @@
 			} else {
 				if(!empty($serial)) {
 					$init = true;
+
+					$build_price = 0;
+
+					$query = "SELECT price FROM builds WHERE ro_number = ".prep($order_number).";";
+					$result = qdb($query) or die(qe()." | $query");
+					if(mysqli_num_rows($result)){
+						$result = mysqli_fetch_assoc($result);
+						$build_price = $result['price'];
+					}
+					
 					foreach ($serial as $build_item) {
 						$item_row .= '
 						<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 							<td>'.($init ? format($item['partid'], true) : '').'</td>
-							<td>'.($init ? format_price($item['price']) : '').'</td>
+							<td>'.($init ? format_price($build_price) : '').'</td>
 							<td>'.$build_item['serial_no'].'</td>
 							'.($init ? '<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">' : '') . '
 							<td>

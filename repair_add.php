@@ -32,6 +32,7 @@
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getRepairCode.php';
+	include_once $rootdir.'/inc/setCostsLog.php';
 
 
 	//Set initials to be used throughout the page
@@ -152,49 +153,77 @@
 	}
 
 	function process_repair_to_db(){
+		global $build;
+		global $order_number;
+		global $now;
 			
-			$place = grab("place");
-			$instance = grab("instance");
-			$condition = prep(grab("condition"));
-			$serial = grab("serial_number");
-			$rlineid = grab("line_id");
-			if(!$rlineid){
-				return("No Line!!");
+		$place = grab("place");
+		$instance = grab("instance");
+		$condition = prep(grab("condition"));
+		$serial = grab("serial_number");
+		$rlineid = grab("line_id");
+		if(!$rlineid){
+			return("No Line!!");
+		} else {
+			$rlineid = prep($rlineid);
+		}
+		if($serial){
+			$serial = prep(strtoupper($serial));
+			$line_item_sel = "SELECT * FROM repair_items where id = $rlineid;";
+			$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
+			$row = mysqli_fetch_assoc($result);
+			$partid = prep($row['partid']);
+			if($place){
+				$location_id = prep(dropdown_processor($place, $instance));
 			} else {
-				$rlineid = prep($rlineid);
+				return("NO LOCATION SELECTED ");
 			}
-			if($serial){
-				$serial = prep(strtoupper($serial));
-				$line_item_sel = "SELECT * FROM repair_items where id = $rlineid;";
-				$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
-				$row = mysqli_fetch_assoc($result);
-				$partid = prep($row['partid']);
-				if($place){
-					$location_id = prep(dropdown_processor($place, $instance));
-				} else {
-					return("NO LOCATION SELECTED ");
-				}
+			
+			$quick_check = "SELECT * FROM inventory where `serial_no` like $serial AND repair_item_id = $rlineid;";
+			$res = qdb($quick_check) or die(qe()." $quick_check");
+			if(!mysqli_num_rows($res)){
+				$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
+				`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
+				VALUES ($serial,1,$partid,$condition,'".($_REQUEST['build'] ? 'shelved' : 'in repair')."',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
 				
-				$quick_check = "SELECT * FROM inventory where `serial_no` like $serial AND repair_item_id = $rlineid;";
-				$res = qdb($quick_check) or die(qe()." $quick_check");
-				if(!mysqli_num_rows($res)){
-					$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
-					`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
-					VALUES ($serial,1,$partid,$condition,'".($_REQUEST['build'] ? 'shelved' : 'in repair')."',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
-					
-					qdb($insert) or die(qe()." $insert");
-				} else {
-					return"ALREADY SCANNED THIS PART FOR THIS RECORD";
+				qdb($insert) or die(qe()." $insert");
+
+				$invid = qid();
+
+				//If this is a build then insert into inventory cost log and inventory cost
+				if($build) {
+					setCost($invid);
+
+					$query = "SELECT price FROM builds WHERE ro_number = ".prep($order_number).";";
+					$result = qdb($query) or die(qe()." | $query");
+
+					if(mysqli_num_rows($result)){
+						$result = mysqli_fetch_assoc($result);
+						$build_price = $result['price'];
+					}
+
+					// $insert = "INSERT INTO inventory_costs (inventoryid, datetime, actual) VALUES (".prep($invid).", ".prep($now).", ".prep($build_price).");";
+					// qdb($insert) or die(qe()." $insert");
+
+					// setCostsLog($invid,$build,'build_id',$build_price);
+
+					// $insert = "INSERT INTO inventory_costs_log (inventoryid, eventid, event_type, amount, datetime) VALUES (".prep($invid).", ".prep($build).", 'build_id', ".prep($build_price).", ".prep($now).");";
+					// qdb($insert) or die(qe()." $insert");
 				}
+			} else {
+				return"ALREADY SCANNED THIS PART FOR THIS RECORD";
 			}
-			if(isset($_REQUEST['notes'])){
-				foreach($_REQUEST['notes'] as $invid => $note){
-					$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
-					qdb($update) or die(qe()." $update");
-				}
+		}
+		if(isset($_REQUEST['notes'])){
+			foreach($_REQUEST['notes'] as $invid => $note){
+				$update = "UPDATE inventory SET `notes` = ".prep($note)." WHERE id = $invid;";
+				qdb($update) or die(qe()." $update");
 			}
+		}
+
 		return($rlineid);
 	}
+
 	if ($_REQUEST["form_submitted"]){
 		$result = process_repair_to_db();
 	}

@@ -52,6 +52,9 @@
 
 				$costOfTotalRepair = calcRepairCost($ro_number);
 				$costPerItem = ($costOfTotalRepair / $qty);
+
+				$query = "UPDATE builds SET price = ".prep($costPerItem)." WHERE id = ".prep($_REQUEST['build']).";";
+				qdb($query);
 			}
 		}
 		
@@ -174,7 +177,7 @@
 					$repair_text = $results['description'];
 				}
 
-				$notes = "Repair Ticket Completed. Final Status: <b>" . $repair_text . "</b>";
+				$notes = ($_REQUEST['build'] ? 'Build' : 'Repair Ticket')." Completed. Final Status: <b>" . $repair_text . "</b>";
 				$trigger = "complete";
 			} else if ($_REQUEST['type'] == 'test_in') {
 				$notes = "Marked as `In Testing`";
