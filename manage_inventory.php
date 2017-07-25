@@ -77,7 +77,9 @@
 <!---------------------------------------------------------------------------->
 	<table class="table table-header table-filter">
 		<tr>
-			<td class="col-md-4"></td>
+			<td class="col-md-4">
+		    	<button class="btn btn-danger btn-sm btn-export" type="button"><i class="fa fa-share-square-o"></i> Export Inventory</button>
+			</td>
 			<!-- <td class = "col-md-3"></td> -->
 
 			<!-- TITLE -->
@@ -135,13 +137,36 @@
     </div>
 </form>
 	
-
-
-
-
-
 <?php include_once 'inc/footer.php'; ?>
 
+    <script type="text/javascript">
+		$(document).ready(function() {
+			$(".btn-export").on("click",function() {
+				var modal_msg = "This is one of those Don't-Take-It-Lightly things that you only do if you know what you're doing.<br/></br/>Like walking down a dark alley by yourself at night, singing 'I got money in my pocket, money in my pocket...'";
+				modalAlertShow('An important warning...',modal_msg,true,'exportInventory');
+			});
+		});
+		function exportInventory() {
+        	console.log(window.location.origin+"/json/inventory-export.php");
+	        $.ajax({
+				url: 'json/inventory-export.php',
+				type: 'get',
+				data: {},
+				dataType: 'json',
+				cache: false,
+				success: function(json, status) {
+					if (json.message) {
+						alert(json.message);
+					} else if (json.error) {
+						alert(json.error);
+					}
+				},
+				error: function(xhr, desc, err) {
+//					console.log(xhr);
+				},
+			});
+		}
+	</script>
 
 </body>
 </html>

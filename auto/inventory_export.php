@@ -1,6 +1,5 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getManf.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSys.php';
@@ -8,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_stristr.php';
 
+	if (! isset($debug)) { $debug = 1; }
 	// build BB, PS, TE and other inventories; see /var/www/venteldb/inventory/util.py and search for "BrokerBin", etc
 
 	// BrokerBin
@@ -83,7 +83,7 @@
 		if ($qty<=0) { continue; }
 
 		$url = '//ven-tel.com';
-		$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($part).'.jpg width=34>';
+		$img = '<img src='.$url.'/img/parts/'.strtoupper($part).'.jpg width=34>';
 		$exts = array('/products/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$manf)));
 		if ($system) {
 			$exts[] = '/'.strtolower(preg_replace('/[^[:alnum:]]+/','-',$system));
@@ -116,8 +116,7 @@
 		}
 
 		foreach ($aliases as $alias) {
-			$url = '//ven-tel.com';
-			$img = '<img src=//ven-tel.com/img/parts/'.strtoupper($alias).'.jpg width=34>';
+			$img = '<img src='.$url.'/img/parts/'.strtoupper($alias).'.jpg width=34>';
 			// replace part# with this alias
 			if ($system AND isset($exts[2])) { $exts[2] = '/'.strtolower($alias); }
 			foreach ($exts as $ext) {
@@ -133,8 +132,10 @@
 		}
 	}
 
-	echo 'Exporting '.count($results).' part(s) totaling '.$k.' item(s)<BR>'.chr(10);
-	echo str_replace(chr(10),'<BR>',$csvTE);
+	if ($debug) {
+		echo 'Exporting '.count($results).' part(s) totaling '.$k.' item(s)<BR>'.chr(10);
+		echo str_replace(chr(10),'<BR>',$csvTE);
+	}
 
 	setGoogleAccessToken(5);
 
@@ -147,10 +148,12 @@
 
 //sendMailMIME("upload@brokerbin.com", "BrokerBin Export", "Report Attached", '/tmp/csvBB.csv')
 	$send_success = send_gmail('Report Attached','BrokerBin Export','upload@brokerbin.com','david@ven-tel.com','',$attachment);
-	if ($send_success) {
-		echo json_encode(array('message'=>'BrokerBin Email Export Successful'));
-	} else {
-		echo json_encode(array('message'=>$SEND_ERR));
+	if ($debug) {
+		if ($send_success) {
+			echo json_encode(array('message'=>'BrokerBin Email Export Successful'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		}
 	}
 
 	// create temp file name in temp directory for each file
@@ -162,10 +165,12 @@
 
 //sendMailMIME("inv@powersourceonline.com", "PowerSource Online Export", "Report Attached", '/tmp/psexport.csv')
 	$send_success = send_gmail('Report Attached','PowerSource Online Export','inv@powersourceonline.com','david@ven-tel.com','',$attachment);
-	if ($send_success) {
-		echo json_encode(array('message'=>'PowerSource Online Email Export Successful'));
-	} else {
-		echo json_encode(array('message'=>$SEND_ERR));
+	if ($debug) {
+		if ($send_success) {
+			echo json_encode(array('message'=>'PowerSource Online Email Export Successful'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		}
 	}
 
 	// create temp file name in temp directory for each file
@@ -180,17 +185,19 @@
 	//switch to passive mode
 	ftp_pasv($ftpid, true) OR die("Cannot switch to passive");
 	if (ftp_put($ftpid,'ventura.csv',$attachment,FTP_ASCII)) {
-		echo "successfully uploaded $attachment<BR>".chr(10);
+		if ($debug) { echo "successfully uploaded $attachment<BR>".chr(10); }
 //		ftp.storlines('STOR ventura.csv', exportFile) # Disable this for debugging
 	} else {
-		echo "problem uploading $attachment<BR>".chr(10);
+		if ($debug) { echo "problem uploading $attachment<BR>".chr(10); }
 	}
 	ftp_close($ftpid);
 
 	$send_success = send_gmail('Report Attached','Tel-Explorer Export','david@ven-tel.com','','',$attachment);
-	if ($send_success) {
-		echo json_encode(array('message'=>'Tel-Explorer Email Export Successful'));
-	} else {
-		echo json_encode(array('message'=>$SEND_ERR));
+	if ($debug) {
+		if ($send_success) {
+			echo json_encode(array('message'=>'Tel-Explorer Email Export Successful'));
+		} else {
+			echo json_encode(array('message'=>$SEND_ERR));
+		}
 	}
 ?>
