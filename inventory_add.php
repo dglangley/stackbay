@@ -366,7 +366,7 @@
 									<?php } else { ?>
 										<td class="componentColumn">
 											<div class="input-group" style="margin-bottom: 6px;">
-											    <input class="form-control input-sm" type="text" name="componentQTY" placeholder="QTY">
+											    <input class="form-control input-sm" type="text" name="componentQTY[<?=$part['id'];?>]" placeholder="QTY">
 											    <span class="input-group-addon">
 											        <button class="btn btn-secondary" type="submit"><i style='color: green;' class="fa fa-save fa-4" aria-hidden="true"></i></button>
 											    </span>

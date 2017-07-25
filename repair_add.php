@@ -31,6 +31,7 @@
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/getRepairCode.php';
 
 
 	//Set initials to be used throughout the page
@@ -52,6 +53,7 @@
 	$sales_order;
 	$tracking;
 	$received_inventory;
+	$ticketStatus;
 
 	$build = $_REQUEST['build'];
 
@@ -77,12 +79,14 @@
 		$o = o_params("bo");
 	}
 
-	$query = "SELECT status, id as repair_item_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
+	$query = "SELECT status, id as repair_item_id, repair_code_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
+	//echo $query;
 	$result = qdb($query) or die(qe());
 	if (mysqli_num_rows($result)) {
 		$result = mysqli_fetch_assoc($result);
 		$status = $result['status'];
 		$repair_item_id = $result['repair_item_id'];
+		$ticketStatus = getRepairCode($result['repair_code_id']);
 	}
 
 	//Check to see if a sales_item record has been created for this item
@@ -176,7 +180,7 @@
 				if(!mysqli_num_rows($res)){
 					$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
 					`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
-					VALUES ($serial,1,$partid,$condition,'in repair',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
+					VALUES ($serial,1,$partid,$condition,'".($_REQUEST['build'] ? 'shelved' : 'in repair')."',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
 					
 					qdb($insert) or die(qe()." $insert");
 				} else {
@@ -307,9 +311,13 @@
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
 			<div class="col-sm-4">
 				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
-					<a href="/order_form.php<?=($build?'?ps=bo&on='.$build:'?ps=repair&on='.$order_number);?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
+					<?php if($build): ?>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
+					<?php else : ?>
+						<a href="/order_form.php<?='?ps=repair&on='.$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
+					<?php endif; ?>
 				<?php } ?>
-				<a href="/repair.php?on=<?=($build ? $build : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
+				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
 
 				<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { 
 						if($sales_order && $o['type'] == 'Repair') { ?>
@@ -370,7 +378,7 @@
 			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active' && $status){
-							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' .$status . '</span>) ';
+							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' . $ticketStatus . '</span>) ';
 						}?> <?=($build ? 'Build':'Repair');?> #<?= ($build?$build:$order_number).' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
@@ -398,7 +406,7 @@
 			
 			<div class="col-sm-10"  style="margin-top: 20px;">
 				<form method="post">
-					<?php if($outstanding): ?>
+					<?php if($outstanding ): ?>
 						<div class="row" style="margin-bottom: 20px; margin-left: 0;">
 							<div class="col-md-7" style="padding-left: 0px !important;">
 								<div class="col-md-6 location">
@@ -418,10 +426,10 @@
 								</div>
 								
 								<div class="col-md-5" style="padding: 0 0 0 5px;">
-								    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($outstanding ? '' : 'disabled');?>>
+								    <input class="form-control input-sm serialInput auto-focus" name="serial_number" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus <?=($outstanding  ? '' : 'disabled');?>>
 					            </div>
 					            <div class="col-md-1" style="padding: 0 0 0 5px;">
-									<button class="btn btn-sm btn-primary" type='submit' <?=($outstanding ? '' : 'disabled');?>>Submit</button>
+									<button class="btn btn-sm btn-primary" type='submit' <?=($outstanding || $build ? '' : 'disabled');?>>Submit</button>
 								</div>
 							    <input class="form-control input-sm serialInput" style='display:none' name="form_submitted" type="text" value="true" autofocus>
 				            </div>

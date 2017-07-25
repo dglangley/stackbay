@@ -3006,7 +3006,7 @@
 			var line_ref_1_label = '';
 				line_ref_1 = sub_row.find(".line_ref_1").val();
 				line_ref_1_label = sub_row.find(".line_ref_1").parent().data('label');
-				alert(line_ref_1);
+				//alert(line_ref_1);
 //	    	var partid = row.attr("data-line-id");
 
 			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);

@@ -448,7 +448,7 @@
 			$info['billing'] = 'bill_to_id';
 			$info['bill_label'] = 'Bill To';
 			$info['ship'] = 'ship_to_id';
-			$info['order'] = "builds";
+			$info['order'] = "builds b";
 			$info['contact_col'] = "Sales Rep";
 			$info['header'] = "Repair";
 			$info['inv_item_id'] = "repair_item_id";
@@ -462,7 +462,7 @@
 			$info['tables'] = " repair_orders o, repair_items i, builds b WHERE o.ro_number = i.ro_number AND b.ro_number = o.ro_number ";
 			$info['short'] = "bo";
 			$info['event'] = 'ordered for repair';
-			$info['id'] = "bid";
+			$info['id'] = "b.id";
 			$info['item_id'] = $info['id'];
 			$info['item_order'] = 'line_number';
 			$info['active'] = " status = 'Active' ";
@@ -478,7 +478,7 @@
 			$info['warranty'] = 'warranty';
 			
 //Operations Modules Limits
-			$info['order_by'] = "o.created DESC, bid";
+			$info['order_by'] = "o.created DESC, b.id";
 			$info['mq_base'] = $info['tables'];
 			$info[strtolower($info['short'])] = true;
 			

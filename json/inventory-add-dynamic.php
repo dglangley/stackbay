@@ -22,6 +22,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/setCost.php';
 
+	include_once $rootdir.'/inc/renderOrder.php';
+	include_once($rootdir."/inc/send_gmail.php");
+	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+
 	//This is a list of everything
 	$partid = grab('partid');
 	$conditionid = grab('conditionid');
@@ -39,6 +43,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$locationid;
 		$query;
 		$result['partid'] = $partid;
+		$result['complete'] = true;
 		$inventory_id = '';
 		
 		//Get the location ID based on the preset ones in the table
@@ -84,6 +89,53 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$result['saved'] = $serial;
 				$inventory_id = qid();
 				
+			}
+
+			//Quick Query to check if all the line items of a PO have been met in full
+			$query = "SELECT po_number FROM purchase_items WHERE po_number = ".prep($po_number)." AND qty_received < qty;";
+			$receivedResult = qdb($query);
+
+			if (mysqli_num_rows($receivedResult)) {
+				$receivedResult = mysqli_fetch_assoc($receivedResult);
+				$result['complete'] = false;
+			}
+
+			//Fine tune this function so it will only send one email on the initial completion of the order
+			if($result['complete']) {
+				//Check if it was the current entry that completed the order
+				$query = "SELECT qty_received FROM purchase_items WHERE id = '".res($item_id)."' AND qty_received = qty; ";
+				$receivedResult = qdb($query);
+
+				$sales_rep = array();
+
+				if (mysqli_num_rows($receivedResult)) {
+					//Grab all users under sales
+					$query = "SELECT email FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id;";
+					$salesResult = qdb($query) OR die(qe() . ' ' . $query);
+
+					if (mysqli_num_rows($salesResult)) {
+						while ($row = $salesResult->fetch_assoc()) {
+							$sales_rep[] = $row['email'];
+						}
+					}
+
+					$email_body_html = renderOrder($po_number, 'Purchase', true);
+					$email_subject = 'PO# ' . $po_number . ' Received';
+					//$recipients = 'andrew@ven-tel.com,';
+					$bcc = '';
+
+					foreach($sales_rep as $rep) {
+						$recipients .= $rep . ', ';
+					}
+
+					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+
+					if ($send_success) {
+					    // echo json_encode(array('message'=>'Success'));
+					} else {
+					    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+					}
+				}
 			}
 		}
 		setCost($inventory_id);
