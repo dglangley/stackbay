@@ -103,6 +103,14 @@
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$actual = $r['actual'];
+		} else {
+			//If we are not updating an item, per say freight etc then we are adding a new inventory ID thus set actual to the previous average cost
+			$query = "SELECT * FROM average_costs WHERE partid = '".res($partid)."' ORDER BY datetime DESC LIMIT 0,1; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$actual = $r['amount'];
+			}
 		}
 
 		if ($force_avg) {

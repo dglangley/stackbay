@@ -25,7 +25,7 @@
 
 			if ($pieces > 0) {
 				$ext_avg = $existing_avg * $pieces;
-				$average_cost = ($ext_avg+($diff - $existing_avg)) / $pieces;
+				$average_cost = ($ext_avg+($diff)) / $pieces;
 			}
 		}
 
