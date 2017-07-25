@@ -32,14 +32,53 @@
 		$result = qdb($query) OR die(qe());
 		
 		if($trigger == "complete"){
-			$select = "SELECT `id` FROM `inventory` where repair_item_id = '$repair_item_id';";
-			$invid_result = qdb($select) or die(qe()." | $select");
-			if(mysqli_num_rows($invid_result)){
-				$invid_arr = mysqli_fetch_assoc($invid_result);
-				setCost($invid_arr['id']);
+			if(!isset($_REQUEST['build'])) {
+				$select = "SELECT `id` FROM `inventory` where repair_item_id = '$repair_item_id';";
+				$invid_result = qdb($select) or die(qe()." | $select");
+				if(mysqli_num_rows($invid_result)){
+					$invid_arr = mysqli_fetch_assoc($invid_result);
+					setCost($invid_arr['id']);
+				}
+			} else {
+				//get the qty of items that have been built
+				$qty = 1;
+				//Calculate the cost for the build
+				$query = "SELECT qty FROM builds WHERE ro_number = ".prep($ro_number).";";
+				$result = qdb($query) or die(qe()." | $query");
+				if(mysqli_num_rows($result)){
+					$result = mysqli_fetch_assoc($result);
+					$qty = $result['qty'];
+				}
+
+				$costOfTotalRepair = calcRepairCost($ro_number);
+				$costPerItem = ($costOfTotalRepair / $qty);
 			}
 		}
 		
+	}
+
+	function triggerBuildTest($invid, $ro_number, $repair_item_id, $notes, $techid, $now) {
+		$status = "shelved";
+		$notes = '';
+
+		$select = "SELECT `status` FROM `inventory` where `id` = ".prep($invid).";";
+		$result = qdb($select) OR die(qe()." | $select");
+		if(mysqli_num_rows($result)){
+			$result = mysqli_fetch_assoc($result);
+			$status = $result['status'];
+			if(strtolower($status) == 'shelved'){
+				$status = 'in testing';
+				$notes = getSerialNumber($invid) . ' Marked as `In Testing`';
+			} else {
+				$notes = getSerialNumber($invid) . ' Marked as `Tested`';
+			}
+		}
+
+		$query = "UPDATE `inventory` SET `status`='$status' WHERE `id` = ".prep($invid).";";
+			qdb($query) or die(qe()." | $query");
+
+		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
+		$result = qdb($query) OR die(qe());
 	}
 
 	function stockUpdate($repair_item_id, $ro_number, $repair_code){
@@ -58,6 +97,20 @@
 			//echo $query . "<br>";
 		}
 		qdb($query) OR die(qe());
+	}
+
+	function getSerialNumber($invid){
+		$serial;
+
+		$query = "SELECT serial_no FROM inventory WHERE id = ".prep($invid).";";
+		$result = qdb($query);
+		
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$serial = $result['serial_no'];
+		}
+		
+		return $serial;
 	}
 
 	function getLocation($place, $instance) {
@@ -84,7 +137,7 @@
 	$ro_number;
 	if (isset($_REQUEST['ro_number'])) { $ro_number = $_REQUEST['ro_number']; }
 
-	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive' || $notes) {
+	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive' || $notes || isset($_REQUEST['build_test'])) {
 		//Declare variables within this scope
 		$repair_item_id;
 		$notes;
@@ -130,13 +183,17 @@
 			}
 		}
 
-		triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
+		if(!isset($_REQUEST['build_test'])) {
+			triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
+		} else {
+			triggerBuildTest($_REQUEST['build_test'], $ro_number, $repair_item_id, $notes, $techid, $now);
+		}
 
 		if($trigger == "complete") {
 			stockUpdate($repair_item_id, $ro_number, $repair_code);
 		}
 
-		header('Location: /repair.php?on=' . $ro_number);
+		header('Location: /repair.php?on=' . ($_REQUEST['build'] ? $_REQUEST['build'] . '&build=true' : $ro_number));
 
 	} else if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'receive') { 
 		//Declare Variables within this scope

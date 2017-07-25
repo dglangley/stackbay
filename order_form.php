@@ -210,7 +210,7 @@
 		$o = o_params($o['type']);
 		$table = $o['order'];
 		$id = $o['id'];
-		$q = "SELECT * FROM `$table` WHERE $id = '".$order_number."'; ";
+		$q = "SELECT * FROM $table WHERE $id = '".$order_number."'; ";
 		$result = qdb($q) or die(qe()." | $q");
 		if (mysqli_num_rows($result)){
 			$ORDER = mysqli_fetch_assoc($result);

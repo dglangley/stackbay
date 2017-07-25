@@ -20,26 +20,43 @@
 			$locationResult = mysqli_fetch_assoc($locationResult);
 			$locationid = $locationResult['id'];
 		}
+		// print_r($qty);
+		// exit;
+		foreach($qty as $key => $amount) {
+			if($amount > 0 && $key) {
+				$newpartid;
 
-		//Updates the amount received
-		$query = "UPDATE purchase_items SET qty_received = ".prep($qty)." WHERE id = ".prep($purchase_item_id).";";
-		qdb($query) OR die(qe());
+				//Updates the amount received
+				$query = "UPDATE purchase_items SET qty_received = ".prep($amount)." WHERE id = ".prep($key).";";
+				qdb($query) OR die(qe());
 
-		$status = "shelved";
-		
-		$query = "INSERT INTO inventory (qty, partid, conditionid, status, locationid, bin, purchase_item_id, userid, date_created) VALUES (
-			".prep($qty).",
-			".prep($partid).",
-			".prep($conditionid).",
-			".prep($status).",
-			".prep($locationid).",
-			".prep($bin).",
-			".prep($purchase_item_id).",
-			".prep($userid).",
-			".prep($now)."
-		);";
-		//echo $query;
-		qdb($query) OR die(qe());
+				$status = "shelved";
+
+				$query = "SELECT partid FROM purchase_items WHERE id = ".prep($key).";";
+
+				$result = qdb($query);
+				if (mysqli_num_rows($result)) {
+					$result = mysqli_fetch_assoc($result);
+					$newpartid = $result['partid'];
+				}
+				
+				$query = "INSERT INTO inventory (qty, partid, conditionid, status, locationid, bin, purchase_item_id, userid, date_created) VALUES (
+					".prep($amount).",
+					".prep($newpartid).",
+					".prep($conditionid).",
+					".prep($status).",
+					".prep($locationid).",
+					".prep($bin).",
+					".prep($key).",
+					".prep($userid).",
+					".prep($now)."
+				);";
+				//echo $query;
+				qdb($query) OR die(qe());
+
+				$partid = $newpartid;
+			}
+		}
 
 		$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($repair_item_id).";";
 		$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);

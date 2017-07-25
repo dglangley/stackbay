@@ -10,6 +10,11 @@
 	
 	//$search = trim($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']);
 
+	if(isset($_REQUEST['purchase_request_id'])) {
+		$query = "UPDATE purchase_requests SET status = 'Void' WHERE id=".prep($_REQUEST['purchase_request_id']).";";
+		qdb($query) OR die(qe() . ' ' . $query);
+	}
+
 	if(!in_array("5", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
 	 	header('Location: /operations.php');
 	}
@@ -18,7 +23,7 @@
 	$itemList = array();
 
 	//if(!$search) {
-		$query = "SELECT pr.*, p.part FROM purchase_requests pr, parts p WHERE p.id = pr.partid ORDER BY requested DESC LIMIT 100;";
+		$query = "SELECT pr.*, p.part FROM purchase_requests pr, parts p WHERE p.id = pr.partid AND (pr.status = 'Active' OR pr.status IS NULL) ORDER BY requested DESC LIMIT 100;";
 		$result = qdb($query) OR die(qe());
 			
 		while ($row = $result->fetch_assoc()) {
@@ -125,9 +130,15 @@
 							<td><?=getUser($part['techid']);?></td>
 							<td>
 								<?php if(!$part['po_number']) { ?>
+								<form class="disable_form" method="POST">
 									<a href="/order_form.php?ps=Purchase&s=<?=$part['partid'];?>&repair=<?=getRepairItemId($part['ro_number'], $part['partid']);?>">
 										<i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i>
 									</a>
+									<input type="text" name="purchase_request_id" class="hidden" value="<?=$part['id'];?>">
+									<a class="disable_trash" style="cursor: pointer;">
+										<i style="margin-right: 5px;" class="fa fa-trash" aria-hidden="true"></i>
+									</a>
+								</form>
 								<?php } ?>
 							</td>
 						</tr>
@@ -140,6 +151,15 @@
 	<?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
+    	(function($){
+    		$(document).on('click', '.disable_trash', function(e) {
+    			if( !confirm('Are you sure you want to cancel this purchase request?')) {
+            		event.preventDefault();
+    			} else {
+    				$(this).closest('form').submit();
+    			}
+    		});
+    	})(jQuery);
     </script>
 
 </body>

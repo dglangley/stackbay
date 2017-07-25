@@ -76,6 +76,7 @@
 	    $row_out .= "<td class = 'line_part' ".($o['build'] ? 'name ="partid" value="'.$partid.'"' : '')." data-search='".$partid."' data-record='".$row['id']."'>".$display;
 	    if($o['build']){
 	    	$row_out .= "<input class='hidden' name='partid' value='".$partid."'>";
+	    	$row_out .= "<input class='hidden' name='qty_variable' value='".$row['qty']."'>";
 	    }
 	    $row_out .= "</td>";
 	    if(!$o['tech'] && !$o['build']){
@@ -306,6 +307,7 @@
 			if(mysqli_num_rows($build_result)) {
 				$build_item = mysqli_fetch_assoc($build_result);
 				$partid = $build_item['partid'];
+				$qty = $build_item['qty'];
 			}
 
 			if($partid) {

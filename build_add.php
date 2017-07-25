@@ -25,11 +25,12 @@
 		);";
 		qdb($insert) or die(qe());
 
-		$insert = "INSERT INTO builds (name, partid, ro_number, status) VALUES (
+		$insert = "INSERT INTO builds (name, partid, ro_number, status, qty) VALUES (
 			".prep($name).",
 			".prep($partid).",
 			".prep($ro_number).",
-			".prep($status)."
+			".prep($status).",
+			".prep($qty)."
 		);";
 		qdb($insert) or die(qe());
 		$bo_number = qid();
@@ -51,7 +52,7 @@
 	$bo_number;
 	
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
-	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
+	if (isset($_REQUEST['qty_variable'])) { $qty = $_REQUEST['qty_variable']; }
 	if (isset($_REQUEST['name'])) { $name = $_REQUEST['name']; }
 	if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
 	if (isset($_REQUEST['build_id'])) { $id = $_REQUEST['build_id']; }
