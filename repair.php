@@ -780,34 +780,21 @@
 											<tr class="" style = "padding-bottom:6px;">
 												<td><?=(trim(format($comp['partid'], true)) != '' ? format($comp['partid'], true) : $comp['partid'] );?></td>
 												<td><?=$comp['totalOrdered'];?></td>
-<<<<<<< HEAD
-												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - $pulled_qty > 0 ? "<span class='label label-warning active_label status_label' >Pending</span>" : 'N/A' ));?></td>
-												<!-- <td><?=$ordered;?></td> -->
-												<td><?=($avail_qty ? $avail_qty : '0');?></td> 
-												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :($pulled_qty ? $pulled_qty : '0'))?></td>
-=======
 												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 && ($comp['status'] != 'Void') ? "<span class='label label-warning active_label status_label' >Pending</span>" : "<span class='label label-danger active_label status_label' >Canceled</span>"));?></td>
 												<!-- <td><?=$ordered;?></td> -->
 												<!-- "<span class='label label-danger active_label status_label' >Canceled</span>" -->
 												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
->>>>>>> origin/master
 												<td><?=format_price($price)?></td>
 												<td><?=format_price($ext)?></td>
 												<td>
 													<div class="row">
 														<div class="col-md-12">
-<<<<<<< HEAD
-															<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=$pulled_qty?>" <?=($avail_qty > 0 ? '' : 'disabled');?>>
-																<?=($avail_qty > 0 ? 'Pull from Stock' : 'No Stock');?> 	
-													        </button>
-=======
 															<?php if($comp['status'] != 'Void') { ?>
 																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
 																	<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
 														        </button>
 													        <?php } ?>
->>>>>>> origin/master
 														</div>
 									                </div>
 												</td>

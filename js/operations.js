@@ -2712,7 +2712,11 @@
 		//Get current filter type
 		var type = $('.filter_status.active').data('filter');
 		var url = '';
+		var zoom = panel.closest(".shipping-dash").attr("id");
 
+		// set defaults, see specific rules for Builds below
+		$(".company-filter").show();
+		$("#build-create").hide();
 		if (zoom_direction=='in') {
 			$('.col-lg-6.data-load').hide();
 			panel.closest(".col-lg-6").addClass("shipping-dash-full");
@@ -2723,7 +2727,7 @@
 			} else {
 				panel.closest('.shipping-dash').children('.table-responsive').find('.show_more').show();
 			}
-					
+
 			panel.closest(".shipping-dash").addClass("shipping-dash-remove");
 			panel.closest(".shipping-dash").removeClass("shipping-dash");
 					
@@ -2740,7 +2744,6 @@
 			panel.parent().removeClass("shipping_section_foot_lock");
 			
 			
-			var zoom = panel.closest(".shipping-dash-remove").attr("id");
 			if(zoom == 'Purchase_panel'){
 				url = 'purchases.php';
 			} else if (zoom == 'Sales_panel'){
@@ -2751,6 +2754,9 @@
 				url = 'repairs.php';
 			} else if (zoom == 'Builds_panel'){
 				url = 'builds.php';
+				// hide company selector for builds and show Create button, otherwise default to company selector
+				$(".company-filter").hide();
+				$("#build-create").show();
 			}
 		} else{
 			$(".shipping-dash-full").removeClass("shipping-dash-full");
@@ -2773,7 +2779,7 @@
 
 			panel.closest(".shipping-dash-remove").removeClass("shipping-dash-remove");
 			$("#filter-title").text('Operations Dashboard');
-			
+
 			panel.parents("body").find(".overview").hide();
 			panel.parent().addClass("shipping_section_foot_lock");
 			panel.parents("body").find(".shipping_section_foot a").text("Show more");

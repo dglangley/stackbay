@@ -782,7 +782,7 @@
 						
 			
 						<div class="col-md-6 remove-pad">
-							<div class="pull-right input-group form-group" style="margin-bottom: 0px;">
+							<div class="pull-right input-group form-group company-filter" style="margin-bottom: 0px;">
 								<select name ='coid' class="company-selector">
 									<option value="">- Select a Company -</option>
 									<?php 
@@ -795,6 +795,9 @@
 										<i class="fa fa-filter" aria-hidden="true"></i>
 									</button>
 								</span>
+							</div>
+							<div id="build-create">
+								<a class="btn btn-sm btn-primary pull-right" href="/builds_management.php"><i class="fa fa-plus"></i></a>
 							</div>
 						</div>
 					</div>
@@ -857,71 +860,7 @@
 		        }
 		    }
 		}
-		
-		// function grabFilterArray(){
-		// 	var f = {
-		// 		start : $("#filter_bar").find("input[name='START_DATE']").val(),
-		// 		end : $("#filter_bar").find("input[name='END_DATE']").val(),
-		// 		coid : $("#filter_bar").find(".company-selector").val(),
-		// 		filter : $("#filter_bar").find(".filter_status.active").data("filter"),
-		// 		table_filter : "<?=$table_filter;?>",
-		// 		search : $("#s").val()
-		// 	}
-		// 	var form_search = '<?=$_REQUEST['form_search']?>';
-		// 	if (!f['search'] && form_search){
-		// 		f['search'] = form_search;
-		// 		$("#s").val(form_search);
-		// 	}
-		// 	if(f['search'] || f['coid']){
-		// 		f['filter'] = 'all';
-		// 	}
-		// 	if(!f['start']){
-		// 		f['start'] = getUrlParameter("start");
-		// 	}
-		// 	if(!f['end']){
-		// 		f['end'] = getUrlParameter("end");
-		// 	}
-		// 	if(!f['coid']){
-		// 		f['coid'] = getUrlParameter("coid");
-		// 	}
-		// 	if(!f['table_filter']){
-		// 		f['table_filter'] = getUrlParameter("table_filter");
-		// 	}
-		// 	// if (f['table_filter'] != '') {
-		// 	// 	zoomPanel($("#"+f['table_filter']+"_panel").find(".shipping_section_foot a"),'in');
-		// 	// }
-		// 	console.log(f);
-		// 	return f;
-		// }
-		// function processFilterUrl(){
-		// 	var f = grabFilterArray();
-		// 	var urlstring = "";
-		// 	if(f['start']){
-		// 		urlstring += "&start="+f['start'];
-		// 	}
-		// 	if(f['end']){
-		// 		urlstring += "&end="+f['end'];
-		// 	}
-		// 	if(f['coid']){
-		// 		urlstring += "&coid="+f['coid'];
-		// 	}
-		// 	if(f['filter']){
-		// 		urlstring += "&filter="+f['filter'];
-		// 	}
-		// 	if(f['search']){
-		// 		urlstring += "&search="+f['search'];
-		// 	}
-		// 	if(f['table_filter']){
-		// 		urlstring += "&table_filter="+f['table_filter'];
-		// 	}
-		// 	if(urlstring){
-		// 		urlstring = urlstring.slice(1);
-		// 		urlstring = "?"+urlstring;
-		// 	}
-		// 	window.history.replaceState(null, null, "/operations.php"+urlstring);
-		// }
-		
-		
+
 		//Triggering Aaron 2017
 		var search = "<?=($_REQUEST['s'] ? $_REQUEST['s'] : $_REQUEST['search']); ?>";
 		if(!search){
@@ -1057,6 +996,8 @@
 		}
 		if (table_filter != '') {
 			zoomPanel($("#"+table_filter+"_panel").find(".shipping_section_foot a"),'in');
+		} else {
+			$("#build-create").hide();
 		}
 		// processFilterUrl();
 		
