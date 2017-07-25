@@ -1469,17 +1469,6 @@
 							"ref_1_label" : line_ref_1_label
 						};
 
-							// alert("line_number "+row["line_number"]);
-							// alert("part "+row["part"]);
-							// alert("id "+row["id"]);
-							// alert("date "+row["date"]);
-							// alert("condition "+row["condition"]);
-							// alert("warranty "+row["warranty"]);
-							// alert("price "+row["price"]);
-							// alert("qty "+row["qty"]);
-							
-							// "line_number"+line_number+"part"+part+"id"+id+"date"+date+"conditionid"+conditionid+"warranty"+warranty+"price"+price+"qty"+qty;
-
 						submit.push(row);
 					});
 					
@@ -1511,7 +1500,6 @@
 							"email_confirmation="+email_confirmation+"&"+
 							"email_to="+email_to);
 					//Submit all rows and meta data for unpacking later
-					// alert(account);
 					$.ajax({
 						type: "POST",
 						url: '/json/order-form-submit.php',
@@ -1792,119 +1780,6 @@
 			}
 		});
 		
-		// $(document).on('click',"#save_button_inventory",function() {
-		// 	//Save to reactivate button if needed
-		// 	$click = $(this);
-		// 	//Prevent Button Spamming
-		// 	$click.removeAttr('id');
-			
-		// 	//items = ['partid', 'Already saved serial','serial or array of serials', 'condition or array', 'lot', 'qty']
-		// 	//Include location in the near future
-		// 	var items = [];
-		// 	var po_number = getUrlParameter('on');
-			
-		// 	//check if anything at all was changed on the page, including a scanned / entered item
-		// 	var checkSaved = false;
-			
-		// 	//Get everything from the form and place it into its own array
-		// 	$('.inventory_add').children('tbody').children('tr').each(function() {
-		// 		var partid = $(this).find('.part_id').attr('data-partid');
-		// 		var serials = [];
-		// 		var savedSerials = [];
-		// 		var ids = [];
-		// 		var place = [];
-		// 		var instance = [];
-		// 		var conditions = [];
-		// 		var lot = false;
-		// 		var qty;
-				
-		// 		$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:first').each(function() {
-		// 			place.push($(this).val());
-		// 		});
-				
-		// 		$(this).find('.infiniteLocations').children('.row-fluid:first').find('select:last').each(function() {
-		// 			instance.push(($(this).val() != '' ? $(this).val() : ''));
-		// 		});
-				
-		// 		$(this).find('.infiniteCondition').children('select').each(function() {
-		// 			conditions.push($(this).val());
-		// 		});
-				
-		// 		$(this).find('.infiniteSerials').find('input').each(function() {
-		// 			// added by david 2-28-17
-		// 			ids.push($(this).attr('data-item-id'));
-		// 			serials.push($(this).val());
-		// 			savedSerials.push($(this).attr('data-saved'));
-					
-		// 			//If an item was saved previously then mark the page as soemthing was edited
-		// 			if($(this).attr('data-saved') != '') {
-		// 				checkSaved = true;
-		// 			}
-					
-		// 			//For purpose of conflicts only add a saved serial when there is nothing in the item, else ajax save generates a serial to match data
-		// 			//if($(this).attr('data-saved') == '')
-		// 			//$(this).attr("data-saved", $(this).val());
-		// 		});
-				
-		// 		//Check if the lot is checked or not
-		// 		if($(this).find('.lot_inventory').prop('checked') == true) {
-		// 			lot = true;
-		// 		} else {
-		// 			lot = false;
-		// 		}
-		// 		qty = $(this).find('.remaining_qty').children('input').val();
-				
-		// 		items.push(partid);
-		// 		items.push(savedSerials);
-		// 		items.push(serials);
-		// 		items.push(conditions);
-		// 		items.push(lot);
-		// 		items.push(qty);
-		// 		items.push(place);
-		// 		items.push(instance);
-		// 		items.push(ids);
-		// 	});
-			
-		// 	console.log(items);
-		// 	//console.log(po_number);
-			
-		// 	$.ajax({
-		// 		type: "POST",
-		// 		url: '/json/inventory-add.php',
-		// 		data: {
-		// 			 'productItems' : items, 'po_number' : po_number
-		// 		},
-		// 		dataType: 'json',
-		// 		success: function(result) {
-		// 			console.log(result);
-					
-		// 			//Error handler or success handler
-		// 			if(result['query'] || checkSaved) {
-		// 				//In case a warning is triggered but data is still saved successfully
-		// 				if(result['error'] != undefined)
-		// 					alert(result['error']);
-		// 				window.onbeforeunload = null;
-		// 				window.location = "/operations.php?po=true";
-		// 			//Error occured enough to stop the page from continuing
-		// 			} else if(result['error'] != undefined) {
-		// 				alert(result['error']);
-		// 				$click.attr('id','save_button_inventory');
-		// 			//Nothing was change
-		// 			} else {
-		// 				//alert('No changes have been made.');
-		// 				$click.attr('id','save_button_inventory');
-		// 				window.location = "/operations.php?po=true";
-		// 			}
-		// 		},
-		// 		error: function(xhr, status, error) {
-			// 			//alert(error+" | "+status+" | "+xhr);
-		// 			window.location = "/operations.php?po=true";
-		// 			console.log("inventory-add-complete.php: ERROR");
-		// 		},	
-		// 	});
-		// });
-		
-		
 //Handle if the user deletes a serial from inventory add or shipping (Undoes a line item)
 		$(document).on('click', '.deleteSerialRow', function() {
 			var page = getPageName();
@@ -2177,7 +2052,6 @@
 						
 						$('.iso_content_title').html('<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');
 						var serial = $(this).data('invid');
-						// alert(serial);
 						// alert($(this).closest('tr').find('.infiniteBox').find().html());
 						var element = "<tr class='"+ damaged +"'>\
 										<td>"+$(this).closest('tr').find('.infiniteBox').find('select[data-associated="'+serial+'"]').find('option:selected').attr('data-boxno')+"</td>\
@@ -2331,7 +2205,6 @@
 		        $(document).on("click", ".ship", function(e) {
 		        	e.preventDefault();
 		        	var type = $(this).data("ship");
-		        	//alert(type);
 		        	$('#modal-repair-receive .alert').hide();
 
 		        	if(type == 'ship') {
@@ -2447,7 +2320,6 @@
 				success: function(id) {
 					$(".box_selector").removeClass("active");
 				//Finally, output the button
-					// alert(final);
 					final.clone().text(autoinc).insertAfter(final)
 					.attr("data-row-id",id).attr("data-box-shipped", '')
 					.addClass("active").removeClass('btn-grey');
@@ -2583,29 +2455,6 @@
 		var order_number = $("body").data("associated");
 		var page = 'rma';
 		var order_type = "RMA"
-		
-	// 	//Left Side Main output on load of the page
-	// 	$.ajax({
-	// 		type: "POST",
-	// 		url: '/json/operations_sidebar.php',
-	// 		data: {
-	// 			"number": order_number,
-	// 			"type": order_type,
-	// 			"page": page,
-	// 			},
-	// 		dataType: 'json',
-	// 		success: function(right) {
-	// 			$(".rma-macro").append(right);
-	// 		},
-	// 		complete: function() {
-	// 			console.log("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Success");
-	// 		},
-	// 		error: function(xhr, status, error) {
-	// 			alert(error+" | "+status+" | "+xhr);
-	// 			console.error("JSON operations_sidebar.php?number="+order_number+"&type="+order_type+"&page="+page+" | Error");
-	// 		}
-			
-	// 	});
 	});
 
 
@@ -2640,7 +2489,6 @@
 			} else {
 				$("#alert_message").hide();
 			}
-			//alert("ON: "+order_number+" | Package #: "+package_number);
 			$.ajax({
 				type: "POST",
 				url: '/json/package_contents.php',
@@ -3002,11 +2850,10 @@
    		    var lineNumber = sub_row.find("input[name=ni_line]").val();
    		    var warranty = sub_row.find(".warranty").val();
 			var conditionid = sub_row.find(".conditionid").val();
-			var line_ref_1 = 'test';
+			var line_ref_1 = '';
 			var line_ref_1_label = '';
 				line_ref_1 = sub_row.find(".line_ref_1").val();
 				line_ref_1_label = sub_row.find(".line_ref_1").parent().data('label');
-				alert(line_ref_1);
 //	    	var partid = row.attr("data-line-id");
 
 			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);
