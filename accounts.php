@@ -307,13 +307,13 @@
 	//Write the query for the gathering of data
 	$record_start = $startDate;
 	$record_end = $endDate;
-	$result = getRecords($part_string,'','',$orders_table);
+	$results = getRecords($part_string,'','',$orders_table);
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 	
-    foreach ($result as $row){
+    foreach ($results as $row){
 
 		$id = $row['order_num'];
 		$freight = 0;
@@ -356,6 +356,13 @@
 				$item_id = $query_row['id'];
 				$qty_shipped = $query_row['qty_shipped'];
 			}
+
+			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r2 = mysqli_fetch_assoc($result);
+				$total_sub += $r2['qty']*$r2['price'];
+			}
 		} else {
 			$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -364,18 +371,38 @@
 				$item_id = $query_row['id'];
 				$qty_shipped = $query_row['qty_received'];
 			}
+
+			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$r2 = mysqli_fetch_assoc($result);
+				$total_sub += $r2['qty']*$r2['price'];
+			}
 		}
 
         $credit = 0;
         $credit_total = 0;
         if($item_id) {
-			$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$query_row = mysqli_fetch_assoc($result);
-				$credit = $query_row['amount'];
-				$credit_total = $query_row['total'];
-			}
+			if ($orders_table=='sales') {
+				$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				if (mysqli_num_rows($result)>0) {
+					$query_row = mysqli_fetch_assoc($result);
+					$credit = $query_row['amount'];
+					$credit_total = $query_row['total'];
+				}
+			} else if($orders_table == 'purchases') {
+                // david's purchase credits hack for now; updated 7-21-17 now that we have purchase_credits, we need to adopt above method (under 'sales')
+				// but we first need to implement a mechanism that generates credits from the RTV process...
+                $query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s ";
+				$query .= "WHERE po_number = ".prep($id)." AND s.ref_1 = p.id AND s.ref_1_label = 'purchase_item_id'; ";
+                $result = qdb($query) OR die(qe().'<BR>'.$query);
+                if (mysqli_num_rows($result)>0) {
+                    $r = mysqli_fetch_assoc($result);
+                    $credit = $r['price'];
+                    $credit_total = $r['total'];
+                }
+            }
         } 
 
         if($row['qty'] > $qty_shipped) {
@@ -440,7 +467,7 @@
 		';
 
 		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
-		$status  = ($total <= 0 ? 'complete' : 'active');
+		$status  = ($total == 0 ? 'complete' : 'active');
 		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
        	$rows .= '
 				<tr class="'.$status.' '.$filter_comb.'">

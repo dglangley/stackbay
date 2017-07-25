@@ -23,6 +23,10 @@
 
 	function getPartInfo($partid) {
 		$P = array();
+		if (! $partid) {
+			return ($P);
+		}
+
 		$query3 = "SELECT * FROM parts WHERE id = '".$partid."'; ";
 		$result3 = qdb($query3) OR die("Failed getting parts info for partid ".$partid.", weird.");
 		if (mysqli_num_rows($result3)==0) {
@@ -346,6 +350,7 @@
 <!--=============================   PRINT TABLE ROWS   =============================-->
 <!--================================================================================-->
 <?php
+	$INVOICE_ITEMS = array();//store for re-looking up same data
 	//Establish a blank array for receiving the results from the table
 	$orders = array();
 	$charge_types = array('Sale','Repair');
@@ -370,40 +375,106 @@
 
 		// get all invoices which are commissioned against
 		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
+		if ($history_date) {
+			$query .= ", c.invoice_item_id, c.inventoryid, c.item_id, c.item_id_label, c.datetime, c.cogsid, c.rep_id, ";
+			$query .= "c.commission_rate, p.amount commission_amount, c.id commissionid, p.amount paid_amount ";
+		}
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
 		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
-		if ($history_date) { $query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' "; }
-   		if ($startDate) {
-   			$dbStartDate = format_date($startDate, 'Y-m-d');
-   			$dbEndDate = format_date($endDate, 'Y-m-d');
-   			$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
+		if ($history_date) {
+			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
+		} else {
+	   		if ($startDate) {
+   				$dbStartDate = format_date($startDate, 'Y-m-d');
+   				$dbEndDate = format_date($endDate, 'Y-m-d');
+   				$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+			}
 		}
 		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
-		$query .= "GROUP BY o.".$order_type.", i.invoice_no ORDER BY o.".$order_type." ASC; ";
+		if (! $history_date) { $query .= "GROUP BY o.".$order_type.", i.invoice_no "; }
+		$query .= "ORDER BY o.".$order_type." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 //		echo '<BR><BR><BR>';
 //		echo $query.'<BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
-//			$commissionid = $r['id'];
 			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
 			//$r['amount'] = $r['commission_amount'];
 			$r['charge_type'] = $type;
 
 			// get amount already paid out
 			$r['commissions'] = array();
-			$pending_comms = 0;
+			$num_pending = 0;
 
-			// get invoice items, which we will use to compare for commissions against each invoiced item
-			$query2 = "SELECT qty, amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+			if ($history_date) {
+				$invoice_item_id = 0;
+				if ($r['invoice_item_id']) { $invoice_item_id = $r['invoice_item_id']; }
+
+				// get invoice items, which we will use to compare for commissions against each invoiced item
+				$I = array();
+				if ($invoice_item_id) {
+					if (! isset($INVOICE_ITEMS[$invoice_item_id])) {
+						$query2 = "SELECT amount, partid FROM invoice_items WHERE id = '".$invoice_item_id."'; ";
+//						echo $query2.'<BR>';
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						if (mysqli_num_rows($result2)>0) {
+							$I = mysqli_fetch_assoc($result2);
+							$INVOICE_ITEMS[$invoice_item_id] = $I;
+						}
+					} else {
+						$I = $INVOICE_ITEMS[$invoice_item_id];
+					}
+				}
+				if (count($I)==0) {
+					$query2 = "SELECT price amount, partid FROM ".$item_type." WHERE id = '".$r['item_id']."'; ";
+//					echo $query2.'<BR>';
+					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+					if (mysqli_num_rows($result2)>0) {
+						$I = mysqli_fetch_assoc($result2);
+					} else {
+						$I = array('amount'=>0,'partid'=>0);
+					}
+				}
+
+				$comm = array(
+					'invoice_no'=>$r['invoice_no'],
+					'invoice_item_id'=>$invoice_item_id,
+					'inventoryid'=>$r['inventoryid'],
+					'item_id'=>$r['item_id'],
+					'item_id_label'=>$r['item_id_label'],
+					'datetime'=>$r['datetime'],
+					'cogsid'=>$r['cogsid'],
+					'rep_id'=>$r['rep_id'],
+					'commission_rate'=>$r['commission_rate'],
+					'commission_amount'=>$r['commission_amount'],
+					'paid_amount'=>$r['paid_amount'],
+					'id'=>$r['commissionid'],
+				);
+
+				$order_key = $r['order_type'].'.'.$r['invoice_no'];
+				if (! isset($orders[$order_key])) {
+					if (! isset($r['commissions'][$invoice_item_id])) {
+						$r['commissions'][$invoice_item_id] = array('amount'=>$I['amount'],'partid'=>$I['partid'],'comms'=>array());
+					}
+					$r['commissions'][$invoice_item_id]['comms'][$r['rep_id']][] = $comm;
+
+					$orders[$order_key] = $r;
+				} else {
+					if (! isset($orders[$order_key]['commissions'][$invoice_item_id])) {
+						$orders[$order_key]['commissions'][$invoice_item_id] = array('amount'=>$I['amount'],'partid'=>$I['partid'],'comms'=>array());
+					}
+					$orders[$order_key]['commissions'][$invoice_item_id]['comms'][$r['rep_id']][] = $comm;
+				}
+				continue;
+			}
+
+			$query2 = "SELECT amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
 //			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$item_amt = $r2['qty']*$r2['amount'];
+				$r['commissions'][$r2['id']] = array('amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
 
-				$r['commissions'][$r2['id']] = array('qty'=>$r2['qty'],'amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
-
-				$query3 = "SELECT h.invid, t.id, i.qty, i.serial_no FROM inventory i, inventory_history h, ".$item_type." t, ";
+				$query3 = "SELECT h.invid, t.id, i.serial_no FROM inventory i, inventory_history h, ".$item_type." t, ";
 				$query3 .= "packages p, package_contents pc, invoice_shipments s, invoice_items ii ";
 				$query3 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND h.invid = pc.serialid ";
 				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND t.price > 0 ";
@@ -414,9 +485,6 @@
 //				echo $query3.'<BR>';
 				$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
 				while ($r3 = mysqli_fetch_assoc($result3)) {
-					$qty = $r3['qty'];
-					if (! $qty) { $qty = 1; }
-
 					$comm = array(
 						'invoice_no'=>$r['invoice_no'],
 						'invoice_item_id'=>$r2['id'],
@@ -439,7 +507,7 @@
 					$result4 = qdb($query4) OR die("Could not pull commissions for invoice ".$r['invoice_no']." AND inventoryid ".$r3['invid']);
 					// if no results from commissions table, supplement them with reps based on $RATES
 					$num_results = mysqli_num_rows($result4);
-					if ($num_results==0) {
+					if ($num_results==0 AND ! $history_date) {
 						// check now that the items weren't invoiced on another invoice for the same billable order
 						$query4 = "SELECT * FROM commissions c, invoices i ";
 						$query4 .= "WHERE c.inventoryid = '".$r3['invid']."' AND c.invoice_no <> '".$r['invoice_no']."' ";
@@ -452,9 +520,9 @@
 								if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter)) { continue; }
 								$comm['rep_id'] = $comm_repid;
 
-								if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
+								if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('amount'=>0,'partid'=>0,'comms'=>array()); }
 								$r['commissions'][$r2['id']]['comms'][$comm_repid][] = $comm;
-								$pending_comms += $qty;
+								$num_pending++;
 							}
 						}
 					}
@@ -467,11 +535,11 @@
 							if (! $history_date AND $r4['commission_amount']==$r4['paid_amount']) { continue; }
 						}
 
-						if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('qty'=>0,'amount'=>0,'partid'=>0,'comms'=>array()); }
+						if (! isset($r['commissions'][$r2['id']])) { $r['commissions'][$r2['id']] = array('amount'=>0,'partid'=>0,'comms'=>array()); }
 						$r['commissions'][$r2['id']]['comms'][$r4['rep_id']][] = $r4;
-						$pending_comms += $qty;
+						$num_pending++;
 					}
-					if ($num_results>0 AND $num_results<count($RATES)) {
+					if (! $history_date AND $num_results>0 AND $num_results<count($RATES)) {
 						// did all reps get tagged?
 						foreach ($RATES as $comm_repid => $comm_rate) {
 							if (! $comm_rate OR ($rep_filter AND $comm_repid<>$rep_filter) OR isset($r['commissions'][$r2['id']]['comms'][$comm_repid])) { continue; }
@@ -483,7 +551,7 @@
 				}
 			}
 
-			if ($pending_comms==0) { continue; }
+			if ($num_pending==0) { continue; }
 
 			$orders[] = $r;
 		}

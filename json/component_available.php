@@ -91,7 +91,8 @@
 		foreach($components as $item) {
 			if($item['qty']) {
 				//function split_components($invid, $new_qty, $id_type = "", $id_number = "")
-				$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
+				//$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
+				$newID = split_components($item['invid'], $item['qty']);//, "repair", $repair_item_id);
 
 				if($newID) {
 					$query = "UPDATE inventory SET status = 'in repair' WHERE id = ".prep($newID).";";

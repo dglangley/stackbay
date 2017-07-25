@@ -381,7 +381,7 @@ if (! $r['partid']) { return ($results); }
 
     <table class="table table-header">
 		<tr>
-			<td class="col-md-2">
+			<td class="col-md-4">
 				<div id="remote-warnings">
 <?php
 	$query = "SELECT * FROM remotes ORDER BY id ASC; ";
@@ -389,10 +389,76 @@ if (! $r['partid']) { return ($results); }
 	while ($r = mysqli_fetch_assoc($result)) {
 		echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
 	}
+
+	$title = '';
+
+//	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
+
+	$lines = array();
+	if ($listid) {
+		$search_index = 0;
+		$qty_index = 1;
+		$query = "SELECT search_meta.id metaid, uploads.type, processed, filename FROM search_meta, uploads ";
+		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
+		$result = qdb($query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$title = $r['filename'];
+
+			if ($r['processed']) {
+				if ($r['type']=='demand') { $table_qty = 'request_qty'; }
+				else { $table_qty = 'avail_qty'; }
+
+				$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
+				$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
+				$result2 = qdb($query2);
+				while ($r2 = mysqli_fetch_assoc($result2)) {
+					// does this search string (followed by an appended space, as in the following 'search qty' format) already
+					// exist in the array? if so, don't add to list for duplication of calculations below
+					if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
+
+					$lines[] = $r2['search'].' '.$r2['qty'];
+				}
+			} else {
+				// if list is not processed, alert the user
+				$ALERTS[] = "Please wait while I process your list. If you do not have an email from me within 10 or 15 minutes, ".
+					"you may have unorganized data in your list that I cannot handle.";
+			}
+		}
+	} else {
+		// if user is just pulling favorites list
+		if (! $s AND $favorites) {
+			// build results using heci7 as key, or part# if no heci
+			$results = array();
+			$query = "SELECT part, LEFT(heci,7) heci7 FROM parts, favorites ";
+			$query .= "WHERE parts.id = favorites.partid ";
+			$query .= "ORDER BY part, rel, heci ";
+			$result = qdb($query) OR die(qe().' '.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				if ($r['heci7']) {
+					$key = $r['heci7'];
+				} else {
+					$partstrs = explode(' ',$r['part']);
+					$key = format_part($partstrs[0]);
+				}
+				$results[$key] = $r;
+			}
+
+			// using keyed results, build $lines for an auto-indexed array
+			$lines = array();
+			foreach ($results as $key => $r) {
+				$lines[] = $key;
+			}
+		} else {
+			$lines = explode(chr(10),$s);
+		}
+	}
+
 ?>
 				</div>
 			</td>
-			<td class="text-center col-md-5">
+			<td class="text-center col-md-4">
+				<h2 class="minimal"><?php echo $title; ?></h2>
 			</td>
 			<td class="col-md-4">
 				<div class="pull-right form-group">
@@ -457,67 +523,6 @@ if (! $r['partid']) { return ($results); }
                         </tr>
                     </thead>
 <?php
-//	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
-
-	$lines = array();
-	if ($listid) {
-		$search_index = 0;
-		$qty_index = 1;
-		$query = "SELECT search_meta.id metaid, uploads.type, processed FROM search_meta, uploads ";
-		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-
-			if ($r['processed']) {
-				if ($r['type']=='demand') { $table_qty = 'request_qty'; }
-				else { $table_qty = 'avail_qty'; }
-
-				$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
-				$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
-				$result2 = qdb($query2);
-				while ($r2 = mysqli_fetch_assoc($result2)) {
-					// does this search string (followed by an appended space, as in the following 'search qty' format) already
-					// exist in the array? if so, don't add to list for duplication of calculations below
-					if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
-
-					$lines[] = $r2['search'].' '.$r2['qty'];
-				}
-			} else {
-				// if list is not processed, alert the user
-				$ALERTS[] = "Please wait while I process your list. If you do not have an email from me within 10 or 15 minutes, ".
-					"you may have unorganized data in your list that I cannot handle.";
-			}
-		}
-	} else {
-		// if user is just pulling favorites list
-		if (! $s AND $favorites) {
-			// build results using heci7 as key, or part# if no heci
-			$results = array();
-			$query = "SELECT part, LEFT(heci,7) heci7 FROM parts, favorites ";
-			$query .= "WHERE parts.id = favorites.partid ";
-			$query .= "ORDER BY part, rel, heci ";
-			$result = qdb($query) OR die(qe().' '.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				if ($r['heci7']) {
-					$key = $r['heci7'];
-				} else {
-					$partstrs = explode(' ',$r['part']);
-					$key = format_part($partstrs[0]);
-				}
-				$results[$key] = $r;
-			}
-
-			// using keyed results, build $lines for an auto-indexed array
-			$lines = array();
-			foreach ($results as $key => $r) {
-				$lines[] = $key;
-			}
-		} else {
-			$lines = explode(chr(10),$s);
-		}
-	}
-
 	foreach ($lines as $n => $line) {
 		$line = trim($line);
 		if (! $line) { continue; }

@@ -156,6 +156,7 @@
 	                </a>
 	                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
+	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
 	                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
 	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
 	                    <?php if(in_array("4", $USER_ROLES)) { ?>

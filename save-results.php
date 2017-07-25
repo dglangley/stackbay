@@ -76,7 +76,9 @@
 			}
 
 			if ($response_qty>0) {
-				$quote_str .= ' qty '.$response_qty.'- '.getPart($partid).' '.format_price($response_price).chr(10);
+				$quote_str .= ' qty '.$response_qty.'- '.getPart($partid).' '.format_price($response_price);
+				if ($response_qty>1) { $quote_str .= ' ea'; }
+				$quote_str .= chr(10);
 				$quote_html .= '<tr><td class="text-left">'.($ln+1).'</td><td class="text-left">'.getPart($partid,'part').'</td>'.
 					'<td class="text-left">'.getPart($partid,'heci').'</td><td class="text-left">'.getPart($partid,'full_descr').'</td>'.
 					'<td>'.$response_qty.'</td><td class="text-right">'.format_price($response_price).'</td>'.
