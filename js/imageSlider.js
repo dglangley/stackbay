@@ -56,11 +56,11 @@ function updateSliderImages(search,img,imgAction) {
 	if (! img) { var img = ''; }
 	if (! imgAction) { var imgAction = ''; }
 
-   	console.log(window.location.origin+"/json/images.php?search="+search+"&img="+escape(img)+"&imgAction="+imgAction);
+   	console.log(window.location.origin+"/json/images.php?search="+search+"&img="+(img)+"&imgAction="+imgAction);
     $.ajax({
 		url: 'json/images.php',
 		type: 'get',
-		data: {'search': search, 'img': escape(img), 'imgAction': imgAction },
+		data: {'search': search, 'img': (img), 'imgAction': imgAction },
 		dataType: 'json',
 		success: function(json, status) {
 			if (json.message!='') { alert(json.message); }
