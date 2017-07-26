@@ -299,6 +299,9 @@
 		exit;
 	}
 
+	$TEMP_DIR = sys_get_temp_dir();
+	if (substr($TEMP_DIR,strlen($TEMP_DIR)-1,1)<>'/') { $TEMP_DIR .= '/'; }
+
 	$ACCESS_TOKEN = false;
 	$REFRESH_TOKEN = false;
 	if ($U['id']>0) {

@@ -178,7 +178,7 @@
 							}
 						} else {
 							alert(json.message); // show response from the php script.
-							modalForm.closest(".modal").modal("toggle");
+							//modalForm.closest(".modal").modal("toggle");
 						}
 					}
 				},

@@ -10,10 +10,8 @@
 	$pdf_options = new Options();
 	$pdf_options->set('isRemoteEnabled', TRUE);
 
-	$temp_dir = sys_get_temp_dir();
-	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 	function attachInvoice($invoice) {
-		global $temp_dir,$pdf_options;
+		global $TEMP_DIR,$pdf_options;
 
 		// get html-rendered invoice for passing to dompdf
         $html = renderOrder($invoice,'INV');
@@ -29,7 +27,7 @@
 
         $output = $dompdf->output();
 
-		$attachment = $temp_dir."Invoice_".$invoice.".pdf";
+		$attachment = $TEMP_DIR."Invoice_".$invoice.".pdf";
 		$handle = fopen($attachment, "w");
 		// add contents from file
 		fwrite($handle, $output);

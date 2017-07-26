@@ -38,32 +38,6 @@
 		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
 	}
 
-	// default
-//	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
-	$since_datetime = format_date($now,'d-M-Y 00:00:00');
-	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
-	$email_number = 0;
-	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
-
-	// try to connect
-	$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
-
-	// grab emails
-	$inbox_results = imap_search($inbox,'SINCE "'.$since_datetime.'"');
-
-	// print "<pre>".print_r($inbox_results,true)."</pre>";
-
-	// if emails are returned, cycle through each...
-	if (! $inbox_results) { die("Could not find any emails in inbox"); }
-
-	// put the newest emails on top
-	rsort($inbox_results);
-
-	$email_body = '';//final result for output below
-	$from_email = '';
-	$from_name = '';
-	$from = '';
-
 	$commons = array(
 		'CARD'=>1,
 		'MODEL'=>1,
@@ -140,29 +114,105 @@
 		'THIS'=>1,
 	);
 
+	// default
+//	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
+	$since_datetime = format_date($now,'d-M-Y 00:00:00');
+	if (isset($_REQUEST['since_datetime']) AND format_date($_REQUEST['since_datetime'])!==false) { $since_datetime = $_REQUEST['since_datetime']; }
+	$email_number = 0;
+	if (isset($_REQUEST['email_number']) AND is_numeric($_REQUEST['email_number'])) { $email_number = $_REQUEST['email_number']; }
+
+	// try to connect
+	$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
+
+	// grab emails
+	//$inbox_results = imap_search($inbox,'SINCE "'.$since_datetime.'"');
+	$inbox_results = imap_search($inbox,'FROM "Robert.Fehlinger@ftr.com"');
+
+	//print "<pre>".print_r($inbox_results,true)."</pre>";
+
+	// if emails are returned, cycle through each...
+	if (! $inbox_results) { die("Could not find any emails in inbox"); }
+
+	// put the newest emails on top
+	rsort($inbox_results);
+
+	$email_body = '';//final result for output below
+	$from_email = '';
+	$from_name = '';
+	$from = '';
+
 	// for every email...
 	foreach ($inbox_results as $n) {
 		// get information specific to this email
 		$message = '';
 		$header = imap_headerinfo($inbox,$n);
+
+		/* get information specific to this email */
 		$overview = imap_fetch_overview($inbox,$n,0);
+
 		// output the email overview information
 		$status = ($overview[0]->seen ? 'read' : 'unread');
 		if ($status=='read') { continue; }
 
+		/* get mail structure */
 		$structure = imap_fetchstructure($inbox, $n);
 		$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
 
-		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
-			$mpart = $structure->parts[1];
+//		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
+		if (array_key_exists('parts', $structure)) {
 //changed 7-13-16 when I stopped redirect-forwarding emails to Amea
+			/* get mail message */
 //			$message = imap_decode(imap_fetchbody($inbox,$n,2),$mpart->encoding);
 
-			$message = imap_decode($inbox,$n,$mpart->encoding);
+			/* if any attachments found... */
+			/* see http://www.codediesel.com/php/downloading-gmail-attachments-in-php-an-update/ */
+			$attachments = array();
+			foreach ($structure->parts as $k => $mpart) {
+				// message body
+				if ($k==1) {
+					$message = imap_decode($inbox,$n,$mpart->encoding);
+				} else if (($mpart->type >= 2) OR (($mpart->ifdisposition == 1) AND ($mpart->disposition == 'ATTACHMENT'))) {
+					if ($mpart->ifparameters) {
+						foreach ($mpart->parameters as $obj) {
+							if (strtolower($obj->attribute) == 'filename') {
+								$attachments[$k]['filename'] = $obj->value;
+							}
+						}
+					}
+
+					if ($mpart->ifdparameters) {
+						foreach ($mpart->dparameters as $obj) {
+							if (strtolower($obj->attribute) == 'filename') {
+								$attachments[$k]['filename'] = $obj->value;
+							}
+						}
+					}
+
+					if ($attachments[$k]) {
+						$attachment = imap_fetchbody($inbox, $n, ($i+1));
+
+						if ($mpart->encoding == 3) {
+							$attachment = base64_decode($attachment);
+						} else if ($mpart->encoding == 4) {
+							$attachment = quoted_printable_decode($attachment);
+						}
+						$attachments[$k]['attachment'] = $attachment;
+					}
+				}
+			}
+
+			/* iterate through each attachment and save it */
+			foreach ($attachments as $attachment) {
+				$filename = $attachment['filename'];
+				$fp = fopen($TEMP_DIR . $filename . "-" . $n, "w+");
+				fwrite($fp, $attachment['attachment']);
+				fclose($fp);
+			}
 		} else {
 			$message = imap_body($inbox,$n);
 		}
-//echo $message.'<BR><BR>';
+echo $message.'<BR><BR>';
+exit;
 
 		$date_utc = $overview[0]->date;
 		$date = date("Y-m-d",strtotime($date_utc));

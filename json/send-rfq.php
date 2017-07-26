@@ -37,6 +37,8 @@
 
     $partid_array = explode(",",$partids);
 
+	setGoogleAccessToken($U['id']);
+
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
 	if (mysqli_num_rows($result)<>1) {
