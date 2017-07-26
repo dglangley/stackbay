@@ -14,6 +14,7 @@
 		'db' => $_SERVER['DEFAULT_DB'],
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
+	if ($WLI_GLOBALS['RDS_HOSTNAME']<>'localhost') { $WLI_GLOBALS['RDS_PASSWORD'] = 'avenpass02!'; }
 
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
 //	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
