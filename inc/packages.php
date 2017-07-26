@@ -45,69 +45,69 @@
     
     function package_edit($action,$id='',$order ='',$type ='',$name =''){
     
-    if ($action == 'addition'){
-        $order_number = prep($order);
-        $name = prep($name);
-        $order_type = prep($type,'Sales');
-        if($order) {
-            $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,$order_type, $name);";
-            qdb($insert) OR die(qe().": $insert");
+        if ($action == 'addition'){
+            $order_number = prep($order);
+            $name = prep($name);
+            $order_type = prep($type,'Sales');
+            if($order) {
+                $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,$order_type, $name);";
+                qdb($insert) OR die(qe().": $insert");
 
-            return qid();
-        }
-        return false;   
-    }
-    elseif($action == "update"){
-        $row_id = prep($id);
-        
-        $update = "UPDATE packages SET ";
-        $update .= updateNull("width",grab("width"));
-        $update .= updateNull("height",grab("height"));
-        $update .= updateNull("length",grab("length"));
-        $update .= updateNull("weight",grab("weight"));
-        $update .= updateNull("tracking_no",grab("tracking"));
-        $update .= rtrim(updateNull("freight_amount",grab("freight")),',');
-        $update .= " WHERE ";
-        $update .= "id = $row_id;";
-        
-        qdb($update) or jsonDie(qe()." $update");
-        
-        $pc = "SELECT `id` FROM package_contents where `packageid` = $row_id;";
-        $pc_results = qdb($pc) or jsonDie(qe()." | $pc");
-        if(mysqli_num_rows($pc_results)){
-            foreach($pc_results as $invid){
-                setCost($invid['id']);
+                return qid();
             }
+            return false;   
         }
-        
-        return $update;
-    }
-    elseif($action == "change"){
-        $assoc = grab('assoc');
-        $new = prep(grab('package'));
-        $update = "Not Updated";
-        if($assoc && $new){
-            $update = "UPDATE package_contents SET packageid = $new WHERE serialid = $assoc";
-            qdb($update) or die(qe()." $update");
+        elseif($action == "update"){
+            $row_id = prep($id);
+            
+            $update = "UPDATE packages SET ";
+            $update .= updateNull("width",grab("width"));
+            $update .= updateNull("height",grab("height"));
+            $update .= updateNull("length",grab("length"));
+            $update .= updateNull("weight",grab("weight"));
+            $update .= updateNull("tracking_no",grab("tracking"));
+            $update .= rtrim(updateNull("freight_amount",grab("freight")),',');
+            $update .= " WHERE ";
+            $update .= "id = $row_id;";
+            
+            qdb($update) or jsonDie(qe()." $update");
+            
+            $pc = "SELECT `id` FROM package_contents where `packageid` = $row_id;";
+            $pc_results = qdb($pc) or jsonDie(qe()." | $pc");
+            if(mysqli_num_rows($pc_results)){
+                foreach($pc_results as $invid){
+                    setCost($invid['id']);
+                }
+            }
+            
+            return $update;
         }
-        return $update;
-        
-    }
-    elseif($action == "delete"){
-        $assoc = grab('assoc');
-        $new = prep(grab('package'));
-        $update = "Not Deleted";
-        if($assoc && $new){
-            $update = "DELETE FROM package_contents WHERE packageid = $new AND serialid = $assoc";
-            qdb($update) or die(qe()." $update");
+        elseif($action == "change"){
+            $assoc = grab('assoc');
+            $new = prep(grab('package'));
+            $update = "Not Updated";
+            if($assoc && $new){
+                $update = "UPDATE package_contents SET packageid = $new WHERE serialid = $assoc";
+                qdb($update) or die(qe()." $update");
+            }
+            return $update;
+            
         }
-        return $update;
-        
+        elseif($action == "delete"){
+            $assoc = grab('assoc');
+            $new = prep(grab('package'));
+            $update = "Not Deleted";
+            if($assoc && $new){
+                $update = "DELETE FROM package_contents WHERE packageid = $new AND serialid = $assoc";
+                qdb($update) or die(qe()." $update");
+            }
+            return $update;
+            
+        }
+        else{
+            return "Nothing.";
+        }
     }
-    else{
-        return "Nothing.";
-    }
-}
 	
 	//Get the freight total for a shipment returned as a float
 	function shipment_freight($order_number,$order_type,$datetime = ''){
@@ -206,4 +206,9 @@
 	    $result = mysqli_fetch_assoc($result);
 	    return $result[$info];
 	}
+
+    function deletePackage($package_id) {
+        $delete = "DELETE FROM packages WHERE id = ".prep($package_id).";";
+        qdb($delete) OR die(qe() . " | $delete");
+    }
 ?>

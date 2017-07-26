@@ -6,9 +6,18 @@
 	header('Content-Type: application/json');
     
     $action = grab('action');
+    $package_no = grab('package_no');
     $order_number = grab('order');
     $order_type = grab('type');
     $name = grab('name');
     $id = grab('id');
-    echo json_encode(package_edit($action,$id,$order_number,$order_type,$name));
+
+    if($action == 'delete_package') {
+    	// echo $package_id;
+    	// exit;
+    	echo json_encode(deletePackage($id));
+    } else {
+    	//exit;
+    	echo json_encode(package_edit($action,$id,$order_number,$order_type,$name));
+    }
 ?>

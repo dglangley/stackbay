@@ -2242,6 +2242,37 @@
 		var package_number = $(".box_selector.active").text();
 		box_edit(package_number);
 	});
+
+//Kill Package
+
+	$(document).on("click",".delete_box", function(event){
+		event.preventDefault();
+
+		if(confirm('Are you sure you want to delete the current box?')) {
+			var id = $("#package-modal-body").attr("data-modal-id");
+
+			$.ajax({
+				type: "POST",
+				url: '/json/packages.php',
+				data: {
+					"action": "delete_package",
+					"id": id,
+				},
+				dataType: 'json',
+				success: function(update) {
+					location.reload();
+					console.log("JSON packages.php: Success");
+					console.log(update);
+				},
+				error: function(xhr, status, error) {
+					alert(error+" | "+status+" | "+xhr);
+					console.log("JSON packages.php: Error");
+				},				
+				
+			});
+		}
+	});
+
 //Submit Modal
 	$(document).on("click","#package-continue", function(){
 			
@@ -2253,6 +2284,7 @@
 		var tracking = $("#modal-tracking").val();
 		var freight = $("#modal-freight").val();
 		var id = $("#package-modal-body").attr("data-modal-id");
+		var order_type = $("#order_body").attr("data-order-type");
 		
 		//Update the Data tags on the page
 		$(".box_selector.active").attr("data-width",width);
@@ -2514,8 +2546,15 @@
 							// for(var k = 0; k < val.length; k++) {
 					}
 						
-						//After the edit modal has been set with the proper data, show it
-						$("#modal-package").modal("show");
+					//After the edit modal has been set with the proper data, show it
+					if(!data && order_type == 'Sale') {
+						$('.delete_box').attr("package", package_number);
+						$('.delete_box').attr("order_number", order_number);
+						$('.delete_box').attr("order_type", order_type);
+						$('.delete_box').show();
+					}
+
+					$("#modal-package").modal("show");
 				},
 				error: function(xhr, status, error) {
 									alert(error+" | "+status+" | "+xhr);
