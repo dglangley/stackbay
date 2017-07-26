@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCostsLog.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setAverageCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
@@ -8,13 +9,14 @@
 	if (! isset($debug)) { $debug = 0; }
 
 	function setCost($inventoryid=0,$force_avg=false,$force_datetime='') {
+		global $cost_datetimes;//see getCost()
 		if (! $inventoryid) { return false; }
 
 		$debug = $GLOBALS['debug'];
 
 		// get qty of inventory record in case it's a lot purchase price
 		$cost = 0;
-		$query = "SELECT qty, serial_no, partid FROM inventory WHERE id = '".res($inventoryid)."'; ";
+		$query = "SELECT qty, serial_no, partid, date_created FROM inventory WHERE id = '".res($inventoryid)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$r = mysqli_fetch_assoc($result);
@@ -22,6 +24,7 @@
 		if ($r['qty']>0) { $qty = $r['qty']; }
 		$serial = $r['serial_no'];
 		$partid = $r['partid'];
+		$date_created = $r['date_created'];
 
 		// get all purchase records in case we've purchased it multiple times
 		$query = "SELECT * FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
@@ -78,19 +81,22 @@
 			$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['repair_item_id']."'; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
-				$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
-				$cost += $repair_cost;
-				setCostsLog($inventoryid,$r['repair_item_id'],'repair_item_id',$repair_cost);
-			}
-		}
+				$r2 = mysqli_fetch_assoc($result2);
 
-		// calculate diff in cost so we can adjust cost average
-		$actual = 0;
-		$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$actual = $r['actual'];
+				$query3 = "SELECT b.price, b.id FROM builds b WHERE b.ro_number = ".$r2['ro_number'].";";
+				$result3 = qdb($query3) or die(qe()." | $query3");
+
+				if(mysqli_num_rows($result3)){
+					$r3 = mysqli_fetch_assoc($result3);
+					//$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
+					$cost += $r3['price'];
+					setCostsLog($inventoryid,$r3['id'],'buildid',$r3['price']);
+				} else {
+					$repair_cost = calcRepairCost($r2['ro_number'],$r['repair_item_id'],$inventoryid);
+					$cost += $repair_cost;
+					setCostsLog($inventoryid,$r['repair_item_id'],'repair_item_id',$repair_cost);
+				}
+			}
 		}
 
 		if ($force_avg) {
@@ -100,7 +106,25 @@
 				setAverageCost($partid,$force_avg,true);
 			}
 		} else {
+			// calculate diff in cost so we can adjust cost average
+			$actual = 0;
+			// this is set here so we get our $cost_datetimes initialized for purposes below
+			$current_avg = getCost($partid);
+
+			/* NEWLY-ADDED INVENTORY ITEM THAT HAS NOT YET BEEN AVERAGE-CALCULATED */
+			if (! isset($cost_datetimes[$partid]) OR $date_created>$cost_datetimes[$partid]) {
+				$actual = $current_avg;
+			} else {
+				/* EXISTING INVENTORY ITEM THAT HAS ALREADY PREVIOUSLY BEEN AVERAGE-CALCULATED */
+				$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$actual = $r['actual'];
+				}
+			}
 			$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+
 			setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
 		}
 

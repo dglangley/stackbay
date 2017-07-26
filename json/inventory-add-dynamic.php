@@ -44,7 +44,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$query;
 		$result['partid'] = $partid;
 		$result['complete'] = true;
-		$inventory_id = '';
+		$inventoryid = 0;
 		
 		//Get the location ID based on the preset ones in the table
 		if($instance != '') {
@@ -77,9 +77,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				//$result['test'] = $query;
 				$result['query'] = qdb($query) or die(qe());
 				//$result['query'] = $query;
-				$inventory_id = qid();
+				$inventoryid = qid();
 				//Pair the package to the line item of the inventory number we changed.
-				$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$packageid','$inventory_id');";
+				$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$packageid','$inventoryid');";
 				$result['package'] = qdb($package_query) OR die(qe());
 				$result['package_q'] = $package_query;
 			} else {
@@ -87,7 +87,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
 				$result['query'] = qdb($query) or die(qe());
 				$result['saved'] = $serial;
-				$inventory_id = qid();
+				$inventoryid = qid();
 				
 			}
 
@@ -138,7 +138,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			}
 		}
-		setCost($inventory_id);
+		setCost($inventoryid);
 		
 		return $result;
 	}

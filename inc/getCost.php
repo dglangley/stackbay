@@ -2,7 +2,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function getCost($partid,$cost_basis='average',$purchase_item_id=0) {
+	$cost_datetimes = array();
+	function getCost($partid,$cost_basis='average') {
+		global $cost_datetimes;
+
 		$partids = array();
 		$csv_partids = '';
 		if (is_array($partid)) {
@@ -35,6 +38,7 @@
 		$qty_sum = mysqli_num_rows($result);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$average_sum += $r['amount'];
+			$cost_datetimes[$r['partid']] = $r['datetime'];
 /*
 			$qty = 1;
 			if ($r['qty']>0) { $qty = $r['qty']; }
