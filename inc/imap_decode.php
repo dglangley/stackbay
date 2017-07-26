@@ -15,9 +15,15 @@
 		// 4 appears with some emails that appear to be generated as a redirect-forward, I found
 		// this in the case of some Bob Fehlinger emails
 		if ($encoding==4) {
-			$message = imap_qprint(imap_body($inbox,$email_number));
+			//dl 7-26-17
+			//$message = imap_qprint(imap_body($inbox,$email_number));
+			$message = quoted_printable_decode(imap_fetchbody($inbox,$email_number,1.1));
+		} else if ($encoding==3) {
+			$message = base64_decode(imap_fetchbody($inbox,$email_number,1.1));
+		} else if ($encoding==1) {
+			$message = imap_8bit(imap_fetchbody($inbox,$email_number,1.1));
 		} else {//most normal emails
-			$message = imap_qprint(imap_fetchbody($inbox,$email_number,1.2));
+			$message = imap_qprint(imap_fetchbody($inbox,$email_number,1.1));
 		}
 
 		return ($message);

@@ -138,7 +138,7 @@
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
 	$username = 'amea@ven-tel.com';
-	$password = 'avenpass02!';
+	$password = 'gvenpass02!';
 
 	$since_datetime = format_date($now,'d-M-Y H:i:s',array('h'=>-2));
 //hack for now
