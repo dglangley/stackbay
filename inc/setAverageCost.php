@@ -1,10 +1,14 @@
 <?php
+	if (! isset($debug)) { $debug = 0; }
 	function setAverageCost($partid,$diff,$setAbsolute=false,$setDatetime='') {
+		global $debug;
+
 		if ($setAbsolute) {
 			$average_cost = $diff;
 		} else {
 			$existing_avg = 0;//assume we start at 0 with no existing average cost data
 			$query = "SELECT * FROM average_costs WHERE partid = '".res($partid)."' ORDER BY datetime DESC LIMIT 0,1; ";
+			if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -16,7 +20,8 @@
 			$pieces = 0;
 			$average_cost = 0;
 			$query = "SELECT qty, serial_no FROM inventory ";
-			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0; ";
+			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0 AND qty > 0; ";
+			if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				if ($r['qty']>0) { $pieces = $r['qty']; }
@@ -33,7 +38,8 @@
 
 		$query = "INSERT INTO average_costs (partid, amount, datetime) ";
 		$query .= "VALUES ('".res($partid)."','".$average_cost."','".$datetime."'); ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if ($debug) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
 		return ($average_cost);
 	}

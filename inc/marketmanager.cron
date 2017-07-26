@@ -43,7 +43,8 @@ RDS_PASSWORD=joder1234
 # sunday ghosting script
 0 20 * * 0 php -f /var/www/html/auto/ghost_inventories.php > ~/ghost_log
 # run amea all day
-0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/amea_processor.php > ~/amea_log
+#0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/amea_processor.php > ~/amea_log
+0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl https://www.stackbay.com/auto/amea_processor.php > ~/amea_log
 # sunday ghosting script
 0 19 * * 0 php -f /var/www/html/auto/product_activity.php > ~/activity_log
 

@@ -22,7 +22,7 @@
 	/* connect to gmail */
 	$hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
 	$username = 'amea@ven-tel.com';
-	$password = 'venpass01';
+	$password = 'avenpass02!';
 
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 
