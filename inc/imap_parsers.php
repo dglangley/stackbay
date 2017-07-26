@@ -72,10 +72,12 @@
 		$fmessage = preg_replace('/^[\s\S]*body[{][\s\S^}]*[}]/','',strip_tags(str_ireplace(array("<br />","<br>","<br/>"),chr(10),$message)));
 //		print "<pre>".print_r($fmessage,true)."</pre>";
 
+/* disabled 7-26-17 when I added attachments handling
 		if (preg_match('/[^[:alpha:]]+attach(ed|ment)[^[:alpha:]]+/i',$fmessage)) {
 			echo 'possible attachment! skipping message<br><BR>';
 			return false;
 		}
+*/
 
 		$signature_matches = array();
 		if (preg_match('/'.$signature.'?/m',$fmessage,$signature_matches)) {

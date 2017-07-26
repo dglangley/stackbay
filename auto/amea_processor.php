@@ -154,10 +154,12 @@
 		$status = ($overview[0]->seen ? 'read' : 'unread');
 		if ($status=='read') { continue; }
 
+		$subject = $overview[0]->subject;
+
 		/* get mail structure */
 		$structure = imap_fetchstructure($inbox, $n);
 		$from_email = $header->from[0]->mailbox . "@" . $header->from[0]->host;
-		$attachment = false;
+		$attachments = array();
 
 //		if (isset($structure->parts) && is_array($structure->parts) && isset($structure->parts[1])) {
 		if (array_key_exists('parts', $structure)) {
@@ -167,12 +169,12 @@
 
 			/* if any attachments found... */
 			/* see http://www.codediesel.com/php/downloading-gmail-attachments-in-php-an-update/ */
-			$attachments = array();
+			$email_att = array();
 			foreach ($structure->parts as $k => $mpart) {
 				if ($mpart->ifparameters) {
 					foreach ($mpart->parameters as $obj) {
 						if (strtolower($obj->attribute) == 'name') {
-							$attachments[$k]['filename'] = $obj->value;
+							$email_att[$k]['filename'] = $obj->value;
 						}
 					}
 				}
@@ -180,30 +182,34 @@
 				if ($mpart->ifdparameters) {
 					foreach ($mpart->dparameters as $obj) {
 						if (strtolower($obj->attribute) == 'filename') {
-							$attachments[$k]['filename'] = $obj->value;
+							$email_att[$k]['filename'] = $obj->value;
 						}
 					}
 				}
 
-				if ($attachments[$k]) {
-					$attachment = imap_fetchbody($inbox, $n, ($i+1));
+				if ($email_att[$k]) {
+					$att = imap_fetchbody($inbox, $n, ($i+1));
 
 					if ($mpart->encoding == 3) {
-						$attachment = base64_decode($attachment);
+						$att = base64_decode($att);
 					} else if ($mpart->encoding == 4) {
-						$attachment = quoted_printable_decode($attachment);
+						$att = quoted_printable_decode($att);
 					}
-					$attachments[$k]['attachment'] = $attachment;
+					$email_att[$k]['attachment'] = $att;
 				} else { // message body
-					$message = imap_decode($inbox,$n,$mpart->encoding);
+					if (substr($subject,0,3)=='RE:') {
+						$message = imap_decode($inbox,$n,3);//$mpart->encoding);
+					} else {
+						$message = imap_decode($inbox,$n,$mpart->encoding);
+					}
 				}
 			}
 
 			/* iterate through each attachment and save it */
-			foreach ($attachments as $att) {
+			foreach ($email_att as $att) {
 				$filename = $att['filename'];
 				$fp = fopen($TEMP_DIR . $n . "-" . $filename, "w+");
-				$attachment = $TEMP_DIR . $n . "-" . $filename;
+				$attachments[] = $TEMP_DIR . $n . "-" . $filename;
 				fwrite($fp, $att['attachment']);
 				fclose($fp);
 			}
@@ -220,7 +226,6 @@
 		} else {
 			$date = date("M j, H:i a",strtotime($date_utc));
 		}
-		$subject = $overview[0]->subject;
 		$from = $overview[0]->from;
 		$f = explode(' <',$from);
 		$from_name = $f[0];
@@ -406,12 +411,16 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			}
 		}
 
+		if (! $results_body AND count($attachment_array)>0) {
+			$results_body = 'Please see email below from '.$from_name.' at '.getCompany($companyid).'<BR>';
+		}
+
 		// build message body and send
 		if ($results_body) {
 			$email_body = $results_body.'<BR>'.$message;
 //			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$results_body.$message.'<BR><BR>';
 
-			$send_success = send_gmail($email_body,$subject,array('david@ven-tel.com','sam@ven-tel.com'),'',$from_email,$attachment);//set reply to as $from_email
+			$send_success = send_gmail($email_body,$subject,array('david@ven-tel.com','sam@ven-tel.com'),'',$from_email,$attachments);//set reply to as $from_email
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {
