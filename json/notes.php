@@ -84,7 +84,7 @@
 		//Hack notification for purchase request to create a PO
 		if($U['id'] == '13') {
 			//Code generated specifically for Notifications of Purchase Requests
-			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND po_number IS NULL AND ri.ro_number = r.ro_number AND r.status <> 'Void' ORDER BY requested DESC LIMIT 0,20;";
+			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND ri.ro_number = r.ro_number AND (r.status IS NULL OR r.status = 'Active') AND po_number IS NULL ORDER BY requested DESC LIMIT 0,20;";
 			$result = qdb($query) OR reportError(qe().' '.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$r['part_label'] = 'Part: ' . $r['part'];
