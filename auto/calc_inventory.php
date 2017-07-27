@@ -1,52 +1,43 @@
 <?php
-// ALTER TABLE  `qtys` ADD  `hidden_qty` INT( 9 ) UNSIGNED NULL ,
-// ADD  `visible_qty` INT( 9 ) UNSIGNED NULL ;
+	//Standard includes section
+	$rootdir = $_SERVER['ROOT_DIR'];
+	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/form_handle.php';
 
-//Standard includes section
-$rootdir = $_SERVER['ROOT_DIR'];
-include_once $rootdir.'/inc/dbconnect.php';
-include_once $rootdir.'/inc/form_handle.php';
+	$csv_partids = '';
+	$query = "SELECT SUM(`qty`) total, `partid` FROM `inventory`  ";
+	$query .= "WHERE `qty` > 0 AND partid IS NOT NULL AND `conditionid` > 0 ";
+	$query .= "AND (`status` = 'shelved' OR `status` = 'received') ";
+	$query .= "GROUP BY partid;";
+	$result = qdb($query) or die(qe()." $query");
+	while ($r = mysqli_fetch_assoc($result)) {
+		if ($csv_partids) { $csv_partids .= ','; }
+		$csv_partids .= $r['partid'];
 
-$SELECT = "
-SELECT SUM(`qty`) total, `partid` 
-FROM `inventory` 
-WHERE `qty` > 0 
-and partid is not null 
-AND `condition` > 0
-AND `status` = 'shelved'
-GROUP BY partid;";
-$res = qdb($SELECT) or die(qe()." $SELECT");
-foreach($res as $r){
-    //vardec
-    $up = '';
-    $ptotal = '';
-    $insert = '';
-    $ptotal = prep($r['total'],0);
+		$qty = $r['total'];
     
-    //Check to see if there is a qtys record
-    $check = "SELECT * FROM `qtys` WHERE partid = ".prep($r['partid']).";";
-    $result = qdb($check) or die(qe()." | $check");
-    if(!mysqli_num_rows($result)){
-        //if not, new part and create one
-        $insert = "INSERT INTO `qtys`(`partid`, `qty`, `hidden_qty`, `visible_qty`) VALUES (".$r['partid'].", ".$r['qty'].", NULL, ".$r['qty'].");";
-        qdb($insert) or die(qe()." | $insert");
-    } else {
-		if ($ptotal==0) {
-			$del = "DELETE FROM qtys WHERE partid = ".prep($r['partid'])."; ";
-			qdb($del) or die(qe());
+		//Check to see if there is a qtys record
+		$query2 = "SELECT * FROM `qtys` WHERE partid = ".prep($r['partid']).";";
+		$result2 = qdb($query2) or die(qe()." | $query2");
+
+		//if not, new part and create one
+		if (! mysqli_num_rows($result2)) {
+			$insert = "INSERT INTO `qtys`(`partid`, `qty`, `hidden_qty`, `visible_qty`) VALUES (".$r['partid'].", '".$qty."', NULL, '".$qty."');";
+			qdb($insert) or die(qe()." | $insert");
 		} else {
 			//otherwise, update the old value
-			$up = "UPDATE `qtys`SET 
-				`qty` = $ptotal,  
+			$query2 = "UPDATE `qtys` SET `qty` = '".$qty."',  
 				`visible_qty` = CASE
-					WHEN ((`hidden_qty` = 0 AND `hidden_qty` is not null) OR (`hidden_qty` >= $ptotal)) THEN 0
-					ELSE ($ptotal - ifnull(`hidden_qty`,0))
+					WHEN ((`hidden_qty` = 0 AND `hidden_qty` is not null) OR (`hidden_qty` >= '".$qty."')) THEN 0
+					ELSE ('".$qty."' - ifnull(`hidden_qty`,0))
 				END
-				WHERE `partid` = ".prep($r['partid'])."
-			;";
+				WHERE `partid` = ".prep($r['partid']).";
+			";
 			qdb($up) or die(qe());
 		}
 	}
-}
 
+	// Delete all parts from qtys table that are NOT in stock per routine above; this removes sold / pulled items from inventory
+	$del = "DELETE FROM qtys WHERE partid NOT IN (".$csv_partids."); ";
+	qdb($del) or die(qe());
 ?>

@@ -208,10 +208,8 @@
 		return ($consolidated);
 	}
 
-	$temp_dir = sys_get_temp_dir();
-	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 	function processUpload($uploadid) {
-		global $temp_dir,$now,$test,$userid,$today,$remotes_log;
+		global $TEMP_DIR,$now,$test,$userid,$today,$remotes_log;
 		if (! $uploadid OR ! is_numeric($uploadid)) { return false; }
 
 		$query = "SELECT uploads.*, search_meta.companyid, uploads.id uploadid FROM uploads, search_meta ";
@@ -232,7 +230,7 @@
 			$file = file_get_contents($filelink);
 
 			// create temp file name in temp directory
-			$tempfile = tempnam($temp_dir,'inv'.date("ymdHis"));
+			$tempfile = tempnam($TEMP_DIR,'inv'.date("ymdHis"));
 			// add contents from file
 			file_put_contents($tempfile,$file);
 /*
@@ -336,7 +334,7 @@ $tempfile = '/var/tmp/400004291.xls';
 			$csv_report = '"Part","HECI","Qty","Status"'.chr(10).$csv_report;
 
 			// create temp file name in temp directory
-			$attachment = sys_get_temp_dir()."/inv-report-".date("ymdHis").".csv";
+			$attachment = $TEMP_DIR."inv-report-".date("ymdHis").".csv";
 			$handle = fopen($attachment, "w");
 			// add contents from file
 			fwrite($handle, $csv_report);

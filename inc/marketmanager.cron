@@ -17,10 +17,11 @@ ROOT_DIR=/var/www/html
 RDS_PORT=3306
 RDS_HOSTNAME=aa1qkk16kza9ick.cbjttt30gz5p.us-west-2.rds.amazonaws.com
 RDS_USERNAME=ventel
-RDS_PASSWORD=joder1234
+RDS_PASSWORD=avenpass02!
 
 #Monday-Friday
-#EXPORT: 4am (runs in about 2 minutes)
+#INV QTY CALC: 3:45am (runs in about 3-5 minutes)
+#EXPORT: 4am (runs in less than 2 minutes)
 #ALU: 5:30am (runs in about 20 seconds)
 #NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
 #FAVORITES: 6:05am to about 7:00am
@@ -38,6 +39,8 @@ RDS_PASSWORD=joder1234
 30 5 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
+# calculate inventory qtys to be exported
+45 3 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log
 # export our inventory
 0 4 * * 1-5 php -f /var/www/html/auto/inventory_export.php > ~/export_log
 # sunday ghosting script

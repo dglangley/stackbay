@@ -25,7 +25,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachment='') {
+	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID;
 
 		if ($GMAIL_USERID>0) { $userid = $GMAIL_USERID; }
@@ -105,8 +105,14 @@
 
 		$mail->MsgHTML(format_email($email_subject,$email_body));
 
-		if ($attachment) {
-			$mail->addAttachment($attachment);
+		if ($attachments) {
+			if (is_array($attachments)) {
+				foreach ($attachments as $attachment) {
+					$mail->addAttachment($attachment);
+				}
+			} else {
+				$mail->addAttachment($attachments);
+			}
 		}
 
 		//create the MIME Message
