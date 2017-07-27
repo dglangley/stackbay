@@ -477,7 +477,7 @@
 				$query3 = "SELECT h.invid, t.id, i.serial_no FROM inventory i, inventory_history h, ".$item_type." t, ";
 				$query3 .= "packages p, package_contents pc, invoice_shipments s, invoice_items ii ";
 				$query3 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND h.invid = pc.serialid ";
-				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND t.price > 0 ";
+				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND (t.price > 0 OR ii.amount > 0) ";
 				$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
 				$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
 				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid ";

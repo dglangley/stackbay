@@ -285,7 +285,7 @@ $email_str .= "</table>";
 //$email_str .= "</body>";
 //$email_str .= "</html>";
 
-	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('david@ven-tel.com','sam@ven-tel.com','chris@ven-tel.com'),'aaron@ven-tel.com');
+	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('david@ven-tel.com','sam@ven-tel.com','chris@ven-tel.com'));//,'aaron@ven-tel.com');
 	if ($send_success) {
 		echo json_encode(array('message'=>'Success'));
 	} else {

@@ -125,8 +125,8 @@
 	$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
 
 	// grab emails
-	//$emails = imap_search($inbox,'SINCE "'.$since_datetime.'"');
-	$emails = imap_search($inbox,'FROM "Robert.Fehlinger@ftr.com"');
+	$emails = imap_search($inbox,'SINCE "'.$since_datetime.'"');
+	//$emails = imap_search($inbox,'FROM "Robert.Fehlinger@ftr.com"');
 
 	//print "<pre>".print_r($emails,true)."</pre>";
 
@@ -188,7 +188,7 @@
 				}
 
 				if ($email_att[$k]) {
-					$att = imap_fetchbody($inbox, $n, ($i+1));
+					$att = imap_fetchbody($inbox, $n, 2);//($i+1));
 
 					if ($mpart->encoding == 3) {
 						$att = base64_decode($att);
@@ -411,7 +411,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			}
 		}
 
-		if (! $results_body AND count($attachment_array)>0) {
+		if (! $results_body AND count($attachments)>0) {
 			$results_body = 'Please see email below from '.$from_name.' at '.getCompany($companyid).'<BR>';
 		}
 
