@@ -127,7 +127,7 @@
 	
 <!----------------------------------------------------------------------------->
 <!------------------------- Output the navigation bar ------------------------->
-<!----------------------------------------------------------------------------->
+<!---------------------------------------------------------------------------->
 	<?php include 'inc/navbar.php'; ?>
 	<?php include_once 'modal/history.php'?>
 	<?php include_once 'modal/rm.php'?>
@@ -371,6 +371,7 @@
 					dataType: 'json',
 					complete: function() { $('#loader').hide(); },
 					success: function(part) {
+						//console.log(part);
 						var nothing_found = true;
 						var cond_filter = $(".condition_filters").find(".active").data("filter");
 						var qty_filter = $(".qty_filters").find(".active").data("filter");
@@ -447,7 +448,7 @@
 								$.each(macro, function(ke,info){
 									var key = ke.split(".");
 									console.log(key);
-									if (key[4] == 'component'){
+									if (info.locationid == 0){
 										return true;
 									}
 									

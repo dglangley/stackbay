@@ -341,7 +341,7 @@
 			// print_r($row);
 			$date = format_date($row['date_created'],"m/d/Y");
 			$po = getPO($row['purchase_item_id']);
-			$key = $row['locationid'].'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date.'.'.$row['classification'];
+			$key = ($row['locationid'] ? $row['locationid'] : '0').'.'.$po.'.'.getCondition($row['conditionid']).'.'.$date.'.'.$row['classification'];
 			$partid = $row['partid'];
 
 			if (! isset($r[$partid])) {
@@ -356,8 +356,8 @@
 				 //$r[$partid][$key]['part_name'] =  $info['part']." ".$info['heci']; 
 				 $r[$partid][$key]['part_name'] =  $row['part']." ".$row['heci']; 
 				 $r[$partid][$key]['partid'] = $row['partid'];
-				 $r[$partid][$key]['locationid'] = $row['locationid'];
-				 $r[$partid][$key]['location'] = display_location($row['locationid']);
+				 $r[$partid][$key]['locationid'] = ($row['locationid'] ? $row['locationid'] : '0');
+				 $r[$partid][$key]['location'] = display_location(($row['locationid'] ? $row['locationid'] : '0')) . ($row['bin'] ? ' Bin# ' . $row['bin'] : '');
 				 $r[$partid][$key]['place'] = display_location($row['locationid'], 'place');
 				 $r[$partid][$key]['instance'] = display_location($row['locationid'], 'instance');
 				 $r[$partid][$key]['vendorid'] = $vendorid;
@@ -370,12 +370,12 @@
 			 //Null Serial handler and serial grouping/append
 			 $serial = 'null';
 			 
-			if ($row['serial_no']){
-				$r[$partid][$key]['serials'][] = $row['invid'].", ".$row['serial_no'].", ".$row['qty'].", ".$row['status'].", ".$row['notes'];
-			}
-			else{
-				$r[$partid][$key]['null'][] = $serial;
-			}
+			//if ($row['serial_no']){
+				$r[$partid][$key]['serials'][] = $row['invid'].", ".($row['serial_no'] ? $row['serial_no'] : 'Component').", ".$row['qty'].", ".$row['status'].", ".$row['notes'];
+			// }
+			// else{
+			// 	$r[$partid][$key]['null'][] = $serial;
+			// }
 		}
 		return $r;
 	}
@@ -386,7 +386,7 @@ $f = grab('filters');
 
 
 $return = (search($search));
-// print_r($return); exit;
+//print_r($return); exit;
 if (count($return) > 0){
 	echo json_encode($return);
 } else {
