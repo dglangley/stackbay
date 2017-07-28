@@ -9,14 +9,6 @@
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getWarranty.php';
 
-    // function order_var($order_type){
-    //     	$order[] = array();
-    //     	$order['type'] = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
-    //         $order['vendor'] = ($order_type == "Purchase")? "remit" : "bill";
-    //         $order['table'] = strtolower($order_type)."_orders";
-    //         $order['items'] = strtolower($order_type)."_items";
-    // }
-	
 	$q = '';
     $companyid = prep(grab('company'));
     $order = o_params(grab('order_type'));

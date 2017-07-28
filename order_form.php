@@ -64,12 +64,14 @@
 	//3 is consider Operations in the user_privilege table
 	if(!in_array("1", $USER_ROLES) && !in_array("5", $USER_ROLES) && !in_array("7", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
 		if(in_array("3", $USER_ROLES)){
-			if($o['type'] == "Sales"){
+			if($o['type'] == "Sale"){
 			 	header('Location: /shipping.php?on='.$order_number.'&ps=s');
 			} else if($o['type'] == "Purchase"){
 			 	header('Location: /inventory_add.php?on='.$order_number.'&ps=p');
 			} else if($o['type'] == "Repair"){
+/*
 			 	header('Location: /repair_add.php?on='.$order_number);
+*/
 			} else if($o['rtv']){
 			
 			} else {
@@ -233,11 +235,11 @@
 
 	$RMA_history = array();
 
-	if ($o['type'] == "Sales"){
+	if ($o['type'] == "Sale"){
 	 	$RMA_history = getRMA($order_number, 'Sale');
 	}
 
-	if ($o['type'] == "Purchases"){
+	if ($o['type'] == "Purchase"){
 	 	$RMA_history = getRMA($order_number, 'Purchase');
 	}
 
@@ -440,7 +442,7 @@
 
 							// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 							// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
-							if($o['type'] == 'Sales') { 
+							if($o['type'] == 'Sale') { 
 								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
 							} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
 								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
@@ -495,7 +497,7 @@
 								';
 							}
 							echo $output;
-						}/* end if($order_number != "New" && ($o['type'] == 'Sales' || $o['type'] == 'Repair'))*/
+						}/* end if($order_number != "New" && ($o['type'] == 'Sale' || $o['type'] == 'Repair'))*/
 
 						if($order_number != "New" && $o['purchase']){
 							$bills_selector = 'SELECT * FROM `bills` WHERE po_number = '.prep($order_number).";";
@@ -534,7 +536,7 @@
 						}
 
 						if($order_number != "New"){
-							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sales' ? 'so' : 'po').'";';
+							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sale' ? 'so' : 'po').'";';
 							$rows = qdb($query);
 							$output = '
 							<div class ="btn-group">

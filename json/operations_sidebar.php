@@ -161,7 +161,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							<label for='assoc'>Customer Order</label>
 				";
 			}
-			if ($order_type == "Sales") {
+			if ($order_type == "Sale") {
 				if ($order_number == 'New') {
 					$right .= "
 								<div class='input-group'>
@@ -185,7 +185,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		}
 		$right .= "
 	    			</div>";
-	    if ($order_type != "Sales") {
+	    if ($order_type != "Sale") {
     		$right .= "<div class='row po-terms'  style='padding-bottom: 10px;'>
 				";
     	} else {
@@ -196,7 +196,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		$right .= "</div>";
     	
-    	if ($order_type == "Sales") {
+    	if ($order_type == "Sale") {
     		$right .= "</div>
 				";
     	}
@@ -295,7 +295,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					</div>
 				</div>
 		";
-		if ($order_number == 'New' AND $order_type == "Sales") {
+		if ($order_number == 'New' AND $order_type == "Sale") {
 			$right .= "
 				<div class='row' style='padding-bottom: 10px;'>
 					<div class='col-sm-12'>

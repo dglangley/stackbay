@@ -179,6 +179,22 @@
 				keyword($pheci,$k,'part');
 				keyword($pheci7,$k,'part');
 			}
+
+			// permute 1's to I's
+			$pheci = str_replace('1','I',$v);
+			$pheci7 = substr($pheci,0,7);
+			if ($pheci7<>substr($v,0,7)) {
+				keyword($pheci,$k,'part');
+				keyword($pheci7,$k,'part');
+			}
+
+			// permute I's to 1's
+			$pheci = str_replace('I','1',$v);
+			$pheci7 = substr($pheci,0,7);
+			if ($pheci7<>substr($v,0,7)) {
+				keyword($pheci,$k,'part');
+				keyword($pheci7,$k,'part');
+			}
 		} else {
 			$keywords = array($v);
 			$words = preg_split('/[^[:alnum:]]+/',$v);

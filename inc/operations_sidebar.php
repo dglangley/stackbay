@@ -297,7 +297,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 					</div>
 				</div>
 		";
-		if ($order_type == "Sales") {
+		if ($order_type == "Sale") {
 			$chkd = '';
 			if ($order_number == 'New') { $chkd = 'checked'; }
 
@@ -390,9 +390,6 @@ include_once $rootdir.'/inc/default_addresses.php';
 		
 		//Navigation changer
 		$right =  "	<div class='row company_meta left-sidebar' style='height:100%; padding: 0 10px;'>";
-		// if ($page == "RMA"){
-		// 	$right = "";
-		// }
 		$right .= "		<div class='sidebar-container'>";
 
 		if ($order_number && !($o['bill'])) {
@@ -611,7 +608,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 			$lists = array();
 			
 			// $query = "SELECT DISTINCT datetime FROM packages WHERE order_number = '".res($order_number)."';";
-			if($page == 'Sales') {
+			if($page == 'Sale') {
 				// Grab the list of packages grouped by shipment datetime
 				$query = "SELECT GROUP_CONCAT(package_no ORDER BY package_no ASC) boxes, datetime, tracking_no FROM packages WHERE order_number = ".prep($order_number)." and datetime IS NOT NULL GROUP BY datetime;";
 				$result = qdb($query) OR die(qe().' '.$query);
@@ -644,11 +641,6 @@ include_once $rootdir.'/inc/default_addresses.php';
 	}
 
 	function sidebar_out($number, $type, $mode ='order'){
-	// if(!empty($rma)) {
-	// 	$mode = 'rma';
-	// } else {
-	// 	$mode = 'order';
-	// }
 	
 	if ($mode == 'order'){
 		echo edit($number,$type,$mode);
