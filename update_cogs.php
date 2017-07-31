@@ -24,6 +24,8 @@
 		if (mysqli_num_rows($result2)>0) { continue; }
 
 		$amount = $r['cogs'];
+		if (! $amount) { continue; }
+
 		$jeid = setJournalEntry(false,$GLOBALS['now'],'Inventory Sale COGS','Inventory Asset','COGS for Invoice #'.$r['invoice_no'],$amount,$r['invoice_no'],'invoice');
 	}
 ?>

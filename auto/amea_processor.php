@@ -197,11 +197,12 @@
 					}
 					$email_att[$k]['attachment'] = $att;
 				} else { // message body
-					if (substr($subject,0,3)=='RE:') {
-						$message = imap_decode($inbox,$n,3);//$mpart->encoding);
-					} else {
+//re-thought this one, dl 7/31/17
+//					if (substr($subject,0,3)=='RE:') {
+//						$message = imap_decode($inbox,$n,3);//$mpart->encoding);
+//					} else {
 						$message = imap_decode($inbox,$n,$mpart->encoding);
-					}
+//					}
 				}
 			}
 

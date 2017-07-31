@@ -1,5 +1,5 @@
 <?php
-	function imap_decode($inbox,$email_number,$encoding=1) {
+	function imap_decode($inbox,$email_number,$encoding=0) {
 		global $debug_num;
 
 		if ($debug_num) {
@@ -20,10 +20,16 @@
 			$message = quoted_printable_decode(imap_fetchbody($inbox,$email_number,1.1));
 		} else if ($encoding==3) {
 			$message = base64_decode(imap_fetchbody($inbox,$email_number,1.1));
+			if ($message) {
+				$message = str_replace(chr(10),'<BR/>',$message);//base64_decode(imap_fetchbody($inbox,$email_number,1.1)));
+			} else {
+				$message = str_replace(chr(10),'<BR/>',base64_decode(imap_fetchbody($inbox,$email_number,1)));
+			}
 		} else if ($encoding==1) {
 			$message = imap_8bit(imap_fetchbody($inbox,$email_number,1.1));
 		} else {//most normal emails
 			$message = imap_qprint(imap_fetchbody($inbox,$email_number,1.1));
+			$message = str_replace(chr(10),'<BR/>',$message);
 		}
 
 		return ($message);
