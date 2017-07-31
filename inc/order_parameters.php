@@ -57,7 +57,7 @@
 			
 		}
 		else if ($type == "s" || strtolower($type) == "sale"  || strtolower($type) == "sales"  || strtolower($type) == "so"  || strtolower($type) == "sales_item_id"  || strtolower($type) == "sold"  || strtolower($type) == "sales_orders"){
-			$info['type'] = "Sales";
+			$info['type'] = "Sale";
 			$info['ptype'] = "Sale";
 			//convenient type check
 			$info['purchase'] = false;

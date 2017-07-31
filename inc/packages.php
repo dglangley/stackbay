@@ -48,7 +48,7 @@
         if ($action == 'addition'){
             $order_number = prep($order);
             $name = prep($name);
-            $order_type = prep($type,'Sales');
+            $order_type = prep($type,'Sale');
             if($order) {
                 $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,$order_type, $name);";
                 qdb($insert) OR die(qe().": $insert");

@@ -1,16 +1,19 @@
 <?php
 	/***** this function outputs tabs for use in navbar, $pos is used as 'left' or 'right' of central search field *****/
 
-	$inventory_sub = '';
+	$inventory_sub = '
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                    <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
+	';
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
-		$inventory_sub = '
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+		$inventory_sub .= '
                     <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Manage Inventory</a></li>
-                    <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
-				</ul>
 		';
 	}
+	$inventory_sub .= '
+				</ul>
+	';
 
 	// list of all tabs for iterative display to be able to match selected tab ($selected_tab) with appropriate tab
 	$TABS = array(
@@ -31,9 +34,8 @@
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a> - <a href="/builds.php">Builds</a></h4>
-                                    <h4 class="megamenu-block-title">'
-									  . ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
-									  '<div class="form-group">
+                                    <h4 class="megamenu-block-title">
+									  <div class="form-group">
 										<div class="input-group pull-left">
 											<span class="input-group-btn">
 												<a href="/order_form.php?ps=RO" class="btn btn-default btn-xs bg-repairs" title="Start New Repair"><i class="fa fa-plus"></i></a>
@@ -44,9 +46,8 @@
 											</span>
 										</div>
 										<!-- <a href="/accounts.php?orders_table=repairs" class="mode-tab"><i class="fa fa-money"></i> Repairs</a> -->
-									  </div>'
-									  : '') .
-									'</h4>
+									  </div>
+									</h4>
                                     <ul id="repair-orders-list">
                                     </ul>
                                 </div>

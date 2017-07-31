@@ -110,7 +110,7 @@
 		
 		
 		$status = 'Pending';
-		$freight = prep(shipment_freight($package_order_number, "Sales", $shipment_datetime));
+		$freight = prep(shipment_freight($package_order_number, "Sale", $shipment_datetime));
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 

@@ -2,7 +2,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 
+	if (! isset($debug)) { $debug = 0; }
+
 	function setJournalEntry($entry_no,$date,$debit_account,$credit_account,$memo,$amount,$trans_num,$trans_type='invoice',$confirmed=false,$confirmed_by=false) {
+		global $debug;
+
 		$q_entryno = prep($entry_no);
 		$date = prep($date);
 		$debit_account = prep($debit_account);
@@ -21,13 +25,22 @@
 
 		$query = "INSERT INTO journal_entries (entry_no, datetime, debit_account, credit_account, memo, trans_number, trans_type, amount, confirmed_datetime, confirmed_by) ";
 		$query .= "VALUES ($q_entryno, $date, $debit_account, $credit_account, $memo, $trans_num, $trans_type, $amount, $confirmed, $confirmed_by); ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$id = qid();
+		if ($debug) {
+			echo $query.'<BR>';
+			$id = 999999;
+		} else {
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$id = qid();
+		}
 
 		// go back and update now with ID; this is kind of legacy crap, maybe revisit this at some point; dl 6-30-17
 		if (! $entry_no) {
 			$query = "UPDATE journal_entries SET entry_no = '".$id."-JE' WHERE id = $id; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if ($debug) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+			}
 		}
 
 		return ($id);

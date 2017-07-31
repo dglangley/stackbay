@@ -80,6 +80,7 @@ function not_component($row){return ($row['classification'] != "component");}
 
 function search_as_heci($search_str){
 		$page = grab('page');
+		if ($page=='Sales') { $page = 'Sale'; }
         $type = grab('type');
 		$heci7_search = false;
 
@@ -160,6 +161,7 @@ function search_row(){
 //==================== Build the individual version output ====================
 function sub_rows($search = ''){
     $page = grab('page');
+	if ($page=='Sales') { $page = 'Sale'; }
     $show = grab('show');
     //On Click of the "GO!" Button, populate a dropped down list of each of the parameters.
     $any_hidden = false;
@@ -271,7 +273,7 @@ function sub_rows($search = ''){
                         $text .= "</div>";
                     }
                     $text .= "</div>";
-                    if (($page == 'Sales' || $page == 's') && !$sellable && !$show){
+                    if (($page == 'Sale' || $page == 's') && !$sellable && !$show){
                         $text = '';
                         $any_hidden = true;
                         continue;
@@ -302,7 +304,7 @@ function sub_rows($search = ''){
                 //EXT price
                 }//END foreach item allowed
             }
-            if (($page == 'Sales' || $page == 's') && !$show && $any_hidden){
+            if (($page == 'Sale' || $page == 's') && !$show && $any_hidden){
                 $rows .= "
                     <tr class = 'items_label'>
                         <td></td>

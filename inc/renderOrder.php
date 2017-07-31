@@ -179,9 +179,6 @@
             // echo("</pre>");
             return $return;
         }
-    // Grab the order number
-//    $order_number = grab('on');
-//	$order_type = ($_REQUEST['ps'] == 'p' || $_REQUEST['ps'] == 'Purchase') ? "Purchase" : "Sales";
 
 	function renderOrder($order_number,$order_type='Purchase', $email = false) {
 	    $o = array();
