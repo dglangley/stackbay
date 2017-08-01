@@ -16,6 +16,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
 
+	$debug = 0;
+	if (isset($_REQUEST['debug'])) { $debug = 1; }
+	$debug_email = '';
+	if (isset($_REQUEST['debug_email'])) { $debug_email = trim($_REQUEST['debug_email']); }
+
 	$userid = 5;
 	setGoogleAccessToken($userid);
 
@@ -40,6 +45,9 @@
 
 	$commons = array(
 		'DC'=>1,
+		'INVERTER'=>1,
+		'PWB'=>1,
+		'COLOR'=>1,
 		'CARD'=>1,
 		'MODEL'=>1,
 		'OSCILLATOR'=>1,
@@ -126,8 +134,15 @@
 	$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
 
 	// grab emails
-	$emails = imap_search($inbox,'SINCE "'.$since_datetime.'"');
-	//$emails = imap_search($inbox,'FROM "Robert.Fehlinger@ftr.com"');
+	if ($debug) {
+		if ($debug_email) {
+			$emails = imap_search($inbox,'SINCE "'.$since_datetime.'" FROM "'.$debug_email.'"');
+		} else {
+			$emails = imap_search($inbox,'SINCE "'.$since_datetime.'" FROM "Robert.Fehlinger@ftr.com"');
+		}
+	} else {
+		$emails = imap_search($inbox,'SINCE "'.$since_datetime.'"');
+	}
 
 	//print "<pre>".print_r($emails,true)."</pre>";
 
@@ -153,7 +168,7 @@
 
 		// output the email overview information
 		$status = ($overview[0]->seen ? 'read' : 'unread');
-		if ($status=='read') { continue; }
+		if (! $debug AND $status=='read') { continue; }
 
 		$subject = $overview[0]->subject;
 
@@ -218,6 +233,7 @@
 		} else {
 			$message = imap_body($inbox,$n);
 		}
+		if ($debug) { echo $message.'<BR><BR>'; continue; }
 
 		$date_utc = $overview[0]->date;
 		$date = date("Y-m-d",strtotime($date_utc));
