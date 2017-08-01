@@ -1,6 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
-	include_once $_SERVER["ROOT_DIR"]."/inc/pipe.php";
+//	include_once $_SERVER["ROOT_DIR"]."/inc/pipe.php";
 
 	//Declare the company array which will be used to globally communicate the found companies
 	$COMPANIES = array();

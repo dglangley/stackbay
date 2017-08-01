@@ -1,10 +1,7 @@
 <?php
 	include_once 'inc/dbconnect.php';
-	include_once 'inc/pipe.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
-	include_once 'inc/getPipeIds.php';
-	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
 	include_once 'inc/getCost.php';
@@ -617,35 +614,6 @@ if (! $r['partid']) { return ($results); }
 			if ($partid_csv) { $partid_csv .= ","; }
 			$partid_csv .= $partid;
 
-//			print "<pre>".print_r($P,true)."</pre>";
-//                                        <img src="/products/images/echo format_part($P['part']).jpg" alt="pic" class="img" />
-/*
-			$results[$partid]['pipe_id'] = 0;
-			if ($P['heci']) {
-				// get all ids based on 7-digit heci code
-				$ids = getPipeIds(substr($P['heci'],0,7),'heci');
-				foreach ($ids as $id => $arr) {
-					// if exact 10-digit heci match to the currently-iterating heci, this is an exact match
-					if ($arr['heci']===$P['heci']) {
-						// stores exact 10-digit heci matched pipe id with partid
-						$pipe_id_assoc[$id] = $partid;
-						// remove pipe id from general array of pipe ids (since this is an exact match, we're storing in $results)
-						unset($pipe_ids[$id]);
-						// store for a singular lookup below
-						$results[$partid]['pipe_id'] = $id;
-					} else if (! isset($pipe_id_assoc[$id])) {
-						// add to pipe id results so long as not associated with 10-digit heci match
-						$pipe_ids[$id] = $arr;
-					}
-				}
-			}
-			$ids = getPipeIds($P['part'],'part');
-			foreach ($ids as $id => $arr) {
-				// add to pipe id results so long as not associated with 10-digit heci match
-				if (! isset($pipe_id_assoc[$id])) { $pipe_ids[$id] = $arr; }
-			}
-*/
-
 			// check favorites
 			$favs[$partid] = 'star-o';
 			$query = "SELECT * FROM favorites WHERE partid = '".$partid."'; ";
@@ -687,23 +655,6 @@ if (! $r['partid']) { return ($results); }
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
-			$results[$partid]['notes'] = '';
-/*
-			$results[$partid]['pipeids_str'] = '';//$PIPEIDS_STR;
-			if ($P['pipe_id']) {//exact 10-digit heci match from pipe
-				$itemqty = getQty($P['pipe_id'],'PIPE');
-			}
-			if (! $P['pipe_id'] OR $num_results==1) {//no exact match or only one match
-				$itemqty += getQty($pipe_ids,'PIPE');
-				// VERY important array reset, so that we're effectively applying all 'misc' pipe ids to the first non-exact match,
-				// and also not re-applying same ids to subsequent revisions. no duplicates!
-				$pipe_ids = array();
-			}
-			$results[$partid]['notes'] = $PIPE_NOTES;
-			$PIPE_NOTES = '';
-			$results[$partid]['pipeids_str'] = $PIPEIDS_STR;
-			$PIPEIDS_STR = '';
-*/
 
 			// change to this after migration, remove ~7-10 lines above
 			$itemqty = getQty($partid);
@@ -726,12 +677,6 @@ if (! $r['partid']) { return ($results); }
 		}
 
 		$id_array = "";//pass in comma-separated values for getShelflife()
-/*
-		foreach ($pipe_id_assoc as $pipe_id => $partid) {
-			if ($id_array) { $id_array .= ','; }
-			$id_array .= $pipe_id;
-		}
-*/
 		$shelflife = getShelflife($id_array);
 
 		$s = '';
@@ -741,16 +686,12 @@ if (! $r['partid']) { return ($results); }
 		$k = 0;
 		foreach ($results as $partid => $P) {
 			$itemqty = $P['qty'];
-			$notes = $P['notes'];
-			$pipeids_str = '';//$P['pipeids_str'];
+			$notes = '';
 
-			// if no notes through pipe, check new db (this is just for the notes flag)
-			if (! $notes) {
-				$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
-				$result2 = qdb($query2);
-				if (mysqli_num_rows($result2)>0) {
-					$notes = true;
-				}
+			$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
+			$result2 = qdb($query2);
+			if (mysqli_num_rows($result2)>0) {
+				$notes = true;
 			}
 
 			$rowcls = '';

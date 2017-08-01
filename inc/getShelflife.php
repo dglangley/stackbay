@@ -3,6 +3,8 @@
 		$shelflife = "";
 		if (! $id_array) { return ($shelflife); }
 
+		return ($shelflife);
+
 		$query = "SELECT AVG(DATEDIFF(CURDATE(),DATE_SUB(rep_exp_date, INTERVAL 90 DAY))) days, COUNT(inventory_itemlocation.id) n ";
 		$query .= "FROM inventory_itemlocation, inventory_inventory ";
 		$query .= "WHERE inventory_id IN (".$id_array.") AND rep_exp_date IS NOT NULL AND inventory_inventory.id = inventory_id; ";

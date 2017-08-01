@@ -9,8 +9,6 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/terms.php';

@@ -13,7 +13,6 @@
 		include_once $rootdir.'/inc/scripts.php';
 		include_once $rootdir.'/inc/dbconnect.php';
 		include_once $rootdir.'/inc/getCompany.php';
-		include_once $rootdir.'/inc/pipe.php';
 		
 			if (!$_POST['new'] && !empty($_POST)){
 				foreach ($_POST as $num => $x) {

@@ -154,14 +154,6 @@
 		$filter = $_REQUEST['filter'];
 	}
 
-	if ($keyword) {
-    	$part_list = getPipeIds($keyword);
-    	foreach ($part_list as $id => $array) {
-    	    $part_string .= $id.',';
-    	}
-    	$part_string = rtrim($part_string, ",");
-	}
-
 	$startDate = format_date($today,'01/01/Y',array('y'=>-1));
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');

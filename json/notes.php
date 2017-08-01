@@ -1,6 +1,5 @@
 <?php
 	include_once '../inc/dbconnect.php';
-	include_once '../inc/pipe.php';
 	include_once '../inc/format_date.php';
 	include_once '../inc/format_price.php';
 	include_once '../inc/getUser.php';
@@ -12,10 +11,6 @@
 		exit;
 	}
 
-	$pipe_ids = '';
-	if (isset($_REQUEST['pipe_ids'])) {
-		$pipe_ids = str_replace('undefined','',$_REQUEST['pipe_ids']);
-	}
 	$partid = 0;
 	if (isset($_REQUEST['partid'])) {
 		$partid = str_replace('undefined','',$_REQUEST['partid']);
@@ -27,8 +22,8 @@
 	$days_sec = $hours_sec*24;
 
 	/***** GET NOTIFICATIONS ONLY *****/
-	// if no part/pipe ids passedin, give back all notes related to new/unread notifications
-	if (! $pipe_ids AND ! $partid) {
+	// if no partid passedin, give back all notes related to new/unread notifications
+	if (! $partid) {
 		$query = "SELECT prices.datetime, prices.note, part, heci, contacts.name, ";
 		$query .= "read_datetime, click_datetime, notifications.id, prices.partid ";
 		$query .= "FROM notifications, prices, parts, users, contacts ";
@@ -247,18 +242,6 @@
 			$note = trim($r['note']);
 			if ($r['price']) { $note = 'Price: '.format_price($r['price'],true).chr(10).$note; }
 			$notes[] = array('user'=>getUser($r['userid']),'date'=>format_date($r['datetime'],'n/j/y g:ia'),'note'=>str_replace(chr(10),'<BR>',utf8_encode($note)));
-		}
-	}
-
-	if ($pipe_ids) {
-		$query = "SELECT CONCAT(notes,'\n',part_of) notes FROM inventory_inventory WHERE id IN (".$pipe_ids.") AND REPLACE('Bot Generated','',notes) <> ''; ";
-		$result = qdb($query,'PIPE') OR reportError('Sorry, there was an error getting notes through the PIPE. Please see Admin immediately!');//qe('PIPE').' '.$query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			// strip out 'Bot Generated' and any outer white space / line feed
-			$note = trim(str_replace('Bot Generated','',$r['notes']));
-			if ($note) {
-				$notes[] = array('user'=>'','date'=>'n/a','note'=>str_replace(chr(10),'<BR>',utf8_encode($note)));
-			}
 		}
 	}
 

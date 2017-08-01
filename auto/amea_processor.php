@@ -39,6 +39,7 @@
 	}
 
 	$commons = array(
+		'DC'=>1,
 		'CARD'=>1,
 		'MODEL'=>1,
 		'OSCILLATOR'=>1,

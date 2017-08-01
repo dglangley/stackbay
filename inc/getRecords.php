@@ -1,6 +1,4 @@
 <?php
-	include_once 'pipe.php';
-	include_once 'getPipeIds.php';
 	include_once 'getPartId.php';
 	include_once 'getRep.php';
 	include_once 'getCompany.php';
@@ -131,7 +129,7 @@
 				$unsorted[$r['datetime']][] = $r;
 			}
 		}
-		// sort local and piped data together in one results array, combining where necessary (to elim dups)
+		// sort in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
 		if ($market_table=='sales' OR $market_table=='purchases' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
 		$results = sort_results($unsorted,'desc',$consolidate,$market_table);
@@ -220,19 +218,13 @@
 		return ($unsorted);
 	}
 
-//	$SALE_QUOTES = array();
 	function get_details($id_csv,$table_name,$results) {
-//		global $SALE_QUOTES, $record_start, $record_end;
 		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
 		$min = format_price($min_price,'','',true);
 		$max = format_price($max_price,'','',true);
 		
 		$db_results = array();
 
-//		if (! $record_start AND ! $record_end AND ! $id_csv AND ($table_name == 'sales' OR $table_name=='purchases' OR $table_name == 'incoming_quote')) {
-//revised 12/16/16 to allow for date-period lookups without a search string
-//		if ((!$id_csv && (!$record_start && !$record_end))||(!$id_csv && ($table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote'))){
-//		if (! $id_csv && ((! $record_start && ! $record_end) || $table_name == 'sales' || $table_name=='purchases' || $table_name == 'incoming_quote')) {
 		if (! $id_csv AND ! $record_start AND ! $record_end) {
 //			echo 'Valid search result or date range not entered';
 			return $db_results;
@@ -257,45 +249,34 @@
 		// add sales/purchaser rep id
 		if ($table_name=='outgoing_quote' OR $table_name=='incoming_quote') { $add_field .= ", creator_id repid "; } else { $add_field .= ", '' repid "; }
 
-//1/12/17
-//		if ($table_name == 'outgoing_request' || $table_name == 'outgoing_quote' || $table_name == 'userrequest'){
-			if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
-//		}
+		if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
 
-/*
-		if ($orig_table=='outgoing_quote' AND isset($SALE_QUOTES[$invid])) {
-			$db_results = $SALE_QUOTES[$invid];
-		} else {
-*/
-			$query = "SELECT date datetime, quantity qty, price, inventory_company.name, ";
-			$query .= "company_id cid, part_number , clei ".$add_field;
-			$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
-			if ($orig_table=='purchases') { $query .= ", inventory_purchaseorder "; }
-			$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-			if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
-			if ($oldid) { $query .= "AND company_id = '".$oldid."' "; }
-			$query .= $and_where;
-			if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
-			$query .= "AND inventory_inventory.id = inventory_id ";
-			if ($min_price){$query .= " AND price >= ".$min." ";}
-			if ($max_price){$query .= " AND price <= ".$max." ";}
+		$query = "SELECT date datetime, quantity qty, price, inventory_company.name, ";
+		$query .= "company_id cid, part_number , clei ".$add_field;
+		$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
+		if ($orig_table=='purchases') { $query .= ", inventory_purchaseorder "; }
+		$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
+		if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
+		if ($oldid) { $query .= "AND company_id = '".$oldid."' "; }
+		$query .= $and_where;
+		if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
+		$query .= "AND inventory_inventory.id = inventory_id ";
+		if ($min_price){$query .= " AND price >= ".$min." ";}
+		if ($max_price){$query .= " AND price <= ".$max." ";}
 
-			$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
-//			echo $orig_table.':<BR>'.$query.'<BR>';
-			$result = qdb($query,'PIPE') OR die(qe('PIPE'));
+		$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
+		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
 			
-			while ($r = mysqli_fetch_assoc($result)) {
-				$r['partid'] = getPartId($r['part_number'],$r['clei']);
-				// translate old id to new
-				$r['cid'] = dbTranslate($r['cid']);
-				if ($company_filter AND $r['cid']<>$company_filter) { continue; }
+		while ($r = mysqli_fetch_assoc($result)) {
+			$r['partid'] = getPartId($r['part_number'],$r['clei']);
+			// translate old id to new
+			$r['cid'] = dbTranslate($r['cid']);
+			if ($company_filter AND $r['cid']<>$company_filter) { continue; }
 
-				$r['name'] = getCompany($r['cid']);
-				$db_results[] = $r;
-			}
+			$r['name'] = getCompany($r['cid']);
+			$db_results[] = $r;
+		}
 
-//			if ($orig_table=='sales') { $SALE_QUOTES[$invid] = $db_results; }
-//		}
 		return (handle_results($db_results,$orig_table,$results));
 	}
 

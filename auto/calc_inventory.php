@@ -33,7 +33,7 @@
 				END
 				WHERE `partid` = ".prep($r['partid']).";
 			";
-			qdb($up) or die(qe());
+			qdb($query2) or die(qe());
 		}
 	}
 

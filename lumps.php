@@ -8,7 +8,6 @@
 		include_once $rootdir.'/inc/getCompany.php';
 		include_once $rootdir.'/inc/getPart.php';
 		include_once $rootdir.'/inc/form_handle.php';
-		include_once $rootdir.'/inc/pipe.php';
 		include_once $rootdir.'/inc/getUser.php';
 		include_once $rootdir.'/inc/keywords.php';
 		include_once $rootdir.'/inc/filter.php';

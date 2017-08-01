@@ -9,7 +9,6 @@
 		include_once $rootdir.'/inc/getCompany.php';
 		include_once $rootdir.'/inc/getWarranty.php';
 		include_once $rootdir.'/inc/getPart.php';
-		include_once $rootdir.'/inc/pipe.php';
 		include_once $rootdir.'/inc/getRep.php';
 		include_once $rootdir.'/inc/keywords.php';
 		include_once $rootdir.'/inc/getRecords.php';

@@ -23,7 +23,6 @@
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
