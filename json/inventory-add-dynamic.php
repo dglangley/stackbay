@@ -120,12 +120,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 					$email_body_html = renderOrder($po_number, 'Purchase', true);
 					$email_subject = 'PO# ' . $po_number . ' Received';
-					//$recipients = 'andrew@ven-tel.com,';
+					$recipients = $sales_rep;
 					$bcc = '';
-
-					foreach($sales_rep as $rep) {
-						$recipients .= $rep . ', ';
-					}
 
 					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 
