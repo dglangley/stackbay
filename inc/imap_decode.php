@@ -17,7 +17,8 @@
 		if ($encoding==4) {
 			//dl 7-26-17
 			//$message = imap_qprint(imap_body($inbox,$email_number));
-			$message = quoted_printable_decode(imap_fetchbody($inbox,$email_number,1.1));
+			$message = quoted_printable_decode(imap_fetchbody($inbox,$email_number,1));
+			$message = str_replace(chr(10),'<BR/>',$message);
 		} else if ($encoding==3) {
 			$message = base64_decode(imap_fetchbody($inbox,$email_number,1.1));
 			if ($message) {

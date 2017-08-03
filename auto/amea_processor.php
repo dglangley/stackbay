@@ -134,12 +134,8 @@
 	$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
 
 	// grab emails
-	if ($debug) {
-		if ($debug_email) {
-			$emails = imap_search($inbox,'SINCE "'.$since_datetime.'" FROM "'.$debug_email.'"');
-		} else {
-			$emails = imap_search($inbox,'SINCE "'.$since_datetime.'" FROM "Robert.Fehlinger@ftr.com"');
-		}
+	if ($debug_email) {
+		$emails = imap_search($inbox,'SINCE "'.$since_datetime.'" FROM "'.$debug_email.'"');
 	} else {
 		$emails = imap_search($inbox,'SINCE "'.$since_datetime.'"');
 	}
@@ -168,7 +164,7 @@
 
 		// output the email overview information
 		$status = ($overview[0]->seen ? 'read' : 'unread');
-		if (! $debug AND $status=='read') { continue; }
+		if ((! $debug AND ! $debug_email) AND $status=='read') { continue; }
 
 		$subject = $overview[0]->subject;
 
@@ -213,12 +209,18 @@
 					}
 					$email_att[$k]['attachment'] = $att;
 				} else { // message body
-//re-thought this one, dl 7/31/17
-//					if (substr($subject,0,3)=='RE:') {
-//						$message = imap_decode($inbox,$n,3);//$mpart->encoding);
-//					} else {
+					// some messages contain a nested message body where the encoding is different than at the parent level
+			        if (array_key_exists('parts', $mpart)) {
+						// this would be the html content
+						if ($mpart->parts[1]) {
+							$subpart = $mpart->parts[1];
+						} else {//plain text
+							$subpart = $mpart->parts[0];
+						}
+						$message = imap_decode($inbox,$n,$subpart->encoding);
+					} else {
 						$message = imap_decode($inbox,$n,$mpart->encoding);
-//					}
+					}
 				}
 			}
 

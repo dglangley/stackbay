@@ -38,6 +38,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 	//items = ['partid', 'serial', 'qty', 'location', 'status', 'conditionid'];
 	function savetoDatabase($partid, $conditionid, $serial, $po_number, $item_id, $savedSerial, $place, $instance,$packageid){
+		global $SEND_ERR;
+
 		$result = array();
 		$locationid;
 		$query;
@@ -109,7 +111,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 				if (mysqli_num_rows($receivedResult)) {
 					//Grab all users under sales
-					$query = "SELECT email FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id;";
+					$query = "SELECT email FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id AND users.id <> 5;";
 					$salesResult = qdb($query) OR die(qe() . ' ' . $query);
 
 					if (mysqli_num_rows($salesResult)) {
@@ -120,14 +122,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 
 					$email_body_html = renderOrder($po_number, 'Purchase', true);
 					$email_subject = 'PO# ' . $po_number . ' Received';
-					//$recipients = 'andrew@ven-tel.com,';
 					$bcc = '';
 
-					foreach($sales_rep as $rep) {
-						$recipients .= $rep . ', ';
-					}
-
-					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+					$send_success = send_gmail($email_body_html,$email_subject,$sales_rep,$bcc);
 
 					if ($send_success) {
 					    // echo json_encode(array('message'=>'Success'));

@@ -936,7 +936,7 @@
 			$email_body_html .= "Link: <a href ='https://www.stackbay.com'>Stackbay</a><br>";
 			$email_body_html .= "Username: " . $this->getUsername() . "<br>";
 			$email_body_html .= "Password: " . ($this->generated_pass == '1' ? htmlspecialchars($this->getTempPass()) : "User Preset") . "<br><br>";
-			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
+			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
 			$email_subject = 'Stackbay Registration';
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
@@ -963,7 +963,7 @@
 			$email_body_html .= "Link: <a target='_blank' href ='" . $_SERVER['HTTP_HOST'] . "'>Stackbay</a><br>";
 			$email_body_html .= "Username: " . $username . "<br>";
 			$email_body_html .= "Password: Some Crazy Password Here<br><br>";
-			$email_body_html .= "If you have any problems, please contact an admin at support@ven-tel.com.";
+			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
 			$email_subject = 'Stackbay Recovery';
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
