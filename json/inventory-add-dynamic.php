@@ -107,24 +107,24 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				$query = "SELECT qty_received FROM purchase_items WHERE id = '".res($item_id)."' AND qty_received = qty; ";
 				$receivedResult = qdb($query);
 
-				$sales_rep = array();
+				$sales_reps = array();
 
 				if (mysqli_num_rows($receivedResult)) {
-					//Grab all users under sales
+					//Grab all users under sales, except users.id = 5 (Amea)
 					$query = "SELECT email FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id AND users.id <> 5;";
 					$salesResult = qdb($query) OR die(qe() . ' ' . $query);
 
 					if (mysqli_num_rows($salesResult)) {
 						while ($row = $salesResult->fetch_assoc()) {
-							$sales_rep[] = $row['email'];
+							$sales_reps[] = $row['email'];
 						}
 					}
 
 					$email_body_html = renderOrder($po_number, 'Purchase', true);
 					$email_subject = 'PO# ' . $po_number . ' Received';
-					$bcc = '';
 
-					$send_success = send_gmail($email_body_html,$email_subject,$sales_rep,$bcc);
+					$bcc = '';
+					$send_success = send_gmail($email_body_html,$email_subject,$sales_reps,$bcc);
 
 					if ($send_success) {
 					    // echo json_encode(array('message'=>'Success'));
