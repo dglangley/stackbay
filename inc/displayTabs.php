@@ -190,6 +190,28 @@
 					'sub' => '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
                     <li><a href="/transactions.php"><i class="fa fa-list-alt"></i> Transactions</a></li>
+					<hr style="margin:0px">
+					<li>
+					  <div class="yamm-content">
+						<div class="row">
+                            <div class="megamenu-block">
+								<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/invoices.php">Invoices</a></h4>
+                                <h4 class="megamenu-block-title">
+								  <div class="form-group">
+									<div class="input-group pull-left">
+										<input type="text" class="form-control input-xs order-search" placeholder="Invoices..." data-type="INV">
+										<span class="input-group-btn">
+											<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+										</span>
+									</div>
+								  </div>
+								</h4>
+                                <ul id="repair-orders-list">
+                                </ul>
+                            </div><!-- .megamenu-block -->
+						</div><!-- .row -->
+					  </div><!-- .yamm-content -->
+					</li>
 				</ul>
 					',
 					'privilege'=>array(1,4,7),

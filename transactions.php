@@ -16,9 +16,8 @@
 	$completed_Invoice = $_REQUEST['invoice_checkbox'];
 	$completed_Bills = $_REQUEST['bills_checkbox'];
 
-	// if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
-	// 	$keyword = $_REQUEST['s'];
-	// }
+	$companyid = 0;
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 
 	if($completed_Invoice) {
 		foreach($completed_Invoice as $invoice) {
@@ -136,15 +135,10 @@
     }
 
     //Invoices population
- //    $select = "
-	// SELECT i.order_number, i.companyid, i.date_invoiced, i.invoice_no, q.date_completed FROM `invoices` as i, `qb_log` as q WHERE i.order_type = 'Sale' AND i.invoice_no = q.order_number";
-	// $select .= " ORDER BY i.invoice_no DESC LIMIT 0,50 ";
-	// $select .= ";";
 
-    $select = "
-	SELECT * FROM `invoices` WHERE order_type = 'Sale'";
-	$select .= " ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300 ";
-	$select .= ";";
+    $select = "SELECT * FROM `invoices` WHERE order_type = 'Sale' ";
+	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
+	$select .= "ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300; ";
 	$invoices_results = qdb($select);
 
 	$invoice_info = array();
@@ -198,7 +192,7 @@
 
 	    	$invoices .= "
 	            <tr class = '".($completed? "complete" : "pending" )."'>
-	            	<td><a href='docs/INV".$row['invoice_no'].".pdf'>".$row['invoice_no']."</td>
+	            	<td><a href='docs/INV".$row['invoice_no'].".pdf' target='_new'>".$row['invoice_no']."</td>
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_invoiced'])."</td>
@@ -222,10 +216,9 @@
 	}
 
 	//Bills population
-    $select = "
-	SELECT * FROM `bills`";
-	$select .= " ORDER BY `bills`.`bill_no` DESC LIMIT 0,300 ";
-	$select .= ";";
+    $select = "SELECT * FROM `bills` ";
+	if ($companyid) { $select .= "WHERE companyid = '".res($companyid)."' "; }
+	$select .= "ORDER BY `bills`.`bill_no` DESC LIMIT 0,300; ";
 	$bills_results = qdb($select);
 	if(mysqli_num_rows($bills_results) > 0){
 	    foreach($bills_results as $row){
@@ -319,7 +312,15 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
+<?php
+	$tab = 'journal-entries';
+	if (isset($_REQUEST['tab']) AND ($_REQUEST['tab']=='invoices' OR $_REQUEST['tab']=='bills')) {
+		$tab = $_REQUEST['tab'];
+	}
+?>
+
     <form class="form-inline" method="get" action="/transactions.php">
+	<input type="hidden" name="tab" value="<?php echo $tab; ?>" id="tab">
 
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
@@ -404,7 +405,8 @@
 			<td class="col-md-2">
 				<div class="pull-right form-group">
 					<select name='companyid' id='companyid' class='form-control input-xs company-selector' >
-						<option value=''>Select a Company</option>
+						<option value=''>- Select a Company -</option>
+<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'; } ?>
 					</select>
 					<button class="btn btn-primary btn-sm" type="submit" >
                         <i class="fa fa-filter" aria-hidden="true"></i>
@@ -432,22 +434,16 @@
 
 			<!-- Nav tabs -->
 			<ul class="nav nav-tabs nav-tabs-ar">
-				<li class="active"><a href="#journal-entries" data-toggle="tab"><i class="fa fa-square"></i> Journal Entries (<?=mysqli_num_rows($je_results)?>)</a></li>
-<!--
-				<li><a href="#customers" data-toggle="tab"><i class="fa fa-book"></i> Customers</a></li>
--->
-				<li><a href="#invoices" data-toggle="tab"><i class="fa fa-file-text"></i> Invoices</a></li>
-<!--
-				<li><a href="#vendors" data-toggle="tab"><i class="fa fa-book"></i> Vendors</a></li>
--->
-				<li><a href="#bills" data-toggle="tab"><i class="fa fa-file-text-o"></i> Bills</a></li>
+				<li<?php if ($tab=='journal-entries') { echo ' class="active"'; } ?>><a href="#journal-entries" class="tab-toggle" data-toggle="tab"><i class="fa fa-square"></i> Journal Entries (<?=mysqli_num_rows($je_results)?>)</a></li>
+				<li<?php if ($tab=='invoices') { echo ' class="active"'; } ?>><a href="#invoices" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text"></i> Invoices</a></li>
+				<li<?php if ($tab=='bills') { echo ' class="active"'; } ?>><a href="#bills" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text-o"></i> Bills</a></li>
 			</ul>
  
 			<!-- Tab panes -->
 			<div class="tab-content">
 
 				<!-- Journal Entries pane -->
-				<div class="tab-pane active" id="journal-entries">
+				<div class="tab-pane<?php if ($tab=='journal-entries') { echo ' active'; } ?>" id="journal-entries">
 					<form class="form-inline" action='/transactions.php' method='POST'>
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
@@ -469,7 +465,7 @@
 				</div><!-- journal-entries -->
 
 				<!-- Invoices pane -->
-				<div class="tab-pane" id="invoices">
+				<div class="tab-pane<?php if ($tab=='invoices') { echo ' active'; } ?>" id="invoices">
 					<form class="form-inline" action='/transactions.php' method='POST'>
 					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
 					<div class='table-responsive'>
@@ -493,7 +489,7 @@
 				</div><!-- invoices -->
 
 				<!-- Bills pane -->
-				<div class="tab-pane" id="bills">
+				<div class="tab-pane<?php if ($tab=='bills') { echo ' active'; } ?>" id="bills">
 					<form class="form-inline" action='/transactions.php' method='POST'>
 					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
 					<div class='table-responsive'>
@@ -560,6 +556,9 @@
 			$(".complete").hide();
 			$(".pending").show();
 			$(this).addClass("active");
+		});
+		$(".tab-toggle").click(function() {
+			$("#tab").val($(this).attr('href').replace('#',''));
 		});
 	});
 </script>

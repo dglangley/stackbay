@@ -556,6 +556,8 @@
 						page: params.page
 	                };
 	            },
+				placeholder: '- Select a Company -',
+				allowClear: true,
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
 		            // since we are using custom formatting functions we do not need to alter remote JSON data
 					// except to indicate that infinite scrolling can be used
@@ -572,7 +574,6 @@
 */
 					};
 				},
-				allowClear: true,
 				cache: true
 	        },
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
@@ -1047,7 +1048,9 @@
 		$(".order-search").on("keypress",function(e) {
 			if (e.keyCode == 13) {
 				e.preventDefault();
-				if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
+				if ($(this).data('type') == 'INV') {
+					window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
 					document.location.href = '/order_form.php?ps='+$(this).data('type')+'&on='+$(this).val();
@@ -1061,7 +1064,9 @@
 		$(".order-search-button").on("click",function(e) {
 			e.preventDefault();
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
-			if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
+			if ($(this).data('type') == 'INV') {
+				window.open('/docs/INV'+search_field.val()+'.pdf','_blank');
+			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
 				document.location.href = '/order_form.php?ps='+search_field.data('type')+'&on='+search_field.val();
