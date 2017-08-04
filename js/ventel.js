@@ -1064,7 +1064,7 @@
 		$(".order-search-button").on("click",function(e) {
 			e.preventDefault();
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
-			if ($(this).data('type') == 'INV') {
+			if (search_field.data('type') == 'INV') {
 				window.open('/docs/INV'+search_field.val()+'.pdf','_blank');
 			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
