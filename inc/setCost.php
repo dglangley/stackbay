@@ -47,10 +47,10 @@
 			setCostsLog($inventoryid,$pi_id,'purchase_item_id',$purchase_cost);
 
 			// get purchase-related freight costs here
-			$freight_cost = getUnitFreight($inventoryid,$po_number,'Purchase');
-			if ($freight_cost>0) {
-				$cost += $freight_cost;
-				setCostsLog($inventoryid,$r2['packageid'],'packageid',$freight_cost);
+			$freight = getUnitFreight($inventoryid,$po_number,'Purchase','array');
+			if ($freight['cost']>0) {
+				$cost += $freight['cost'];
+				setCostsLog($inventoryid,$freight['packageid'],'packageid',$freight['cost']);
 			}
 
 			// discount rtv's here

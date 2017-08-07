@@ -8,7 +8,7 @@
 		} else {
 			$existing_avg = 0;//assume we start at 0 with no existing average cost data
 			$query = "SELECT * FROM average_costs WHERE partid = '".res($partid)."' ORDER BY datetime DESC LIMIT 0,1; ";
-			if ($debug) { echo $query.'<BR>'; }
+//			if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -21,7 +21,7 @@
 			$average_cost = 0;
 			$query = "SELECT qty, serial_no FROM inventory ";
 			$query .= "WHERE partid = '".res($partid)."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0 AND qty > 0; ";
-			if ($debug) { echo $query.'<BR>'; }
+//			if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				if ($r['qty']>0) { $pieces += $r['qty']; }
