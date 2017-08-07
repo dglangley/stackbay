@@ -132,6 +132,21 @@
 			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 		}
 	}
+
+	$query = "SELECT * FROM picture_maps WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$query2 = "SELECT * FROM picture_maps WHERE partid = '".res($masterid)."' AND image = '".$r['image']."'; ";
+		$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		if (mysqli_num_rows($result2)==0) {
+			$query2 = "UPDATE picture_maps SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
+			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		} else {
+			$query2 = "DELETE FROM picture_maps WHERE id = '".$r['id']."'; ";
+			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		}
+	}
+
 	$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
@@ -149,8 +164,6 @@
 	$query = "DELETE FROM parts WHERE id = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "DELETE FROM parts_index WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "DELETE FROM picture_maps WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 	$query = "DELETE FROM qtys WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
