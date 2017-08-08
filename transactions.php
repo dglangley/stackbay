@@ -136,7 +136,7 @@
 
     //Invoices population
 
-    $select = "SELECT * FROM `invoices` WHERE order_type = 'Sale' ";
+    $select = "SELECT * FROM `invoices` WHERE (order_type = 'Sale' OR order_type = 'Repair') ";
 	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
 	$select .= "ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300; ";
 	$invoices_results = qdb($select);
@@ -149,6 +149,13 @@
 	    	//Grab Order Information
 	    	if($row['order_type'] == 'Sale') {
 				$query = "SELECT * FROM sales_orders WHERE so_number = ".prep($row['order_number'])."; ";
+				$result = qdb($query) OR die(qe().' '.$query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$invoice_info = $r;
+				}
+	    	} else if($row['order_type'] == 'Repair') {
+				$query = "SELECT * FROM repair_orders WHERE ro_number = ".prep($row['order_number'])."; ";
 				$result = qdb($query) OR die(qe().' '.$query);
 				if (mysqli_num_rows($result)>0) {
 					$r = mysqli_fetch_assoc($result);
@@ -196,7 +203,7 @@
                     <td>".getCompany($row['companyid'])."</td>
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_invoiced'])."</td>
-                    <td><a href='/SO".$row['order_number']."'>".$row['order_number']."</a></td>
+                    <td><a href='/".substr($row['order_type'],0,1)."O".$row['order_number']."'>".$row['order_number']."</a></td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
                     <td>".summarize_date($row['date_invoiced'], '30')."</td>
@@ -475,7 +482,7 @@
 								<th class = 'col-sm-2'>Customer</th>
 								<th class = 'col-sm-2'>Address</th>
 								<th class = 'col-sm-1'>Date</th>
-								<th class = 'col-sm-1'>SO No</th>
+								<th class = 'col-sm-1'>Order#</th>
 								<th class = 'col-sm-1'>Terms</th>
 								<th class = 'col-sm-2'>Memo</th>
 								<th class = 'col-sm-1'>Bill Due</th>
