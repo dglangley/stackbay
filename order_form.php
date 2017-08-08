@@ -257,8 +257,11 @@
 			WHERE p.id = sp.packageid
 			AND ii.id = sp.invoice_item_id
 			AND i.invoice_no = ii.invoice_no
+			AND (i.order_number = $order_number AND i.order_type = ".prep($o['type']).")
+/*
 			AND p.order_number = $order_number
-			AND p.order_type = ".prep($o['ptype'])."
+			AND p.order_type = ".prep($o['type'])."
+*/
 			GROUP BY package_no;
 		";
 	 	$invoices = qdb($query) or die(qe()." | $query");

@@ -21,23 +21,20 @@
         	    $bill_items[$row['bill_no']] += $row['amount'] * $row['qty'];
             }
     	}
-    } else if($o['sales']) {
+    } else if($o['sales'] OR $o['repair']) {
         $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."';";
-        
         $result = qdb($query) OR die(qe ().' '.$query);
-    	
     	while ($rows = mysqli_fetch_assoc($result)) {
         	$invoice_items[] = $rows;
         }
     	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($order_number)."' AND i.order_type = 'Sale'; ";// AND i.companyid = '".res(25)."';";
+    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($order_number)."' AND i.order_type = '".$o['type']."'; ";// AND i.companyid = '".res(25)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
         while ($rows = mysqli_fetch_assoc($result)) {
         	$credit_items[] = $rows;
         }
-        
     } else {
         //Future space for Returns or other forms
     }

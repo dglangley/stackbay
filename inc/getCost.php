@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	$cost_datetimes = array();
@@ -36,9 +37,12 @@
 		//$query = "SELECT * FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid ORDER BY datetime DESC; ";
 		$query = "SELECT * FROM average_costs WHERE id IN (SELECT max(id) FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid) ORDER BY datetime DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$qty_sum = mysqli_num_rows($result);
+//dl 8-7-17
+//		$qty_sum = mysqli_num_rows($result);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$average_sum += $r['amount'];
+			$qty = getQty($r['partid']);
+			$qty_sum += $qty;
+			$average_sum += $qty*$r['amount'];
 			$cost_datetimes[$r['partid']] = $r['datetime'];
 /*
 			$qty = 1;
