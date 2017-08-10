@@ -25,6 +25,14 @@
 				$arr['search'] = $r['so_number'];
 				$arr['type'] = 'SO';
 			}
+		} else if ($type=='RO') {
+			$query = "SELECT ro_number FROM repair_orders WHERE cust_ref = '".res($search)."' OR ro_number = '".res($search)."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$search);
+			if (mysqli_num_rows($result)==1) {
+				$r = mysqli_fetch_assoc($result);
+				$arr['search'] = $r['ro_number'];
+				$arr['type'] = 'RO';
+			}
 		} else if ($type=='PO') {
 			$query = "SELECT po_number FROM purchase_orders WHERE assoc_order = '".res($search)."' OR po_number = '".res($search)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$search);
@@ -85,10 +93,16 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		$so_matches = mysqli_num_rows($result);
 
-		if ($po_matches>0 AND $so_matches==0) {
+		$query = "SELECT * FROM repair_orders WHERE ro_number = '".$order."' AND created >= CONCAT(DATE_SUB(CURDATE(),INTERVAL 365 DAY),' 00:00:00'); ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$ro_matches = mysqli_num_rows($result);
+
+		if ($po_matches>0 AND $so_matches==0 AND $ro_matches==0) {
 			$type = 'PO';
-		} else if ($po_matches==0 AND $so_matches>0) {
+		} else if ($po_matches==0 AND $so_matches>0 AND $ro_matches==0) {
 			$type = 'SO';
+		} else if ($po_matches==0 AND $so_matches==0 AND $ro_matches>0) {
+			$type = 'RO';
 		}
 /*
 		$query = "SELECT * FROM repair_orders WHERE ro_number = '".$order."'; ";
@@ -103,6 +117,7 @@
 
 	if ($type=='SO') { $_REQUEST['ps'] = 'Sale'; }
 	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
+	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
 
 	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
 		include 'order_form.php';
