@@ -119,7 +119,7 @@
 	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
 	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
 
-	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
+	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
 		include 'order_form.php';
 	} else {
 		if ($type=='PO') {

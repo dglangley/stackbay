@@ -206,7 +206,7 @@
                     <td><a href='/".substr($row['order_type'],0,1)."O".$row['order_number']."'>".$row['order_number']."</a></td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
-                    <td>".summarize_date($row['date_invoiced'], '30')."</td>
+                    <td>".format_date($row['date_invoiced'],'D n/j/y')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
                     <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='invoice_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>
@@ -274,7 +274,7 @@
                     <td><a href='/PO".$row['po_number']."'>".$row['po_number']."</td>
                     <td>".$term."</td>
                     <td>".$row['notes']."</td>
-                    <td>".summarize_date($row['date_due'])."</td>
+                    <td>".format_date($row['date_due'],'D n/j/y')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
                     <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
 	            </tr>

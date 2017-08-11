@@ -29,7 +29,7 @@
 			setCost($inventoryid);
 			echo "<BR>";
 $i++;
-if ($i>=2) { exit; }
+if ($i>=10) { exit; }
 		}
 	}
 ?>

@@ -58,6 +58,11 @@
         }
         elseif($action == "update"){
             $row_id = prep($id);
+
+/*
+			$query = "SELECT freight_amount FROM packages WHERE id = $row_id; ";
+			$result = qdb($query);
+*/
             
             $update = "UPDATE packages SET ";
             $update .= updateNull("width",grab("width"));
