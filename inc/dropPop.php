@@ -41,6 +41,7 @@
     //This function works to prepopulate the dropdowns and output their selected option
     function dropdown($field, $selected = '', $limit = '',$size ='col-sm-6',$label=true,$custom_id=false){
     //Fields Allowed: Carrier, Services, Warranty
+
         $field = strtolower($field);
         if (strtolower($field) == 'carrier'){
         //Carrier outputs the carrier information based off of no selector parameters
@@ -189,7 +190,7 @@
         else if ($field == 'conditionid'){
             // Grab all the variations of the enum into an iterable array
             
-            getCondition();//initialize global $CONDITIONS
+            getCondition('', $limit);//initialize global $CONDITIONS
 			global $CONDITIONS;
 
             $id = ($custom_id) ? $custom_id : "conditionid";

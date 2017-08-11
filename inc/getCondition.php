@@ -1,6 +1,6 @@
 <?php
 	$CONDITIONS = array();
-	function getCondition($search_string=0) {
+	function getCondition($search_string=0, $restriction = '') {
 		global $CONDITIONS;
 
 		// if already set previously, just re-use from memory
@@ -9,7 +9,9 @@
 			return ($CONDITIONS[$search_string]);
 		}
 
-		$query = "SELECT * FROM conditions; ";
+		$CONDITIONS = array();
+
+		$query = "SELECT * FROM conditions ".($restriction ? 'WHERE id < 0' : '')."; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$CONDITIONS[$r['id']] = $r['condition'];

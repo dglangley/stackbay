@@ -155,6 +155,7 @@
 		global $build;
 		global $order_number;
 		global $now;
+		$invid;
 			
 		$place = grab("place");
 		$instance = grab("instance");
@@ -178,7 +179,7 @@
 				return("NO LOCATION SELECTED ");
 			}
 			
-			$quick_check = "SELECT * FROM inventory where `serial_no` like $serial AND repair_item_id = $rlineid;";
+			$quick_check = "SELECT * FROM inventory where `serial_no` like $serial AND partid = $partid;";
 			$res = qdb($quick_check) or die(qe()." $quick_check");
 			if(!mysqli_num_rows($res)){
 				$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
@@ -200,17 +201,15 @@
 						$result = mysqli_fetch_assoc($result);
 						$build_price = $result['price'];
 					}
-
-					// $insert = "INSERT INTO inventory_costs (inventoryid, datetime, actual) VALUES (".prep($invid).", ".prep($now).", ".prep($build_price).");";
-					// qdb($insert) or die(qe()." $insert");
-
-					// setCostsLog($invid,$build,'build_id',$build_price);
-
-					// $insert = "INSERT INTO inventory_costs_log (inventoryid, eventid, event_type, amount, datetime) VALUES (".prep($invid).", ".prep($build).", 'build_id', ".prep($build_price).", ".prep($now).");";
-					// qdb($insert) or die(qe()." $insert");
 				}
 			} else {
-				return"ALREADY SCANNED THIS PART FOR THIS RECORD";
+				//return"ALREADY SCANNED THIS PART FOR THIS RECORD";
+				$result = mysqli_fetch_assoc($res);
+
+				$invid = $result['id'];
+
+				$query = "UPDATE inventory SET repair_item_id = $rlineid WHERE id = $invid;";
+				qdb($query) or die(qe()." $query");
 			}
 		}
 		if(isset($_REQUEST['notes'])){
@@ -448,7 +447,7 @@
 										</div>
 
 										<div class="col-md-5">
-											<?=dropdown('conditionid', $sel_condition, '', '',false)?>
+											<?=dropdown('conditionid', ($build ? '2' : '-5'), ($build ? '' : 'repair'), '',false)?>
 										</div>
 									</div>
 								</div>
