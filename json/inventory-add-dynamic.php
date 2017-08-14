@@ -1,9 +1,13 @@
 <?php
+	$debug = 0;
+	if (isset($_REQUEST['debug'])) { $debug = $_REQUEST['debug']; }
 
-//Prepare the page as a JSON type
-header('Content-Type: application/json');
+	//Prepare the page as a JSON type
+	if (! $debug) {
+		header('Content-Type: application/json');
+	}
 
-$rootdir = $_SERVER['ROOT_DIR'];
+	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
@@ -58,38 +62,49 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			$locationResult = mysqli_fetch_assoc($locationResult);
 			$locationid = $locationResult['id'];
 		}
-		
+
 		$result['query'] = true;
 		$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
 		$check = qdb($query);
-		if($check->num_rows > 0) {
+		if($check->num_rows > 0 AND ! $GLOBALS['debug']) {
 			$result['query'] = false;
 		} else {//== 0
 			if($savedSerial == '') {// no record for this item previously, so creating a new record
 
 				//DEPRECATED To find this later on
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE id = '".res($item_id)."'; ";//po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
-				qdb($query);
+				if ($GLOBALS['debug']) { echo $query.'<BR>'; } else { $res = qdb($query) OR die(qe().'<BR>'.$query); }
 				
 				//Insert the item into the inventory
-		 		//$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', '". res($po_number) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', '". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
-				
-				//$result['test'] = $query;
-				$result['query'] = qdb($query) or die(qe());
-				//$result['query'] = $query;
-				$inventoryid = qid();
+		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, ";
+				$query .= "purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) ";
+				$query .= "VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', ";
+				$query .= "'". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
+				if ($GLOBALS['debug']) {
+					echo $query.'<BR>';
+					$inventoryid = 29843;
+				} else {
+					$result['query'] = qdb($query) OR die(qe().'<BR>'.$query);
+					$inventoryid = qid();
+				}
+
 				//Pair the package to the line item of the inventory number we changed.
 				$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$packageid','$inventoryid');";
-				$result['package'] = qdb($package_query) OR die(qe());
-				$result['package_q'] = $package_query;
+				if (! $GLOBALS['debug']) {
+					$result['package'] = qdb($package_query) OR die(qe());
+					$result['package_q'] = $package_query;
+				}
 			} else {
 				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', conditionid = '". res($conditionid) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
 				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
-				$result['query'] = qdb($query) or die(qe());
-				$result['saved'] = $serial;
-				$inventoryid = qid();
-				
+				if ($GLOBALS['debug']) {
+					echo $query.'<BR>';
+					$inventoryid = 29843;
+				} else {
+					$result['query'] = qdb($query) or die(qe());
+					$result['saved'] = $serial;
+					$inventoryid = qid();
+				}
 			}
 
 			//Quick Query to check if all the line items of a PO have been met in full
@@ -124,12 +139,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$email_subject = 'PO# ' . $po_number . ' Received';
 
 					$bcc = '';
-					$send_success = send_gmail($email_body_html,$email_subject,$sales_reps,$bcc);
+					if (! $GLOBALS['DEV_ENV']) {
+						$send_success = send_gmail($email_body_html,$email_subject,$sales_reps,$bcc);
 
-					if ($send_success) {
-					    // echo json_encode(array('message'=>'Success'));
-					} else {
-					    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+						if ($send_success) {
+						    // echo json_encode(array('message'=>'Success'));
+						} else {
+						    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+						}
 					}
 				}
 			}

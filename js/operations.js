@@ -2445,33 +2445,47 @@
 		$("#modal-RM").modal("show");
 	});
 	$(document).on("click","#RM-continue",function() {
-		var init_part = $("#modalRMBody").attr("data-partid");
-		var new_part = $("#modalRMBody").find(".item_search").val();
-		// console.log("OG PART: "+init_part+)
-		if (new_part != init_part){
-			var invid = $("#modalRMBody").attr("data-invid");
-			$.ajax({
-				type: "POST",
-				url: '/json/rm-processor.php',
-				data: {
-					"invid" : invid,
-					"part" : new_part
-				},
-				dataType: 'json',
-				success: function(result) {
-					console.log("JSON RM PROCESSOR | Success | /json/rm-processor.php?invid="+invid+"&part="+new_part);
-					location.reload();
-					console.log(result);
-				},
-				error: function(xhr, status, error) {
-					alert(error+" | "+status+" | "+xhr);
-					submitProblem("SYSTEM","JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
-					console.log("JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_part);
-				}
-			});
+		var e = $("#modalRMBody");
+		var partid = e.attr("data-partid");
+		var new_partid = e.find(".item_search").val();
 
+		// if the user has changed the partid, send to processor
+		if (new_partid != partid) {
+			updatePartid("modalRMBody");
 		}
 	});
+	function updatePartid(element_name,debug_mode) {
+		if (! debug_mode) { var debug_mode = 0; }
+		var e = $("#"+element_name);
+		var partid = e.attr("data-partid");
+		var new_partid = e.find(".item_search").val();
+		var invid = e.attr("data-invid");
+
+		console.log(window.location.origin+"/json/rm-processor.php?invid="+invid+"&partid="+new_partid+"&debug="+debug_mode);
+		$.ajax({
+			type: "POST",
+			url: '/json/rm-processor.php',
+			data: {
+				"invid" : invid,
+				"partid" : new_partid,
+				"debug" : debug_mode
+			},
+			dataType: 'json',
+			success: function(json, status) {
+				//console.log(json.message);
+				if (json.message=='Success') {
+					//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Success", 'New average cost: '+json.data);
+					location.reload();
+				} else {
+					//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", json.message);
+				}
+			},
+			error: function(xhr, status, error) {
+				alert(error+" | "+status+" | "+xhr);
+				//submitProblem("SYSTEM","JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_partid);
+			}
+		});
+	}
 	
 
 //=================================== End RM ===================================
@@ -3022,8 +3036,7 @@
 	    		var box_number = $(".box_group").find(".box_selector.active").data("row-id");
 
 	    		var result;
-	    		// alert(place+"-"+instance);
-	    		
+
 	    		if(place != 'null' && instance != 'null'){
 	    			result = true;
 	    		} else {
@@ -3031,6 +3044,7 @@
 	    		}
 	    		
 	    		if(result) {
+					console.log(window.location.origin+"/json/inventory-add-dynamic.php?partid="+partid+"&conditionid="+conditionid+"&serial="+escape(serial)+"&po_number="+order_num+"&item_id="+item_id+"&savedSerial="+escape(savedSerial)+"&place="+place+"&instance="+instance+"&package="+box_number);
 		    		$.ajax({
 						type: "POST",
 						url: '/json/inventory-add-dynamic.php',
@@ -3047,7 +3061,6 @@
 						},
 						dataType: 'json',
 						success: function(result) {
-							console.log(result);
 							//Once an item has a serial and is generated disable the ability to lot the item for the rest of the editing for users current view
 							$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 
@@ -3118,8 +3131,7 @@
 							
 						},
 						error: function(xhr, status, error) {
-								alert(error+" | "+status+" | "+xhr);
-							console.log("Inventory-add-dynamic.php: ERROR");
+							alert(error+" | "+status+" | "+xhr);
 						},
 						
 					});

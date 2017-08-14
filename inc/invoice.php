@@ -167,11 +167,13 @@
 			// render invoice and attach to a temp file, we get attachment as a temp file pointer
 			$attachment = attachInvoice($invoice_id);
 
-			// bcc david for now, so I can see what Joe is seeing
-			$send_success = send_gmail('See attached Invoice '.$invoice_id,'Invoice '.$invoice_id,'accounting@ven-tel.com','david@ven-tel.com','',$attachment);
+			if (! $GLOBALS['DEV_ENV']) {
+				// bcc david for now, so I can see what Joe is seeing
+				$send_success = send_gmail('See attached Invoice '.$invoice_id,'Invoice '.$invoice_id,'accounting@ven-tel.com','david@ven-tel.com','',$attachment);
 
-			if(!$send_success){
-				$return['error'] = "Email not sent ".$GLOBALS['SEND_ERR'];
+				if(!$send_success){
+					$return['error'] = "Email not sent ".$GLOBALS['SEND_ERR'];
+				}
 			}
 		}
 

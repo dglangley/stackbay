@@ -198,7 +198,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							} else {
 								/***** SALE ITEM *****/
 								// this item is a billable sale and very straightforward; $r2['id'] is the sales item id
-								$cogs = getCost($partid);//get existing avg cost at this point in time
+								$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
 								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 							}
 						}

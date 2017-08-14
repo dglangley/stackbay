@@ -79,7 +79,7 @@
 	}
 
 	function getHistory($partid, $order_number) {
-		$listSerials;
+		$listSerials = array();
 		
 		$query = "
 			SELECT serial_no, i.id, i.qty, status, locationid, i.conditionid 
@@ -223,9 +223,10 @@
 
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
 								$results = qdb($select) or die(qe()." ".$select);
+								$num_packages = mysqli_num_rows($results);
 								
 								//Check for any open items to be shipped
-								if (mysqli_num_rows($results) > 0){
+								if ($num_packages > 0){
 									//Initialize
 									$init = true;
 									$package_no = 0;
@@ -237,7 +238,7 @@
 										
 										//Build classes for the box buttons based off data-options
 										$box_button .= 'btn-grey'; //If the button has been shipped
-										$box_button .= (($b['datetime'] == '' && $init) ? ' active' : ''); //If the box is active, indicate that
+										$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
 										$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 										$box_button .= " box_selector'";
 										

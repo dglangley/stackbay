@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
 
-	$debug = 0;
+	$debug = 1;
 
 /*
 	$query = "SELECT sc.*, c.invoice_no FROM sales_cogs sc, commissions c ";
@@ -24,6 +24,7 @@
 		if (mysqli_num_rows($result2)>0) { continue; }
 
 		$amount = $r['cogs'];
+		print "<pre>".print_r($r,true)."</pre>"; continue;
 		if (! $amount) { print "<pre>".print_r($r,true)."</pre>"; continue; }
 
 		$jeid = setJournalEntry(false,$GLOBALS['now'],'Inventory Sale COGS','Inventory Asset','COGS for Invoice #'.$r['invoice_no'],$amount,$r['invoice_no'],'invoice');

@@ -435,7 +435,8 @@
 									$check = "SELECT * FROM `sales_items`  WHERE  `so_number` = '$order_number' AND qty_shipped < qty";
 									$open_items = qdb($check);
 	
-									if (mysqli_num_rows($results) > 0){
+									$num_packages = mysqli_num_rows($results);
+									if ($num_packages > 0) {
 										//Initialize
 										$init = true;
 										$package_no = 0;
@@ -447,7 +448,7 @@
 											
 											//Build classes for the box buttons based off data-options
 											$box_button .= ($b['datetime'] != '' ? 'btn-grey' : 'btn-secondary'); //If the button has been shipped
-											$box_button .= (($b['datetime'] == '' && $init) ? ' active' : ''); //If the box is active, indicate that
+											$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
 											$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 											$box_button .= " box_selector'";
 											

@@ -1,10 +1,9 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	$cost_datetimes = array();
-	function getCost($partid,$cost_basis='average') {
+	function getCost($partid,$cost_basis='average',$absolute_stock=false) {
 		global $cost_datetimes;
 
 		$partids = array();
@@ -32,31 +31,19 @@
 		$actual_sum = 0;
 		$average_sum = 0;
 		$qty_sum = 0;
-		//$query = "SELECT * FROM inventory WHERE partid IN (".$csv_partids.") AND (status = 'received' OR status = 'shelved') ";
-		//$query .= "AND conditionid > 0; ";//AND qty > 0; ";
-		//$query = "SELECT * FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid ORDER BY datetime DESC; ";
 		$query = "SELECT * FROM average_costs WHERE id IN (SELECT max(id) FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid) ORDER BY datetime DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
-//dl 8-7-17
-//		$qty_sum = mysqli_num_rows($result);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$qty = getQty($r['partid']);
+			// if we want to know the last-available average cost (for example, when shipping the last item in stock for COGS purposes),
+			// absolute stock is set to true so that we assume an absolute value of qty 1
+			if ($absolute_stock) {
+				$qty = 1;
+			} else {
+				$qty = getQty($r['partid']);
+			}
 			$qty_sum += $qty;
 			$average_sum += $qty*$r['amount'];
 			$cost_datetimes[$r['partid']] = $r['datetime'];
-/*
-			$qty = 1;
-			if ($r['qty']>0) { $qty = $r['qty']; }
-			$qty_sum += $qty;
-
-			$query2 = "SELECT average, actual FROM inventory_costs WHERE inventoryid = '".$r['id']."' ORDER BY id DESC LIMIT 0,1; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-			if (mysqli_num_rows($result2)>0) {
-				$r2 = mysqli_fetch_assoc($result2);
-				$actual_sum += $r2['actual']/$qty;
-				$average_sum += $r2['average']/$qty;
-			}
-*/
 		}
 		$actual_cost = 0;
 		$average_cost = 0;
