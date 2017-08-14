@@ -118,7 +118,7 @@
 		'right' =>
 			array(
 				array(
-					'action'=>'/',
+					'action'=>'/sales_report.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'aliases'=>array('/order_form.php'),

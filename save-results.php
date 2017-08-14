@@ -6,8 +6,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
-//	print "<pre>".print_r($_REQUEST,true)."</pre>";
+	//print "<pre>".print_r($_REQUEST,true)."</pre>"; 
 	$submit_type = 'demand';
+
 	if (isset($_REQUEST['submit_type']) AND ($_REQUEST['submit_type']=='availability' OR $_REQUEST['submit_type']=='demand')) { $submit_type = $_REQUEST['submit_type']; }
 //	if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
 
@@ -57,6 +58,11 @@
 		$sellprice[$ln] = array();
 		if (isset($_REQUEST['sellprice'][$ln]) AND is_array($_REQUEST['sellprice'][$ln])) { $sellprice[$ln] = $_REQUEST['sellprice'][$ln]; }
 
+		$bid_qty[$ln] = array();
+		if (isset($_REQUEST['bid_qty']) AND is_array($_REQUEST['bid_qty'])) { $bid_qty = $_REQUEST['bid_qty']; }
+		$bid_price[$ln] = array();
+		if (isset($_REQUEST['bid_price']) AND is_array($_REQUEST['bid_price'])) { $bid_price = $_REQUEST['bid_price']; }
+
 		$quote_str = '';
 		$quote_html = '';
 		foreach ($row as $n => $partid) {
@@ -65,7 +71,12 @@
 			if ($submit_type=='availability') { $response_qty = $list_qty; }
 			else if (isset($sellqty[$ln][$n]) AND is_numeric($sellqty[$ln][$n]) AND $sellqty[$ln][$n]>0) { $response_qty = $sellqty[$ln][$n]; }
 			$response_price = false;
+			// if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
 			if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
+
+			if ($submit_type=='availability' && isset($bid_qty[$ln])) { $response_qty = $bid_qty[$ln]; }
+			if ($submit_type=='availability' && isset($bid_price[$ln])) { $response_price = $bid_price[$ln]; }
+
 
 			// get id if already saved
 			if ($companyid) {
@@ -98,7 +109,7 @@
 		$display_html = '<table class="table table-condensed"><tr><th>Line#</th><th>Part#</th><th>HECI/CLEI</th><th>Description</th>'.
 			'<th>Qty</th><th>Unit Price</th><th>Ext Price</th></tr>'.$display_html.'</table>';
 	} else {
-		header('Location: /');
+		header("Refresh:0");
 		exit;
 	}
 ?>

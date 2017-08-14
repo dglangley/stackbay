@@ -191,26 +191,7 @@
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
-	function format_dateTitle($order_date,$dated_qty) {
-		global $today,$yesterday;
-
-/*
-		if ($order_date==$today) { $date = 'Today'; }
-		else if ($order_date==$yesterday) { $date = 'Yesterday'; }
-		else if ($order_date>$lastWeek) { $date = format_date($order_date,'D'); }
-		else if ($order_date>=$lastYear) { $date = format_date($order_date,'M j'); }
-		else { $date = format_date($order_date,'M j, y'); }
-*/
-		$date = summarize_date($order_date);
-		// highlight any records in the past week
-		$dateSty = '';
-		if ($order_date>$GLOBALS['lastWeek']) { $dateSty = ' style="font-weight:bold"'; }
-
-		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal"'.$dateSty.'>'.$date.': '.
-			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
-		return ($dtitle);
-	}
-
+	
 
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
