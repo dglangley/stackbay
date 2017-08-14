@@ -86,7 +86,8 @@
 			}
 
 			$fprice = format_price($r['price'],true,'',true);
-			$grouped[$group_date]['count']++;
+			if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['count'] = 1; }
+			else { $grouped[$group_date]['count']++; }
 			if ($fprice>0) {
 				$grouped[$group_date]['sum_qty'] += $r['qty'];
 				$grouped[$group_date]['sum_price'] += ($fprice*$r['qty']);

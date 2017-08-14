@@ -50,11 +50,11 @@
     $order = "SELECT * FROM sales_orders WHERE so_number = $porder_number;";
     $items = "
     SELECT serial_no, tracking_no, sales_item_id, inventory.id invid, inventory.partid, package_no, packages.datetime DATE, sales_orders.so_number
-    FROM inventory, packages, package_contents, sales_items,sales_orders
+    FROM inventory_history h, inventory, packages, package_contents, sales_items,sales_orders
     WHERE serialid = inventory.id
     AND packageid = packages.id
     AND sales_orders.so_number = sales_items.so_number
-    AND sales_items.id = `inventory`.`sales_item_id`
+    AND sales_items.id = h.value AND h.field_changed = 'sales_item_id' AND h.invid = inventory.id /*`inventory`.`sales_item_id`*/
     AND sales_orders.so_number = $porder_number 
     AND packages.datetime = '$datetime'
     GROUP BY serial_no

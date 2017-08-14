@@ -61,7 +61,7 @@
 		$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 
 		$heci = $r['heci'];
-		if (strlen($heci)==7) { $heci = $heci7.'VTL'; }
+		if (strlen($heci)==7) { $heci .= 'VTL'; }
 
 		$manf = getManf($r['manfid']);
 		$system = getSys($r['systemid']);
