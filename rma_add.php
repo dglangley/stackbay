@@ -194,7 +194,7 @@
 				".prep($ro_number).",
 				'1',
 				".prep($result['qty']).",
-				".prep($order_result['price']).",
+				'0.00',
 				".prep($order_result['due_date']).",
 				".prep($result['inventoryid']).",";
 

@@ -14,15 +14,17 @@
 	$date = '';
 	$price = '';
 	$records_table = 'availability';//hard-coded for now, dgl 11-18-16
+	$type = 'supply';
 
 	if (isset($_REQUEST['partids']) AND $_REQUEST['partids']) { $partids = $_REQUEST['partids']; }
+	if (isset($_REQUEST['type']) AND $_REQUEST['type']) { $type = $_REQUEST['type']; }
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['date']) AND $_REQUEST['date']) { $date = format_date($_REQUEST['date'],'Y-m-d'); }
 	if (isset($_REQUEST['price']) AND $_REQUEST['price']) { $price = format_price($_REQUEST['price'],false,'',true); }
 
 	$price_field = '';
-	if ($records_table=='availability') { $price_field = 'avail_price'; }
-	else if ($records_table=='demand') { $price_field = 'quote_price'; }
+	if ($type=='supply') { $price_field = 'avail_price'; }
+	else if ($type=='demand') { $price_field = 'quote_price'; $records_table = 'demand';}
 
 	// get metaid so we can query item records based on partids, and update the price
 	$query = "SELECT * FROM search_meta WHERE companyid = '".res($companyid)."' AND datetime LIKE '".res($date)."%'; ";
@@ -32,8 +34,9 @@
 		$query2 = "UPDATE ".$records_table." SET ".$price_field." = ";
 		if ($price) { $query2 .= "'".res($price)."' "; } else { $query2 .= "NULL "; }
 		$query2 .= "WHERE metaid = '".$r['id']."' AND partid IN (".$partids."); ";
-//		echo json_encode(array('message'=>$query2));
-//		exit;
+		//echo json_encode(array('message'=>$query));
+		// echo json_encode(array('message'=>$query2));
+		// exit;
 
 		$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 	}

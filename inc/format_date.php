@@ -221,4 +221,23 @@
 
 		return ($date);
 	}
-?>
+
+	function format_dateTitle($order_date,$dated_qty) {
+		global $today,$yesterday;
+
+/*
+		if ($order_date==$today) { $date = 'Today'; }
+		else if ($order_date==$yesterday) { $date = 'Yesterday'; }
+		else if ($order_date>$lastWeek) { $date = format_date($order_date,'D'); }
+		else if ($order_date>=$lastYear) { $date = format_date($order_date,'M j'); }
+		else { $date = format_date($order_date,'M j, y'); }
+*/
+		$date = summarize_date($order_date);
+		// highlight any records in the past week
+		$dateSty = '';
+		if ($order_date>$GLOBALS['lastWeek']) { $dateSty = ' style="font-weight:bold"'; }
+
+		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal"'.$dateSty.'>'.$date.': '.
+			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
+		return ($dtitle);
+	}

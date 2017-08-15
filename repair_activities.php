@@ -33,7 +33,7 @@
 		
 		if($trigger == "complete"){
 			if(!isset($_REQUEST['build'])) {
-				$select = "SELECT `id` FROM `inventory` where repair_item_id = '$repair_item_id';";
+				$select = "SELECT i.id FROM inventory i, repair_items ri, repair_orders ro WHERE ri.id = i.repair_item_id AND ro.ro_number = ri.ro_number AND ri.price = 0 AND termsid = 15 AND repair_item_id = '$repair_item_id';";
 				$invid_result = qdb($select) or die(qe()." | $select");
 				if(mysqli_num_rows($invid_result)){
 					$invid_arr = mysqli_fetch_assoc($invid_result);

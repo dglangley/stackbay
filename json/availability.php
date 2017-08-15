@@ -21,16 +21,19 @@
 	// partids are passed in with comma-separated format
 	$partid_array = explode(",",$partids);
 
-//	$results = array();
-
-	$results = getSupply($partid_array,$attempt,$ln,$max_ln);
+	$results = array();
+	if (isset($_REQUEST['type']) AND $_REQUEST['type']=='supply') {
+		$results = getSupply($partid_array,$attempt,$ln,$max_ln);
+	} else {
+		$results = getDemand($partid_array,$attempt,$ln,$max_ln);
+	}
 /*
 	if ($err) {
 		$results = array('results'=>$results,'done'=>1,'err'=>$err,'errmsgs'=>$errmsgs);
 	}
 */
 
-//	print "<pre>".print_r($results,true)."</pre>";
+	//print "<pre>".print_r($results,true)."</pre>";
 
 	header("Content-Type: application/json", true);
 	echo json_encode($results);

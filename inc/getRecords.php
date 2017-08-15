@@ -8,11 +8,15 @@
 	$record_start = '';
 	$record_end = '';
 	
-	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0) {
+	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '') {
 		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
 		$unsorted = array();
 		$min = format_price($min_price,'','',true);
 		$max = format_price($max_price,'','',true);
+
+		//Allow filtering of dates dynamically
+		if(isset($start)){$record_start = $start;}
+		if(isset($end)){$record_end = $end;}
 		
 		// append times to start/end dates, if missing (based on strlen)
 		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
@@ -115,6 +119,135 @@
 				$query .= "ORDER BY datetime ASC; ";
 
 				//$unsorted = get_coldata($search_str,'supply');
+				break;
+
+			//Add in the queries for repair items	
+			case 'repair_quoted':
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query .= "FROM repair_quotes, search_meta, companies ";
+				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				break;
+
+			case 'repair_sources':
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query .= "FROM repair_sources, search_meta, companies ";
+				$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				break;
+
+			case 'repairs_completed':
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+				$query .= "FROM repair_orders ro, repair_items ri, companies ";
+				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "ORDER BY created ASC; ";
+
+				break;
+
+			case 'in_repair':
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+				$query .= "FROM repair_orders ro, repair_items ri, companies ";
+				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "ORDER BY created ASC; ";
+
+				break;
+
+			case 'repairs':
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status ";
+				$query .= "FROM repair_quotes, search_meta, companies ";
+				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				//$query .= "ORDER BY datetime ASC ";
+				$query .= "UNION ";
+					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+					$query .= "FROM repair_orders ro, repair_items ri, companies ";
+					$query .= "WHERE  companies.id = ro.companyid  AND ro.ro_number = ri.ro_number";
+					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+					if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+					if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+					// show results only with prices
+					if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				//$query .= "ORDER BY datetime ASC ";
+				$query .= "UNION ";
+					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status ";
+					$query .= "FROM repair_sources, search_meta, companies ";
+					$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
+					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+					if ($min_price){$query .= " AND quote_price >= ".$min." ";}
+					if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+					// show results only with prices
+					if ($results_mode==1) { $query .= "AND quote_price > 0"; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				//$unsorted = get_coldata($search_str,'demand');
+				break;
+
+			case 'sales_summary':
+
+				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
+				$query .= "sales_rep_id userid, part, heci, sales_orders.status ";
+				$query .= "FROM sales_items, sales_orders, companies, parts ";
+				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
+				$query .= "AND parts.id = sales_items.partid ";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "UNION ";	
+					$query .= "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
+					$query .= "sales_rep_id userid, part, heci, purchase_orders.status ";
+					$query .= "FROM purchase_items, purchase_orders, companies, parts ";
+					$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
+					$query .= "AND parts.id = purchase_items.partid ";
+					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+					// show results only with prices
+					if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				//$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			default:
