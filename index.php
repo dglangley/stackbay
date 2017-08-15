@@ -180,7 +180,7 @@
 		}
 
 		if ($market_str) {
-			$market_str = '<a href="#" class="market-title">'.ucfirst($market_table).'</a><div class="market-body">'.$market_str.'</div>';
+			$market_str = '<a href="#" class="market-title" data-type="'.$market_table.'">'.ucfirst($market_table).'</a><div class="market-body">'.$market_str.'</div>';
 		} else {
 			$market_str = '<span class="info">- No '.ucfirst($market_table).' -</span>';
 		}
@@ -773,7 +773,7 @@ if (! $r['partid']) { return ($results); }
 								<table class="table market-table" data-partids="'.$partid_csv.'">
 									<tr>
 										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal">Supply <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
+											<a href="javascript:void(0);" class="market-title modal-results" data-type="supply" data-target="marketModal">Supply <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
 											<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'"></div>
 										</td>
 										<td class="col-sm-3 bg-purchases">
