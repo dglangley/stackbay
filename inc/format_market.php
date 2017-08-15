@@ -1,10 +1,7 @@
 <?php
 	include_once 'dbconnect.php';
-	include_once 'pipe.php';
 	include_once 'format_date.php';
 	include_once 'format_price.php';
-	include_once 'getPipeIds.php';
-	include_once 'getPipeQty.php';
 	include_once 'getRecords.php';
 	include_once 'getShelflife.php';
 	include_once 'getCost.php';

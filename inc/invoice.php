@@ -44,14 +44,13 @@
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
 		} else {
-			$type = 'Sale';
 			$invoice_item_select = "
 				Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
 				WHERE package_contents.packageid = packages.id
 				AND package_contents.serialid = i.id
 				AND `packages`.order_number = ".prep($order_number)."
-				AND `packages`.order_type = 'Sale'
+				AND `packages`.order_type = '".$type."'
 				AND i.sales_item_id = it.id
 				AND it.so_number = `packages`.`order_number`
 				AND price > 0.00
@@ -63,7 +62,7 @@
 		$o = o_params($type);
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['ptype'])." AND `shipmentid` = ".prep($shipment_datetime).";");
+		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['type'])." AND `shipmentid` = ".prep($shipment_datetime).";");
 		if($already_invoiced){return $already_invoiced;}
 		
 		//Check to see there are actually invoice-able items on the order
@@ -81,7 +80,7 @@
 			$sales_charges = "SELECT * FROM sales_charges WHERE so_number = ".prep($order_number).";";
 			$sales_result = qdb($sales_charges) OR die(qe());
 
-			while ($row = $sales_result->fetch_assoc()) {
+			while ($row = mysqli_fetch_assoc($sales_result)) {
 				$sales_charge_holder[] = $row;
 			}
 
@@ -114,7 +113,7 @@
 
 		$invoice_creation = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['ptype']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
 		";
 		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
 		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }
