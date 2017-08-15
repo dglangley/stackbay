@@ -173,28 +173,37 @@
 				        	modalBody.closest('.modal-content').find('.modal-footer').find('.text-left').hide();
 				        	modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').hide();
 				        	$.each(result, function(key, row) {
+				        		var price;
+				        		var username;
 				        		if(row.format_price) {
-				        			var price = row.format_price;
+				        			price = row.format_price;
 				        		} else {
-				        			var price = '$0.00';
+				        			price = '$0.00';
 				        		}
+
+				        		if(row.username != 'false') {
+				        			username;
+				        		} else {
+				        			username = ' ';
+				        		}
+
 					        	rowHtml += '<div class="row">\
-										<div class="col-sm-3">\
+										<div class="col-sm-2">\
 											'+row.date+'\
 										</div>\
-										<div class="col-sm-1">\
-											<strong>'+row.qty+'</strong>\
-										</div>\
-										<div class="col-sm-2 company-name">\
+										<div class="col-sm-3 company-name">\
 											<a href="/">'+row.name+'</a>\
 										</div>\
 										<div class="col-sm-2">\
 											<a href="/'+abbrev+row.order_num+'">'+row.order_num+'</a>\
 										</div><!-- col-sm -->\
+										<div class="col-sm-1">\
+											<strong>'+row.qty+'</strong>\
+										</div>\
 										<div class="col-sm-2">\
 											'+price+'\
 										</div><!-- col-sm -->\
-										<div class="col-sm-2">\
+										<div class="col-sm-2" style="min-height: 24px;">\
 											'+row.username+'\
 										</div><!-- col-sm -->\
 									</div><!-- row -->';
@@ -563,8 +572,11 @@
         $(".market-results").each(function() {
 			$(this).loadResults(0);
 		});
-		$(".market-download").click(function() {
+
+        //Legacy Code
+		$(document).on("click", ".market-download", function() {
 			var mr = $(this).closest(".col-sm-3").find(".market-results:first");
+
 			mr.loadResults(2);
 		});
 
