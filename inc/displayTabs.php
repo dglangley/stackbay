@@ -58,21 +58,21 @@
                                     <h4 class="megamenu-block-title">
 <!--
 										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Returns</a> <span class="pull-right"><a href="/order_form.php?ps=Return" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
--->'
-									. ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
-									  '<div class="form-group">
-										<div class="input-group pull-left">
-											<span class="input-group-btn">
+-->
+									  <div class="form-group">
+										<div class="input-group pull-left">'.
+									((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
+											'<span class="input-group-btn">
 												<a href="#" class="btn btn-default btn-xs bg-returns" title="Start New Return"><i class="fa fa-plus"></i></a>
-											</span>
-											<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="RMA">
+											</span>'
+									:'').
+											'<input type="text" class="form-control input-xs order-search" placeholder="Returns..." data-type="RMA">
 											<span class="input-group-btn">
 												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
 											</span>
 										</div>
-									  </div>'
-									  :'').
-									'</h4>
+									  </div>
+									</h4>
                                     <ul id="return-orders-list">
                                     </ul>
                                 </div>
