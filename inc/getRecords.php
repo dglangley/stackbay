@@ -28,8 +28,8 @@
 		$max = format_price($sales_max,'','',true);
 
 		//Allow filtering of dates dynamically
-		if(isset($start)){$record_start = $start;}
-		if(isset($end)){$record_end = $end;}
+		if(isset($start) && $start != ''){$record_start = $start;}
+		if(isset($end) && $end != ''){$record_end = $end;}
 		
 		// append times to start/end dates, if missing (based on strlen)
 		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
