@@ -9,10 +9,23 @@
 	$record_end = '';
 	
 	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '') {
-		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
+		global $record_start,$record_end,$oldid,$company_filter,$sales_min,$sales_max;
 		$unsorted = array();
-		$min = format_price($min_price,'','',true);
-		$max = format_price($max_price,'','',true);
+
+		$favorites = 0;
+		if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) { $favorites = 1; }
+		$invlistid = 0;
+		if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
+			// validate id in uploads table
+			$query = "SELECT * FROM uploads WHERE id = '".res($_REQUEST['invlistid'])."'; ";
+			$result = qdb($query);
+			if (mysqli_num_rows($result)==1) {
+				$invlistid = $_REQUEST['invlistid'];
+			}
+		}
+
+		$min = format_price($sales_min,'','',true);
+		$max = format_price($sales_max,'','',true);
 
 		//Allow filtering of dates dynamically
 		if(isset($start)){$record_start = $start;}
@@ -82,6 +95,8 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
@@ -98,8 +113,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				//$unsorted = get_coldata($search_str,'sales');
@@ -115,7 +132,7 @@
 				if ($min_price){$query .= " AND avail_price >= ".$min." ";}
 				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND avail_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				//$unsorted = get_coldata($search_str,'supply');
@@ -129,10 +146,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				break;
@@ -144,10 +161,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				break;
@@ -159,10 +176,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				if ($min_price){$query .= " AND ri.price >= ".$min." ";}
+				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND ri.price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				break;
@@ -174,10 +191,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				if ($min_price){$query .= " AND ri.price >= ".$min." ";}
+				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND ri.price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				break;
@@ -189,10 +206,10 @@
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
 					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
@@ -201,10 +218,10 @@
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
 					if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-					if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-					if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+					if ($min_price){$query .= " AND price >= ".$min." ";}
+					if ($max_price){$query .= " AND price <= ".$max." ";}
 					// show results only with prices
-					if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+					if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
 					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status ";
@@ -213,10 +230,10 @@
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
 					if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
-					if ($min_price){$query .= " AND quote_price >= ".$min." ";}
-					if ($max_price){$query .= " AND quote_price <= ".$max." ";}
+					if ($min_price){$query .= " AND price >= ".$min." ";}
+					if ($max_price){$query .= " AND price <= ".$max." ";}
 					// show results only with prices
-					if ($results_mode==1) { $query .= "AND quote_price > 0"; }
+					if ($results_mode==1) { $query .= "AND price > 0"; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				//$unsorted = get_coldata($search_str,'demand');
@@ -233,7 +250,7 @@
 				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				// show results only with prices
-				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "UNION ";	
 					$query .= "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
 					$query .= "sales_rep_id userid, part, heci, purchase_orders.status ";
@@ -244,7 +261,7 @@
 					if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 					// show results only with prices
-					if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+					if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				//$unsorted = get_coldata($search_str,'demand');
