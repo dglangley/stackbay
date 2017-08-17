@@ -59,17 +59,6 @@
         elseif($action == "update"){
             $row_id = prep($id);
 
-/*
-			$query = "SELECT freight_amount FROM packages WHERE id = $row_id; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)==0) {
-				return "Nothing.";
-			}
-			$r = mysqli_fetch_assoc($result);
-			$existing_freight = $r['freight_amount'];
-			$updated_freight = grab("freight");
-*/
-            
             $update = "UPDATE packages SET ";
             $update .= updateNull("width",grab("width"));
             $update .= updateNull("height",grab("height"));
@@ -79,17 +68,17 @@
             $update .= rtrim(updateNull("freight_amount",grab("freight")),',');
             $update .= " WHERE ";
             $update .= "id = $row_id;";
-            
             qdb($update) or jsonDie(qe()." $update");
-            
-            $pc = "SELECT `id` FROM package_contents where `packageid` = $row_id;";
-            $pc_results = qdb($pc) or jsonDie(qe()." | $pc");
-            if(mysqli_num_rows($pc_results)){
-                foreach($pc_results as $invid){
-                    setCost($invid['id']);
-                }
-            }
-            
+
+			// get all serialid's (inventoryid's) in this package, and let setCost() do its thing,
+			// which finds any difference in existing costs, and re-updates its inventory costs records
+			// and re-averages costs for this partid
+			$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				setCost($r['serialid']);
+			}
+
             return $update;
         }
         elseif($action == "change"){

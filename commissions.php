@@ -472,7 +472,7 @@
 				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND (t.price > 0 OR ii.amount > 0) ";
 				$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
 				$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
-				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid ";
+				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
 				$query3 .= "GROUP BY h.invid, t.id; ";
 //				echo $query3.'<BR>';
 				$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
@@ -736,8 +736,9 @@
 						}
 						$profit = $invoice_amount-$cogs;
 
-						// add comm amount so long as it's a positive number (can't lose money on a sale), or a return
-						if ($c['item_id_label']=='return_item_id' OR $c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0 OR $history_date) {
+						// add comm amount so long as it's a positive number (can't lose money on a sale), or a return, or there's a
+						// manual negative amount on an order with profit
+						if ($history_date OR $c['item_id_label']=='return_item_id' OR $c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0 OR $profit>0) {
 							$comm_amount = $c['commission_amount'];
 						}
 

@@ -109,11 +109,11 @@
 			// calculate diff in cost so we can adjust cost average
 			$actual = 0;
 			// this is set here so we get our $cost_datetimes initialized for purposes below
-			$current_avg = getCost($partid);
+			$current_cost = getCost($partid);
 
 			/* NEWLY-ADDED INVENTORY ITEM THAT HAS NOT YET BEEN AVERAGE-CALCULATED */
 			if (! isset($cost_datetimes[$partid]) OR $date_created>$cost_datetimes[$partid]) {
-				$actual = $current_avg;
+				$actual = $current_cost;
 			} else {
 				/* EXISTING INVENTORY ITEM THAT HAS ALREADY PREVIOUSLY BEEN AVERAGE-CALCULATED */
 				$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";

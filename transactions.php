@@ -183,7 +183,7 @@
 				$term = $r['terms'];
 			}
 
-			$query = "SELECT SUM(price) * qty as amount FROM sales_items WHERE so_number = ".prep($row['order_number']).";";
+			$query = "SELECT SUM(price * qty) as amount FROM sales_items WHERE so_number = ".prep($row['order_number']).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -250,7 +250,7 @@
 				$term = $r['terms'];
 			}
 
-			$query = "SELECT SUM(price) * qty as amount FROM purchase_items WHERE po_number = ".prep($row['po_number']).";";
+			$query = "SELECT SUM(price * qty) as amount FROM purchase_items WHERE po_number = ".prep($row['po_number']).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);

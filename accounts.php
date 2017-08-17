@@ -500,7 +500,7 @@
 		$rows .='
             		<td>
 						<div class="row">
-							<div class="col-md-6">'.$id.' <a href="/'.(strtoupper($info['order_table'],0,1).'O').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
+							<div class="col-md-6">'.$id.' <a href="/'.(strtoupper(substr($info['order_type'],0,1)).'O').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
 		';
 
 		if($_REQUEST['invoice']) {		
