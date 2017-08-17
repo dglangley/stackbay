@@ -875,6 +875,11 @@ textarea.freeform-text {
 .table-striped tr:hover:nth-child(odd) td.primary {
   background-color: #f6f6f6;
 }
+.table-striped > tbody > tr > .bg-danger,
+.table-striped > tbody > .bg-danger > td,
+.table-striped > tbody > .bg-danger > th {
+  background-color: #f2dede !important;
+}
 
 
 

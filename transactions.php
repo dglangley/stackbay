@@ -94,44 +94,52 @@
 	$select .= " ORDER BY `journal_entries`.`id` DESC LIMIT 0,300 ";
 	$select .= ";";
 	$je_results = qdb($select);
-	
+
 	$journal_entries = '';
 	if(mysqli_num_rows($je_results) > 0){
 	    foreach($je_results as $row){
+
+			$cls = $row['confirmed_datetime']? 'complete' : 'pending';
+			$tooltip = '';
+			if (! $row['amount'] AND $row['debit_account']=='Inventory Sale COGS') {
+				$cls .= ' bg-danger';
+				$tooltip = 'data-toggle="tooltip" data-placement="bottom" title="Please verify 0.00 COGS is correct before continuing!"';
+			}
             $company_id = get_invoiced_company_id($row['invoice_no']);
-            $journal_entries .=
-            "<tr class = '".($row['confirmed_datetime']? "complete" : "pending" )."'>
-                <td>".format_date($row['datetime']) ."</td>
-                <td>".$row['id']."</td>
-                <td>".$row['debit_account']."</td>
-                <td>".$row['credit_account']."</td>
-				<td>".$row['memo']."</td>
+            $journal_entries .= '
+			<tr class="'.$cls.'">
+                <td>'.format_date($row['datetime']) .'</td>
+                <td>'.$row['id'].'</td>
+                <td>'.$row['debit_account'].'</td>
+                <td>'.$row['credit_account'].'</td>
+				<td>'.$row['memo'].'</td>
 				<td> </td>
 				<td> </td>
-                <td class='text-right'>".format_price($row['amount'])."</td>
-				<td class='text-center'>"."<input type='checkbox' name = id[] value ='".$row['id']."' 
-				".($row['confirmed_datetime']? "checked disabled" : "" )."></td>
+                <td class="text-right">'.format_price($row['amount']).'</td>
+				<td class="text-center">
+					<input type="checkbox" name=id[] value="'.$row['id'].'" '.($row['confirmed_datetime']? 'checked disabled' : '' ).' '.$tooltip.'>
+				</td>
             </tr>
-            ";
+            ';
             //, SUM(price) as 
 	    }
-	    $journal_entries .="
+	    $journal_entries .= '
 		    <tr>
-		    	<td colspan='8'>
+		    	<td colspan="8">
 		    	</td>
-		    	<td class='text-center' style='padding-top:40px'>
-		    		<button class = 'btn btn-success btn-sm' type='submit'>Save</button>
+		    	<td class="text-center" style="padding-top:40px">
+		    		<button class = "btn btn-success btn-sm" type="submit">Save</button>
 		    	</td>
 		    </tr>
-	    ";
+	    ';
     } else {
-        $journal_entries = "
+        $journal_entries = '
             <tr>
-                <td colspan = '9' class='text-center'>
+                <td colspan = "9" class="text-center">
                     - No Journal Entries -
                 </td>
             </tr>
-        ";
+        ';
     }
 
     //Invoices population
