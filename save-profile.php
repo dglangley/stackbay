@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
@@ -80,7 +81,7 @@
 	}
 	
 	//Variables used among all saves
-	$companyid = 0;
+	$companyid = setCompany();
 	$submit_type = '';
 	
 	//Variables for contact

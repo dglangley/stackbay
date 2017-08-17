@@ -61,7 +61,13 @@
 
 /*
 			$query = "SELECT freight_amount FROM packages WHERE id = $row_id; ";
-			$result = qdb($query);
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)==0) {
+				return "Nothing.";
+			}
+			$r = mysqli_fetch_assoc($result);
+			$existing_freight = $r['freight_amount'];
+			$updated_freight = grab("freight");
 */
             
             $update = "UPDATE packages SET ";

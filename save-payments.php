@@ -84,9 +84,13 @@
 	// Get the CompanyID from Order
 	function getCompanyID($order, $type) {
 		$companyid = 0; 
+
+		$order_field = '';
+		if ($type=='sales_orders') { $order_field = 'so_number'; }
+		else if ($type=='purchase_orders') { $order_field = 'po_number'; }
+		else if ($type=='repair_orders') { $order_field = 'ro_number'; }
 		
-		$query = "SELECT companyid FROM $type WHERE ".($type == 'sales_orders' ? 'so_number' : 'po_number')." = '$order';";
-		//echo $query; die;
+		$query = "SELECT companyid FROM $type WHERE $order_field = '".$order."'; ";
 		$result = qdb($query) or die(qe());
         if (mysqli_num_rows($result)>0) {
         	$r = mysqli_fetch_assoc($result);
@@ -109,6 +113,7 @@
 	
 	$so_order;
 	$po_order;
+	$ro_order;
 	
 	$payment_type;
 	$notes;
@@ -124,8 +129,24 @@
 	$ref_num = $ref_grab[1];
 	
 	//Determine if this is an so or po
-	if (isset($_REQUEST['so_order'])) { $so_order = $_REQUEST['so_order']; }
-	if (isset($_REQUEST['po_order'])) { $po_order = $_REQUEST['po_order']; }
+	if (isset($_REQUEST['so_order'])) {
+		$so_order = $_REQUEST['so_order'];
+		$order_type = 'so';
+		$order_table = 'sales_orders';
+		$order_name = 'Sale';
+	}
+	if (isset($_REQUEST['po_order'])) {
+		$po_order = $_REQUEST['po_order'];
+		$order_type = 'po';
+		$order_table = 'purchase_orders';
+		$order_name = 'Purchase';
+	}
+	if (isset($_REQUEST['ro_order'])) {
+		$ro_order = $_REQUEST['ro_order'];
+		$order_type = 'ro';
+		$order_table = 'repair_orders';
+		$order_name = 'Repair';
+	}
 	
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
@@ -135,10 +156,11 @@
 	if (!$payment_ID) {
 		$msg = 'Missing valid input data';
 	} else {
-		$order_no = (!empty($so_order) ?  $so_order : $po_order );
-		$order_type = (!empty($so_order) ?  'so' : 'po' );
+		if ($so_order) { $order_no = $so_order; }
+		else if ($po_order) { $order_no = $po_order; }
+		else if ($ro_order) { $order_no = $ro_order; }
 		
-		$companyid = (!empty($so_order) ? getCompanyID($so_order,'sales_orders') : getCompanyID($po_order,'purchase_orders'));
+		$companyid = getCompanyID($order_no,$order_table);
 
 		$pid = updatePayments($payment_type, $payment_ID, $payment_date, $journal_entry, $payment_amount, $companyid, $notes);
 		
@@ -152,7 +174,8 @@
 	}
 
 	if(!$accounting_page) {
-		header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
+		//header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
+		header('Location: /order_form.php?ps='.$order_name.'&on='.$order_no.'&payment='.$payment);
 	} else {
 		header('Location: /accounts.php?payment=true');
 	}

@@ -26,10 +26,6 @@
 
 		$min = format_price($sales_min,'','',true);
 		$max = format_price($sales_max,'','',true);
-
-		//Allow filtering of dates dynamically
-//		if(isset($start)){$record_start = $start;}
-//		if(isset($end)){$record_end = $end;}
 		
 		// append times to start/end dates, if missing (based on strlen)
 		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
@@ -45,18 +41,9 @@
 		}
 
 		if ((count($search_arr)==0 && !$partid_array)&&(!$record_start && !$record_end)){
-//			echo 'Valid search result or date range not entered';
 			echo 'Please enter filters to get values.';
 			return $unsorted;
 			
-		}
-
-		// funky but true: getPipeIds() (within get_coldata() below) accepts space-separated strings and
-		// will split them apart automatically, so we need to convert array to string
-		$search_str = '';
-		foreach ($search_arr as $each_search) {
-			if ($search_str) { $search_str .= ' '; }
-			$search_str .= $each_search;
 		}
 
 		$partid_str = '';
@@ -71,7 +58,7 @@
 		switch ($market_table) {
 			case 'demand':
 				
-				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid, userid, 'Active' status, 'Sale' order_type ";
 				$query .= "FROM demand, search_meta, companies ";
 				$query .= "WHERE  demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -83,12 +70,11 @@
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
-				//$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'purchases':
 				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
-				$query .= "sales_rep_id userid, part, heci, purchase_orders.status ";
+				$query .= "sales_rep_id userid, part, heci, purchase_orders.status, 'Purchase' order_type ";
 				$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				$query .= "AND parts.id = purchase_items.partid ";
@@ -101,12 +87,11 @@
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
-				//$unsorted = get_coldata($search_str,'purchases');
 				break;
 
 			case 'sales':
 				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
-				$query .= "sales_rep_id userid, part, heci, sales_orders.status ";
+				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
@@ -119,11 +104,10 @@
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
-				//$unsorted = get_coldata($search_str,'sales');
 				break;
 
 			case 'supply':
-				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid, userid, 'Active' status, 'Purchase' order_type ";
 				$query .= "FROM availability, search_meta, companies ";
 				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -135,12 +119,11 @@
 				if ($results_mode==1) { $query .= "AND avail_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
-				//$unsorted = get_coldata($search_str,'supply');
 				break;
 
 			//Add in the queries for repair items	
 			case 'repair_quoted':
-				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -155,7 +138,7 @@
 				break;
 
 			case 'repair_sources':
-				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status ";
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_sources, search_meta, companies ";
 				$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -170,11 +153,11 @@
 				break;
 
 			case 'repairs_completed':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND ri.price >= ".$min." ";}
 				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
@@ -185,7 +168,7 @@
 				break;
 
 			case 'in_repair':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -200,7 +183,7 @@
 				break;
 
 			case 'repairs':
-				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status ";
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -212,7 +195,7 @@
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
-					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status ";
+					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_orders ro, repair_items ri, companies ";
 					$query .= "WHERE  companies.id = ro.companyid  AND ro.ro_number = ri.ro_number";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -224,7 +207,7 @@
 					if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
-					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status ";
+					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_sources, search_meta, companies ";
 					$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -236,13 +219,12 @@
 					if ($results_mode==1) { $query .= "AND price > 0"; }
 				$query .= "ORDER BY datetime ASC; ";
 
-				//$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			case 'sales_summary':
 
 				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
-				$query .= "sales_rep_id userid, part, heci, sales_orders.status ";
+				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
@@ -264,7 +246,6 @@
 					if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
-				//$unsorted = get_coldata($search_str,'demand');
 				break;
 
 			default:
@@ -296,12 +277,6 @@
 		$k = 0;
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
-				// if we're getting repid from the old db, cross-reference it using getRep() just to get the new db userid
-/*
-				if (isset($r['repid']) AND (! isset($r['userid']) OR ! $r['userid'])) {
-					$r['userid'] = getRep($r['repid'],'repid','id');
-				}
-*/
 				if (! $r['userid']) {
 					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
 					else { $r['userid'] = 2; }
@@ -337,122 +312,4 @@
 
 		return ($results);
 	}
-
-	function get_coldata($search,$coldata='demand') {
-		$unsorted = array();
-		$pipe_ids = array();
-
-		if ($search){
-			$pipe_ids = getPipeIds($search);
-			// if a search string is passed in but there are no results from brians db, don't continue
-			if (count($pipe_ids)==0) { return ($unsorted); }
-		}
-
-		$id_csv = '';
-		foreach ($pipe_ids as $r) {
-			if ($id_csv) { $id_csv .= ','; }
-			$id_csv .= $r['id'];
-		}
-
-		if ($coldata=='demand') {
-			$unsorted = get_details($id_csv,'outgoing_quote',$unsorted);
-			$unsorted = get_details($id_csv,'outgoing_request',$unsorted);
-			$unsorted = get_details($id_csv,'userrequest',$unsorted);
-		} else if ($coldata=='sales') {
-			$unsorted = get_details($id_csv,'sales',$unsorted);
-		} else if ($coldata=='purchases') {
-			$unsorted = get_details($id_csv,'purchases',$unsorted);
-		} else if ($coldata=='supply') {
-			$unsorted = get_details($id_csv,'incoming_quote',$unsorted);
-		}
-		return ($unsorted);
-	}
-
-	function get_details($id_csv,$table_name,$results) {
-		global $record_start,$record_end,$oldid,$company_filter,$min_price,$max_price;
-		$min = format_price($min_price,'','',true);
-		$max = format_price($max_price,'','',true);
-		
-		$db_results = array();
-
-		if (! $id_csv AND ! $record_start AND ! $record_end) {
-//			echo 'Valid search result or date range not entered';
-			return $db_results;
-		}
-
-		// save the original table name passed in above because below we change it to accommodate various other db lookups
-		$orig_table = $table_name;
-
-		$and_where = '';
-		$add_field = '';
-		if ($table_name=='sales') {
-			$table_name = 'outgoing_quote';
-//			$and_where = "AND win = '1' ";
-			$add_field = ', quote_id, win ';
-		} else if ($table_name=='purchases' OR $table_name=='incoming_quote') {
-			if ($table_name=='purchases') {
-				$table_name = 'incoming_quote';
-				$and_where = "AND inventory_purchaseorder.purchasequote_ptr_id = inventory_incoming_quote.quote_id ";
-			}
-			$add_field = ', quote_id ';
-		}
-		// add sales/purchaser rep id
-		if ($table_name=='outgoing_quote' OR $table_name=='incoming_quote') { $add_field .= ", creator_id repid "; } else { $add_field .= ", '' repid "; }
-
-		if ($record_start && $record_end){$and_where .= "AND date between CAST('".substr($record_start,0,10)."' AS DATETIME) and CAST('".substr($record_end,0,10)."' AS DATETIME) ";}
-
-		$query = "SELECT date datetime, quantity qty, price, inventory_company.name, ";
-		$query .= "company_id cid, part_number , clei ".$add_field;
-		$query .= "FROM inventory_".$table_name.", inventory_company, inventory_inventory ";
-		if ($orig_table=='purchases') { $query .= ", inventory_purchaseorder "; }
-		$query .= "WHERE inventory_".$table_name.".company_id = inventory_company.id AND quantity > 0 ";
-		if ($id_csv) { $query .= "AND inventory_id IN (".$id_csv.") "; }
-		if ($oldid) { $query .= "AND company_id = '".$oldid."' "; }
-		$query .= $and_where;
-		if ($table_name=='userrequest') { $query .= "AND incoming = '0' "; }
-		$query .= "AND inventory_inventory.id = inventory_id ";
-		if ($min_price){$query .= " AND price >= ".$min." ";}
-		if ($max_price){$query .= " AND price <= ".$max." ";}
-
-		$query .= "ORDER BY date ASC, inventory_".$table_name.".id ASC; ";
-		$result = qdb($query,'PIPE') OR die(qe('PIPE'));
-			
-		while ($r = mysqli_fetch_assoc($result)) {
-			$r['partid'] = getPartId($r['part_number'],$r['clei']);
-			// translate old id to new
-			$r['cid'] = dbTranslate($r['cid']);
-			if ($company_filter AND $r['cid']<>$company_filter) { continue; }
-
-			$r['name'] = getCompany($r['cid']);
-			$db_results[] = $r;
-		}
-
-		return (handle_results($db_results,$orig_table,$results));
-	}
-
-	function handle_results($db_results,$table_name,$results) {
-		foreach ($db_results as $r) {
-			if ($r['price']=='0.00') { $r['price'] = ''; }
-			else { $r['price'] = format_price($r['price'],2); }
-
-			if ($table_name=='sales' OR $table_name=='purchases') {
-				if ($table_name=='sales') {
-					if (! $r['win']) { continue; }
-					$query3 = "SELECT so_date date FROM inventory_salesorder WHERE quote_ptr_id = '".$r['quote_id']."'; ";
-				} else if ($table_name=='purchases') {
-					$query3 = "SELECT po_date date FROM inventory_purchaseorder WHERE purchasequote_ptr_id = '".$r['quote_id']."'; ";
-				}
-				$result3 = qdb($query3,'PIPE') OR die(qe('PIPE').' '.$query3);
-				if (mysqli_num_rows($result3)>0) {
-					$r3 = mysqli_fetch_assoc($result3);
-					$r['datetime'] = $r3['date'];
-				}
-			}
-
-			$results[$r['datetime']][] = $r;
-		}
-
-		return ($results);
-	}
-
 ?>

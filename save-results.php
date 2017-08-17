@@ -74,8 +74,8 @@
 			// if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
 			if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
 
-			if ($submit_type=='availability' && isset($bid_qty[$ln])) { $response_qty = $bid_qty[$ln]; }
-			if ($submit_type=='availability' && isset($bid_price[$ln])) { $response_price = $bid_price[$ln]; }
+//			if ($submit_type=='availability' && isset($bid_qty[$ln])) { $response_qty = $bid_qty[$ln]; }
+//			if ($submit_type=='availability' && isset($bid_price[$ln])) { $response_price = $bid_price[$ln]; }
 
 
 			// get id if already saved
@@ -109,7 +109,8 @@
 		$display_html = '<table class="table table-condensed"><tr><th>Line#</th><th>Part#</th><th>HECI/CLEI</th><th>Description</th>'.
 			'<th>Qty</th><th>Unit Price</th><th>Ext Price</th></tr>'.$display_html.'</table>';
 	} else {
-		header("Refresh:0");
+		//header("Refresh:0");
+		header('Location: /');
 		exit;
 	}
 ?>

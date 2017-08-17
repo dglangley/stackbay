@@ -583,7 +583,8 @@
 //dgl 11-15-16
 /*		$(".marketpricing-toggle").click(function() { */
 		$(document).on("click", ".btn-resultsmode .btn", function() {
-			var mr = $(this).closest(".part_info").find(".market-results:first");
+//			var mr = $(this).closest(".part_info").find(".market-results:first");
+			var mr = $(this).closest("tbody").find(".market-results:first");
 
 			var this_btn = $(this);
 			// reset all market pricing button styles, and depress the selected one
@@ -592,6 +593,7 @@
 			});
 			$(this).removeClass('btn-default').addClass('btn-primary');
 
+/* why is this commented? new sales view? dl 8-16-17 */
 /*
 			$(this).find(".fa").each(function() {
 				if ($(this).hasClass('fa-toggle-off')) {
@@ -603,6 +605,7 @@
 				}
 			});
 */
+
 			// reset html with a loader/spinner while loading new data
             mr.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 

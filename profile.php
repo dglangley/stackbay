@@ -21,13 +21,13 @@
         
         return $freights;
 	}
-
-	$companyid;
 	
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$company = $_REQUEST['s'];
 
 		$companyid = getCompany($company, "name", "id");
+	} else {
+		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	}
 	
 	function getAddress($searchid,$search_type='addressid') {
@@ -46,9 +46,6 @@
 		$A['address'] = $A['street'].', '.$A['city'].', '.$A['state'].' '.$A['postal_code'];
 		return ($A);
 	}
-	
-	if(!$companyid)
-		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 ?>
 <!DOCTYPE html>
 <html>

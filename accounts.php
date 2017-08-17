@@ -74,7 +74,9 @@
 	}
 
 	$orders_table = 'sales';
-	if (isset($_GET['orders_table']) AND $_GET['orders_table']=='purchases') { $orders_table = 'purchases'; }
+	if (isset($_REQUEST['orders_table'])) {
+		if ($_REQUEST['orders_table']=='purchases') { $orders_table = 'purchases'; }
+	}
 	$o = o_params($orders_table);
 ?>
 
@@ -308,20 +310,24 @@
 	$record_start = $startDate;
 	$record_end = $endDate;
 	$results = getRecords($part_string,'','',$orders_table);
+	if ($orders_table=='sales') {
+		$repairs = getRecords($part_string,'','','repairs_completed');
+		foreach ($repairs as $repair) {
+			$results[] = $repair;
+		}
+	}
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
 	$summary_rows = array();
 	
     foreach ($results as $row){
-
 		$id = $row['order_num'];
 		$freight = 0;
 		$invoiceid = array();
 
-		$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='Sale';";
+		$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='".$row['order_type']."';";
 		$result = qdb($query) OR die(qe());
-					
 		while ($rowInvoice = $result->fetch_assoc()) {
 			$freight += $rowInvoice['freight'];
 			$invoiceid[] = $rowInvoice['invoice_no'];
@@ -347,32 +353,39 @@
 		//Query to get the credit per item
 		//test for sales first
 		$item_id = 0;
-		$qty_shipped = 0;
-		if($orders_table == 'sales') {
-			$query = "SELECT * FROM sales_items WHERE partid = ".prep($row['partid'])." AND so_number = ".prep($id).";";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$query_row = mysqli_fetch_assoc($result);
-				$item_id = $query_row['id'];
-				$qty_shipped = $query_row['qty_shipped'];
-			}
+		$complete_qty = 0;
+		switch ($row['order_type']) {
+			case 'Purchase':
+				$items_table = 'purchase_items';
+				$order_field = 'po_number';
+				$fqty_field = 'qty_received';
+				$charges_table = 'purchase_charges';
+				break;
+			case 'Repair':
+				$items_table = 'repair_items';
+				$order_field = 'ro_number';
+				$fqty_field = 'qty';
+				$charges_table = '';
+				break;
+			case 'Sale':
+			default:
+				$items_table = 'sales_items';
+				$order_field = 'so_number';
+				$fqty_field = 'qty_shipped';
+				$charges_table = 'sales_charges';
+				break;
+		}
 
-			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r2 = mysqli_fetch_assoc($result);
-				$total_sub += $r2['qty']*$r2['price'];
-			}
-		} else {
-			$query = "SELECT * FROM purchase_items WHERE partid = ".prep($row['partid'])." AND po_number = ".prep($id).";";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$query_row = mysqli_fetch_assoc($result);
-				$item_id = $query_row['id'];
-				$qty_shipped = $query_row['qty_received'];
-			}
+		$query = "SELECT *, ".$fqty_field." complete_qty FROM ".$items_table." WHERE partid = ".prep($row['partid'])." AND ".$order_field." = ".prep($id).";";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$query_row = mysqli_fetch_assoc($result);
+			$item_id = $query_row['id'];
+			$complete_qty = $query_row['complete_qty'];
+		}
 
-			$query = "SELECT * FROM sales_charges WHERE so_number = ".prep($id)."; ";
+		if ($charges_table) {
+			$query = "SELECT * FROM ".$charges_table." WHERE ".$order_field." = ".prep($id)."; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r2 = mysqli_fetch_assoc($result);
@@ -382,8 +395,8 @@
 
         $credit = 0;
         $credit_total = 0;
-        if($item_id) {
-			if ($orders_table=='sales') {
+        if ($item_id) {
+			if ($row['order_type']=='Sale') {
 				$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				if (mysqli_num_rows($result)>0) {
@@ -391,7 +404,7 @@
 					$credit = $query_row['amount'];
 					$credit_total = $query_row['total'];
 				}
-			} else if($orders_table == 'purchases') {
+			} else if($row['order_type'] == 'Purchase') {
                 // david's purchase credits hack for now; updated 7-21-17 now that we have purchase_credits, we need to adopt above method (under 'sales')
 				// but we first need to implement a mechanism that generates credits from the RTV process...
                 $query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s ";
@@ -405,7 +418,7 @@
             }
         } 
 
-        if($row['qty'] > $qty_shipped) {
+        if($row['qty'] > $complete_qty) {
         	$status = 'active';
 			// not sure why this was added, makes no sense to reduce the subtotal of charges on an order by the payment or credit amount;
 			// these are taken AS credits and payments, not negative charges of items
@@ -420,7 +433,14 @@
 		$summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
 		$summary_rows[$id]['invoice'] = $invoiceid;
 		$summary_rows[$id]['status'] = $status;
-		$summary_rows[$id]['partids'][] = ['partid' => $row['partid'], 'price' => $row['price'], 'qty' => $row['qty'], 'qty_shipped' => $qty_shipped, 'credit' => ($credit == '' ? 0 : $credit)];
+		$summary_rows[$id]['order_type'] = $row['order_type'];
+		$summary_rows[$id]['partids'][] = array(
+			'partid' => $row['partid'], 
+			'price' => $row['price'], 
+			'qty' => $row['qty'], 
+			'complete_qty' => $complete_qty, 
+			'credit' => ($credit == '' ? 0 : $credit),
+		);
 	}
 
 	$init = true;
@@ -428,7 +448,7 @@
 	foreach ($summary_rows as $id => $info) {
     	$paymentTotal = 0;
 
-		$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($id).' AND order_type = "'.($orders_table == 'sales' ? 'so' : 'po').'";';
+		$query = "SELECT * FROM payment_details WHERE order_number = ".prep($id)." AND order_type = '".substr($order_field,0,2)."'; ";
 		//echo $query;
 		$prows = qdb($query);
 		$output = '
@@ -447,7 +467,7 @@
 
 				$output .= '
 						<li style="text-align: left;">
-							<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
+							<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$info['order_type'].'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
 								<i class="fa fa-usd" aria-hidden="true"></i>
 								Payment #'.$payment['paymentid'].'
 							</a>
@@ -458,7 +478,7 @@
 
 		$output .= '
 						<li>
-							<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$orders_table.'" data-orders_number="'.$id.'">
+							<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$info['order_type'].'" data-orders_number="'.$id.'">
 								<i class="fa fa-plus"></i> Add New Payment
 							</a>
 						</li>
@@ -480,7 +500,7 @@
 		$rows .='
             		<td>
 						<div class="row">
-							<div class="col-md-6">'.$id.' <a href="/'.($orders_table == 'sales' ? 'SO':'PO').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
+							<div class="col-md-6">'.$id.' <a href="/'.(strtoupper($info['order_table'],0,1).'O').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
 		';
 
 		if($_REQUEST['invoice']) {		
@@ -497,7 +517,7 @@
             		<td class="text-right">'.format_price($info['summed']).'</td>
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
-                    <td class="text-right">'.terms_calc($id, $orders_table).'</td>
+                    <td class="text-right">'.terms_calc($id, $info['order_type']).'</td>
                     <td class="text-right total_cost">'.format_price($total).'</td>
                 </tr>
 		';
@@ -545,7 +565,7 @@
 									<tr>
 										<th class="col-md-4">Part Description</th>
 										<th class="col-md-1">Qty</th>
-										<th class="col-md-1">'.($orders_table == 'sales' ? 'Shipped' : 'Received').'</th>
+										<th class="col-md-1">Filled</th>
 										<th class="col-md-1 text-right">Price (ea)</th>
 										<th class="col-md-1 text-right">Ext Price</th>
 										<th class="col-md-1 text-right">Credits</th>
@@ -564,7 +584,7 @@
 									<tr>
 										<td class="col-md-4">'.display_part(current(hecidb($part['partid'], 'id'))).'</td>
 										<td class="col-md-1">'.$part['qty'].'</td>
-										<td class="col-md-1">'.$part['qty_shipped'].'</td>
+										<td class="col-md-1">'.$part['complete_qty'].'</td>
 										<td class="col-md-1 text-right"><span class="info">'.format_price($part['price']).'</span></td>
 										<td class="col-md-1 text-right"><span class="info">'.format_price($part['price'] * $part['qty']).'</span></td>
 										<td class="col-md-1 text-right"><span class="info">'.$credit_col.'</span></td>
@@ -711,6 +731,7 @@
 			$('.payment-data').empty();
 			
 			$('input[name="reference_button"][value="' + ref + '"]').prop('checked', true);
+			console.log(window.location.origin+'/json/payment_accounts.php?orders_table='+orders_table+'&order_number='+order_number);
 			$.ajax({
 				type: "POST",
 				url: '/json/payment_accounts.php',
@@ -744,6 +765,7 @@
 			
 			$('input[name="reference_button"]').prop('checked', false);
 
+			console.log(window.location.origin+'/json/payment_accounts.php?orders_table='+orders_table+'&order_number='+order_number);
 			$.ajax({
 				type: "POST",
 				url: '/json/payment_accounts.php',

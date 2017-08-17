@@ -22,7 +22,7 @@
             }
     	}
     } else if($o['sales'] OR $o['repair']) {
-        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."';";
+        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($order_number)."' AND i.order_type = '".$o['type']."';";
         $result = qdb($query) OR die(qe ().' '.$query);
     	while ($rows = mysqli_fetch_assoc($result)) {
         	$invoice_items[] = $rows;
@@ -131,7 +131,7 @@
 					        <!--<input class="form-control input-sm" type="text" name="companyid" value="">-->
 					    </div>
 					    <div class="col-md-6">
-					        <input class="form-control input-sm" type="text" name="<?=($o['type'] == 'Purchase' ? "po" : "so");?>_order" value="<?=$order_number;?>">
+					        <input class="form-control input-sm" type="text" name="<?=strtolower(substr($o['type'],0,1))."o";?>_order" value="<?=$order_number;?>">
 					    </div>
 					</div>
                 </div>

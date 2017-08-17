@@ -283,6 +283,7 @@
 				krsort($prices[$r['companyid']]);//sort in reverse order to get most recent result first
 				foreach ($prices[$r['companyid']] as $p) {
 					$r['price'] = $p;
+					break;//we got what we wanted with the first identifiable price, now get out of here!
 				}
 			}
 			// create array of partids so we can sum qtys on a given date or avoid duplicating qtys

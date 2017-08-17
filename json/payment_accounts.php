@@ -7,8 +7,12 @@
 	header("Content-Type: application/json", true);
 
 	$orders_table = $_REQUEST['orders_table'];
-    $order_num = $_REQUEST['order_number'];
-    $order_number = prep($order_num);
+	if ($orders_table=='purchases') { $orders_table = 'Purchase'; }
+	else if ($orders_table=='sales') { $orders_table = 'Sale'; }
+	else if ($orders_table=='repairs') { $orders_table = 'Repair'; }
+
+    $order_number = $_REQUEST['order_number'];
+    $q_ordernum = prep($order_number);
 
 	$query = "";
     $invoice_items = array();
@@ -17,8 +21,8 @@
 
     $output = "";
 
-    if($orders_table == 'purchases') {
-        $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = $order_number;";
+    if($orders_table == 'Purchase') {
+        $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = $q_ordernum;";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
@@ -30,23 +34,20 @@
         	    $bill_items[$row['bill_no']] += $row['amount'] * $row['qty'];
             }
     	}
-    } else if($orders_table == 'sales') {
-        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = $order_number;";
-        
+    } else if($orders_table == 'Sale' OR $orders_table=='Repair') {
+        $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = $q_ordernum AND i.order_type = '".$orders_table."';";
         $result = qdb($query) OR die(qe ().' '.$query);
-    	
     	while ($rows = mysqli_fetch_assoc($result)) {
         	$invoice_items[] = $rows;
         }
-    	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = $order_number AND i.order_type = 'Sale'; ";//AND i.companyid = '".res(25)."';";
-        
-        $result = qdb($query) OR die(qe().' '.$query);
-    
-        while ($rows = mysqli_fetch_assoc($result)) {
-        	$credit_items[] = $rows;
-        }
-        
+
+		if ($orders_table=='Sale') {
+			$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = $q_ordernum AND i.order_type = '".$orders_table."'; ";//AND i.companyid = '".res(25)."';";
+			$result = qdb($query) OR die(qe().' '.$query);
+			while ($rows = mysqli_fetch_assoc($result)) {
+				$credit_items[] = $rows;
+			}
+		}
     } else {
         //Future space for Returns or other forms
     }
@@ -108,7 +109,7 @@
 				        <input class="form-control input-sm" type="text" name="accounting_page" value="true">
 				    </div>
 				    <div class="col-md-6">
-				        <input class="form-control input-sm" type="text" name="'.($orders_table == 'sales' ? "so" : "po").'_order" value="'.$order_num.'">
+				        <input class="form-control input-sm" type="text" name="'.strtolower(substr($orders_table,0,1)).'o_order" value="'.$order_number.'">
 				    </div>
 				</div>
             </div>';

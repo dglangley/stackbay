@@ -757,6 +757,15 @@
 													$price = 0;
 
 													if($comp['po_number']) {
+														$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
+														$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
+														$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
+														$query .= "WHERE po.po_number = ".prep($comp['po_number'])." AND pr.partid = ".prep($comp['partid'])." ";
+														$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $repair_order ";
+														$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
+														$query .= "GROUP BY i.id; ";
+														$result = qdb($query) OR die(qe().'<BR>'.$query);
+/*
 														$query = "
 														SELECT price, pi.qty, po.status
 														FROM purchase_requests pr, purchase_items pi, purchase_orders po
@@ -767,19 +776,17 @@
 														AND pr.partid = ".prep($comp['partid']).";
 														";
 														$result = qdb($query) OR die(qe().'<BR>'.$query);
-														
-														// echo $query;
-
+*/
 														if (mysqli_num_rows($result)>0) {
-										                    $query_row = mysqli_fetch_assoc($result);
-										                    $status = $query_row['status'];
-										                    $price = $query_row['price'];
-										                    if($status == 'Active') {
-										                    	$ordered = $query_row['qty'];
-										                    }
-										                }
-										                $ext = ($price * $ordered);
-										                $total += $ext;
+															$query_row = mysqli_fetch_assoc($result);
+															$status = $query_row['status'];
+															$price = $query_row['price'];
+															if($status == 'Active') {
+																$ordered = $query_row['qty'];
+															}
+														}
+														$ext = ($price * $ordered);
+														$total += $ext;
 													}
 
 													$avail_qty = getQuantity($comp['partid'],$comp['po_number']);

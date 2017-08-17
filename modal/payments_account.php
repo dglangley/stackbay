@@ -35,7 +35,6 @@
 					</div>
 					<br>
                     <div class="payment-data"></div>
-					
                 </div>
                 <div class="modal-footer text-center">
                     <div class="col-md-8">
