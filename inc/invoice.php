@@ -9,6 +9,7 @@
     include_once $rootdir.'/inc/setCommission.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 	include_once $rootdir.'/inc/renderOrder.php';
+	include_once $rootdir.'/inc/setInvoiceCOGS.php';
 	include_once $rootdir.'/inc/attachInvoice.php';
     include_once $rootdir.'/dompdf/autoload.inc.php';
 
@@ -58,7 +59,7 @@
 			";
 			$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
 		}
-		
+
 		$o = o_params($type);
 		//Function to be run to create an invoice
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
@@ -162,6 +163,8 @@
 		if($invoice_id){
 			// set google session to amea for sending email below
 			setGoogleAccessToken(5);
+
+			setInvoiceCOGS($invoice_id,$type);
 
 			// render invoice and attach to a temp file, we get attachment as a temp file pointer
 			$attachment = attachInvoice($invoice_id);

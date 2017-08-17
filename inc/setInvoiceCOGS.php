@@ -41,14 +41,14 @@
 
 			$query3 = "SELECT * FROM journal_entries WHERE trans_number = '".$r2['invoice_no']."' AND trans_type = 'invoice'; ";
 			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-			if (mysqli_num_rows($result3)>0) { continue; }
+			if (mysqli_num_rows($result3)>0) { return false; }
 
 			$amount = $r2['cogs'];
-			print "<pre>".print_r($r2,true)."</pre>"; continue;
+//			print "<pre>".print_r($r2,true)."</pre>"; return false;
 			if (! $amount) {
 				$amount = 0;
 
-				print "<pre>".print_r($r2,true)."</pre>"; continue;
+//				print "<pre>".print_r($r2,true)."</pre>"; return false;
 			}
 
 			$jeid = setJournalEntry(false,$GLOBALS['now'],$debit,$credit,'COGS for Invoice #'.$r2['invoice_no'],$amount,$r2['invoice_no'],'invoice');
