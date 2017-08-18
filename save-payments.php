@@ -117,6 +117,15 @@
 	
 	$payment_type;
 	$notes;
+
+	//Filters to be incorporated
+	if (isset($_REQUEST['summary'])) { $summary = $_REQUEST['summary']; }
+	if (isset($_REQUEST['start'])) { $start = $_REQUEST['start']; }
+	if (isset($_REQUEST['end'])) { $end = $_REQUEST['end']; }
+	if (isset($_REQUEST['table'])) { $table = $_REQUEST['table']; }
+	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; }
+	if (isset($_REQUEST['companyid'])) { $companyid_search = $_REQUEST['companyid']; }
+	if (isset($_REQUEST['filter'])) { $filter = $_REQUEST['filter']; }
 	
 	if (isset($_REQUEST['payment_type'])) { $payment_type = $_REQUEST['payment_type']; }
 	if (isset($_REQUEST['payment_ID'])) { $payment_ID = $_REQUEST['payment_ID']; }
@@ -177,6 +186,6 @@
 		//header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
 		header('Location: /order_form.php?ps='.$order_name.'&on='.$order_no.'&payment='.$payment);
 	} else {
-		header('Location: /accounts.php?payment=true');
+		header('Location: /accounts.php?payment=true&report_type='.(!empty($summary) ? $summary : '').'&START_DATE='.(!empty($start) ? $start : '').'&END_DATE='.(!empty($end) ? $end : '').'&orders_table='.(!empty($table) ? $table : '').'&order='.(!empty($order) ? $order : '').'&companyid='.(!empty($companyid_search) ? $companyid_search : '').'&filter='.(!empty($filter) ? $filter : '').'');
 	}
 	exit;

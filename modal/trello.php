@@ -22,4 +22,4 @@
   </div>
 </div>
 
-<div class="" id ="leave_feedback" style='position:fixed;bottom:10px;right:10px;cursor:pointer;'><a>Report a Problem [+]</a></div>
+<!-- <div class="" id ="leave_feedback" style='position:fixed;bottom:10px;right:10px;cursor:pointer;'><a>Report a Problem [+]</a></div> -->
