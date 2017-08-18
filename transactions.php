@@ -101,7 +101,7 @@
 
 			$cls = $row['confirmed_datetime']? 'complete' : 'pending';
 			$tooltip = '';
-			if (! $row['amount'] AND $row['debit_account']=='Inventory Sale COGS') {
+			if (! $row['confirmed_datetime'] AND ($row['amount']=='0.00' OR ! $row['amount']) AND $row['debit_account']=='Inventory Sale COGS') {
 				$cls .= ' bg-danger';
 				$tooltip = 'data-toggle="tooltip" data-placement="bottom" title="Please verify 0.00 COGS is correct before continuing!"';
 			}

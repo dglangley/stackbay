@@ -91,33 +91,27 @@
 					case 'returns_item_id':
 						// $order_type = strtoupper(substr($r['field_changed'],0,1))."O";
 						$o = o_params($r['field_changed']);
-						/*
-						$event = 'purchased';
-						if ($r['field_changed']=='returns_item_id') {
-							$order_type = 'RMA';
-							$event = 'returned';
-						} else if ($r['field_changed']=='sales_item_id') {
-							$event = 'sold';
-						}*/
-						$string = "Item ".$o['event']." on ".strtoupper($o['short'])."#".getOrderNumber($r['value'],$r['field_changed']);
+						$order_number = getOrderNumber($r['value'],$r['field_changed']);
+						$order_str = strtoupper($o['short']).$order_number;
+
+						$string = ucfirst($o['event']).' on '.$order_str.
+							' <a href="/'.$order_str.'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 						break;
 
 					case 'new':
 						continue(2);
-						$string = "Item entered into system ";
+						$string = "Entered into system ";
 						break;
 					default:
 						continue(2);
 						break;
 
 				}
-				// if($r['date_changed']){
-				// 	$string .= " on <strong>".format_date($r['date_changed'], 'n/d/y')."</strong>";
-				// }
 				if($r['userid']){
 					$string .= " by ".getRep($r['userid']);
 				}
-				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = ucwords($string);
+				//$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y g:ia').'</strong>'] = $string;
+				$output[(++$i).'. <strong>'.format_date($r['date_changed'],'D n/d/y').'</strong>'] = $string;
 	    	}
     	}
     	else{

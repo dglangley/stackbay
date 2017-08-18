@@ -196,23 +196,23 @@
         if ($o['invoice']){
             $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
         } 
-        
-        
+
 		$orig_order = $order_number;
 		if(!$o['lump']){
-    		$order = "SELECT * FROM `".$o['order']."` WHERE `".$o['id']."` = $order_number;";
-    		$order_result = qdb($order) or die(qe()." | $order");
-    		if (mysqli_num_rows($order_result) == 0) {
+    		$query = "SELECT * ";
+			if ($order_type=='CM') { $query .= ", order_num order_number "; }
+			$query .= "FROM `".$o['order']."` ";
+			$query .= "WHERE `".$o['id']."` = $order_number;";
+    		$result = qdb($query) or die(qe()." | $query");
+    		if (mysqli_num_rows($result) == 0) {
     			die("Could not pull record");
     		}
-    		$oi = mysqli_fetch_assoc($order_result);
+    		$oi = mysqli_fetch_assoc($result);
 		} else { 
 		    $lumps = printLumpedInvoices($order_number);
 		    $oi = $lumps['order_info'];
 
 		}
-// 		echo $order;exit;
-
 
 		// is order a sale or repair?
 		if ($o["invoice"] OR $o["credit"]) {
@@ -254,12 +254,10 @@
 		    AND ih.field_changed = "sales_item_id" 
 		    AND sci.sales_item_id = ih.value 
 		    AND i.id = ih.invid GROUP BY sci.cid;';
-		  //  echo($items);
 		}
 		//Make a call here to grab RMA's items instead
-		
+
 		//And sort through serials instead of PO_orders
-		
 		$items_results = qdb($items) or die (qe()." | ".$items);
         
         //Process Item results of the credit to associate the serials into a nested array
@@ -491,7 +489,8 @@ $html_page_str .='
     $html_page_str .= '
     <th>Customer</th>
     <th>Credit Date</th>
-    <th>PO #</th>';
+    <th>PO #</th>
+    <th>SO #</th>';
     if ($oi['rma']){
     $html_page_str.='
         <th>RMA #</th>
@@ -527,7 +526,8 @@ $html_page_str .= '
 else if (!$o['lump']){
     $html_page_str .='
     <td class="text-center">'.format_date($oi['date_created'],"M j, Y").'</td>
-    <td class="text-center">'.$oi['cust_ref'].'</td>';
+    <td class="text-center">'.$oi['cust_ref'].'</td>
+    <td class="text-center">'.$oi['order_number'].'</td>';
     
     if($oi['rma']){
         $html_page_str .= '<td class= "pull-center">'.$oi['rma'].'</td>';
@@ -618,7 +618,7 @@ if(!$o['lump']){
                 '.($o['purchase']? '<th>Cond</th>' : "").'
                 <th class="'.($o['rma'] ? 'remove' : '').'">Qty</th>
                 <th>'.$o['price'].'</th>
-                <th>'.($o['rma'] ? 'Disposition' : 'Ext Price').'</th>
+                <th>'.($o['rma'] ? 'Disposition' : 'Ext Amount').'</th>
                 <th class="'.($o['rma'] ? '' : 'remove').'">Qty</th>
             </tr>
             

@@ -80,7 +80,6 @@
 	}
 
 	include_once $rootdir.'/inc/invoice.php';
-
 	
 	if(strtolower($o['type']) == 'rtv'){
 	 	$status = 'Active';
@@ -175,9 +174,12 @@
 	function getRMA($order_number, $type){
 		$RMA = array();
 
-		$query = "SELECT * FROM returns as r, return_items as i WHERE r.order_number = ".prep($order_number)." AND r.order_type = ".prep($type)." AND r.rma_number = i.rma_number;";
+		$query = "SELECT *, date_changed inv_date FROM returns as r, return_items as i ";
+		$query .= "LEFT JOIN inventory_history h ON i.inventoryid = h.invid ";
+		$query .= "WHERE r.order_number = ".prep($order_number)." AND r.order_type = ".prep($type)." AND r.rma_number = i.rma_number ";
+		$query .= "AND h.field_changed = 'returns_item_id' AND h.value = i.id ";
+		$query .= "GROUP BY h.invid, r.rma_number; ";
 		$result = qdb($query) OR die(qe());
-
 		while ($row = $result->fetch_assoc()) {
 			$RMA[] = $row;
 		}
@@ -232,15 +234,7 @@
 		} 
 	}
 
-	$RMA_history = array();
-
-	if ($o['type'] == "Sale"){
-	 	$RMA_history = getRMA($order_number, 'Sale');
-	}
-
-	if ($o['type'] == "Purchase"){
-	 	$RMA_history = getRMA($order_number, 'Purchase');
-	}
+	$RMA_history = getRMA($order_number, $o['type']);
 
  	function getPackagesFix($order_number, $type = 'Sale') {
  	 	$output = '';
@@ -277,8 +271,6 @@
 
 	 	return $output;
 	 }
-
-	//print_r($RMA_history);
 
 ?>
 
@@ -902,26 +894,84 @@
 				   </table>
 				</div>
 				<?php if($RMA_history): ?>
+					<h4 class="text-center">Returns and Credits</h4><br/>
 					<div class="table-responsive">
 						<table class="table table-hover table-striped table-condensed">
 							<thead>
+							<tr class="bg-warning">
+								<th>Date</th>
 								<th>RMA #</th>
 								<th>Description</th>
-								<th>Date</th>
-								<th>Serial</th>
 								<th>Disposition</th>
-								<th>Reason</th>
+								<th>Serial</th>
+								<th>Status</th>
+								<th>Action</th>
+							</tr>
 							</thead>
 
 							<tbody>
 								<?php foreach($RMA_history as $history): ?>
-									<tr>
-										<td><?=$history['rma_number']?></td>
-										<td><?=display_part(current(hecidb($history['partid'], 'id')));?></td>
+									<?php
+										$status = 'Pending';
+										if ($history['inv_date']) {
+											$status = '<strong>'.format_date($history['inv_date'],'D n/d/y').'</strong> Received back<BR>';
+
+											$query = "SELECT * FROM inventory_history h ";
+											$query .= "WHERE invid = '".$history['inventoryid']."' AND field_changed RLIKE 'item_id' ";
+											$query .= "AND date_changed > '".$history['inv_date']."' AND (field_changed <> 'returns_item_id' OR value <> '".$history['id']."') ";
+											$query .= "ORDER BY date_changed ASC; ";
+											$result = qdb($query) OR die(qe().'<BR>'.$query);
+											while ($r = mysqli_fetch_assoc($result)) {
+												$status .= '<strong>'.format_date($r['date_changed'],'D n/d/y').'</strong> ';
+
+												if ($r['field_changed']=='sales_item_id') {
+													$query2 = "SELECT so_number FROM sales_items WHERE id = '".$r['value']."' ";
+													if ($o['type']=='Sale') { $query2 .= "AND so_number <> '".$order_number."' "; }
+													$query2 .= "; ";
+													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+													if (mysqli_num_rows($result2)==0) { continue; }
+													$r2 = mysqli_fetch_assoc($result2);
+													$status .= $r2['so_number'];
+												} else if ($r['field_changed']=='repair_item_id') {
+													$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['value']."' ";
+													if ($o['type']=='Repair') { $query2 .= "AND ro_number <> '".$order_number."' "; }
+													$query2 .= "; ";
+													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+													if (mysqli_num_rows($result2)==0) { continue; }
+													$r2 = mysqli_fetch_assoc($result2);
+													$status .= $r2['ro_number'];
+												} else {
+												}
+												$status .= '<BR>';
+											}
+										}
+										$action = '';
+										if ($history['dispositionid']==1) {
+											// look for credits issued against Credit disposition, and if exists then link to it
+											$query = "SELECT * FROM sales_credits c, sales_credit_items i ";
+											$query .= "WHERE c.order_num = '".$order_number."' AND c.order_type = '".$o['type']."' AND rma = '".$history['rma_number']."' ";
+											$query .= "AND c.id = i.cid AND return_item_id = '".$history['id']."'; ";
+											$result = qdb($query) OR die(qe().'<BR>'.$query);
+											if (mysqli_num_rows($result)>0) {
+												$r = mysqli_fetch_assoc($result);
+												$action = '<a href="/docs/CM'.$r['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+											} else if ($history['inv_date']) {//if already received back, eligible for credit
+												$action = '<a href="" class="btn btn-danger btn-xs"><i class="fa fa-cart-arrow-down"></i></a>';
+											}
+										}
+									?>
+									<tr class="valign-top">
 										<td><?=format_date($history['created']);?></td>
-										<td><?=getSerial($history['inventoryid']);?></td>
+										<td><?=$history['rma_number']?> <a href="/rma.php?rma=<?=$history['rma_number']?>" target="_new"><i class="fa fa-arrow-right"></i></a></td>
+										<td><small><?=display_part(current(hecidb($history['partid'], 'id')));?></small></td>
 										<td><?=getDisposition($history['dispositionid']);?></td>
-										<td><?=$history['reason']?></td>
+										<td>
+											<?=getSerial($history['inventoryid']);?>
+											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button"><i class="fa fa-history"></i></a><br/>
+											<small class="info"><?=$history['reason']?></small>
+										</td>
+										<td><?=$status?></td>
+										<td class="text-center"><?=$action?></td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
@@ -933,6 +983,7 @@
 		</div>
 	</div>
 	
+		<?php include_once 'modal/history.php'; ?>
 		<?php include_once 'inc/footer.php';?>
 		<script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script>
 		

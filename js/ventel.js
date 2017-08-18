@@ -1233,6 +1233,7 @@
 						},
 						dataType: 'json',
 						success: function(lines) {
+							$("#history_items").html("");
 							//Clear the modal
 							$(".history_line").remove();
 							console.log(lines);
@@ -1261,7 +1262,6 @@
 
     });/* close $(document).ready */
 
-	
     // build jquery plugin for remote ajax call
     jQuery.fn.loadResults = function(attempt, results_mode) {
 		if (! results_mode) { var results_mode = '0'; }

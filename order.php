@@ -41,15 +41,23 @@
 				$arr['search'] = $r['po_number'];
 				$arr['type'] = 'PO';
 			}
+		} else if ($type=='RMA') {
+			$query = "SELECT rma_number FROM returns WHERE rma_number = '".res($search)."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$search);
+			if (mysqli_num_rows($result)==1) {
+				$r = mysqli_fetch_assoc($result);
+				$arr['search'] = $r['rma_number'];
+				$arr['type'] = 'RMA';
+			}
 		}
 
 		return ($arr);
 	}
 
-	//$order = preg_replace('/^([\/])([SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
+	//$order = preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
 	$type = trim($_SERVER["REQUEST_URI"]);
 	$order = '';
-	$order_str = explode('|',preg_replace('/^([\/])([SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
+	$order_str = explode('|',preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
 	if (count($order_str)==2) {
 		$type = $order_str[0];
 		$order = $order_str[1];
@@ -120,7 +128,13 @@
 	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
 
 	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
-		include 'order_form.php';
+		if ($type=='RMA') {
+			$_REQUEST['rma'] = $O['search'];
+			$_REQUEST['on'] = '';
+			include 'rma.php';
+		} else {
+			include 'order_form.php';
+		}
 	} else {
 		if ($type=='PO') {
 			include 'inventory_add.php';
