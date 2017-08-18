@@ -94,6 +94,7 @@
 	$select .= " ORDER BY `journal_entries`.`id` DESC LIMIT 0,300 ";
 	$select .= ";";
 	$je_results = qdb($select);
+	$je_open = 0;
 
 	$journal_entries = '';
 	if(mysqli_num_rows($je_results) > 0){
@@ -101,9 +102,12 @@
 
 			$cls = $row['confirmed_datetime']? 'complete' : 'pending';
 			$tooltip = '';
-			if (! $row['confirmed_datetime'] AND ($row['amount']=='0.00' OR ! $row['amount']) AND $row['debit_account']=='Inventory Sale COGS') {
-				$cls .= ' bg-danger';
-				$tooltip = 'data-toggle="tooltip" data-placement="bottom" title="Please verify 0.00 COGS is correct before continuing!"';
+			if (! $row['confirmed_datetime']) {
+				$je_open++;
+				if (($row['amount']=='0.00' OR ! $row['amount']) AND $row['debit_account']=='Inventory Sale COGS') {
+					$cls .= ' bg-danger';
+					$tooltip = 'data-toggle="tooltip" data-placement="bottom" title="Please verify 0.00 COGS is correct before continuing!"';
+				}
 			}
             $company_id = get_invoiced_company_id($row['invoice_no']);
             $journal_entries .= '
@@ -148,8 +152,8 @@
 	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
 	$select .= "ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300; ";
 	$invoices_results = qdb($select);
-
 	$invoice_info = array();
+	$invoices_open = 0;
 
 	$invoices = '';
 	if(mysqli_num_rows($invoices_results) > 0){
@@ -203,6 +207,8 @@
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$completed = $r['date_completed'];
+			} else {
+				$invoices_open++;
 			}
 
 	    	$invoices .= "
@@ -231,6 +237,7 @@
 	}
 
 	//Bills population
+	$bills_open = 0;
     $select = "SELECT * FROM `bills` ";
 	if ($companyid) { $select .= "WHERE companyid = '".res($companyid)."' "; }
 	$select .= "ORDER BY `bills`.`bill_no` DESC LIMIT 0,300; ";
@@ -270,6 +277,8 @@
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$completed = $r['date_completed'];
+			} else {
+				$bills_open++;
 			}
 
 	    	$bills .= "
@@ -449,9 +458,12 @@
 
 			<!-- Nav tabs -->
 			<ul class="nav nav-tabs nav-tabs-ar">
-				<li<?php if ($tab=='journal-entries') { echo ' class="active"'; } ?>><a href="#journal-entries" class="tab-toggle" data-toggle="tab"><i class="fa fa-square"></i> Journal Entries (<?=mysqli_num_rows($je_results)?>)</a></li>
-				<li<?php if ($tab=='invoices') { echo ' class="active"'; } ?>><a href="#invoices" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text"></i> Invoices</a></li>
-				<li<?php if ($tab=='bills') { echo ' class="active"'; } ?>><a href="#bills" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text-o"></i> Bills</a></li>
+				<li<?php if ($tab=='journal-entries') { echo ' class="active"'; } ?>><a href="#journal-entries" class="tab-toggle" data-toggle="tab"><i class="fa fa-square"></i>
+					Journal Entries<?=($je_open>0 ? ' ('.$je_open.')' : '');?></a></li>
+				<li<?php if ($tab=='invoices') { echo ' class="active"'; } ?>><a href="#invoices" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text"></i>
+					Invoices<?=($invoices_open>0 ? ' ('.$invoices_open.')' : '');?></a></li>
+				<li<?php if ($tab=='bills') { echo ' class="active"'; } ?>><a href="#bills" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text-o"></i>
+					Bills<?=($bills_open>0 ? ' ('.$bills_open.')' : '');?></a></li>
 			</ul>
  
 			<!-- Tab panes -->
