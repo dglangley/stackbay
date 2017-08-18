@@ -443,7 +443,7 @@
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
 					$company_ln = '';
-					if ($company && (in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES))) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-arrow-right"></i></a>'; 
+					if ($company && (in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES))) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-book"></i></a>'; 
 					} else if($company) {
 						$company_ln = '<div class="company-overflow">'.$company.'</div>';
 					}

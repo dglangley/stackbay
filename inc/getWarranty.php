@@ -46,7 +46,8 @@
 
 		//If querying our warranty
 		if($type == 'sales') {
-			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
+			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i ";
+			$query .= "WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
 		//If querying vendor warranty
 		} else if($type == 'history'){
 		    //In the history case, the inventory ID is not what is passed in, rather we get the PO line item id

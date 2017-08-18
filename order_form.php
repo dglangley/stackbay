@@ -922,7 +922,7 @@
 											$query .= "ORDER BY date_changed ASC; ";
 											$result = qdb($query) OR die(qe().'<BR>'.$query);
 											while ($r = mysqli_fetch_assoc($result)) {
-												$status .= '<strong>'.format_date($r['date_changed'],'D n/d/y').'</strong> ';
+												$row_info = '<strong>'.format_date($r['date_changed'],'D n/d/y').'</strong> ';
 
 												if ($r['field_changed']=='sales_item_id') {
 													$query2 = "SELECT so_number FROM sales_items WHERE id = '".$r['value']."' ";
@@ -931,7 +931,7 @@
 													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 													if (mysqli_num_rows($result2)==0) { continue; }
 													$r2 = mysqli_fetch_assoc($result2);
-													$status .= $r2['so_number'];
+													$row_info .= 'Sold on SO'.$r2['ro_number'].' <a href="/SO'.$r2['so_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 												} else if ($r['field_changed']=='repair_item_id') {
 													$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['value']."' ";
 													if ($o['type']=='Repair') { $query2 .= "AND ro_number <> '".$order_number."' "; }
@@ -939,10 +939,11 @@
 													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 													if (mysqli_num_rows($result2)==0) { continue; }
 													$r2 = mysqli_fetch_assoc($result2);
-													$status .= $r2['ro_number'];
+													$row_info .= 'Repaired on RO'.$r2['ro_number'].' <a href="/RO'.$r2['ro_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 												} else {
 												}
-												$status .= '<BR>';
+
+												$status .= $row_info.'<BR>';
 											}
 										}
 										$action = '';

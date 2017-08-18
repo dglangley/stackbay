@@ -51,12 +51,12 @@
 	//echo $ro_number;
 	
 	//If this is a form which sumbits upon itself
-	if((grab('rmaid') || grab('invid')) && !grab('exchange_trigger')) {
-		$rma_serial = strtoupper(grab('rmaid'));
+	if((grab('rma_serial') || grab('invid')) && !grab('exchange_trigger')) {
+		$rma_serial = strtoupper(grab('rma_serial'));
 		$invid = grab('invid');
-		// exit($invid);
 
-			//Get the initial Sales Item 
+		//Get the initial Sales Item 
+		if ($invid) {
 			$query = "SELECT serial_no, sales_item_id, returns_item_id, partid FROM inventory WHERE id = ".prep($invid).";";
 			$serial_find = qdb($query) or die(qe());
 			if (mysqli_num_rows($serial_find)) {
@@ -65,8 +65,7 @@
 				$sales_item_id = $serial_find['sales_item_id'];
 				$partid = $serial_find['partid'];
 			}
-
-		
+		}
 		
 		$place = grab('place');
 		$instance = grab('instance');
@@ -300,9 +299,11 @@
 		$query = '';
 		
 		if($type == 'all'){
-			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d ";
+			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
 		} else {
-			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d ";
+			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
 		}
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
@@ -329,6 +330,8 @@
 		}
 		
 		//Check to see if the item has been received
+//echo $locationid.' locationid<BR>';
+//print "<pre>".print_r($data,true)."</pre>";
 		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
 		$receive_check = qdb($query);
 		
@@ -564,7 +567,12 @@
 								</div>
 								
 								<div class="col-md-6" style="padding: 0 0 0 5px;">
-								    <input class="form-control input-sm serialInput auto-focus" name="rmaid" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
+									<div class="input-group">
+									    <input class="form-control input-sm serialInput auto-focus" name="rma_serial" type="text" placeholder="Serial" value="<?=($rma_serial ? $rma_serial : '');?>" autofocus>
+										<span class="input-group-btn">
+											<button class="btn btn-success btn-sm" type="submit"><i class="fa fa-save"></i></button>
+										</span>
+									</div>
 					            </div>
 				            </div>
 
@@ -576,7 +584,7 @@
 						<table class="rma_add table table-hover table-striped table-condensed" style="table-layout:fixed;"  id="items_table">
 							<thead>
 						         <tr>
-						            <th class="col-sm-2">
+						            <th class="col-sm-3">
 						            	PART	
 						            </th>
 						            <th class="text-center col-sm-1">
@@ -588,13 +596,13 @@
 						        	<th class="text-center col-sm-1">
 										Disposition
 						        	</th>
-						        	<th class="col-sm-3">
+						        	<th class="col-sm-2">
 										Reason
 						        	</th>
-						        	<th class="text-center col-sm-2">
+						        	<th class="text-center col-sm-1">
 										Location
 						        	</th>
-						        	<th class="text-center col-sm-1">
+						        	<th class="text-center col-sm-2">
 										Vendor Warr Exp
 						        	</th>
 						        	<th class="text-right col-sm-1">
@@ -607,7 +615,7 @@
 
 						<?php endif; ?>
 
-								<tr>
+								<tr class="valign-top">
 									<td>
 										<?php 
 											echo display_part(current(hecidb($part['partid'],'id')));
@@ -709,9 +717,11 @@
 										?>
 										<div class="row text-center">
 											<?php if(!$item['returns_item_id']) { ?>
+<!--
 												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive">
 													<i class="fa fa-truck"></i>
 													</button>
+-->
 											<?php 
 												} else if(getDisposition($item['dispositionid']) == 'Repair') { 
 													$linked_ro;
