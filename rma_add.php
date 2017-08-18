@@ -28,7 +28,7 @@
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
-	include_once $rootdir.'/inc/credit_creation.php';
+	include_once $rootdir.'/inc/credit_functions.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 
 
@@ -47,6 +47,7 @@
 	// print_r($_REQUEST);
 	$order_number = getOrderNum($rma_number);
 	$partid;
+	$sales_item_id;
 	
 	//If this is a form which sumbits upon itself
 	if((grab('rma_serial') || grab('invid')) && !grab('exchange_trigger')) {
@@ -80,6 +81,7 @@
 			//Check if there is 1, multiple, or none found
 			if(count($rmaArray) == 1 || $invid != '') {
 				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
+/*
 				if($sales_item_id){
 					$si_line = "
 					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
@@ -88,13 +90,14 @@
 					if (mysqli_num_rows($si_result)){
 						$si_result = mysqli_fetch_assoc($si_result);
 						$so_number = $si_result['so_number'];
-						if(all_credit_received($rma_number)){
-							credit_creation($so_number, "sales",$rma_number);
+						if(qualifyCredit($rma_number)){
+							createCreate($so_number, "sales",$rma_number);
 						}
 					}
 				}else{
 					//exit('This part was never sold');
 				}
+*/
 				
 				//Clear values after save
 				if($errorHandler == '') {
@@ -337,7 +340,7 @@
 
 			// notify accounting when disposition is Credit, so that they can generate the Credit Memo
 			if ($data['dispositionid']==1) {
-//				if (! $GLOBALS['DEV_ENV']) {
+				if (! $GLOBALS['DEV_ENV']) {
 					setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 					$bcc = 'david@ven-tel.com';
@@ -363,7 +366,7 @@
 					} else {
 						//$this->setError(json_encode(array('message'=>$SEND_ERR)));
 					}
-//				}
+				}
 			}
 		} else {
 			$err_output = "Item has already been received.";

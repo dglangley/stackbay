@@ -957,7 +957,8 @@
 												$r = mysqli_fetch_assoc($result);
 												$action = '<a href="/docs/CM'.$r['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 											} else if ($history['inv_date']) {//if already received back, eligible for credit
-												$action = '<a href="" class="btn btn-danger btn-xs"><i class="fa fa-cart-arrow-down"></i></a>';
+												$action = '<a href="/credit.php?rma_number='.$history['rma_number'].'&order_number='.$order_number.'&order_type='.$o['type'].'" '.
+													'class="btn btn-danger btn-xs"><i class="fa fa-cart-arrow-down"></i></a>';
 											}
 										}
 									?>

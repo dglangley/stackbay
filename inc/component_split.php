@@ -16,7 +16,6 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/renderOrder.php';
-	include_once $rootdir.'/inc/credit_creation.php';
 	include_once $rootdir.'/inc/setPart.php';
 	
 	
