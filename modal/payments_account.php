@@ -35,6 +35,15 @@
 					</div>
 					<br>
                     <div class="payment-data"></div>
+
+                    <!-- Hidden values for the search filter preservation -->
+                    <input class="hidden" type="text" value="<?=$_REQUEST['report_type'];?>" name="summary" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['START_DATE'];?>" name="start" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['END_DATE'];?>" name="end" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['orders_table'];?>" name="table" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['order'];?>" name="order" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['companyid'];?>" name="companyid" class="form-control input-sm">
+                    <input class="hidden" type="text" value="<?=$_REQUEST['filter'];?>" name="filter" class="form-control input-sm">
 					
                 </div>
                 <div class="modal-footer text-center">
