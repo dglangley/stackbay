@@ -29,26 +29,24 @@
 	include_once $rootdir.'/inc/display_part.php'; 
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/credit_creation.php';
+	include_once $rootdir.'/inc/send_gmail.php';
 
 
 	//Set initials to be used throughout the page
-	$order_number = grab('on');
-	$order_type = "rma";
+	$rma_number = grab('on');
+	$order_type = "RMA";
 	
 	//Variables used for the post save
 	$rma_serial = '';
 	$invid = '';
 	$itemLocation = '';
 	$errorHandler = '';
-	$errorHandler = '';
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
 	// print_r($_REQUEST);
-	$ro_number = getOrderNum($order_number);
+	$order_number = getOrderNum($rma_number);
 	$partid;
-
-	//echo $ro_number;
 	
 	//If this is a form which sumbits upon itself
 	if((grab('rma_serial') || grab('invid')) && !grab('exchange_trigger')) {
@@ -73,7 +71,7 @@
 		$itemLocation = dropdown_processor($place,$instance);
 		
 		//Find the items pertaining to the RMA number and the serial searched
-		$rmaArray = findRMAItems($rma_serial, $order_number);
+		$rmaArray = findRMAItems($rma_serial, $rma_number);
 	
 		// print_r($rmaArray);
 		if(empty($itemLocation)) {
@@ -90,8 +88,8 @@
 					if (mysqli_num_rows($si_result)){
 						$si_result = mysqli_fetch_assoc($si_result);
 						$so_number = $si_result['so_number'];
-						if(all_credit_received($order_number)){
-							credit_creation($so_number, "sales",$order_number);
+						if(all_credit_received($rma_number)){
+							credit_creation($so_number, "sales",$rma_number);
 						}
 					}
 				}else{
@@ -136,7 +134,7 @@
 		$order_result = array();
 
 		//Grab from RO data that is populated from there
-		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($order_number).";";
+		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($rma_number).";";
 
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
@@ -172,7 +170,7 @@
 				".prep($order_result['sales_rep_id']).",
 				".prep($result['companyid']).",
 				".prep($result['contactid']).",
-				".prep('RMA#' . $order_number).",
+				".prep('RMA#' . $rma_number).",
 				".prep($order_result['bill_to_id']).",
 				".prep($order_result['ship_to_id']).",
 				".prep($order_result['freight_carrier_id']).",
@@ -233,18 +231,18 @@
 	//Check if the page has invoked a success in saving
 	$rma_updated = $_REQUEST['success'];
 	
-	if(empty($order_number)) {
+	if(empty($rma_number)) {
 		header( 'Location: /operations.php' ) ;
 	}
 	
 
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
-	function getRMAParts ($order_number) {
+	function getRMAParts ($rma_number) {
 		
 		$listPartid;
 		
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
-		$query = "SELECT id, partid FROM return_items WHERE rma_number = ". res($order_number) ." GROUP BY partid;";
+		$query = "SELECT id, partid FROM return_items WHERE rma_number = ". res($rma_number) ." GROUP BY partid;";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -258,10 +256,10 @@
 	}
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
-	function getRMAitems($partid, $order_number) {
+	function getRMAitems($partid, $rma_number) {
 		$listSerial;
 		
-		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid, r.id FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($order_number).";";
+		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid, r.id FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($rma_number).";";
 		$result = qdb($query);
 	    
 	    if($result)
@@ -276,9 +274,9 @@
 	
 
 	//This is solely used to grab the date the order was created "RMA" for sidebar usage
-	function getCreated($order_number) {
+	function getCreated($rma_number) {
 		$date;
-		$query = "SELECT * FROM returns WHERE rma_number = ".res($order_number).";";
+		$query = "SELECT * FROM returns WHERE rma_number = ".res($rma_number).";";
 		$result = qdb($query) or die(qe());
 		
 		if (mysqli_num_rows($result)>0) {
@@ -294,16 +292,16 @@
 	
 	
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
-	function findRMAItems($search, $order_number, $type = 'all'){
+	function findRMAItems($search, $rma_number, $type = 'all'){
 		$rma_search = array();
 		$query = '';
 		
 		if($type == 'all'){
 			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d ";
-			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($order_number).";";
+			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND r.rma_number = ".res($rma_number).";";
 		} else {
 			$query = "SELECT r.id as rmaid, r.inventoryid, disposition, dispositionid FROM inventory as i, return_items as r, dispositions as d ";
-			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($order_number).";";
+			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($rma_number).";";
 		}
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
@@ -316,9 +314,9 @@
 	}
 	
 	function savetoDatabase($locationid, $data, $invid = ''){
-		global $ro_number;
+		global $rma_number;
 
-		$result;
+		$err_output;
 		$receive_check;
 		$query;
 		$id;
@@ -328,48 +326,70 @@
 		} else {
 			$id = $data['inventoryid'];
 		}
-		
+
 		//Check to see if the item has been received
-//echo $locationid.' locationid<BR>';
-//print "<pre>".print_r($data,true)."</pre>";
 		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
 		$receive_check = qdb($query);
 		
 		if (mysqli_num_rows($receive_check)>0) {
-			if($ro_number) {
-				$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '8' WHERE id = '". res($id) ."';";
-			} else {
-				$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
-			}
-			//$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', locationid = '". res($locationid) ."', conditionid = '-1' WHERE id = '". res($id) ."';";
-			//Query or pass back error
+			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '-5' WHERE id = '". res($id) ."';";
 			$result = (qdb($query) ? '' : qe());
+
+			// notify accounting when disposition is Credit, so that they can generate the Credit Memo
+			if ($data['dispositionid']==1) {
+//				if (! $GLOBALS['DEV_ENV']) {
+					setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+
+					$bcc = 'david@ven-tel.com';
+					$rma_ln = 'https://www.stackbay.com/RMA'.$rma_number;
+					$email_body = 'RMA '.$rma_number.' is received, and is dispositioned for Credit.<br/><br/>';
+
+					$query = "SELECT order_number, order_type FROM returns WHERE rma_number = '".res($rma_number)."'; ";
+					$result = qdb($query) OR die(qe().'<BR>'.$query);
+					if (mysqli_num_rows($result)>0) {
+						$r = mysqli_fetch_assoc($result);
+						$order_combo = strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'];
+						$order_ln = 'https://www.stackbay.com/'.$order_combo;
+						$email_body .= 'To issue the Credit, go to the originating billable order: '.
+							$order_combo.' (<a href="'.$order_ln.'">'.$order_ln.'</a>)<br/><br/>';
+					}
+
+					$email_body .= 'Here is a link to the RMA: <a href="'.$rma_ln.'">'.$rma_ln.'</a><br/>';
+
+					$send_success = send_gmail($email_body,'RMA '.$rma_number.' pending credit','accounting@ven-tel.com',$bcc);
+
+					if ($send_success) {
+						// echo json_encode(array('message'=>'Success'));
+					} else {
+						//$this->setError(json_encode(array('message'=>$SEND_ERR)));
+					}
+//				}
+			}
 		} else {
-			$result = "Item has already been received.";
+			$err_output = "Item has already been received.";
 		}
 
-		return $result;
+		return $err_output;
 	}
 
-	function getOrderNum($number) {
-		$ro_number;
+	function getOrderNum($rma_number) {
+		$order_number;
 
-		$query = "SELECT order_number FROM returns WHERE rma_number = ".prep($number).";";
+		$query = "SELECT order_number FROM returns WHERE rma_number = ".prep($rma_number).";";
 		$result = qdb($query);
-		
 		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$ro_number = $result['order_number'];
+			$r = mysqli_fetch_assoc($result);
+			$order_number = $r['order_number'];
 		}
 
-		return $ro_number;
+		return $order_number;
 	}
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
 	
 
 	//Grab all parts of the RMA
-	$partsListing = getRMAParts($order_number);
+	$partsListing = getRMAParts($rma_number);
 ?>
 
 <!DOCTYPE html>
@@ -378,7 +398,7 @@
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
 		?>
-		<title>RMA Receive <?=($order_number != 'New' ? '#' . $order_number : '')?></title>
+		<title>RMA Receive <?=($rma_number != 'New' ? '#' . $rma_number : '')?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.table td {
@@ -444,14 +464,14 @@
 		</style>
 	</head>
 	
-	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$order_number?>">
+	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$rma_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php'; include 'modal/package.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php?rma=<?=$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$rma_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2>RMA #<?= $order_number.' Receiving'; ?></h2>
+				<h2>RMA #<?= $rma_number.' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
 			<!--	<button class="btn-flat gray pull-right btn-update" id="rma_complete" style="margin-top: 10px; margin-right: 10px;" disabled>Save</button>-->
@@ -468,7 +488,7 @@
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
 				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-						<?=sidebar_out($ro_number,"RMA","RMA_display")?>
+						<?=sidebar_out($order_number,"RMA","RMA_display")?>
 			</div>
 				
 			<div class="col-sm-10">
@@ -479,7 +499,7 @@
 					$rma_status = true;
 					if(!empty($partsListing)) {
 						foreach($partsListing as $part): 
-							$serials = getRMAitems($part['partid'],$order_number);
+							$serials = getRMAitems($part['partid'],$rma_number);
 
 						if($init):
 							foreach($serials as $item){
@@ -499,7 +519,7 @@
 							</button>
 							<?php
 
-								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$rma_number' AND `order_type` = 'RMA'; ";
 								$results = qdb($select) or die(qe()." ".$select);
 								
 								//Check for any open items to be shipped
@@ -508,7 +528,7 @@
 									$init = true;
 									$package_no = 0;
 									
-									$masters = master_packages($order_number,$order_type);
+									$masters = master_packages($rma_number,$order_type);
 									foreach($results as $b){
 										$package_no = $b['package_no'];
 										$box_button = "<button type='button' class='btn ";
@@ -524,7 +544,7 @@
 										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
 										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
-										$box_button .= " data-order-number='" . $order_number . "'";
+										$box_button .= " data-order-number='" . $rma_number . "'";
 										$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."' >".$b['package_no']."</button>";
 										echo($box_button);
 			                        	
@@ -535,7 +555,7 @@
 									
 
 								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'$order_type','1',NOW());";
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($rma_number,'$order_type','1',NOW());";
 									qdb($insert) or die(qe());
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
