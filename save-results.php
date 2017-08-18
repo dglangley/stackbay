@@ -6,7 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearchMeta.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 
-	//print "<pre>".print_r($_REQUEST,true)."</pre>"; 
+	//print "<pre>".print_r($_REQUEST,true)."</pre>";
 	$submit_type = 'demand';
 
 	if (isset($_REQUEST['submit_type']) AND ($_REQUEST['submit_type']=='availability' OR $_REQUEST['submit_type']=='demand')) { $submit_type = $_REQUEST['submit_type']; }
@@ -113,6 +113,7 @@
 		header('Location: /');
 		exit;
 	}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -125,6 +126,77 @@
 <body>
 
 	<?php include 'inc/navbar.php'; ?>
+
+	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+		<div class="row" style="padding: 8px;" id="filterBar">
+			<div class="col-md-4 mobile-hide" style="max-height: 30px;">
+				<form action="quote_pdf.php" method="post" target="_blank">
+					<input type="hidden" name="metaid" value="<?=$metaid;?>">
+					<input type="hidden" name="START_DATE" value="<?=$_REQUEST['START_DATE'];?>">
+					<input type="hidden" name="END_DATE" value="<?=$_REQUEST['END_DATE'];?>">
+					<input type="hidden" name="companyid" value="<?=$_REQUEST['companyid'];?>">
+					<input type="hidden" name="searchlistid" value="<?=$_REQUEST['searchlistid'];?>">
+					<input type="hidden" name="submit_type" value="<?=$_REQUEST['submit_type'];?>">
+
+					<?php foreach($_REQUEST['manfid'] as $manf) {
+						echo '<input type="hidden" name="manfid[]" value="' . $manf . '">';
+					} ?>
+					<?php foreach($_REQUEST['systemid'] as $systemid) {
+						echo '<input type="hidden" name="systemid[]" value="' . $systemid . '">';
+					} ?>
+					<?php foreach($_REQUEST['searches'] as $searches) {
+						echo '<input type="hidden" name="searches[]" value="' . $searches . '">';
+					} ?>
+					<?php foreach($_REQUEST['search_qtys'] as $search_qtys) {
+						echo '<input type="hidden" name="search_qtys[]" value="' . $search_qtys . '">';
+					} ?>
+					<?php foreach($_REQUEST['descr'] as $descr) {
+						echo '<input type="hidden" name="descr[]" value="' . $descr . '">';
+					} ?>
+					<?php foreach($_REQUEST['bid_qty'] as $bid_qty) {
+						echo '<input type="hidden" name="bid_qty[]" value="' . $bid_qty . '">';
+					} ?>
+					<?php foreach($_REQUEST['bid_price'] as $bid_price) {
+						echo '<input type="hidden" name="bid_price[]" value="' . $bid_price . '">';
+					} ?>
+					<?php $counter = 0; foreach($_REQUEST['items'] as $items) {
+						$counter2 = 0;
+						foreach($items as $item){
+							echo '<input type="hidden" name="items['.$counter.']['.$counter2.']" value="' . $item . '">';
+							$counter2 ++;
+						}
+						$counter ++;
+					} ?>
+					<?php $counter = 0; foreach($_REQUEST['sellqty'] as $sellqtys) {
+						$counter2 = 0;
+						foreach($sellqtys as $sellqty){
+							echo '<input type="hidden" name="sellqty['.$counter.']['.$counter2.']" value="' . $sellqty . '">';
+							$counter2 ++;
+						}
+						$counter ++;
+					} ?>
+					<?php $counter = 0; foreach($_REQUEST['sellprice'] as $sellprices) {
+						$counter2 = 0;
+						foreach($sellprices as $sellprice){
+							echo '<input type="hidden" name="sellprice['.$counter.']['.$counter2.']" value="' . $sellprice . '">';
+							$counter2 ++;
+						}
+						$counter ++;
+					} ?>
+
+					<button type="submit" class="btn-flat pull-left"><i class="fa fa-file-pdf-o"></i></button>
+				</form>
+			</div>
+
+			<div class="text-center col-md-4">
+				<h2 class="minimal">Sales Quote <?=$metaid;?></h2>
+			</div>
+
+			<div class="col-md-4">
+				
+			</div>
+		</div>
+	</div>
 
     <div id="pad-wrapper">
 

@@ -730,7 +730,7 @@ textarea.freeform-text {
 }
 
 .market-table .market-results {
-	height:83%;
+	height:86%;
 	overflow:hidden;
 	width:95%;
 	background:white;
@@ -1349,6 +1349,12 @@ tr.grayout td a {
 	.search-form .search-group {
 		width: 100%;
 		margin: 6px auto auto 6px;
+	}
+}
+
+@media only screen and (max-width: 767px) {
+	.phone-hide {
+		display: none;
 	}
 }
 

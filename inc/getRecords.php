@@ -8,7 +8,7 @@
 	$record_start = '';
 	$record_end = '';
 	
-	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0) {//, $start = '', $end = '') {
+	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '') {//, $start = '', $end = '') {
 		global $record_start,$record_end,$oldid,$company_filter,$sales_min,$sales_max;
 		$unsorted = array();
 
@@ -28,9 +28,9 @@
 		$max = format_price($sales_max,'','',true);
 
 		//Allow filtering of dates dynamically
-//		if(isset($start) && $start != ''){$record_start = $start;}
-//		if(isset($end) && $end != ''){$record_end = $end;}
-
+		if(!empty($start)){$record_start = $start;}
+		if(!empty($end)){$record_end = $end;}
+		
 		// append times to start/end dates, if missing (based on strlen)
 		if (strlen($record_start)==10) { $record_start .= ' 00:00:00'; }
 		if (strlen($record_end)==10) { $record_end .= ' 23:59:59'; }
@@ -126,7 +126,7 @@
 				break;
 
 			//Add in the queries for repair items	
-			case 'repair_quoted':
+			case 'repairs_quoted':
 				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
@@ -226,7 +226,6 @@
 				break;
 
 			case 'sales_summary':
-
 				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
@@ -239,7 +238,7 @@
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "UNION ";	
 					$query .= "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
-					$query .= "sales_rep_id userid, part, heci, purchase_orders.status ";
+					$query .= "sales_rep_id userid, part, heci, purchase_orders.status, 'Purchase' order_type ";
 					$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 					$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 					$query .= "AND parts.id = purchase_items.partid ";

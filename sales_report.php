@@ -23,7 +23,7 @@
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
 	else if (isset($_REQUEST['upload_listid']) AND is_numeric($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']>0) { $listid = $_REQUEST['upload_listid']; }
 	$pg = 1;
-	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
+	//if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
@@ -139,6 +139,85 @@ if (! $r['partid']) { return ($results); }
 			font-size: 12px;
 			color: #855d41;
 		}
+
+		#pad-wrapper {
+			padding: 0 25px;
+			margin-top: 110px;
+		}
+
+		#pad-wrapper .part_info {
+			margin-bottom: 5px;
+		}
+
+		.list_total {
+			font-weight: bold;
+			font-size: 12px;
+			color: #000;
+		}
+
+		.market-table {
+			margin-bottom: 10px;
+		}
+
+		.descr-row {
+			height: auto !important;
+		}
+
+		.market-company {
+			display: inline-block;
+		}
+
+		.filter-group {
+		    position: relative;
+		    display: inline-block;
+		    vertical-align: middle;
+		}
+
+		.part-modal-show {
+			visibility: hidden;
+		}
+
+		.descr-row:hover .part-modal-show {
+			visibility: visible;
+		}
+
+		.part_info .bg-availability, .part_info .bg-purchases, .part_info .bg-sales, .part_info .bg-demand, .part_info .bg-repair {
+			padding: 5px;
+			min-height: 140px;
+			height: 100%;
+		}
+
+		.form-group .input-group.sell {
+			width: auto;
+			max-width: 90px;
+		}
+
+		.table-header .select2 {
+			width: 80% !important;
+		}
+
+		.spinner_lock {
+			margin: 0 auto;
+			width: 12px;
+			padding-bottom: 25px;
+		}
+
+		/*Temporarily kill the product first row action options (Merge etc)*/
+		.product-action .action-items {
+			display: none !important;
+		}
+
+		@media (max-width: 992px) {
+			#pad-wrapper {
+				margin-top: 130px;
+			}
+		}
+
+		@media (max-width: 767px) {
+			.table-header .select2 {
+				width: 100% !important;
+			}
+		}
 	</style>
 </head>
 <body>
@@ -215,12 +294,6 @@ if (! $r['partid']) { return ($results); }
 <?php
 	} else {
 
-	$query = "SELECT * FROM remotes ORDER BY id ASC; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
-	}
-
 	$title = '';
 
 //	if (! $s) { $s = 'UN375F'.chr(10).'090-42140-13'.chr(10).'IXCON'; }
@@ -291,21 +364,24 @@ if (! $r['partid']) { return ($results); }
 	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 		<div class="row" style="padding: 8px;" id="filterBar">
 			<div class="col-md-4 mobile-hide" style="max-height: 30px;">
-				<div class="col-md-3">
-					<div class="col-md-4">
-						<a href="#" class="fa fa-star-half-o text-danger fa-lg" data-toggle="tooltip" data-placement="right" title="" data-original-title="Add/Remove as a Favorite" style="margin-top: 8px;"></a>
-					</div>
-					<div class="btn-group medium remove-pad col-md-8" data-toggle="buttons">
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Ascending" class="btn btn-sm left filter_status active btn-warning" data-filter="active" data-type="sort" data-sort="asc">
-				        	<i class="fa fa-sort-numeric-asc" aria-hidden="true"></i>
-				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Descending" class="btn btn-sm middle filter_status btn-default" data-filter="complete" data-type="sort"  data-sort="desc">
-				        	<i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>	
-				        </button>
-				    </div>
+				<div class="col-md-3" style="margin-top: -5px;">
+					<!-- <div class="col-md-8 remove-pad" style="margin-top: -5px;"> -->
+						<div class="btn-group" data-toggle="buttons">
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Line" class="btn btn-xs left filter_status active btn-warning" data-sort="line" data-type="sort" data-listid="<?=$listid;?>">
+					        	<i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+					        </button>
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Stock" class="btn btn-xs middle filter_status btn-default" data-sort="stock" data-type="sort" data-listid="<?=$listid;?>">
+					        	<i class="fa fa-dropbox" aria-hidden="true"></i>	
+					        </button>
+					    </div>
+					    <div class="filter-group">
+							<button class="btn btn-xs btn-primary active filter_equipment" type="button" data-type="equipment" data-toggle="tooltip" data-placement="right" title="" data-original-title="Equipments"><i class="fa fa-cube"></i></button><br/>
+							<button class="btn btn-xs btn-default filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+						</div>
+					<!-- </div> -->
 				</div>
 
-				<div class="col-md-9 date_container mobile-hide">
+				<div class="col-md-9 date_container mobile-hid remove-pad">
 					<div class="col-sm-5 remove-pad">
 						<div class="input-group date datetime-picker" data-format="MM/DD/YYYY">
 				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
@@ -357,12 +433,15 @@ if (! $r['partid']) { return ($results); }
 				</div>
 			</div>
 
-			<div class="text-center col-md-4">
-				<h2 class="minimal"><?=($title ? $title : strtoupper($s));?></h2>
+			<div class="text-center col-md-4 remove-pad">
+				<h2 class="minimal"><?=($title ? $title : '');?></h2>
 			</div>
 
 			<div class="col-md-4">
-				<div class="col-sm-4">
+				<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
+					<span class="list_total"></span>
+				</div>
+				<div class="col-md-2 col-sm-2 col-xs-3">
 					<div class="pull-right slider-frame success filter_modes">
 						<!-- include radio's inside slider-frame to set appropriate actions to them -->
 						<input type="radio" class="sales_mode hidden" value="Buy">
@@ -371,20 +450,20 @@ if (! $r['partid']) { return ($results); }
 					</div>
 				</div>
 
-				<div class="col-sm-8">
-					<div class="col-sm-10">
-						<div class="pull-right form-group">
+				<div class="col-md-8 col-sm-8 col-xs-9">
+					<div class="col-sm-10 col-xs-8">
+						<div class="pull-right form-group" style="width: 100%;">
 							<select name="companyid" id="companyid" class="company-selector">
 								<option value="">- Select a Company -</option>
 							</select>
-							<button class="btn btn-primary btn-sm" type="submit">
+							<button class="btn btn-primary btn-sm phone-hide" type="submit">
 								<i class="fa fa-filter" aria-hidden="true"></i>
 							</button>
 						</div>
 					</div>
 
-					<div class="col-sm-2">
-						<button class="btn-flat btn-sm success save_sales" type='submit' data-validation="left-side-main">
+					<div class="col-sm-2 col-xs-4 remove-pad">
+						<button class="btn-flat btn-sm success save_sales pull-right" type='submit' data-validation="left-side-main">
 							Save					
 						</button>
 					</div>
@@ -398,9 +477,19 @@ if (! $r['partid']) { return ($results); }
 		if ($s) { $searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right); }
 	?>
 	<input type="hidden" name="searchlistid" value="<?php echo $searchlistid; ?>">
-	<input type="text" name="submit_type" style="display:none;" value="demand">
+	<input type="hidden" name="submit_type" value="demand">
 
     <div id="pad-wrapper">
+
+    	<div id="remote-warnings">
+			<?php 
+				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
+				$result = qdb($query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					echo '<a style="margin-bottom: 15px;" class="btn btn-danger btn-xs hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+				}
+			?>
+		</div>
 
 <?php
 	// set alert message if favorites and/or filters
@@ -428,6 +517,7 @@ if (! $r['partid']) { return ($results); }
 ?>
 
 <?php
+	$rows = array();
 
 	foreach ($lines as $n => $line) {
 		$line = trim($line);
@@ -437,7 +527,7 @@ if (! $r['partid']) { return ($results); }
 	}
 	unset($lines);
 
-	$per_pg = 5;
+	$per_pg = 10;
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -485,6 +575,9 @@ if (! $r['partid']) { return ($results); }
 			$results = hecidb(format_part($search_str));
 		}
 
+		//Default show only equipment
+		$results = array_filter($results, function($row) { global $equipment_filter; return ($row['classification'] == 'equipment'); });
+
 		// the LARGE majority of items don't have more than 25 results within a certain group of 7-digit hecis
 		if (count($results)>25) {
 			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 25!';
@@ -500,7 +593,7 @@ if (! $r['partid']) { return ($results); }
 		if (! $favorites AND ! $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
 			else if ($x>$max_ln) { 
-				// echo '<div class="row inifite_scroll" data-page="'.(isset($ln) ? $ln + 1 : '1').'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+				echo '<div class="row infinite_scroll spinner_lock" data-page="'.(isset($ln) ? $ln + 1 : '1').'" data-list="'.$listid.'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
 				break; 
 			}
 			$x++;
@@ -645,55 +738,63 @@ if (! $r['partid']) { return ($results); }
 			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$results_rows .= '
-                        <div class="col-md-12 descr-row" style="padding:8px;">
-							<div class="product-action text-center">
-                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
-                                <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite"></a>
-							</div>
-							<div class="qty">
-								<div class="form-group">
-									<input name="sellqty['.$ln.'][]" type="text" value="'.$itemqty.'" size="2" placeholder="Qty" class="input-xs form-control" />
+                        <div class="row descr-row" style="padding:8px">
+                        	<div class="col-sm-3 remove-pad">
+								<div class="product-action text-center">
+	                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
+	                                <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite"></a>
 								</div>
-							</div>
-                            <div class="product-img">
-                                <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
-                            </div>
-                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
-								<a href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" style="cursor:pointer;"><span class="descr-label"><span class="part-label">'.$P['Part'].'</span></a> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>
-                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
+								<div class="qty">
+									<div class="form-group">
+										<input name="sellqty['.$ln.'][]" type="text" value="'.$itemqty.'" size="2" placeholder="Qty" class="input-xs form-control" />
+									</div>
+								</div>
+	                            <div class="product-img">
+	                                <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
+	                            </div>
+	                        </div>
 
-								<div class="descr-edit hidden">
-									<p>
-	        							<button type="button" class="close parts-edit"><span>&times;</span></button>
-										<input type="text" value="'.$P['Part'].'" class="form-control" data-partid="'.$partid.'" data-field="part" placeholder="Part Number">
-									</p>
-									<p>
-										<input type="text" value="'.$P['HECI'].'" class="form-control" data-partid="'.$partid.'" data-field="heci" placeholder="HECI/CLEI">
-									</p>
-									<p>
-										<input type="text" name="descr[]" value="'.$P['description'].'" class="form-control" data-partid="'.$partid.'" data-field="description" placeholder="Description">
-									</p>
-									<p>
-										<div class="form-group">
-											<select name="manfid[]" class="manf-selector" data-partid="'.$partid.'" data-field="manfid">
-												<option value="'.$P['manfid'].'">'.$P['manf'].'</option>
-											</select>
-										</div>
-										<div class="form-group">
-											<select name="systemid[]" class="system-selector" data-partid="'.$partid.'" data-field="systemid">
-												<option value="'.$P['systemid'].'">'.$P['system'].'</option>
-											</select>
-										</div>
-									</p>
+	                        <div class="col-sm-7">
+	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
+									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
+	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
+
+									<div class="descr-edit hidden">
+										<p>
+		        							<button type="button" class="close parts-edit"><span>&times;</span></button>
+											<input type="text" value="'.$P['Part'].'" class="form-control" data-partid="'.$partid.'" data-field="part" placeholder="Part Number">
+										</p>
+										<p>
+											<input type="text" value="'.$P['HECI'].'" class="form-control" data-partid="'.$partid.'" data-field="heci" placeholder="HECI/CLEI">
+										</p>
+										<p>
+											<input type="text" name="descr[]" value="'.$P['description'].'" class="form-control" data-partid="'.$partid.'" data-field="description" placeholder="Description">
+										</p>
+										<p>
+											<div class="form-group">
+												<select name="manfid[]" class="manf-selector" data-partid="'.$partid.'" data-field="manfid">
+													<option value="'.$P['manfid'].'">'.$P['manf'].'</option>
+												</select>
+											</div>
+											<div class="form-group">
+												<select name="systemid[]" class="system-selector" data-partid="'.$partid.'" data-field="systemid">
+													<option value="'.$P['systemid'].'">'.$P['system'].'</option>
+												</select>
+											</div>
+										</p>
+									</div>
 								</div>
 							</div>
-							<div class="price">
-								<div class="form-group">
-									<div class="input-group sell">
-										<span class="input-group-btn">
-											<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="group/ungroup prices for item"><i class="fa fa-lock"></i></button>
-										</span>
-										<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
+
+							<div class="col-sm-2 ">
+								<div class="price">
+									<div class="form-group">
+										<div class="input-group sell">
+											<span class="input-group-btn">
+												<button class="btn btn-default input-xs control-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="group/ungroup prices for item"><i class="fa fa-lock"></i></button>
+											</span>
+											<input type="text" name="sellprice['.$ln.'][]" value="'.$itemprice.'" size="6" placeholder="0.00" class="input-xs form-control price-control sell-price" />
+										</div>
 									</div>
 								</div>
 							</div>
@@ -714,7 +815,7 @@ if (! $r['partid']) { return ($results); }
 				$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
 
 				if($explanation != '') {
-					// $results_rows .= '<div class="row inifite_scroll" data-page="'.($page ? $page + 1 : '1').'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+					// $results_rows .= '<div class="row infinite_scroll" data-page="'.($page ? $page + 1 : '1').'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
 				}
 
 				$results_rows .= '
@@ -723,7 +824,7 @@ if (! $r['partid']) { return ($results); }
 							<!-- market-row for all items within search result section -->
                             <div class="market-row col-md-8 remove-pad" data-ln="'.$ln.'">
 								<div class="table market-table" data-partids="'.$partid_csv.'" style="min-height: 140px;">		
-									<div class="col-sm-2 bg-availability" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 bg-availability">
 										<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">Supply <i class="fa fa-window-restore"></i>
 										</a> 
 										<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i>
@@ -735,20 +836,20 @@ if (! $r['partid']) { return ($results); }
 											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
 										</div>
 									</div>
-									<div class="col-sm-2 bg-purchases" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 bg-purchases">
 										'.$purchases_col.'
 									</div>
-									<div class="col-sm-2 bg-sales" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 bg-sales">
 										'.$sales_col.'
 									</div>
-									<div class="col-sm-2 bg-demand" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 bg-demand">
 										<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Demand Results" data-type="demand">Demand <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
 										<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="demand"></div>
 									</div>
-									<div class="col-sm-2 bg-repair" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 bg-repair">
 										'.$repair_col.'
 									</div>
-									<div class="col-sm-2 slider-box" style="height: 100%; padding-top: 8px;">
+									<div class="col-sm-2 slider-box">
 										<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
 											<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Ln '.($ln+1).'">
 											<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Off">
@@ -758,7 +859,7 @@ if (! $r['partid']) { return ($results); }
 										<br/><span class="info"></span>
 										<br/>
 										<div class="price">
-											<span class="seller_qty"></span> <span class="seller_x" style="display: none;">x</span> <span class="seller_price"></span> <span class="total_price_text">'.format_price($rev_total).'</span>
+											<span class="seller_qty"></span> <span class="seller_x" style="display: none;">x</span> <span class="seller_price"></span> <span class="total_price_text" data-total="'.$rev_total.'">'.format_price($rev_total).'</span>
 										</div>
 										<br/>
 
@@ -771,7 +872,7 @@ if (! $r['partid']) { return ($results); }
 												<input type="text" name="bid_price['.$ln.']" data-type="bid_price" class="form-control input-xxs bid-input text-center" value="" placeholder="Price">
 											</div>
 											<div class="col-sm-3 remove-pad">
-												<span class="buy_text">
+												<span class="buy_text" data-buy_total="0">
 													$0.00
 												<span>
 											</div>
@@ -804,7 +905,7 @@ if (! $r['partid']) { return ($results); }
 						</div>
 					</div>
 					<div class="qty">
-						<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty"/><br/>
+						<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty" data-ln="<?php echo $ln; ?>"/><br/>
 					</div>
 					<div class="product-descr action-hover">
 	                	<div class="input-group">

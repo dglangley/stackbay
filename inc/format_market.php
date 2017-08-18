@@ -41,7 +41,7 @@
 		// } else if ($market_table=='demand' AND $DEMAND!==false) {
 		// 	$results = $DEMAND;
 		// } else {
-		$results = getRecords($search_strs,$partid_csv,'csv',$market_table, 0,$start, $end);
+		$results = getRecords($search_strs,$partid_csv,'csv',$market_table, 0, $start, $end);
 		// }
 
 		$num_results = count($results);
@@ -142,14 +142,15 @@
 				}
 			}
 			$price_str = '';
+			$uprice = round($r['sum_price']/$r['sum_qty']);
 			if (($r['sum_qty']>0) || strpos($market_table, 'repair') !== false) {
 				$fprice = format_price(format_price(round($r['sum_price']/$r['sum_qty'])),false);
 				if ($market_table=='purchases') {
-					$price_str = '<a href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
+					$price_str = '<a target="_blank" href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
 				} else if ($market_table=='sales') {
-					$price_str = '<a href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
+					$price_str = '<a target="_blank" href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
 				} else if (strpos($market_table, 'repair') !== false) {
-					$price_str = '<a href="/RO'.$r['order_num'].'">'.($fprice ? $fprice : '0.00').'</a>';
+					$price_str = '<a target="_blank" href="/RO'.$r['order_num'].'">'.($fprice ? $fprice : '0.00').'</a>';
 				} else if($market_table!='sales_summary') {
 					$price_str = '<input type="text" class="form-control input-xxs market-price" value="'.$fprice.'" data-date="" data-cid="">';
 				}
@@ -162,7 +163,7 @@
 				$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
 			}
 			$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
-				$companies.' <span class="pa">'.$price_str.'</span></div>';
+				$companies.' <span class="pa '.$market_table.'_price" data-price="'.$uprice.'">'.$price_str.'</span></div>';
 
 			// append to column string
 			$market_str = $cls1.$line_str.$cls2.$market_str;

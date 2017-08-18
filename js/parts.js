@@ -235,7 +235,7 @@
 		});
 	}
 
-	$(".part-modal-show").click(function(){
+	$(document).on("click", ".part-modal-show", function(){
 		var id = '';
 		if($(this).data("partid")){
 			id = $(this).data("partid");
