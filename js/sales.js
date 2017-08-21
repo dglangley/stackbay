@@ -24,6 +24,8 @@
 				filter = temp;
 			}
 
+			container.find('.part_loader').show();
+
 			$.ajax({
 		        url: 'json/sales.php',
 		        type: 'get',
@@ -53,6 +55,8 @@
 					container.find('.slider-button').click(function() {
 						setSlider($(this));
 					});
+
+					container.find('.part_loader').hide();
 		        },
 		        error: function(xhr, desc, err) {
 		            console.log("Details: " + desc + "\nError:" + err);
@@ -68,6 +72,9 @@
 		var ln = $(this).closest(".market-row").data("ln");
 
 		if(type == "repairs" || type == 'sales_summary'){
+
+			container.closest('.part_info').find('.part_loader').show();
+
 			e.preventDefault();
 
 			$.ajax({
@@ -98,6 +105,8 @@
 					container.find('.slider-button').click(function() {
 						setSlider($(this));
 					});
+
+					container.closest('.part_info').find('.part_loader').hide();
 		        },
 		        error: function(xhr, desc, err) {
 		            console.log("Details: " + desc + "\nError:" + err);
@@ -166,6 +175,8 @@
 
 		var container = $(this).closest('.filter-group');
 
+		$('#sales_loader').show();
+
 		//Get the values currently set
 		var count = 0;
 		var temp = '';
@@ -220,6 +231,8 @@
 						container.find('.slider-button').click(function() {
 							setSlider($(this));
 						});
+
+						$('#sales_loader').hide();
 			        },
 			        error: function(xhr, desc, err) {
 			            console.log("Details: " + desc + "\nError:" + err);
@@ -382,6 +395,8 @@
 
 		//alert(sort);
 
+		$('#sales_loader').show();
+
 		$.ajax({
 	        url: 'json/sales.php',
 	        type: 'get',
@@ -418,6 +433,8 @@
 						container.find('.slider-button').click(function() {
 							setSlider($(this));
 						});
+
+						$('#sales_loader').hide();
 					});
 				}
 	        },

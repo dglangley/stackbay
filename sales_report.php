@@ -173,7 +173,11 @@ if (! $r['partid']) { return ($results); }
 		    vertical-align: middle;
 		}
 
-		.part-modal-show {
+		.first .part-modal-show {
+			visibility: visible !important;
+		}
+
+		.product-descr .part-modal-show {
 			visibility: hidden;
 		}
 
@@ -229,6 +233,13 @@ if (! $r['partid']) { return ($results); }
 	<?php include_once 'inc/getQty.php'; ?>
 
 	<?php include_once 'inc/navbar.php'; ?>
+
+	<div id="sales_loader" class="loader text-muted">
+		<div>
+			<i class="fa fa-refresh fa-5x fa-spin"></i><br>
+			<h1 id="loader-message">Please wait for Sales results to load...</h1>
+		</div>
+	</div>
 
 <?php
 	/* FILTER CONTROLS */
@@ -916,6 +927,8 @@ if (! $r['partid']) { return ($results); }
 	-->
 						</div><!-- /input-group -->
 						<span class="info"><?php echo $num_results.' result'.$s; ?></span> &nbsp; <span class="text-danger"><?php echo $explanation; ?></span>
+						<?=($num_results == 0 ? '<a href="javascript:void(0);" class="part-modal-show" data-partid="">
+								<i class="fa fa-plus"></i></a>' : '');?>
 					</div>
 					<!-- <div class="price pull-right">
 						<div class="form-group target text-right">
@@ -949,6 +962,12 @@ if (! $r['partid']) { return ($results); }
 					</div>
 	        	</div>
         	</div>
+
+        	<div class="part_loader loader text-muted" style="position: relative; margin-top: 25px; margin-bottom: -25px;">
+				<div style="color: #777;">
+					<i class="fa fa-refresh fa-5x fa-spin"></i><br>
+				</div>
+			</div>
 
         	<?php echo $results_rows; ?>
 

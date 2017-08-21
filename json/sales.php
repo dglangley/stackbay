@@ -89,6 +89,7 @@
 
 		$search_index = 0;
 		$qty_index = 1;
+		$line_index = 2;
 		$query = "SELECT search_meta.id metaid, uploads.type, processed, filename FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
@@ -103,17 +104,17 @@
 				$query2 = '';
 
 				if($sort == 'line') {
-					$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches ";
+					$query2 = "SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches ";
 					$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
 				} else {
 					//Other query to sort by (Stock, No Stock, Never Had)
-					$query2 = "SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status IN ('shelved', 'received') AND inventory.conditionid >= 0 HAVING SUM(inventory.qty) > 0)
+					$query2 = "SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status IN ('shelved', 'received') AND inventory.conditionid >= 0 HAVING SUM(inventory.qty) > 0)
 							UNION
-								SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status NOT IN ('shelved', 'received') HAVING SUM(inventory.qty) > 0)
+								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status NOT IN ('shelved', 'received') HAVING SUM(inventory.qty) > 0)
 							UNION
-								SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid HAVING SUM(inventory.qty) = 0)
+								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid HAVING SUM(inventory.qty) = 0)
 							UNION
-								SELECT search, ".$table_qty." qty FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND NOT EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid);";
+								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND NOT EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid);";
 				}
 				$result2 = qdb($query2);
 				while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -121,7 +122,7 @@
 					// exist in the array? if so, don't add to list for duplication of calculations below
 					if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
 
-					$lines[] = $r2['search'].' '.$r2['qty'];
+					$lines[] = $r2['search'].' '.$r2['qty'].' '.$r2['line_number'];
 				}
 			} else {
 				// if list is not processed, alert the user
@@ -166,6 +167,8 @@
 				if (is_numeric($qty_text) AND $qty_text>0) { $search_qty = $qty_text; }
 			}
 
+			$line_number = strtoupper(trim($terms[$line_index])) - 1;
+
 			$search_price = "0.00";//default
 			if ($price_index!==false AND isset($terms[$price_index])) {
 				$price_text = trim($terms[$price_index]);
@@ -184,7 +187,7 @@
 				$x++;
 			}
 
-			$html .=  '<div class="table part_info">' . partTable($search_str, $ln + $last_ln, $equipment_filter, $search_qty, $search_price) . '</div>';
+			$html .=  '<div class="table part_info">' . partTable($search_str, $line_number, $equipment_filter, $search_qty, $search_price) . '</div>';
 		}
 
 		return $html;
@@ -296,6 +299,9 @@
 								<input type="text" name="searches['.$ln.']" value="'.$search_str.'" data-ln="'.$ln.'" class="product-search text-primary" tabindex="-1" />
 							</div>
 							<span class="info">'.$num_results.' result'.($num_results > 0 ? 's' : '').'</span> &nbsp; <span class="text-danger">'.$explanation.'</span>
+
+							'.($num_results == 0 ? '<a href="javascript:void(0);" class="part-modal-show" data-partid="">
+								<i class="fa fa-plus"></i></a>' : '').'
 						</div>
 						';
 
