@@ -358,26 +358,39 @@
 		}
 
 		$terms = '';
-		$address = '';
+//		$address = '';
 		$query2 = "SELECT created, bill_to_id, terms FROM ".$order_table." o, terms t ";
 		$query2 .= "WHERE ".$order_field." = '".$r['order_num']."' AND o.termsid = t.id; ";
 		$result2 = qdb($query2) OR die(qe().' '.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
 
-			$address = address_out($r2['bill_to_id'],false,', ');
+//			$address = address_out($r2['bill_to_id'],false,', ');
 			$terms = $r2['terms'];
 			$order_date = $r2['created'];
 		}
 
+		$invoice = '';
+		$invoice_date = '';
 		$amount = 0;
-		$query2 = "SELECT SUM(qty*amount) ext_amt FROM sales_credit_items WHERE cid = '".$r['id']."' GROUP BY cid; ";
+		$query2 = "SELECT qty, amount, return_item_id FROM sales_credit_items WHERE cid = '".$r['id']."'; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-		if (mysqli_num_rows($result2)>0) {
-			$r2 = mysqli_fetch_assoc($result2);
-			$amount = $r2['ext_amt'];
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$amount += $r2['qty']*$r2['amount'];
+
+			$query3 = "SELECT i.invoice_no, i.date_invoiced ";
+			$query3 .= "FROM return_items ri, package_contents pc, invoice_shipments s, invoice_items ii, invoices i ";
+			$query3 .= "WHERE ri.id = '".$r2['return_item_id']."' AND ri.inventoryid = pc.serialid AND pc.packageid = s.packageid ";
+			$query3 .= "AND s.invoice_item_id = ii.id AND ii.invoice_no = i.invoice_no; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			if (mysqli_num_rows($result3)>0) {
+				$r3 = mysqli_fetch_assoc($result3);
+				$invoice = $r3['invoice_no'];
+				$invoice_date = format_date($r3['date_invoiced'],'n/d/y');
+			}
 		}
 
+		$completed = '';
 		$query2 = "SELECT date_completed FROM qb_log WHERE order_number = '".$r['id']."' AND order_type = 'Credit'; ";
 		$result2 = qdb($query2) OR die(qe().' '.$query2);
 		if (mysqli_num_rows($result2)>0) {
@@ -393,17 +406,18 @@
 
 		$credits_rows .= '
 				<tr class="'.$cls.'">
-					<td>'.$r['id'].' <a href="/docs/CM'.$r['id'].'" target="_new"><i class="fa fa-pdf-icon-o"></i></a></td>
+					<td>'.$r['id'].' <a href="/docs/CM'.$r['id'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
 					<td>'.getCompany($r['companyid']).'</td>
-					<td>'.$address.'</td>
 					<td>'.format_date($r['date_created'],'n/d/y').'</td>
-					<td>'.substr($r['order_type'],0,1).'O '.$r['order_num'].'</td>
+					<td>'.substr($r['order_type'],0,1).'O '.$r['order_num'].' <a href="/'.substr($r['order_type'],0,1).'O'.$r['order_num'].'" target="_new"><i class="fa fa-arrow-right"></i></a></td>
 					<td>'.format_date($order_date,'n/d/y').'</td>
-					<td>'.$r['rma'].'</td>
 					<td>'.$terms.'</td>
+					<td>'.$r['rma'].'</td>
+					<td>'.$invoice.' <a href="/docs/INV'.$invoice.'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
+					<td>'.$invoice_date.'</td>
 					<td class="text-right">'.format_price($amount).'</td>
 					<td class="text-center">
-						<input type="checkbox" name="credits_checkbox[]" value="'.$r['id'].'"'.$chk_status.'> '.format_date($completed,'n/d/y').'</td>
+						<input type="checkbox" name="credits_checkbox[]" value="'.$r['id'].'"'.$chk_status.'> '.$completed.'</td>
 					</td>
 				</tr>
 		';
@@ -688,12 +702,13 @@
 							<tr>
 								<th class = 'col-sm-1'>CM</th>
 								<th class = 'col-sm-2'>Customer</th>
-								<th class = 'col-sm-2'>Address</th>
 								<th class = 'col-sm-1'>CM Date</th>
 								<th class = 'col-sm-1'>Order No</th>
 								<th class = 'col-sm-1'>Order Date</th>
-								<th class = 'col-sm-1'>RMA No</th>
 								<th class = 'col-sm-1'>Terms</th>
+								<th class = 'col-sm-1'>RMA No</th>
+								<th class = 'col-sm-1'>Invoice No</th>
+								<th class = 'col-sm-1'>Invoice Date</th>
 								<th class = 'col-sm-1 text-right'>Amount</th>
 								<th class = 'col-sm-1 text-center'>Confirm</th>
 							</tr>
