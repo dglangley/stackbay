@@ -378,9 +378,9 @@
 			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
 		} else {
 	   		if ($startDate) {
-   				$dbStartDate = format_date($startDate, 'Y-m-d');
-   				$dbEndDate = format_date($endDate, 'Y-m-d');
-   				$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+   				$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+   				$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+   				$query .= "AND o.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
 		}
 		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }

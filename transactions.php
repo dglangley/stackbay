@@ -13,23 +13,35 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
 
-	$completed_Invoice = $_REQUEST['invoice_checkbox'];
-	$completed_Bills = $_REQUEST['bills_checkbox'];
+	/***** POST DATA *****/
+	$confirmed_invoices = '';
+	if (isset($_REQUEST['invoices_checkbox'])) { $confirmed_invoices = $_REQUEST['invoices_checkbox']; }
+	$confirmed_bills = '';
+	if (isset($_REQUEST['bills_checkbox'])) { $confirmed_bills = $_REQUEST['bills_checkbox']; }
+	$confirmed_credits = '';
+	if (isset($_REQUEST['credits_checkbox'])) { $confirmed_credits = $_REQUEST['credits_checkbox']; }
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 
-	if($completed_Invoice) {
-		foreach($completed_Invoice as $invoice) {
+	if($confirmed_invoices) {
+		foreach($confirmed_invoices as $invoice) {
 			insertQBLog($invoice, 'Invoice');
 		}
 	}
 
-	if($completed_Bills) {
-		foreach($completed_Bills as $bill) {
+	if($confirmed_bills) {
+		foreach($confirmed_bills as $bill) {
 			insertQBLog($bill, 'Bill');
 		}
 	}
+
+	if ($confirmed_credits) {
+		foreach ($confirmed_credits as $credit) {
+			insertQBLog($credit, 'Credit');
+		}
+	}
+	/***** END POST DATA *****/
 
 	function insertQBLog($order_number, $order_type) {
 		global $U;
@@ -86,11 +98,26 @@
 		$update = "UPDATE `journal_entries` SET `confirmed_datetime` = '".$now."', `confirmed_by` = '".$U['id']."' WHERE `id` IN ($ids)";
 		qedb($update);
 	}
+
+	$startDate = '';
+ 	if ($_REQUEST['START_DATE']){
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+	}
+	$endDate = format_date($today, 'm/d/Y');
+ 	if ($_REQUEST['END_DATE']){
+		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
+	}
+	if ($startDate) {
+		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+	}
 		
 	$company = 'NO COMPANY SELECTED THIS IS PROBABLY NOT AN ORDER';
 	$order_type = '';
-	$select = "
-	SELECT * FROM `journal_entries` ";
+	$select = "SELECT * FROM `journal_entries` ";
+	if ($startDate) {
+		$select .= "WHERE datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+	}
 	$select .= " ORDER BY `journal_entries`.`id` DESC LIMIT 0,300 ";
 	$select .= ";";
 	$je_results = qdb($select);
@@ -127,15 +154,6 @@
             ';
             //, SUM(price) as 
 	    }
-	    $journal_entries .= '
-		    <tr>
-		    	<td colspan="8">
-		    	</td>
-		    	<td class="text-center" style="padding-top:40px">
-		    		<button class = "btn btn-success btn-sm" type="submit">Save</button>
-		    	</td>
-		    </tr>
-	    ';
     } else {
         $journal_entries = '
             <tr>
@@ -150,6 +168,9 @@
 
     $select = "SELECT * FROM `invoices` WHERE (order_type = 'Sale' OR order_type = 'Repair') ";
 	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
+	if ($startDate) {
+		$select .= "AND date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+	}
 	$select .= "ORDER BY `invoices`.`invoice_no` DESC LIMIT 0,300; ";
 	$invoices_results = qdb($select);
 	$invoice_info = array();
@@ -202,7 +223,7 @@
 				$amount = $r['amount'];
 			}
 
-			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['invoice_no']).";";
+			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['invoice_no'])." AND order_type = 'Invoice';";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -219,10 +240,9 @@
                     <td>".format_date($row['date_invoiced'])."</td>
                     <td><a href='/".substr($row['order_type'],0,1)."O".$row['order_number']."'>".$row['order_number']."</a></td>
                     <td>".$term."</td>
-                    <td>".$row['notes']."</td>
                     <td>".format_date($row['date_invoiced'],'D n/j/y')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
-                    <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='invoice_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
+                    <td class='text-center'><input type='checkbox' name='invoices_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '')."> ".format_date($completed,'n/d/y')."</td>
 	            </tr>
             ";
 	    }
@@ -238,8 +258,11 @@
 
 	//Bills population
 	$bills_open = 0;
-    $select = "SELECT * FROM `bills` ";
-	if ($companyid) { $select .= "WHERE companyid = '".res($companyid)."' "; }
+    $select = "SELECT * FROM `bills` WHERE 1 = 1 ";
+	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
+	if ($startDate) {
+		$select .= "AND date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+	}
 	$select .= "ORDER BY `bills`.`bill_no` DESC LIMIT 0,300; ";
 	$bills_results = qdb($select);
 	if(mysqli_num_rows($bills_results) > 0){
@@ -272,7 +295,7 @@
 				$amount = $r['amount'];
 			}
 
-			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['bill_no']).";";
+			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['bill_no'])." AND order_type = 'Bill';";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -290,10 +313,9 @@
                     <td>".$row['invoice_no']."</td>
                     <td><a href='/PO".$row['po_number']."'>".$row['po_number']."</td>
                     <td>".$term."</td>
-                    <td>".$row['notes']."</td>
                     <td>".format_date($row['date_due'],'D n/j/y')."</td>
                     <td class='text-right'>".format_price($amount)."</td>
-                    <td class='text-center'><input type='checkbox' style='margin-right: 10px;' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '').">".format_date($completed)."</td>
+                    <td class='text-center'><input type='checkbox' name='bills_checkbox[]' value='".$row['bill_no']."' ".($completed ? 'disabled checked' : '')."> ".format_date($completed,'n/d/y')."</td>
 	            </tr>
             ";
 	    }
@@ -305,6 +327,86 @@
 	                </td>
 	            </tr>
 	    ";
+	}
+
+	$credits_rows = '';
+	$credits_open = 0;
+	$query = "SELECT * FROM sales_credits sc ";
+	$query .= "WHERE 1 = 1 ";
+	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
+	if ($startDate) {
+		$query .= "AND date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+	}
+	$query .= "ORDER BY sc.id DESC; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	if (mysqli_num_rows($result)==0) {
+	    $credits_rows = '
+	            <tr>
+	                <td colspan = "10" class="text-center">
+	                    - No Credits -
+	                </td>
+	            </tr>
+	    ';
+	}
+	while ($r = mysqli_fetch_assoc($result)) {
+		if ($r['order_type']=='Sale') {
+			$order_table = 'sales_orders';
+			$order_field = 'so_number';
+		} else if ($r['order_type']=='Repair') {
+			$order_table = 'repair_orders';
+			$order_field = 'ro_number';
+		}
+
+		$terms = '';
+		$address = '';
+		$query2 = "SELECT created, bill_to_id, terms FROM ".$order_table." o, terms t ";
+		$query2 .= "WHERE ".$order_field." = '".$r['order_num']."' AND o.termsid = t.id; ";
+		$result2 = qdb($query2) OR die(qe().' '.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+
+			$address = address_out($r2['bill_to_id'],false,', ');
+			$terms = $r2['terms'];
+			$order_date = $r2['created'];
+		}
+
+		$amount = 0;
+		$query2 = "SELECT SUM(qty*amount) ext_amt FROM sales_credit_items WHERE cid = '".$r['id']."' GROUP BY cid; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$amount = $r2['ext_amt'];
+		}
+
+		$query2 = "SELECT date_completed FROM qb_log WHERE order_number = '".$r['id']."' AND order_type = 'Credit'; ";
+		$result2 = qdb($query2) OR die(qe().' '.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+			$completed = format_date($r2['date_completed'],'n/d/y');
+			$cls = 'complete';
+			$chk_status = ' disabled checked';
+		} else {
+			$credits_open++;
+			$cls = 'pending';
+			$chk_status = '';
+		}
+
+		$credits_rows .= '
+				<tr class="'.$cls.'">
+					<td>'.$r['id'].' <a href="/docs/CM'.$r['id'].'" target="_new"><i class="fa fa-pdf-icon-o"></i></a></td>
+					<td>'.getCompany($r['companyid']).'</td>
+					<td>'.$address.'</td>
+					<td>'.format_date($r['date_created'],'n/d/y').'</td>
+					<td>'.substr($r['order_type'],0,1).'O '.$r['order_num'].'</td>
+					<td>'.format_date($order_date,'n/d/y').'</td>
+					<td>'.$r['rma'].'</td>
+					<td>'.$terms.'</td>
+					<td class="text-right">'.format_price($amount).'</td>
+					<td class="text-center">
+						<input type="checkbox" name="credits_checkbox[]" value="'.$r['id'].'"'.$chk_status.'> '.format_date($completed,'n/d/y').'</td>
+					</td>
+				</tr>
+		';
 	}
 	
     $order_types = getEnumValue("journal_entries","trans_type");
@@ -338,7 +440,7 @@
 
 <?php
 	$tab = 'journal-entries';
-	if (isset($_REQUEST['tab']) AND ($_REQUEST['tab']=='invoices' OR $_REQUEST['tab']=='bills')) {
+	if (isset($_REQUEST['tab']) AND ($_REQUEST['tab']=='invoices' OR $_REQUEST['tab']=='bills' OR $_REQUEST['tab']=='credits')) {
 		$tab = $_REQUEST['tab'];
 	}
 ?>
@@ -464,6 +566,11 @@
 					Invoices<?=($invoices_open>0 ? ' ('.$invoices_open.')' : '');?></a></li>
 				<li<?php if ($tab=='bills') { echo ' class="active"'; } ?>><a href="#bills" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text-o"></i>
 					Bills<?=($bills_open>0 ? ' ('.$bills_open.')' : '');?></a></li>
+				<li<?php if ($tab=='credits') { echo ' class="active"'; } ?>><a href="#credits" class="tab-toggle" data-toggle="tab"><i class="fa fa-inbox"></i>
+					Credits<?=($credits_open>0 ? ' ('.$credits_open.')' : '');?></a></li>
+				<li class="pull-right" style="padding:3px 3px 3px 0px">
+					<button class="btn btn-success btn-sm" id="master-save" type="button">Save</button>
+				</li>
 			</ul>
  
 			<!-- Tab panes -->
@@ -472,6 +579,10 @@
 				<!-- Journal Entries pane -->
 				<div class="tab-pane<?php if ($tab=='journal-entries') { echo ' active'; } ?>" id="journal-entries">
 					<form class="form-inline" action='/transactions.php' method='POST'>
+					<input type="hidden" name="tab" value="<?php echo $tab; ?>" class="tab-hidden">
+					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
+					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
+					<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
@@ -486,6 +597,13 @@
 								<th class = 'col-sm-1 text-center'>Confirm</th>
 							</tr>
 							<?=$journal_entries?>
+<?php if ($je_open) { ?>
+							<tr>
+								<td colspan="9" class="text-right">
+									<button class="btn btn-success btn-sm" id="btn-journal-entries" type="submit">Save</button>
+								</td>
+							</tr>
+<?php } ?>
 						</table>
 					</div>
 					</form>
@@ -494,7 +612,10 @@
 				<!-- Invoices pane -->
 				<div class="tab-pane<?php if ($tab=='invoices') { echo ' active'; } ?>" id="invoices">
 					<form class="form-inline" action='/transactions.php' method='POST'>
-					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
+					<input type="hidden" name="tab" value="<?php echo $tab; ?>" class="tab-hidden">
+					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
+					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
+					<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
@@ -504,12 +625,18 @@
 								<th class = 'col-sm-1'>Date</th>
 								<th class = 'col-sm-1'>Order#</th>
 								<th class = 'col-sm-1'>Terms</th>
-								<th class = 'col-sm-2'>Memo</th>
 								<th class = 'col-sm-1'>Bill Due</th>
 								<th class = 'col-sm-1 text-right'>Amount</th>
 								<th class = 'text-center'>Confirm</th>
 							</tr>
 							<?=$invoices?>
+<?php if ($invoices_open) { ?>
+							<tr>
+								<td colspan="9" class="text-right">
+									<button class="btn btn-success btn-sm" id="btn-invoices" type="submit">Save</button>
+								</td>
+							</tr>
+<?php } ?>
 						</table>
 					</div>
 					</form>
@@ -518,7 +645,10 @@
 				<!-- Bills pane -->
 				<div class="tab-pane<?php if ($tab=='bills') { echo ' active'; } ?>" id="bills">
 					<form class="form-inline" action='/transactions.php' method='POST'>
-					<button class="btn-flat success pull-right btn-update" type='submit' style="margin-bottom: 15px;">Save</button>
+					<input type="hidden" name="tab" value="<?php echo $tab; ?>" class="tab-hidden">
+					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
+					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
+					<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
@@ -527,18 +657,58 @@
 								<th class = 'col-sm-2'>Address</th>
 								<th class = 'col-sm-1'>Date Created</th>
 								<th class = 'col-sm-1'>Ref No</th>
-								<th class = 'col-sm-1'>PO NO</th>
+								<th class = 'col-sm-1'>PO No</th>
 								<th class = 'col-sm-1'>Terms</th>
-								<th class = 'col-sm-2'>Memo</th>
 								<th class = 'col-sm-1'>Date Due</th>
 								<th class = 'col-sm-1 text-right'>Amount</th>
 								<th class = 'col-sm-1 text-center'>Confirm</th>
 							</tr>
 							<?=$bills?>
+<?php if ($bills_open) { ?>
+							<tr>
+								<td colspan="9" class="text-right">
+									<button class="btn btn-success btn-sm" id="btn-bills" type="submit">Save</button>
+								</td>
+							</tr>
+<?php } ?>
 						</table>
 					</div>
 					</form>
 				</div><!-- bills -->
+
+				<!-- Credits pane -->
+				<div class="tab-pane<?php if ($tab=='credits') { echo ' active'; } ?>" id="credits">
+					<form class="form-inline" action='/transactions.php' method='POST'>
+					<input type="hidden" name="tab" value="<?php echo $tab; ?>" class="tab-hidden">
+					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
+					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
+					<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
+					<div class='table-responsive'>
+						<table class='table table-hover table-striped table-condensed'>
+							<tr>
+								<th class = 'col-sm-1'>CM</th>
+								<th class = 'col-sm-2'>Customer</th>
+								<th class = 'col-sm-2'>Address</th>
+								<th class = 'col-sm-1'>CM Date</th>
+								<th class = 'col-sm-1'>Order No</th>
+								<th class = 'col-sm-1'>Order Date</th>
+								<th class = 'col-sm-1'>RMA No</th>
+								<th class = 'col-sm-1'>Terms</th>
+								<th class = 'col-sm-1 text-right'>Amount</th>
+								<th class = 'col-sm-1 text-center'>Confirm</th>
+							</tr>
+							<?=$credits_rows?>
+<?php if ($credits_open) { ?>
+							<tr>
+								<td colspan="10" class="text-right">
+									<button class="btn btn-success btn-sm" id="btn-credits" type="submit">Save</button>
+								</td>
+							</tr>
+<?php } ?>
+						</table>
+					</div>
+					</form>
+				</div><!-- credits -->
 
 			</div><!-- tab-content -->
 
@@ -585,7 +755,18 @@
 			$(this).addClass("active");
 		});
 		$(".tab-toggle").click(function() {
-			$("#tab").val($(this).attr('href').replace('#',''));
+			var tab_id = $(this).attr('href').replace('#','');
+			$("#tab").val(tab_id);
+			$(".tab-hidden").each(function() {
+				$(this).val(tab_id);
+			});
+			if (document.getElementById("btn-"+tab_id)) {
+				$("#master-save").prop('disabled',false);
+				$("#master-save").show();
+			} else {
+				$("#master-save").prop('disabled',true);
+				$("#master-save").hide();
+			}
 		});
 	});
 </script>

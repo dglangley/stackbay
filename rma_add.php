@@ -137,22 +137,24 @@
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
+			$r2 = false;
 
 			//If an order exists for this RMA then retrieve all the information we need for this order
-			if($r['order_type'] == 'Sale' && $r['order_number']) {
+			if ($r['order_type'] == 'Sale' && $r['order_number']) {
 				$query2 = "SELECT * FROM sales_orders so, sales_items si WHERE so.so_number = si.so_number AND so.so_number = ".prep($r['order_number']).";";
 				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
 				if (mysqli_num_rows($result2)) {
 					$r2 = mysqli_fetch_assoc($result2);
 				}
-
-			} else {
-die("This feature is busted, please see Admin immediately");
-				$query2 = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($ro_number).";";
+			} else if ($r['order_type'] == 'Repair' && $r['order_number']) {
+				$query2 = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($r['order_number']).";";
 				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
 				if (mysqli_num_rows($result2)) {
 					$r2 = mysqli_fetch_assoc($result2);
 				}
+			}
+			if (! $r2) {
+				die("This feature is busted, please see Admin immediately");
 			}
 
 			$insert = "INSERT INTO repair_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, bill_to_id, ship_to_id,

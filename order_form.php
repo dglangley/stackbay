@@ -958,7 +958,8 @@
 												$action = '<a href="/docs/CM'.$r['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 											} else if ($history['inv_date']) {//if already received back, eligible for credit
 												$action = '<a href="/credit.php?rma_number='.$history['rma_number'].'&order_number='.$order_number.'&order_type='.$o['type'].'" '.
-													'class="btn btn-danger btn-xs"><i class="fa fa-cart-arrow-down"></i></a>';
+													'class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="bottom" title="Issue Credit Memo">'.
+													'<i class="fa fa-inbox"></i></a>';
 											}
 										}
 									?>
@@ -969,11 +970,11 @@
 										<td><?=getDisposition($history['dispositionid']);?></td>
 										<td>
 											<?=getSerial($history['inventoryid']);?>
-											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button"><i class="fa fa-history"></i></a><br/>
+											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button" data-toggle="tooltip" data-placement="bottom" title="View Serial History"><i class="fa fa-history"></i></a><br/>
 											<small class="info"><?=$history['reason']?></small>
 										</td>
 										<td><?=$status?></td>
-										<td class="text-center"><?=$action?></td>
+										<td><?=$action?></td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
