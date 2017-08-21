@@ -131,101 +131,86 @@
 		}
 		
 		header("Location: /shipping.php?on=".$new_so."&exchange=true");
-		//print_r($exchangeid); die;
 	} else if(grab('repair_trigger')){
-		$ro_number;
-		$order_result = array();
-
 		//Grab from RO data that is populated from there
 		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($rma_number).";";
-
 		$result = qdb($query) OR die(qe() . ' ' . $query);
-
-		if (mysqli_num_rows($result)) {
-
-			$result = mysqli_fetch_assoc($result);
-			//print_r($result);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
 
 			//If an order exists for this RMA then retrieve all the information we need for this order
-			if($result['order_type'] == 'Sale' && $result['order_number']) {
-
-				$query = "SELECT * FROM sales_orders so, sales_items si WHERE so.so_number = si.so_number AND so.so_number = ".prep($result['order_number']).";";
-
-				$order_result = qdb($query) OR die(qe() . ' ' . $query);
-				if (mysqli_num_rows($order_result)) {
-					$order_result = mysqli_fetch_assoc($order_result);
+			if($r['order_type'] == 'Sale' && $r['order_number']) {
+				$query2 = "SELECT * FROM sales_orders so, sales_items si WHERE so.so_number = si.so_number AND so.so_number = ".prep($r['order_number']).";";
+				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
+				if (mysqli_num_rows($result2)) {
+					$r2 = mysqli_fetch_assoc($result2);
 				}
 
 			} else {
-				$query = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($ro_number).";";
-
-				$order_result = qdb($query) OR die(qe() . ' ' . $query);
-				if (mysqli_num_rows($order_result)) {
-					$order_result = mysqli_fetch_assoc($order_result);
+die("This feature is busted, please see Admin immediately");
+				$query2 = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($ro_number).";";
+				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
+				if (mysqli_num_rows($result2)) {
+					$r2 = mysqli_fetch_assoc($result2);
 				}
 			}
 
-			//print_r($order_result);
-
-			$insert = "INSERT INTO repair_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, bill_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, repair_code_id, status) VALUES (
+			$insert = "INSERT INTO repair_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, bill_to_id, ship_to_id,
+				freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, repair_code_id, status) VALUES (
 				".prep($now).",
 				".prep($U['id']).",
-				".prep($order_result['sales_rep_id']).",
-				".prep($result['companyid']).",
-				".prep($result['contactid']).",
+				".prep($r2['sales_rep_id']).",
+				".prep($r['companyid']).",
+				".prep($r['contactid']).",
 				".prep('RMA#' . $rma_number).",
-				".prep($order_result['bill_to_id']).",
-				".prep($order_result['ship_to_id']).",
-				".prep($order_result['freight_carrier_id']).",
-				".prep($order_result['freight_services_id']).",
-				".prep($order_result['freight_account_id']).",
+				".prep($r2['bill_to_id']).",
+				".prep($r2['ship_to_id']).",
+				".prep($r2['freight_carrier_id']).",
+				".prep($r2['freight_services_id']).",
+				".prep($r2['freight_account_id']).",
 				".prep('15').",
-				".prep($order_result['public_notes']).",
-				".prep($order_result['private_notes']).",
+				".prep($r2['public_notes']).",
+				".prep($r2['private_notes']).",
 				NULL,
 				'Active'
 				);";
-			//echo $insert . '<br><br>';
 			qdb($insert);
 			$ro_number = qid();
 
 			$insert = "INSERT INTO repair_items (partid, ro_number, line_number, qty, price, due_date, invid, ref_1, ref_1_label, ref_2, ref_2_label, warrantyid, notes) VALUES (
-				".prep($result['partid']).",
+				".prep($r['partid']).",
 				".prep($ro_number).",
 				'1',
-				".prep($result['qty']).",
+				".prep($r['qty']).",
 				'0.00',
-				".prep($order_result['due_date']).",
-				".prep($result['inventoryid']).",";
+				".prep($r2['due_date']).",
+				".prep($r['inventoryid']).",";
 
 			//If Ref_ is null we will use the label as the pointer to rma	
-			if(!$result['ref_1']) {
-				$insert .=	prep($result['id']).",
+			if(!$r['ref_1']) {
+				$insert .=	prep($r['id']).",
 					".prep('return_item_id').",";
 			} else {
-				$insert .=	prep($result['ref_1']).",
-					".prep($result['ref_1_label']).",";
+				$insert .=	prep($r['ref_1']).",
+					".prep($r['ref_1_label']).",";
 			}
 
 			//If Ref_1 was used and ref_2 is null we will use ref 2 instead else we used ref 1 already and will ignore ref 2
-			if(!$result['ref_2'] && $result['ref_1']) {
-				$insert .=	prep($result['id']).",
+			if(!$r['ref_2'] && $r['ref_1']) {
+				$insert .=	prep($r['id']).",
 					".prep('return_item_id').",";
 			} else {
-				$insert .=	prep($result['ref_2']).",
-					".prep($result['ref_2_label']).",";
+				$insert .=	prep($r['ref_2']).",
+					".prep($r['ref_2_label']).",";
 			}
 
-			$insert .=	prep($order_result['warranty']).",
-				".prep($order_result['notes'])."
+			$insert .=	prep($r2['warranty']).",
+				".prep($r2['notes'])."
 				);";
 
 			//echo $insert;
 			qdb($insert);
 			$repair_item_id = qid();
-
-			// $update = "UPDATE inventory SET repair_item_id = ".prep($repair_item_id).", status = 'in repair' WHERE id = ".prep($result['inventoryid']).";";
-			// qdb($update);
 		}
 
 		header("Location: /order_form.php?ps=repair&on=" . $ro_number);
@@ -241,14 +226,11 @@
 
 	//Using the order number from purchase order, get all the parts being ordered and place them on the inventory add page
 	function getRMAParts ($rma_number) {
-		
-		$listPartid;
+		$listPartid = array();
 		
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
 		$query = "SELECT id, partid FROM return_items WHERE rma_number = ". res($rma_number) ." GROUP BY partid;";
-		$result = qdb($query);
-	    
-	    if($result)
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 	    if (mysqli_num_rows($result)>0) {
 			while ($row = $result->fetch_assoc()) {
 				$listPartid[] = $row;
@@ -260,34 +242,31 @@
 	
 	//This grabs the return specific items based on the rma_number and partid (Used to grab inventoryid for the same part only)
 	function getRMAitems($partid, $rma_number) {
-		$listSerial;
+		$listSerial = array();
 		
 		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid, r.id FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($rma_number).";";
-		$result = qdb($query);
-	    
-	    if($result)
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 	    if (mysqli_num_rows($result)>0) {
 			while ($row = $result->fetch_assoc()) {
 				$listSerial[] = $row;
 			}
 		}
-		
+
 		return $listSerial;
 	}
 	
 
 	//This is solely used to grab the date the order was created "RMA" for sidebar usage
 	function getCreated($rma_number) {
-		$date;
+		$date = '';
 		$query = "SELECT * FROM returns WHERE rma_number = ".res($rma_number).";";
 		$result = qdb($query) or die(qe());
-		
 		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$date = $result['created'];
+			$r = mysqli_fetch_assoc($result);
+			$date = $r['created'];
+
+			$date = date_format(date_create($date), "M j, Y");
 		}
-		
-		$date = date_format(date_create($date), "M j, Y");
 		
 		return $date;
 	}
@@ -308,7 +287,6 @@
 		}
 		//Query or pass back error
 		$result = qdb($query) or die(qe());
-		
 		while ($row = $result->fetch_assoc()) {
 			$rma_search[] = $row;
 		}
