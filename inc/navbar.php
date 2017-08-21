@@ -210,7 +210,8 @@
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
 	                <?php } ?>
-
+	                <hr>
+	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
 	                <li><a href="signout.php">Logout</a></li>
 
                 </ul>

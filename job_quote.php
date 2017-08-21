@@ -13,7 +13,7 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.list {
-				padding: 10px;
+				padding: 5px;
 			}
 
 			.list-pad span {
@@ -30,7 +30,7 @@
 			}*/
 
 			.row-title {
-				padding: 10px 0;
+				padding: 5px 0;
 				background-color: #fff;
 			}
 
