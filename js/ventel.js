@@ -268,6 +268,10 @@
 			return false;
 		});
 
+		$(document).on("click", "input.price-control", function(){
+			$(this).select();
+		});
+
 		/* toggle notes on input focus and blur */
         $("input.price-control").each(function() {
 			$(this).click(function() {
@@ -575,7 +579,7 @@
 
         //Legacy Code
 		$(document).on("click", ".market-download", function() {
-			var mr = $(this).closest(".col-sm-3").find(".market-results:first");
+			var mr = $(this).closest(".bg-availability").find(".market-results:first");
 
 			mr.loadResults(2);
 		});
@@ -584,7 +588,7 @@
 /*		$(".marketpricing-toggle").click(function() { */
 		$(document).on("click", ".btn-resultsmode .btn", function() {
 //			var mr = $(this).closest(".part_info").find(".market-results:first");
-			var mr = $(this).closest("tbody").find(".market-results:first");
+			var mr = $(this).closest("tbody, .part_info").find(".market-results:first");
 
 			var this_btn = $(this);
 			// reset all market pricing button styles, and depress the selected one
