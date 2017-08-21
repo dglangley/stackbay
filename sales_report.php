@@ -378,10 +378,10 @@ if (! $r['partid']) { return ($results); }
 				<div class="col-md-3" style="margin-top: -5px;">
 					<!-- <div class="col-md-8 remove-pad" style="margin-top: -5px;"> -->
 						<div class="btn-group" data-toggle="buttons">
-					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Line" class="btn btn-xs left filter_status active btn-warning" data-sort="line" data-type="sort" data-listid="<?=$listid;?>">
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Line" class="btn btn-xs left filter_status active btn-warning" data-sort="line" data-type="sort" data-listid="<?=$listid;?>" <?=($listid == 0 ? 'disabled' : '')?>>
 					        	<i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
 					        </button>
-					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Stock" class="btn btn-xs middle filter_status btn-default" data-sort="stock" data-type="sort" data-listid="<?=$listid;?>">
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Stock" class="btn btn-xs middle filter_status btn-default" data-sort="stock" data-type="sort" data-listid="<?=$listid;?>" <?=($listid == 0 ? 'disabled' : '')?>>
 					        	<i class="fa fa-dropbox" aria-hidden="true"></i>	
 					        </button>
 					    </div>
