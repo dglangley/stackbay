@@ -15,7 +15,8 @@
 
 		$query = "SELECT si.serial, si.cost actual_cost, i.id, si.so_id order_id, si.price, si.rep_id, si.freight_cost, si.po, si.avg_cost, ";
 		//$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.clei, inv.date, si.oq_id item_id, inv.id ref, so.freight_charge ";
-		$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.clei, so.so_date date, si.oq_id item_id, inv.id ref, so.freight_charge ";
+		//$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.clei, so.so_date date, si.oq_id item_id, inv.id ref, so.freight_charge ";
+		$query .= "si.invoice_id, si.orig_cost, so.po_number, so.complete, i.part_number, i.clei, inv.date, si.oq_id item_id, inv.id ref, so.freight_charge ";
 		if (! $item_id) { $query .= ", c.name "; }
 		$query .= "FROM inventory_solditem si, inventory_salesorder so, inventory_inventory i, ";
 		if (! $item_id) { $query .= "inventory_outgoing_quote oq, inventory_company c, "; }
@@ -28,9 +29,11 @@
    		if ($startDate) {
    			$dbStartDate = format_date($startDate, 'Y-m-d');
    			$dbEndDate = format_date($endDate, 'Y-m-d');
-   			$query .= "AND so.so_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+   			//$query .= "AND so.so_date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+   			$query .= "AND inv.date between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 		}
-		$query .= "ORDER BY so.so_date ASC, si.so_id ASC; ";
+		//$query .= "ORDER BY so.so_date ASC, si.so_id ASC; ";
+		$query .= "ORDER BY inv.date ASC, si.so_id ASC; ";
 		$result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['descr'] = trim($r['part_number'].' '.$r['clei']);
@@ -367,6 +370,7 @@
 					$r['ref'] = $r['repair_id'];
 				}
 			} else if ($r['new_item_id']) {
+continue;
 				$r['type'] = 'Replace';
 
 				$r['price'] = 0;

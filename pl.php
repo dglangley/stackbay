@@ -6,30 +6,136 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/pipe.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
+	include_once $rootdir.'/inc/getCost.php';
 	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 
+	function order_type($order_type) {
+		$T = array();
+
+		switch ($order_type) {
+			case 'Repair':
+				$T['orders'] = 'repair_orders';
+				$T['order'] = 'ro_number';
+				$T['items'] = 'repair_items';
+				$T['item_label'] = 'repair_item_id';
+				break;
+
+			case 'Sale':
+			default:
+				$T['orders'] = 'sales_orders';
+				$T['order'] = 'so_number';
+				$T['items'] = 'sales_items';
+				$T['item_label'] = 'sales_item_id';
+				break;
+		}
+
+		return ($T);
+	}
+
 	$PURCHASES = array();
-	function getSalesRecords($item_id,$startDate='',$endDate='') {
+	function getSalesRecords($order_search,$startDate='',$endDate='') {
 		global $PURCHASES;
 		$entries = array();
 
+		$query = "SELECT ii.line_number, c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.partid, ii.amount, s.packageid ";
+		$query .= "FROM companies c, invoices i, invoice_items ii, invoice_shipments s ";
+		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no AND ii.id = s.invoice_item_id ";
+		if ($order_search) { $query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') "; }
+		if ($startDate) {
+			$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+			$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+			$query .= "AND i.date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+		}
+		$query .= "ORDER BY i.date_invoiced ASC, i.order_number ASC; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$T = order_type($r['order_type']);
+
+			$query2 = "SELECT items.id item_id, i.qty, i.serial_no, i.id inventoryid, part, heci ";
+			$query2 .= "FROM ".$T['items']." items, packages p, package_contents pc, inventory_history h, inventory i, parts ";
+			$query2 .= "WHERE items.".$T['order']." = '".$r['order_number']."' AND items.line_number ";
+			if ($r['line_number']) { $query2 .= "= '".$r['line_number']."' "; } else { $query2 .= "IS NULL "; }
+			$query2 .= "AND pc.serialid = h.invid AND p.id = pc.packageid AND items.".$T['order']." = p.order_number AND p.order_type = '".$r['order_type']."' ";
+			$query2 .= "AND (h.field_changed = '".$T['item_label']."' AND h.value = items.id) ";
+			$query2 .= "AND h.invid = i.id AND i.partid = parts.id; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$entry = $r;
+				$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
+
+				$entry['price'] = $r['amount'];
+				$entry['avg_cost'] = 0;
+				$entry['actual_cost'] = getCost($r['partid'],'actual');
+
+				$query3 = "SELECT cogs_avg FROM sales_cogs sc WHERE sc.inventoryid = '".$r2['inventoryid']."' ";
+				$query3 .= "AND item_id = '".$r2['item_id']."' AND item_id_label = '".$T['item_label']."'; ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					$entry['avg_cost'] = $r3['cogs_avg'];
+				}
+
+				$entries[] = $entry;
+			}
+		}
+
+
+/*
+		$query = "SELECT c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ";
+		$query .= "ii.partid, inv.qty, ii.amount, s.packageid, inv.serial_no, inv.id inventoryid, part, heci ";
+		$query .= "FROM companies c, invoices i, invoice_items ii, invoice_shipments s, ";
+		$query .= "package_contents pc, inventory_history h, inventory inv, parts p ";
+		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no AND ii.id = s.invoice_item_id ";
+		$query .= "AND s.packageid = pc.packageid AND pc.serialid = h.invid ";
+		$query .= "AND (h.field_changed = 'sales_item_id' OR h.field_changed = 'repair_item_id') AND h.invid = inv.id AND inv.partid = p.id ";
+		if ($order_search) { $query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') "; }
+		if ($startDate) {
+			$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+			$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+			$query .= "AND i.date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+		}
+		$query .= "ORDER BY i.date_invoiced ASC, i.order_number ASC; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$r['descr'] = trim($r['part'].' '.$r['heci']);
+
+			$T = order_type($r['order_type']);
+
+			$r['price'] = $r['amount'];
+			$r['avg_cost'] = 0;
+			$r['actual_cost'] = getCost($r['partid'],'actual');
+
+			$query2 = "SELECT cogs_avg FROM sales_cogs sc, ".$T['items']." i ";
+			$query2 .= "WHERE sc.inventoryid = '".$r['inventoryid']."' AND item_id = i.id AND item_id_label = '".$T['item_label']."' ";
+			$query2 .= "AND i.".$T['order']." = '".$r['order_number']."'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$r['avg_cost'] = $r2['cogs_avg'];
+			}
+
+			$entries[] = $r;
+		}
+*/
+
+/*
 		$query = "SELECT serial_no, si.partid, si.qty, price, purchase_item_id, sales_item_id, returns_item_id, ";
-		$query .= "si.so_number, so.created date, i.id invid, part, heci, c.name, '' ref ";
-		$query .= "FROM inventory i, inventory_history h, parts p, sales_items si, sales_orders so, companies c ";
-		$query .= "WHERE i.partid = p.id AND h.invid = i.id AND h.value = si.id AND h.field_changed = 'sales_item_id' ";
+		$query .= "si.so_number, so.created date, inv.id invid, part, heci, c.name, '' ref ";
+		$query .= "FROM inventory inv, inventory_history h, parts p, sales_items si, sales_orders so, companies c ";
+		$query .= "WHERE inv.partid = p.id AND h.invid = inv.id AND h.value = si.id AND h.field_changed = 'sales_item_id' ";
 		$query .= "AND si.so_number = so.so_number AND so.companyid = c.id ";
 		if ($startDate) {
 			$dbStartDate = format_date($startDate, 'Y-m-d');
 			$dbEndDate = format_date($endDate, 'Y-m-d');
-			$query .= "AND so.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+			$query .= "AND so.created BETWEEN CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
 		}
 		$query .= "ORDER BY so.created ASC, si.so_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['descr'] = trim($r['part'].' '.$r['heci']);
-			$r['order_id'] = $r['so_number'];
+			$r['order_number'] = $r['so_number'];
 
 			$r['price'] = $r['price'];
 			$r['actual_cost'] = 0;
@@ -53,6 +159,7 @@
 
 			$entries[] = $r;
 		}
+*/
 
 		return ($entries);
 	}
@@ -66,14 +173,10 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { 
 		$company_filter = $_REQUEST['companyid']; 
 	}
-	
-	//This is saved as a cookie in order to cache the results of the button function within the same window
-//	setcookie('report_type',$report_type);
-	
-	$order = '';
+
+	$order_search = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
-		$report_type = 'detail';
-		$order = $_REQUEST['order'];
+		$order_search = $_REQUEST['order'];
 	}
 	
 	$part = '';
@@ -123,6 +226,12 @@
 		.table td {
 			vertical-align:top !important;
 		}
+		.description {
+			max-width:240px;
+			overflow:hidden;
+			white-space:nowrap;
+			text-overflow:ellipsis;
+		}
 	</style>
 </head>
 
@@ -131,7 +240,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
-	<form class="form-inline" method="get" action="/profit_loss.php">
+	<form class="form-inline" method="get" action="/pl.php">
 
     <table class="table table-header table-filter">
 		<tr>
@@ -210,7 +319,7 @@
 		</td>
 		
 		<td class="col-md-2 text-center">
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #" disabled />
+			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order_search?>' placeholder = "Order #" />
 <!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
 -->
@@ -268,7 +377,7 @@
 	$credits = array();//keep track to avoid duplicates
 	$returns = array();//combined credits
 
-	$entries = getSalesRecords(0,$startDate,$endDate);
+	$entries = getSalesRecords($order_search,$startDate,$endDate);
 
 	if (1 == 2) {
 		$query = "SELECT si.serial, rt.repair_id, si.inventory_id, item_id id, si.cost actual_cost, rt.id ref, si.so_id order_id, ";
@@ -415,23 +524,19 @@
 
 
 	foreach ($entries as $r) {
-		$key = $r['date'].'.A'.preg_replace('/^(RO|SO)[[:space:]]([0-9]+)$/','$2',$r['order_id']).'.'.$r['partid'].'.'.$r['ref'];
-		if ($r['order_id']) {
-			if (substr($r['order_id'],0,2)=='RO') {
-				$ro = str_replace('RO ','',$r['order_id']);
-				$r['order_id'] = '<a href="https://db.ven-tel.com:10086/ventel/repair/edit/'.$ro.'" target="_new">Repair '.$ro.'</a>';
-			} else {
-				$so = str_replace('SO ','',$r['order_id']);
-				$r['order_id'] = '<a href="https://db.ven-tel.com:10086/ventel/company/view_so/'.$so.'" target="_new">SO '.$so.'</a>';
-			}
-		}
+		$key = $r['date'].'.A'.$r['order_number'].'.'.$r['partid'].'.'.$r['ref'].'.'.$r['invoice_item_id'];
+		$order_ln = '<a href="/'.strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+
 		$ref = '';
 		if ($r['ref']) {
+			$ref = 'Invoice '.$r['ref'].' <a href="/docs/INV'.$r['ref'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+/*
 			if ($r['type']=='Repair' OR $r['type']=='Pending') {
 				$ref = '<a href="https://db.ven-tel.com:10086/ventel/repair/edit/'.$r['ref'].'" target="_new">RMA Repair '.$r['ref'].'</a>';
 			} else {
 				$ref = '<a href="https://db.ven-tel.com:10086/ventel/company/edit_invoice/'.$r['ref'].'" target="_new">Invoice '.$r['ref'].'</a>';
 			}
+*/
 		}
 		if (! isset($results[$key])) {
 			$results[$key] = array(
@@ -442,10 +547,12 @@
 				'voided'=>0,
 				'pushed'=>1,
 				'push_success'=>1,
-				'order'=>$r['order_id'],
+				'order'=>$r['order_number'],
+				'order_ln'=>$order_ln,
 				'ref'=>$ref,
 				'descr'=>$r['descr'],
 				'price'=>$r['price'],
+				'companyid'=>$r['companyid'],
 				'company'=>$r['name'],
 				'actual_cost'=>$r['actual_cost'],
 				'avg_cost'=>$r['avg_cost'],
@@ -465,16 +572,9 @@
 	foreach ($returns as $r) {
 		$r['descr'] = trim($r['part_number'].' '.$r['clei']);
 
-		$key = $r['date'].'.B'.$r['item_id'].'.'.preg_replace('/^(RO|SO)[[:space:]]([0-9]+)$/','$2',$r['order_id']);//$r['order_id'];
-		if ($r['order_id']) {
-			if (substr($r['order_id'],0,2)=='RO') {
-				$ro = str_replace('RO ','',$r['order_id']);
-				$r['order_id'] = '<a href="https://db.ven-tel.com:10086/ventel/repair/edit/'.$ro.'" target="_new">Repair '.$ro.'</a>';
-			} else {
-				$so = str_replace('SO ','',$r['order_id']);
-				$r['order_id'] = '<a href="https://db.ven-tel.com:10086/ventel/company/view_so/'.$so.'" target="_new">SO '.$so.'</a>';
-			}
-		}
+		$key = $r['date'].'.B'.$r['item_id'].'.'.$r['order_number'];
+		$order_ln = '<a href="/'.strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+
 		$ref = '';
 		if ($r['ref']) {
 			if ($r['type']=='Repair' OR $r['type']=='Pending') {
@@ -492,10 +592,12 @@
 				'voided'=>$r['voided'],
 				'pushed'=>1,
 				'push_success'=>1,
-				'order'=>$r['order_id'],
+				'order'=>$r['order_number'],
+				'order_ln'=>$order_ln,
 				'ref'=>$ref,
 				'descr'=>$r['descr'],
 				'price'=>$r['price'],
+				'companyid'=>$r['companyid'],
 				'company'=>$r['name'],
 				'actual_cost'=>$r['actual_cost'],
 				'avg_cost'=>$r['avg_cost'],
@@ -574,7 +676,7 @@
                                     '.$type.' '.format_date($r['date'],'M j, Y').'
                                 </td>
                                 <td>
-                                    <small>'.$r['descr'].'</small>
+									<div class="description"><small>'.$r['descr'].'</small></div>
                                 </td>
                                 <td class="text-right">
                                     <span class="pull-left">'.$r['qty'].'</span>
@@ -587,13 +689,13 @@
                                     '.$ext_debit.'
                                 </td>
                                 <td>
-                                    <strong>'.$r['order'].'</strong>
+                                    <strong>'.$r['order'].'</strong> '.$r['order_ln'].'
                                 </td>
                                 <td>
 									'.$r['ref'].'
                                 </td>
                                 <td>
-	                                <small><a href="#">'.$r['company'].'</a></small>
+	                                <small>'.$r['company'].' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a></small>
                                 </td>
                                 <td class="text-right primary">
                                     '.$cogs_credit.'

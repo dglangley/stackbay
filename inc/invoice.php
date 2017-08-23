@@ -19,7 +19,6 @@
 		//Variable Declarations
 		$warranty = '';
 		$macro = '';
-		$already_invoiced = false;
 		$ro_number = '';
 		$invoice_id = '';
 		$invoice_item_id = '';
@@ -34,11 +33,13 @@
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
 			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
 			FROM sales_items si, packages, repair_items ri 
-			where si.ref_1_label = 'repair_item_id' 
-			and order_number = so_number 
-			and order_number = ".prep($order_number)."
-			and ri.id = si.ref_1 
-			and ri.price > 0;";
+			WHERE si.ref_1_label = 'repair_item_id' 
+			AND order_number = so_number 
+			AND order_number = ".prep($order_number)." AND order_type = 'Sale'
+			AND ri.id = si.ref_1 
+			AND ri.price > 0
+			GROUP BY packages.id;
+		";
 		$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
@@ -55,16 +56,25 @@
 				AND i.sales_item_id = it.id
 				AND it.so_number = `packages`.`order_number`
 				AND price > 0.00
-				GROUP BY it.id;
+				GROUP BY package_contents.packageid;
 			";
+				//GROUP BY it.id;
 			$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
 		}
 
 		$o = o_params($type);
+
 		//Function to be run to create an invoice
+
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
-		$already_invoiced = rsrq("SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['type'])." AND `shipmentid` = ".prep($shipment_datetime).";");
-		if($already_invoiced){return $already_invoiced;}
+
+		// did we already invoice this shipment?
+		$query2 = "SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['type'])." AND `shipmentid` = ".prep($shipment_datetime).";";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$return['error'] = 'Shipment has already been invoiced';
+			return $return;
+		}
 		
 		//Check to see there are actually invoice-able items on the order
 		if($GLOBALS['debug']){ echo($invoice_item_select);}
@@ -107,7 +117,6 @@
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
 		$macro_row = mysqli_fetch_assoc($invoice_macro);
-		
 		
 		$status = 'Pending';
 		$freight = prep(shipment_freight($package_order_number, "Sale", $shipment_datetime));

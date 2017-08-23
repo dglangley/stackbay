@@ -218,11 +218,10 @@
 				$term = $r['terms'];
 			}
 
-			$query = "SELECT SUM(price * qty) as amount FROM sales_items WHERE so_number = ".prep($row['order_number']).";";
+			$query = "SELECT SUM(amount * qty) as amount FROM invoice_items WHERE invoice_no = ".prep($row['invoice_no']).";";
 			$result = qdb($query) OR die(qe().' '.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$amount = $r['amount'];
+			while ($r = mysqli_fetch_assoc($result)) {
+				$amount += $r['amount'];
 			}
 
 			$query = "SELECT date_completed FROM qb_log WHERE order_number = ".prep($row['invoice_no'])." AND order_type = 'Invoice';";
