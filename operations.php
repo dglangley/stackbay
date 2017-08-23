@@ -377,17 +377,7 @@
 		$o = o_params($order);
 		$type = $o['short'];
 		$f = grabDashFilters();
-		// if ($order == 'p') {
-		// 	$type = 'po';
-		// } else if ($order == 's') {
-		// 	$type = 'so';
-		// } 
-		// else if ($order == 'rma') {
-		// 	$type = 'rma';
-		// } else {
-		// 	$type = 'ro';
-		// }
-		//if($order != 'rma' && $order != 'ro') {
+
 			if($search =='') {
 				if($order != 'ro') {
 					$query = "SELECT * ";
@@ -413,12 +403,9 @@
 
 			//display only the first N rows, but output all of them
 			$count = 0;
-			// $active = 1;
-			// $complete = 1;
 
 			//Loop through the results.
 			if(!empty($results)) {
-				//print_r($results);
 				foreach ($results as $r){
 					if ($order=='bo') {
 						unset($r['serial_no']);
@@ -432,8 +419,6 @@
 					//set if a serial is present or not
 					$serialDetection[$type] = ($r['serial_no'] != '' ? 'true' : 'false');
 					
-					//echo $type . " " .($r['serial_no'] != '' ? 'true' : 'false');
-					
 					$count++;
 					$order_num = $r[$o['id']];
 					if ($order=='bo') { $order_num = $r['bid']; }
@@ -443,13 +428,14 @@
 					$due_date = strtotime($r['receive_date']);
 					$company = getCompany($r['companyid']);
 					$company_ln = '';
-					if ($company && (in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES))) { $company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-arrow-right"></i></a>'; 
+					if ($company && (in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES))) {
+						$company_ln = '<div class="company-overflow">'.$company.'</div> <a href="/profile.php?companyid='. $r['companyid'] .'"><i class="fa fa-book"></i></a>';
 					} else if($company) {
 						$company_ln = '<div class="company-overflow">'.$company.'</div>';
 					}
 					$item = display_part($r['partid'], true);
 					$qty = $r['qty'];
-					
+
 					if ($order != 's' && $order != 'rma' && $order != 'ro' && $order != 'bo'){
 						$status = ($r['qty_received'] >= $r['qty'] ? 'complete_item' : 'active_item');
 						$pending = false;
@@ -465,17 +451,28 @@
 
 						// statuses of "Checked Out" and "In Test" can be subclasses of Active repairs, where there is no repair_code_id set
 						if (! $r['repair_code_id']) {
-							$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Checked%' ";
+							$first_status = false;
+							$query2 = "SELECT notes, techid FROM repair_activities WHERE ro_number = '".res($order_num)."' ";
+							$query2 .= "AND (notes LIKE 'Checked%' OR notes LIKE 'Claimed%' OR notes LIKE 'Marked as%') ";
 							//$query2 .= "AND techid = '".$U['id']."' ";
-							$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
+							$query2 .= "ORDER BY datetime DESC; ";// LIMIT 0,1; ";
 							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-							if (mysqli_num_rows($result2)>0) {
-								$r2 = mysqli_fetch_assoc($result2);
-								if ($r2['notes']=='Checked Out') {
+							while ($r2 = mysqli_fetch_assoc($result2)) {
+								if ($r2['notes']=='Checked Out' AND ! $first_status) {
 									$status .= ' checked-out_item';
+									$first_status = true;
+								} else if ($r2['notes']=='Marked as `In Testing`') {
+									$status .= ' testing_item';
+									$first_status = true;
+								}
+								// has this tech ever claimed the ticket?
+								if ($r2['notes']=='Claimed Ticket' AND $r2['techid']==$GLOBALS['U']['id']) {
+									$status .= ' claimed_item';
+									$first_status = true;
+									break;
 								}
 							}
-
+/*
 							$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Marked as%' ";
 							$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
 							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -485,6 +482,7 @@
 									$status .= ' testing_item';
 								}
 							}
+*/
 						}
 
 						//If repair code exists then check if the order has already been shipped out or not
@@ -742,6 +740,9 @@
 						        </button>
 						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" data-filter="testing">
 						        	<i class="fa fa-terminal" aria-hidden="true"></i>
+						        </button>
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="My Claimed" class="btn btn-sm right filter_status <?=(($filter == 'claimed' || $filter == '') ? 'active btn-flat inverse' : 'btn-default');?>" data-filter="claimed">
+						        	<i class="fa fa-id-badge" aria-hidden="true"></i>
 						        </button>
 								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">
 						        	All
@@ -1043,6 +1044,13 @@
 				$('.status_label').hide();
 			} else if (type=='testing') {
 				btn = 'flat info';
+				type2 = type;
+				$('.pending_item').hide();
+				$('.complete_item').hide();
+				$('.status-column').hide();
+				$('.status_label').hide();
+			} else if (type=='claimed') {
+				btn = 'flat inverse';
 				type2 = type;
 				$('.pending_item').hide();
 				$('.complete_item').hide();

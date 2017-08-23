@@ -48,7 +48,7 @@
 			$query .= "JOIN user_roles ON usernames.userid = user_roles.userid ";
 			$query .= "JOIN user_privileges ON user_roles.privilegeid = user_privileges.id ";
 			$query .= "WHERE user_privileges.privilege = 'Administration' OR user_privileges.privilege = 'Sales' ";
-			$query .= "ORDER BY contacts.status ASC, usernames.id ASC; ";
+			$query .= "GROUP BY users.id ORDER BY contacts.status ASC, usernames.id ASC; ";
 	    	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	    	//Check is any rows exists then populate all the results into an array

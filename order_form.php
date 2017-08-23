@@ -922,7 +922,7 @@
 											$query .= "ORDER BY date_changed ASC; ";
 											$result = qdb($query) OR die(qe().'<BR>'.$query);
 											while ($r = mysqli_fetch_assoc($result)) {
-												$status .= '<strong>'.format_date($r['date_changed'],'D n/d/y').'</strong> ';
+												$row_info = '<strong>'.format_date($r['date_changed'],'D n/d/y').'</strong> ';
 
 												if ($r['field_changed']=='sales_item_id') {
 													$query2 = "SELECT so_number FROM sales_items WHERE id = '".$r['value']."' ";
@@ -931,7 +931,7 @@
 													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 													if (mysqli_num_rows($result2)==0) { continue; }
 													$r2 = mysqli_fetch_assoc($result2);
-													$status .= $r2['so_number'];
+													$row_info .= 'Sold on SO'.$r2['ro_number'].' <a href="/SO'.$r2['so_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 												} else if ($r['field_changed']=='repair_item_id') {
 													$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['value']."' ";
 													if ($o['type']=='Repair') { $query2 .= "AND ro_number <> '".$order_number."' "; }
@@ -939,10 +939,11 @@
 													$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 													if (mysqli_num_rows($result2)==0) { continue; }
 													$r2 = mysqli_fetch_assoc($result2);
-													$status .= $r2['ro_number'];
+													$row_info .= 'Repaired on RO'.$r2['ro_number'].' <a href="/RO'.$r2['ro_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 												} else {
 												}
-												$status .= '<BR>';
+
+												$status .= $row_info.'<BR>';
 											}
 										}
 										$action = '';
@@ -956,7 +957,9 @@
 												$r = mysqli_fetch_assoc($result);
 												$action = '<a href="/docs/CM'.$r['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 											} else if ($history['inv_date']) {//if already received back, eligible for credit
-												$action = '<a href="" class="btn btn-danger btn-xs"><i class="fa fa-cart-arrow-down"></i></a>';
+												$action = '<a href="/credit.php?rma_number='.$history['rma_number'].'&order_number='.$order_number.'&order_type='.$o['type'].'" '.
+													'class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="bottom" title="Issue Credit Memo">'.
+													'<i class="fa fa-inbox"></i></a>';
 											}
 										}
 									?>
@@ -967,11 +970,11 @@
 										<td><?=getDisposition($history['dispositionid']);?></td>
 										<td>
 											<?=getSerial($history['inventoryid']);?>
-											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button"><i class="fa fa-history"></i></a><br/>
+											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button" data-toggle="tooltip" data-placement="bottom" title="View Serial History"><i class="fa fa-history"></i></a><br/>
 											<small class="info"><?=$history['reason']?></small>
 										</td>
 										<td><?=$status?></td>
-										<td class="text-center"><?=$action?></td>
+										<td><?=$action?></td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>

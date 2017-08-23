@@ -27,7 +27,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
 	include_once $rootdir.'/inc/operations_sidebar.php'; 
-	include_once $rootdir.'/inc/credit_creation.php';
+	include_once $rootdir.'/inc/credit_functions.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 
 	//Declarations

@@ -42,14 +42,15 @@
 		return $f;
 	}
     
-    function package_edit($action,$id='',$order ='',$type ='',$name =''){
-    
+    function package_edit($action,$id='',$order_number ='',$order_type ='',$name =''){
+
         if ($action == 'addition'){
-            $order_number = prep($order);
+            $q_number = prep($order_number);
+			$q_type = prep($order_type,'Sale');
+
             $name = prep($name);
-            $order_type = prep($type,'Sale');
-            if($order) {
-                $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,$order_type, $name);";
+            if($order_number) {
+                $insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($q_number,$q_type, $name);";
                 qdb($insert) OR die(qe().": $insert");
 
                 return qid();
@@ -73,10 +74,12 @@
 			// get all serialid's (inventoryid's) in this package, and let setCost() do its thing,
 			// which finds any difference in existing costs, and re-updates its inventory costs records
 			// and re-averages costs for this partid
-			$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				setCost($r['serialid']);
+			if ($order_type=='Purchase') {
+				$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					setCost($r['serialid']);
+				}
 			}
 
             return $update;

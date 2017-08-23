@@ -17,7 +17,7 @@
             }
         }
 	}
-	function address_out($address_id){
+	function address_out($address_id,$include_name=true,$sep='<BR>'){
 		//General function for handling the standard display of addresses
 		$address = '';
 		//Address Handling
@@ -32,10 +32,10 @@
 		$country = $row['country'];
 		
 		//Address Output
-		if($name){$address .= $name."<br>";}
-		if($street){$address .= $street."<br>";}
-		if($addr2){$address .= $addr2."<br>";}
-		if($addr3){$address .= $addr3."<br>";}
+		if($name AND $include_name){$address .= $name.$sep;}
+		if($street){$address .= $street.$sep;}
+		if($addr2){$address .= $addr2.$sep;}
+		if($addr3){$address .= $addr3.$sep;}
 		if($city && $state){$address .= $city.", ".$state;}
 		else if ($city || $state){ ($address .= $city.$state);}
 		if($zip){$address .= "  $zip";}

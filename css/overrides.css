@@ -1262,6 +1262,9 @@ tr.grayout td a {
 .table-condensed thead > tr > th.text-right {
 	padding-right:15px !important;
 }
+.btn-default.inverse {
+	color:#fff !important;
+}
 
 
 

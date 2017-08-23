@@ -45,6 +45,11 @@
 
 	$commons = array(
 		'DC'=>1,
+		'THE'=>1,
+		'CINDY'=>1,
+		'214-738-4896'=>1,
+		'PAM'=>1,
+		'MODULE'=>1,
 		'INVERTER'=>1,
 		'PWB'=>1,
 		'COLOR'=>1,
@@ -59,7 +64,6 @@
 		'HOUSING'=>1,
 		'TEST'=>1,
 		'PACK'=>1,
-		'MODULE'=>1,
 		'NID'=>1,
 		'TIMING'=>1,
 		'TAG'=>1,
@@ -316,9 +320,10 @@
 					// set part string from identified field, uppercase it for $commons lookup purposes
 					if (isset($fields[$part_field])) {
 						$part = strtoupper($fields[$part_field]);
+
+						// if this is a 'common' word and if we already have a matched field, resort to that previously-matched field
+						if (isset($commons[$part])) { continue; }// AND isset($last_fields[$part_field])) { $part = $last_fields[$part_field]; }
 					}
-					// if this is a 'common' word and if we already have a matched field, resort to that previously-matched field
-					if (isset($commons[$part]) AND isset($last_fields[$part_field])) { $part = $last_fields[$part_field]; }
 
 					$qty = '';
 					if ($qty_from_end) {
@@ -339,13 +344,14 @@
 					if ($part==$qty) { $qty = 1; }
 
 					// trailing -RF (refurb) is common in frontier emails, but also occurs elsewhere at times
-					$part = preg_replace('/-RF$/','',$part);
+					$part = strtoupper(preg_replace('/-RF$/','',$part));
 
 					$qty = preg_replace('/^([0-9]+)-$/','$1',$qty);
 					if (! is_numeric($qty)) { $qty = ''; }
 					$qty = (int)$qty;//convert 02's into 2's
 
-					$heci = preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci);
+					$heci = strtoupper(preg_replace('/^([[:punct:]]+)?([[:alnum:]]{7,10})([[:punct:]]+)?$/','$2',$heci));
+					if (isset($commons[$heci])) { continue; }
 
 					$last_fields = $fields;//set for next iteration, if any
 
@@ -370,11 +376,16 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					$partkey = $part;
 					if ($heci) { $partkey .= ' '.substr($heci,0,7); }
 
-					if (strlen($part)<2 AND ! $heci) {
+					$clean_part = preg_replace('/[^[:alnum:]]+/','',$part);
+					if (strlen($clean_part)<2 AND ! $heci) {
+						continue;//added 8-21-17
+
 						if (! strstr($failed_strings,$partkey)) {
 							if ($failed_strings) { $failed_strings .= ', '; }
 							$failed_strings .= $partkey;
 						}
+						continue;
+					} else if (substr($part,0,7)=='--_000_' OR substr($part,0,8)=='[HTTP://') {
 						continue;
 					}
 

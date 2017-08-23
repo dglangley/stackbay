@@ -378,9 +378,9 @@
 			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
 		} else {
 	   		if ($startDate) {
-   				$dbStartDate = format_date($startDate, 'Y-m-d');
-   				$dbEndDate = format_date($endDate, 'Y-m-d');
-   				$query .= "AND o.created between CAST('".$dbStartDate."' AS DATE) AND CAST('".$dbEndDate."' AS DATE) ";
+   				$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+   				$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+   				$query .= "AND o.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
 		}
 		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
@@ -596,8 +596,8 @@
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
 				<td> '.$order_abbrev.$r[$order_type].' <a href="/order_form.php?on='.$r[$order_type].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
-				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'"><i class="fa fa-arrow-right"></i></a> </td>
-				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a> </td>
+				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>
 				<td class="text-right"> '.format_price($paid_amt).' </td>
 			</tr>
