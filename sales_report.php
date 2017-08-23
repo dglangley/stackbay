@@ -109,7 +109,7 @@ if (! $r['partid']) { return ($results); }
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Sales Dashboard</title>
+	<title>Sales</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
@@ -129,15 +129,23 @@ if (! $r['partid']) { return ($results); }
 		}
 
 		.total_price_text, .seller_qty, .seller_price, .seller_times {
-			font-weight: bold;
 			font-size: 12px;
 			color: #000;
+			border: 1px solid #357ebd;
+			padding: 2px 7px;
+			border-radius: 3px;
 		}
 
 		.buy_text {
 			font-weight: bold;
 			font-size: 12px;
-			color: #855d41;
+			color: #428bca;
+			padding: 2px 7px;
+		}
+
+		.bid-input {
+			color: #428bca;
+			font-weight: bold;
 		}
 
 		#pad-wrapper {
@@ -151,8 +159,8 @@ if (! $r['partid']) { return ($results); }
 
 		.list_total {
 			font-weight: bold;
-			font-size: 12px;
-			color: #000;
+			font-size: 15px;
+			color: #428bca;
 		}
 
 		.market-table {
@@ -206,9 +214,46 @@ if (! $r['partid']) { return ($results); }
 			padding-bottom: 25px;
 		}
 
+		.descr-row {
+			margin-left: 0;
+		}
+
 		/*Temporarily kill the product first row action options (Merge etc)*/
 		.product-action .action-items {
 			display: none !important;
+		}
+
+		.bg-demand .market-download {
+			display: none;
+		}
+
+		.slider-box .slider-frame {/*.toggle-results {*/
+			z-index:1000;
+			position:relative;
+			top:2px;
+			right:5px;
+			height:16px;
+			width:60px;
+		}
+
+		.never-stock .first {
+			background: repeating-linear-gradient(
+		    -55deg,
+		    #eff0f6,
+		    #eff0f6 10px,
+		    #f1f2f8 10px,
+		    #f1f2f8 20px
+		  );
+		}
+
+		.out-stock .first {
+		  background: repeating-radial-gradient(
+		    circle,
+		    #eff0f6,
+		    #eff0f6 10px,
+		    #f1f2f8 10px, 
+		    #f1f2f8 20px
+		  );
 		}
 
 		@media (max-width: 992px) {
@@ -410,10 +455,10 @@ if (! $r['partid']) { return ($results); }
 					    </div>
 					</div>
 					<div class="col-sm-2 remove-pad">
-							<button class="btn btn-primary btn-sm date_filter"><i class="fa fa-filter" aria-hidden="true"></i></button>
+							<button class="btn btn-primary btn-sm date_filter" style="padding: 3px 8px; margin-top: 2px;"><i class="fa fa-filter" aria-hidden="true"></i></button>
 							<div class="btn-group" id="dateRanges">
 								<div id="btn-range-options">
-									<button class="btn btn-default btn-sm">&gt;</button>
+									<button class="btn btn-default btn-sm" style="padding: 3px 8px; margin-top: 2px;">&gt;</button>
 									<div class="animated fadeIn hidden" id="date-ranges">
 								        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
 										<?php
@@ -448,9 +493,9 @@ if (! $r['partid']) { return ($results); }
 				<h2 class="minimal"><?=($title ? $title : '');?></h2>
 			</div>
 
-			<div class="col-md-4">
+			<div class="col-md-4" style="padding-left: 0;">
 				<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
-					<span class="list_total"></span>
+					<span style="font-size: 15px; font-weight: bold;">Total:</span> <span class="list_total">$0.00</span>
 				</div>
 				<div class="col-md-2 col-sm-2 col-xs-3">
 					<div class="pull-right slider-frame success filter_modes">
@@ -710,6 +755,12 @@ if (! $r['partid']) { return ($results); }
 
         $last_element = count($results) - 1;
 
+        //If in any case the list item's part has no revisions
+		if(empty($results)) {
+			//kill parts-container
+			$results_rows .= '	</div>';
+		}
+
 		foreach ($results as $partid => $P) {
 			$itemqty = $P['qty'];
 			$notes = $P['notes'];
@@ -767,7 +818,7 @@ if (! $r['partid']) { return ($results); }
 
 	                        <div class="col-sm-7">
 	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
-									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
+									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
 	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
 
 									<div class="descr-edit hidden">
@@ -861,28 +912,30 @@ if (! $r['partid']) { return ($results); }
 										'.$repair_col.'
 									</div>
 									<div class="col-sm-2 slider-box">
-										<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
-											<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Ln '.($ln+1).'">
-											<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Off">
-											<span data-on-text="Ln '.($ln+1).'" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln '.($ln+1).'</span>
-										</div>
-										<span class="header-text"></span>
-										<br/><span class="info"></span>
-										<br/>
-										<div class="price">
-											<span class="seller_qty"></span> <span class="seller_x" style="display: none;">x</span> <span class="seller_price"></span> <span class="total_price_text" data-total="'.$rev_total.'">'.format_price($rev_total).'</span>
+										<br>
+										<div class="row price">
+											<div class="col-sm-3">
+												<span class="seller_qty" style="display: none;"></span>
+											</div>
+											<div class="col-sm-1 remove-pad"><span class="seller_x" style="display: none;">x</span></div>
+											<div class="col-sm-4 remove-pad">
+												<span class="seller_price" style="display: none;"></span>
+											</div>
+											<div class="col-sm-4 remove-pad">
+												<span class="total_price_text" data-total="'.$rev_total.'">'.format_price($rev_total).'</span>
+											</div>
 										</div>
 										<br/>
 
 										<div class="row bid_inputs" style="display: none;">
-											<div class="col-sm-4">
+											<div class="col-sm-3 remove-pad">
 												<input type="text" name="bid_qty['.$ln.']" data-type="bid_qty" class="form-control input-xxs bid-input text-center" value="" placeholder="Qty">
 											</div>
 											<div class="col-sm-1 remove-pad">x</div>
 											<div class="col-sm-4 remove-pad">
 												<input type="text" name="bid_price['.$ln.']" data-type="bid_price" class="form-control input-xxs bid-input text-center" value="" placeholder="Price">
 											</div>
-											<div class="col-sm-3 remove-pad">
+											<div class="col-sm-4 remove-pad">
 												<span class="buy_text" data-buy_total="0">
 													$0.00
 												<span>
@@ -898,7 +951,7 @@ if (! $r['partid']) { return ($results); }
 ?>
 
         <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
-        <div class="table part_info">
+        <div class="table part_info line_<?php echo ($ln+1); ?>">
         	<div class="row first" style="padding: 8px;">
 	        	<div class="col-sm-4">
 	        		<div class="product-action action-hover text-left">
@@ -957,6 +1010,12 @@ if (! $r['partid']) { return ($results); }
 									<i class="fa fa-list-ol"></i>
 									<sup><i class="fa options-toggle fa-sort-asc"></i></sup>
 								</a>
+							</div>
+
+							<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
+								<input type="radio" name="line_number[<?php echo ($ln+1); ?>]" class="row-status line-number hidden" value="Ln <?php echo ($ln+1); ?>">
+								<input type="radio" name="line_number[<?php echo ($ln+1); ?>]" class="row-status line-number hidden" value="Off">
+								<span data-on-text="Ln <?php echo ($ln+1); ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo ($ln+1); ?></span>
 							</div>
 						</div>
 					</div>

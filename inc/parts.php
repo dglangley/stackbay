@@ -22,9 +22,12 @@
         } else if ($action == "update") {
 			if (! $parr['name']) {
 				$result['error'] = "Missing part number! Cannot continue";
-			} else if (! $parr['manf']) {
-				$result['error'] = "Missing manufacturer! Cannot continue";
-			} else {
+			} 
+			// Currently not in use (future maybe)
+			// else if (! $parr['manf']) {
+			// 	$result['error'] = "Missing manufacturer! Cannot continue";
+			// }
+			 else {
 	            if(!$partid){
 					$insert = "
 						INSERT INTO `parts` (`part`, `rel`, `heci`, `manfid`, `systemid`, `description`, `classification`) VALUES 

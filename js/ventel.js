@@ -954,63 +954,6 @@
 		// 	});
 		// });
 
-		$(document).on('change',".line-number",function() {
-			var chkbox = $(this);
-			var mode = $('.sales_mode:checked').val();
-
-			var rowbody = $(this).closest(".part_info").find(".product-results");
-
-			if (chkbox.is(':checked')) {
-				//rowbody.slideUp('fast');
-				$(this).closest(".part_info").find("input").prop('disabled',true);
-				$(this).closest(".part_info").find("button").prop('disabled',true);
-			} else {
-				//rowbody.slideDown('fast');
-				$(this).closest(".part_info").find("input").prop('disabled',false);
-				$(this).closest(".part_info").find("button").prop('disabled',false);
-
-				if(mode == 'Buy') {
-					$('.price-control').prop("disabled", false);
-
-					$('.sell-price').prop("disabled", true);
-					$('.sell-price').closest('.form-group').hide();
-
-					$('.product-results .qty input').prop("disabled", true);
-					//$('.first .qty input').prop("disabled", false);
-
-					$('.bid_inputs').show();
-					$('.seller_x').show();
-				} else {
-					$('.price-control').prop("disabled", true);
-
-					$('.sell-price').prop("disabled", false);
-					$('.sell-price').closest('.form-group').show();
-
-					$('.product-results .qty input').prop("disabled", false);
-					//$('.first .qty input').prop("disabled", true);
-
-					$('.bid_inputs').hide();
-					$('.seller_x').hide();
-				}
-			}
-
-		});
-
-		$(document).on('click',".line-number-toggle",function() {
-			var chkbox = $(this);
-
-			var rowbody = $(this).closest(".part_info").find(".product-results");
-
-			if (chkbox.hasClass('toggle-up')) {
-				rowbody.slideUp('fast');
-				chkbox.removeClass('toggle-up');
-				chkbox.find('.fa-sort-asc').addClass('fa-sort-desc').removeClass('fa-sort-asc');
-			} else {
-				rowbody.slideDown('fast');
-				chkbox.addClass('toggle-up');
-				chkbox.find('.fa-sort-desc').addClass('fa-sort-asc').removeClass('fa-sort-desc');
-			}
-		});
 
 		$('.btn-remote').click(function() {
 			var remote = $(this).prop('id').replace('remote-','');
@@ -1305,7 +1248,9 @@
                         rowHtml += '<div class="market-data market-company-'+row.cid+'"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
                             '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                         $.each(row.sources, function(i, src) {
-                            rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
+                        	if(src != 'import' && src != 'email') {
+                           		rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
+                        	}
                         });
                         rowHtml += '&nbsp; <input type="text" data-type="'+type+'" class="form-control input-xxs market-price" value="'+row.price+'" '+
 									'data-date="'+row.date+'" data-cid="'+row.cid+'" onFocus="this.select()"'+inputDis+'/></div>';

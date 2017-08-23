@@ -90,6 +90,8 @@
 		$search_index = 0;
 		$qty_index = 1;
 		$line_index = 2;
+		$stock_index = 3;
+
 		$query = "SELECT search_meta.id metaid, uploads.type, processed, filename FROM search_meta, uploads ";
 		$query .= "WHERE uploads.id = '".res($listid)."' AND uploads.metaid = search_meta.id; ";
 		$result = qdb($query);
@@ -104,17 +106,17 @@
 				$query2 = '';
 
 				if($sort == 'line') {
-					$query2 = "SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches ";
+					$query2 = "SELECT search, ".$table_qty." qty, line_number, '' stock FROM parts, ".$r['type'].", searches ";
 					$query2 .= "WHERE metaid = '".$r['metaid']."' AND parts.id = partid AND ".$r['type'].".searchid = searches.id; ";
 				} else {
 					//Other query to sort by (Stock, No Stock, Never Had)
-					$query2 = "SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status IN ('shelved', 'received') AND inventory.conditionid >= 0 HAVING SUM(inventory.qty) > 0)
+					$query2 = "SELECT search, ".$table_qty." qty, line_number, 'in' stock FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status IN ('shelved', 'received') AND inventory.conditionid >= 0 HAVING SUM(inventory.qty) > 0)
 							UNION
-								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status NOT IN ('shelved', 'received') HAVING SUM(inventory.qty) > 0)
+								SELECT search, ".$table_qty." qty, line_number, 'out' stock FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid AND inventory.status NOT IN ('shelved', 'received') HAVING SUM(inventory.qty) > 0)
 							UNION
-								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid HAVING SUM(inventory.qty) = 0)
+								SELECT search, ".$table_qty." qty, line_number, 'out' stock FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid HAVING SUM(inventory.qty) = 0)
 							UNION
-								SELECT search, ".$table_qty." qty, line_number FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND NOT EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid);";
+								SELECT search, ".$table_qty." qty, line_number, 'never' stock FROM parts, ".$r['type'].", searches WHERE metaid = '".$r['metaid']."' AND parts.id = ".$r['type'].".partid AND ".$r['type'].".searchid = searches.id AND NOT EXISTS (SELECT partid FROM inventory WHERE ".$r['type'].".partid = inventory.partid);";
 				}
 				$result2 = qdb($query2);
 				while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -122,7 +124,7 @@
 					// exist in the array? if so, don't add to list for duplication of calculations below
 					if (array_stristr($lines,$r2['search'].' ')!==false) { continue; }
 
-					$lines[] = $r2['search'].' '.$r2['qty'].' '.$r2['line_number'];
+					$lines[] = $r2['search'].' '.$r2['qty'].' '.$r2['line_number'].' '.$r2['stock'];
 				}
 			} else {
 				// if list is not processed, alert the user
@@ -154,6 +156,8 @@
 		foreach ($rows as $ln => $line) {
 			$terms = preg_split('/[[:space:]]+/',$line);
 			$search_str = strtoupper(trim($terms[$search_index]));
+			$stock = $terms[$stock_index];
+
 			if (! $search_str) {
 				$num_rows--;//mostly impacting pagination
 				continue;
@@ -187,7 +191,7 @@
 				$x++;
 			}
 
-			$html .=  '<div class="table part_info">' . partTable($search_str, $line_number, $equipment_filter, $search_qty, $search_price) . '</div>';
+			$html .= '<div class="table part_info line_'.($line_number+1).' '.($sort != 'line' ?  $stock . '-stock' : '').'">' . partTable($search_str, $line_number, $equipment_filter, $search_qty, $search_price) . '</div>';
 		}
 
 		return $html;
@@ -330,6 +334,12 @@
 									<sup><i class="fa options-toggle fa-sort-asc"></i></sup>
 								</a>
 							</div>
+
+							<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
+								<input type="radio" name="line_number['.($ln+1).']" class="row-status line-number hidden" value="Ln '.($ln+1).'">
+								<input type="radio" name="line_number['.($ln+1).']" class="row-status line-number hidden" value="Off">
+								<span data-on-text="Ln '.($ln+1).'" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln '.($ln+1).'</span>
+							</div>
 						</div>
 					</div>';
 
@@ -381,7 +391,7 @@
 			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$html .= '
-                        <div class="row descr-row" style="padding:8px;">
+                        <div class="row descr-row " style="padding:8px;">
 	                        <div class="col-sm-3 remove-pad">
 								<div class="product-action text-center">
 	                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$counter.']" value="'.$partid.'"'.$chkd.'></div>
@@ -399,7 +409,7 @@
 
 	                        <div class="col-sm-7 remove-pad">
 	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
-									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
+									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
 	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
 
 									<div class="descr-edit hidden">
@@ -519,27 +529,30 @@
 			'.$summar_col.'
 		</div>
 		<div class="col-sm-2 slider-box" style="height: 100%;">
-			<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
-				<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Ln '.($ln+1).'">
-				<input type="radio" name="line_number['.$ln.']" class="row-status line-number hidden" value="Off">
-				<span data-on-text="Ln '.($ln+1).'" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln '.($ln+1).'</span>
+			<br>
+			<div class="row price">
+				<div class="col-sm-3">
+					<span class="seller_qty" style="display: none;"></span>
+				</div>
+				<div class="col-sm-1 remove-pad"><span class="seller_x" style="display: none;">x</span></div>
+				<div class="col-sm-4 remove-pad">
+					<span class="seller_price" style="display: none;"></span>
+				</div>
+				<div class="col-sm-4 remove-pad">
+					<span class="total_price_text" data-total="'.$rev_total.'">'.format_price($rev_total).'</span>
+				</div>
 			</div>
-			<span class="header-text"></span>
-			<br/><span class="info"></span>
 			<br/>
-			<div class="price">
-				<span class="seller_qty"></span> <span class="seller_x" style="display: none;">x</span> <span class="seller_price"></span> <span class="total_price_text" data-total="0">'.format_price($rev_total).'</span>
-			</div>
-			<br/>
+
 			<div class="row bid_inputs" style="display: none;">
-				<div class="col-md-4">
-					<input type="text" data-type="bid_qty" class="form-control input-xxs bid-input text-center" value="" placeholder="Qty">
+				<div class="col-sm-3 remove-pad">
+					<input type="text" name="bid_qty['.$ln.']" data-type="bid_qty" class="form-control input-xxs bid-input text-center" value="" placeholder="Qty">
 				</div>
-				<div class="col-md-1 remove-pad">x</div>
-				<div class="col-md-4 remove-pad">
-					<input type="text" data-type="bid_price" class="form-control input-xxs bid-input text-center" value="" placeholder="Price">
+				<div class="col-sm-1 remove-pad">x</div>
+				<div class="col-sm-4 remove-pad">
+					<input type="text" name="bid_price['.$ln.']" data-type="bid_price" class="form-control input-xxs bid-input text-center" value="" placeholder="Price">
 				</div>
-				<div class="col-md-3 remove-pad">
+				<div class="col-sm-4 remove-pad">
 					<span class="buy_text" data-buy_total="0">
 						$0.00
 					<span>

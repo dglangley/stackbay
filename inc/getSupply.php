@@ -762,7 +762,7 @@
 		if ($record_start && $record_end){$query .= " AND search_meta.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = demand.partid AND staged_qtys.companyid = search_meta.companyid "; }
-		$query .= "GROUP BY demand.partid, datetime, search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
+		$query .= "GROUP BY demand.partid, CAST(datetime AS DATE), search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
 
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -777,7 +777,8 @@
 			$rows[] = $r;
 		}
 
-		//echo $query;
+
+		//echo $query; exit;
 
 		foreach ($rows as $r) {
 			$date = substr($r['datetime'],0,10);
@@ -823,6 +824,7 @@
 //			$result[] = $r;
 			$results[$key] = $r;
 		}
+
 
 		$min_price = false;
 		$max_price = false;
@@ -950,8 +952,9 @@
 		$n = 0;
 		foreach ($market as $rDate => $r) {
 //for now, just show past 5 dates
-			if ($n>=5 AND $results_mode==0 AND ! $detail) { break; }
+			// if ($n>=5 AND $results_mode==0 AND ! $detail) { break; }
 
+			$ogDate = $rDate;
 			$rDate = summarize_date($rDate);
 
 			if (count($r)==0) {
@@ -962,13 +965,23 @@
 
 			foreach ($r as $k => $row) {
 				//$newRows[] = $row;
-				if (isset($newResults['results'][$rDate][$rDate.'.'.$row['cid']])) { continue; }
+				if (isset($newResults['results'][$rDate][$rDate.'.'.$row['cid']. '.' . $ogDate])) { continue; }
 
-				$newResults['results'][$rDate][$rDate.'.'.$row['cid']] = $row;
+				$newResults['results'][$rDate][$rDate.'.'.$row['cid'] . '.' . $ogDate] = $row;
+
+
 			}
 			if (count($r)>0) { $n++; }
 		}
-//		print "<pre>".print_r($newResults,true)."</pre>";
+
+		// Clean Up all the blank values from the summary
+		if ($results_mode==0 AND ! $detail) { 
+			if(count($newResults)>=5) {
+				$newResults['results'] = array_filter($newResults['results']);
+			}
+			$newResults['results'] = array_slice($newResults['results'],0,5,true);
+		}
+		//print "<pre>".print_r($newResults,true)."</pre>";
 
 		return ($newResults);
 	}
