@@ -385,7 +385,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 							$failed_strings .= $partkey;
 						}
 						continue;
-					} else if (substr($part,0,7)=='--_000_' OR substr($part,0,8)=='[HTTP://') {
+					} else if (substr($part,0,7)=='--_000_' OR substr($part,0,8)=='[HTTP://' OR $part=='CONTENT-TYPE:' OR $part=='CONTENT-TRANSFER-ENCODING:') {
 						continue;
 					}
 

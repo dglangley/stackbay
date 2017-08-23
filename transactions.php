@@ -14,6 +14,8 @@
 	include_once $rootdir.'/inc/locations.php';
 
 	/***** POST DATA *****/
+	$sorter = '';
+	if (isset($_REQUEST['sorter'])) { $sorter = $_REQUEST['sorter']; }
 	$confirmed_invoices = '';
 	if (isset($_REQUEST['invoices_checkbox'])) { $confirmed_invoices = $_REQUEST['invoices_checkbox']; }
 	$confirmed_bills = '';
@@ -332,12 +334,18 @@
 	$credits_rows = '';
 	$credits_open = 0;
 	$query = "SELECT * FROM sales_credits sc ";
+	if ($sorter=='company') { $query .= ", companies c "; }
 	$query .= "WHERE 1 = 1 ";
+	if ($sorter=='company') { $query .= "AND c.id = sc.companyid "; }
 	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
 	if ($startDate) {
 		$query .= "AND date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 	}
-	$query .= "ORDER BY sc.id DESC; ";
+	if ($sorter=='company') {
+		$query .= "ORDER BY c.name ASC; ";
+	} else {
+		$query .= "ORDER BY sc.id DESC; ";
+	}
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	if (mysqli_num_rows($result)==0) {
 	    $credits_rows = '
@@ -371,6 +379,7 @@
 		}
 
 		$invoice = '';
+		$invoice_ln = '';
 		$invoice_date = '';
 		$amount = 0;
 		$query2 = "SELECT qty, amount, return_item_id FROM sales_credit_items WHERE cid = '".$r['id']."'; ";
@@ -386,6 +395,7 @@
 			if (mysqli_num_rows($result3)>0) {
 				$r3 = mysqli_fetch_assoc($result3);
 				$invoice = $r3['invoice_no'];
+				$invoice_ln = $invoice.' <a href="/docs/INV'.$invoice.'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 				$invoice_date = format_date($r3['date_invoiced'],'n/d/y');
 			}
 		}
@@ -413,7 +423,7 @@
 					<td>'.format_date($order_date,'n/d/y').'</td>
 					<td>'.$terms.'</td>
 					<td>'.$r['rma'].'</td>
-					<td>'.$invoice.' <a href="/docs/INV'.$invoice.'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
+					<td>'.$invoice_ln.'</td>
 					<td>'.$invoice_date.'</td>
 					<td class="text-right">'.format_price($amount).'</td>
 					<td class="text-center">
@@ -444,6 +454,19 @@
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
 	?>
+	<style type="text/css">
+		.sorter {
+			cursor:pointer;
+		}
+		.sorter:after {
+			content: '\f0dc';/*f15d';*/
+			font-family: FontAwesome;
+			font-weight: normal;
+			font-style: normal;
+			margin:0px 0px 0px 30px;
+			text-decoration:none;
+		}
+	</style>
 </head>
 <body>
 <!----------------------------------------------------------------------------->
@@ -697,11 +720,12 @@
 					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
 					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
 					<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
+					<input type="hidden" name="sorter" value="<?php echo $sorter; ?>">
 					<div class='table-responsive'>
 						<table class='table table-hover table-striped table-condensed'>
 							<tr>
-								<th class = 'col-sm-1'>CM</th>
-								<th class = 'col-sm-2'>Customer</th>
+								<th class = 'col-sm-1 sorter' data-type="id">CM</th>
+								<th class = 'col-sm-2 sorter' data-type="company">Customer</th>
 								<th class = 'col-sm-1'>CM Date</th>
 								<th class = 'col-sm-1'>Order No</th>
 								<th class = 'col-sm-1'>Order Date</th>
@@ -782,6 +806,12 @@
 				$("#master-save").prop('disabled',true);
 				$("#master-save").hide();
 			}
+		});
+		$(".sorter").click(function() {
+			var sort_field = $(this).data("type");
+			var form = $(this).closest("form");
+			form.find("input[name='sorter']").val(sort_field);
+			form.submit();
 		});
 	});
 </script>

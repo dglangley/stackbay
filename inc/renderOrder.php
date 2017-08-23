@@ -21,6 +21,7 @@
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
+	include_once $rootdir.'/inc/getRepairCode.php';
 	
     function getPackageTracking($invoice_number) {
         $tracking = array();
@@ -314,6 +315,7 @@
                         </div>
                     </td>
                     <td class="text-center '.(($o['due_date'])? '' : 'remove' ).'">'.format_date($item[$o['date_field']],'m/d/y').'</td>
+					<td class="text-center '.($oi['repair_code_id'] ? '' : 'remove').'">'.getRepairCode($oi['repair_code_id']).'</td>
                     <td class="text-center '.($o['warranty'] ? '' : 'remove').'">'.getWarranty($item['warranty'],'name').'</td> 
 			';
 			$item_rows .= ($o['purchase']? '<td>'.getCondition($item['conditionid']).'</td>' : "");
@@ -613,6 +615,7 @@ if(!$o['lump']){
                 <th>Ln#</th>
                 <th>Description</th>
                 <th class="'.(($o['due_date'])? '' : 'remove' ).'">Due Date</th>
+				<th class="'.($oi['repair_code_id']? '' : 'remove').'">Repair Status</th>
                 <th class="'.($o['warranty']? '' : 'remove').'">Warranty</th>
                 '.($o['credit']? '<th>Serials</th>' : "").'
                 '.($o['purchase']? '<th>Cond</th>' : "").'
