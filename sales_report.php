@@ -256,6 +256,10 @@ if (! $r['partid']) { return ($results); }
 		  );
 		}
 
+		.bg-demand .fa-circle-o {
+			visibility: hidden;
+		}
+
 		@media (max-width: 992px) {
 			#pad-wrapper {
 				margin-top: 130px;
@@ -506,7 +510,7 @@ if (! $r['partid']) { return ($results); }
 					</div>
 				</div>
 
-				<div class="col-md-8 col-sm-8 col-xs-9">
+				<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
 					<div class="col-sm-10 col-xs-8">
 						<div class="pull-right form-group" style="width: 100%;">
 							<select name="companyid" id="companyid" class="company-selector">
@@ -519,8 +523,8 @@ if (! $r['partid']) { return ($results); }
 					</div>
 
 					<div class="col-sm-2 col-xs-4 remove-pad">
-						<button class="btn-flat btn-sm success save_sales pull-right" type='submit' data-validation="left-side-main">
-							Save					
+						<button class="btn btn-success btn-sm save_sales pull-right" type='submit' data-validation="left-side-main" style="padding: 5px 25px;">
+							SAVE					
 						</button>
 					</div>
 				</div>

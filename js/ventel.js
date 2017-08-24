@@ -48,6 +48,7 @@
             console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&results_mode="+results_mode+'&type='+results_type);
 
             if(results_type == 'supply' || results_type == 'demand') {
+
 	            $.ajax({
 	                url: 'json/availability.php',
 	                type: 'get',
@@ -62,7 +63,8 @@
 						var searchHeader = 'Listed As';//set for the first header row, but then erased after that; see usage below
 						var priceHeader = 'Price';//set for the first header row, but then erased after that; see usage below
 	                    $.each(json.results, function(dateKey, item) {
-		                    rowHtml += '<div class="check-group">\
+	                    	
+						   rowHtml += '<div class="check-group">\
 								<div class="row">\
 									<div class="col-sm-1">\
 										<input type="checkbox" class="checkTargetAll" data-target=".check-group"/>\
@@ -1227,7 +1229,15 @@
 		var partids = container.closest(".market-table").data('partids');
 		var type = container.data('type');
 
+		var date = '';
+    	var last_month = '';
+    	var last_year = '';
+		var init = true;
+
+		var hr = true;
+
         console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+partids+"&ln="+ln+"&results_mode="+results_mode+"&type="+type);
+
         $.ajax({
             url: 'json/availability.php',
             type: 'get',
@@ -1235,6 +1245,26 @@
 			settings: {async:true},
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
+                	var rowDate = '';
+
+                	var cls1 = '';
+                	var cls2 = '';
+                	//Set the first date to the first record, getSupply function already orders the records by date DESC
+                	if(init && type == 'demand') {
+                		//Get the first date from the item array (probably a way better way to implement this feature)
+                		$.each(item, function(key, row) {
+                			var dateParts = row.date.split("-");
+							date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+							return false;
+						});
+                		//Based on the first date of entries found
+						last_month = date.setMonth(date.getMonth() - 1, 1);
+						last_year = date.setMonth(date.getMonth() - 11, 1);
+
+						init = false;
+                	}
+
                     qtyTotal = 0;
 
                     rowHtml = '';
@@ -1260,9 +1290,34 @@
 
 					doneFlag = json.done;
 
+					if(type == 'demand') {
+						$.each(item, function(key, row) {
+							var dateParts = row.date.split("-");
+							rowDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+							return false;
+						});
+
+						if(rowDate < last_year) { 
+							if(hr) {
+								cls1 = '<hr>';
+								hr = false;
+							}
+							cls1 += '<span class="archives">';
+							cls2 = '</span>';
+						} else if (rowDate < last_month) {
+							if(hr) {
+								cls1 = '<hr>';
+								hr = false;
+							}
+							cls1 += '<span class="summary">';
+							cls2 = '</span>';
+						}
+					}
+
                     /* add section header of date and qty total */
                     //if(type == 'supply') {
-	                    newHtml += addDateGroup(dateKey,qtyTotal,doneFlag, type)+rowHtml;
+	                    newHtml += cls1+addDateGroup(dateKey,qtyTotal,doneFlag, type)+rowHtml+cls2;
 	                // } else {
 	                // 	newHtml += rowHtml;
 	                // }
@@ -1528,8 +1583,14 @@
 		return;
 	}
     function addDateGroup(dateKey,qtyTotal,doneFlag, type) {
+    	var groupStr = ''
+
         //var groupStr = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal">'+
-        var groupStr = '<div class="date-group">'+dateKey+': qty '+qtyTotal+' ';
+        if (type == 'supply') {
+        	groupStr = '<div class="date-group">'+dateKey+': qty '+qtyTotal+' ';
+        } else {
+        	groupStr = '<div class="date-group"><a href=href="javascript:void(0);">'+dateKey+': qty '+qtyTotal+'</a> ';
+        }
         if (! doneFlag && dateKey=='Today' && type == 'supply') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
         }
