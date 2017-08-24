@@ -235,7 +235,11 @@
 		$dateSty = '';
 		if ($order_date>$GLOBALS['lastWeek']) { $dateSty = ' style="font-weight:bold"'; }
 
-		$dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal"'.$dateSty.'>'.$date.': '.
+		// $dtitle = '<div class="date-group"><a href="javascript:void(0);" class="modal-results" data-target="marketModal"'.$dateSty.'>'.$date.': '.
+		// 	'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
+
+		// Changed to remove unused modal currently
+		$dtitle = '<div class="date-group"><a href="javascript:void(0);"'.$dateSty.'>'.$date.': '.
 			'qty '.$dated_qty.' <i class="fa fa-list-alt"></i></a></div>';
 		return ($dtitle);
 	}
