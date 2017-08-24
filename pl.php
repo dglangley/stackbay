@@ -370,7 +370,7 @@
 					$r['ref'] = $r['repair_id'];
 				}
 			} else if ($r['new_item_id']) {
-continue;
+continue;//dl 8-23-17
 				$r['type'] = 'Replace';
 
 				$r['price'] = 0;

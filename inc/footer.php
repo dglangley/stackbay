@@ -23,6 +23,8 @@
 	<script src="js/dropzone.js"></script>
 	<script src="js/trello.js"></script>
 	<script src="js/parts.js"></script>
+
+	<script src="js/jquery.floatThead.min.js"></script>
 	
 	<!-- bxSlider Javascript file -->
 	<script src="js/jquery.bxslider.min.js"></script>
