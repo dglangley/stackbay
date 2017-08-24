@@ -11,14 +11,13 @@
 				$dispositions[$row['id']] = $row['disposition'];
 			}
 		} else {
-			$query = "SELECT * FROM dispositions WHERE id = ".prep($id).";";
+			$query = "SELECT * FROM dispositions WHERE id = '".$id."';";
 			$result = qdb($query) or die(qe());
 			
 			if (mysqli_num_rows($result)>0) {
-				$result = mysqli_fetch_assoc($result);
-				$disp_value = $result['disposition'];
+				$r = mysqli_fetch_assoc($result);
+				$disp_value = $r['disposition'];
 			}
-			
 			return $disp_value;
 		}
 		

@@ -10,10 +10,6 @@
 //=============================================================================
 include_once $_SERVER["ROOT_DIR"]."/inc/dbconnect.php";
 
-//For testing purposes, I am running this on local mySQL connection, this will 
-//Need to be fixed before pushing to live.
-// $conn = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
-
 
 $query = "TRUNCATE TABLE staged_qtys; ";
 $result = qdb($query) OR die(qe().' '.$query);

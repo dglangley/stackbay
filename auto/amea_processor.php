@@ -50,6 +50,7 @@
 		'214-738-4896'=>1,
 		'PAM'=>1,
 		'MODULE'=>1,
+		'FILTER'=>1,
 		'INVERTER'=>1,
 		'PWB'=>1,
 		'COLOR'=>1,

@@ -20,8 +20,6 @@ include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
 // initializes Amea's gmail API session
 setGoogleAccessToken(5);
 
-#$credentials = new mysqli('127.0.0.1', 'aaronventel', '', 'c9');
-
 
 //Pull the values of the parts we want to search for in the last day
 $query = "SELECT favorites.`userid`,`partid`, p.`id`, p.`part`, `heci` "; 
@@ -285,7 +283,7 @@ $email_str .= "</table>";
 //$email_str .= "</body>";
 //$email_str .= "</html>";
 
-	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('david@ven-tel.com','sam@ven-tel.com','chris@ven-tel.com'));//,'aaron@ven-tel.com');
+	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('david@ven-tel.com','sam@ven-tel.com','chris@ven-tel.com'));
 	if ($send_success) {
 		echo json_encode(array('message'=>'Success'));
 	} else {
