@@ -175,7 +175,7 @@
 		}
 
 		if ($market_str) {
-			$market_str = '<a href="javascript:void(0);" class="market-title modal-results" '.($market_table != 'repairs' && $market_table != 'sales_summary' ? 'data-target="marketModal"' : '').' data-title="'.ucwords(str_replace('_', ' ', $market_table)).'" data-type="'.$market_table.'" data-partid_csv="'.$partid_csv.'" data-type="'.$market_table.'">'.ucwords(str_replace('_', ' ', $market_table)) . ($market_table != 'repairs' && $market_table != 'sales_summary' ? ' <i class="fa fa-window-restore"></i>' : '') . (($market_table == 'repairs' OR $market_table == 'sales_summary') ? ' <i class="fa fa-plus" aria-hidden="true"></i>':'').'</a><div class="market-body">'.$market_str.'</i>
+			$market_str = '<a href="javascript:void(0);" class="market-title modal-results" '.($market_table != 'repairs' && $market_table != 'sales_summary' ? 'data-target="marketModal"' : '').' data-title="'.ucwords(str_replace('_', ' ', $market_table)).'" data-type="'.$market_table.'" data-partid_csv="'.$partid_csv.'" data-type="'.$market_table.'">'.ucwords(str_replace('_', ' ', $market_table)) . ($market_table != 'repairs' && $market_table != 'sales_summary' ? ' <i class="fa fa-window-restore"></i>' : '') . (($market_table == 'repairs' OR $market_table == 'sales_summary') ? ' <i class="fa fa-expand" aria-hidden="true"></i>':'').'</a><div class="market-body">'.$market_str.'</i>
 </div>';
 		} else {
 			$market_str = '<span class="info">- No '.ucwords(str_replace('_', ' ', $market_table)).' -</span>';

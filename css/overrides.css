@@ -322,6 +322,9 @@ select.input-sm {
     border: 1px solid #dfe4eb;
 	vertical-align:top;
 }
+.descr-row .product-img {
+    margin-right: 0;
+}
 .product-img .img {
     height: 28px;
     width: 28px;
@@ -403,12 +406,12 @@ select.input-sm {
 .product-results .price .btn i {
 	color:#aaa;
 }
-.price-header, .product-results .price {
+/*.price-header, .product-results .price {
 	padding-right:5px;
 	display:inline-block;
 	text-align:right;
 	float: right;
-}
+}*/
 .price-header, .product-results .descr-row .price {
 	float:right;
 }
@@ -732,7 +735,7 @@ textarea.freeform-text {
 .market-table .market-results {
 	height:86%;
 	overflow:hidden;
-	width:95%;
+	width:140%;
 	background:white;
 }
 .market-table .bg-availability:hover .market-results, .market-table .bg-demand:hover .market-results {

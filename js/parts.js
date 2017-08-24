@@ -131,10 +131,11 @@
 	}
 
 	
-	function part_open(id){
+	function part_open(id, line){
 		var classification = 'equipment';
 		var hdb = '';
 		$("#modalPartsBody").attr("data-partid",id); //Loads incorrectly if I use .data(); attr('data..') used instead
+		$("#modalPartsBody").attr("data-ln",line);
 		$(".pm-field").val('');
 		$("#pm-manf").initSelect2("/json/manfs.php","Manf");
 		$("#pm-system").initSelect2("/json/systems.php","System");
@@ -181,7 +182,9 @@
 		var system = '';
 		var classification = '';
 		
-		id = $("#modalPartsBody").data("partid");
+		var line = $("#modalPartsBody").attr("data-ln");
+
+		id = $("#modalPartsBody").attr("data-partid");
 		name = $("#pm-name").val();
 		heci = $("#pm-heci").val();
 		desc = $("#pm-desc").val();
@@ -212,12 +215,12 @@
 					console.log("partid: "+id+"| name: "+name+"| heci: "+heci+"| desc: "+desc+"| manf: "+manf+"| system: "+system+"| classification: "+classification);
 */
 					var msg = '';
-					// var res = JSON.parse(result.responseText)
+					//var res = JSON.parse(result.responseText)
 					// if(res['insert']){
 					// 	msg = " Inserted";
 					// } else {
-					// 	msg = " Updated"
-					// }
+						msg = " Updated"
+					//}
 					toggleLoader("Part"+msg);
 				} else {
 					alert(result['error']);
@@ -230,17 +233,89 @@
 				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
 			},
 			complete: function(result){
-				location.reload();
+				if(!line){
+					location.reload();
+				} else {
+					// reload the line instead
+					//alert('line_'+line);
+					var container = $('.line_'+line);
+
+					var search_str = container.find('.product-search').val();
+					var container = container.find('.product-search').closest('.part_info');
+					var ln = container.find('.product-search').data('ln');
+
+					//Get the values currently set
+					var filter ='equipment';
+					var count = 0;
+					var temp = '';
+					$('.filter-group').find('.filter_equipment').each(function(){
+						if($(this).hasClass('active')) {
+							temp = $(this).data('type');
+							count++;
+						}
+					});
+
+					if(count == 2) {
+						filter = 'both';
+					} else if(count == 1) {
+						filter = temp;
+					}
+
+					container.find('.part_loader').show();
+
+					$.ajax({
+				        url: 'json/sales.php',
+				        type: 'get',
+				        data: {'search_strs': search_str, 'equipment_filter': filter, 'ln': ln},
+				        success: function(result) {
+							//Clear out past HTML from this table
+							container.empty();
+							container.append(result);
+
+							var marketTable = container.find('.market-table');
+							var parentBody = marketTable.closest(".product-results").find(".parts-container").height();
+
+							if(parentBody > 140) {
+								marketTable.children("*").css("height" ,'100%');
+								// marketTable.find('.market-results').css("height" ,'98%');
+								// marketTable.find('.market-body').css("height" ,'98%');
+							}
+
+							marketTable.css("height" ,parentBody);
+
+							container.find(".market-results").each(function() {
+								$(this).loadResults(0);
+							});
+
+							setSlider(container.find(".slider-button"));
+
+							container.find('.slider-button').click(function() {
+								setSlider($(this));
+							});
+
+							container.find('.part_loader').hide();
+				        },
+				        error: function(xhr, desc, err) {
+				            console.log("Details: " + desc + "\nError:" + err);
+				        }
+				    }); // end ajax call
+				}
 			}
 		});
 	}
 
 	$(document).on("click", ".part-modal-show", function(){
 		var id = '';
+		var line = '';
 		if($(this).data("partid")){
 			id = $(this).data("partid");
 		}
-		part_open(id);
+
+		if($(this).data("ln") || $(this).data("ln") == 0){
+			line = $(this).data("ln");
+		}
+
+		part_open(id, line);
 	});
 	$("#parts-continue").click(function(){
 		part_submit();

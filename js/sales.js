@@ -484,6 +484,72 @@
 		});
 	});
 
+	$(document).on('click',".line-number-toggle",function() {
+		var chkbox = $(this);
+
+		var rowbody = $(this).closest(".part_info").find(".product-results");
+
+		if (chkbox.hasClass('toggle-up')) {
+			rowbody.slideUp('fast');
+			chkbox.removeClass('toggle-up');
+			chkbox.find('.fa-sort-asc').addClass('fa-sort-desc').removeClass('fa-sort-asc');
+		} else {
+			rowbody.slideDown('fast');
+			chkbox.addClass('toggle-up');
+			chkbox.find('.fa-sort-desc').addClass('fa-sort-asc').removeClass('fa-sort-desc');
+		}
+	});
+
+	$(document).on('change',".line-number",function() {
+		var chkbox = $(this);
+		var mode = $('.sales_mode:checked').val();
+		var ln_toggle = chkbox.closest('.part_info').find('.line-number-toggle');
+
+		var rowbody = $(this).closest(".part_info").find(".product-results");
+
+		if (chkbox.is(':checked')) {
+			//Purely for the toggle slide feature
+			rowbody.hide();
+			ln_toggle.removeClass('toggle-up');
+			ln_toggle.find('.fa-sort-asc').addClass('fa-sort-desc').removeClass('fa-sort-asc');
+
+			$(this).closest(".part_info").find("input").prop('disabled',true);
+			$(this).closest(".part_info").find("button").prop('disabled',true);
+		} else {
+			rowbody.show();
+			ln_toggle.addClass('toggle-up');
+			ln_toggle.find('.fa-sort-desc').addClass('fa-sort-asc').removeClass('fa-sort-desc');
+
+			$(this).closest(".part_info").find("input").prop('disabled',false);
+			$(this).closest(".part_info").find("button").prop('disabled',false);
+
+			if(mode == 'Buy') {
+				$('.price-control').prop("disabled", false);
+
+				$('.sell-price').prop("disabled", true);
+				$('.sell-price').closest('.form-group').hide();
+
+				$('.product-results .qty input').prop("disabled", true);
+				//$('.first .qty input').prop("disabled", false);
+
+				$('.bid_inputs').show();
+				$('.seller_x').show();
+			} else {
+				$('.price-control').prop("disabled", true);
+
+				$('.sell-price').prop("disabled", false);
+				$('.sell-price').closest('.form-group').show();
+
+				$('.product-results .qty input').prop("disabled", false);
+				//$('.first .qty input').prop("disabled", true);
+
+				$('.bid_inputs').hide();
+				$('.seller_x').hide();
+			}
+		}
+
+	});
+
 
 	$(document).on("change", ".sales_mode", function(e){
 		var total_list = 0;
@@ -639,6 +705,12 @@
 		var mr = $(this).closest(".bg-availability, .bg-demand").find(".market-results:first");
 
 		mr.loadResults(2);
+	});
+
+	$(document).on("keydown",".bid-input",function(e){
+		if (e.keyCode == 13) {
+			e.preventDefault();
+		}
 	});
 
 
