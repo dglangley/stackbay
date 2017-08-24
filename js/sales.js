@@ -26,6 +26,7 @@
 
 			container.find('.part_loader').show();
 
+        	console.log(window.location.origin+"/json/sales.php?search_strs="+escape(search_str)+"&equipment_filter="+escape(filter)+"&ln="+ln);
 			$.ajax({
 		        url: 'json/sales.php',
 		        type: 'get',
@@ -77,6 +78,7 @@
 
 			e.preventDefault();
 
+        	console.log(window.location.origin+"/json/sales.php?type="+escape(type)+"&partid_csv="+escape(partid_csv)+"&ln="+ln);
 			$.ajax({
 				url: 'json/sales.php',
 		        type: 'get',
@@ -130,6 +132,7 @@
 			var ln = container.closest('.market-row').data("ln");
 			var type = 'date_filter';
 
+        	console.log(window.location.origin+"/json/sales.php?type="+escape(type)+"&partid_csv="+escape(partid_csv)+"&ln="+ln+"&start="+start+"&end="+end);
 			$.ajax({
 				url: 'json/sales.php',
 		        type: 'get',

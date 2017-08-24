@@ -1248,10 +1248,12 @@
                         rowHtml += '<div class="market-data market-company-'+row.cid+'"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
                             '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                         $.each(row.sources, function(i, src) {
-                        	if(src != 'import' && src != 'email') {
+							if (src=='email') {
+								rowHtml += '<i class="fa fa-email"></i>';
+							} else if (src != 'import') {
                            		rowHtml += '<img src="img/'+src.toLowerCase()+'.png" class="bot-icon" />';
-                        	}
-                        });
+							}
+						});
                         rowHtml += '&nbsp; <input type="text" data-type="'+type+'" class="form-control input-xxs market-price" value="'+row.price+'" '+
 									'data-date="'+row.date+'" data-cid="'+row.cid+'" onFocus="this.select()"'+inputDis+'/></div>';
                     });
