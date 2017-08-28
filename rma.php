@@ -39,6 +39,8 @@
 	$yesterday = '';
 	
 
+
+
 	function lastPrice($invid,$ps = 'sold',$before_date = ''){
 		//Search for the last purchased price based off an inventory id.
 		//If there are multiple, look for the most recent prior to the date of the search
@@ -294,6 +296,7 @@
 			*/
 			$rma_micro = qdb($rma_mic) or die(qe()." $rma_mic");
 			
+
 			$receive_check = '';
 			//This check is grouping line item information by the inventory ID. I should be able to 
 			foreach($rma_micro as $line_item){
@@ -332,13 +335,15 @@
 		
 		if($repair  || $build) {
 			//Check to see if these items have already been RMA'd off this particular sales order
-			$limiter = "SELECT `inventoryid`
-			FROM `returns` r , `return_items` ri, inventory i
-			WHERE order_number=".prep($so_number)." 
-			AND order_type = 'Repair' 
-			AND r.`rma_number` = ri.`rma_number`
-			AND i.id = `inventoryid`
-			AND i.`qty` > 0;";
+			// $limiter = "SELECT `inventoryid`
+			// FROM `returns` r , `return_items` ri, inventory i
+			// WHERE order_number=".prep($so_number)." 
+			// AND order_type = 'Repair' 
+			// AND r.`rma_number` = ri.`rma_number`
+			// AND i.id = `inventoryid`
+			// AND i.`qty` > 0;";
+
+			$limiter = "SELECT i.id as inventoryid FROM `repair_items` ri, inventory i WHERE ri.ro_number = ".prep($so_number)." AND i.repair_item_id = ri.id;";
 		} else {
 			//Check to see if these items have already been RMA'd off this particular sales order
 			$limiter = "SELECT `inventoryid`
@@ -354,9 +359,11 @@
 		$limit = '';
 		$limit_arr = array();
 
-		if($repair) {
+		if($repair || $build) {
 			//Check to see if these items have already been RMA'd off this particular sales order
-			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND i.`id` = `ri`.`invid` AND i.serial_no IS NOT NULL;";
+			// $sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND i.`id` = `ri`.`invid` AND i.serial_no IS NOT NULL;";
+
+			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND i.repair_item_id = `ri`.`id` AND i.serial_no IS NOT NULL;";
 
 			//echo $sales_micro;
 		} else {
@@ -392,7 +399,9 @@
 				$rma_items[$partid][$invid]['price'] = '';
 				$rma_items[$partid][$invid]['history'] = getItemHistory($invid,"exchange");
 				if($limit_arr[$invid]){
-					$rma_items[$partid][$invid]['already'] = true;
+					if(! $repair) {
+						$rma_items[$partid][$invid]['already'] = true;
+					}
 				} 
 			}
 		}
