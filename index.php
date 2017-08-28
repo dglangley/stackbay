@@ -479,6 +479,10 @@ if (! $r['partid']) { return ($results); }
 	}
 ?>
 
+		<?php if (! $filtersOn AND count($lines)==1 AND rand(0,2)==2) { ?>
+			<h3 class="text-center" style="margin:0px 0px 20px 0px">Sales view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/sales_report.php?s=<?php echo $s; ?>">Preview it now.</a></h3>
+		<?php } ?>
+
         <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
         <div class="table-products">
             <div class="row">

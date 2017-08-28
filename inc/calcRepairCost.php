@@ -1,4 +1,6 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
+
 	function calcRepairCost($ro_number,$repair_item_id=0,$inventoryid=0,$include_freight=false) {
 		if (! $ro_number) { return (0); }
 
