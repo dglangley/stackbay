@@ -190,6 +190,9 @@
 
 				$invid = qid();
 
+				$query = "UPDATE repair_items SET invid = $invid WHERE id = $rlineid;";
+				qdb($query) or die(qe()." $query");
+
 				//If this is a build then insert into inventory cost log and inventory cost
 				if($build) {
 					setCost($invid);
@@ -202,6 +205,7 @@
 						$build_price = $result['price'];
 					}
 				}
+
 			} else {
 				//return"ALREADY SCANNED THIS PART FOR THIS RECORD";
 				$result = mysqli_fetch_assoc($res);
@@ -209,6 +213,9 @@
 				$invid = $result['id'];
 
 				$query = "UPDATE inventory SET repair_item_id = $rlineid WHERE id = $invid;";
+				qdb($query) or die(qe()." $query");
+
+				$query = "UPDATE repair_items SET invid = $invid WHERE id = $rlineid;";
 				qdb($query) or die(qe()." $query");
 			}
 		}
