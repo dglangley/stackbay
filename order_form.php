@@ -90,6 +90,8 @@
 	} else if ($o['type'] == "Invoice"){
 	 	$inv_info = getInvoice($order_number);
 	 	$origin = $inv_info['order_number'];
+	} else if ($o['type'] == "Sale" AND $order_number!='New') {
+		$sales_order = $order_number;
 	} else if($o['type'] == "Repair") {
 
 		$repair_billable = true;
@@ -326,12 +328,14 @@
 								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn btn-default btn-sm pull-left"><i class="fa fa-pencil"></i></a> ';
 							}
 
-							if (($o['type']=='Repair' AND strtolower($status)<>'completed' AND strtolower($status)<>'repaired') OR $o['type']<>'Repair') {
+							if (($o['type']=='Repair' AND strtolower($status)<>'completed' AND strtolower($status)<>'repaired') OR ($o['type']<>'Repair' AND $o['type']<>'Sale')) {
 								echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn btn-default btn-sm pull-left text-warning"><i class="fa fa-qrcode"></i> Receive</a> ';
 							}
 
 							if (strtolower($status) != 'voided' && strtolower($status) != 'canceled' && $status) {
-								if ($o['type']=='Repair' AND (strtolower($status)=='completed' OR strtolower($status)=='repaired') AND ($sales_order OR $tracking OR $received_inventory OR $order_number!='New')) {
+								if ($o['type']=='Sale' AND $order_number!='New') {
+									echo '<a class="btn btn-primary btn-sm" href="/shipping.php?on='.$order_number.'"><i class="fa fa-truck"></i> Ship</a>';
+								} else if ($o['type']=='Repair' AND (strtolower($status)=='completed' OR strtolower($status)=='repaired') AND ($sales_order OR $tracking OR $received_inventory OR $order_number!='New')) {
 									if ($order_number!='New') { echo '<form id="repair_ship" action="repair_shipping.php" method="POST">'; }
 
 									echo '
@@ -547,7 +551,7 @@
 				</div>
 				<div class="col-md-4 text-right">
 <?php
-					if ($o['type']=='Sale' OR $repair_billable) {
+					if ($order_number!='New' AND ($o['type']=='Sale' OR $repair_billable)) {
 						if($o['type'] == 'Sale') { 
 							$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
 						} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
