@@ -125,7 +125,7 @@
 		$returns = array();
 
 		$query = "SELECT ii.line_number, c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
-		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.partid, ii.amount, s.packageid ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.partid, ii.amount, s.packageid, ii.memo ";
 		$query .= "FROM companies c, invoices i, invoice_items ii ";
 		$query .= "LEFT JOIN invoice_shipments s ON ii.id = s.invoice_item_id ";
 		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no ";
@@ -148,6 +148,17 @@
 			}
 			$r['price'] = $r['amount'];
 
+			// a place for misc invoiced charges (COD Charges, etc)
+			if (! $r['partid']) {
+				$entry = $r;
+				$entry['descr'] = $r['memo'];
+				$entry['avg_cost'] = 0;
+				$entry['actual_cost'] = 0;
+
+				$entries[] = $entry;
+				continue;
+			}
+
 			if (! $r['packageid']) {
 				$query2 = "SELECT items.id item_id, i.qty, i.serial_no, i.id inventoryid, part, heci ";
 				$query2 .= "FROM ".$T['items']." items, inventory_history h, inventory i, parts ";
@@ -155,6 +166,7 @@
 				if ($r['line_number']) { $query2 .= "= '".$r['line_number']."' "; } else { $query2 .= "IS NULL "; }
 				$query2 .= "AND (h.field_changed = '".$T['item_label']."' AND h.value = items.id) ";
 				$query2 .= "AND h.invid = i.id AND i.partid = parts.id ";
+				$query2 .= "AND items.partid = '".$r['partid']."' ";
 				$query2 .= "GROUP BY h.invid, h.value; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) {
@@ -222,6 +234,7 @@
 				}
 				$query2 .= ") AND (h.field_changed = '".$T['item_label']."' AND h.value = items.id) ";
 				$query2 .= "AND h.invid = i.id AND i.partid = parts.id ";
+				$query2 .= "AND items.partid = '".$r['partid']."' ";
 				$query2 .= "GROUP BY h.invid, h.value; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) {

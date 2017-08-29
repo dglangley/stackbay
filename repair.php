@@ -317,6 +317,7 @@
 	if(!empty($items)){
 		foreach($items as $item){
 			$status;
+			$inventoryid;
 
 			$query = "SELECT serial_no, id, status FROM inventory WHERE repair_item_id = ".prep($item['id'])." AND serial_no IS NOT NULL;";
 			$result = qdb($query) or die(qe() . ' ' . $query);
@@ -334,11 +335,10 @@
 				} else {
 					$r = mysqli_fetch_assoc($result);
 					$serial = $r['serial_no'];
-					//$invid = $r['id']; // From what I can tell this is never used
+					$inventoryid = $r['id']; // From what I can tell this is never used
 					$status = $r['status'];
 				}
 			}
-			//echo('<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">');
 			$ref1 = $item['ref_1'];
 			if($item['ref_1_label'] == "return_item_id"){
 				if(!$rma_number){
@@ -350,6 +350,19 @@
 				</b>&nbsp;<a href="/rma.php?rma='.$rma_number.'">'.$rma_number.'</a>
 				<br><br>';
 			}
+
+			$btn_value = "test_out";
+			$btn_title = "Mark as Tested";
+			$btn_style = " btn-flat info";
+			if (strtolower($status=='in repair')) {
+				$btn_value = "test_in";
+				$btn_title = "Send to Test";
+				$btn_style = "";
+			}
+			$btn_disabled = '';
+			if (! $serial OR $ticketStatus) {
+				$btn_disabled = ' disabled';
+			}
 			if(!$build) {
 				$item_row .= '
 				<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
@@ -358,12 +371,14 @@
 					<td>'.$ref1.'</td>
 					<td>'.(($item['ref_2']) ? $item['ref_2'] : "").'</td>
 					<td>'.format_price($item['price']).'</td>
-					<td>
-						<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-						<button class="btn btn-sm btn-primary" type="submit" name="type" value="'.((strtolower($status) == 'in repair')? "test_in":"test_out").'" '.((!$serial || $ticketStatus) ? 'disabled' : '').'>'.((strtolower($status) == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+					<td class="text-right">
+						<input type="hidden" name="inventoryid" value="'.$inventoryid.'">
+						<input type="hidden" name="repair_item_id" value="'.$item['id'].'">
+						<button class="btn btn-sm btn-default'.$btn_style.'" type="submit" name="type" value="'.$btn_value.'" '.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
 					</td>
 				</tr>';
 			} else {
+
 				if(!empty($serial)) {
 					$init = true;
 
@@ -377,14 +392,23 @@
 					}
 					
 					foreach ($serial as $build_item) {
+						$btn_disabled = '';
+						if (! $build_item['serial_no']) { $btn_disabled = ' disabled'; }
+						$btn_title = "Mark as Tested";
+						$btn_style = " btn-flat info";
+						if (strtolower($built_item['status'])=='shelved') {
+							$btn_title = "Send to Test";
+							$btn_style = "";
+						}
+
 						$item_row .= '
 						<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 							<td>'.($init ? format($item['partid'], true) : '').'</td>
 							<td>'.($init ? format_price($build_price) : '').'</td>
 							<td>'.$build_item['serial_no'].'</td>
-							'.($init ? '<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">' : '') . '
-							<td>
-								<button class="btn btn-sm btn-primary" type="submit" name="build_test" value="'.$build_item['id'].'" '.((!$build_item['serial_no']) ? 'disabled' : '').'>'.((strtolower($build_item['status']) == 'shelved')? "Send to Testing":"Mark as Tested").'</button>
+							'.($init ? '<input type="hidden" name="repair_item_id" value="'.$item['id'].'">' : '') . '
+							<td class="text-right">
+								<button class="btn btn-sm btn-primary'.$btn_style.'" type="submit" name="build_test" value="'.$build_item['id'].'"'.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
 							</td>
 						</tr>';
 						$init = false;
@@ -397,7 +421,7 @@
 						<td></td>
 						<td>
 							<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-							<button class="btn btn-sm btn-primary" type="submit" name="type" disabled>'.((strtolower($status) == 'in repair')? "Send to Testing":"Mark as Tested").'</button>
+							<button class="btn btn-sm btn-primary" type="submit" name="type" disabled><i class="fa fa-terminal"></i> '.((strtolower($status) == 'in repair')? "Send to Test":"Mark as Tested").'</button>
 						</td>
 					</tr>';
 				}
@@ -515,15 +539,15 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if($build): ?>
-						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
-					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
-						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
-					<?php endif; ?>
-
 					<?php if(!$build || ($build && $ticketStatus)) { ?>
-						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn-flat pull-left"><i class="fa fa-truck"></i> Receive</a>
+						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning pull-left"><i class="fa fa-qrcode"></i> Receive</a>
 					<?php } ?>
+
+					<?php if($build): ?>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
+						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<?php endif; ?>
 				</div>
 				
 				<div class="col-md-4 text-center">
@@ -542,13 +566,11 @@
 							echo ("<b><span style='color:red;'> [VOIDED]</span></b>");
 						}
 
-						if($ticketStatus){
-							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($ticketStatus), 'unrepairable') !== false ? 'danger' : (strpos(strtolower($ticketStatus), 'trouble') ? 'warning' : 'success')).'">' .ucwords($ticketStatus) . '</span>) ';
-						}
 						echo"</h2>";
 					?>
+					<div class="text-center info"><?=$claimed;?></div>
 				</div>
-				<div class="col-md-4">
+				<div class="col-md-4 text-right">
 					<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
 					<input type="text" name="techid" value="<?=$U['id'];?>" class="hidden">
 					<?php if($build) { ?>
@@ -561,19 +583,18 @@
 
 					<?php if($check_status == 'opened' || !$check_status) { ?>
 						<input type="text" name="check_in" value="check_in" class="hidden">
-						<button class="btn-flat success pull-right btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Check In</button>
+						<button class="btn btn-info btn-sm btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
 						<input type="text" name="check_in" value="check_out" class="hidden">
-						<button class="btn-flat danger pull-right btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Check Out</button>
+						<button class="btn btn-warning btn-sm btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Check Out</button>
 					<?php } ?>
 
 					<?php if(!$claimed){ ?>
-						<button class="btn-flat info pull-right btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
+						<button class="btn btn-success btn-sm btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
-						<button class="btn-sm btn btn-primary pull-right btn-update" data-toggle="modal" data-target="#modal-repair" style="margin-top: 11px; margin-right: 10px; margin-left: 10px;" <?=($ticketStatus ? 'disabled' : '');?>>
-							Complete Ticket
+						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-repair" <?=($ticketStatus ? 'disabled' : '');?>>
+							<i class="fa fa-save"></i> Complete Ticket
 						</button>
-						<p class="pull-right" style="margin-top: 18px;"><?=$claimed;?></p>
 					<?php } ?>		
 				</div>
 			</div>
@@ -585,6 +606,19 @@
 				</div>
 			<?php endif; ?>
 		</form>	
+
+<?php
+		if ($ticketStatus) {
+			echo '
+				<div class="alert alert-default" style="padding:5px; margin:0px">
+					<h3 class="text-center">
+						<span class="ticket_status_'.(strpos(strtolower($ticketStatus), 'unrepairable') !== false || strpos(strtolower($ticketStatus), 'voided') !== false || strpos(strtolower($ticketStatus), 'canceled') !== false ? 'danger' : (strpos(strtolower($ticketStatus), 'trouble') ? 'warning' : 'success')).'">' .ucwords($ticketStatus) . '</span>
+					</h3>
+				</div>
+			';
+		}
+?>
+
 			<div class="loading_element">
 				<div class="row remove-margin">
 					<!--================== Begin Left Half ===================-->
@@ -700,7 +734,7 @@
 														<div class="input-group">
 															<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
 															<span class="input-group-btn">
-																<button class="btn btn-sm btn-primary" name="type" value='note_log' id="submit" <?=(($ticketStatus && !$build) ? 'disabled' : '');?>>Log</button>
+																<button class="btn btn-sm btn-primary" name="type" value='note_log' id="submit" <?=(($ticketStatus && !$build) ? 'disabled' : '');?> data-toggle="tooltip" data-placement="bottom" title="Save Entry"><i class="fa fa-save"></i></button>
 															</span>
 														</div>
 													</div>
@@ -737,10 +771,12 @@
 												<th>Available</th>
 												<th>Pulled</th>
 												<th>Price Per Unit</th>
-												<th>EXT Price</th>
-				        						<th><button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
+												<th>Ext Price</th>
+				        						<th data-toggle="tooltip" data-placement="left" title="Request Components">
+													<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status middle modal_component pull-right" type="submit" <?=($ticketStatus ? 'disabled' : '');?>>
 											        	<i class="fa fa-plus"></i>	
-											        </button></th>
+											        </button>
+												</th>
 											</tr>
 										</thead>
 										<?php
@@ -762,6 +798,7 @@
 														$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
 														$query .= "WHERE po.po_number = ".prep($comp['po_number'])." AND pr.partid = ".prep($comp['partid'])." ";
 														$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $repair_order ";
+														$query .= "AND rc.ro_number = pr.ro_number ";
 														$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
 														$query .= "GROUP BY i.id; ";
 														$result = qdb($query) OR die(qe().'<BR>'.$query);

@@ -597,6 +597,11 @@ input[type="text"].inline {
 .alert i.fa {
 	vertical-align:middle;
 }
+.alert-default {
+	background-color:#fff;
+	border-color:#cfcfcf;
+	text-transform:uppercase;
+}
 
 /***** HEADER TAGS WITH LEADING AND TRAILING LINES *****/
 .header-border {
@@ -1222,6 +1227,10 @@ hr.no-margin {
 .btn-flat.gray {
 	color:#fff;
 }
+.btn-brown {
+	background-color:#ad683a;
+	color:#fff;
+}
 #date-ranges {
    width:436px;
    height:30px;
@@ -1264,6 +1273,24 @@ tr.grayout td a {
 }
 .btn-default.inverse {
 	color:#fff !important;
+}
+.btn-default.text-muted {
+  color: #999999;
+}
+.btn-default.text-primary {
+  color: #428bca;
+}
+.btn-default.text-warning {
+  color: #c09853;
+}
+.btn-default.text-danger {
+  color: #b94a48;
+}
+.btn-default.text-success {
+  color: #468847;
+}
+.btn-default.text-info {
+  color: #3a87ad;
 }
 
 
@@ -1532,7 +1559,8 @@ a > .icon-ar.icon-ar-inverse:hover {
   margin-top: 0;
 }
 .content-box.box-primary {
-  background-color: #c37744;
+  background-color: #ad683a;
+  /*background-color: #c37744;*/
   color: #fff;
   border: solid 1px #245ebe;
 }
@@ -1777,8 +1805,12 @@ a.bg-warning:focus,a.bg-warning:hover{background-color:#f7ecb5}
 .bg-danger{background-color:#d9534f}
 a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 
+.bg-brown{color:#fff;background-color:#ad683a;}
+.text-brown{color:#ad683a !important;}
+/*
 .bg-brown{color:#fff;background-color:#c37744;}
 .text-brown{color:#c37744 !important;}
+*/
 .text-black{color:#000000 !important;}
 .long-text { max-height:200px; overflow-y:auto; }
 .text-danger { color:#b94a48 !important; }

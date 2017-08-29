@@ -318,84 +318,75 @@
 				include_once $rootdir.'/modal/repair_receive.php';
 				include_once $rootdir.'/modal/trello.php';
 			?>
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:<?=(($status && $o['repair'] && $order_number!='New') ? '75':'50')?>px;background-color:<?=$o['color']?>;">
-				
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;background-color:<?=$o['color']?>; height:60px">
 				<div class="col-md-4">
 					<?php
 						if($order_number != "New"){
 							if($o['type'] == 'Invoice'){
-								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn-flat pull-left"><i class="fa fa-list"></i></a> ';
+								echo '<a href="/order_form.php?on='. $origin .'&ps=s" class="btn btn-default btn-sm pull-left"><i class="fa fa-pencil"></i></a> ';
 							}
-							echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn-flat pull-left"><i class="fa fa-truck"></i> '.($o['type'] == 'Repair' || $build_number ? "Receive" : '').'</a> ';
-							
-							if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { ?>
-								<?php if($sales_order && $o['type'] == 'Repair') { ?>
-									<div class ="btn-group pull-left">
-										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
-											<i class="fa fa-truck"></i> Ship
+
+							if (($o['type']=='Repair' AND strtolower($status)<>'completed' AND strtolower($status)<>'repaired') OR $o['type']<>'Repair') {
+								echo '<a href="/'.$o['url'].'.php?on=' . ($build_number ? $build_number . '&build=true' : (($origin)? $origin : $order_number)) . '" class="btn btn-default btn-sm pull-left text-warning"><i class="fa fa-qrcode"></i> Receive</a> ';
+							}
+
+							if (strtolower($status) != 'voided' && strtolower($status) != 'canceled' && $status) {
+								if ($o['type']=='Repair' AND (strtolower($status)=='completed' OR strtolower($status)=='repaired') AND ($sales_order OR $tracking OR $received_inventory OR $order_number!='New')) {
+									if ($order_number!='New') { echo '<form id="repair_ship" action="repair_shipping.php" method="POST">'; }
+
+									echo '
+									<div class="btn-group pull-left">
+										<button type="button" class="btn btn-default btn-sm text-success dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-truck"></i> Ship Manager
 											<span class="caret"></span>
 			                            </button>
 			                            <ul class="dropdown-menu">
+									';
+
+									if ($sales_order) {
+										echo '
 			                            	<li>
-												<a href="/shipping.php?on=<?=$sales_order;?>"><i class="fa fa-truck"></i> Ship</a>
+												<a href="/shipping.php?on='.$sales_order.'"><i class="fa fa-truck"></i> Ship</a>
 											</li>
-										</ul>
-									</div>
-								<?php } else if($tracking && $o['type'] == 'Repair') { ?>
-									<div class ="btn-group pull-left">
-										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
-											<i class="fa fa-truck"></i> Ship
-											<span class="caret"></span>
-			                            </button>
-			                            <ul class="dropdown-menu">
+										';
+									} else if ($tracking) {
+										echo '
 			                            	<li>
-												<span style="padding: 3px 20px;">Tracking# <?=$tracking;?></span>
+												<span style="padding: 3px 5px;">Trk# '.$tracking.'</span>
 											</li>
-										</ul>
-									</div>
-								<?php } else if($received_inventory && $o['type'] == 'Repair') { ?>
-									<div class ="btn-group pull-left">
-										<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
-											<i class="fa fa-truck"></i> Ship
-											<span class="caret"></span>
-			                            </button>
-			                            <ul class="dropdown-menu">
+										';
+									} else if ($received_inventory) {
+										echo '
 			                            	<li>
-												<span style="padding: 3px 20px;">Returned to Stock</span>
+												<span style="padding: 3px 5px;">Returned to Stock</span>
 											</li>
-										</ul>
-									</div>
-								<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
-									<form id="repair_ship" action="repair_shipping.php" method="POST">
-										<div class ="btn-group pull-left">
-											<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
-												<i class="fa fa-truck"></i> Ship
-												<span class="caret"></span>
-				                            </button>
-				                            <ul class="dropdown-menu">
+										';
+									} else if ($order_number!='New') {
+										echo '
 				                            	<li>
-													<a class="ship" data-ship="ship" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-truck"></i> Ship</a>
+													<a class="ship" data-ship="ship" href="/repair_shipping.php?ro_number='.$order_number.'"><i class="fa fa-truck"></i> Ship</a>
 												</li>
 												<li>
-													<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="<?=$order_number?>" href="#"><i class="fa fa-list"></i> Return to Stock</a>
+													<a class="ship" data-ship="stock" id="stock_order" type="submit" name="ro_number" value="'.$order_number.'" href="#"><i class="fa fa-qrcode"></i> Return to Stock</a>
 												</li>
-											</ul>
-										</div>
-										<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
-									</form>
-								<?php } ?>
-							<?php }
+										';
+									}
+									echo '
+										</ul>
+									</div>
+									';
+								}
+							}
+
+							if($o['type'] == 'Builds' OR $o['type']=='Repair'){
+								$build_on = '';
+								if ($o['type']=='Builds') { $build_on = '&build=true'; }
+								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) . $build_on .'" class="btn btn-primary btn-sm pull-left"><i class="fa fa-wrench"></i> Tech View</a> ';
+							} else if ($o['type']=='Purchase') {
+								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn btn-brown btn-sm pull-left"><i class="fa fa-file-pdf-o"></i></a>';
+							}
 							if($o['type'] == 'Builds'){
-								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'&build=true" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
-							}
-							if($o['type'] == 'Repair'){
-								echo '<a href="/repair.php?on='. ($build_number ? $build_number : $order_number) .'" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a> ';
-							}
-							if($o['type'] != 'Repair' && $o['type'] != 'Builds') {
-								echo '<a target="_blank" href="/docs/'.strtoupper($o['short']).$order_number.'.pdf" class="btn-flat pull-left"><i class="fa fa-file-pdf-o"></i></a>';
-							}
-							if($o['type'] == 'Builds'){
-								echo '<a href="/builds_management.php?on='.$build_number.'" class="btn-flat pull-left">Manage</a>';
+								echo '<a href="/builds_management.php?on='.$build_number.'" class="btn btn-default btn-sm pull-left">Edit</a>';
 							}
 						}
 
@@ -407,21 +398,14 @@
 
 								$output = '
 								<div class ="btn-group">
-									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-		                              <i class="fa fa-credit-card"></i>
+									<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+		                              <i class="fa fa-folder-open-o"></i>
 		                              <span class="caret"></span>
 		                            </button>
 									<ul class="dropdown-menu">
 								';
 
 								$output .= getPackagesFix($order_number, $o['type']);
-
-								// if($packages) {
-								// 	foreach($packages as $item){
-
-								// 	}
-								// }
-								//Check to see if this order has a valid package to create an invoice
 
 								$output .= '
 										<li>
@@ -433,64 +417,6 @@
 								</div>
 								';
 								echo $output;
-
-							// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
-							// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
-							if($o['type'] == 'Sale') { 
-								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
-							} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
-								$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
-							}
-
-							if(!$repair_billable && $o['repair']) {
-								$output = '';
-								//If the repair  is not billable don't allow the user to create an RMA for this order
-							} else {
-								$rows = qdb($rma_select) or die(qe().$rma_select);
-								$output = '
-							<div class ="btn-group">
-								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-	                              <i class="fa fa-question-circle-o"></i>
-	                              <span class="caret"></span>
-	                            </button>
-								';
-	                        
-							$output .= '<ul class="dropdown-menu">';
-							if(mysqli_num_rows($rows)>0){
-									foreach ($rows as $rma) {
-										$output .= '
-										<li>
-											<div class = "row rma-list-items">
-												<div class = "col-md-3">
-													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-														<i class="fa fa-list"></i>
-													</a>
-												</div>
-												<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
-													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-														RMA #'.$rma['rma_number'].'
-													</a>	
-												</div>
-												<div class = "col-md-3 pull-left">
-													<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
-														<i class="fa fa-truck"></i>
-													</a>
-												</div>
-											</div>
-										</li>
-										';
-									}
-								}
-								$output .= '<li>
-												<a href="/rma.php?on='.$order_number.''.($o['repair'] ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
-													ADD RMA <i class ="fa fa-plus"></i>
-												</a>
-											</li>
-			                        	</ul>
-									</div>
-								';
-							}
-							echo $output;
 						}/* end if($order_number != "New" && ($o['type'] == 'Sale' || $o['type'] == 'Repair'))*/
 
 						if($order_number != "New" && $o['purchase']){
@@ -498,8 +424,8 @@
 							$rows = qdb($bills_selector);
 							$output = '
 								<div class ="btn-group">
-									<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-		                              <i class="fa fa-credit-card"></i>
+									<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+		                              <i class="fa fa-folder-open-o"></i>
 		                              <span class="caret"></span>
 		                            </button>
 									';
@@ -510,7 +436,7 @@
 									$output .= '
 										<li>
 											<a href="/bill.php?bill='.$bill['bill_no'].'">
-											Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
+												Bill #'.$bill['bill_no'].' ('.format_date($bill['date_created'],'n/j/Y').') 
 											</a>
 										</li>';
 								}
@@ -532,15 +458,15 @@
 						if($order_number != "New"){
 							$query = 'SELECT * FROM payment_details WHERE order_number = '.prep($order_number).' AND order_type = "'.($o['type'] == 'Sale' ? 'so' : 'po').'";';
 							$rows = qdb($query);
-							$output = '
+							if(mysqli_num_rows($rows) > 0){
+								$output = '
 							<div class ="btn-group">
-								<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
+								<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
 	                              <i class="fa fa-usd" aria-hidden="true"></i>
 	                              <span class="caret"></span>
 	                            </button>';
 	                            
-							$output .= '<ul class="dropdown-menu">';
-							if(mysqli_num_rows($rows) > 0){
+								$output .= '<ul class="dropdown-menu">';
 								foreach ($rows as $payment) {
 									$number = 0;
 									$amount = 0;
@@ -568,17 +494,19 @@
 												</a>
 											</li>';
 								}
-							}
-							$output .= '
+/*
 											<li>
 												<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment">
 													<i class="fa fa-plus"></i> Add New Payment
 												</a>
 											</li>
+*/
+								$output .= '
 										</ul>
 									</div>
-							';
-							echo $output;
+								';
+								echo $output;
+							}
 						}
 ?>
 					
@@ -603,14 +531,6 @@
 								echo "# $build_number";
 							}
 						}
-
-						if($status && $o['type'] == 'Repair' && $order_number!='New'){
-							echo '<br>(<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false || strpos(strtolower($status), 'canceled') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>) ';
-						}
-
-						if ($order_number!='New'){
-							echo("<br><span style = 'font-size:14px;'>".$ORDER['fcreated']."</span>");
-						}
 					} else if ($o['invoice']){
 						echo("Invoice# ".$order_number);
 					} else if ($o['rtv']){
@@ -620,18 +540,88 @@
 						echo ("<b><span style='color:red;'> [".strtoupper($status)."]</span></b>");
 					}
 					echo"</h2>";
+					if ($order_number!='New'){
+						echo '<div class="info text-center" style="font-size:14px;">'.$ORDER['fcreated'].'</div>';
+					}
 					?>
 				</div>
-				<div class="col-md-4">
-					<button class="btn-flat btn-sm <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?> pull-right" id = "save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
-						<?=($order_number=="New") ? 'Create' :'Save'?>
+				<div class="col-md-4 text-right">
+<?php
+					if ($o['type']=='Sale' OR $repair_billable) {
+						if($o['type'] == 'Sale') { 
+							$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+						} else if($o['type'] == 'Repair' || $o['type'] == 'Builds') { 
+							$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Repair" AND order_number = "'.$order_number.'"';
+						}
+						$rows = qdb($rma_select) or die(qe().$rma_select);
+						echo '
+							<div class ="btn-group">
+								<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+	                              <i class="fa fa-question-circle-o"></i>
+									Support
+	                              <span class="caret"></span>
+	                            </button>
+						';
+	                        
+						echo '<ul class="dropdown-menu text-left">';
+						if(mysqli_num_rows($rows)>0){
+							foreach ($rows as $rma) {
+								echo '
+										<li>
+											<div class = "row rma-list-items">
+												<div class = "col-md-3">
+													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+														<i class="fa fa-pencil"></i>
+													</a>
+												</div>
+												<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
+													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+														RMA #'.$rma['rma_number'].'
+													</a>	
+												</div>
+												<div class = "col-md-3 pull-left">
+													<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
+														<i class="fa fa-truck"></i>
+													</a>
+												</div>
+											</div>
+										</li>
+								';
+							}
+						}
+						echo '<li>
+								<a href="/rma.php?on='.$order_number.''.($o['repair'] ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
+									<i class ="fa fa-plus"></i>
+									Create RMA
+								</a>
+							</li>
+                       	</ul>
+					</div>
+						';
+					}
+?>
+
+					<button class="btn btn-success <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?>" id = "save_button" data-validation="left-side-main">
+						<i class="fa fa-save"></i> <?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>
 			</div>
-			
+
+<?php
+			if($status && $o['type'] == 'Repair' && $order_number!='New'){
+				echo '
+			<div class="alert alert-default" style="padding:5px; margin:0px">
+				<h3 class="text-center">
+					<span class="ticket_status_'.(strpos(strtolower($status), 'unrepairable') !== false || strpos(strtolower($status), 'voided') !== false || strpos(strtolower($status), 'canceled') !== false ? 'danger' : (strpos(strtolower($status), 'trouble') ? 'warning' : 'success')).'">' .ucwords($status) . '</span>
+				</h3>
+			</div>
+				';
+			}
+?>
 			
 			<!-- Row declaration for splitting the two "halves of the page  -->
 			<div class="row order-data remove-margin">
+			
 			
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order">
@@ -660,7 +650,7 @@
 		                        		//echo("<option>".$old_rep."</option>");
 		                        	}
 								?>
-			                    <select id="sales-rep" data-creator = <?=$U['contactid']?> <?=($set_rep ? 'disabled' : '');?>>
+			                    <select id="sales-rep" data-creator = <?=$U['contactid']?> >
 	
 			                        <?php
 			                        	//REP OUTPUT
@@ -782,7 +772,7 @@
 						            </td>
 					        		<td><input class='form-control input-sm' readonly='readonly' tabIndex='-1' type='text' name='ni_ext' id = 'new_item_total' placeholder='0.00'></td>
 					                <td colspan='2' id = 'check_collumn'> 
-					                    <a class='btn-sm btn-flat success pull-right multipart_sub' >
+					                    <a class='btn btn-sm btn-success pull-right multipart_sub' >
 					                    <i class='fa fa-save fa-4' aria-hidden='true'></i></a>
 					                </td>
 								</tr>

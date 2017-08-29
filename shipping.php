@@ -313,64 +313,15 @@
 		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #f7fff1">
 			<div class="col-md-4">
 				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
-				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
+				<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=s" class="btn btn-default btn-sm pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 				<?php
 						$isoq = "SELECT * FROM iso WHERE so_number = ".prep($order_number).";";
 						$isor = qdb($isoq) OR die(qe() . ' ' . $isoq);
 
 						 if (mysqli_num_rows($isor)>0) {
 					?>
-				<a target="_blank" href="/iso-form.php?on=<?=$order_number;?>" class="btn-flat pull-left">QC</a>
+				<a target="_blank" href="/iso-form.php?on=<?=$order_number;?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-check-square-o"></i> QC</a>
 				<?php }} ?>
-<?php
-				if(is_numeric($order_number)){
-					// echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
-					// echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
-					$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
-					$rows = qdb($rma_select);
-						$output = '
-						<div class ="btn-group">
-							<button type="button" class="btn-flat dropdown-toggle" data-toggle="dropdown">
-                              <i class="fa fa-question-circle-o"></i>
-                              <span class="caret"></span>
-                            </button>';
-                        
-						$output .= '<ul class="dropdown-menu">';
-						// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
-						if(mysqli_num_rows($rows)>0){
-							foreach ($rows as $rma) {
-								$output .= '
-									<li>
-										<div class = "row rma-list-items">
-											<div class = "col-md-3">
-												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-													<i class="fa fa-list"></i>
-												</a>
-											</div>
-											<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
-												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
-													RMA #'.$rma['rma_number'].'
-												</a>	
-											</div>
-											<div class = "col-md-3 pull-left">
-												<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
-													<i class="fa fa-truck"></i>
-												</a>
-											</div>
-										</div>
-									</li>';
-							}
-						}
-						$output .= '<li>
-										<a href="/rma.php?on='.$order_number.'">
-											ADD RMA <i class ="fa fa-plus"></i>
-										</a>
-									</li>';
-                        $output .= "</ul>";
-						$output .= "</div>";
-						echo $output;
-				}
-?>
 			</div>
 			
 			<div class="col-md-4 text-center">
@@ -394,8 +345,58 @@
 					echo"</h2>";
 				?>
 			</div>
-			<div class="col-md-4">
-				<button class="btn-flat success pull-right btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>" style="margin-top: 10px; margin-right: 10px;">Complete Order</button>
+			<div class="col-md-4 text-right">
+<?php
+				if(is_numeric($order_number)){
+					$rma_select = 'SELECT rma_number FROM `returns` where order_type = "Sale" AND order_number = "'.$order_number.'"';
+					$rows = qdb($rma_select);
+					if(mysqli_num_rows($rows)>0){
+						$output = '
+						<div class ="btn-group">
+							<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+	                            <i class="fa fa-question-circle-o"></i>
+								Support
+	                            <span class="caret"></span>
+	                        </button>
+						';
+                        
+						$output .= '<ul class="dropdown-menu">';
+						foreach ($rows as $rma) {
+							$output .= '
+									<li>
+										<div class = "row rma-list-items">
+											<div class = "col-md-3">
+												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+													<i class="fa fa-list"></i>
+												</a>
+											</div>
+											<div class = "col-md-6" style="padding-left:0px;padding-right:0px;">
+												<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-right">
+													RMA #'.$rma['rma_number'].'
+												</a>	
+											</div>
+											<div class = "col-md-3 pull-left">
+												<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
+													<i class="fa fa-truck"></i>
+												</a>
+											</div>
+										</div>
+									</li>
+							';
+						}
+						$output .= '<li>
+										<a href="/rma.php?on='.$order_number.'">
+											ADD RMA <i class ="fa fa-plus"></i>
+										</a>
+									</li>
+								</ul>
+						</div>
+						';
+						echo $output;
+					}
+				}
+?>
+				<button class="btn btn-success btn-update" id="iso_report" data-datestamp = "<?= getDateStamp($order_number); ?>"><i class="fa fa-save"></i> Complete</button>
 			</div>
 		</div>
 		
@@ -584,7 +585,6 @@
 	
 										<?php endforeach; ?>
 										</div>
-										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style="margin-top: -40px;"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 									</td>
 									<td class="remaining_qty" style="padding-top: 15px !important;" data-qty="<?php echo $item['qty'] - $item['qty_shipped']; ?>">
 										<?php echo $item['qty'] - $item['qty_shipped']; ?>
@@ -599,7 +599,6 @@
 										<?php echo (!empty($item['delivery_date']) ? date_format(date_create($item['delivery_date']), "m/d/Y") : ''); ?>
 									</td>
 									<td>
-										<!--<button class="btn-sm btn-flat pull-right serial-expand" data-serial="serial-<?=$item['id'] ?>"><i class="fa fa-list" aria-hidden="true"></i></button>-->
 									</td>
 								</tr>
 								

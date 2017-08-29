@@ -5,22 +5,30 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
-	function triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in){
+	function triggerActivity($ro_number, $repair_item_id, $inventoryid=0, $notes, $techid, $trigger, $check_in){
+		$now = $GLOBALS['now'];
+
 		if ($_REQUEST['type'] == 'test_in' || $_REQUEST['type'] == 'test_out'){
 			$status = "in repair";
-			$select = "SELECT `status` FROM `inventory` where `repair_item_id` = ".prep($repair_item_id).";";
+			$select = "SELECT `status` FROM `inventory` WHERE ";
+			if ($inventoryid) { $select .= "id = '".res($inventoryid)."' "; }
+			else { $select .= "`repair_item_id` = ".prep($repair_item_id)." "; }
+			$select .= "; ";
 			$result = qdb($select) OR die(qe()." | $select");
 			if(mysqli_num_rows($result)){
 				$result = mysqli_fetch_assoc($result);
 				$status = $result['status'];
 				if(strtolower($status) == 'in repair'){
-					$status = 'in testing';
+					$status = 'testing';
 				} else {
 					$status = 'in repair';
 				}
 			}
-			
-			$query = "UPDATE `inventory` SET `status`='$status' WHERE `repair_item_id` = ".prep($repair_item_id).";";
+
+			$query = "UPDATE `inventory` SET `status`='$status' WHERE ";//`repair_item_id` = ".prep($repair_item_id).";";
+			if ($inventoryid) { $query .= "id = '".res($inventoryid)."' "; }
+			else { $query .= "`repair_item_id` = ".prep($repair_item_id)." "; }
+			$query .= "; ";
 			qdb($query) or die(qe()." | $query");
 		}
 
@@ -60,7 +68,9 @@
 		
 	}
 
-	function triggerBuildTest($invid, $ro_number, $repair_item_id, $notes, $techid, $now) {
+	function triggerBuildTest($invid, $ro_number, $repair_item_id, $notes, $techid) {
+		$now = $GLOBALS['now'];
+
 		$status = "shelved";
 		$notes = '';
 
@@ -143,6 +153,7 @@
 	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive' || $notes || isset($_REQUEST['build_test'])) {
 		//Declare variables within this scope
 		$repair_item_id;
+		$inventoryid;
 		$notes;
 		$techid;
 		$partid;
@@ -152,6 +163,7 @@
 		$trigger;
 		
 		if (isset($_REQUEST['repair_item_id'])) { $repair_item_id = $_REQUEST['repair_item_id']; }
+		if (isset($_REQUEST['inventoryid'])) { $inventoryid = $_REQUEST['inventoryid']; }
 		if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 		if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
 		if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
@@ -186,10 +198,10 @@
 			}
 		}
 
-		if(!isset($_REQUEST['build_test'])) {
-			triggerActivity($ro_number, $repair_item_id, $notes, $techid, $now, $trigger, $check_in);
+		if (! isset($_REQUEST['build_test'])) {
+			triggerActivity($ro_number, $repair_item_id, $inventoryid, $notes, $techid, $trigger, $check_in);
 		} else {
-			triggerBuildTest($_REQUEST['build_test'], $ro_number, $repair_item_id, $notes, $techid, $now);
+			triggerBuildTest($_REQUEST['build_test'], $ro_number, $repair_item_id, $notes, $techid);
 		}
 
 		if($trigger == "complete") {

@@ -168,6 +168,10 @@
 			if ($search_type=='heci') {
 				$permuted_search = str_replace('0','O',$fsearch);
 				if (substr($r['heci'],0,7)!==substr($fsearch,0,7) AND substr($r['heci'],0,7)!==substr($permuted_search,0,7)) { continue; }
+			} else if (strlen($fsearch)<>7 AND strlen($fsearch)<>10 AND strtoupper($fsearch)==substr($r['heci'],0,strlen($fsearch)) AND ! stristr($r['part'],$fsearch) AND ! stristr($fsearch,$r['part'])) {
+				// do not allow for search strings that are NOT 7- or 10-digits (heci pattern) AND the substring of the HECI matches the search,
+				// AND the search string is not part of the Part string in any way
+				continue;
 			}
 
 			// used as a simple counter of the manf variance within the results

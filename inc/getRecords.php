@@ -104,8 +104,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
-				// show results only with prices
-				if ($results_mode==1) { $query .= "AND price > 0 "; }
+				$query .= "AND price > 0 ";
 				$query .= "ORDER BY created ASC; ";
 
 				break;

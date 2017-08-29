@@ -50,6 +50,8 @@
 		'214-738-4896'=>1,
 		'PAM'=>1,
 		'MODULE'=>1,
+		'HECI'=>1,
+		'CLEI'=>1,
 		'FILTER'=>1,
 		'INVERTER'=>1,
 		'PWB'=>1,

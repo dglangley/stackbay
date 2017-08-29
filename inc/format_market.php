@@ -35,14 +35,7 @@
 		$dated_qty = 0;
 		$monthly_totals = array();
 
-		// re-use data within global scope, if previously set from use with filters
-		// if ($market_table=='sales' AND $SALES!==false) {
-		// 	$results = $SALES;
-		// } else if ($market_table=='demand' AND $DEMAND!==false) {
-		// 	$results = $DEMAND;
-		// } else {
 		$results = getRecords($search_strs,$partid_csv,'csv',$market_table, 0, $start, $end);
-		// }
 
 		$num_results = count($results);
 		// number of detailed results instead of month-groups, which is normally only results within the past month

@@ -37,45 +37,10 @@
     $mode = grab('mode'); //Expects: 'Search', 
     $search_string = grab('item'); 
 
-//Function order:
-//  Output the header
-//  If there is already info entered for this order:
-//      - Output the sub-rows
-//  Output the search row.
 
+	function is_component($row){return ($row['classification'] == "component");}
 
-function is_component($row){return ($row['classification'] == "component");}
-function not_component($row){return ($row['classification'] != "component");}
-// function getOrderedQty($match_string){
-//     $results = array();
-//     //for a given partid or partid string, find the number of ordered items not yet received
-//     $purchased = "
-//     SELECT SUM(`pi`.`qty`)total, pi.partid
-//     FROM purchase_items pi
-//     WHERE pi.partid in ($match_string)
-// 	GROUP BY pi.partid;";
-	
-// 	$received = "
-// 	SELECT ifnull(sum(`qty`),0) rec, partid 
-// 	FROM inventory i where `partid` in ($match_string) 
-// 	AND i.id IN (
-// 	    SELECT invid 
-// 	    FROM inventory_history, purchase_items pi 
-// 	    where field_changed = 'purchase_item_id' 
-// 	    AND pi.id = value 
-// 	    AND pi.partid IN ($match_string)
-//     ) GROUP BY `partid`;";
-
-//     $pur_res = qdb($purchased) or die(qe()." | $purchased");
-//     $rec_res = qdb($received) or die(qe()." | $received");
-//     foreach($pur_res as $row){
-//         $results[$row['partid']] = $row['total'];
-//     }
-//     foreach($rec_res as $rrow){
-//         $results[$rrow['partid']] -= $rrow['rec'];
-//     }
-//     return $results;
-// }
+	function not_component($row){return ($row['classification'] != "component");}
 
 function search_as_heci($search_str){
 		$page = grab('page');
@@ -83,24 +48,22 @@ function search_as_heci($search_str){
         $type = grab('type');
 		$heci7_search = false;
 
-        if($type =="repair") {
+        if($type =="Repair") {
             $results = hecidb($search_str, 'id');
         } else {
 
     		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
     			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'";
-    // 			$query .= (? " AND classification = 'component'" : "");
     			$query .= "; ";
     			$result = qdb($query);
     			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
-    		} else {
+    		} else if (strlen($search_str)==7) {
     		    $query = "SELECT heci FROM parts WHERE heci LIKE '".$search_str."%'";
-    		  //  $query .= (($page =="Repair" || $page == "Tech")? " AND classification = 'component'" : "");
     		    $query .= "; ";
     			$result = qdb($query) or jsonDie(qe()." | $query");
     			if (mysqli_num_rows($result)) {
-    			    $result = mysqli_fetch_assoc($result);
-    			    $search_str = $result['heci'];
+    			    $r = mysqli_fetch_assoc($result);
+    			    $search_str = $r['heci'];
     			    $heci7_search = true;
     			}
     		}

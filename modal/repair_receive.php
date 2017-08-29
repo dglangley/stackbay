@@ -6,6 +6,8 @@
 
 <div class="modal modal-alert fade" id="modal-repair-receive" tabindex="-1" role="dialog" aria-labelledby="modalcomponentTitle">
     <div class="modal-dialog" role="document">
+        <form id="receive_form" action="repair_activities.php" method="post">
+        <input class="hidden" name="ro_number" value="<?=$order_number?>">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
@@ -24,7 +26,6 @@
                         <strong id="alert_title">Warning</strong>: Attempting to Ship an Internal Item. 
                     </div>
                 <?php } ?>
-                <form id="receive_form" action="repair_activities.php" method="post">
                     <div class="row ship_option" style="margin: 0;">
                         <!-- <div class="radio"> -->
                             <label class="radio-inline"><input type="radio" name="optradio" disabled>Billable</label>
@@ -85,20 +86,14 @@
                     <p class="modal_message"></p>
                     <div class="row" style="margin: 0;">
                         <div class="col-md-12">
-                            <input class="hidden" name="ro_number" value="<?=$order_number?>">
-                            <button style="margin-top: 10px" class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="receive" data-datestamp="">Confirm</button>
                         </div>
                     </div>
-                </form>
             </div>
-            <div class="modal-footer text-center">
-                <div class="col-md-8">
-                    <!-- <textarea rows="2" class="form-control" placeholder="Notes" name="notes"></textarea> -->
-                </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
-                </div>
+            <div class="modal-footer text-right">
+                <button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
+                <button class="btn-sm btn btn-primary pull-right btn-update" type="submit" name="type" value="receive" data-datestamp="">Confirm</button>
             </div>
         </div>
+        </form>
     </div>
 </div>

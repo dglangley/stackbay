@@ -336,15 +336,15 @@
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php';?>
 		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4">
+			<div class="col-sm-4 text-left">
 				<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
 					<?php if($build): ?>
-						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list-ul" aria-hidden="true"></i> Manage</a>
+						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php else : ?>
-						<a href="/order_form.php<?='?ps=repair&on='.$order_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage</a>
+						<a href="/order_form.php<?='?ps=repair&on='.$order_number;?>" class="btn btn-default btn-sm""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 				<?php } ?>
-				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn-flat pull-left"><i class="fa fa-wrench"></i></a>
+				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 
 				<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { 
 						if($sales_order && $o['type'] == 'Repair') { ?>
@@ -399,7 +399,6 @@
 								</li>
 							</ul>
 						</div>
-						<!-- <button type="submit" name="ro_number" value="<?=$order_number?>" class="btn-flat info pull-right" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-truck"></i> Ship</button> -->
 					</form>
 				<?php } } ?>
 			</div>

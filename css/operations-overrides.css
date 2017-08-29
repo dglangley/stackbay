@@ -267,7 +267,7 @@ body.modal-open.accounts-body, #order_body.modal-open {
 
 /* David additions */
 
-#order_header .btn-flat {
+#order_header .btn {
 	margin-top:10px;
 	margin-right:10px;
 }
