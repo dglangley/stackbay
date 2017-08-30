@@ -894,9 +894,10 @@
 				$('.locations_main').clone().appendTo(loc_col).removeClass("locations_main").addClass('locations');
 				var actualInstance = loc_col.data('instance');
 				var actualPlace = loc_col.data('place');
+
 				loc_col.find('.instance').val(actualInstance);
 				loc_col.find('option[data-place='+actualPlace+']').show();
-				loc_col.find('.place').val(actualPlace);
+				loc_col.find('.place').val(actualPlace.toUpperCase());
 				
 			}
 			var con_col = $(this).closest('tr').find('.edit.condition_col');
