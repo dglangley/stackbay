@@ -605,7 +605,7 @@
 					}
 ?>
 
-					<button class="btn btn-success <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?>" id = "save_button" data-validation="left-side-main">
+					<button type="button" class="btn btn-success <?=(strtolower($status) == 'void' || strtolower($status) == 'voided' || strpos(strtolower($status), 'canceled') !== false ? 'gray' : 'success');?>" id = "save_button" data-validation="left-side-main">
 						<i class="fa fa-save"></i> <?=($order_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>

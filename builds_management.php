@@ -172,9 +172,9 @@
 		?>
 		<form id="build_form" action="build_add.php" method="post">
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color: #b9bfd8">
-				<div class="col-md-4">
+				<div class="col-md-4 text-left">
 					<?php if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) { ?>
-						<a href="/repair.php?build=true&on=<?php echo $build_num; ?>" class="btn-flat pull-left" style="margin-top: 10px;"><i class="fa fa-wrench" aria-hidden="true"></i></a>
+						<a href="/repair.php?build=true&on=<?php echo $build_num; ?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench" aria-hidden="true"></i> Tech View</a>
 					<?php } ?>
 				</div>
 				

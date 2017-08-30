@@ -351,12 +351,11 @@
 						<a href="/order_form.php<?='?ps=repair&on='.$order_number;?>" class="btn btn-default btn-sm""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 				<?php } ?>
-				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 
 				<?php if((strtolower($status) != 'voided' && strpos(strtolower($status), 'canceled') === false) && $status) { 
 						if($sales_order && $o['type'] == 'Repair') { ?>
-					<div class ="btn-group pull-left">
-						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+					<div class ="btn-group">
+						<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 							<i class="fa fa-truck"></i> Ship
 							<span class="caret"></span>
                         </button>
@@ -367,20 +366,20 @@
 						</ul>
 					</div>
 				<?php } else if($tracking && $o['type'] == 'Repair') { ?>
-					<div class ="btn-group pull-left">
-						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+					<div class ="btn-group">
+						<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 							<i class="fa fa-truck"></i> Ship
 							<span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
                         	<li>
-								<span style="padding: 3px 20px;">Tracking# <?=$tracking;?></span>
+								<small><span style="padding: 3px 10px;">Trk# <?=$tracking;?></span></small>
 							</li>
 						</ul>
 					</div>
 				<?php } else if($received_inventory && $o['type'] == 'Repair') { ?>
-					<div class ="btn-group pull-left">
-						<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+					<div class ="btn-group">
+						<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 							<i class="fa fa-truck"></i> Ship
 							<span class="caret"></span>
                         </button>
@@ -392,8 +391,8 @@
 					</div>
 				<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
 					<form id="repair_ship" action="repair_shipping.php" method="POST">
-						<div class ="btn-group pull-left">
-							<button type="button" class="btn-flat info dropdown-toggle" data-toggle="dropdown">
+						<div class ="btn-group">
+							<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 								<i class="fa fa-truck"></i> Ship
 								<span class="caret"></span>
                             </button>
@@ -408,6 +407,7 @@
 						</div>
 					</form>
 				<?php } } ?>
+				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
 				<h2><?php if($status != 'Active' && $status){

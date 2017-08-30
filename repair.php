@@ -244,7 +244,7 @@
 		return $purchase_requests;
 	}
 
-	function getQuantity($partid,$po_number) {
+	function getQuantity($partid,$po_number=0) {
 		$qty = 0;
 		$query;
 		
@@ -408,12 +408,19 @@
 							<td>'.$build_item['serial_no'].'</td>
 							'.($init ? '<input type="hidden" name="repair_item_id" value="'.$item['id'].'">' : '') . '
 							<td class="text-right">
-								<button class="btn btn-sm btn-primary'.$btn_style.'" type="submit" name="build_test" value="'.$build_item['id'].'"'.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
+								<button class="btn btn-sm btn-default'.$btn_style.'" type="submit" name="build_test" value="'.$build_item['id'].'"'.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
 							</td>
 						</tr>';
 						$init = false;
 					}
 				} else {
+					$btn_title = "Mark as Tested";
+					$btn_style = "";
+					if (strtolower($built_item['status'])=='in repair') {
+						$btn_title = "Send to Test";
+						$btn_style = " btn-flat info";
+					}
+
 					$item_row .= '
 					<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 						<td>'.format($item['partid'], true).'</td>
@@ -421,7 +428,7 @@
 						<td></td>
 						<td>
 							<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-							<button class="btn btn-sm btn-primary" type="submit" name="type" disabled><i class="fa fa-terminal"></i> '.((strtolower($status) == 'in repair')? "Send to Test":"Mark as Tested").'</button>
+							<button class="btn btn-sm btn-default'.$btn_style.'" type="submit" name="type" title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom" disabled><i class="fa fa-terminal"></i></button>
 						</td>
 					</tr>';
 				}

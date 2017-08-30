@@ -1314,9 +1314,6 @@
 				var repair_order = getUrlParameter('repair');
 
 				var isValid = nonFormCase($(this), e);
-				//if($(".search_lines").length > 0){
-					//line_item_submit();
-				//}
 
 				// save any pending rows before proceeding
 				$(".search_lines").each(function() {
@@ -1379,12 +1376,6 @@
 					var second_fee_id = $("#second_fee_label").data("scid");
 					
 					
-					// if (($('#account_select').last('option').val())){
-					// 	var account = $('#account_select').last('option').val();
-					// }
-					// else{
-					// 	var account = '';
-					// }
 					var pri_notes = $("#private_notes").val();
 					var pub_notes = $("#public_notes").val();
 					var email_to = $("#email_to").val();
@@ -1442,7 +1433,6 @@
 					//-------------------------- Right hand side --------------------------
 					//Get Line items from the right half of the page
 					var submit = [];
-					console.log("first_fee_label:"+first_fee_label+" | first_fee_amount:"+first_fee_amount+" | first_fee_id:"+first_fee_id+" | second_fee_label:"+second_fee_label+" | second_fee_amount:"+second_fee_amount+" | second_fee_id:"+second_fee_id);
 					//This loop runs through the right-hand side and parses out the general values from the page
 					var sum_qty = 0;
 					$(this).closest("body").find("#right_side_main").children(".easy-output").each(function(){
@@ -1476,8 +1466,6 @@
 						modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Cannot add multiple quantities to a repair order. If you intend to receive multiple parts, make multiple repair orders");
 						return;
 					}
-					console.log(submit);
-					console.log(order_number+" | "+order_type);
 					console.log("/json/order-form-submit.php?"+
 							"sales-rep="+ repid+"&"+
 							"created_by="+ created_by+"&"+
@@ -1555,25 +1543,16 @@
 								window.location = "/order_form.php?ps="+ps+"&on="+on;
 							}
 							else{
-								console.log("SAVED"+on+" | Order"+ps);
-								console.log("Last Inserted: "+form['insert']);
-								console.log("Last Line Inserted: "+form['line_insert']);
-								console.log("Error from the last query: "+form["error"]);
-								console.log("Update form: "+form['update']);
-								console.log(form['input']);
-								console.log(form['update_result']);
-
-							modalAlertShow(
-								"<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",
-								form['message'],
-								false);
+								modalAlertShow(
+									"<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning",
+									form['message'],
+									false
+								);
 							}
 						},
 						error: function(xhr, status, error) {
 							console.log("Order-form-submission Error:");
 						   	console.log(error);
-//						   	"&userid="+userid+"&company="+company+"&order_type="+order_type+"&order_number="+order_number+"&contact="+contact+"&assoc="+assoc+"&tracking="+tracking+"&ship_to="+ship_to+"&bill_to="+bill_to+"&carrier="+carrier+"&account="+account+"&terms="+terms+"&service="+service+"&pri_notes="+pri_notes+"&pub_notes="+pub_notes;
-							
 						},
 					});
 				} else if($('.lazy-entry:visible').length > 0) {
