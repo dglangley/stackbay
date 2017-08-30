@@ -392,10 +392,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 		$right .= "		<div class='sidebar-container'>";
 
 		if ($order_number && !($o['bill'])) {
-			
-			// $order = ($page == "Purchase") ? 'purchase_orders' : 'sales_orders';
 			$order = $o['order'];
-			// $num_type = ($page == "Purchase") ? 'po_number' : 'so_number';
 			$num_type = $o['id'];
 			
 			$query = "SELECT * FROM $order WHERE $num_type = '$order_number';";
@@ -419,33 +416,11 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$terms = $row['termsid'];
 			}
 			
-			if(!$o['rma'] && !$m['bill']){
-				/*
-				$right.="
-						<div class='row'>
-							<div class='col-sm-12' style='padding-bottom: 10px;'>						
-								<div class ='order'>
-									<label for='order_selector'> ";
-				// $right .= ($page == "Purchase")? "<h5>PO NAVIGATION</h5>" : "<h5>SO NAVIGATION</h5>";
-				$right .= "</label>
-									<select name='order_selector' id='order_selector' class='order-selector' style = 'width:100%;'>";
-				
-							
-							if($order_number){ 
-									$right.="			<option value = $order_number>$order_number $company_name</option>";
-							}
-				$right.="			</select>
-								</div>
-							</div>
-						</div>";
-						*/
-			}else if ($o['rma']){
+			if ($o['rma']){
 				$repair = $_REQUEST['repair'];
 				if (!$repair){
 					$query = "SELECT order_number, order_type FROM `returns` WHERE order_number = ".prep($order_number).";";
-					// echo($query);
 					$result = qdb($query) or die(qe()." $query");
-					// exit;
 					if (mysqli_num_rows($result)){
 						$result = mysqli_fetch_assoc($result);
 						$so_number = $result['order_number'];
@@ -519,7 +494,8 @@ include_once $rootdir.'/inc/default_addresses.php';
 			$right .= "<div class='row'>";
 			$right .= "<div class='col-md-12'>";
 				// $right .= "<h5>SHIPMENT INFORMATION</h5><br>";
-			$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".
+//			$right .= "<b style='color: #526273;font-size: 14px;'>".strtoupper($company_name)."</b><br>".
+			$right .= "<h4 style='margin-top:10px'>".strtoupper($company_name)."</h4>".
 						"<b style='color: #526273;font-size: 12px;'>".getContact($contact)."</b><br><br>";
 				
 			//Order Number

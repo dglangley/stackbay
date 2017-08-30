@@ -433,10 +433,8 @@
 					</tr>';
 				}
 			}
-			//'.((strtolower($status) == 'in repair')? "test_in":"test_out").'
 		}
 	}
-	//print_r($U);
 ?>
 	
 

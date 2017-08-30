@@ -390,7 +390,7 @@
 						</ul>
 					</div>
 				<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
-					<form id="repair_ship" action="repair_shipping.php" method="POST">
+					<form id="repair_ship" action="repair_shipping.php" method="POST" style="display:inline">
 						<div class ="btn-group">
 							<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 								<i class="fa fa-truck"></i> Ship
@@ -410,14 +410,23 @@
 				<a href="/repair.php?on=<?=($build ? $build . '&build=true' : $order_number);?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 			</div>
 			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2><?php if($status != 'Active' && $status){
-							echo '(<span class="ticket_status_'.($status == 'Not Reparable' ? 'danger' : ($status == 'NTF' ? 'warning' : 'success')).'">' . $ticketStatus . '</span>) ';
-						}?> <?=($build ? 'Build':'Repair');?> #<?= ($build?$build:$order_number).' Receiving'; ?></h2>
+				<h2><?=($build ? 'Build':'Repair');?> #<?= ($build?$build:$order_number).' Receiving'; ?></h2>
 			</div>
 			<div class="col-sm-4">
-				
 			</div>
 		</div>
+
+<?php
+		if ($ticketStatus) {
+			echo '
+				<div class="alert alert-default" style="padding:5px; margin:0px">
+					<h3 class="text-center">
+						<span class="ticket_status_'.(strpos(strtolower($ticketStatus), 'unrepairable') !== false || strpos(strtolower($ticketStatus), 'voided') !== false || strpos(strtolower($ticketStatus), 'canceled') !== false ? 'danger' : (strpos(strtolower($ticketStatus), 'trouble') ? 'warning' : 'success')).'">' .ucwords($ticketStatus) . '</span>
+					</h3>
+				</div>
+			';
+		}
+?>
 		
 		<!--Add in Error message-->
 		<?php if($errorHandler != ''): ?>

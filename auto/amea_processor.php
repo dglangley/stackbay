@@ -51,6 +51,7 @@
 		'PAM'=>1,
 		'MODULE'=>1,
 		'HECI'=>1,
+		'PLEASE'=>1,
 		'CLEI'=>1,
 		'FILTER'=>1,
 		'INVERTER'=>1,
