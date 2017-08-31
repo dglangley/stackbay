@@ -138,7 +138,7 @@
                 $rows['invoice_amount'] = $inv_total;
             }
 
-            $orderedResults[$row['type'] .'.'.$rows['order_number']][] = $rows;
+            $orderedResults[$rows['type'] .'.'.$rows['order_number']][] = $rows;
         }
 
 		return ($orderedResults);
