@@ -1,5 +1,4 @@
 <?php
-// AddressSubmit handles the submission of a new address from an addresses modal
 	header('Content-Type: application/json');
 	$rootdir = $_SERVER['ROOT_DIR'];
 			
@@ -23,10 +22,10 @@
 		$query .= "WHERE bill_no = '".res($bill_no)."' LIMIT 1; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 	} else { // create new bill if none is passed in
-                $company_id = '';
+                $companyid = 0;
                 
                 $po_select = "
-                Select `companyid` company, `days` FROM purchase_orders, terms
+                Select `companyid`, `days` FROM purchase_orders, terms
                 WHERE terms.id = termsid AND po_number = ".prep($data['po_number'])."
                 ";
                 
@@ -34,7 +33,7 @@
                 
                 if (mysqli_num_rows($po_results)>0){
                     $po_results = mysqli_fetch_assoc($po_results);
-                    $company_id = $po_results['company'];
+                    $companyid = $po_results['companyid'];
                 }
 
                 $bill_insert = "
@@ -48,43 +47,46 @@
                 '".$GLOBALS['now']."',
                 ".prep($due_date,'NULL').",
                 ".prep($data['po_number']).",
-                ".prep($company_id,"NULL").");
+                ".prep($companyid,"NULL").");
                 ";
                 qdb($bill_insert) or die(qe().": ".$bill_insert);
 
                 $bill_no = qid();
 	}
 	foreach ($data['lines'] as $line) {
+				$line_id = 0;
+				if ($line['bill_item_id']) { $line_id = $line['bill_item_id']; }
+
 				if ($line['qty']==0){
+					// delete if already set
+					if ($line_id) {
+						$query = "DELETE FROM bill_items WHERE id = '".$line_id."'; ";
+						$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+						$query = "DELETE FROM bill_shipments WHERE bill_item_id = '".$line_id."'; ";
+						$result = qdb($query) OR die(qe().'<BR>'.$query);
+					}
                     continue;
                 }
-                $line_insert = "
-                    INSERT INTO `bill_items`(
-                    `bill_no`,
-                    `partid`,
-                    `qty`,
-                    `warranty`,
-                    `amount`,
-                    `line_number`
-                    ) VALUES (
-                    $bill_no,
-                    ".prep($line['partid']).",
-                    ".prep($line['qty']).",
-                    ".prep($line['warranty']).",
-                    ".prep($line['price']).",
-                    ".prep($line['ln'])."
-                    );
-                ";
-                qdb($line_insert) or die(qe().": ".$line_insert);
-                $line_id = qid();
+				$query = "REPLACE bill_items (bill_no, partid, memo, qty, amount, warranty, line_number";
+				if ($line_id) { $query .= ", id"; }
+				$query .= ") VALUES ('".$bill_no."', ".prep($line['partid']).", NULL, ".prep($line['qty']).", ";
+				$query .= prep($line['price']).", ".prep($line['warranty']).", ".prep($line['ln']);
+				if ($line_id) { $query .= ", '".res($line_id)."' "; }
+				$query .= "); ";
+				$result = qdb($query) or die(qe().": ".$query);
+				if (! $line_id) { $line_id = qid(); }
+
                 if(current($line['serials'])){
                     foreach($line['serials'] as $invid){
-                        $inv = prep($invid);
-                        $serial_insert = "
-                        INSERT INTO `bill_shipments`(`inventoryid`, `packageid`, `bill_item_id`) 
-                        VALUES ($inv,NULL,$line_id);
-                        ";
-                        qdb($serial_insert) or die(qe().": ".$serial_insert);
+						$inv = prep($invid);
+						$query2 = "SELECT * FROM bill_shipments WHERE inventoryid = $inv AND packageid IS NULL AND bill_item_id = '".res($line_id)."'; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						if (mysqli_num_rows($result2)==0) {
+							$query2 = "INSERT INTO bill_shipments (inventoryid, packageid, bill_item_id) ";
+							$query2 .= "VALUES ($inv, NULL, $line_id); ";
+							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						}
                     }
                 }
 	}
