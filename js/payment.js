@@ -36,6 +36,8 @@
             data.push(orders);
         });
 
+        console.log(data);
+
         // Load in the new payments module content dynamically
         $.ajax({
         	url: 'json/payments.php',
@@ -43,20 +45,30 @@
             data: {'data': data},
             success: function(json, status) {
             	var rowHTML = '';
+            	var order;
+            	var order_type;
+
+            	var link = '';
+
             	console.log(json);
-            	$.each(json, function(order, data) {
-            		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="/SO110172"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
+            	$.each(json, function(order_str, data) {
+            		order = order_str.split(".")[1];
+            		order_type = order_str.split(".")[0];
+
+            		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
             		rowHTML += "<table class='table table-hover table-striped table-condensed'><tbody>";
 
 
             		$.each(data, function(key, row) {
             			//console.log(row);
             			var row_amount = parseFloat(row.amount * row.qty);
-
             			rowHTML += "<tr class='payment_info'>\
-										<td style='padding: 0px 10px;' class='col-md-3'>"+row.type+" "+row.invoice_no+"\
-											<a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>\
-										</td>\
+										<td style='padding: 0px 10px;' class='col-md-3'>";
+						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
+						rowHTML +=			row.ref_type+" "+row.invoice_no+"\
+											<a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+						}
+						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
 										<td style='padding: 0px 10px;' class='col-md-4'>\
 											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.type+"."+row.invoice_no+"][amount]' style='max-width: 124px; text-align: right;'>\
@@ -108,9 +120,17 @@
             	var payment_total;
             	var payment_notes = '';
 
+            	var order;
+            	var order_type;
+
+            	var link = '';
+
             	console.log(json);
-            	$.each(json, function(order, data) {
-            		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="/SO110172"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
+            	$.each(json, function(order_str, data) {
+            		order = order_str.split(".")[1];
+            		order_type = order_str.split(".")[0];
+
+            		rowHTML += '<h4>'+order+' <a target="_blank" id="order_link" style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
             		rowHTML += "<table class='table table-hover table-striped table-condensed'><tbody>";
 
 
@@ -125,9 +145,12 @@
             			payment_notes = row.notes;
 
             			rowHTML += "<tr class='payment_info'>\
-										<td style='padding: 0px 10px;' class='col-md-3'>"+row.ref_type+" "+row.ref_number+"\
-											<a target='_blank' href='/docs/INV"+row.ref_number+".pdf'><i class='fa fa-file-pdf-o'></i></a>\
-										</td>\
+										<td style='padding: 0px 10px;' class='col-md-3'>";
+						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
+						rowHTML +=			row.ref_type+" "+row.ref_number+"\
+											<a target='_blank' href='/docs/INV"+row.ref_number+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+						}
+						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row.invoice_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
 										<td style='padding: 0px 10px;' class='col-md-4'>\
 											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.ref_number+"][amount]' style='max-width: 124px; text-align: right;'>\

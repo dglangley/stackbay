@@ -33,6 +33,13 @@
 				if($inv_detail['check'] == 'on') {
 					$inv_number = explode('.', $invoice)[1];
 					$inv_type = explode('.', $invoice)[0];
+
+					// Null record for non invoiced and non billed items
+					if($inv_type == "Purchase" OR $inv_type == "Sale" OR $inv_type == "Repair") {
+						$inv_type = '';
+						$inv_number = '';
+					}
+
 					$query = "INSERT INTO payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".prep($order_number).", ".prep($order_type).", ".prep($inv_number).", ".prep($inv_type).", ".prep($inv_detail['amount']).", '$id');";
 					qdb($query) OR die(qe().' '.$query);
 				}
