@@ -19,6 +19,8 @@
                 if(mysqli_num_rows($result) > 0){
                     while ($rows = mysqli_fetch_assoc($result)) {
                     	$rows['type'] = 'Bill';
+                    	$rows['order_type'] = $row['type'];
+                    	$rows['ref_type'] = 'Bill';
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
                 } else {
