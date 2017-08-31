@@ -452,7 +452,7 @@
 							}
 							$output .= '
 										<li>
-											<a href="/bill.php?on='.$order_number.'&bill=new">
+											<a href="/bill.php?on='.$order_number.'&bill=">
 												<i class="fa fa-plus"></i> Add New Bill
 											</a>
 										</li>
