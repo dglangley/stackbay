@@ -213,7 +213,7 @@
 		</td>
 		<td class="col-md-2 text-center">
 			<div class="row">
-				<div class="col-md-9">
+				<div class="col-md-7">
 					<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order?>' placeholder = "Order #"/>
 				</div>
 
@@ -228,17 +228,25 @@
 -->
 		</td>
 		<td class="col-md-3">
-			<div class="pull-right form-group">
-				<select name="companyid" id="companyid" class="company-selector">
-					<option value="">- Select a Company -</option>
-					<?php 
-						if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-						else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-					?>
-				</select>
-				<button class="btn btn-primary btn-sm" type="submit" >
-					<i class="fa fa-filter" aria-hidden="true"></i>
-				</button>
+			<div class="col-md-10">
+				<div class="pull-right form-group">
+					<select name="companyid" id="companyid" class="company-selector">
+						<option value="">- Select a Company -</option>
+						<?php 
+							if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+							else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+						?>
+					</select>
+					<button class="btn btn-primary btn-sm" type="submit" >
+						<i class="fa fa-filter" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
+			<div class="col-md-2">
+				<button type="button" class="btn btn-default btn-sm payment_module"  <?=(empty($_REQUEST['companyid']) ? 'disabled' : '');?>>
+                	<i class="fa fa-usd" aria-hidden="true"></i>
+                	<span class="caret"></span>
+                </button>
 			</div>
 		</td>
 		</tr>
@@ -448,46 +456,37 @@
 	foreach ($summary_rows as $id => $info) {
     	$paymentTotal = 0;
 
-		$query = "SELECT * FROM payment_details WHERE order_number = ".prep($id)." AND order_type = '".substr($order_field,0,2)."'; ";
-		//echo $query;
-		$prows = qdb($query);
+		$query = "SELECT * FROM payment_details WHERE order_number = ".prep($id)." AND order_type = ".prep($info['order_type']).";";
+		$payment_results = qdb($query) OR die(qe() . ' ' .$query);
+
 		$output = '
 				<div class ="btn-group">
-					<button type="button" class="dropdown-toggle" data-toggle="dropdown">
-                      <span class="caret"></span>
+					<button type="button" class="dropdown-toggle" data-toggle="dropdown" '.(mysqli_num_rows($payment_results) == 0 ? 'disabled' : '').'>
+                      <span class="caret" '.(mysqli_num_rows($payment_results) == 0 ? 'style="border-top: 4px solid #999;"' : '').'></span>
                     </button>
 					<ul class="dropdown-menu">
 		';
 
-		if (mysqli_num_rows($prows) > 0) {
-			foreach ($prows as $payment) {
-				$p_amount = $payment['amount'];
-				$paymentTotal += $payment['amount'];
-				$p_ref = $payment['ref_type'].' '.$payment['ref_number'];
-
-				$output .= '
-						<li style="text-align: left;">
-							<a style="cursor: pointer" class="paid-data" data-date="'.$p_date.'" data-ref="'.$p_ref.'" data-notes="'.$p_notes.'" data-type="'.$p_type.'" data-number="'.$p_number.'" data-amount="'.$p_amount.'" data-orders_table="'.$info['order_type'].'" data-orders_number="'.$id.'" data-toggle="modal" data-target="#modal-payment">
-								<i class="fa fa-usd" aria-hidden="true"></i>
-								Payment #'.$payment['paymentid'].'
-							</a>
-						</li>
-				';
-			}
+		while ($payment_rows = mysqli_fetch_assoc($payment_results)) {
+			$paymentTotal += $payment_rows['amount']; 
+			$output .= '
+					<li style="text-align: left;">
+						<a style="cursor: pointer; width: 100%;" class="paid-data" data-paymentid="'.$payment_rows['paymentid'].'">
+							<i class="fa fa-usd" aria-hidden="true"></i>
+							Payment #'.$payment_rows['paymentid'].'
+						</a>
+					</li>
+			';
 		}
 
 		$output .= '
-						<li>
-							<a style="cursor: pointer" data-toggle="modal" class="new-payment" data-target="#modal-payment" data-orders_table="'.$info['order_type'].'" data-orders_number="'.$id.'">
-								<i class="fa fa-plus"></i> Add New Payment
-							</a>
-						</li>
+
 					</ul>
 				</div>
 		';
 
 		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
-		$status  = ($total == 0 ? 'complete' : 'active');
+		$status  = ($total <= 0 ? 'complete' : 'active');
 		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
        	$rows .= '
 				<tr class="'.$status.' '.$filter_comb.'">
@@ -518,7 +517,7 @@
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td class="text-right">'.terms_calc($id, $info['order_type']).'</td>
-                    <td class="text-right total_cost">'.format_price($total).'</td>
+                    <td class="text-right total_cost">'.format_price($total).' <input class="pull-right payment_orders" type="checkbox" data-type="'.$info['order_type'].'" data-order="'.$id.'" style="margin: 4px 8px;"></td>
                 </tr>
 		';
 
@@ -667,17 +666,17 @@
                         <tbody>
                         	<?php echo $rows; ?>
 							<?php if ($rows) { ?>
-                            <!-- row -->
-                            <tr class="nohover" style="background: #EEE;">
-                            	<td colspan="<?php echo $footer_span1; ?>"> </td>
-                            	<td colspan=""> </td>
-                            	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
-                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
-                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_payments,true,' '); ?></strong></td>
-                                <td class="text-right" colspan="<?php echo $footer_span2; ?>">
-                                    <strong><?php echo format_price($total_amt,true,' '); ?></strong>
-                                </td>
-                            </tr>
+	                            <!-- row -->
+	                            <tr class="nohover" style="background: #EEE;">
+	                            	<td colspan="<?php echo $footer_span1; ?>"> </td>
+	                            	<td colspan=""> </td>
+	                            	<td colspan="" class="text-right"><strong><?php echo format_price($total_sub,true,' '); ?></strong></td>
+	                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_cred,true,' '); ?></strong></td>
+	                            	<td colspan="" class="text-right"><strong>-<?php echo format_price($total_payments,true,' '); ?></strong></td>
+	                                <td class="text-right" colspan="<?php echo $footer_span2; ?>">
+	                                    <strong><?php echo format_price($total_amt,true,' '); ?></strong>
+	                                </td>
+	                            </tr>
 							<?php } ?>
                         </tbody>
                     </table>
@@ -688,104 +687,14 @@
 
 	</div>
 	</form>
-<?php include_once 'inc/footer.php'; ?>
+
+	<?php include_once 'inc/footer.php'; ?>
+	<script src="js/payment.js"></script>
 
     <script type="text/javascript">
 
     (function($){
-    	$(document).on("change", ".payment-type", function() {
-			var placeholder = '';
-			
-			if($(this).val() == "Check") {
-				placeholder = "Check #";
-			} else if($(this).val() == "Wire Transfer") {
-				placeholder = "Ref #";
-			} else if($(this).val() == "Credit Card") {
-				placeholder = "Appr Code";
-			} else if($(this).val() == "Paypal") {
-				placeholder = "Transaction #";
-			} else {
-				placeholder = "Other";
-			}
-			
-            $('.payment-placeholder').attr('placeholder', placeholder);
-        });
-        
-        $(document).on("click", ".paid-data", function() {
-			var number = $(this).data('number');
-			var amount = $(this).data('amount');
-			var type = $(this).data('type');
-			var ref = $(this).data('ref');
-			var notes = $(this).data('notes');
-			var date = $(this).data('date');
-
-			var order_number = $(this).data('orders_number');
-			var orders_table = $(this).data('orders_table');
-			$('select[name="payment_type"]').val(type);
-			$('input[name="payment_ID"]').val(number);
-			$('input[name="payment_amount"]').val(amount);
-			$('input[name="payment_date"]').val(date);
-			
-			$('textarea[name="notes"]').val(notes);
-
-			$('.payment-data').empty();
-			
-			$('input[name="reference_button"][value="' + ref + '"]').prop('checked', true);
-			console.log(window.location.origin+'/json/payment_accounts.php?orders_table='+orders_table+'&order_number='+order_number);
-			$.ajax({
-				type: "POST",
-				url: '/json/payment_accounts.php',
-				data: {
-					"orders_table": orders_table,
-					"order_number": order_number,
-				}, // serializes the form's elements.
-				dataType: 'json',
-				success: function(result) {
-					$('.payment-data').append(result);
-				},					
-				error: function(xhr, status, error) {
-					console.log("JSON | Initial table load | order table out.php: "+error);
-				}
-			});
-        });
-        
-        $(document).on("click", ".new-payment", function() {
-
-        	var order_number = $(this).data('orders_number');
-			var orders_table = $(this).data('orders_table');
-
-			$('select[name="payment_type"]').val('Wire Transfer');
-			$('input[name="payment_ID"]').val('');
-			$('input[name="payment_amount"]').val('');
-			$('input[name="payment_date"]').val($('input[name="payment_date"]').data('date'));
-			
-			$('textarea[name="notes"]').val('');
-
-			$('.payment-data').empty();
-			
-			$('input[name="reference_button"]').prop('checked', false);
-
-			console.log(window.location.origin+'/json/payment_accounts.php?orders_table='+orders_table+'&order_number='+order_number);
-			$.ajax({
-				type: "POST",
-				url: '/json/payment_accounts.php',
-				data: {
-					"orders_table": orders_table,
-					"order_number": order_number,
-				}, // serializes the form's elements.
-				dataType: 'json',
-				success: function(result) {
-					$('.payment-data').append(result);
-				},					
-				error: function(xhr, status, error) {
-					console.log("JSON | Initial table load | order table out.php: "+error);
-				}
-			});
-        });
-
         $('#item-updated-timer').delay(1000).fadeOut('fast');
-
-        
     })(jQuery);
 
     </script>
