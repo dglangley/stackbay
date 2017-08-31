@@ -55,6 +55,14 @@
             		order = order_str.split(".")[1];
             		order_type = order_str.split(".")[0];
 
+            		if(order_type == "Purchase") {
+            			link = 'PO' + order;
+            		} else if(order_type == "Sale") {
+            			link = 'SO' + order;
+            		} else if(order_type == "Repair") {
+            			link = 'RO' + order;
+            		}
+
             		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
             		rowHTML += "<table class='table table-hover table-striped table-condensed'><tbody>";
 
@@ -65,8 +73,11 @@
             			rowHTML += "<tr class='payment_info'>\
 										<td style='padding: 0px 10px;' class='col-md-3'>";
 						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
-						rowHTML +=			row.ref_type+" "+row.invoice_no+"\
-											<a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+							rowHTML +=		row.ref_type+" "+row.invoice_no;
+
+							if(row.ref_type == 'Invoice') {
+								rowHTML +=	" <a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+							}
 						}
 						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
@@ -130,6 +141,14 @@
             		order = order_str.split(".")[1];
             		order_type = order_str.split(".")[0];
 
+            		if(order_type == "Purchase") {
+            			link = 'PO' + order;
+            		} else if(order_type == "Sale") {
+            			link = 'SO' + order;
+            		} else if(order_type == "Repair") {
+            			link = 'RO' + order;
+            		}
+
             		rowHTML += '<h4>'+order+' <a target="_blank" id="order_link" style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
             		rowHTML += "<table class='table table-hover table-striped table-condensed'><tbody>";
 
@@ -147,8 +166,11 @@
             			rowHTML += "<tr class='payment_info'>\
 										<td style='padding: 0px 10px;' class='col-md-3'>";
 						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
-						rowHTML +=			row.ref_type+" "+row.ref_number+"\
-											<a target='_blank' href='/docs/INV"+row.ref_number+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+							rowHTML +=		row.ref_type+" "+row.ref_number;
+
+							if(row.ref_type == 'Invoice') {
+								rowHTML +=	" <a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+							}
 						}
 						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row.invoice_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\

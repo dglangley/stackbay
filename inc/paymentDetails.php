@@ -103,6 +103,9 @@
 	                while ($inv_rows = mysqli_fetch_assoc($inv_result)) {
                     	$inv_total += $inv_rows['price'] * $inv_rows['qty'];
                     }
+
+                    $rows['ref_number'] = $rows['order_number'];
+                    $rows['ref_type'] = $rows['type'];
                 }
 
                 $rows['invoice_amount'] = $inv_total;
