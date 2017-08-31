@@ -244,7 +244,7 @@
 		return $purchase_requests;
 	}
 
-	function getQuantity($partid,$po_number) {
+	function getQuantity($partid,$po_number=0) {
 		$qty = 0;
 		$query;
 		
@@ -408,12 +408,19 @@
 							<td>'.$build_item['serial_no'].'</td>
 							'.($init ? '<input type="hidden" name="repair_item_id" value="'.$item['id'].'">' : '') . '
 							<td class="text-right">
-								<button class="btn btn-sm btn-primary'.$btn_style.'" type="submit" name="build_test" value="'.$build_item['id'].'"'.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
+								<button class="btn btn-sm btn-default'.$btn_style.'" type="submit" name="build_test" value="'.$build_item['id'].'"'.$btn_disabled.' title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
 							</td>
 						</tr>';
 						$init = false;
 					}
 				} else {
+					$btn_title = "Mark as Tested";
+					$btn_style = "";
+					if (strtolower($built_item['status'])=='in repair') {
+						$btn_title = "Send to Test";
+						$btn_style = " btn-flat info";
+					}
+
 					$item_row .= '
 					<tr class="meta_part" data-item_id="'.$item['id'].'" style="padding-bottom:6px;">
 						<td>'.format($item['partid'], true).'</td>
@@ -421,15 +428,13 @@
 						<td></td>
 						<td>
 							<input type="text" name="repair_item_id" value="'.$item['id'].'" class="hidden">
-							<button class="btn btn-sm btn-primary" type="submit" name="type" disabled><i class="fa fa-terminal"></i> '.((strtolower($status) == 'in repair')? "Send to Test":"Mark as Tested").'</button>
+							<button class="btn btn-sm btn-default'.$btn_style.'" type="submit" name="type" title="'.$btn_title.'" data-toggle="tooltip" data-placement="bottom" disabled><i class="fa fa-terminal"></i></button>
 						</td>
 					</tr>';
 				}
 			}
-			//'.((strtolower($status) == 'in repair')? "test_in":"test_out").'
 		}
 	}
-	//print_r($U);
 ?>
 	
 
@@ -539,15 +544,15 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if(!$build || ($build && $ticketStatus)) { ?>
-						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning pull-left"><i class="fa fa-qrcode"></i> Receive</a>
-					<?php } ?>
-
 					<?php if($build): ?>
 						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
 						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
+
+					<?php if(!$build || ($build && $ticketStatus)) { ?>
+						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+					<?php } ?>
 				</div>
 				
 				<div class="col-md-4 text-center">

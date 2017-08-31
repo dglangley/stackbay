@@ -15,6 +15,7 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/dictionary.php';
 	include_once $rootdir.'/inc/getCompany.php';
+	include_once $rootdir.'/inc/order_type.php';
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getAddresses.php';
@@ -31,10 +32,20 @@
 	include_once $rootdir.'/inc/credit_functions.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 
+	function getRMA($rma_number) {
+		$R = array();
+
+		$query = "SELECT * FROM returns WHERE rma_number = ".prep($rma_number).";";
+		$result = qdb($query);
+		if (mysqli_num_rows($result)>0) {
+			$R = mysqli_fetch_assoc($result);
+		}
+
+		return $R;
+	}
 
 	//Set initials to be used throughout the page
 	$rma_number = grab('on');
-	$order_type = "RMA";
 	
 	//Variables used for the post save
 	$rma_serial = '';
@@ -43,9 +54,11 @@
 	$errorHandler = '';
 	$place = '';
 	$instance = '';
-	$rmaArray = array();
-	// print_r($_REQUEST);
-	$order_number = getOrderNum($rma_number);
+
+	$R = getRMA($rma_number);
+	$order_number = $R['order_number'];
+	$order_type = $R['order_type'];
+
 	$partid;
 	$sales_item_id;
 	
@@ -74,31 +87,13 @@
 		//Find the items pertaining to the RMA number and the serial searched
 		$rmaArray = findRMAItems($rma_serial, $rma_number);
 	
-		// print_r($rmaArray);
 		if(empty($itemLocation)) {
 			$errorHandler = "Locations can not be empty.";
 		} else {
 			//Check if there is 1, multiple, or none found
 			if(count($rmaArray) == 1 || $invid != '') {
 				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
-/*
-				if($sales_item_id){
-					$si_line = "
-					SELECT so_number FROM sales_items WHERE `id` = ".prep($sales_item_id).";
-					";
-					$si_result = qdb($si_line);
-					if (mysqli_num_rows($si_result)){
-						$si_result = mysqli_fetch_assoc($si_result);
-						$so_number = $si_result['so_number'];
-						if(qualifyCredit($rma_number)){
-							createCreate($so_number, "sales",$rma_number);
-						}
-					}
-				}else{
-					//exit('This part was never sold');
-				}
-*/
-				
+
 				//Clear values after save
 				if($errorHandler == '') {
 					$rma_serial = '';
@@ -256,25 +251,7 @@
 
 		return $listSerial;
 	}
-	
 
-	//This is solely used to grab the date the order was created "RMA" for sidebar usage
-	function getCreated($rma_number) {
-		$date = '';
-		$query = "SELECT * FROM returns WHERE rma_number = ".res($rma_number).";";
-		$result = qdb($query) or die(qe());
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$date = $r['created'];
-
-			$date = date_format(date_create($date), "M j, Y");
-		}
-		
-		return $date;
-	}
-	
-	
-	
 	//This attempts to find all the items pertaining to the Serial & PartID matching the inventory to return item table
 	function findRMAItems($search, $rma_number, $type = 'all'){
 		$rma_search = array();
@@ -354,19 +331,6 @@
 
 		return $err_output;
 	}
-
-	function getOrderNum($rma_number) {
-		$order_number;
-
-		$query = "SELECT order_number FROM returns WHERE rma_number = ".prep($rma_number).";";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$order_number = $r['order_number'];
-		}
-
-		return $order_number;
-	}
 	
 	//parameter id if left blank will pull everything else if id is specified then it will give the disposition value
 	
@@ -425,6 +389,7 @@
 			.rma_sidebar {
 				background: #efefef;
 				height: 100%;
+				padding-top:15px;
 			}
 			
 			.serialsExpected .input-group-addon {
@@ -447,17 +412,17 @@
 		</style>
 	</head>
 	
-	<body class="sub-nav" id="rma-add" data-order-type="<?=$order_type?>" data-order-number="<?=$rma_number?>">
+	<body class="sub-nav" id="rma-add" data-order-type="RMA" data-order-number="<?=$rma_number?>">
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php'; include 'modal/package.php';?>
-		<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-			<div class="col-sm-4"><a href="/rma.php?rma=<?=$rma_number;?>" class="btn-flat info pull-left" style="margin-top: 10px;"><i class="fa fa-list" aria-hidden="true"></i> Manage RMA</a></div>
-			<div class="col-sm-4 text-center" style="padding-top: 5px;">
-				<h2>RMA #<?= $rma_number.' Receiving'; ?></h2>
+		<div class="row table-header" id = "order_header" style="margin: 0; min-height:60px; width: 100%;">
+			<div class="col-sm-4"><a href="/rma.php?rma=<?=$rma_number;?>" class="btn btn-default btn-sm" style="margin-top: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a></div>
+			<div class="col-sm-4 text-center">
+				<h2 class="minimal" style="margin-top:10px"><?php echo 'RMA# '.$rma_number.' Receiving'; ?></h2>
+				<?php if ($R['created']) { echo '<div class="info text-center" style="font-size:14px">'.format_date($R['created'],"D n/j/y g:ia").'</div>'; } ?>
 			</div>
 			<div class="col-sm-4">
-			<!--	<button class="btn-flat gray pull-right btn-update" id="rma_complete" style="margin-top: 10px; margin-right: 10px;" disabled>Save</button>-->
 			</div>
 		</div>
 		
@@ -470,8 +435,26 @@
 		<?php endif; ?>
 		
 			<!-------------------- $$ OUTPUT THE MACRO INFORMATION -------------------->
-				<div class="col-md-2 rma_sidebar" data-page="addition" style="padding-top: 15px;">
-						<?=sidebar_out($order_number,"RMA","RMA_display")?>
+			<div class="col-md-2 rma_sidebar" data-page="addition">
+<?php
+	$T = order_type($order_type);
+	$prefix = strtoupper(substr($T['order'],0,2));
+?>
+				<div class="row">
+					<div class="col-sm-12">
+						<h4 style="margin-top:10px"><?php echo strtoupper(getCompany($R['companyid'])); ?></h4>
+						<h3><?php echo $prefix.' '.$order_number; ?> <a href="/<?php echo $prefix.$order_number; ?>"><i class="fa fa-arrow-right"></i></a></h3>
+					</div>
+				</div>
+				<BR><BR><BR>
+				<div class="row">
+					<div class="col-sm-12">
+						<label>RMA Notes</label>
+						<div style="width:100%; height:150px; border:1px solid gray; background-color:#f5f5f5">
+							<?php echo $R['notes']; ?>
+						</div>
+					</div>
+				</div>	
 			</div>
 				
 			<div class="col-sm-10">
@@ -511,7 +494,7 @@
 									$init = true;
 									$package_no = 0;
 									
-									$masters = master_packages($rma_number,$order_type);
+									$masters = master_packages($rma_number,"RMA");
 									foreach($results as $b){
 										$package_no = $b['package_no'];
 										$box_button = "<button type='button' class='btn ";
@@ -538,7 +521,7 @@
 									
 
 								} else {
-									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($rma_number,'$order_type','1',NOW());";
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($rma_number,'RMA','1',NOW());";
 									qdb($insert) or die(qe());
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}

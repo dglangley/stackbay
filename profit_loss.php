@@ -11,6 +11,7 @@
 	include_once $rootdir.'/inc/getDisposition.php';
 //	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 	include_once $rootdir.'/inc/calcRepairCost.php';
+	include_once $rootdir.'/inc/order_type.php';
 
 	function getReturns($order_number, $order_type, $inventoryid) {
 		global $dbStartDate,$dbEndDate;
@@ -88,36 +89,6 @@
 		return ($credits);
 	}
 
-	function order_type($order_type) {
-		$T = array();
-
-		switch ($order_type) {
-			case 'IT':
-				$T['orders'] = '';
-				$T['order'] = '';
-				$T['items'] = '';
-				$T['item_label'] = '';
-				break;
-
-			case 'Repair':
-				$T['orders'] = 'repair_orders';
-				$T['order'] = 'ro_number';
-				$T['items'] = 'repair_items';
-				$T['item_label'] = 'repair_item_id';
-				break;
-
-			case 'Sale':
-			default:
-				$T['orders'] = 'sales_orders';
-				$T['order'] = 'so_number';
-				$T['items'] = 'sales_items';
-				$T['item_label'] = 'sales_item_id';
-				break;
-		}
-
-		return ($T);
-	}
-
 	$PURCHASES = array();
 	function getSalesRecords() {
 		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search;
@@ -180,6 +151,10 @@
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$entry = $r;
 					$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
+
+					//dl 8-31-17 to accommodate non-serialized qtys instead of a single-qty-per-record serial-based model
+					if ($r2['qty']==0) { $r2['qty'] = 1; }
+					$entry['qty'] = $r2['qty'];
 
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = getCost($r['partid'],'actual');
@@ -248,6 +223,10 @@
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$entry = $r;
 					$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
+
+					//dl 8-31-17 to accommodate non-serialized qtys instead of a single-qty-per-record serial-based model
+					if ($r2['qty']==0) { $r2['qty'] = 1; }
+					$entry['qty'] = $r2['qty'];
 
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = getCost($r['partid'],'actual');
@@ -592,7 +571,9 @@
 		}
 
 		$results[$key]['class'] = 'Billable';
-		$results[$key]['qty']++;
+		//dl 8-31-17 see change above for qtys from inventory
+		//$results[$key]['qty']++;
+		$results[$key]['qty'] += $r['qty'];
 		if ($cost_basis=='average') {
 			$results[$key]['cogs'] += $r['avg_cost'];
 		} else {

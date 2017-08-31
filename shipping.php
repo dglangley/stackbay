@@ -547,7 +547,7 @@
 											foreach ($serials as $serial):
 										?>
 										<div class="input-group check-save" data-savable="true">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id ='<?=$serial['id']?>' data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>>
+										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-package = "<?= $serial['packageid']; ?>" data-inv-id ='<?=$serial['id']?>' data-saved="<?=$serial['serial_no']?>" data-item-id='<?=$item['id']?>' value='<?=$serial['serial_no']?>' <?php echo ($serial['datetime'] != '' ? 'readonly="readonly"' : '');?>>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" data-package = "<?= $serial['packageid']; ?>" <?php echo ($serial['datetime'] != '' ? 'disabled' : '');?>><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>

@@ -26,18 +26,9 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
-	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/credit_functions.php';
 	include_once $rootdir.'/inc/getDisposition.php';
-
-	//Declarations
-	$mode = '';
-	$so_number = '';
-	$rma_number = '';
-	$rma_items = array();
-	$date_created = '';
-	$yesterday = '';
-	
+	include_once $rootdir.'/inc/order_type.php';
 
 	function lastPrice($invid,$ps = 'sold',$before_date = ''){
 		//Search for the last purchased price based off an inventory id.
@@ -56,29 +47,50 @@
 		$result = mysqli_fetch_assoc($result);
 		return($result['price']);
 	}
+	function insertRMA($partid, $invid, $rma_number, $line_number, $reasonInfo, $disposition, $qty=1) {
+		$reasonInfo = trim($reasonInfo);
 
-	
+       	$rmaQuery = "INSERT INTO return_items ";
+		$rmaQuery .= "(`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) ";
+		$rmaQuery .= "VALUES ($partid, $invid, $rma_number, ";
+		if ($line_number) { $rmaQuery .= "'".res($line_number)."',"; } else { $rmaQuery .= "NULL,"; }
+		if ($reasonInfo) { $rmaQuery .= "'".res($reasonInfo)."',"; } else { $rmaQuery .= "NULL,"; }
+		$rmaQuery .= "$disposition,$qty); ";
+		$result = qdb($rmaQuery) OR die(qe().'<BR>'.$rmaQuery);
+	}
+
+	//Declarations
+	$mode = '';
+	$order_number = '';
+	$order_type = '';
+	$rma_number = '';
+	$rma_items = array();
+	$date_created = '';
+	$yesterday = '';
+	$build_number;
+	$companyid = 0;
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	$rma_date = '';
 
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
-	$so_number = grab("on");
+	$order_number = grab("on");
 	$rma_number = grab("rma",'');
 	$repair = grab("repair");
 	$build = grab("build");
 
-	$build_number;
-
 	//If this record has a rma number, find the RMA
 	if ($rma_number){
-		$query = "SELECT order_number, order_type FROM `returns` WHERE rma_number = ".prep($rma_number).";";
-		// echo($query);
+		$query = "SELECT created, companyid, order_number, order_type FROM `returns` WHERE rma_number = ".prep($rma_number).";";
 		$result = qdb($query) or die(qe()." $query");
-		// exit;
 		if (mysqli_num_rows($result)){
-			$result = mysqli_fetch_assoc($result);
-			$so_number = $result['order_number'];
+			$r = mysqli_fetch_assoc($result);
+			$order_number = $r['order_number'];
+			$order_type = $r['order_type'];
+			if (! $companyid) { $companyid = $r['companyid']; }
+			$rma_date = $r['created'];
 
-			if($result['order_type'] == 'Repair') {
+			if($r['order_type'] == 'Repair') {
 				$repair = true;
 			}
 		}
@@ -86,15 +98,15 @@
 
 	if($build) {
 		//get the build # for usage
-		$build_number = $so_number;
+		$build_number = $order_number;
 		//Get the real number aka the RO number
-		$query = "SELECT ro_number FROM builds WHERE id=".prep($so_number).";";
+		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
 		$result = qdb($query) or die(qe());
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
 			$order_number = $result['ro_number'];
 		} else {
-			$query = "SELECT id FROM builds WHERE ro_number=".prep($so_number).";";
+			$query = "SELECT id FROM builds WHERE ro_number=".prep($order_number).";";
 
 			$result = qdb($query) or die(qe());
 			if (mysqli_num_rows($result)) {
@@ -104,21 +116,18 @@
 		}
 	}
 
-	//echo $so_number;
-	
+	$T = order_type($order_type);
+
 	//Check for any post data from save
-	//Array = [counter] = invid
 	$checkedItems = $_POST["inventory"];
 	$reason = $_POST["reason"];
 	$dispositionArray = $_POST["disposition"];
 	$rma_notes = $_POST["rma_notes"];
 	$return = $_POST["return"];
-	
-	$companyid = $_POST['companyid'];
+
     $contactid = $_POST['contactid'];
     
 	if(!empty($checkedItems)){
-		//print_r($dispositionArray); die;
 		$rmaSave;
 		$partid;
 		$rmaQuery;
@@ -130,70 +139,43 @@
 		//New RMA
 		if (!$rma_number){
 			
-			if($repair || $build) {
-		        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
-		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Repair',".prep($contactid).",".prep($rma_notes).");";
-		    } else {
-		    	$insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
-		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($so_number).",'Sale',".prep($contactid).",".prep($rma_notes).");";
-		    }
+	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
+		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($order_number).",'".$order_type."',".prep($contactid).",".prep($rma_notes).");";
 	        qdb($insert) OR die();
 	        $rma_number = qid();
 	    	
 	    	//$checkedItems contains all the inventory id
 	        foreach($checkedItems as $invid) {
 	        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
-	        	$rmaSave = qdb($partidQuery) or die(qe());
+	        	$result = qdb($partidQuery) or die(qe());
 	        	
-	        	if (mysqli_num_rows($rmaSave)>0) {
-					$rmaSave = mysqli_fetch_assoc($rmaSave);
-					$partid = $rmaSave['partid'];
+	        	if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$partid = $r['partid'];
 				}
 	        	
 	        	$reasonInfo = $reason[$invid];
 	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
-	        	
-	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
-	        		//print_r($return); die;
-		        	$rmaQuery = "
-		                INSERT INTO `return_items`
-		                (`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) VALUES 
-		                ($partid ,$invid,".$rma_number.",NULL,'".$reasonInfo."',$disposition,1);
-		            ";
-	        	if ($rmaQuery){
-					//echo($rmaQuery);
-					qdb($rmaQuery) OR die();
-				}
-	        }
-	    //Tis an RMA Update or Delete
-		} else { 
+
+				insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
+			}
+
+		} else { //Tis an RMA Update or Delete
+
         	foreach($checkedItems as $invid) {
-        		if($repair || $build) {
-        			$partidQuery = "SELECT partid, repair_item_id FROM inventory WHERE id = ".res($invid).";";
-        		} else {
-	        		$partidQuery = "SELECT partid, sales_item_id FROM inventory WHERE id = ".res($invid).";";
-	        	}
-	        	$rmaSave = qdb($partidQuery) or die(qe());
-	        	
-	        	if (mysqli_num_rows($rmaSave)) {
-					$rmaSave = mysqli_fetch_assoc($rmaSave);
-					$partid = $rmaSave['partid'];
-					if($repair  || $build) {
-	        			$so_line_id = $rmaSave['repair_item_id'];
-	        		} else {
-		        		$so_line_id = $rmaSave['sales_item_id'];
-		        	}
-					
+       			$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
+	        	$result = qdb($partidQuery) or die(qe());
+				if (mysqli_num_rows($result)==0) {
+					echo 'FAILED! No partid for query: '.$partidQuery.'<BR>';
+					exit;
 				}
-	        	
+
+				$r = mysqli_fetch_assoc($result);
+				$partid = $r['partid'];
+
 	        	$reasonInfo = $reason[$invid];
 	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 	        	
-	        	// print_r($checkedItems);
-	        	// echo "<br>";
-	        	// print_r($return);
-	        	// die;
-	        	//echo 'Reason: ' . $reasonInfo . ' RMA: ' . $rma_number . ' invid:' . $invid . ' Partid:' . $partid . "<br>";
 	        	$rma_macro_update = "UPDATE `returns` SET `notes` = ".prep($rma_notes)." WHERE rma_number = '".$rma_number."';";
 	        	qdb($rma_macro_update) OR die();
 	        	if ($return[$invid] != ''){
@@ -202,49 +184,29 @@
 		            `reason`= '$reasonInfo',
 		            `dispositionid`= $disposition
 		             WHERE `id` = ".prep($return[$invid]).";";
-	        	} else {
-	        		$rmaQuery = "
-		                INSERT INTO `return_items`
-		                (`partid`,`inventoryid`, `rma_number`, `line_number`, `reason`, `dispositionid`, `qty`) VALUES 
-		                ($partid ,$invid,".$rma_number.",NULL,'".$reasonInfo."',$disposition,1);
-		            ";
-	        	}
-	        	
-	        	if ($rmaQuery){
-					//echo($rmaQuery);
 					qdb($rmaQuery) OR die();
+	        	} else {
+					insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
 				}
         	}
+
         	//Garbage collection for unchecked data (the key = the inventoryid)
-				foreach($return as $key => $retid) {
-					if(!in_array($key, $checkedItems) && $retid != '') {
-						$query = "DELETE FROM `return_items` WHERE `id` = $retid;";
-						//echo $query;print_r($return);
-						qdb($query) OR die();
-					}
-					//print_r($checkedItems);
-		        	//echo $retid . "<br>";
-		        	//print_r($return);
-		        	
+			foreach($return as $key => $retid) {
+				if(!in_array($key, $checkedItems) && $retid != '') {
+					$query = "DELETE FROM `return_items` WHERE `id` = $retid;";
+					qdb($query) OR die();
 				}
-				// print_r($checkedItems);
-	   //     	echo "<br>";
-	   //     	print_r($return);
-	   //     	die;
+			}
 		}
 	}
 
 	// echo"<div style='position:fixed;right:15px;bottom:10px;'>";
 	//If there is an RMA number, then this is an existing RMA record
 	if ($rma_number){
-		$sidebar_mode = 'RMA';
-		$sidebar_number = $rma_number;
 		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
 		$rma_select = qdb($rma_select);
 		//Verify there are Rows from this returns/get meta information
 		if (mysqli_num_rows($rma_select)){
-			//Date Created
-
 			//Should only be one row
 			$rma = mysqli_fetch_assoc($rma_select);
 			
@@ -254,11 +216,11 @@
 			if($date_created >= $yesterday){
 				//If order was within last day, load Available sales order rows (allowing the user to edit them)
 				if($rma['order_type'] == "Sale" || $rma['order_type'] == "Repair"){
-					$so_number = $rma['order_number'];
+					$order_number = $rma['order_number'];
 				}
 				else{
 					//Otherwise, there is no need: just pull the 
-					$so_number = false;
+					$order_number = false;
 				}
 			} else {
 				$mode = 'old';
@@ -266,32 +228,6 @@
 			
 			//Grab all the serials which have been received on this RMA already
 			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
-			/*
-			This is the sales information of all the items which were ever sold on the inventory
-			SELECT * FROM inventory i, sales_items si where 
-			si.id = i.sales_item_id
-			AND i.id in ( 
-				SELECT invid FROM `return_items` ri, inventory_history ih 
-				WHERE ih.invid = ri.inventoryid 
-				and field_changed = "returns_item_id" 
-				and value = ri.id
-				and rma_number = 14347
-			);
-			*/
-			/*
-			
-			SELECT i.* FROM `inventory_history` ih, inventory i
-			where invid = i.id 
-			AND field_changed = 'sales_item_id' 
-			AND value in(
-				SELECT si.id FROM `returns`, `sales_items` si 
-				where order_type = 'Sale' 
-				and order_number = si.so_number 
-				and rma_number = 14162
-			)
-
-
-			*/
 			$rma_micro = qdb($rma_mic) or die(qe()." $rma_mic");
 			
 			$receive_check = '';
@@ -311,72 +247,42 @@
 				$mode = 'view';
 			}
 		}
-	}else{
-		$sidebar_mode = 'Sales';
-		$sidebar_number = $so_number;
 	}
 	
 	//If there is an so_number set, and we are not just looking at an existing record, here I would pull the SO items for addition
-	if($so_number && $mode != 'view' && $mode != 'old'){
+	if($order_number && $mode != 'view' && $mode != 'old'){
 
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 
-		if($repair  || $build) {
-			$sales_macro = "SELECT companyid, contactid, ro_number FROM repair_orders where `ro_number` = ".prep($so_number).";";
-		} else {
-			$sales_macro = "SELECT companyid, contactid, so_number FROM sales_orders where `so_number` = ".prep($so_number).";";
-		}
+		$query = "SELECT companyid, contactid, ".$T['order']." FROM ".$T['orders']." WHERE ".$T['order']." = ".prep($order_number).";";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$r = mysqli_fetch_assoc($result);
 
-		//echo $sales_macro;
-		$sales_macro = mysqli_fetch_assoc(qdb($sales_macro));
-		
-		if($repair  || $build) {
-			//Check to see if these items have already been RMA'd off this particular sales order
-			$limiter = "SELECT `inventoryid`
+		//Check to see if these items have already been RMA'd off this particular order
+		$limiter = "SELECT `inventoryid`
 			FROM `returns` r , `return_items` ri, inventory i
-			WHERE order_number=".prep($so_number)." 
-			AND order_type = 'Repair' 
+			WHERE order_number=".prep($order_number)." 
+			AND order_type = '".$order_type."' 
 			AND r.`rma_number` = ri.`rma_number`
 			AND i.id = `inventoryid`
-			AND i.`qty` > 0;";
-		} else {
-			//Check to see if these items have already been RMA'd off this particular sales order
-			$limiter = "SELECT `inventoryid`
-			FROM `returns` r , `return_items` ri, inventory i
-			WHERE order_number=".prep($so_number)." 
-			AND order_type = 'Sale' 
-			AND r.`rma_number` = ri.`rma_number`
-			AND i.id = `inventoryid`
-			AND i.`qty` > 0;";
-		}
-		
+			AND i.`qty` > 0;
+		";
 		$limit_result = qdb($limiter) or die(qe()." | $limiter");
 		$limit = '';
 		$limit_arr = array();
 
-		if($repair) {
-			//Check to see if these items have already been RMA'd off this particular sales order
-			$sales_micro = "SELECT i.serial_no, ri.partid, i.id inventoryid, ri.price FROM repair_items ri, inventory i WHERE `ro_number` = ".prep($so_number)." AND i.`id` = `ri`.`invid` AND i.serial_no IS NOT NULL;";
-
-			//echo $sales_micro;
-		} else {
-			$sales_micro = "SELECT i.serial_no, si.partid, i.id inventoryid, si.price FROM sales_items si, inventory i WHERE `so_number` = ".prep($so_number)." AND `sales_item_id` = `si`.`id`;";
-		}
-		
 		//here is where I take out the results of the serials I have already RMA'ed
 		if (mysqli_num_rows($limit_result)){
 			foreach ($limit_result as $invid){
-				// $limit .= $invid['inventoryid'].", ";
 				$limit_arr[$invid['inventoryid']] = true;
 			}
-			// $limit = trim($limit,", ");
-			// $sales_micro .= " AND i.id NOT IN ($limit)";
 		}
-		$sales_micro .= ";";
-		// echo($sales_micro);
-		$sales_micro = qdb($sales_micro) or die(qe()." | $sales_micro");
-		// print_r($sales_micro);
-		foreach ($sales_micro as $line_item){
+
+		// pull all items on this order
+		$query2 = "SELECT i.serial_no, i.partid, i.id inventoryid, items.price FROM ".$T['items']." items, inventory i ";
+		$query2 .= "WHERE ".$T['order']." = ".prep($order_number)." AND i.".$T['item_label']." = items.id; ";
+		$result2 = qdb($query2) or die(qe()." | $query2");
+		foreach ($result2 as $line_item){
 			$partid = '';
 			$invid = '';
 			if (!isset($rma_items[$line_item['partid']][$line_item['inventoryid']])){
@@ -396,18 +302,8 @@
 				} 
 			}
 		}
-		
-
-		
-		
 	}
 ?>
-
-
-
-
-
-
 <!DOCTYPE html>
 <html>
 	<head>
@@ -420,10 +316,6 @@
 			.serial_box{
 				padding-bottom:10px;
 			}
-			.reason-col, .serials-col, .qty-col,.disp-col,.history-col,.warranty-col{
-				padding-top:10px !important;
-			}
-
 			.history-col{
 				font-size:8pt;
 			}
@@ -434,7 +326,7 @@
 		</style>
 	</head>
 	<!---->
-	<body class="sub-nav forms" id = "rma-body" data-rma-number="<?=$rma_number?>" data-associated="<?=$so_number?>">
+	<body class="sub-nav forms" id = "rma-body" data-rma-number="<?=$rma_number?>" data-associated="<?=$order_number?>">
 		<div class="container-fluid pad-wrapper">
 		<?php include 'inc/navbar.php';
 		include_once $rootdir.'/modal/address.php';
@@ -444,24 +336,25 @@
 		include_once $rootdir.'/modal/history.php';
 		?>
 		
-		<form action="rma.php?on=<?=$so_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : ($build ? '&build=true' : ''));?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
+		<form action="rma.php?on=<?=$order_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : ($build ? '&build=true' : ''));?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
 			
-			<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
+			<div class="row-fluid table-header" id = "order_header" style="width:100%;background-color:#f0f4ff;">
 				
 				<div class="col-md-4">
 					<?php
-	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$order_type[0].'O'.$rma_number.'.pdf"
-						if(!$repair && !$build) {
-							echo '<a class="btn-flat pull-left" href="/shipping.php?on='.$so_number.'"><i class="fa fa-truck"></i> (SO# '.$so_number.')</a>';
-						} else if($repair) {
-							echo '<a class="btn-flat pull-left" href="/repair_add.php?on='.$so_number.'"><i class="fa fa-truck"></i> (RO# '.$so_number.')</a>';
+	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $rma_number . '" | href="/docs/'.$type[0].'O'.$rma_number.'.pdf"
+/*
+						if ($order_type=='Sale') {
+							echo '<a class="btn btn-primary btn-sm" href="/shipping.php?on='.$order_number.'"><i class="fa fa-truck"></i> SO# '.$order_number.'</a>';
+						} else if ($repair) {
+							echo '<a class="btn btn-default btn-sm text-warning" href="/repair_add.php?on='.$order_number.'"><i class="fa fa-qrcode"></i> RO# '.$order_number.'</a>';
 						} else {
 							//It's a build mask
-							echo '<a class="btn-flat pull-left" href="/repair_add.php?on='.$so_number.'"><i class="fa fa-truck"></i> (Build# '.$build_number.')</a>';
+							echo '<a class="btn btn-default btn-sm text-warning" href="/repair_add.php?on='.$order_number.'"><i class="fa fa-qrcode"></i> Build# '.$build_number.'</a>';
 						}
+*/
 						if($rma_number){
-							// echo '<a class="btn-flat pull-left" target="_new" href="/docs/RMA'.$rma_number.'.pdf"><i class="fa fa-file-pdf-o"></i></a>';
-							echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$rma_number.'">Receive</a>';
+							echo '<a class="btn btn-default btn-sm text-warning" href="/rma_add.php?on='.$rma_number.'"><i class="fa fa-qrcode"></i> Receive</a>';
 							$rows = get_assoc_credit($rma_number);
 							if(mysqli_num_rows($rows)>0){
 								$output = '
@@ -472,7 +365,6 @@
 		                            </button>';
 	                            
 								$output .= '<ul class="dropdown-menu">';
-								// $output = "<div id = 'invoice_selector' class = 'ui-select'>";
 								foreach ($rows as $cm) {
 									$output .= '
 										<li>
@@ -489,14 +381,13 @@
 					?>
 					
 				</div>
-				<div class="col-md-4 text-center"><h2 class = "minimal" style ="margin-top:10px;;">
-				    <?=($rma_number)? "RMA# $rma_number" :'New RMA';?>
-				    </h2>
+				<div class="col-md-4 text-center">
+					<h2 class="minimal" style="margin-top:10px"><?=($rma_number)? "RMA# $rma_number" :'New RMA';?></h2>
+					<?php if ($rma_date) { echo '<div class="info text-center" style="font-size:14px">'.format_date($rma_date,"D n/j/y g:ia").'</div>'; } ?>
 				</div>
-				<!--<?=($rma_number=="New")?'success':'success'?>-->
-				<div class="col-md-4">
-					<button class="btn-flat btn-sm gray pull-right" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;" disabled>
-						<?=($rma_number=="New") ? 'Create' :'Save'?>
+				<div class="col-md-4 text-right">
+					<button class="btn btn-success btn-sm" id = "rma_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;" disabled>
+						<i class="fa fa-save"></i> <?=($rma_number=="New") ? 'Create' :'Save'?>
 					</button>
 				</div>
 			</div>
@@ -504,9 +395,23 @@
 			<!-- Row declaration for splitting the two "halves of the page  -->
 			<div class="row remove-margin">
 				<!--================== Begin Left Half ===================-->
-				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
-					<!--'RMA'/$rma_number OR 'Sales'/$so_number-->
-					<?=sidebar_out($so_number,"RMA",$sidebar_mode,$rma_number)?>
+				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef">
+					<div class="row">
+						<div class="col-sm-12">
+<?php
+	$prefix = strtoupper(substr($T['order'],0,2));
+?>
+							<h4 style="margin-top:10px"><?php echo strtoupper(getCompany($companyid)); ?></h4>
+							<h3><?php echo $prefix.' '.$order_number; ?> <a href="/<?php echo $prefix.$order_number; ?>"><i class="fa fa-arrow-right"></i></a></h3>
+						</div>
+					</div>
+					<BR><BR><BR>
+					<div class="row">
+						<div class="col-sm-12">
+							<label for="rma_notes">RMA Notes</label>
+							<textarea id="rma_notes" class="form-control textarea" name="rma_notes" rows="3"><?php echo $rma_notes; ?></textarea>
+						</div>
+					</div>	
 				</div>
 			
 				<!--======================= End Left half ======================-->
@@ -518,13 +423,13 @@
 						<table class="rma-create table table-hover table-striped table-condensed" style="margin-top: 15px;">
 							<thead>
 								<tr>
-									<th class="col-md-2">Description</th>
+									<th class="col-md-3">Description</th>
 									<th class="col-md-1">Price</th>
 									<th class="col-md-1">Warr Exp</th>
 									<th class="col-md-2">Serials</th>
 									<th class="col-md-1">Disposition</th>
 									<th class="col-md-2">Reason</th>
-									<th class="col-md-3">History</th>
+									<th class="col-md-2">History</th>
 								</tr>
 							</thead>
 							
@@ -532,7 +437,7 @@
 								<!-- html... -->
 								<?php foreach ($row as $i => $inf):?>
 									<tr class="line_item" style = "padding-bottom:6px;">
-										<td class="part"  data-partid="" style="padding-top: 5px !important;vertical-align:top !important;">
+										<td class="part"  data-partid="">
 											<?php if($init):?>
 												<?=display_part(current(hecidb($part,"id")));?>
 											<?php endif;?>
@@ -577,7 +482,7 @@
 													$dispositionoptions = getDisposition('');
 												?>
 											    <?php if($mode=='view'){?>
-											    <div class="infinite brow-<?=$i?>" style="line-height:30px;"><?=getDisposition($inf['dispositionid']); ?></div>
+											    <div class="infinite brow-<?=$i?>"><?=getDisposition($inf['dispositionid']); ?></div>
 											    <?php }else{?>
 											    <select class="form-control disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]' <?=($inf['already'])? "disabled" : ''?>>
 											    	<option value = "null">- Select Disposition -</option>
@@ -600,85 +505,67 @@
 										</td>
 										<td class="history-col">										
 											<!--font-size:1.2vh;-->
-											<div class = "infinite" style='line-height:15px;font-size:.6vw;vertical-align:initial !important;'>
+											<div class = "infinite">
 												<?php 
-													$history_text ='';
 													$first_war = true;
 													$hist_count = 0;
 													$printable = array();
 													$war_text = "";
 													if($inf['history']){
 														foreach ($inf['history'] as $i => $history){
-														$select = "";
-														$link = "";
-														$actionHolder = "";
-														$action = "";
-														switch ($history['field']) {
-															case 'sales_item_id':
-																$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
-																$link = "/SO";
-																$actionHolder = "SO";
-																break;
-															case 'returns_item_id':
-																$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
-																$link = "/rma.php?rma=";
-																$actionHolder = "RMA";
-																break;
-															case 'purchase_item_id':
-																$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
-																$actionHolder = "PO";
-																$link = "/PO";
-																if($first_war){
-																	$war_text = "Warr ";
-																	// $most_recent_war = $history['value'];
-																	$war_text .= calcWarranty($history['value'],"history") . '<br>';
-																}
-																break;
-														}
-													
+															$select = "";
+															$link = "";
+															$actionHolder = "";
+															$action = "";
+															switch ($history['field']) {
+																case 'sales_item_id':
+																	$select = "SELECT `so_number` o FROM `sales_items` WHERE `id` = ".prep($history['value']).";";
+																	$link = "/SO";
+																	$actionHolder = "SO";
+																	break;
+																case 'returns_item_id':
+																	$select = "SELECT `rma_number` o FROM `return_items` WHERE `id` = ".prep($history['value']).";";
+																	$link = "/rma.php?rma=";
+																	$actionHolder = "RMA";
+																	break;
+																case 'purchase_item_id':
+																	$select = "SELECT `po_number` o FROM `purchase_items` WHERE `id` = ".prep($history['value']).";";
+																	$actionHolder = "PO";
+																	$link = "/PO";
+																	if($first_war){
+																		$war_text = "Warr ";
+																		// $most_recent_war = $history['value'];
+																		$war_text .= calcWarranty($history['value'],"history") . '<br>';
+																	}
+																	break;
+															}
 
-														if($select){
-															$result = qdb($select);
-															$result = mysqli_fetch_assoc($result);
-															if($result['o'] != $so_number) {
-																$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a> &nbsp; ";
-																if($actionHolder != 'PO') {
-																	$action .= format_date($history['date'],"n/j/y") . "<br>";
+															if($select){
+																$result = qdb($select);
+																$result = mysqli_fetch_assoc($result);
+																if($result['o'] != $order_number) {
+																	$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a> &nbsp; ";
+																	if($actionHolder != 'PO') {
+																		$action .= format_date($history['date'],"n/j/y") . "<br>";
+																	}
 																}
 															}
-														}
 
-														$printable[] = $action;
+															$printable[] = $action;
 														
-														if($first_war && $war_text){
-															//Print out the $warranty text
-															$printable[] = $war_text;
-															//We only care about the most recent warranty
-															$first_war = false;
+															if($first_war && $war_text){
+																//Print out the $warranty text
+																$printable[] = $war_text;
+																//We only care about the most recent warranty
+																$first_war = false;
+															}
 														}
 													}
+													foreach ($printable as $o => $text) {
+														echo($text);
+														$final = $o;
 													}
-													if (count($printable) > 0){
-														foreach ($printable as $o => $text) {
-															echo($text);
-															// if ($o != 1){
-															// 	echo " ";
-															// } else {
-															//echo "<br>";
-															// }
-															// if($o == 3){
-															// 	echo "<a class = 'lonk history_button' data-id='".$inf['inventoryid']."'>Show more</a>";
-															// 	break;
-															// }
-															$final = $o;
-														}
-														if($final < 1){
-															echo"<br>&nbsp;";
-														}
-													} else {
-														echo "&nbsp;<br>&nbsp;";
-													}
-		
+													if (count($printable)==0) { echo "&nbsp;<br>&nbsp;"; }
 												?>
 											</div>										
 										</td>
