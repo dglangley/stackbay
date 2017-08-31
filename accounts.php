@@ -99,7 +99,10 @@
 		body {
 		    top: 0px !important; 
 	    }
-
+	    
+		.capitalize {
+		    text-transform: capitalize;
+		}
 /*	    .complete {
 	    	color: rgb(129, 189, 130) !important;
 	    }*/
