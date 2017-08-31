@@ -50,6 +50,8 @@
 			$descr = trim(strtoupper($cols->item(array_search('DESCRIPTION',$F))->nodeValue));
 			if ($manf AND $descr) { $descr = $manf.' '.$descr; }
 			$qty = trim($cols->item(array_search('QTY.',$F))->nodeValue);
+			if (! $qty OR ! is_numeric($qty)) { continue; }
+
 			$heci = '';
 			if ($cols->item(array_search('HECI',$F))->getElementsByTagName('a')->length>0) {
 				if ($cols->item(array_search('HECI',$F))->getElementsByTagName('a')->item(0)->getElementsByTagName('span')->length>0) {

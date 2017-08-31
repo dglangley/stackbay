@@ -395,23 +395,28 @@
 						}
 
 						if($order_number != "New" && ($o['sales'] || $o['repair'] || $o['type'] == 'Builds')){
-							$rows = get_assoc_invoices($order_number, $o['type']);
-
-							//Get packages pertaining to this order
-							//$packages = getPackagesFix($order_number);
-
-								$output = '
+							$output = '
 								<div class ="btn-group">
 									<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
 		                              <i class="fa fa-folder-open-o"></i>
 		                              <span class="caret"></span>
 		                            </button>
 									<ul class="dropdown-menu">
-								';
-
-								$output .= getPackagesFix($order_number, $o['type']);
-
+							';
+							$rows = get_assoc_invoices($order_number, $o['type']);
+							foreach ($rows as $inv) {
 								$output .= '
+										<li>
+											<a href="/docs/INV'.$inv['invoice_no'].'.pdf">
+												Invoice# '.$inv['invoice_no'].' ('.format_date($inv['date_invoiced'],'n/j/Y').') 
+											</a>
+										</li>
+								';
+							}
+
+							$output .= getPackagesFix($order_number, $o['type']);
+
+							$output .= '
 										<li>
 											<a target="_blank" href="/invoice.php?on='.$order_number.'">
 												<i class="fa fa-plus"></i> Proforma Invoice
@@ -419,8 +424,8 @@
 										</li>
 	                            	</ul>
 								</div>
-								';
-								echo $output;
+							';
+							echo $output;
 						}/* end if($order_number != "New" && ($o['type'] == 'Sale' || $o['type'] == 'Repair'))*/
 
 						if($order_number != "New" && $o['purchase']){

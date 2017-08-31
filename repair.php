@@ -544,15 +544,15 @@
 			?>
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				<div class="col-md-4">
-					<?php if(!$build || ($build && $ticketStatus)) { ?>
-						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning pull-left"><i class="fa fa-qrcode"></i> Receive</a>
-					<?php } ?>
-
 					<?php if($build): ?>
 						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
 						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
+
+					<?php if(!$build || ($build && $ticketStatus)) { ?>
+						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+					<?php } ?>
 				</div>
 				
 				<div class="col-md-4 text-center">

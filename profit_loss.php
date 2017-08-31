@@ -152,6 +152,10 @@
 					$entry = $r;
 					$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
 
+					//dl 8-31-17 to accommodate non-serialized qtys instead of a single-qty-per-record serial-based model
+					if ($r2['qty']==0) { $r2['qty'] = 1; }
+					$entry['qty'] = $r2['qty'];
+
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = getCost($r['partid'],'actual');
 
@@ -219,6 +223,10 @@
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$entry = $r;
 					$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
+
+					//dl 8-31-17 to accommodate non-serialized qtys instead of a single-qty-per-record serial-based model
+					if ($r2['qty']==0) { $r2['qty'] = 1; }
+					$entry['qty'] = $r2['qty'];
 
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = getCost($r['partid'],'actual');
@@ -563,7 +571,9 @@
 		}
 
 		$results[$key]['class'] = 'Billable';
-		$results[$key]['qty']++;
+		//dl 8-31-17 see change above for qtys from inventory
+		//$results[$key]['qty']++;
+		$results[$key]['qty'] += $r['qty'];
 		if ($cost_basis=='average') {
 			$results[$key]['cogs'] += $r['avg_cost'];
 		} else {

@@ -7,7 +7,7 @@
 		$cost = 0;
 
 		/***** COMPONENTS COST *****/
-		$query = "SELECT rc.qty, pi.price FROM repair_components rc, inventory i, purchase_items pi ";
+		$query = "SELECT rc.qty, pi.price, i.id inventoryid FROM repair_components rc, inventory i, purchase_items pi ";
 		$query .= "WHERE rc.ro_number = '".res($ro_number)."' AND rc.invid = i.id ";
 		$query .= "AND i.purchase_item_id = pi.id; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -19,6 +19,8 @@
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$price = $r2['actual']/$r['qty'];
+			} else {
+//				echo $ro_number.' = '.$r['qty'].'*'.$r['price'].':'.$query2.'<BR>';
 			}
 			$ext = $r['qty']*$price;
 

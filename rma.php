@@ -157,7 +157,7 @@
 	        	$reasonInfo = $reason[$invid];
 	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 
-				insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition,$qty);
+				insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
 			}
 
 		} else { //Tis an RMA Update or Delete
@@ -186,7 +186,7 @@
 		             WHERE `id` = ".prep($return[$invid]).";";
 					qdb($rmaQuery) OR die();
 	        	} else {
-					insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition,$qty);
+					insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
 				}
         	}
 
@@ -254,7 +254,7 @@
 
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 
-		$query = "SELECT companyid, contactid, ".$T['order']." FROM repair_orders WHERE ".$T['order']." = ".prep($order_number).";";
+		$query = "SELECT companyid, contactid, ".$T['order']." FROM ".$T['orders']." WHERE ".$T['order']." = ".prep($order_number).";";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		$r = mysqli_fetch_assoc($result);
 
