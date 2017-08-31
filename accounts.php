@@ -517,7 +517,7 @@
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td class="text-right">'.terms_calc($id, $info['order_type']).'</td>
-                    <td class="text-right total_cost">'.format_price($total).' <input class="pull-right payment_orders" type="checkbox" data-type="'.$info['order_type'].'" data-order="'.$id.'" style="margin: 4px 8px;"></td>
+                    <td class="text-right total_cost">'.format_price($total).' <input class="pull-right payment_orders" type="checkbox" data-type="'.$info['order_type'].'" data-order="'.$id.'" style="margin: 4px 8px;" '.($status == 'complete' ? 'disabled' : '').'></td>
                 </tr>
 		';
 

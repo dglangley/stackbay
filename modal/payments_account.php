@@ -19,7 +19,7 @@
                                 <input class="form-control input-sm payment-placeholder" type="text" name="payment_number" placeholder="Check #">
                             </div>
                             <div class="col-md-3" style="padding: 0 5px">
-                                <div class="input-group date datetime-picker-line">
+                                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
                                     <input type="text" name="payment_date" class="form-control input-sm" data-date="<?=date("m/d/Y")?>" value="<?=date("m/d/Y")?>" style="min-width:50px;">
                                     <span class="input-group-addon">
                                         <span class="fa fa-calendar"></span>
