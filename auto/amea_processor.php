@@ -52,6 +52,7 @@
 		'MODULE'=>1,
 		'HECI'=>1,
 		'PLEASE'=>1,
+		'ARD'=>1,
 		'CLEI'=>1,
 		'FILTER'=>1,
 		'INVERTER'=>1,

@@ -589,7 +589,7 @@
 													</a>	
 												</div>
 												<div class = "col-md-3 pull-left">
-													<a href="/rma.php?on='.$rma['rma_number'].'" class = "pull-left">
+													<a href="/rma.php?rma='.$rma['rma_number'].'" class = "pull-left">
 														<i class="fa fa-truck"></i>
 													</a>
 												</div>
@@ -599,7 +599,7 @@
 							}
 						}
 						echo '<li>
-								<a href="/rma.php?on='.$order_number.''.($o['repair'] ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
+								<a href="/rma.php?on='.$order_number.($o['repair'] ? '&repair=true' : ($o['type'] == 'Builds' ? '&repair=true' : '')).'">
 									<i class ="fa fa-plus"></i>
 									Create RMA
 								</a>

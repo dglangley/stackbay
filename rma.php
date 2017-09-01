@@ -62,7 +62,7 @@
 	//Declarations
 	$mode = '';
 	$order_number = '';
-	$order_type = '';
+	$order_type = grab("order_type");
 	$rma_number = '';
 	$rma_items = array();
 	$date_created = '';
@@ -78,6 +78,7 @@
 	$rma_number = grab("rma",'');
 	$repair = grab("repair");
 	$build = grab("build");
+	if (! $repair AND ! $build AND ! $order_type) { $order_type = 'Sale'; }
 
 	//If this record has a rma number, find the RMA
 	if ($rma_number){
@@ -141,7 +142,7 @@
 			
 	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
 		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($order_number).",'".$order_type."',".prep($contactid).",".prep($rma_notes).");";
-	        qdb($insert) OR die();
+	        qdb($insert) OR die(qe().'<BR>'.$insert);
 	        $rma_number = qid();
 	    	
 	    	//$checkedItems contains all the inventory id
@@ -158,6 +159,7 @@
 	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 
 				insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
+				$rma_date = $now;
 			}
 
 		} else { //Tis an RMA Update or Delete
@@ -257,6 +259,7 @@
 		$query = "SELECT companyid, contactid, ".$T['order']." FROM ".$T['orders']." WHERE ".$T['order']." = ".prep($order_number).";";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		$r = mysqli_fetch_assoc($result);
+		$companyid = $r['companyid'];
 
 		//Check to see if these items have already been RMA'd off this particular order
 		$limiter = "SELECT `inventoryid`
@@ -336,7 +339,12 @@
 		include_once $rootdir.'/modal/history.php';
 		?>
 		
-		<form action="rma.php?on=<?=$order_number;?>&rma=<?=$rma_number;?><?=($repair ? '&repair=true' : ($build ? '&build=true' : ''));?>" onsubmit="return validateForm()" method="post" style="height: 100%;">
+		<form action="rma.php" onsubmit="return validateForm()" method="post">
+		<input type="hidden" name="on" value="<?=$order_number;?>">
+		<input type="hidden" name="order_type" value="<?=$order_type;?>">
+		<input type="hidden" name="rma" value="<?=$rma_number;?>">
+		<?php if ($repair) { echo '<input type="hidden" name="repair" value="true">'; } ?>
+		<?php if ($build) { echo '<input type="hidden" name="build" value="true">'; } ?>
 			
 			<div class="row-fluid table-header" id = "order_header" style="width:100%;background-color:#f0f4ff;">
 				
@@ -575,8 +583,8 @@
 						</table>
 							
 						<!-- Macro Form Inputs-->
-						<input type="text" name="companyid" style="display:none;" value="<?=$sales_macro['companyid']?>"/>
-						<input type="text" name="contactid" style="display:none;" value="<?=$sales_macro['contactid']?>"/>
+						<input type="text" name="companyid" style="display:none;" value="">
+						<input type="text" name="contactid" style="display:none;" value="">
 
 					</div>
 				</div>
@@ -626,11 +634,6 @@
 		})(jQuery);
 		
 		function validateForm() {
-		    // var x = "";
-		    // if (x == "") {
-		    //     modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Disposition can not be empty. <br><br> Please select a dispostion and re-submit the form.");
-		    //     return false;
-		    // }
 		}
 	</script>
 
