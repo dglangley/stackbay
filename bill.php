@@ -28,150 +28,162 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/item_history.php';
-	include_once $rootdir.'/inc/operations_sidebar.php'; 
 	include_once $rootdir.'/inc/order_parameters.php'; 
 	include_once $rootdir.'/inc/terms.php';
-	
-	//Declarations
-	$mode = '';
-	$po_number = '';
-	$grouped = array();
 	
 
 	//Helper functions
 	function getSerial($invid) {
 		$serial = "";
 		
-		$query = "SELECT serial_no FROM inventory WHERE id = ". prep($invid) .";";
+		$query = "SELECT serial_no FROM inventory WHERE id = ". prep($invid) ." AND serial_no IS NOT NULL;";
 		$result = qdb($query);
-	    
 	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$serial = $result['serial_no'];
+			$r = mysqli_fetch_assoc($result);
+			$serial = $r['serial_no'];
 		}
 		
 		return $serial;
 	}
-	
-	function outstanding_amount($order, $type){
-		//Calculates the amount outstanding for an SO/PO
-		$o = o_params($type);
-		$order = prep($order);
-		$money = array(
-			"paid" => 0.00,
-			"order_total" => 0.00,
-			"remaining" => 0.00
-			);
-		if($o['purchase']){
-			//This grabs all the payments made on a purchase order
-			$recorded = "
-			SELECT SUM(`amount`) paid FROM payment_details
-			WHERE order_type = 'Bill'
-			AND order_number in (SELECT `bill_no` FROM `bills` where po_number = $order);";
-			
-			$paid_results = qdb($recorded) or die(qe()." | $recorded");
-			if(mysqli_num_rows($paid_results)){
-				$paid_item = mysqli_fetch_assoc($paid_results);
-				$money['paid'] = $paid_item['paid'];
-			}
-			
-			$total = "SELECT SUM(`qty` * `price`) total FROM purchase_items where po_number = $order;";
-			$total_results = qdb($total) or die(qe()." | $total");
-			if(mysqli_num_rows($total_results)){
-				$total_item = mysqli_fetch_assoc($total_results);
-				$money['order_total'] = $total_item['total'];
-			}
-		}
-		$money['remaining'] = $money['order_total'] - $money['paid'];
-		return($money);
-	}
+
+	//Declarations
+	$mode = '';
+	$grouped = array();
+	$invoice_no = '';
+	$order_total = 0;
+	$outstanding_amount = 0;
 	
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
-	$po_number = grab("on");
-	$bill_number = grab("bill");
-	$sidebar_mode ='bill';
-	$associated_order = '';
-	$subtotal = 0.00;
-	
-	if(strtolower($bill_number) == 'new' || (is_numeric($bill_number))&&$mode=="edit"){
-		//Get all the information from the previously purchased items with associated inventory
-		$po_select = "
-		SELECT pi.line_number ln, pi.partid, pi.qty, serial_no, pi.id purchid, pi.warranty, price, i.id
-		FROM `purchase_items` pi
-		LEFT JOIN `inventory` i on pi.`id` = i.`purchase_item_id`
-		WHERE pi.po_number = ".prep($po_number)."
-		AND (i.id NOT IN (
+	$order_number = grab("on");
+	$bill_no = grab("bill");
+	if (! trim($bill_no) OR ! is_numeric($bill_no)) { $bill_no = 0; }
+	$companyid = 0;
+	$notes = '';
+
+	if ($mode=='edit' AND ! $bill_no) {
+		die("Cannot continue without a valid Bill No.");
+	}
+
+	if ($bill_no) {
+		$query = "SELECT * FROM bills WHERE bill_no = '".res($bill_no)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)==0) {
+			die("Bill No. $bill_no is not valid");
+		}
+		$bill = mysqli_fetch_assoc($result);
+		$invoice_no = $bill['invoice_no'];
+		$due_date = format_date($bill['due_date'],"n/j/Y");
+		$notes = $bill['notes'];
+		$order_number = $bill['po_number'];
+
+/*
+		$query2 = "SELECT *, bill_items.id as bi_id FROM bill_items ";
+		$query2 .= "LEFT JOIN bill_shipments on bill_items.id = bill_item_id ";
+		$query2 .= "WHERE bill_items.bill_no = '".res($bill_no)."'; ";
+		$result2 = qdb($query2) or die(qe().": ".$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			// using the bill item id as key just to avoid duplicates
+			$grouped[$r2['bi_id']]['partid'] = $r2['partid'];
+			$grouped[$r2['bi_id']]['qty'] = $r2['qty'];
+//			$grouped[$r2['bi_id']]['purchid'] = $order_number;
+			$grouped[$r2['bi_id']]['warranty'] = $r2['warranty'];
+			$grouped[$r2['bi_id']]['price'] = $r2['amount'];
+
+			// inventoryid comes from bill_shipments
+			$grouped[$r2['bi_id']]['serials'][$r2['inventoryid']] = getSerial($r2['inventoryid']);
+			$order_total += $r2['qty'] * $r2['amount'];
+		}
+*/
+	} 
+
+	$query = "SELECT * FROM purchase_orders WHERE po_number = '".res($order_number)."'; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	if (mysqli_num_rows($result)>0) {
+		$r = mysqli_fetch_assoc($result);
+		$companyid = $r['companyid'];
+	}
+	$due_date = terms_calc($order_number,"po");
+
+	//Get all the information from the previously purchased items with associated inventory
+	$i = 0;
+	$po_select = "
+		/*SELECT pi.line_number ln, pi.partid, pi.qty, serial_no, pi.id purchid, pi.warranty, price, i.id*/
+		SELECT * FROM purchase_items pi
+		/*LEFT JOIN `inventory` i on pi.`id` = i.`purchase_item_id`*/
+		WHERE pi.po_number = ".prep($order_number)."
+		/*AND (i.id NOT IN (
 			SELECT inventoryid FROM `bill_items` bi, `bills` b, `bill_shipments` bs
-			WHERE b.po_number = ".prep($po_number)."
+			WHERE b.po_number = ".prep($order_number)."
 			AND b.bill_no = bi.bill_no
 			AND bi.id = bs.bill_item_id
 			)
 			OR i.id IS NULL
-		)
-		Order by ln
-		;";
-		// echo($po_select);
-		$po_results = qdb($po_select) OR die(qe().": $po_select");
-		// echo("<pre>");
-		foreach($po_results as $row){
-			$grouped[$row['purchid']]['partid'] = $row['partid'];
-            $grouped[$row['purchid']]['qty'] = $row['qty'];
-            $grouped[$row['purchid']]['purchid'] = $row['purchid'];
-            $grouped[$row['purchid']]['warranty'] = $row['warranty'];
-            $grouped[$row['purchid']]['price'] = $row['price'];
-            // $grouped[$row['purchid']]['id'] = $row['id'];
-			$grouped[$row['purchid']]['serials'][$row['id']] = $row['serial_no'];
-			$grouped[$row['purchid']]['ln'] = $row['ln'];
-			$subtotal += $row['qty'] * $row['amount'];
-			
-		}
-		// print_r($grouped);exit;
-		$due_estimate = terms_calc($po_number,"po");
+		)*/
+		ORDER BY pi.line_number;
+	";
+	$po_results = qdb($po_select) OR die(qe().": $po_select");
+	while ($r = mysqli_fetch_assoc($po_results)) {
+		$bi_id = 0;
 
-		// $due_select = "
-		// SELECT created, days FROM purchase_orders, terms WHERE termsid = terms.id and po_number = ".prep($po_number).";";
-		// $due_estimate_result = qdb($due_select) or die(qe()." | $due_select");
-		// $due_estimate_arr = mysqli_fetch_assoc($due_estimate_result);
-		// $due_estimate = format_date($due_estimate_arr['created'], "n/j/Y", array("d"=>$due_estimate_arr['days']));
-		
-		// $billable = "SELECT SUM(`amount` * `qty`) FROM `bills` b, `bill_items` bi where b.bill_no = bi.bill_no AND po_number = ".prep($po_number).";";
-	}	
-	
-	if(is_numeric($bill_number)){
-		$bill_select = "
-		SELECT *, bill_items.id as bill_id
-		FROM bills, bill_items 
-		LEFT JOIN bill_shipments on bill_items.id = bill_item_id
-		WHERE bills.bill_no = ".prep($bill_number)." 
-		AND bills.bill_no = bill_items.bill_no
-		;";
-		$rows = qdb($bill_select) or die(qe().": ".$bill_select);
-		foreach($rows as $row){
-			$po_number = $row['po_number'];
-			$associated_order = $row['invoice_no'];
-			$due_date = format_date($row['due_date'],"n/j/Y");
-			$grouped[$row['bill_id']]['partid'] = $row['partid'];
-            $grouped[$row['bill_id']]['qty'] = $row['qty'];
-            $grouped[$row['bill_id']]['purchid'] = $po_number;
-            $grouped[$row['bill_id']]['warranty'] = $row['warranty'];
-            $grouped[$row['bill_id']]['price'] = $row['amount'];
-            // $grouped[$row['bill_id']]['id'] = $row['id'];
-			$grouped[$row['bill_id']]['serials'][$row['inventoryid']] = getSerial($row['inventoryid']);
-			$subtotal += $row['qty'] * $row['amount'];
+		$grouped[$i]['partid'] = $r['partid'];
+		$grouped[$i]['qty'] = $r['qty'];
+		$grouped[$i]['warranty'] = $r['warranty'];
+		$grouped[$i]['ln'] = $r['line_number'];
+		$grouped[$i]['qty_recd'] = 0;
+		$qty_billed = 0;
+		$amount_billed = $r['price'];
+
+		$serials = array();
+		$query2 = "SELECT i.* ";
+		if ($bill_no) { $query2 .= ", bs.* "; }
+		$query2 .= "FROM inventory i ";
+		if ($bill_no) {
+			$query2 .= "LEFT JOIN bill_shipments bs ON i.id = bs.inventoryid ";
 		}
-		// echo("<pre>");
-		// print_r($grouped);
-		// echo("</pre>");
-		// exit;
-	} 
+		$query2 .= "WHERE i.purchase_item_id = '".$r['id']."'; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if (! $bill_no OR ($r2['bill_item_id'] AND $r2['inventoryid'])) { $chkd = ' checked'; }
+			$qty = $r2['qty'];
+			if ($qty==0) { $qty = 1; }
+			$serials[$r2['id']] = array('serial_no'=>$r2['serial_no'],'checked'=>$chkd,'qty'=>$qty);
+			$qty_recd += $qty;
+
+			if ($bill_no) {
+				if ($r2['bill_item_id']) {
+					$query3 = "SELECT * FROM bill_items WHERE id = '".$r2['bill_item_id']."'; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						// only declare it the first time through so we don't duplicate qty on every serial
+						if (! $bi_id) { $qty_billed += $r3['qty']; }
+						$amount_billed = $r3['amount'];
+					}
+
+					// declare even though it will get set every loop
+					$bi_id = $r2['bill_item_id'];
+				}
+			}
+		}
+
+		$grouped[$i]['qty_billed'] = $qty_billed;
+		$grouped[$i]['qty_recd'] = $qty_recd;
+		$grouped[$i]['price'] = $amount_billed;
+		$grouped[$i]['serials'] = $serials;//[$r['id']] = $r['serial_no'];
+		$grouped[$i]['bi_id'] = $bi_id;
+
+		if ($bill_no) {
+			$subtotal = ($qty_billed*$amount_billed);
+		} else {
+			$subtotal = ($r['qty']*$amount_billed);
+		}
+		$order_total += $subtotal;
+
+		$outstanding_amount = (($r['qty']-$qty_billed)*$amount_billed);
+		$i++;
+	}
 ?>
-
-
-
-
-
-
 <!DOCTYPE html>
 <html>
 	<head>
@@ -179,7 +191,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 		?>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
-		<title>Bill <?=(($bill_number == "new")?:"#$bill_number")?></title>
+		<title>Bill<?=($bill_no) ? '# '.$bill_no : '';?></title>
 		<style type="text/css">
 			.serial_box{
 				padding-bottom:10px;
@@ -193,46 +205,63 @@
 			.history-col{
 				font-size:8pt;
 			}
+			.total {
+				border:1px inset gray;
+				background-color:#fff;
+				color:#000;
+				font-weight:bold;
+				font-size:110%;
+				padding:3px 6px 3px 3px;
+			}
 
 		</style>
 	</head>
 	<!---->
-	<body class="sub-nav forms" id = "rma-body" data-bill-number="<?=$bill_number?>" data-associated="<?=$po_number?>">
+	<body class="sub-nav forms" id = "rma-body" data-bill-number="<?=$bill_no?>" data-associated="<?=$order_number?>">
 		<?php include 'inc/navbar.php'; ?>
-		<div class="row-fluid table-header" id = "order_header" style="width:100%;height:50px;background-color:#f0f4ff;">
+		<div class="row-fluid table-header" id = "order_header" style="width:100%;min-height:50px;background-color:#f0f4ff;">
 				
 				<div class="col-md-4">
-					<?php
-	                    // Add in the following to link to the appropriate page | href="/'.$url.'.php?on=' . $order_number . '" | href="/docs/'.$order_type[0].'O'.$order_number.'.pdf"
-						echo '<a class="btn-flat pull-left" href="/PO'.$po_number.'"><i class="fa fa-truck"></i> PO #'.$po_number.'</a>';
-						// if($bill_number){
-						// 	echo '<a class="btn-flat pull-left" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
-						// 	echo '<a class="btn-flat pull-left" href="/rma_add.php?on='.$bill_number.'">Receive</a>';
-						// }
-					?>
-					
 				</div>
 				<div class="col-md-4 text-center"><h2 class = "minimal" style ="margin-top:10px;;">
-				    <?=(is_numeric($bill_number))? "Bill #$bill_number" :'New Bill for PO #'.$po_number;?>
+				    <?=($bill_no) ? "Bill #$bill_no" :'New Bill for PO #'.$order_number;?>
 				    </h2>
 				</div>
 				
-				<div class="col-md-4">
-					<?php if(strtolower($bill_number)=="new" || $mode == "edit"){?>
-					<button class="btn-flat btn-sm  <?=($order_number=="New")?'success':'success'?> pull-right" id = "bill_save_button" data-validation="left-side-main" style="margin-top:2%;margin-bottom:2%;">
-						<?=(strtolower($bill_number)=="new") ? 'Create' :'Update'?>
-					</button>
-					<?php } ?>
+				<div class="col-md-4 text-right">
+					<button class="btn btn-success btn-sm" id = "bill_save_button" data-validation="left-side-main"> <i class="fa fa-save"></i> Save </button>
 				</div>
 			</div>
 		<div class="row remove-margin">
-				<!--================== Begin Left Half ===================-->
+			<!--================== Begin Left Half ===================-->
 			<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef;padding-top:15px;">
-					<!--'RMA'/$rma_number OR 'Sales'/$po_number-->
-					<?=sidebar_out($bill_number,"purchase",$sidebar_mode)?>
+				<div class="row">
+					<div class="col-sm-12" style="margin-bottom:10px">
+						<h4 style="margin-top:10px"><?php echo strtoupper(getCompany($companyid)); ?></h4>
+						<h3><?php echo 'PO '.$order_number; ?> <a href="/<?php echo 'PO'.$order_number; ?>"><i class="fa fa-arrow-right"></i></a></h3>
+					</div>
 				</div>
-			
-				<!--======================= End Left half ======================-->
+				<div class="row">
+					<div class="col-sm-12" style="padding-bottom: 10px;">
+						<label for="associated_invoice"><h4>Vendor Invoice #</h4></label>
+						<input name = "associated_invoice" id="customer_invoice" class = "form-control" value="<?php echo $invoice_no; ?>">
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<label for="due_date"><h4>Payment Due</h4></label>
+						<div class="form-group">
+							<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+								<input type="text" id="due_date" name="due_date" class="form-control" value="<?php echo $due_date; ?>">
+								<span class="input-group-addon">
+									<span class="fa fa-calendar"></span>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--======================= End Left half ======================-->
 			
 		
 				<!--===================== Begin Right half =====================-->
@@ -240,82 +269,73 @@
 					<div class="table-responsive">
 						<table  class = "table table-hover table-striped table-condensed" style="margin-top: 15px;">
 							<thead>
-								<th style='min-width:30px;'>Ln&nbsp;#</th>
-								<th class = "col-md-1">Part</th>
-								<th class = "col-md-8"></th>
+								<th class = "col-md-1">Ln#</th>
+								<th class = "col-md-2">Part</th>
+								<th class = "col-md-4"></th>
 								<th class = "col-md-1">Warranty</th>
-								<th class = "col-md-1">Qty</th>
+								<th class = "col-md-1">PO Qty</th>
+								<th class = "col-md-1">Qty Recd</th>
+								<th class = "col-md-1">Billed Qty</th>
 								<th class = "col-md-1">Amount</th>
 							</thead>
 							<tbody>
 							<?php
 							$output = '';
-							$total = 0.00;
+
 							if(isset($grouped)){
 								foreach($grouped as $meta => $li){
-									$total += $li['price'] * $li['qty'];
-									$output .= "
-									<tr class ='meta-line meta-$meta' data-line-number='$meta' data-og-qty='".$li['qty']."' 
-									data-partid='".$li['partid']."' data-warranty='".$li['warranty']." data-ln='".$li['ln']."'
-									data-price='".$li['price']."'>
-										<td>".$li['ln']."</td>
-										<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
-										<td>".getWarranty($li['warranty'],"warranty")."</td>
-										<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
-										<td>".format_price($li['price'])."</td>
+
+									$output .= '
+								<tr class="meta-line meta-'.$meta.'" data-line-number="'.$meta.'" data-og-qty="'.$li['qty'].'" 
+									data-partid="'.$li['partid'].'" data-warranty="'.$li['warranty'].'" data-ln="'.$li['ln'].'"
+									data-price="'.$li['price'].'" data-bill-item-id="'.$li['bi_id'].'">
+										<td>'.$li['ln'].'</td>
+										<td colspan="2">'.display_part(current(hecidb($li['partid'],'id'))).'</td>
+										<td>'.getWarranty($li['warranty'],"warranty").'</td>
+										<td style="font-weight:bold">
+											'.$li['qty'].'
+										</td>
+										<td>
+											<span class="info">'.$li['qty_recd'].'</span>
+										</td>
+										<td>
+											<input type="text" name="qty" class="bill-qty form-control input-sm" value="'.$li['qty_billed'].'" readonly>
+										</td>
+										<td class="text-right">'.format_price($li['price'],true,' ').'</td>
 									</tr>
-									";
-									if(current($li['serials'])){
-										$first = true;
-										foreach ($li['serials'] as $inv => $serial){
-											$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
-												$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
-												$output .= "<td colspan = '2'>".$serial."</td>";
-												$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
-												$output .= "<td></td>";
-											$output .= "</tr>";
-											$first = false;
-										}
-										$output.="<tr style='border:0;opacity:0;'><td colspan='6'>&nbsp;</td></tr>";
+									';
+									$first = true;
+									foreach ($li['serials'] as $inventoryid => $inv){
+										$serial = $inv['serial_no'];
+										if (! $serial) { $serial = '- No Serial -'; }
+
+										$output .= "
+								<tr class='serial-$meta' data-line-number='$meta' data-inventoryid = '$inventoryid' data-qty='".$inv['qty']."'>
+									<td class='text-right'><span class='info'>".($first ? 'Serials:': '')."</span></td>
+									<td><input type='checkbox' class = 'serialCheckBox' ".$inv['checked']."> ".$serial."</td>
+								</tr>
+										";
+										$first = false;
 									}
 								}
 							}
-							if(strtolower($bill_number)=="new" || $mode == "edit"){
-								$money = outstanding_amount($po_number,"po");
-								$output .= "<tr class='amount_remaining'>";
-								$output .= "<td colspan = '5' style='text-align:right;'>Outstanding Amount Due:</td>";
-								$output .= "<td><input type='text'class='form-control input-sm' value='".format_price($money['total'])."' readonly/></td>";
-								$output .= "</tr>";
-							}
-							$output .= "<tr class='total'>";
-							$output .= "<td colspan = '5' style='text-align:right;'>Total:</td>";
-							$output .= "<td><input type='text'class='form-control input-sm' value='".format_price($total)."' readonly/></td>";
-							$output .= "</tr>";
-								// $output .= "
-								// 		<tr class ='new_line'>
-								// 			<td>"."<input type='text' name='new_ln' class='form-control input-sm' placeholder = 'LN' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
-								// 			<td colspan = '2'>".display_part(current(hecidb($li['partid'],'id')))."</td>
-								// 			<td>".getWarranty($li['warranty'],"warranty")."</td>
-								// 			<td>"."<input type='text' name='qty' class='bill-qty form-control input-sm' value ='".$li['qty']."' placeholder = 'Qty' ".(is_numeric($bill_number) && ! $mode=="edit" ?"readonly" : "")."/>"."</td>
-								// 			<td>".format_price($li['price'])."</td>
-								// 		</tr>
-								// 		";
-								// 		if(current($li['serials'])){
-								// 			$first = true;
-								// 			foreach ($li['serials'] as $inv => $serial){
-								// 				$output .= "<tr class='serial-$meta' data-line-number='$meta' data-inv-id = '$inv'>";
-								// 					$output .= "<td colspan = '2' style='text-align:right;'>".($first ? 'Serials:': '')."</td>";
-								// 					$output .= "<td colspan = '2'>".$serial."</td>";
-								// 					$output .= "<td>".(is_numeric($bill_number)?"&nbsp;":'<input type="checkbox" class = "serialCheckBox">')."</td>";
-								// 					$output .= "<td></td>";
-								// 				$output .= "</tr>";
-								// 				$first = false;
-								// 			}
-								// 			$output.="<tr style='border:0;opacity:0;'><td colspan='6'>&nbsp;</td></tr>";
-								// 		}
-									
-								echo($output);
+							$output .= "
+								<tr class=''>
+									<td colspan = '6' class='text-right'>Outstanding:</td>
+									<td></td>
+									<td class='text-right' style='font-weight:bold'>".format_price($outstanding_amount,true,' ')."</td>
+								</tr>
+								<tr>
+									<td colspan = '6' class='text-right'>Total:</td>
+									<td></td>
+									<td class='text-right'>
+										<div class='total'>".format_price($order_total,true,' ')."</div>
+									</td>
+								</tr>
+							";
+							echo($output);
 							?>
+
 							</tbody>
 						</table>
 					</div>
@@ -333,16 +353,15 @@
 			var qty = 0;
 			$.each($(".serial-"+ln),function(){
 				if($(this).find(".serialCheckBox").is(":checked")){
-					qty++;
+					qty += parseInt($(this).data('qty'));
 				}
 			});
 			if(qty == 0){
-				qty = $(this).closest("table").find(".meta-"+ln).data("og-qty");
+//				qty = $(this).closest("table").find(".meta-"+ln).data("og-qty");
 			}
 			$(this).closest("table").find(".meta-"+ln).find(".bill-qty").val(qty);
 		});
 		$("#bill_save_button").click(function(){
-			console.log("TRIGGERED");
 			var meta_submission = [];
 			var bill_no = $("body").data("bill-number");
 			var line_sub = [];
@@ -352,20 +371,16 @@
 				var warranty = $(this).data("warranty");
 				var price = $(this).data("price");
 				var partid = $(this).data("partid");
+				var bill_item_id = $(this).data("bill-item-id");
 				var qty = 0;
 				
 				var serial_submission = [];
-				var serialized = false;
 				$.each($(".serial-"+id),function(){
 					if($(this).find(".serialCheckBox").is(":checked")){
-						serialized = true;
-						serial_submission.push($(this).closest("tr").data("inv-id"));
-						qty++;
+						serial_submission.push($(this).data("inventoryid"));
+						qty += parseInt($(this).data('qty'));
 					}
 				});
-				if (!serialized){
-					qty = $(this).find(".bill-qty").val();
-				}
 				var line = {
 					'id' : id,
 					'ln' : ln,
@@ -373,6 +388,7 @@
 					'partid' : partid,
 					'qty' : qty,
 					'price':price,
+					'bill_item_id':bill_item_id,
 					'serials' : serial_submission,
 				}
 				line_sub.push(line);
@@ -381,7 +397,7 @@
 				'bill_no' : bill_no,
 				'invoice_no' : $("#customer_invoice").val(),
 				'due_date': $("#due_date").val(),
-				'po_number':'<?=$po_number?>',
+				'po_number':'<?=$order_number?>',
 				'lines': line_sub
 			};
 			
@@ -405,13 +421,12 @@
 
 		});
 		var date = null;
-		if(!(isNaN(parseInt('<?=$bill_number?>')))){
-			var assoc = '<?=$associated_order?>';
-				$('#customer_invoice').val(assoc)
-				.prop('readonly', true);
+		if(!(isNaN(parseInt('<?=$bill_no?>')))){
+			var assoc = '<?=$invoice_no?>';
+//			$('#customer_invoice').val(assoc).prop('readonly', true);
 			date = '<?=$due_date?>';
 		}else{
-			date = '<?=$due_estimate?>';
+			date = '<?=$due_date?>';
 		}
 		$('#due_date').val(date);
 		
