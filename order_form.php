@@ -176,13 +176,26 @@
 	function getRMA($order_number, $type){
 		$RMA = array();
 
+/*
 		$query = "SELECT *, date_changed inv_date FROM returns as r, return_items as i ";
 		$query .= "LEFT JOIN inventory_history h ON i.inventoryid = h.invid ";
 		$query .= "WHERE r.order_number = ".prep($order_number)." AND r.order_type = ".prep($type)." AND r.rma_number = i.rma_number ";
-		$query .= "AND h.field_changed = 'returns_item_id' AND h.value = i.id ";
 		$query .= "GROUP BY h.invid, r.rma_number; ";
+		$query .= "AND h.field_changed = 'returns_item_id' AND h.value = i.id ";
+*/
+		$query = "SELECT *, i.id return_item_id FROM returns as r, return_items as i ";
+		$query .= "WHERE r.order_number = ".prep($order_number)." AND r.order_type = ".prep($type)." AND r.rma_number = i.rma_number; ";
 		$result = qdb($query) OR die(qe());
 		while ($row = $result->fetch_assoc()) {
+			$row['inv_date'] = '';
+
+			$query2 = "SELECT * FROM inventory_history h ";
+			$query2 .= "WHERE invid = '".$row['inventoryid']."' AND h.field_changed = 'returns_item_id' AND h.value = '".$row['return_item_id']."' ";
+			$query2 .= "GROUP BY invid; ";
+			$result2 = qdb($query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$row['inv_date'] = $r2['date_changed'];
+			}
 			$RMA[] = $row;
 		}
 

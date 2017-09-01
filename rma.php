@@ -205,49 +205,52 @@
 	// echo"<div style='position:fixed;right:15px;bottom:10px;'>";
 	//If there is an RMA number, then this is an existing RMA record
 	if ($rma_number){
-		$rma_select = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
-		$rma_select = qdb($rma_select);
+		$query = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		//Verify there are Rows from this returns/get meta information
-		if (mysqli_num_rows($rma_select)){
-			//Should only be one row
-			$rma = mysqli_fetch_assoc($rma_select);
-			
-			//Check to see if the order was within the last day
-			$date_created = format_date($rma['created'],"Y-m-d");
-			$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
-			if($date_created >= $yesterday){
-				//If order was within last day, load Available sales order rows (allowing the user to edit them)
-				if($rma['order_type'] == "Sale" || $rma['order_type'] == "Repair"){
-					$order_number = $rma['order_number'];
-				}
-				else{
-					//Otherwise, there is no need: just pull the 
-					$order_number = false;
-				}
-			} else {
-				$mode = 'old';
+		if (mysqli_num_rows($result)==0){
+			die("RMA No. $rma_number does not appear to be valid, please explain yourself!");
+		}
+
+		//Should only be one row
+		$rma_row = mysqli_fetch_assoc($result);
+		$companyid = $rma_row['companyid'];
+		
+		//Check to see if the order was within the last day
+		$date_created = format_date($rma_row['created'],"Y-m-d");
+		$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
+		if($date_created >= $yesterday){
+			//If order was within last day, load Available sales order rows (allowing the user to edit them)
+			if($rma_row['order_type'] == "Sale" || $rma_row['order_type'] == "Repair"){
+				$order_number = $rma_row['order_number'];
 			}
-			
-			//Grab all the serials which have been received on this RMA already
-			$rma_mic = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
-			$rma_micro = qdb($rma_mic) or die(qe()." $rma_mic");
-			
-			$receive_check = '';
-			//This check is grouping line item information by the inventory ID. I should be able to 
-			foreach($rma_micro as $line_item){
-				$receive_check = $line_item['id'].", ";
-				$rma_items[$line_item['partid']][$line_item['inventoryid']] = $line_item;
-				$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange"); 
-				//Exhange is a bit of a doubled name in the line above: here it refers to a "exhange" as a general term for sales, returns, purhcases and repairs.
+			else{
+				//Otherwise, there is no need: just pull the 
+				$order_number = false;
 			}
-			$receive_check = trim($receive_check,", ");
-			//This Query will search the history to see if the parts were ever received against the line item record
-			$receive_query = "SELECT * FROM `inventory_history` where field_changed = 'returns_item_id' and value IN ($receive_check);";
-			$receive_result = qdb($receive_query) or die(qe()." $receive_query");
-			//If there are more rows (Or equivalent rows) in the receive row result, then all items have been received)
-			if (mysqli_num_rows($rma_micro) <= mysqli_num_rows($receive_result) && mysqli_num_rows($rma_micro) > 0){
-				$mode = 'view';
-			}
+		} else {
+			$mode = 'old';
+		}
+		
+		//Grab all the serials which have been received on this RMA already
+		$query = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
+		$result = qdb($query) or die(qe()." $query");
+		
+		$receive_check = '';
+		//This check is grouping line item information by the inventory ID. I should be able to 
+		foreach($result as $line_item){
+			$receive_check = $line_item['id'].", ";
+			$rma_items[$line_item['partid']][$line_item['inventoryid']] = $line_item;
+			$rma_items[$line_item['partid']][$line_item['inventoryid']]['history'] = getItemHistory($line_item['inventoryid'],"exchange"); 
+			//Exhange is a bit of a doubled name in the line above: here it refers to a "exhange" as a general term for sales, returns, purhcases and repairs.
+		}
+		$receive_check = trim($receive_check,", ");
+		//This Query will search the history to see if the parts were ever received against the line item record
+		$receive_query = "SELECT * FROM `inventory_history` where field_changed = 'returns_item_id' and value IN ($receive_check);";
+		$receive_result = qdb($receive_query) or die(qe()." $receive_query");
+		//If there are more rows (Or equivalent rows) in the receive row result, then all items have been received)
+		if (mysqli_num_rows($result) <= mysqli_num_rows($receive_result) && mysqli_num_rows($result) > 0){
+			$mode = 'view';
 		}
 	}
 	
@@ -343,6 +346,8 @@
 		<input type="hidden" name="on" value="<?=$order_number;?>">
 		<input type="hidden" name="order_type" value="<?=$order_type;?>">
 		<input type="hidden" name="rma" value="<?=$rma_number;?>">
+		<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
+		<input type="hidden" name="contactid" value="<?php echo $contactid; ?>">
 		<?php if ($repair) { echo '<input type="hidden" name="repair" value="true">'; } ?>
 		<?php if ($build) { echo '<input type="hidden" name="build" value="true">'; } ?>
 			
@@ -581,11 +586,6 @@
 								<?php $init = false; endforeach; ?>
 							<?php endforeach; ?>
 						</table>
-							
-						<!-- Macro Form Inputs-->
-						<input type="text" name="companyid" style="display:none;" value="">
-						<input type="text" name="contactid" style="display:none;" value="">
-
 					</div>
 				</div>
 			<!--====================== End Right half ======================-->
