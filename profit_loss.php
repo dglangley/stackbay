@@ -13,27 +13,54 @@
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/order_type.php';
 
-	function getReturns($order_number, $order_type, $inventoryid) {
-		global $dbStartDate,$dbEndDate;
+	function getReturns($order_number=0, $order_type='', $inventoryid=0) {
+		global $dbStartDate,$dbEndDate,$order_search,$companyid;
 
 		$returns = array();
 
-		$query = "SELECT ri.*, '' avg_cost FROM returns r, return_items ri ";
-		$query .= "WHERE order_number = '".$order_number."' AND order_type = '".$order_type."' ";
-		$query .= "AND r.rma_number = ri.rma_number AND inventoryid = '".$inventoryid."'; ";
+		$query = "SELECT r.*, ri.*, c.name, '' avg_cost FROM returns r, return_items ri, companies c ";
+		$query .= "WHERE r.rma_number = ri.rma_number ";
+		if ($order_number AND $order_type) {
+			$query .= "AND order_number = '".$order_number."' AND order_type = '".$order_type."' AND inventoryid = '".$inventoryid."' ";
+		} else {
+			if ($companyid) { $query .= "AND r.companyid = '".$companyid."' "; }
+			if ($order_search) { $query .= "AND (r.rma_number = '".res($order_search)."' OR r.order_number = '".res($order_search)."' "; }
+			else if ($dbStartDate) {
+				$query .= "AND r.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+			}
+		}
+		$query .= "AND r.companyid = c.id; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['order_number'] = $r['rma_number'];
 			$r['order_type'] = getDisposition($r['dispositionid']);
 
-			$query2 = "SELECT ro_number, id FROM repair_items WHERE ref_1 = '".$r['id']."' AND ref_1_label = 'return_item_id'; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			// repair, still with possible credit
+			$query2 = "SELECT ro_number, invid, id FROM repair_items WHERE ref_1 = '".$r['id']."' AND ref_1_label = 'return_item_id'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) {
+				$r['ref'] = '';
+				if ($r['dispositionid']==3) {//3==repair so if no results, we gotta ask why
+					echo $query2.'<BR>';
+				} else if ($r['dispositionid']==1) {//credit
+					continue;
+				} else {//if ($r['dispositionid']==2) {//replace/exchange
+				}
+				$query2 = "SELECT * FROM parts WHERE id = '".$r['partid']."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				if (mysqli_num_rows($result2)==0) {
+					echo $query2.'<BR>';
+					continue;
+				}
+				$r2 = mysqli_fetch_assoc($result2);
+				$r['descr'] = trim($r2['part'].' '.$r2['heci']);
+
+				$returns[] = $r;
+				continue;
 			}
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				if ($r['order_type']=='Repair') {
-					$r['avg_cost'] = calcRepairCost($r2['ro_number'],$r2['id'],$inventoryid,true);
+					$r['avg_cost'] = calcRepairCost($r2['ro_number'],$r2['id'],$r2['invid'],true);
 				}
 				$r['ref'] = $r2['ro_number'];
 
@@ -91,7 +118,7 @@
 
 	$PURCHASES = array();
 	function getSalesRecords() {
-		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search;
+		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search,$companyid,$buckets;
 		$entries = array();
 		$returns = array();
 
@@ -100,6 +127,7 @@
 		$query .= "FROM companies c, invoices i, invoice_items ii ";
 		$query .= "LEFT JOIN invoice_shipments s ON ii.id = s.invoice_item_id ";
 		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no ";
+		if ($companyid) { $query .= "AND i.companyid = '".$companyid."' "; }
 		if ($order_search) { $query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') "; }
 		else if ($dbStartDate) {
 			$query .= "AND i.date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
@@ -110,7 +138,7 @@
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;
-				$entry['descr'] = 'IT';
+				$entry['descr'] = '- ERROR finding order information, please investigate -';
 				$entry['avg_cost'] = 0;
 				$entry['actual_cost'] = 0;
 
@@ -172,7 +200,7 @@
 					}
 
 					$entries[] = $entry;
-
+/*
 					$ret = getReturns($r['order_number'],$r['order_type'],$r2['inventoryid']);
 					foreach ($ret as $ri) {
 						$entry['order_number'] = $ri['order_number'];
@@ -183,6 +211,7 @@
 
 						$returns[] = $entry;
 					}
+*/
 				}
 			} else {
 				$pseudos = array();
@@ -214,7 +243,7 @@
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) {
 					$entry = $r;
-					$entry['descr'] = 'IT';
+					$entry['descr'] = '- ERROR finding order information, please investigate -';
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = 0;
 
@@ -244,7 +273,7 @@
 					}
 
 					$entries[] = $entry;
-
+/*
 					$ret = getReturns($r['order_number'],$r['order_type'],$r2['inventoryid']);
 					foreach ($ret as $ri) {
 						$entry['order_number'] = $ri['order_number'];
@@ -255,11 +284,12 @@
 
 						$returns[] = $entry;
 					}
+*/
 				}
 			}
 		}
 
-		return (array('entries'=>$entries,'returns'=>$returns));
+		return ($entries);//array('entries'=>$entries,'returns'=>$returns));
 	}
 
 	//=========================================================================================
@@ -267,9 +297,9 @@
 	//=========================================================================================
 	
 	//Company Id is grabbed from the search field at the top, but only if one has been passed in
-	$company_filter = 0;
+	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { 
-		$company_filter = $_REQUEST['companyid']; 
+		$companyid = $_REQUEST['companyid']; 
 	}
 
 	$order_search = '';
@@ -353,25 +383,33 @@
 		<tr>
 		<td class = "col-md-2">
 <?php
+	$debits = false;
+	if (isset($_REQUEST['debits'])) { $debits = $_REQUEST['debits']; }
+	$credits = false;
+	if (isset($_REQUEST['credits'])) { $credits = $_REQUEST['credits']; }
+	if (! $debits AND ! $credits) {
+		$debits = true;
+		$credits = true;
+	}
+	$buckets = array('debits'=>$debits,'credits'=>$credits);
+
 	$cost_basis = 'average';//can toggle between average and fifo
+/*
 	if (isset($_REQUEST['cost_basis'])) {
 		if ($_REQUEST['cost_basis']=='fifo') { $cost_basis = 'fifo'; }
 		else if ($_REQUEST['cost_basis']=='qb') { $cost_basis = 'qb'; }
 	}
+*/
 ?>
 		    <div class="btn-group">
-		        <button class="glow left large btn-radio <?php if ($cost_basis=='average') { echo ' active'; } ?>" type="submit" data-value="average" data-toggle="tooltip" data-placement="bottom" title="average cost">
-		        	<i class="fa fa-random"></i>	
+		        <button class="btn btn-sm left btn-bucket<?php if ($buckets['debits']) { echo ' btn-success active'; } ?>" type="submit" data-value="debits" data-toggle="tooltip" data-placement="bottom" title="debits">
+		        	<i class="fa fa-shopping-cart"></i>	
 		        </button>
-				<input type="radio" name="cost_basis" value="average" class="hidden"<?php if ($cost_basis=='average') { echo ' checked'; } ?>>
-		        <button class="glow middle large btn-radio<?php if ($cost_basis=='fifo') { echo ' active'; } ?>" type="submit" data-value="fifo" data-toggle="tooltip" data-placement="bottom" title="fifo cost">
-		        	<i class="fa fa-exchange"></i>	
+				<input type="radio" name="debits" id="debits" value="1" class="hidden"<?php if ($buckets['debits']) { echo ' checked'; } ?>>
+				<input type="radio" name="credits" id="credits" value="1" class="hidden"<?php if ($buckets['credits']) { echo ' checked'; } ?>>
+		        <button class="btn btn-sm right btn-bucket<?php if ($buckets['credits']) { echo ' btn-danger active'; } ?>" type="submit" data-value="credits" data-toggle="tooltip" data-placement="bottom" title="credits">
+		        	<i class="fa fa-inbox"></i>	
 		        </button>
-		        <input type="radio" name="cost_basis" value="fifo" class="hidden"<?php if ($cost_basis=='fifo') { echo ' checked'; } ?>>
-		        <button class="glow right large btn-radio<?php if ($cost_basis=='qb') { echo ' active'; } ?>" type="submit" data-value="qb" data-toggle="tooltip" data-placement="bottom" title="qb entry">
-		        	<i class="fa fa-file-text"></i>	
-		        </button>
-		        <input type="radio" name="cost_basis" value="qb" class="hidden"<?php if ($cost_basis=='qb') { echo ' checked'; } ?>>
 		    </div>
 		</td>
 
@@ -393,6 +431,7 @@
 			    </div>
 			</div>
 			<div class="form-group">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
@@ -426,17 +465,22 @@
 		</td>
 		
 		<td class="col-md-2 text-center">
-			<input type="text" name="order" class="form-control input-sm" value ='<?php echo $order_search?>' placeholder = "Order #" />
+			<div class="input-group">
+                <input class="form-control" type="text" name="order" value="<?php echo trim($order_search); ?>" placeholder="Order #" />
+            	<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+                </span>
+            </div><!-- /input-group -->
 <!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
 -->
 		</td>
 		<td class="col-md-3">
 			<div class="pull-right form-group">
-			<select name="companyid" id="companyid" class="company-selector" disabled >
+			<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>
 				<?php 
-				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+				if ($companyid) {echo '<option value="'.$companyid.'" selected>'.(getCompany($companyid)).'</option>'.chr(10);} 
 				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
 				?>
 				</select>
@@ -468,12 +512,6 @@
 <?php
 	//Establish a blank array for receiving the results from the table
 	$results = array();
-	$oldid = 0;
-//	echo getCompany($company_filter,'id','oldid');
-//	echo('Value Passed in: '.$company_filter);
-	//If there is a company id, translate it to the old identifier
-	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
-//	echo '<br>The value of this company in the old database is: '.$oldid;
 
 	$rows = '';
 	$total_pcs = 0;
@@ -481,15 +519,31 @@
 
 	$results = array();
 	$entries = array();//invoice / sale / qb entries
-	$credits = array();//keep track to avoid duplicates
+	$credit_results = array();//keep track to avoid duplicates
 	$returns = array();//combined credits
 
+/*
 	$records = getSalesRecords();
 	$entries = $records['entries'];
 	$returns = $records['returns'];
+*/
+	$entries = getSalesRecords();
+	$returns = getReturns();
+/*
+	foreach ($ret as $ri) {
+		$entry['order_number'] = $ri['order_number'];
+		$entry['order_type'] = $ri['order_type'];
+		$entry['ref'] = $ri['ref'];
+		$entry['qty'] = $ri['qty'];
+		$entry['avg_cost'] = $ri['avg_cost'];
 
-	$credits = getCredits();
-	foreach ($credits as $c) {
+		$returns[] = $entry;
+	}
+*/
+
+	//append to returns results
+	$credit_results = getCredits();
+	foreach ($credit_results as $c) {
 		$returns[] = $c;
 	}
 
@@ -662,6 +716,8 @@
 		} else {
 //			if ($r['order_type']=='Sale' OR $r['order_type']=='Repair' OR $r['order_type']=='IT') {
 			if ($r['class']=='Billable' OR $r['order_type']=='Repair') {
+				if (! $buckets['debits']) { continue; }
+
 				if ($r['class']<>'Billable') {
 					$ext_price = 0;
 				}
@@ -674,6 +730,8 @@
 				$cogs_debit = format_price(round($r['cogs'],2),true,' ');
 				$sum_cogs_debits += $r['cogs'];
 			} else {
+				if (! $buckets['credits']) { continue; }
+
 				$ext_credit = format_price(-round($ext_price,2),true,' ');
 				$sum_credits += $ext_price;
 				$ext_price = '';
@@ -879,6 +937,10 @@
 			$(".sticky-header").floatThead({
 				top:94,
 				zIndex:1001,
+			});
+			$('.btn-bucket').click(function() {
+				var btnChk = ! $("#"+$(this).data('value')).attr('checked');
+				$("#"+$(this).data('value')).attr('checked',btnChk);
 			});
         });
     </script>
