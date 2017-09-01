@@ -123,24 +123,46 @@
 				$receivedResult = qdb($query);
 
 				$sales_reps = array();
+				$userids = array();
 
 				if (mysqli_num_rows($receivedResult)) {
 					//Grab all users under sales, except users.id = 5 (Amea)
-					$query = "SELECT email FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id AND users.id <> 5;";
+					$query = "SELECT email, users.id as userid FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id AND users.id <> 5;";
 					$salesResult = qdb($query) OR die(qe() . ' ' . $query);
 
 					if (mysqli_num_rows($salesResult)) {
 						while ($row = $salesResult->fetch_assoc()) {
 							$sales_reps[] = $row['email'];
+							$userids[] = $row['userid'];
 						}
 					}
 
+					$message = 'PO# ' . $po_number . ' Received';
+					$link = '/PO' . $po_number;
+
+					$query = "INSERT INTO messages (message, datetime, userid, link) ";
+					$query .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
+					qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+					$messageid = qid();
+
+					// $query = "INSERT INTO prices (messageid, price) ";
+					// $query .= "VALUES ('".$messageid."',NULL); ";
+					// $result = qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+
+					if($messageid) {
+						foreach ($userids as $userid) {
+							//if ($userid==$each_userid) { continue; }
+							$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+							$query .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
+							$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+						}	
+					}
+
 					$email_body_html = renderOrder($po_number, 'Purchase', true);
-					$email_subject = 'PO# ' . $po_number . ' Received';
 
 					$bcc = '';
 					if (! $GLOBALS['DEV_ENV']) {
-						$send_success = send_gmail($email_body_html,$email_subject,$sales_reps,$bcc);
+						$send_success = send_gmail($email_body_html,$message,$sales_reps,$bcc);
 
 						if ($send_success) {
 						    // echo json_encode(array('message'=>'Success'));

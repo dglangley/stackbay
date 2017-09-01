@@ -71,7 +71,28 @@
 			if(mysqli_num_rows($request_result)) {
 				$request_item = mysqli_fetch_assoc($request_result);
 				//$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", ".$request_item['techid'].");";
-				$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", '16');";
+				// $query = "INSERT INTO notifications (partid, userid) VALUES (".prep($partid).", '16');";
+				// $result = qdb($query) or die(qe() . ' ' . $query);
+
+				$query = "SELECT * FROM parts WHERE id = ".prep($partid)."; ";
+				$result = qdb($query);
+
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$part = $r['part'];
+				}
+
+				$message = 'received for Repair# ' . $ro_number;
+
+				$link = '/repair.php?on='.$ro_number;
+
+				$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+				$query .= "VALUES ('".$now."', ".prep($message).", ".prep($userid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($ro_number).", 'ro_number');";
+
+				qdb($query) or die(qe() . ' ' . $query);
+				$messageid = qid();
+
+				$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '16');";
 				$result = qdb($query) or die(qe() . ' ' . $query);
 			}
 		}

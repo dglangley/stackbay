@@ -11,7 +11,13 @@
 		exit;
 	}
 
+	$messageid = 0;
 	$partid = 0;
+
+	if (isset($_REQUEST['messageid'])) {
+		$messageid = str_replace('undefined','',$_REQUEST['messageid']);
+	}
+
 	if (isset($_REQUEST['partid'])) {
 		$partid = str_replace('undefined','',$_REQUEST['partid']);
 	}
@@ -22,17 +28,35 @@
 	$days_sec = $hours_sec*24;
 
 	/***** GET NOTIFICATIONS ONLY *****/
-	// if no partid passedin, give back all notes related to new/unread notifications
-	if (! $partid) {
-		$query = "SELECT prices.datetime, prices.note, part, heci, contacts.name, ";
-		$query .= "read_datetime, click_datetime, notifications.id, prices.partid ";
-		$query .= "FROM notifications, prices, parts, users, contacts ";
-		$query .= "WHERE notifications.userid = '".$userid."' AND notifications.partid = prices.partid ";
-		$query .= "AND parts.id = notifications.partid AND contacts.id = users.contactid AND users.id = prices.userid ";
-		$query .= "ORDER BY prices.datetime DESC LIMIT 0,20; ";
+	// if no messageid passedin, give back all notes related to new/unread notifications
+	if (! $messageid AND ! $partid) {
+		$query = "SELECT messages.id as messageid, messages.datetime, messages.message as note, messages.link, contacts.name, ";
+		$query .= "read_datetime, click_datetime, notifications.id, messages.ref_1, messages.ref_1_label ";
+		$query .= "FROM notifications, prices, users, contacts, messages ";
+		$query .= "WHERE notifications.userid = '".$userid."' AND notifications.messageid = messages.id ";
+		$query .= "AND contacts.id = users.contactid AND users.id = messages.userid ";
+		$query .= "GROUP BY messages.id ";
+		$query .= "ORDER BY messages.datetime DESC LIMIT 0,20; ";
+
 		$result = qdb($query) OR reportError(qe().' '.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
+
+			// Determine if the notification under suspicion is a partid or something else (ref_1_label)
+			// This is a patch assuming not all messages have a partid associated with it
+			if($r['ref_1_label'] == 'partid') {
+				$query = "SELECT part, heci FROM parts WHERE id = ".res($r['ref_1']).";";
+				$result2 = qdb($query) OR reportError(qe().' '.$query);
+
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+
+					$r['heci'] = $r2['heci'];
+					$r['part'] = $r2['part'];
+				}
+			}
+
 			$r['part_label'] = trim($r['part'].' '.$r['heci']);
+
 			if ($r['heci']) {
 				$r['search'] = substr($r['heci'],0,7);
 			} else {
@@ -74,111 +98,6 @@
 			$query2 = "UPDATE notifications SET read_datetime = '".$now."' WHERE id = '".$r['id']."'; ";
 			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 		}
-		
-		//Sabedra = 13
-		//Hack notification for purchase request to create a PO
-		if($U['id'] == '13') {
-			//Code generated specifically for Notifications of Purchase Requests
-			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND ri.ro_number = r.ro_number AND (r.status IS NULL OR r.status = 'Active') AND po_number IS NULL ORDER BY requested DESC LIMIT 0,20;";
-			$result = qdb($query) OR reportError(qe().' '.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				$r['part_label'] = 'Part: ' . $r['part'];
-				if ($r['heci']) {
-					$r['search'] = $r['part_string'];
-				} else {
-					$parts = explode(' ',$r['part']);
-					$r['search'] = $r['part_string'];
-				}
-				$name = explode(' ',$r['name']);
-				$r['name'] = $name[0];
-				$r['datetime'] = utf8_encode($r['requested']);
-				$r['read'] = '';
-				if ($r['read_datetime']) { $r['read'] = 'T'; }
-				$r['viewed'] = '';
-				if ($r['click_datetime']) { $r['viewed'] = 'T'; }
-				$r['note'] = utf8_encode('requested for Repair# ' . $r['ro_number']);
-
-				$secs_diff = strtotime($now)-strtotime($r['datetime']);
-				if ($secs_diff>$days_sec) {
-					$date1 = new DateTime(substr($r['datetime'],0,10));
-					$date2 = new DateTime($today);
-					$r['since'] = $date2->diff($date1)->format("%d");
-					if ($r['since']==1) { $r['since'] .= ' day'; }
-					else { $r['since'] .= ' days'; }
-				} else if ($secs_diff>$hours_sec) {
-					$r['since'] = floor($secs_diff/$hours_sec).' hours';
-				} else {
-					$r['since'] = floor($secs_diff/60).' mins';//mins
-				}
-
-				//$r['repair_item_id'] = $r['ro_number'];
-
-				$r['type'] = "purchase_request";
-				//dispose of unneeded fields
-				unset($r['part']);
-				unset($r['heci']);
-				unset($r['datetime']);
-				unset($r['read_datetime']);
-				unset($r['click_datetime']);
-				$notes[] = $r;
-
-				// mark this notification as read, but do not mark it as clicked
-				$query2 = "UPDATE notifications SET read_datetime = '".$now."' WHERE id = '".$r['id']."'; ";
-				$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-			}
-		}
-
-		//Rathna = 16
-		//Hack notification to tell the tech who requested an item that the order has been ordered and received into stock
-		if($U['id'] == '16') {
-			//Code generated specifically for Notifications of Purchase Requests
-			$query = "SELECT *, ri.id as repair_item_id, n.partid as part_string FROM notifications n, purchase_requests r, parts, contacts, users, repair_items ri WHERE n.userid = ".$U['id']." AND parts.id = n.partid AND n.partid = r.partid AND users.id = n.userid AND contacts.id = users.contactid AND ri.ro_number = r.ro_number ORDER BY requested DESC LIMIT 0,20;";
-			$result = qdb($query) OR reportError(qe().' '.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				$r['part_label'] = 'Component: ' . $r['part'];
-				if ($r['heci']) {
-					$r['search'] = $r['part_string'];
-				} else {
-					$parts = explode(' ',$r['part']);
-					$r['search'] = $r['part_string'];
-				}
-				$name = explode(' ',$r['name']);
-				$r['name'] = $name[0];
-				$r['datetime'] = utf8_encode($r['requested']);
-				$r['read'] = '';
-				if ($r['read_datetime']) { $r['read'] = 'T'; }
-				$r['viewed'] = '';
-				if ($r['click_datetime']) { $r['viewed'] = 'T'; }
-				$r['note'] = utf8_encode('received for Repair# ' . $r['ro_number']);
-
-				$secs_diff = strtotime($now)-strtotime($r['datetime']);
-				if ($secs_diff>$days_sec) {
-					$date1 = new DateTime(substr($r['datetime'],0,10));
-					$date2 = new DateTime($today);
-					$r['since'] = $date2->diff($date1)->format("%d");
-					if ($r['since']==1) { $r['since'] .= ' day'; }
-					else { $r['since'] .= ' days'; }
-				} else if ($secs_diff>$hours_sec) {
-					$r['since'] = floor($secs_diff/$hours_sec).' hours';
-				} else {
-					$r['since'] = floor($secs_diff/60).' mins';//mins
-				}
-
-				$r['repair_item_id'] = $r['ro_number'];
-				$r['type'] = "purchase_received";
-				//dispose of unneeded fields
-				unset($r['part']);
-				unset($r['heci']);
-				unset($r['datetime']);
-				unset($r['read_datetime']);
-				unset($r['click_datetime']);
-				$notes[] = $r;
-
-				// mark this notification as read, but do not mark it as clicked
-				$query2 = "UPDATE notifications SET read_datetime = '".$now."' WHERE id = '".$r['id']."'; ";
-				$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-			}
-		}
 
 		echo json_encode(array('results'=>$notes));
 		exit;
@@ -195,17 +114,35 @@
 		}
 
 		if ($add_notes) {
-			if ($partid) {
-				$query = "INSERT INTO prices (partid, price, datetime, note, userid) ";
-				$query .= "VALUES ('".$partid."',NULL,'".$now."','".res($add_notes)."','".$userid."'); ";
-				$result = qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately!');
+			if ($partid AND ! $messageid) {
+				$link = '';
+
+				// Query to generate the link for a sales page note
+				$query = "SELECT part FROM parts WHERE id = ".res($partid).";";
+				$result2 = qdb($query) OR reportError(qe().' '.$query);
+
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					$parts = explode(' ',$r2['part']);
+
+					$link = '/sales.php?s='.$parts[0];
+				}
+
+				$query = "INSERT INTO messages (message, datetime, userid, link, ref_1, ref_1_label) ";
+				$query .= "VALUES ('".res($add_notes)."','".$now."','".$userid."', '".res($link)."','".$partid."','partid'); ";
+				qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+				$messageid = qid();
+
+				$query = "INSERT INTO prices (messageid, price) ";
+				$query .= "VALUES ('".$messageid."',NULL); ";
+				$result = qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
 
 				// after entering notes, add notifications to the other members of this user's team (for now, just add for sam and chris)
-				$team_users = array(getUser('Chris Bumgarner','name','userid'),getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'));
+				$team_users = array(getUser('Chris Bumgarner','name','userid'),getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
 				foreach ($team_users as $each_userid) {
 					if ($userid==$each_userid) { continue; }
-					$query = "INSERT INTO notifications (partid, userid, read_datetime, click_datetime) ";
-					$query .= "VALUES ('".$partid."','".$each_userid."',NULL,NULL); ";
+					$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+					$query .= "VALUES ('".$messageid."','".$each_userid."',NULL,NULL); ";
 					$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
 				}
 			} else {
@@ -217,9 +154,9 @@
 
 	// if there are any notifications related to this partid for this userid, mark as read; only do this
 	// when no $add_notes are passed in
-	if (! $add_notes AND $userid AND $partid) {
-		$query = "SELECT * FROM notifications WHERE userid = '".res($userid)."' AND partid = '".res($partid)."' ";
-		$query .= "AND (read_datetime IS NULL OR click_datetime IS NULL); ";
+	if (! $add_notes AND $userid AND $messageid) {
+		$query = "SELECT * FROM notifications n WHERE n.userid = '".res($userid)."' AND n.messageid = '".res($messageid)."' ";
+		$query .= "AND (n.read_datetime IS NULL OR n.click_datetime IS NULL); ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$read = $r['read_datetime'];
@@ -234,15 +171,17 @@
 		}
 	}
 
-	// get pricing notes from new system next
-	if ($partid) {
-		$query = "SELECT note, price, datetime, userid FROM prices WHERE partid = '".res($partid)."' ORDER BY datetime DESC LIMIT 0,30; ";
+	// get pricing notes from new system
+	if ($partid AND ! $messageid) {
+		$query = "SELECT message as note, price, datetime, userid FROM prices p, messages m WHERE m.ref_1 = '".res($partid)."' AND m.ref_1_label = 'partid' AND m.id = p.messageid ORDER BY datetime DESC LIMIT 0,30;";
 		$result = qdb($query) OR reportError('Sorry, there was an error getting notes from the new db. Please see Admin immediately!');
 		while ($r = mysqli_fetch_assoc($result)) {
 			$note = trim($r['note']);
 			if ($r['price']) { $note = 'Price: '.format_price($r['price'],true).chr(10).$note; }
 			$notes[] = array('user'=>getUser($r['userid']),'date'=>format_date($r['datetime'],'n/j/y g:ia'),'note'=>str_replace(chr(10),'<BR>',utf8_encode($note)));
 		}
+
+		//echo $query; exit;
 	}
 
 	if (count($notes)==0) {
