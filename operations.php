@@ -466,7 +466,7 @@
 									$first_status = true;
 								}
 								// has this tech ever claimed the ticket?
-								if ($r2['notes']=='Claimed Ticket' AND $r2['techid']==$GLOBALS['U']['id']) {
+								if ($r2['notes']=='Claimed Ticket') {// AND $r2['techid']==$GLOBALS['U']['id']) {
 									$status .= ' claimed_item';
 									$first_status = true;
 									break;
@@ -741,7 +741,7 @@
 						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="In Test" class="btn btn-sm right filter_status <?=(($filter == 'testing' || $filter == '') ? 'active btn-flat info' : 'btn-default');?>" data-filter="testing">
 						        	<i class="fa fa-terminal" aria-hidden="true"></i>
 						        </button>
-						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="My Claimed" class="btn btn-sm right filter_status <?=(($filter == 'claimed' || $filter == '') ? 'active btn-flat inverse' : 'btn-default');?>" data-filter="claimed">
+						        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Claimed" class="btn btn-sm right filter_status <?=(($filter == 'claimed' || $filter == '') ? 'active btn-flat inverse' : 'btn-default');?>" data-filter="claimed">
 						        	<i class="fa fa-id-badge" aria-hidden="true"></i>
 						        </button>
 								<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status <?=(($filter == 'all' || $filter == '') ? 'active btn-info' : 'btn-default');?>" data-filter="all">

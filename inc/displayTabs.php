@@ -129,7 +129,7 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales.php">Sales</a></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales_order.php">Sales</a></h4>
                                     <h4 class="megamenu-block-title">'
                                     . ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
 									  '<div class="form-group">
@@ -152,7 +152,7 @@
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchases.php">Purchases</a> - <a href="/purchase_requests.php">Reqs</a></h4></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchase_order.php">Purchases</a> - <a href="/purchase_requests.php">Reqs</a></h4></h4>
                                     <h4 class="megamenu-block-title">
 <!--
 										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Purchases</a> <span class="pull-right"><a href="/order_form.php?ps=Purchase" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>

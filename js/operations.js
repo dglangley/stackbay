@@ -2772,9 +2772,9 @@
 			
 			
 			if(zoom == 'Purchase_panel'){
-				url = 'purchases.php';
+				url = 'purchase_order.php';
 			} else if (zoom == 'Sales_panel'){
-				url = 'sales.php';
+				url = 'sales_order.php';
 			} else if (zoom == 'RMA_panel'){
 				url = 'returns.php';
 			} else if (zoom == 'Repair_panel'){

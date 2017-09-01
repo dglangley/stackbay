@@ -276,7 +276,7 @@
 								<th class = "col-md-1">PO Qty</th>
 								<th class = "col-md-1">Qty Recd</th>
 								<th class = "col-md-1">Billed Qty</th>
-								<th class = "col-md-1">Amount</th>
+								<th class = "col-md-1">Amount (ea)</th>
 							</thead>
 							<tbody>
 							<?php
