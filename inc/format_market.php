@@ -90,6 +90,7 @@
 
 		$cls1 = '';
 		$cls2 = '';
+		$hr = false;
 		foreach ($grouped as $order_date => $r) {
 			// because we're grouping dates above with suffixed companyid's, we need to shorten them back to just the date
 			$order_date = substr($order_date,0,10);
@@ -109,15 +110,17 @@
 			if ($r['datetime']<$GLOBALS['summary_lastyear']) {
 				$cls1 = '<span class="archives">';
 				$cls2 = '</span>';
-				$summary_form = true;
 			} else if ($r['datetime']<$summary_past) {
 				$cls1 = '<span class="summary">';
 				$cls2 = '</span>';
 				$summary_form = true;
+			} else {
+				$hr = true;
 			}
 
-			if (strlen($order_date)==10 AND strlen($last_date)==7) {
+			if (strlen($order_date)==10 AND strlen($last_date)==7 AND $hr) {
 				$market_str = '<HR>'.$market_str;
+				$hr = false;
 			}
 
 			$last_date = $order_date;

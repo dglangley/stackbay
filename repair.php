@@ -149,6 +149,8 @@
 				SELECT userid as techid, date_created as datetime, CONCAT('Received $type Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
 				UNION
 				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
+				UNION
+				SELECT '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.ro_number = ".prep($ro_number)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
 				ORDER BY datetime DESC;";
 
 		$result = qdb($query) OR die(qe());
@@ -588,14 +590,14 @@
 
 					<?php if($check_status == 'opened' || !$check_status) { ?>
 						<input type="text" name="check_in" value="check_in" class="hidden">
-						<button class="btn btn-info btn-sm btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Check In</button>
+						<button class="btn btn-info btn-sm btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
 						<input type="text" name="check_in" value="check_out" class="hidden">
-						<button class="btn btn-warning btn-sm btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Check Out</button>
+						<button class="btn btn-warning btn-sm btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Check Out</button>
 					<?php } ?>
 
 					<?php if(!$claimed){ ?>
-						<button class="btn btn-success btn-sm btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=($ticketStatus ? 'disabled' : '');?>>Claim Ticket</button>	
+						<button class="btn btn-success btn-sm btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
 						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-repair" <?=($ticketStatus ? 'disabled' : '');?>>
 							<i class="fa fa-save"></i> Complete Ticket
