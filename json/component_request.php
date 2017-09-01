@@ -34,19 +34,44 @@
 	function saveReq($techid, $order_number, $requested, $components, $repair_item_id, $notes, $total_pr) {
 		global $SEND_ERR;
 		global $_SERVER;
+		global $now;
+		global $DEV_ENV;
+
+		//Probably over declaring variables here
 		$query;
 		$result;
 
+		$link = '';
+		$message = '';
+
 		foreach($components as $item) {
+
+			$query = "SELECT * FROM parts WHERE id = '".res($item['part'])."'; ";
+			$result = qdb($query);
+
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$part = $r['part'];
+			}
+
+			$message = 'requested for Repair# ' . $order_number;
+
+			$link = '/order_form.php?ps=Purchase&s='.$item['part'].'&repair='.$repair_item_id;
 
 			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($order_number).", ".prep($requested).", ".prep($item['part']).", ".prep($total_pr).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
-			$query = "INSERT INTO notifications (partid, userid) VALUES (".prep($item['part']).", '13');";
+			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+			$query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($item['part']).", 'partid', ".prep($order_number).", 'ro_number');";
+
+			qdb($query) or die(qe() . ' ' . $query);
+			$messageid = qid();
+
+			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
-			if($result) {
+			if($result && !$DEV_ENV) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$item['part']."&repair=".$repair_item_id."'>Part# ".getPart($item['part'])."</a> Qty ".$total_pr." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				//$recipients = 'andrew@ven-tel.com';

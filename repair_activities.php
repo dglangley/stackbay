@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
 	function triggerActivity($ro_number, $repair_item_id, $inventoryid=0, $notes, $techid, $trigger, $check_in){
 		$now = $GLOBALS['now'];
@@ -47,6 +48,7 @@
 					$invid_arr = mysqli_fetch_assoc($invid_result);
 					setCost($invid_arr['id']);
 				}
+
 			} else {
 				//get the qty of items that have been built
 				$qty = 1;
@@ -95,12 +97,47 @@
 	}
 
 	function stockUpdate($repair_item_id, $ro_number, $repair_code){
+		$status = '';
 
 		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
-		$result = qdb($query) OR die(qe());
+		qdb($query) OR die(qe());
 
 		$query = "UPDATE repair_orders SET repair_code_id = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
+		qdb($query) OR die(qe());
+
+		$query = "SELECT description FROM repair_codes WHERE id = ".prep($repair_code)." ;";
 		$result = qdb($query) OR die(qe());
+
+		if(mysqli_num_rows($result)){
+			$r = mysqli_fetch_assoc($result);
+			$status = $r['description'];
+		}
+
+		// /repair.php?build=true&on=38
+		if(empty($_REQUEST['build'])) {
+			$message = 'RO# ' . $ro_number . ' Status: ' . $status;
+			$link = '/RO' . $ro_number;
+		} else {
+			$message = 'BO# ' . $_REQUEST['build'] . ' Status: ' . $status;
+			$link = '/repair.php?build=true&on=' . $_REQUEST['build'];
+		}
+
+		$query = "INSERT INTO messages (message, datetime, userid, link) ";
+		$query .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
+		qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+		$messageid = qid();
+
+		$team_users = array(getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
+
+		foreach ($team_users as $each_userid) {
+			//if ($userid==$each_userid) { continue; }
+			$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+			$query .= "VALUES ('".$messageid."','".$each_userid."',NULL,NULL); ";
+			$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+		}
+
+		// $query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '6');";
+		// qdb($query) or die(qe() . ' ' . $query);
 	}
 
 	function addtoStock($place, $instance, $condition, $serial_no){

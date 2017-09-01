@@ -12,15 +12,13 @@
             // Get information per order number selected
             // If paying a purchase then look into bills
             if($row['type'] == 'Purchase') {
-                $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($row['order_number'])."';";
+                $query = "SELECT *, 'Bill' as ref_type FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($row['order_number'])."';";
 
                 $result = qdb($query) OR die(qe().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
                     while ($rows = mysqli_fetch_assoc($result)) {
-                    	$rows['type'] = 'Bill';
                     	$rows['order_type'] = $row['type'];
-                    	$rows['ref_type'] = 'Bill';
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
                 } else {
@@ -29,7 +27,6 @@
 	                $result = qdb($query) OR die(qe().' '.$query);
 
 	                while ($rows = mysqli_fetch_assoc($result)) {
-                    	$rows['type'] = 'Purchase';
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
                 }
@@ -41,7 +38,6 @@
 
                 if(mysqli_num_rows($result) > 0){
 	                while ($rows = mysqli_fetch_assoc($result)) {
-	                	$rows['type'] = 'Invoice';
 	                    $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
 	                }
 	            } else {
@@ -56,8 +52,6 @@
 	                $result = qdb($query) OR die(qe().' '.$query);
 
 	                while ($rows = mysqli_fetch_assoc($result)) {
-	                	$rows['type'] = $row['type'];
-                    	$rows['query'] = $query;
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
 	            }

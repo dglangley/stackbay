@@ -71,7 +71,7 @@
             			//console.log(row);
             			var row_amount = parseFloat(row.amount * row.qty);
             			rowHTML += "<tr class='payment_info'>\
-										<td style='padding: 0px 10px;' class='col-md-3'>";
+										<td style='padding: 0px 10px;' class='col-md-3 capitalize'>";
 						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
 							rowHTML +=		row.ref_type+" "+row.invoice_no;
 
@@ -82,9 +82,9 @@
 						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
 										<td style='padding: 0px 10px;' class='col-md-4'>\
-											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.type+"."+row.invoice_no+"][amount]' style='max-width: 124px; text-align: right;'>\
+											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.invoice_no+"][amount]' style='max-width: 124px; text-align: right;'>\
 										</td>\
-										<td style='padding: 0px 10px;' class='col-md-1'><div class='checkbox pull-right'><input type='checkbox' name='payment_orders["+row.order_type+"."+order+"]["+row.type+"."+row.invoice_no+"][check]' class='payment_check' checked></div></td>\
+										<td style='padding: 0px 10px;' class='col-md-1'><div class='checkbox pull-right'><input type='checkbox' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.invoice_no+"][check]' class='payment_check' checked></div></td>\
 									</tr>";
 					});
 
@@ -164,7 +164,7 @@
             			payment_notes = row.notes;
 
             			rowHTML += "<tr class='payment_info'>\
-										<td style='padding: 0px 10px;' class='col-md-3'>";
+										<td style='padding: 0px 10px;' class='col-md-3 capitalize'>";
 						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
 							rowHTML +=		row.ref_type+" "+row.ref_number;
 

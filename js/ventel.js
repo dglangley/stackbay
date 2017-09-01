@@ -325,7 +325,15 @@
 							if (row.read=='') { read_class = ' unread'; }
 							else if (row.viewed=='') { read_class = ' unviewed'; }
 
-							notif_html += '<a href="javascript:viewNotification(\''+row.partid+'\',\''+row.search+'\',\''+row.type+'\',\''+row.repair_item_id+'\')" class="item'+read_class+'">'+
+							if(!row.part_label) {
+								var title = (row.note).split(" ");
+								row.part_label = title[0] + ' ' + title[1];
+								row.note = '';
+								for(var i = 2; i < title.length; i++){
+									row.note += title[i] + ' ';
+								}
+							}
+							notif_html += '<a href="javascript:viewNotification(\''+row.messageid+'\',\''+row.search+'\',\''+row.link+'\')" class="item'+read_class+'">'+
 								'<div class="user fa-stack fa-lg">'+
 									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
 								'</div> '+
@@ -1246,11 +1254,14 @@
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
                 	var rowDate = '';
+                	var curDate = new Date();
 
                 	var cls1 = '';
                 	var cls2 = '';
+
+
                 	//Set the first date to the first record, getSupply function already orders the records by date DESC
-                	if(init && type == 'demand') {
+                	if(init) {
                 		//Get the first date from the item array (probably a way better way to implement this feature)
                 		$.each(item, function(key, row) {
                 			var dateParts = row.date.split("-");
@@ -1258,11 +1269,16 @@
 
 							return false;
 						});
-                		//Based on the first date of entries found
-						last_month = date.setMonth(date.getMonth() - 1, 1);
-						last_year = date.setMonth(date.getMonth() - 11, 1);
 
-						init = false;
+						if(date) {
+	                		//Based on the first date of entries found
+							last_month = date.setMonth(date.getMonth() - 1, 1);
+							last_year = date.setMonth(date.getMonth() - 11, 1);
+
+							last_week = new Date(curDate.setTime(curDate.getTime() - (6 * 24 * 60 * 60 * 1000)));
+
+							init = false;
+						}
                 	}
 
                     qtyTotal = 0;
@@ -1290,13 +1306,19 @@
 
 					doneFlag = json.done;
 
-					if(type == 'demand') {
-						$.each(item, function(key, row) {
-							var dateParts = row.date.split("-");
-							rowDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+					$.each(item, function(key, row) {
+						var dateParts = row.date.split("-");
+						rowDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
-							return false;
-						});
+						return false;
+					});
+
+					if(rowDate >= last_week) { 
+						cls1 += '<span class="last_week">';
+						cls2 += '</span>';
+					} 
+
+					if(type == 'demand') {
 
 						if(rowDate < last_year) { 
 							if(hr) {
@@ -1304,14 +1326,14 @@
 								hr = false;
 							}
 							cls1 += '<span class="archives">';
-							cls2 = '</span>';
+							cls2 += '</span>';
 						} else if (rowDate < last_month) {
 							if(hr) {
 								cls1 = '<hr>';
 								hr = false;
 							}
 							cls1 += '<span class="summary">';
-							cls2 = '</span>';
+							cls2 += '</span>';
 						}
 					}
 
@@ -1589,7 +1611,7 @@
         if (type == 'supply') {
         	groupStr = '<div class="date-group">'+dateKey+': qty '+qtyTotal+' ';
         } else {
-        	groupStr = '<div class="date-group"><a href=href="javascript:void(0);">'+dateKey+': qty '+qtyTotal+'</a> ';
+        	groupStr = '<div class="date-group">'+dateKey+': qty '+qtyTotal+' ';
         }
         if (! doneFlag && dateKey=='Today' && type == 'supply') {
             groupStr += '<i class="fa fa-circle-o-notch fa-spin"></i>';
@@ -1610,8 +1632,10 @@
 		// get refid passed into save button, and use it to find object for placement of the notes modal,
 		// then get user notes body and pass to toggleNotes() to add new entry and to refresh notes modal
 		//var itemRow = $("#"+$(this).data('refid'));
-		var itemRow = $("#"+$("#modalNotes").find("#save-notes-btn").data('refid'));
+		var itemRow = $("#"+$("#modalNotes").find("#save-notes-btn").attr('data-refid'));
 		var itemObj = itemRow.find(".item-notes:first");
+
+		console.log($("#modalNotes").find("#save-notes-btn").attr('data-refid'));
 
 		//var user_textarea = $(this).closest(".notes-body").find("textarea[name='user_notes']");
 		var user_textarea = $("#modalNotes").find("textarea[name='user_notes']");
@@ -1630,7 +1654,9 @@
 		var partid = productBody.data('partid');
 		var pipe_ids = productBody.data('pipeids');
 		/* save part/pipe ids to the button for when the user saves the notes */
-		$("#save-notes-btn").data("refid",e.closest(".product-results").prop("id"));
+		$("#save-notes-btn").attr("data-refid",e.closest(".product-results").prop("id"));
+
+		//$("#save-notes-btn").attr("data-refid",'row-' + e.closest(".product-descr").data("partid"));
 
         console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids+"&add_notes="+escape(add_notes));
         $.ajax({
@@ -1685,24 +1711,18 @@
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
 		modalBody.html(table_html);
 	}
-	function viewNotification(partid,search, type, order_number) {
+	function viewNotification(messageid,search, link) {
 		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
-        console.log(window.location.origin+"/json/notes.php?partid="+partid);
+        console.log(window.location.origin+"/json/notes.php?messageid="+messageid);
 
         $.ajax({
             url: 'json/notes.php',
             type: 'get',
-            data: {'partid': partid},
+            data: {'messageid': messageid},
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					if(type != "purchase_request" && type != "purchase_received") {
-						document.location.href = '/?s='+search;
-					} else if(type == "purchase_request") {
-						document.location.href = '/order_form.php?ps=Purchase&s='+search + '&repair=' +order_number;
-					} else if(type == "purchase_received") {
-						document.location.href = '/repair.php?on=' +order_number;
-					}
+					document.location.href = link;
 				} else {
 					var message = 'There was an error processing your request!';
 					if (json.message) { message = json.message; } // show response from the php script.
