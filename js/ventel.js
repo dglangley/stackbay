@@ -1221,6 +1221,7 @@
 
     });/* close $(document).ready */
 
+	var last_week = '';
     // build jquery plugin for remote ajax call
     jQuery.fn.loadResults = function(attempt, results_mode) {
 		if (! results_mode) { var results_mode = '0'; }
@@ -1315,7 +1316,7 @@
 						return false;
 					});
 
-					if(rowDate >= last_week) { 
+					if(last_week!='' && rowDate >= last_week) { 
 						cls1 += '<span class="last_week">';
 						cls2 += '</span>';
 					} 
