@@ -224,9 +224,10 @@
 		global $today,$yesterday;
 
 		$date = summarize_date($order_date);
+		$order_date = substr($order_date,0,10);
 		// highlight any records in the past week
 		$dateSty = '';
-		if ($order_date>$GLOBALS['lastWeek']) { $dateSty = ' style="font-weight:bold"'; }
+		if ($order_date>format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7))) { $dateSty = ' style="font-weight:bold"'; }
 
 		// Changed to remove unused modal currently
 		$dtitle = '<div class="date-group"><a href="javascript:void(0);"'.$dateSty.'>'.$date.': '.
