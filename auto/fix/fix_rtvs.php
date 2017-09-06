@@ -36,7 +36,7 @@
 
 	$vendor_rma = $r['vendor_rma'];
 	$reason = $r['reason'];
-	$action_id = $r['action_id'];//our disposition
+	$action_id = $r['action_id'];//our disposition, 3=credit
 	$status_id = $r['status_id'];//should be 5 = complete
 
 	$serial_no = $r2['serial'];
@@ -64,13 +64,14 @@
 		die("No purchase item id");
 	}
 
-	$query2 = "SELECT po_number FROM purchase_items WHERE id = '".$r['purchase_item_id']."'; ";
+	$query2 = "SELECT po_number, price FROM purchase_items WHERE id = '".$r['purchase_item_id']."'; ";
 	$result2 = qdb($query2) OR die(qe().'<BR>'.$query);
 	if (mysqli_num_rows($result2)==0) {
 		echo $query2.'<BR>';
 		die("No purchase items record");
 	}
 	$r2 = mysqli_fetch_assoc($result2);
+	$price = $r2['price'];
 	if ($po_number<>$r2['po_number']) {
 		die("Our PO (".$r2['po_number'].") doesn't match BDB PO (".$po_number.")");
 	}
@@ -122,4 +123,18 @@ echo $query3.'<BR>';
 	$query3 = "DELETE FROM returns WHERE rma_number = '".$rma."'; ";
 	$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 echo $query3.'<BR>';
+
+	// create purchase credits record
+	if ($action_id==3) {
+		$query3 = "INSERT INTO purchase_credits (po_number, companyid, memo, date_created, repid) ";
+		$query3 .= "VALUES ('".$po_number."', '".$companyid."', '".res($reason)."', '".$date." 00:00:00', NULL); ";
+		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+echo $query3.'<BR>';
+		$pcid = qid();
+
+		$query3 = "INSERT INTO purchase_credit_items (pcid, purchase_item_id, qty, amount) ";
+		$query3 .= "VALUES ('".$pcid."', '".$r['purchase_item_id']."', '1', '".$price."'); ";
+		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+echo $query3.'<BR>';
+	}
 ?>
