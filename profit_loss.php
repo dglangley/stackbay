@@ -18,7 +18,7 @@
 
 		$returns = array();
 
-		$query = "SELECT r.*, ri.*, c.name, '' avg_cost FROM returns r, return_items ri, companies c ";
+		$query = "SELECT r.*, r.created date, ri.*, c.name, '' avg_cost FROM returns r, return_items ri, companies c ";
 		$query .= "WHERE r.rma_number = ri.rma_number ";
 		if ($order_number AND $order_type) {
 			$query .= "AND order_number = '".$order_number."' AND order_type = '".$order_type."' AND inventoryid = '".$inventoryid."' ";

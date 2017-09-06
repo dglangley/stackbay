@@ -427,7 +427,7 @@
 								';
 							}
 
-							$output .= getPackagesFix($order_number, $o['type']);
+//							$output .= getPackagesFix($order_number, $o['type']);
 
 							$output .= '
 										<li>
