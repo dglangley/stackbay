@@ -147,38 +147,79 @@
 		}
 	}
 
-	$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	/***** UPDATE QUERIES *****/
+
+	$query = "UPDATE average_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE prices SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE notifications SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE purchase_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE rfqs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "DELETE FROM parts WHERE id = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "DELETE FROM parts_index WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "DELETE FROM qtys WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE inventory SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-//	$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-//	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	$query = "UPDATE return_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
+
 	$query = "UPDATE bill_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE builds SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE inventory SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE inventory_history SET value = '".res($masterid)."' WHERE field_changed = 'partid' AND value = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
 	$query = "UPDATE invoice_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE messages SET ref_1 = '".res($masterid)."' WHERE ref_1_label = 'partid' AND ref_1 = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE purchase_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE repair_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE repair_quotes SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE repair_sources SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE return_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE rfqs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE service_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+
+	/***** DELETE QUERIES *****/
+	$query = "DELETE FROM parts WHERE id = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "DELETE FROM parts_index WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+	$query = "DELETE FROM qtys WHERE partid = '".res($slaveid)."'; ";
+	$result = qdb($query) OR reportError(qe().' '.$query);
+
+//	$query = "UPDATE prices SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+//	$result = qdb($query) OR reportError(qe().' '.$query);
+//	$query = "UPDATE notifications SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+//	$result = qdb($query) OR reportError(qe().' '.$query);
+//	$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+//	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	echo json_encode(array('message'=>'Success'));
 	exit;

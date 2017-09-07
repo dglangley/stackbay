@@ -738,7 +738,7 @@
 							<?=$credits_rows?>
 <?php if ($credits_open) { ?>
 							<tr>
-								<td colspan="10" class="text-right">
+								<td colspan="11" class="text-right">
 									<button class="btn btn-success btn-sm" id="btn-credits" type="submit">Save</button>
 								</td>
 							</tr>
@@ -805,6 +805,13 @@
 				$("#master-save").prop('disabled',true);
 				$("#master-save").hide();
 			}
+		});
+		$("#master-save").click(function() {
+			var active_tab = $("#tab").val();
+			if (! active_tab) { return; }
+			var f = $("#"+active_tab).find("form");
+
+			f.submit();
 		});
 		$(".sorter").click(function() {
 			var sort_field = $(this).data("type");

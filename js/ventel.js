@@ -1016,12 +1016,14 @@
 			$("input[name='END_DATE']").val(end_date);
 		});
         $('.btn-radio').click(function() {
-            var btnValue = $(this).data('value');
+			var btn = $(this);
+            var btnValue = btn.data('value');
             $(this).closest("div").find("input[type=radio]").each(function() {
-                if ($(this).val()==btnValue) { $(this).attr('checked',true); }
+				if ($(this).val()!=btnValue) { return; }
+				$(this).attr('checked',true);
             });
         });
-				$('td[id*=Ranges]').children().click(function() {
+		$('td[id*=Ranges]').children().click(function() {
 			$(this).siblings('button[class*=active]').toggleClass("active");
 		});
 		/*
@@ -1219,6 +1221,7 @@
 
     });/* close $(document).ready */
 
+	var last_week = '';
     // build jquery plugin for remote ajax call
     jQuery.fn.loadResults = function(attempt, results_mode) {
 		if (! results_mode) { var results_mode = '0'; }
@@ -1313,7 +1316,7 @@
 						return false;
 					});
 
-					if(rowDate >= last_week) { 
+					if(last_week!='' && rowDate >= last_week) { 
 						cls1 += '<span class="last_week">';
 						cls2 += '</span>';
 					} 
