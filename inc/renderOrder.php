@@ -249,7 +249,8 @@
 
 		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
 		if($o['credit'] && is_numeric($order_number)){
-		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
+		    //$items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
+		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, sci.qty,i.partid 
 		    FROM inventory_history ih, inventory i, '.$o['tables'].' 
 		    AND sc.`'.$o['id'].'` = '.$order_number.' 
 		    AND ih.field_changed = "sales_item_id" 

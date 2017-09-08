@@ -44,6 +44,7 @@
 	}
 
 	$commons = array(
+		'TRANSMITTER'=>1,
 		'DC'=>1,
 		'THE'=>1,
 		'CINDY'=>1,
@@ -57,6 +58,7 @@
 		'HOURS'=>1,
 		'BUYER'=>1,
 		'20'=>1,
+		'10'=>1,
 		'CLEI'=>1,
 		'FILTER'=>1,
 		'INVERTER'=>1,
@@ -386,7 +388,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					if ($heci) { $partkey .= ' '.substr($heci,0,7); }
 
 					$clean_part = preg_replace('/[^[:alnum:]]+/','',$part);
-					if (strlen($clean_part)<2 AND ! $heci) {
+					if ((strlen($clean_part)<2 OR (strlen($clean_part)==2 AND is_numeric($clean_part))) AND ! $heci) {
 						continue;//added 8-21-17
 
 						if (! strstr($failed_strings,$partkey)) {

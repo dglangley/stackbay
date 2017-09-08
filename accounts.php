@@ -27,7 +27,7 @@
 	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
 	//This is saved as a cookie in order to cache the results of the button function within the same window
-	setcookie('report_type',$report_type);
+	setcookie('report_type', $report_type, (time() + (7 * 24 * 60 * 60)));
 
 	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
 	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above

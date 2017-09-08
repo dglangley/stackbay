@@ -18,33 +18,66 @@
 
 		$returns = array();
 
-		$query = "SELECT r.*, r.created date, ri.*, c.name, '' avg_cost FROM returns r, return_items ri, companies c ";
+		$query = "SELECT r.*, r.created date, ri.*, c.name, '' avg_cost, r.status ";
+		$query .= "FROM returns r, return_items ri, companies c ";
 		$query .= "WHERE r.rma_number = ri.rma_number ";
 		if ($order_number AND $order_type) {
 			$query .= "AND order_number = '".$order_number."' AND order_type = '".$order_type."' AND inventoryid = '".$inventoryid."' ";
 		} else {
 			if ($companyid) { $query .= "AND r.companyid = '".$companyid."' "; }
-			if ($order_search) { $query .= "AND (r.rma_number = '".res($order_search)."' OR r.order_number = '".res($order_search)."' "; }
+			if ($order_search) { $query .= "AND (r.rma_number = '".res($order_search)."' OR r.order_number = '".res($order_search)."') "; }
 			else if ($dbStartDate) {
 				$query .= "AND r.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
 		}
-		$query .= "AND r.companyid = c.id; ";
+		$query .= "AND r.companyid = c.id; ";// AND r.status <> 'Void'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['order_number'] = $r['rma_number'];
 			$r['order_type'] = getDisposition($r['dispositionid']);
 
 			// repair, still with possible credit
-			$query2 = "SELECT ro_number, invid, id FROM repair_items WHERE ref_1 = '".$r['id']."' AND ref_1_label = 'return_item_id'; ";
+			//$query2 = "SELECT ro_number, invid, id FROM repair_items WHERE ref_1 = '".$r['id']."' AND ref_1_label = 'return_item_id'; ";
+			// don't count voided/canceled repair orders
+			$query2 = "SELECT ri.ro_number, ri.invid, ri.id FROM repair_items ri, repair_orders ro ";
+			$query2 .= "WHERE ri.ref_1 = '".$r['id']."' AND ri.ref_1_label = 'return_item_id' AND ri.ro_number = ro.ro_number ";
+			$query2 .= "AND (repair_code_id <> 8 AND repair_code_id <> 9 AND repair_code_id <> 18); ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) {
 				$r['ref'] = '';
-				if ($r['dispositionid']==3) {//3==repair so if no results, we gotta ask why
+				if ($r['dispositionid']==3) {//3==Repair so if no results, we gotta ask why
 					echo $query2.'<BR>';
-				} else if ($r['dispositionid']==1) {//credit
+				} else if ($r['dispositionid']==1) {//Credit
 					continue;
-				} else {//if ($r['dispositionid']==2) {//replace/exchange
+				} else {//if ($r['dispositionid']==2) {//Replace/Exchange
+					// get Sales COGS of item returned on this RMA to Credit back the Sales COGS account
+					$query3 = "SELECT ri.*, sc.* FROM returns r, return_items ri, inventory_history h, sales_cogs sc, sales_items si ";
+					$query3 .= "WHERE ri.rma_number = '".$r['rma_number']."' ";
+					$query3 .= "AND r.rma_number = ri.rma_number AND (h.field_changed = 'returns_item_id' AND h.value = ri.id) AND sc.inventoryid = h.invid ";
+					$query3 .= "AND sc.item_id = si.id AND si.so_number = r.order_number AND r.order_type = 'Sale' ";
+					$query3 .= "GROUP BY h.invid; ";
+					$result3 = qdb($query3);
+					if (mysqli_num_rows($result3)>0) {
+						echo $query3.'<BR>';
+						$r3 = mysqli_fetch_assoc($result3);
+						$r['avg_cost'] = $r3['cogs_avg'];
+						$r['exchange_cogs'] = 0;
+
+						// in Exchanges, we must not only offset COGS by Crediting back to stock, but also need to Debit the COGS account
+						// since we're shipping an item back out
+						$query4 = "SELECT * FROM sales_items si, sales_cogs sc WHERE si.id = sc.item_id AND sc.item_id_label = 'sales_item_id' ";
+						$query4 .= "AND (";
+						$query4 .= "(si.ref_1 = '".$r3['return_item_id']."' AND si.ref_1_label = 'return_item_id') ";
+						$query4 .= "OR (si.ref_2 = '".$r3['return_item_id']."' AND si.ref_2_label = 'return_item_id') ";
+						$query4 .= ") ";
+						$query4 .= "AND (si.so_number = '".$r3['so_number']."'); ";
+						$result4 = qdb($query4);
+						if (mysqli_num_rows($result4)>0) {
+							$r4 = mysqli_fetch_assoc($result4);
+
+							$r['exchange_cogs'] = $r4['cogs_avg'];
+						}
+					}
 				}
 				$query2 = "SELECT * FROM parts WHERE id = '".$r['partid']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -59,6 +92,14 @@
 				continue;
 			}
 			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$query3 = "SELECT * FROM parts WHERE id = '".$r['partid']."'; ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				if (mysqli_num_rows($result3)==0) {
+					echo $query3.'<BR>';
+				}
+				$r3 = mysqli_fetch_assoc($result3);
+				$r['descr'] = trim($r3['part'].' '.$r3['heci']);
+
 				if ($r['order_type']=='Repair') {
 					$r['avg_cost'] = calcRepairCost($r2['ro_number'],$r2['id'],$r2['invid'],true);
 				}
@@ -82,8 +123,10 @@
 
 		$query = "SELECT c.name, sc.companyid, sci.qty, sci.amount price, ri.inventoryid, ri.partid, part, heci, ";
 		$query .= "sc.id ref, sc.rma order_number, sc.date_created date, 'Credit' order_type, sc.order_num og_order, sc.order_type og_type, ";
-		$query .= "NULL line_number, NULL item_id, NULL serial_no, NULL invoice_no, NULL packageid ";
-		$query .= "FROM companies c, sales_credits sc, sales_credit_items sci, return_items ri, parts p ";
+		$query .= "NULL line_number, NULL item_id, NULL serial_no, NULL invoice_no, NULL packageid, 'Active' status ";
+		$query .= "FROM companies c, sales_credits sc, sales_credit_items sci ";//, return_items ri, parts p ";
+		$query .= "LEFT JOIN return_items ri ON sci.return_item_id = ri.id ";
+		$query .= "LEFT JOIN parts p ON ri.partid = p.id ";
 		$query .= "WHERE sc.companyid = c.id ";
 //		$query .= "AND sc.order_num = '".$order_number."' AND sc.order_type = '".$order_type."' ";
 		if ($companyid) { $query .= "AND sc.companyid = '".$companyid."' "; }
@@ -91,7 +134,7 @@
 		else if ($dbStartDate) {
 			$query .= "AND sc.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
-		$query .= "AND sci.return_item_id = ri.id AND ri.partid = p.id ";
+//		$query .= "AND sci.return_item_id = ri.id AND ri.partid = p.id ";
 		$query .= "AND sc.id = sci.cid; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -121,9 +164,10 @@
 		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search,$companyid,$buckets;
 		$entries = array();
 		$returns = array();
+		$freight_charges = array();
 
 		$query = "SELECT ii.line_number, c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
-		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.partid, ii.amount, s.packageid, ii.memo ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.partid, ii.amount, s.packageid, ii.memo, i.freight, i.status ";
 		$query .= "FROM companies c, invoices i, invoice_items ii ";
 		$query .= "LEFT JOIN invoice_shipments s ON ii.id = s.invoice_item_id ";
 		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no ";
@@ -135,6 +179,23 @@
 		$query .= "ORDER BY i.date_invoiced ASC, i.order_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
+
+			// sum freight charges for each invoice only once
+			if ($r['freight'] AND ! isset($freight_charges[$r['invoice_no']])) {
+				$freight = $r;
+				$freight['qty'] = 1;
+				$freight['invoice_item_id'] = 999999;
+				$freight['line_number'] = 999999;
+				$freight['partid'] = 0;
+				$freight['price'] = $r['freight'];
+				$freight['memo'] = '';
+				$freight['descr'] = 'FREIGHT CHARGE';
+				$freight['avg_cost'] = 0;
+				$freight['actual_cost'] = 0;
+
+				$entries[] = $freight;
+				$freight_charges[$r['invoice_no']] = true;
+			}
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;
@@ -238,6 +299,9 @@
 				}
 				$query2 .= ") AND (h.field_changed = '".$T['item_label']."' AND h.value = items.id) ";
 				$query2 .= "AND h.invid = i.id AND i.partid = parts.id ";
+				// exclude rma-replaced items because those will be counted in the returns section
+				$query2 .= "AND (items.ref_1_label IS NULL OR items.ref_1_label <> 'sales_item_id') ";
+				$query2 .= "AND (items.ref_2_label IS NULL OR items.ref_2_label <> 'sales_item_id') ";
 				$query2 .= "AND items.partid = '".$r['partid']."' ";
 				$query2 .= "GROUP BY h.invid, h.value; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -302,9 +366,20 @@
 		$companyid = $_REQUEST['companyid']; 
 	}
 
+	$debits = false;
+	if (isset($_REQUEST['debits'])) { $debits = $_REQUEST['debits']; }
+	$credits = false;
+	if (isset($_REQUEST['credits'])) { $credits = $_REQUEST['credits']; }
+	if (! $debits AND ! $credits) {
+		$debits = true;
+		$credits = true;
+	}
+
 	$order_search = '';
 	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
 		$order_search = $_REQUEST['order'];
+		$credits = true;
+		$debits = true;
 	}
 	
 	$part = '';
@@ -383,14 +458,6 @@
 		<tr>
 		<td class = "col-md-2">
 <?php
-	$debits = false;
-	if (isset($_REQUEST['debits'])) { $debits = $_REQUEST['debits']; }
-	$credits = false;
-	if (isset($_REQUEST['credits'])) { $credits = $_REQUEST['credits']; }
-	if (! $debits AND ! $credits) {
-		$debits = true;
-		$credits = true;
-	}
 	$buckets = array('debits'=>$debits,'credits'=>$credits);
 
 	$cost_basis = 'average';//can toggle between average and fifo
@@ -607,7 +674,7 @@
 				'qty'=>0,
 				'cogs'=>0,
 				'sale_amount'=>0,
-				'voided'=>0,
+				'status'=>$r['status'],
 				'pushed'=>1,
 				'push_success'=>1,
 				'order'=>$r['order_number'],
@@ -619,6 +686,7 @@
 				'company'=>$r['name'],
 				'actual_cost'=>$r['actual_cost'],
 				'avg_cost'=>$r['avg_cost'],
+				'exchange_cogs'=>0,
 				'date'=>$r['date'],
 				'po_number'=>$r['po_number'],
 			);
@@ -640,6 +708,7 @@
 		$key = $r['date'].'.B'.$r['item_id'].'.'.$r['order_number'].'.'.$r['ref'];
 		$order_ln = '';
 		if ($r['order_number']) { $order_ln = '<a href="/RMA'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>'; }
+		$exchange_cogs = 0;
 
 		$ref = '';
 		if ($r['ref']) {
@@ -648,6 +717,8 @@
 			} else {
 				$ref = 'Repair '.$r['ref'].' <a href="/RO'.$r['ref'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 			}
+		} else if ($r['order_type']=='Exchange' AND isset($r['exchange_cogs'])) {
+			$exchange_cogs = $r['exchange_cogs'];
 		}
 		if (! isset($results[$key])) {
 			$results[$key] = array(
@@ -655,7 +726,7 @@
 				'qty'=>0,
 				'cogs'=>0,
 				'sale_amount'=>0,
-				'voided'=>$r['voided'],
+				'status'=>$r['status'],
 				'pushed'=>1,
 				'push_success'=>1,
 				'order'=>$r['order_number'],
@@ -667,6 +738,7 @@
 				'company'=>$r['name'],
 				'actual_cost'=>$r['actual_cost'],
 				'avg_cost'=>$r['avg_cost'],
+				'exchange_cogs'=>0,
 				'date'=>$r['date'],
 				'po_number'=>$r['po_number'],
 			);
@@ -679,6 +751,7 @@
 		} else {
 			$results[$key]['cogs'] += $r['actual_cost'];
 		}
+		$results[$key]['exchange_cogs'] += $exchange_cogs;
 		if ($r['order_type']=='Credit') {
 			$results[$key]['sale_amount'] += $r['price'];
 		}
@@ -711,7 +784,7 @@
 		$cogs_credit = '';
 		$cogs_debit = '';
 		$cls = '';
-		if ($r['voided']) {
+		if ($r['status']=='Void' OR $r['status']=='Voided') {
 			$cls = ' class="strikeout"';
 		} else {
 //			if ($r['order_type']=='Sale' OR $r['order_type']=='Repair' OR $r['order_type']=='IT') {
@@ -741,6 +814,14 @@
 				$sum_cogs_credits -= $r['cogs'];
 				$returned_cogs = true;
 				$profit = -($r['sale_amount']-$r['cogs']);
+
+				if ($r['exchange_cogs']) {
+					$cogs_debit = format_price(round($r['exchange_cogs'],2),true,' ');//.' <sup><i class="fa fa-plus"></i></sup>';
+					$sum_cogs_debits += $r['exchange_cogs'];
+					$profit -= $r['exchange_cogs'];
+					$sum_qty += $r['qty'];
+				}
+
 				$sum_profit += $profit;
 			}
 

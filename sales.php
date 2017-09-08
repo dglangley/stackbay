@@ -890,6 +890,10 @@ if (! $r['partid']) { return ($results); }
 					// $results_rows .= '<div class="row infinite_scroll" data-page="'.($page ? $page + 1 : '1').'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
 				}
 
+				$res1_btn = 'primary';
+				$res2_btn = 'default';
+				if (isset($_REQUEST['pricing_mode'])) { $res1_btn = 'default'; $res2_btn = 'primary'; }
+
 				$results_rows .= '
 							</div>
 
@@ -903,8 +907,8 @@ if (! $r['partid']) { return ($results); }
 										</a>
 										<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="supply"></div>
 										<div class="btn-group btn-resultsmode action-items pull-right">
-											<button class="btn btn-primary btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
-											<button class="btn btn-default btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
+											<button class="btn btn-'.$res1_btn.' btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
+											<button class="btn btn-'.$res2_btn.' btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
 											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
 										</div>
 									</div>
@@ -1070,6 +1074,11 @@ if (! $r['partid']) { return ($results); }
 	<input type="hidden" name="demand_max" value="<?php echo $demand_max; ?>" class="search-filter">
 
 	</form>
+
+	<script type="text/javascript">
+		var RESULTS_MODE = 0;
+		<?php if (isset($_REQUEST['pricing_mode'])) { echo 'RESULTS_MODE = 1'; } ?>
+	</script>
 
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>

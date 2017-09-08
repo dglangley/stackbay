@@ -1,4 +1,6 @@
     $(document).ready(function() {
+		if (! RESULTS_MODE) { RESULTS_MODE = 0; }
+
 		$('#loader').hide();
 		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) {
 			$("#s").select();
@@ -584,7 +586,7 @@
 			});
 		});
         $(".market-results").each(function() {
-			$(this).loadResults(0);
+			$(this).loadResults(0,RESULTS_MODE);
 		});
 
         //Legacy Code
@@ -1360,7 +1362,7 @@
 //					$("#shelflife-"+ln).html('');
 	                if (! json.done && attempt==0) {
 	                    //setTimeout("$('#market-results').loadResults()",1000);
-						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+")",1000);
+						setTimeout("$('#"+container.prop('id')+"').loadResults("+(attempt+1)+","+RESULTS_MODE+")",1000);
 	                } else if (json.done==1) {
 						// after done loading the market results, show the market pricing summary and toggle
 						var price_range = '';
