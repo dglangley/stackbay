@@ -109,10 +109,18 @@
 		}
 	} else if(grab('exchange_trigger')) {
 		$new_so;
+		$return_item_id;
+
+		$query = "SELECT id FROM return_items WHERE inventoryid = ".$_REQUEST['exchange_trigger'].";";
+		$result = qdb($query) or die(qe());
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$return_item_id = $result['id'];
+		}
 		
 		//Insertion of the values of from the exhange parameters
-		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, `ref_2`, `ref_2_label`, `warranty`, `conditionid`)
-		SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, `inventory`.`sales_item_id` AS `ref_1`, 'sales_item_id' AS `ref_1_label`, `warranty`, s.`conditionid`
+		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, ref_1, ref_1_label,`ref_2`, `ref_2_label`, `warranty`, `conditionid`)
+		SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, $return_item_id AS ref_1, 'return_item_id' AS ref_1_label,`inventory`.`sales_item_id` AS `ref_2`, 'sales_item_id' AS `ref_2_label`, `warranty`, s.`conditionid`
 		FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
 		qdb($insert);
 		$exchangeid = qid();
