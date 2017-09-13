@@ -363,9 +363,9 @@
 			</div>
 			<div class="col-sm-1 text-center">
 				<div class="btn-group">
-					<button class="btn btn-<?php echo $goodstock_btn; ?> btn-sm left" name="btn-goodstock" value="<?php echo !$goodstock; ?>"><i class="fa fa-dot-circle-o<?php echo $goodstock_text; ?>"></i></button>
-					<button class="btn btn-<?php echo $badstock_btn; ?> btn-sm middle" name="btn-badstock" value="<?php echo !$badstock; ?>"><i class="fa fa-circle<?php echo $badstock_text; ?>"></i></button>
-					<button class="btn btn-<?php echo $outstock_btn; ?> btn-sm right" name="btn-outstock" value="<?php echo !$outstock; ?>"><i class="fa fa-minus-circle<?php echo $outstock_text; ?>"></i></button>
+					<button class="btn btn-<?php echo $goodstock_btn; ?> btn-sm left" name="btn-goodstock" value="<?php echo !$goodstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Good Stock"><i class="fa fa-dot-circle-o<?php echo $goodstock_text; ?>"></i></button>
+					<button class="btn btn-<?php echo $badstock_btn; ?> btn-sm middle" name="btn-badstock" value="<?php echo !$badstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Bad Stock"><i class="fa fa-circle<?php echo $badstock_text; ?>"></i></button>
+					<button class="btn btn-<?php echo $outstock_btn; ?> btn-sm right" name="btn-outstock" value="<?php echo !$outstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Zero Stock"><i class="fa fa-minus-circle<?php echo $outstock_text; ?>"></i></button>
 				</div>
 			</div>
 			<div class="col-sm-2">
