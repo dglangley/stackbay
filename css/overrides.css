@@ -2029,3 +2029,31 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .navbar-inverse .col-megamenu {
   border-right: solid 1px #555;
 }
+
+.descr-row.in-stock {
+    background-color: #f9edd8;
+    background: -webkit-linear-gradient(#f9edd8, #fbf4e6);
+    background: -o-linear-gradient(#f9edd8, #fbf4e6);
+    background: -moz-linear-gradient(#f9edd8, #fbf4e6);
+    background: linear-gradient(#f9edd8, #fbf4e6);
+}
+
+.never-stock .first {
+	background: repeating-linear-gradient(
+    -55deg,
+    #edeef5,
+    #edeef5 10px,
+    #f1f2f8 10px,
+    #f1f2f8 20px
+  );
+}
+
+.out-stock .first {
+  background: repeating-radial-gradient(
+    circle,
+    #edeef5,
+    #edeef5 10px,
+    #f1f2f8 10px, 
+    #f1f2f8 20px
+  );
+}
