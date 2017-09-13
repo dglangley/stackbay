@@ -1,197 +1,33 @@
 <?php
 	include_once 'inc/dbconnect.php';
+	include_once 'inc/pipe.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
+	include_once 'inc/getPipeIds.php';
+	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
 	include_once 'inc/getCost.php';
 	include_once 'inc/array_stristr.php';
+	include_once 'inc/calcQuarters.php';
+	include_once 'inc/format_market.php';
 
 	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST) {
 		header('Location: '.$SEARCH_MODE);
 		exit;
 	}
 
+
+
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
 	else if (isset($_REQUEST['upload_listid']) AND is_numeric($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']>0) { $listid = $_REQUEST['upload_listid']; }
 	$pg = 1;
-	if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
-
-	// frequent companies within scope of demand and supply
-	$FREQS = array('demand'=>array(),'supply'=>array());
-
-	$freq_min = 2;
-	$query = "SELECT * FROM company_activity WHERE demand_volume > $freq_min OR supply_volume > $freq_min; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		if ($r['demand_volume']>$freq_min) {
-			$FREQS['demand'][$r['companyid']] = $r['demand_volume'];
-		}
-		if ($r['supply_volume']>$freq_min) {
-			$FREQS['supply'][$r['companyid']] = $r['supply_volume'];
-		}
-	}
-
-	$SALES = false;
-	$DEMAND = false;
-	function format_market($partid_csv,$market_table,$search_strs) {
-		global $FREQS,$SALES,$DEMAND;
-
-		$last_date = '';
-		$last_sum = '';
-		$market_str = '';
-		$dated_qty = 0;
-		$monthly_totals = array();
-
-		// re-use data within global scope, if previously set from use with filters
-		if ($market_table=='sales' AND $SALES!==false) {
-			$results = $SALES;
-		} else if ($market_table=='demand' AND $DEMAND!==false) {
-			$results = $DEMAND;
-		} else {
-			$results = getRecords($search_strs,$partid_csv,'csv',$market_table);
-		}
-
-		$num_results = count($results);
-		// number of detailed results instead of month-groups, which is normally only results within the past month
-		// unless the only records available are outdated, in which case it would be good to show the first couple in detail
-		$num_detailed = 0;
-
-		$summary_past = $GLOBALS['summary_past'];
-
-		$grouped = array();
-		$last_date = '';
-		foreach ($results as $r) {
-			$datetime = substr($r['datetime'],0,10);
-			if ($num_detailed==0 OR $market_table<>'demand' OR $datetime>=$summary_past) {
-				// append the companyid to the date to avoid grouping results on the same date
-				// because otherwise we end up with averaged prices when we want to see breakouts instead
-				$group_date = substr($r['datetime'],0,10).'-'.$r['cid'];
-
-				$last_date = $group_date;
-				if ($num_detailed==0 AND $datetime<$summary_past) {
-					$summary_past = substr($datetime,0,7).'-01';
-					$GLOBALS['summary_past'] = $summary_past;
-				}
-				$num_detailed++;
-			} else {
-				// update date baseline for summarize_date() below to show just month rather than full date
-
-				$group_date = substr($r['datetime'],0,7);
-			}
-			if (! isset($grouped[$group_date])) {
-				$grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array(),'status'=>'');
-				if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['order_num'] = ''; }
-			}
-
-			$fprice = format_price($r['price'],true,'',true);
-			if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['count'] = 1; }
-			else { $grouped[$group_date]['count']++; }
-			if ($fprice>0) {
-				$grouped[$group_date]['sum_qty'] += $r['qty'];
-				$grouped[$group_date]['sum_price'] += ($fprice*$r['qty']);
-			}
-			$grouped[$group_date]['datetime'] = $r['datetime'];
-			$grouped[$group_date]['total_qty'] += $r['qty'];
-
-			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']]) AND array_search($r['name'],$grouped[$group_date]['companies'])===false) {
-				$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
-			}
-			if ($market_table=='purchases' OR $market_table=='sales') { $grouped[$group_date]['order_num'] = $r['order_num']; }
-			if ($r['status']=='Void') { $grouped[$group_date]['status'] = 'Void'; }
-		}
-		ksort($grouped);
-
-		$cls1 = '';
-		$cls2 = '';
-		foreach ($grouped as $order_date => $r) {
-			// because we're grouping dates above with suffixed companyid's, we need to shorten them back to just the date
-			$order_date = substr($order_date,0,10);
-
-			// summarized date for heading line
-			$sum_date = summarize_date($r['datetime']);
-
-			// add group heading (date with summarized qty)
-			if ($last_sum AND $sum_date<>$last_sum) {
-				$market_str = $cls1.format_dateTitle($last_date,$dated_qty).$cls2.$market_str;
-				$dated_qty = 0;//reset for next date
-			}
-
-			$cls1 = '';
-			$cls2 = '';
-			$summary_form = false;
-			if ($r['datetime']<$GLOBALS['summary_lastyear']) {
-				$cls1 = '<span class="archives">';
-				$cls2 = '</span>';
-				$summary_form = true;
-			} else if ($r['datetime']<$summary_past) {
-				$cls1 = '<span class="summary">';
-				$cls2 = '</span>';
-				$summary_form = true;
-			}
-
-			if (strlen($order_date)==10 AND strlen($last_date)==7) {
-				$market_str = '<HR>'.$market_str;
-			}
-
-			$last_date = $order_date;
-			$last_sum = $sum_date;
-			$dated_qty += $r['total_qty'];
-
-			$companies = '';
-			$cid = 0;
-			foreach ($r['companies'] as $cid => $name) {
-				if ((($market_table=='demand' OR $market_table=='sales') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['demand'][$cid])))
-					OR (($market_table=='purchases') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['supply'][$cid]))))
-				{
-					if ($companies) { $companies .= '<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'; }
-					$companies .= '<a href="profile.php?companyid='.$cid.'" class="market-company">'.$name.'</a>';
-				}
-			}
-			$price_str = '';
-			if ($r['sum_qty']>0) {
-				$fprice = format_price(format_price(round($r['sum_price']/$r['sum_qty'])),false);
-				if ($market_table=='purchases') {
-					$price_str = '<a href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
-				} else if ($market_table=='sales') {
-					$price_str = '<a href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
-				} else {
-					$price_str = $fprice;
-				}
-			}
-
-			$cls_add = '';
-			if ($r['status']=='Void' OR $r['total_qty']==0) { $cls_add = ' strikeout'; }
-			$line_str = '<div class="market-data'.$cls_add.'">';
-			if (strlen($order_date)==7) {
-				$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
-			}
-			$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
-				$companies.' <span class="pa">'.$price_str.'</span></div>';
-
-			// append to column string
-			$market_str = $cls1.$line_str.$cls2.$market_str;
-		}
-
-		// append last remaining data
-		if ($num_results>0) {
-			$market_str = $cls1.format_dateTitle($order_date,$dated_qty).$cls2.$market_str;
-		}
-
-		if ($market_str) {
-			$market_str = '<a href="#" class="market-title" data-type="'.$market_table.'">'.ucfirst($market_table).'</a><div class="market-body">'.$market_str.'</div>';
-		} else {
-			$market_str = '<span class="info">- No '.ucfirst($market_table).' -</span>';
-		}
-
-		return ($market_str);
-	}
+	//if (isset($_REQUEST['pg']) AND is_numeric($_REQUEST['pg']) AND $_REQUEST['pg']>0) { $pg = $_REQUEST['pg']; }
 
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
-	
 
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
@@ -273,10 +109,173 @@ if (! $r['partid']) { return ($results); }
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Stackbay</title>
+	<title>Sales</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
+	<style type="text/css">
+		.product-img .img {
+		    height: 31px !important;
+		    /*float: left;*/
+		    background: white;
+		    width: 31px !important;
+		    border: 1px solid #dfe4eb !important;
+		    text-align: center !important;
+		    cursor: pointer;
+		}
+
+		.last_week .date-group {
+			font-weight: bold !important;
+		}
+
+		.table-header .form-group {
+			margin-bottom: 0;
+		}
+
+		.total_price_text, .seller_qty, .seller_price, .seller_times {
+			font-size: 12px;
+			color: #000;
+			border: 1px solid #357ebd;
+			padding: 2px 7px;
+			border-radius: 3px;
+		}
+
+		.buy_text {
+			font-weight: bold;
+			font-size: 12px;
+			color: #428bca;
+			padding: 2px 7px;
+		}
+
+		.bid-input {
+			color: #428bca;
+			font-weight: bold;
+		}
+
+		#pad-wrapper {
+			padding: 0 25px;
+			margin-top: 110px;
+		}
+
+		#pad-wrapper .part_info {
+			margin-bottom: 5px;
+		}
+
+		.list_total {
+			font-weight: bold;
+			font-size: 15px;
+			color: #428bca;
+		}
+
+		.market-table {
+			margin-bottom: 10px;
+		}
+
+		.descr-row {
+			height: auto !important;
+		}
+
+		.market-company {
+			display: inline-block;
+		}
+
+		.filter-group {
+		    position: relative;
+		    display: inline-block;
+		    vertical-align: middle;
+		}
+
+		.first .part-modal-show {
+			visibility: visible !important;
+		}
+
+		.product-descr .part-modal-show {
+			visibility: hidden;
+		}
+
+		.descr-row:hover .part-modal-show {
+			visibility: visible;
+		}
+
+		.part_info .bg-availability, .part_info .bg-purchases, .part_info .bg-sales, .part_info .bg-demand, .part_info .bg-repair {
+			padding: 5px;
+			min-height: 140px;
+			height: 100%;
+		}
+
+		.form-group .input-group.sell {
+			width: auto;
+			max-width: 90px;
+		}
+
+		.table-header .select2 {
+			width: 80% !important;
+		}
+
+		.spinner_lock {
+			margin: 0 auto;
+			width: 12px;
+			padding-bottom: 25px;
+		}
+
+		.descr-row {
+			margin-left: 0;
+		}
+
+		/*Temporarily kill the product first row action options (Merge etc)*/
+		.product-action .action-items {
+			display: none !important;
+		}
+
+		.bg-demand .market-download {
+			display: none;
+		}
+
+		.slider-box .slider-frame {/*.toggle-results {*/
+			z-index:1000;
+			position:relative;
+			top:2px;
+			right:5px;
+			height:16px;
+			width:60px;
+		}
+
+		.never-stock .first {
+			background: repeating-linear-gradient(
+		    -55deg,
+		    #eff0f6,
+		    #eff0f6 10px,
+		    #f1f2f8 10px,
+		    #f1f2f8 20px
+		  );
+		}
+
+		.out-stock .first {
+		  background: repeating-radial-gradient(
+		    circle,
+		    #eff0f6,
+		    #eff0f6 10px,
+		    #f1f2f8 10px, 
+		    #f1f2f8 20px
+		  );
+		}
+
+		.bg-demand .fa-circle-o {
+			visibility: hidden;
+		}
+
+		@media (max-width: 992px) {
+			#pad-wrapper {
+				margin-top: 130px;
+			}
+		}
+
+		@media (max-width: 767px) {
+			.table-header .select2 {
+				width: 100% !important;
+			}
+		}
+	</style>
 </head>
 <body>
 
@@ -288,7 +287,12 @@ if (! $r['partid']) { return ($results); }
 
 	<?php include_once 'inc/navbar.php'; ?>
 
-	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
+	<div id="sales_loader" class="loader text-muted">
+		<div>
+			<i class="fa fa-refresh fa-5x fa-spin"></i><br>
+			<h1 id="loader-message">Please wait for Sales results to load...</h1>
+		</div>
+	</div>
 
 <?php
 	/* FILTER CONTROLS */
@@ -353,21 +357,6 @@ if (! $r['partid']) { return ($results); }
 	</table>
 <?php
 	} else {
-		$searchlistid = 0;
-		if ($s) { $searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right); }
-?>
-	<input type="hidden" name="searchlistid" value="<?php echo $searchlistid; ?>">
-
-    <table class="table table-header">
-		<tr>
-			<td class="col-md-4">
-				<div id="remote-warnings">
-<?php
-	$query = "SELECT * FROM remotes ORDER BY id ASC; ";
-	$result = qdb($query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
-	}
 
 	$title = '';
 
@@ -432,27 +421,139 @@ if (! $r['partid']) { return ($results); }
 			$lines = explode(chr(10),$s);
 		}
 	}
-
 ?>
+	<form class="form-inline results-form" method="post" action="save-results.php" enctype="multipart/form-data" >
+
+
+	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+		<div class="row" style="padding: 8px;" id="filterBar">
+			<div class="col-md-4 mobile-hide" style="max-height: 30px;">
+				<div class="col-md-3" style="margin-top: -5px;">
+					<!-- <div class="col-md-8 remove-pad" style="margin-top: -5px;"> -->
+						<div class="btn-group" data-toggle="buttons">
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Line" class="btn btn-xs left filter_status active btn-warning" data-sort="line" data-type="sort" data-listid="<?=$listid;?>" <?=($listid == 0 ? 'disabled' : '')?>>
+					        	<i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+					        </button>
+					        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Stock" class="btn btn-xs middle filter_status btn-default" data-sort="stock" data-type="sort" data-listid="<?=$listid;?>" <?=($listid == 0 ? 'disabled' : '')?>>
+					        	<i class="fa fa-dropbox" aria-hidden="true"></i>	
+					        </button>
+					    </div>
+					    <div class="filter-group">
+							<button class="btn btn-xs btn-primary active filter_equipment" type="button" data-type="equipment" data-toggle="tooltip" data-placement="right" title="" data-original-title="Equipments"><i class="fa fa-cube"></i></button><br/>
+							<button class="btn btn-xs btn-default filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+						</div>
+					<!-- </div> -->
 				</div>
-			</td>
-			<td class="text-center col-md-4">
-				<h2 class="minimal"><?php echo $title; ?></h2>
-			</td>
-			<td class="col-md-4">
-				<div class="pull-right form-group">
-					<input type="hidden" name="submit_type" value="" id="submit_type">
-					<button class="btn btn-success btn-sm" type="submit" data-type="demand">SALES REQUEST</button>
-					<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					</select>
-					<button class="btn btn-warning btn-sm" type="submit" data-type="availability">AVAILABILITY</button>
+
+				<div class="col-md-9 date_container mobile-hid remove-pad">
+					<div class="col-sm-5 remove-pad">
+						<div class="input-group date datetime-picker" data-format="MM/DD/YYYY">
+				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
+				            <span class="input-group-addon">
+				                <span class="fa fa-calendar"></span>
+				            </span>
+				        </div>
+					</div>
+					<div class="col-sm-5 remove-pad">
+						<div class="input-group date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
+				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
+				            <span class="input-group-addon">
+				                <span class="fa fa-calendar"></span>
+				            </span>
+					    </div>
+					</div>
+					<div class="col-sm-2 remove-pad">
+							<button class="btn btn-primary btn-sm date_filter" style="padding: 3px 8px; margin-top: 2px;"><i class="fa fa-filter" aria-hidden="true"></i></button>
+							<div class="btn-group" id="dateRanges">
+								<div id="btn-range-options">
+									<button class="btn btn-default btn-sm" style="padding: 3px 8px; margin-top: 2px;">&gt;</button>
+									<div class="animated fadeIn hidden" id="date-ranges">
+								        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
+										<?php
+											$quarters = calcQuarters();
+											foreach ($quarters as $qnum => $q) {
+												echo '
+									    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
+												';
+											}
+
+											for ($m=1; $m<=5; $m++) {
+												$month = format_date($today,'M m/t/Y',array('m'=>-$m));
+												$mfields = explode(' ',$month);
+												$month_name = $mfields[0];
+												$mcomps = explode('/',$mfields[1]);
+												$MM = $mcomps[0];
+												$DD = $mcomps[1];
+												$YYYY = $mcomps[2];
+												echo '
+													<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
+												';
+											}
+										?>
+									</div><!-- animated fadeIn -->
+								</div><!-- btn-range-options -->
+							</div><!-- btn-group -->
+					</div><!-- form-group -->
 				</div>
-			</td>
-		</tr>
-	</table>
+			</div>
+
+			<div class="text-center col-md-4 remove-pad">
+				<h2 class="minimal"><?=($title ? $title : '');?></h2>
+			</div>
+
+			<div class="col-md-4" style="padding-left: 0; padding-right: 10px;">
+				<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
+					<span style="font-size: 15px; font-weight: bold;">Total:</span> <span class="list_total">$0.00</span>
+				</div>
+				<div class="col-md-2 col-sm-2 col-xs-3">
+					<div class="pull-right slider-frame success filter_modes">
+						<!-- include radio's inside slider-frame to set appropriate actions to them -->
+						<input type="radio" class="sales_mode hidden" value="Buy">
+						<input type="radio" class="sales_mode hidden" value="Sell">
+						<span data-on-text="Buy" data-off-text="Sell" class="slider-button upload-slider" id="upload-slider">Sell</span>
+					</div>
+				</div>
+
+				<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
+					<div class="col-sm-10 col-xs-8">
+						<div class="pull-right form-group" style="width: 100%;">
+							<select name="companyid" id="companyid" class="company-selector">
+								<option value="">- Select a Company -</option>
+							</select>
+							<button class="btn btn-primary btn-sm phone-hide company-filter">
+								<i class="fa fa-filter" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+
+					<div class="col-sm-2 col-xs-4 remove-pad">
+						<button class="btn btn-success btn-sm save_sales pull-right" type='submit' data-validation="left-side-main" style="padding: 5px 25px;">
+							SAVE					
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<?php
+		$searchlistid = 0;
+		if ($s) { $searchlistid = logSearch($s,$search_field,$search_from_right,$qty_field,$qty_from_right,$price_field,$price_from_right); }
+	?>
+	<input type="hidden" name="searchlistid" value="<?php echo $searchlistid; ?>">
+	<input type="hidden" name="submit_type" value="demand">
 
     <div id="pad-wrapper">
+
+    	<div id="remote-warnings">
+			<?php 
+				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
+				$result = qdb($query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					echo '<a style="margin-bottom: 15px;" class="btn btn-danger btn-xs hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+				}
+			?>
+		</div>
 
 <?php
 	// set alert message if favorites and/or filters
@@ -479,35 +580,9 @@ if (! $r['partid']) { return ($results); }
 	}
 ?>
 
-		<?php if (! $filtersOn AND $s AND count($lines)==1 AND rand(1,2)==2) { ?>
-			<h3 class="text-center" style="margin:0px 0px 20px 0px">Sales view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/sales.php?s=<?php echo $s; ?>">Preview it now.</a></h3>
-		<?php } else if (! $filtersOn AND $listid) { ?>
-			<h3 class="text-center" style="margin:0px 0px 20px 0px">Sales view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/sales.php?listid=<?php echo $listid; ?>">Preview it now.</a></h3>
-		<?php } ?>
-
-        <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
-        <div class="table-products">
-            <div class="row">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th class="col-md-6">
-								<span class="qty-header">Qty</span>
-                                Product Description
-								<span class="price-header">Price</span>
-                            </th>
-                            <th class="col-md-6 text-center">
-                                <span class="line"></span>Market
-                            </th>
-<!--
-                            <th class="col-md-1">
-                                <span class="line"></span>
-								<span class="pull-right">Response</span>
-                            </th>
--->
-                        </tr>
-                    </thead>
 <?php
+	$rows = array();
+
 	foreach ($lines as $n => $line) {
 		$line = trim($line);
 		if (! $line) { continue; }
@@ -516,12 +591,13 @@ if (! $r['partid']) { return ($results); }
 	}
 	unset($lines);
 
-	$per_pg = 30;
+	$per_pg = 10;
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
 
 	$x = 0;//line number index for tracking under normal circumstances, but also for favorites-only views
+	$rev_total = 0.00;
 	foreach ($rows as $ln => $line) {
 		$terms = preg_split('/[[:space:]]+/',$line);
 		$search_str = strtoupper(trim($terms[$search_index]));
@@ -563,6 +639,9 @@ if (! $r['partid']) { return ($results); }
 			$results = hecidb(format_part($search_str));
 		}
 
+		//Default show only equipment
+		$results = array_filter($results, function($row) { global $equipment_filter; return ($row['classification'] == 'equipment'); });
+
 		// the LARGE majority of items don't have more than 25 results within a certain group of 7-digit hecis
 		if (count($results)>25) {
 			$explanation = '<i class="fa fa-warning fa-lg"></i> '.count($results).' results found, limited to first 25!';
@@ -577,7 +656,10 @@ if (! $r['partid']) { return ($results); }
 		// if favorites is NOT set, we're counting rows based on global results and don't need to waste pre-processing in first loop below
 		if (! $favorites AND ! $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
-			else if ($x>$max_ln) { break; }
+			else if ($x>$max_ln) { 
+				echo '<div class="row infinite_scroll spinner_lock" data-page="'.(isset($ln) ? $ln + 1 : '1').'" data-list="'.$listid.'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+				break; 
+			}
 			$x++;
 		}
 
@@ -643,6 +725,7 @@ if (! $r['partid']) { return ($results); }
 		// qtys based on sum of ids above, and we're using those qtys to determine for filters, if present
 		foreach ($results as $partid => $P) {
 			$itemqty = 0;
+			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
 			$itemqty = getQty($partid);
@@ -672,14 +755,32 @@ if (! $r['partid']) { return ($results); }
 
 		$results_rows = '';
 		$k = 0;
+
+		$results_rows .= '
+                        <!-- row -->
+                        <div class="product-results animated row">
+                        	<div class="col-md-4 remove-pad parts-container">';
+
+        $last_element = count($results) - 1;
+
+        //If in any case the list item's part has no revisions
+		if(empty($results)) {
+			//kill parts-container
+			$results_rows .= '	</div>';
+		}
+
 		foreach ($results as $partid => $P) {
 			$itemqty = $P['qty'];
-			$notes = '';
+			$notes = $P['notes'];
+			$pipeids_str = '';//$P['pipeids_str'];
 
-			$query2 = "SELECT * FROM prices WHERE partid = '".$partid."'; ";
-			$result2 = qdb($query2);
-			if (mysqli_num_rows($result2)>0) {
-				$notes = true;
+			// if no notes through pipe, check new db (this is just for the notes flag)
+			if (! $notes) {
+				$query2 = "SELECT * FROM messages, prices WHERE ref_1 = '".$partid."' AND ref_1_label = 'partid' AND messages.id = prices.messageid; ";
+				$result2 = qdb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$notes = true;
+				}
 			}
 
 			$rowcls = '';
@@ -707,24 +808,27 @@ if (! $r['partid']) { return ($results); }
 			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$results_rows .= '
-                        <!-- row -->
-                        <tr class="product-results animated" id="row-'.$partid.'">
-                            <td class="descr-row'.$rowcls.'">
+					<div class="product-results" id="row-'.$partid.'">
+                        <div class="row descr-row" style="padding:8px">
+                        	<div class="col-sm-3 remove-pad">
 								<div class="product-action text-center">
-                                	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
-                                    <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite"></a>
+	                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>
+	                                <a href="javascript:void(0);" data-partid="'.$partid.'" class="fa fa-'.$fav_flag.' fa-lg fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite"></a>
 								</div>
 								<div class="qty">
 									<div class="form-group">
 										<input name="sellqty['.$ln.'][]" type="text" value="'.$itemqty.'" size="2" placeholder="Qty" class="input-xs form-control" />
 									</div>
 								</div>
-                                <div class="product-img">
-                                    <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
-                                </div>
-                                <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
-									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span>
-                                   	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
+	                            <div class="product-img">
+	                                <img src="/img/parts/'.format_part($primary_part).'.jpg" alt="pic" class="img" data-part="'.$primary_part.'" />
+	                            </div>
+	                        </div>
+
+	                        <div class="col-sm-7">
+	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
+									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
+	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
 
 									<div class="descr-edit hidden">
 										<p>
@@ -751,6 +855,9 @@ if (! $r['partid']) { return ($results); }
 										</p>
 									</div>
 								</div>
+							</div>
+
+							<div class="col-sm-2 ">
 								<div class="price">
 									<div class="form-group">
 										<div class="input-group sell">
@@ -761,184 +868,186 @@ if (! $r['partid']) { return ($results); }
 										</div>
 									</div>
 								</div>
-                            </td>
+							</div>
+                        </div>
+                    </div>
 			';
 
+			//Sum up all the revision cost per line number
+			$rev_total += $itemprice * $itemqty;
+
 			// if on the first result, build out the market column that runs down all rows of results
-			if ($k==0) {
-				$sales_col = format_market($partid_csv,'sales',$search_strs);
-				$demand_col = format_market($partid_csv,'demand',$search_strs);
-				$purchases_col = format_market($partid_csv,'purchases',$search_strs);
+			if ($k==$last_element) {
+				$sales_col = format_market($partid_csv,'sales',$search_strs, $start_date, $end_date);
+				$demand_col = format_market($partid_csv,'demand',$search_strs, $start_date, $end_date);
+				$purchases_col = format_market($partid_csv,'purchases',$search_strs, $start_date, $end_date);
+				$repair_col = format_market($partid_csv,'repairs',$search_strs, $start_date, $end_date);
 
 				// reset after getting col data in format_market() above, which  may alter this date for item-specific results
 				$summary_past = format_date($today,'Y-m-01',array('m'=>-1));
 
-				$results_rows .= '
-							<!-- market-row for all items within search result section -->
-                            <td rowspan="'.($num_results+1).'" class="market-row">
-								<table class="table market-table" data-partids="'.$partid_csv.'">
-									<tr>
-										<td class="col-sm-3 bg-availability">
-											<a href="javascript:void(0);" class="market-title modal-results" data-title="Supply Results" data-type="supply" data-target="marketModal">Supply <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
-											<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="supply"></div>
-										</td>
-										<td class="col-sm-3 bg-purchases">
-											'.$purchases_col.'
-										</td>
-										<td class="col-sm-3 bg-sales">
-											'.$sales_col.'
-										</td>
-										<td class="col-sm-3 bg-demand">
-											'.$demand_col.'
-										</td>
-									</tr>
-								</table>
-                            </td>
-				';
-			}
-			$k++;
+				if($explanation != '') {
+					// $results_rows .= '<div class="row infinite_scroll" data-page="'.($page ? $page + 1 : '1').'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+				}
 
-			$results_rows .= '
-<!--
-                            <td class="product-actions text-right">
-								<div class="price">
-									<div class="form-group">
-										<div class="input-group buy">
-											<span class="input-group-btn">
-												<button class="btn btn-default input-xs control-toggle" type="button"><i class="fa fa-lock"></i></button>
-											</span>
-											<input name="buyprice['.$ln.'][]" type="text" value="0.00" size="6" placeholder="Buy" class="input-xs form-control price-control" />
+				$res1_btn = 'primary';
+				$res2_btn = 'default';
+				if (isset($_REQUEST['pricing_mode'])) { $res1_btn = 'default'; $res2_btn = 'primary'; }
+
+				$results_rows .= '
+							</div>
+
+							<!-- market-row for all items within search result section -->
+                            <div class="market-row col-md-8 remove-pad" data-ln="'.$ln.'">
+								<div class="table market-table" data-partids="'.$partid_csv.'" style="min-height: 140px;">		
+									<div class="col-sm-2 bg-availability">
+										<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">Supply <i class="fa fa-window-restore"></i>
+										</a> 
+										<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i>
+										</a>
+										<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="supply"></div>
+										<div class="btn-group btn-resultsmode action-items pull-right">
+											<button class="btn btn-'.$res1_btn.' btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
+											<button class="btn btn-'.$res2_btn.' btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
+											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
+										</div>
+									</div>
+									<div class="col-sm-2 bg-purchases">
+										'.$purchases_col.'
+									</div>
+									<div class="col-sm-2 bg-sales">
+										'.$sales_col.'
+									</div>
+									<div class="col-sm-2 bg-demand">
+										<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Demand Results" data-type="demand">Demand <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
+										<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="demand"></div>
+									</div>
+									<div class="col-sm-2 bg-repair">
+										'.$repair_col.'
+									</div>
+									<div class="col-sm-2 slider-box">
+										<br>
+										<div class="row price">
+											<div class="col-sm-3">
+												<span class="seller_qty" style="display: none;"></span>
+											</div>
+											<div class="col-sm-1 remove-pad"><span class="seller_x" style="display: none;">x</span></div>
+											<div class="col-sm-4 remove-pad">
+												<span class="seller_price" style="display: none;"></span>
+											</div>
+											<div class="col-sm-4 remove-pad">
+												<span class="total_price_text" data-total="'.$rev_total.'">'.format_price($rev_total).'</span>
+											</div>
+										</div>
+										<br/>
+
+										<div class="row bid_inputs" style="display: none;">
+											<div class="col-sm-3 remove-pad">
+												<input type="text" name="bid_qty['.$ln.']" data-type="bid_qty" class="form-control input-xxs bid-input text-center" value="" placeholder="Qty">
+											</div>
+											<div class="col-sm-1 remove-pad">x</div>
+											<div class="col-sm-4 remove-pad">
+												<input type="text" name="bid_price['.$ln.']" data-type="bid_price" class="form-control input-xxs bid-input text-center" value="" placeholder="Price">
+											</div>
+											<div class="col-sm-4 remove-pad">
+												<span class="buy_text" data-buy_total="0">
+													$0.00
+												<span>
+											</div>
 										</div>
 									</div>
 								</div>
-                            </td>
-                        </tr>
--->
-			';
+                            </div>
+				';
+			}
+			$k++;
 		}
 ?>
 
-                    <tbody>
-                        <!-- row -->
-                        <tr class="first">
-                            <td>
-								<div class="product-action action-hover text-left">
-									<div>
-										<input type="checkbox" class="checkAll" checked><br/>
-									</div>
-									<div class="action-items">
-							           	<a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil"></i></a><br/>
-							           	<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain"></i></a><br/>
-<?php if ($num_results==0) { // add link to create a new part ?>
-										<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
-<?php } else { ?>
-										<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
-<?php } ?>
-									</div>
-								</div>
-								<div class="qty">
-									<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty" /><br/>
-								</div>
-								<div class="product-descr action-hover">
-				                	<div class="input-group">
-										<input type="text" name="searches[<?php echo $ln; ?>]" value="<?php echo $search_str; ?>" class="product-search text-primary" tabindex="-1" />
-<!--
-	           		       				<span class="input-group-addon action-items">
-										</span>
--->
-									</div><!-- /input-group -->
-									<span class="info"><?php echo $num_results.' result'.$s; ?></span> &nbsp; <span class="text-danger"><?php echo $explanation; ?></span>
-								</div>
-								<div class="price pull-right">
-									<div class="form-group target text-right">
-										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" data-toggle="tooltip" data-placement="top" title="customer target price or vendor asking price" />
-									</div>
-								</div>
-							</td>
-                            <td class="action-hover slider-box">
-<!--
-								<div class="toggle-results">
-								<a href="javascript:void(0);" title="toggle selection of the results in this row">
-									<i class="fa fa-toggle-on fa-lg animated"></i>
+        <!-- the script for the toggle all checkboxes from header is located in js/theme.js -->
+        <div class="table part_info line_<?php echo ($ln+1); ?>">
+        	<div class="row first" style="padding: 8px;">
+	        	<div class="col-sm-4">
+	        		<div class="product-action action-hover text-left">
+						<div>
+							<input type="checkbox" class="checkAll" checked><br/>
+						</div>
+						<div class="action-items">
+				           	<!-- <a href="javascript:void(0);" class="parts-edit" title="edit selected part(s)"><i class="fa fa-pencil"></i></a><br/> -->
+				           	<a href="javascript:void(0);" class="parts-merge" title="merge two selected part(s) into one"><i class="fa fa-chain"></i></a><br/>
+	<?php if ($num_results==0) { // add link to create a new part ?>
+							<a href="javascript:void(0);" class="add-part" title="add to parts db"><i class="fa fa-plus"></i></a>
+	<?php } else { ?>
+							<a href="javascript:void(0);" class="parts-index" title="re-index db (reloads page)"><i class="fa fa-cog"></i></a>
+	<?php } ?>
+						</div>
+					</div>
+					<div class="qty">
+						<input type="text" name="search_qtys[<?php echo $ln; ?>]" value="<?php echo $search_qty; ?>" class="form-control input-xs search-qty input-primary" data-toggle="tooltip" data-placement="top" title="customer request qty or supplier available qty" data-ln="<?php echo $ln; ?>"/><br/>
+					</div>
+					<div class="product-descr action-hover">
+	                	<div class="input-group">
+							<input type="text" name="searches[<?php echo $ln; ?>]" data-ln="<?php echo $ln; ?>" value="<?php echo $search_str; ?>" class="product-search text-primary" tabindex="-1" />
+	<!--
+			       				<span class="input-group-addon action-items">
+							</span>
+	-->
+						</div><!-- /input-group -->
+						<span class="info"><?php echo $num_results.' result'.$s; ?></span> &nbsp; <span class="text-danger"><?php echo $explanation; ?></span>
+						<?=($num_results == 0 ? '<a href="javascript:void(0);" class="part-modal-show" data-partid="">
+								<i class="fa fa-plus"></i></a>' : '');?>
+					</div>
+					<!-- <div class="price pull-right">
+						<div class="form-group target text-right">
+							<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" data-toggle="tooltip" data-placement="top" title="customer target price or vendor asking price" />
+						</div>
+					</div> -->
+	        	</div>
+
+	        	<div class="col-sm-8 action-hover slider-box">
+					<div class="row">
+						<div class="col-sm-2 text-center">
+							<div id="marketpricing-<?php echo $ln; ?>" class="header-text">&nbsp;</div>
+							<div class="form-group target text-right">
+								<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" data-toggle="tooltip" data-placement="top" title="customer target price or vendor asking price" disabled/>
+							</div>
+						</div>
+						<div class="col-sm-2 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
+						<div class="col-sm-2 text-center">
+							<span class="header-text"></span><br/><span class="info">summary</span>
+						</div>
+						<div class="col-sm-2 text-center">
+							<div class="pull-right">
+								<a class="line-number-toggle toggle-up" style="cursor: pointer;">
+									<i class="fa fa-list-ol"></i>
+									<sup><i class="fa options-toggle fa-sort-asc"></i></sup>
 								</a>
-								</div>
--->
-									<!-- color-coding the slider backwards because toggled right looks more 'on' in this case than 'off' -->
-									<div class="slider-frame default" data-onclass="default" data-offclass="primary">
-										<!-- include radio's inside slider-frame to set appropriate actions to them -->
-										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Ln <?php echo ($ln+1); ?>">
-										<input type="radio" name="line_number[<?php echo $ln; ?>]" class="row-status line-number hidden" value="Off">
-										<span data-on-text="Ln <?php echo ($ln+1); ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo ($ln+1); ?></span>
-									</div>
-								<div class="row">
-									<div class="col-sm-3 text-center">
-<!--
-										<span id="marketpricing-<?php echo $ln; ?>"></span> <a href="javascript:void(0);" class="marketpricing-toggle hidden"><i class="fa fa-toggle-off"></i></a>
--->
-										<div id="marketpricing-<?php echo $ln; ?>" class="header-text">&nbsp;</div>
-										<div class="btn-group btn-resultsmode action-items">
-											<button class="btn btn-primary btn-xs" type="button" data-results="0" data-toggle="tooltip" data-placement="top" title="all market results"><i class="fa fa-globe"></i></button>
-											<button class="btn btn-default btn-xs" type="button" data-results="1" data-toggle="tooltip" data-placement="top" title="priced results"><i class="fa fa-dollar"></i></button>
-											<button class="btn btn-default btn-xs" type="button" data-results="2" data-toggle="tooltip" data-placement="top" title="ghosted inventories"><i class="fa fa-magic"></i></button>
-										</div><!-- <br/>
-										<span class="info">market pricing</span> -->
-									</div>
-									<div class="col-sm-3 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
-									<div class="col-sm-3 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
-									<div class="col-sm-3 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
-								</div>
-							</td>
-<!--
-                            <td class="text-right">
-								<div class="price">
-									<div class="form-group target">
-										<input name="list_price[<?php echo $ln; ?>]" type="text" value="<?php echo $search_price; ?>" size="6" placeholder="0.00" class="input-xs form-control price-control input-primary" />
-										<span class="info">their price</span>
-									</div>
-								</div>
-							</td>
--->
-						</tr>
+							</div>
 
-						<?php echo $results_rows; ?>
+							<div class="slider-frame primary pull-right" data-onclass="default" data-offclass="primary">
+								<input type="radio" name="line_number[<?php echo ($ln+1); ?>]" class="row-status line-number hidden" value="Ln <?php echo ($ln+1); ?>">
+								<input type="radio" name="line_number[<?php echo ($ln+1); ?>]" class="row-status line-number hidden" value="Off">
+								<span data-on-text="Ln <?php echo ($ln+1); ?>" data-off-text="Off" class="slider-button" data-toggle="tooltip" data-placement="top" title="enable/disable results for this row">Ln <?php echo ($ln+1); ?></span>
+							</div>
+						</div>
+					</div>
+	        	</div>
+        	</div>
 
-                        <!-- row -->
-                        <tr>
-                            <td> </td>
-<!--
-                            <td> </td>
--->
-                        </tr>
-                    </tbody>
-<?php
-	}
-?>
-                </table>
-            </div>
-<?php
-		if ($num_rows>$per_pg) {
-			$pages = ceil($num_rows/$per_pg);
-			$paginates = '';
-			$end_pg = '';
-			if ($pages>4) {
-				$paginates = '<li><a href="javascript:void(0);" data-pg="1" data-listid="'.$listid.'">&laquo;</a></li>'.chr(10);
-                $end_pg = '<li><a href="javascript:void(0);" data-pg="'.$pages.'" data-listid="'.$listid.'">&raquo;</a></li>'.chr(10);
-			}
-			$pstart = 1;
-			if ($pg>2) { $pstart = $pg-2; }
-			for ($p=$pstart; $p<=($pstart+3); $p++) {
-				$cls = '';
-				if ($p==$pg) { $cls = ' class="active"'; }
-                $paginates .= '<li'.$cls.'><a href="javascript:void(0);" data-pg="'.$p.'" data-listid="'.$listid.'">'.$p.'</a></li>'.chr(10);
-			}
-			$paginates .= $end_pg;
-?>
-            <ul class="pagination">
-				<?php echo $paginates; ?>
-            </ul>
-<?php
-		}
-?>
+        	<div class="part_loader loader text-muted" style="position: relative; margin-top: 25px; margin-bottom: -25px;">
+				<div style="color: #777;">
+					<i class="fa fa-refresh fa-5x fa-spin"></i><br>
+				</div>
+			</div>
+
+        	<?php echo $results_rows; ?>
+
+        </div>
+         </div>           
+<?php } ?>
+            
         </div>
 <?php
 	}//end if ($s)
@@ -966,11 +1075,19 @@ if (! $r['partid']) { return ($results); }
 
 	</form>
 
+	<script type="text/javascript">
+		var RESULTS_MODE = 0;
+		<?php if (isset($_REQUEST['pricing_mode'])) { echo 'RESULTS_MODE = 1'; } ?>
+	</script>
+
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
 <?php include_once 'modal/image.php'; ?>
+<?php include_once 'modal/parts.php'; ?>
 <?php include_once 'inc/footer.php'; ?>
+
+<script src="js/sales.js"></script>
 
 </body>
 </html>
