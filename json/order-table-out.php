@@ -37,7 +37,19 @@
 //------------------------------------------------------------------------------
 //---------------------------- Function Declarations ---------------------------
 //------------------------------------------------------------------------------
-	
+	function getRepairNumber($repair_item_id) {
+		$ro_number;
+
+		$query = "SELECT ro_number FROM repair_items WHERE id = ".prep($repair_item_id)." LIMIT 1;";
+		$result = qdb($query);
+
+		if (mysqli_num_rows($result)) {
+			$result = mysqli_fetch_assoc($result);
+			$ro_number = $result['ro_number'];
+		}
+
+		return $ro_number;
+	}
 
 	//The general purpose array-to-row output
 	function build_row($row = array()){
@@ -49,7 +61,6 @@
 		$display = '';
 		$select_display = '';
 		$partid = $row['search'];
-		//Eventually I will make this cooler - Aaron 2017
 		// $display = display_part(current(hecidb($partid,"id")));
 		$p = hecidb($partid,'id');
 		foreach ($p as $r){
@@ -77,7 +88,37 @@
 	    	$row_out .= "<input class='hidden' name='partid' value='".$partid."'>";
 	    	$row_out .= "<input class='hidden' name='qty_variable' value='".$row['qty']."'>";
 	    }
-	    $row_out .= "</td>";
+        // If is repair_item_id as the label then kill the option to edit
+        $row_out .= "<td class='line_ref_1'>
+			        		<div class='col-md-6'>
+			        			<input class='form-control input-sm ".($row['ref_1_label'] == 'repair_item_id' ? '' : 'ref_1')."' type='text' name='".($row['ref_1_label'] == 'repair_item_id' ? '' : 'ref_1')."' value='".(($row['ref_1'] AND $row['ref_1_label'] == 'repair_item_id') ? getRepairNumber($row['ref_1']) : $row['ref_1'])."' ".($row['ref_1_label'] == 'repair_item_id' ? 'disabled' : '').">
+			        			".($row['ref_1_label'] == 'repair_item_id' ? "<input class='form-control input-sm ref_1' type='hidden' name='ref_1' value='".$row['ref_1']."'>" : '')."
+			        		</div>
+			        		<div class='col-md-6'>
+			        			<select class='form-control input-sm ref_1_label' ".($row['ref_1_label'] == 'repair_item_id' ? 'readonly' : '').">
+			        				".($row['ref_1_label'] == 'repair_item_id' ? '<option value="repair_item_id" selected>RO</option>' : "
+			        						<option value='' disabled ".($row['ref_1_label'] == '' ? 'Selected' : '').">Select</option>
+			        						<option value='PN' ".($row['ref_1_label'] == 'PN' ? 'Selected' : '').">PN</option>
+					        				<option value='SAP' ".($row['ref_1_label'] == 'SAP' ? 'Selected' : '').">SAP</option>
+					        				<option value='PO' ".($row['ref_1_label'] == 'PO' ? 'Selected' : '').">PO</option>
+			        					")."
+			        			</select>
+			        		</div>
+			        	</td>
+			        	<td class='line_ref_2'>
+			        		<div class='col-md-6'>
+			        			<input class='form-control input-sm ref_2' type='text' name='ref_2' value='".($row['ref_2'])."'>
+			        		</div>
+			        		<div class='col-md-6'>
+			        			<select name='ref_2_label' class='form-control input-sm ref_2_label'>
+			        				<option value='' disabled ".($row['ref_2_label'] == '' ? 'Selected' : '').">Select</option>
+			        				<option value='PN' ".($row['ref_2_label'] == 'PN' ? 'Selected' : '').">PN</option>
+			        				<option value='SAP' ".($row['ref_2_label'] == 'SAP' ? 'Selected' : '').">SAP</option>
+			        				<option value='PO' ".($row['ref_2_label'] == 'PO' ? 'Selected' : '').">PO</option>
+			        			</select>
+			        		</div>
+			        	</td>";
+		$row_out .= "</td>";
 	    if(!$o['tech'] && !$o['build']){
         	$row_out .= "<td class = 'line_date' data-date = '$date'>".$date."</td>";
         }
@@ -127,11 +168,11 @@
 				            </span>
 			            </div>
 				    </td>";
-		if(!$o['repair']){
-	    $row_out .="<td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
-		            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>";
-        }
-		$row_out .="<td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
+			if(!$o['repair']){
+		    $row_out .="<td>".dropdown('conditionid',$row['conditionid'],'','',false)."</td>
+			            <td>".dropdown('warranty',$row['warranty'],'','',false)."</td>";
+	        }
+			$row_out .="<td><input class='form-control input-sm oto_qty' type='text' name='ni_qty' placeholder='QTY' value = '".$row['qty']."' data-value = '".$row['qty']."'></td>
 		            <td><input class='form-control input-sm oto_price' type='text' name = 'ni_price' placeholder='0.00' value='".$row['uPrice']."' data-value = '".$row['uPrice']."'></td>
 		            <td><input class='form-control input-sm oto_ext' readonly='readonly' type='text' name='ni_ext' placeholder='0.00'></td>
 		            <td style='display: none;' data-label='".$row['ref_1_label']."'><input class='form-control input-sm line_ref_1' readonly='readonly' type='text' name='' placeholder='0.00' value ='".$row['ref_1']."'></td>
@@ -217,6 +258,8 @@
 					'conditionid' => $r['conditionid'],
 					'ref_1' => $r['ref_1'],
 					'ref_1_label' => $r['ref_1_label'],
+					'ref_2' => $r['ref_2'],
+					'ref_2_label' => $r['ref_2_label'],
 					);
 					$table .= build_row($new_row);			
 				}
@@ -267,36 +310,46 @@
 		} else if ($mode == 'repair') {
 			$qty = 1;
 
-			$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
-			$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+			// $query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
+			// $repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
 
-			if(mysqli_num_rows($repair_result)) {
-				$repair_item = mysqli_fetch_assoc($repair_result);
-				$query = "SELECT * FROM purchase_requests WHERE partid = ".prep($_REQUEST['search'])." AND ro_number = ".prep($repair_item['ro_number'])." ORDER BY requested DESC LIMIT 1;";
-				$result_request = qdb($query);
+			// if(mysqli_num_rows($repair_result)) {
+			// 	$repair_item = mysqli_fetch_assoc($repair_result);
+			// 	$query = "SELECT * FROM purchase_requests WHERE partid = ".prep($_REQUEST['search'])." AND ro_number = ".prep($repair_item['ro_number'])." ORDER BY requested DESC LIMIT 1;";
+			// 	$result_request = qdb($query);
 
-				if(mysqli_num_rows($result_request)) {
-					$request_item = mysqli_fetch_assoc($result_request);
-					$qty = $request_item['qty'];
-					//print_r($request_item);
-				}
-			}
+			// 	if(mysqli_num_rows($result_request)) {
+			// 		$request_item = mysqli_fetch_assoc($result_request);
+			// 		$qty = $request_item['qty'];
+			// 		//print_r($request_item);
+			// 	}
+			// }
 
 			//echo $qty . 'test';
+			$parts = $_REQUEST['part'];
 
-			$new_row = array(
-				'id' => 'new',
-				'line' => '',
-				'search' => $_REQUEST['search'],
-				'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
-				'qty' => $qty,
-				'uPrice' => 0.00,
-				'warranty' => 0,
-				'conditionid' => 2,
-				//'ref_1' => $r['ref_1'],
-				'ref_1_label' => 'repair_item_id',
-			);
-			$table .= build_row($new_row);	
+			//foreach($parts as $partid => $row) {
+				//foreach ($row as $ro_number => $row2) {
+					//foreach ($row2 as $qty => $checks) {
+						$new_row = array(
+							'id' => 'new',
+							'line' => '',
+							'search' => '322405',
+							'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
+							'qty' => $qty,
+							'uPrice' => 0.00,
+							'warranty' => 0,
+							'conditionid' => 2,
+							//'ref_1' => $r['ref_1'],
+							'ref_1_label' => 'repair_item_id',
+						);
+
+						$table .= build_row($new_row);
+					//}
+				//}
+			//}
+
+				
 		} else if ($mode == 'build') {
 			$qty = 1;
 

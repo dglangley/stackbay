@@ -88,6 +88,7 @@
     $order_number = $_REQUEST['order_number'];
     $form_rows = $_REQUEST['table_rows'];
     $o = o_params($order_type);
+
     if($o['rtv']){
     	$o = o_params("sales");
     }
@@ -200,6 +201,7 @@
     		$filename = grab('filename');
     		$filename = prep($filename);
         } 
+
         $insert = "INSERT INTO `".$o['order']."`(`created_by`, `created`, `sales_rep_id`, `companyid`, `contactid`, ".((!$o['purchase'])?"`cust_ref`, `ref_ln`, " : "")."
         `".$o['billing']."`, `ship_to_id`, `freight_carrier_id`, `freight_services_id`, `freight_account_id`, `termsid`, `public_notes`, `private_notes`, `status`) VALUES 
         ($created_by, $created, $save_rep, $cid, $save_contact, ".((!$o['purchase'])?"$assoc_order, $filename," : "")." $bill, $ship, $carrier, $service, $account, $terms, $public, $private, 'Active');";
@@ -270,6 +272,7 @@
     		qdb($charge_update) or jsonDie(qe()." $charge_update");
     	}
 	}
+
    	if ($second_fee_label && $second_fee_amount){
 		$second_fee_label = prep($second_fee_label);
 		$second_fee_amount = prep($second_fee_amount);
@@ -306,7 +309,12 @@
             $qty = prep($r['qty']);
             $unitPrice = prep(format_price($r['price'],true,'',true));
             $ref_1 = prep($r['ref_1']);
-            $ref_1_label = prep($r['ref_1_label']);
+            $ref_1_label = prep(($r['ref_1'] ? $r['ref_1_label'] : ''));
+
+            // Added recently to take 2 ref labels
+            $ref_2 = prep($r['ref_2']);
+            $ref_2_label = prep(($r['ref_2'] ? $r['ref_2_label'] : ''));
+
 			$query2 = "SELECT part, heci FROM parts WHERE id = $item_id; ";
 			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
@@ -324,7 +332,7 @@
 				if (! isset($rows[$partkey])) { $rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$r['line_number']); }
 				$rows[$partkey]['qty'] += $r['qty'];
 			}
-            if ($record == 'new'){
+            if ($record == 'new') {
 
             	if($order_type == "Purchase" && $repair_order) {
 	                //Build the insert statements
@@ -340,16 +348,24 @@
             		//Build the insert statements
 	                $line_insert = "INSERT INTO ".$o['item']." (`partid`, `".$o['id']."`, `".$o['date_field']."`, ";
 	                // $line_insert .=  ($order_type=="Purchase") ? "`po_number`, `receive_date`, " : "`so_number`, `delivery_date`, ";
-	                $line_insert .=  " `line_number`, `qty`, `price` ";
-	                $line_insert .= (!$o['repair'] ? ", `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`  , `warranty`, `conditionid` " : "");
+	                $line_insert .=  " `line_number`, `qty`, `price`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`   ";
+	                $line_insert .= (!$o['repair'] ? ", `warranty`, `conditionid` " : "");
 	                $line_insert .= ") VALUES ";
-	                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice ";
-	                $line_insert .= (!$o['repair'] ? " , $ref_1, $ref_1_label, NULL, NULL ,$warranty, $conditionid " : "");
+	                $line_insert .=   "($item_id, '$order_number' , $date, $line_number, $qty , $unitPrice, $ref_1, $ref_1_label, $ref_2, $ref_2_label  ";
+	                $line_insert .= (!$o['repair'] ? " ,$warranty, $conditionid " : "");
 	                $line_insert .= ");";
             	}
                 
                 if($line_insert) {
 					$result = qdb($line_insert) OR jsonDie(qe().' '.$line_insert);
+                }
+
+                // If this exists then treat this row as a purchase request item
+                if($r['pr_id']) {
+                	$pr_id = prep($r['pr_id']);
+
+                	$query = "UPDATE purchase_requests SET po_number =".prep($order_number)." WHERE id = $pr_id;";
+					$result = qdb($query) OR die(qe());
                 }
             }
             else{
@@ -358,7 +374,11 @@
                 `line_number`= $line_number,
                 ".($r['qty'] ? "`qty`= $qty," : "")."
                 `price`= $unitPrice, 
-                `".$o['date_field']."`= $date ";
+                `".$o['date_field']."`= $date, 
+                ref_1 = $ref_1, 
+                ref_1_label = $ref_1_label, 
+                ref_2 = $ref_2, 
+                ref_2_label = $ref_2_label ";
 if(!$o['repair']){
     $update .= "
                 ,`warranty` = ".$warranty."

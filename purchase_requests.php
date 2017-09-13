@@ -22,14 +22,14 @@
 	//Query items from parts table
 	$itemList = array();
 
-	//if(!$search) {
-		$query = "SELECT pr.*, p.part FROM purchase_requests pr, parts p WHERE p.id = pr.partid AND (pr.status = 'Active' OR pr.status IS NULL) ORDER BY requested DESC LIMIT 100;";
-		$result = qdb($query) OR die(qe());
-			
-		while ($row = $result->fetch_assoc()) {
-			$itemList[] = $row;
-		}
-	//} 
+	$query = "SELECT pr.*, p.part, p.classification FROM purchase_requests pr, parts p WHERE p.id = pr.partid AND (pr.status = 'Active' OR pr.status IS NULL) ORDER BY requested DESC LIMIT 100;";
+	$result = qdb($query) OR die(qe());
+		
+	while ($row = $result->fetch_assoc()) {
+		$itemList[$row['partid']][] = $row;
+	}
+
+	//print '<BR><BR><BR><BR><pre>' . print_r($itemList, true) . '</pre>';
 
 	function getRepairItemId($ro_number, $partid) {
 		$repair_item_id;
@@ -41,8 +41,6 @@
 			$result = mysqli_fetch_assoc($result);
 			$repair_item_id = $result['repair_item_id'];
 		}
-
-		//echo $query;
 
 		return $repair_item_id;
 	}
@@ -69,84 +67,149 @@
 		    top: 0px !important; 
 	    }
 
-/*	    .complete {
-	    	color: rgb(129, 189, 130) !important;
-	    }*/
+	    .table-detailed td {
+	    	background-color: #FFF !important;
+	    }
+
+	    .completed {
+	    	display: none;
+	    }
 	</style>
 </head>
 
 <body class="sub-nav accounts-body">
 	
 	<?php include 'inc/navbar.php'; ?>
-	<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
-		<div class="row" style="padding: 8px;" id = "filterBar">
-			<div class="col-md-4">
-				<div class="row">
-				
+
+	<form action="/order_form.php?ps=Purchase" method="POST">
+		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+			<div class="row" style="padding: 8px;" id="filterBar">
+				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
+					<div class="col-md-3">
+						<div class="btn-group medium">
+					        <button data-toggle="tooltip" name="filter" type="submit" data-value="active" data-placement="bottom" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status active btn-warning">
+					        	<i class="fa fa-sort-numeric-desc"></i>	
+					        </button>
+
+					        <button data-toggle="tooltip" name="filter" type="submit" data-value="completed" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-default btn-sm middle filter_status ">
+					        	<i class="fa fa-history"></i>	
+					        </button>
+
+							<button data-toggle="tooltip" name="filter" type="submit" data-value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-default btn-sm right filter_status ">
+					        	All
+					        </button>
+					    </div>
+					</div>
+
+					<div class="col-md-9 date_container mobile-hid remove-pad">
+						
+					</div>
+				</div>
+
+				<div class="text-center col-md-4 remove-pad">
+					<h2 class="minimal" id="filter-title">Purchase Requests</h2>
+				</div>
+
+				<div class="col-md-4" style="padding-left: 0; padding-right: 10px;">
+					<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
+
+					</div>
+					<div class="col-md-2 col-sm-2 col-xs-3">
+
+					</div>
+
+					<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
+						<button class="btn btn-success btn-sm save_sales pull-right" type="submit" data-validation="left-side-main" style="padding: 5px 25px;">
+							CREATE					
+						</button>
+					</div>
 				</div>
 			</div>
-
-			<div class="col-md-4 text-center remove-pad">
-            	<h2 class="minimal" id="filter-title">Purchase Requests</h2>
-			</div>
-			
-			<div class="col-md-4">
-			<?php if($search): ?>
-				<button class="btn btn-sm btn-primary part-modal-show pull-right" style="cursor: pointer" data-partid="">
-					<i class="fa fa-plus" aria-hidden="true"></i>
-				</button>
-			<?php endif; ?>
-			</div>
-
 		</div>
-	</div>
-	<div id="pad-wrapper">
-		<div class="row">
-			<table class="table heighthover heightstriped table-condensed p_table">
-				<thead>
-					<tr>
-						<th class="col-md-1"></th>
-						<th class="col-md-1">Repair#</th>
-						<th class="col-md-3">Component</th>
-						<th class="col-md-1">QTY</th>
-						<th class="col-md-2">Order#</th>
-						<th class="col-md-2">Tech</th>
-						<th class="col-md-2">Action</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php 
-						foreach($itemList as $part): 
-							$parts = explode(' ',$part['part']);
-							$part_name = $parts[0];
-					?>
+		<div id="pad-wrapper">
+			<div class="row">
+				<table class="table heighthover heightstriped table-condensed p_table">
+					<thead>
 						<tr>
-							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
-							<td><?=$part['ro_number'];?> <a href="/order_form.php?ps=ro&on=<?=$part['ro_number'];?>"><i class="fa fa-arrow-right"></i></a></td>
-							<td><?=(display_part($part['partid'], true) ? display_part($part['partid'], true) : $part['part']); ?></td>
-							<td><?=$part['qty'];?></td>
-							<td><?=$part['po_number'];?> 
-								<?php if($part['po_number']) { ?> <a href="/order_form.php?on=<?=$part['po_number'];?>&amp;ps=p"><i class="fa fa-arrow-right"></i></a><?php } ?> </td>
-							<td><?=getUser($part['techid']);?></td>
-							<td>
-								<?php if(!$part['po_number']) { ?>
-								<form class="disable_form" method="POST">
-									<a href="/order_form.php?ps=Purchase&s=<?=$part['partid'];?>&repair=<?=getRepairItemId($part['ro_number'], $part['partid']);?>">
-										<i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i>
-									</a>
-									<input type="text" name="purchase_request_id" class="hidden" value="<?=$part['id'];?>">
-									<a class="disable_trash" style="cursor: pointer;">
-										<i style="margin-right: 5px;" class="fa fa-trash" aria-hidden="true"></i>
-									</a>
-								</form>
-								<?php } ?>
-							</td>
+							<th class="col-md-1"></th>
+							<th class="col-md-4">PART DESCRIPTION</th>
+							<th class="col-md-2">CLASSIFICATION</th>
+							<th class="col-md-1">ID</th>
+							<th class="col-md-2">QTY</th>
+							<th class="col-md-2 text-right">Action</th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-	        </table>
+					</thead>
+					<tbody>
+						<?php foreach($itemList as $key => $part): 
+							$parts = explode(' ',$part[0]['part']);
+							$part_name = $parts[0];
+
+							$status = '';
+							$active_qty = 0;
+							$completed_qty = 0;
+
+							$initial = true;
+
+							// Determine and sum the status and the amount ordered
+							foreach($part as $details) {
+								if($details['po_number']) {
+									if($status != 'active') {
+										$status = 'completed';
+									}
+									$completed_qty += $details['qty'];
+								} else if(! $details['po_number']) {
+									$status = 'active';
+									$active_qty += $details['qty'];
+								}
+							}
+
+							// Determine if the meta level row should exists for the purchase request
+							foreach($part as $details) {
+								if($initial) {
+									$rowHTML= '<tr class="'.$status.' row-'.$details['partid'].' part_details" style="display:none;">
+												<td colspan="6">
+													<table class="table table-condensed table-detailed">
+														<tbody>
+								
+															<tr>
+																<th class="col-md-3">RO#</th>
+																<th class="col-md-3">Qty</th>
+																<th class="col-md-3">Status</th>
+																<th class="col-md-3 text-right"></th>
+															</tr>';
+									$initial = false;
+								}
+
+								$rowHTML .= '
+												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
+													<td>'.$details['ro_number'].' <a target="_blank" href="/repair.php?on='.$details['ro_number'].'"><i class="fa fa-arrow-right"></i></a></td>
+													<td>'.$details['qty'].'</td>
+													<td>'.(! $details['po_number'] ? '<span style="color: #8a6d3b;">Pending</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
+													<td><input type="checkbox" name="purchase_request['.$details['partid'].']['.$details['ro_number'].']['.$details['qty'].']['.$details['id'].']" value="'.getRepairItemId($details['ro_number']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'></td>
+												</tr>';
+							}
+
+							$rowHTML .= '	</tbody>
+										</table>
+									</td>
+								</tr>';
+						?>
+							<tr class="<?=$status;?>">
+								<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
+								<td><?=(display_part($part[0]['partid'], true) ? display_part($part[0]['partid'], true) : $part['part']);?></td>
+								<td><?=ucwords($part[0]['classification']);?></td>
+								<td><?=$part[0]['partid'];?></td>
+								<td class="total_qty"><?=($status == 'active' ? $active_qty : $completed_qty);?></td>
+								<td><input type="checkbox" class="toggle-children pull-right" data-partid="<?=$part[0]['partid'];?>" style="margin-right: 10px;"></td>
+							</tr>
+
+							<?=$rowHTML;?>
+						<?php endforeach; ?>
+					</tbody>
+		        </table>
+			</div>
 		</div>
-	</div>
+	</form>
 
 	<?php include_once 'inc/footer.php'; ?>
 
@@ -158,6 +221,69 @@
     			} else {
     				$(this).closest('form').submit();
     			}
+    		});
+
+    		$(document).on("change", ".toggle-children", function(e){
+    			var data = $(this).data("partid");
+
+    			if($(this).is(':checked')) {
+    				$(".row-"+data).show();
+    				$(".row-"+data).find('input').prop("checked", true);
+    			} else {
+    				$(".row-"+data).hide();
+    				$(".row-"+data).find('input').prop("checked", false);
+    			}
+
+    			
+    		});
+
+    		$(document).on("change", ".detailed_check", function(e){
+    			var container = $(this).closest(".table-detailed");
+    			var qty = 0;
+
+    			container.find(".active .detailed_check").each(function(){
+    				if($(this).is(":checked")){
+    					qty += parseInt($(this).data("qty"));
+    				}
+    			});
+
+    			container.closest('.part_details').prev().find(".total_qty").html(qty);
+    		});
+
+    		$(document).on("click", ".filter_status", function(e){
+    			e.preventDefault();
+
+				var value = $(this).data('value');
+
+				//Equipment or component filter
+				var filter = $('.filter-group').find('.active').data('type');
+				var type = 'list';
+
+				$('.filter_status').removeClass('active');
+				$('.filter_status').addClass('btn-default');
+
+				$('.filter_status').removeClass('btn-warning');
+				$('.filter_status').removeClass('btn-success');
+				$('.filter_status').removeClass('btn-info');
+
+				if(value == 'active'){
+					$(this).addClass('btn-warning');
+					$('.active').show();
+					$('.completed').hide();
+					$('.part_details').hide();
+				} else if(value == 'completed') {
+					$(this).addClass('btn-success');
+					$('.completed').show();
+					$('.active').hide();
+					$('.part_details').hide();
+				} else {
+					$('.active').show()
+					$('.completed').show()
+					$(this).addClass('btn-info');
+					$('.part_details').show();
+				}
+
+				$(this).addClass('active');
     		});
     	})(jQuery);
     </script>

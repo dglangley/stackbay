@@ -198,6 +198,8 @@ function sub_rows($search = ''){
                         <td></td>
                         <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                         <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
+                        <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
                         <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"").">
                             <div class='row-fluid'>
                                 <div class='".($page=="Tech" || $page=='build' ?"col-md-12":"col-md-6")."' style='padding:0%;text-align:center;'>Stock</div>
@@ -243,7 +245,7 @@ function sub_rows($search = ''){
                     $rows .= "
                     <tr class = 'search_lines' data-line-id = $id>
                         <td ".($page=="Tech" || $page=='build' ?"style='display:none;'":"")."></td>
-                        <td>";
+                        <td ".($page=="Tech" || $page=='build' ?"":"colspan='3'").">";
 
                     $rows .=(display_part($info));
                     $rows .= "</td>

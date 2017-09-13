@@ -159,6 +159,10 @@
 				background: transparent !important;
 			}
 
+			.line_ref_1, .line_ref_2 {
+				display: none;
+			}
+
 			/*tfoot > tr > td {
 			    padding: 0px 5px !important;
 			}*/
