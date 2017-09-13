@@ -46,7 +46,7 @@
 			if (mysqli_num_rows($result2)==0) {
 				$r['ref'] = '';
 				if ($r['dispositionid']==3) {//3==Repair so if no results, we gotta ask why
-					echo $query2.'<BR>';
+					if ($r['status']<>'Void') { echo $query2.'<BR>'; }
 				} else if ($r['dispositionid']==1) {//Credit
 					continue;
 				} else {//if ($r['dispositionid']==2) {//Replace/Exchange
@@ -58,7 +58,7 @@
 					$query3 .= "GROUP BY h.invid; ";
 					$result3 = qdb($query3);
 					if (mysqli_num_rows($result3)>0) {
-						echo $query3.'<BR>';
+//						echo $query3.'<BR>';
 						$r3 = mysqli_fetch_assoc($result3);
 						$r['avg_cost'] = $r3['cogs_avg'];
 						$r['exchange_cogs'] = 0;

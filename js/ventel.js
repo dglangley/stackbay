@@ -1,5 +1,5 @@
+	if (typeof RESULTS_MODE === 'undefined') { RESULTS_MODE = 0; }
     $(document).ready(function() {
-		if (! RESULTS_MODE) { RESULTS_MODE = 0; }
 
 		$('#loader').hide();
 		if ($("#s:focus") && $(".profile-body").length==0 && $(".accounts-body").length==0) {
@@ -753,6 +753,35 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+
+		$(".location-selector").select2({
+			placeholder: '- Select Location -',
+			ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+				url: "/json/locations.php",
+				dataType: 'json',
+				data: function (params) {
+					return {
+						q: params.term,//search term
+						page: params.page
+					};
+				},
+				allowClear: true,
+				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+		});
+
 		$(".task-selector").select2({
 	    	placeholder: '- Select a Task -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper

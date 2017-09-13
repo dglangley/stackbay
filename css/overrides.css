@@ -648,6 +648,9 @@ textarea.freeform-text {
 .system-selector {
 	width:180px;
 }
+.location-selector {
+	min-width:150px;
+}
 
 .business-icon {
 	float:left;

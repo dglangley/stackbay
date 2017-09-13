@@ -344,6 +344,8 @@
 			$invoiceid[] = $rowInvoice['invoice_no'];
 		}
 
+		if ($row['status']=='Void' AND $filter<>'All') { continue; }
+
 		$status = 'complete';
 		if ($order AND $order<>$id) { continue; }
 

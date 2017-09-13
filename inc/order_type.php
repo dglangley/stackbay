@@ -10,6 +10,13 @@
 				$T['item_label'] = '';
 				break;
 
+			case 'Purchase':
+				$T['orders'] = 'purchase_orders';
+				$T['order'] = 'po_number';
+				$T['items'] = 'purchase_items';
+				$T['item_label'] = 'purchase_item_id';
+				break;
+
 			case 'Repair':
 				$T['orders'] = 'repair_orders';
 				$T['order'] = 'ro_number';

@@ -3,6 +3,7 @@
 
 	$inventory_sub = '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                    <li><a href="/inventory-beta.php" class="mode-tab"><i class="fa fa-qrcode"></i> Inventory BETA</a></li>
                     <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
 	';
 	//if user is sales or management, they have a manage inventory link

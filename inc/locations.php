@@ -49,7 +49,7 @@
     function loc_dropdowns($type = '', $selected = '',$limit = '',$default = ''){
         // Populates the location dropdown with the accurate value/paired information
         $type = strtolower($type);
-        
+
         //Warehouse dropdown
         if($type == "warehouse"){
             $result = getWarehouse();

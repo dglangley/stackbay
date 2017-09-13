@@ -79,6 +79,7 @@
 	$repair = grab("repair");
 	$build = grab("build");
 	if (! $repair AND ! $build AND ! $order_type) { $order_type = 'Sale'; }
+	else if ($repair) { $order_type = 'Repair'; }
 
 	//If this record has a rma number, find the RMA
 	if ($rma_number){

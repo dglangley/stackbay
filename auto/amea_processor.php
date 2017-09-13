@@ -45,6 +45,8 @@
 
 	$commons = array(
 		'TRANSMITTER'=>1,
+		'UNIV'=>1,
+		'DOLPHIN'=>1,
 		'DC'=>1,
 		'THE'=>1,
 		'CINDY'=>1,
