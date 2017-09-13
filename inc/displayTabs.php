@@ -3,7 +3,6 @@
 
 	$inventory_sub = '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
-                    <li><a href="/inventory-beta.php" class="mode-tab"><i class="fa fa-qrcode"></i> Inventory BETA</a></li>
                     <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Manage Parts</a></li>
 	';
 	//if user is sales or management, they have a manage inventory link
@@ -114,6 +113,13 @@
 					'title'=>'Inventory',
 					'aliases'=>array('/manage_inventory.php','/parts.php'),
 					'sub' => $inventory_sub,
+				),
+				array(
+					'action'=>'/inventory-beta.php',
+					'image'=>'<i class="fa fa-qrcode"></i>',
+					'title'=>'Inv BETA',
+					'aliases'=>array(),
+					'sub' =>'',
 				),
 			),
 		'right' =>

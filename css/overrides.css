@@ -1234,6 +1234,7 @@ hr.no-margin {
 	background-color:#ad683a;
 	color:#fff;
 }
+
 #date-ranges {
    width:436px;
    height:30px;
@@ -1294,6 +1295,15 @@ tr.grayout td a {
 }
 .btn-default.text-info {
   color: #3a87ad;
+}
+
+.text-purple {
+  color: #a235a2;
+}
+.btn-purple,
+.btn-purple:hover {
+  color: #fff;
+  background-color: #a235a2;
 }
 
 
@@ -2033,6 +2043,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
   border-right: solid 1px #555;
 }
 
+.table-inventory .in-stock td,
 .descr-row.in-stock {
     background-color: #f9edd8;
     background: -webkit-linear-gradient(#f9edd8, #fbf4e6);
@@ -2041,6 +2052,15 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
     background: linear-gradient(#f9edd8, #fbf4e6);
 }
 
+.table-inventory .bad-stock td {
+    background-color: #d5b8d5;
+    background: -webkit-linear-gradient(#d5b8d5, #ead8ea);
+    background: -o-linear-gradient(#d5b8d5, #ead8ea);
+    background: -moz-linear-gradient(#d5b8d5, #ead8ea);
+    background: linear-gradient(#d5b8d5, #ead8ea);
+}
+
+.table-inventory .never-stock td,
 .never-stock .first {
 	background: repeating-linear-gradient(
     -55deg,
@@ -2051,6 +2071,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
   );
 }
 
+.table-inventory .out-stock td,
 .out-stock .first {
   background: repeating-radial-gradient(
     circle,
