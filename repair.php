@@ -590,14 +590,14 @@
 
 					<?php if($check_status == 'opened' || !$check_status) { ?>
 						<input type="text" name="check_in" value="check_in" class="hidden">
-						<button class="btn btn-info btn-sm btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Check In</button>
+						<button class="btn btn-info btn-sm btn-update" type="submit" name="type" value="check_in" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=((($ticketStatus OR ! $serial) AND ! $build) ? 'disabled' : '');?>>Check In</button>
 					<?php } else { ?>
 						<input type="text" name="check_in" value="check_out" class="hidden">
-						<button class="btn btn-warning btn-sm btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Check Out</button>
+						<button class="btn btn-warning btn-sm btn-update" id="submit" name="type" value="check_out" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=((($ticketStatus OR ! $serial) AND ! $build) ? 'disabled' : '');?>>Check Out</button>
 					<?php } ?>
 
 					<?php if(!$claimed){ ?>
-						<button class="btn btn-success btn-sm btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=(($ticketStatus OR ! $serial) ? 'disabled' : '');?>>Claim Ticket</button>	
+						<button class="btn btn-success btn-sm btn-update" type="submit" name="type" value="claim" data-datestamp = "<?= getDateStamp($order_number); ?>" <?=((($ticketStatus OR ! $serial) AND ! $build) ? 'disabled' : '');?>>Claim Ticket</button>	
 					<?php } else { ?>
 						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-repair" <?=($ticketStatus ? 'disabled' : '');?>>
 							<i class="fa fa-save"></i> Complete Ticket

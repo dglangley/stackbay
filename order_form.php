@@ -48,7 +48,16 @@
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$keyword = $_REQUEST['s'];
 	}
-	
+
+	if (isset($_REQUEST['purchase_request']) AND $_REQUEST['purchase_request']) {
+		$purchase_request = $_REQUEST['purchase_request'];
+	}
+
+	// Test print for purchase request only
+	// if(! empty($purchase_request)) {
+	// 	print '<pre>' . print_r($_REQUEST, true) . '</pre>';
+	// }
+
 	//High level order parameters
 	$o = o_params(grab('ps',"s"));
 	$order_number = grab('on','New');
@@ -171,6 +180,17 @@
 		}
 	 	
 	 	return $total;
+	}
+
+	function format($partid, $desc = true){
+		$r = reset(hecidb($partid, 'id'));
+		$parts = explode(' ',$r['part']);
+	    $display = "<span class = 'descr-label'>".$r['part']." &nbsp; ".$r['heci']."</span>";
+	    if($desc)
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' '.dictionary($r['system']).
+				'</span> <span class="description-label">'.dictionary(substr($r['description'],0,30)).'</span></div>';
+
+	    return $display;
 	}
 
 	function getRMA($order_number, $type){
@@ -711,9 +731,16 @@
 						<table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
 						<thead>
 							<?php //if($o['type'] != 'invoice'){?>
-		    				<th style='min-width:30px;'>#</th>		
-		    				<th class='col-md-<?=($o['repair']?"7":"5")?>'>Item Information</th>
-		    				<th class='col-md-2'>Delivery Date</th>
+		    				<th style='min-width:30px;'>#</th>
+		    				<?php //if(! empty($_REQUEST['purchase_request'])) { ?>		
+			    				<th class='col-md-<?=($o['repair']?"4":"2")?>'>Item Information</th>
+			    				<th class='col-md-2'>Ref 1</th>
+			    				<th class='col-md-2'>Ref 2</th>
+			    				<th class='col-md-1'>Delivery Date</th>
+		    				<?php //} else { ?>
+		    					<!-- <th class='col-md-<?=($o['repair']?"7":"5")?>'>Item Information</th>
+			    				<th class='col-md-2'>Delivery Date</th> -->
+		    				<?php //} ?>	
 		    				<?php if(!$o['repair']): ?>
 		    				<th class='col-md-1'>
 			    				<?php
@@ -747,6 +774,141 @@
 	    				</thead>
 	
 			        	<tbody id="right_side_main" <?=($o['rtv'] ? 'data-rtvarray = '. json_encode($rtv_items) : '');?> style = "font-size:13px;">
+
+			        		<?php 
+			        			if(! empty($purchase_request)) { 
+			        				foreach ($purchase_request as $partid => $row) {
+			        					//echo $partid . '<br>';
+			        					foreach ($row as $ro_number => $row2) {
+			        						//echo $ro_number . '<br>';
+			        						foreach ($row2 as $qty => $row3) {
+			        							foreach($row3 as $pr_id => $repair_item_id) {
+			        		?>
+									        		<tr class="easy-output " data-record="new">
+												        <td class="line_line" data-line-number=""></td>
+												        <td class="line_part" data-search="<?=$partid;?>" data-record="new">
+												        	<?=format($partid);?>
+												        	<!-- <span class="descr-label">ER-B &nbsp; </span> &nbsp; <div class="description desc_second_line descr-label" style="color:#aaa;">MISC &nbsp;  <span class="description-label">BALDOR <abbr title="ALTERNATING CURRENT">AC</abbr> GEARMOTOR <abbr title="LONG-HAUL">L/H</abbr> 1/3 HP 115/230 VOLTS</span></div></td> -->
+											    
+											        	<td class="line_ref_1">
+											        		<div class="col-md-6">
+											        			<input class="form-control input-sm" type="text" name="" value="<?=$ro_number;?>" readonly>
+											        			<input class="form-control input-sm ref_1" type="hidden" name="ref_1" value="<?=$repair_item_id;?>">
+											        			<!-- Hidden Field to contain all the purchase request values -->
+											        			<input class="form-control input-sm pr_id" type="hidden" name="pr_id" value="<?=$pr_id;?>">
+											        		</div>
+											        		<div class="col-md-6">
+											        			<select class="form-control input-sm" readonly>
+											        				<option>RO</option>
+											        			</select>
+											        			<input class="form-control input-sm ref_1_label" type="hidden" name="ref_1_label" value="repair_item_id">
+											        		</div>
+											        	</td>
+											        	<td class="line_ref_2">
+											        		<div class="col-md-6">
+											        			<input class="form-control input-sm ref_2" type="text" name="ref_2" value="">
+											        		</div>
+											        		<div class="col-md-6">
+											        			<select name="ref_2_label" class="form-control input-sm ref_2_label">
+											        				<option value="" selected disabled>Optional</option>
+											        				<option value="PN">PN</option>
+											        				<option value="SAP">SAP</option>
+											        				<option value="PO">PO</option>
+											        			</select>
+											        		</div>
+											        	</td>
+											        	<td class="line_date" data-date="<?=addBusinessDays($now, 4);?>"><?=addBusinessDays($now, 4);?></td>
+														<td class="line_cond" data-cond="2">Used (Untested)</td>
+											        	<td class="line_war" data-war="4">30 Days</td>
+											        	<td class="line_qty" data-stock="0" data-qty="<?=$qty;?>"><?=$qty;?></td>
+											            <td class="line_price">$0.00</td>
+											            <td class="line_linext">$0.00</td>
+											            <td class="line_ref" style="display: none;" data-label=""></td>
+											            <td class="forms_edit" style="cursor: pointer;">
+											            	<i class="fa fa-pencil fa-4" aria-hidden="true"></i></td><td class="forms_trash" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i>
+											            </td>
+										            </tr>
+
+									            	<tr class="lazy-entry" style="display:none;">
+														<td style="padding:0;"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" value="2" data-value="2" style="height:28px;padding:0;text-align:center;"></td>
+											            <td class="search_collumn">
+											            	<div class="item-selected">
+																<select class="item_search input-xs">
+																	<option data-search="<?=$partid;?>">ER-B</option>
+																</select>
+															</div>
+														</td>
+											            <td>				
+											            	<div class="input-group date datetime-picker-line">
+													            <input type="text" name="ni_date" class="form-control input-sm" value="<?=format_date($now);?>" data-value="<?=format_date($now);?>" style="min-width:50px;">
+													            <span class="input-group-addon">
+													                <span class="fa fa-calendar"></span>
+													            </span>
+												            </div>
+													    </td>
+													    <td>
+													    	<div class="">
+													    		<select id="conditionid" name="condition" class="form-control input-sm conditionid">    
+													    			<option value="-7">Pending Test</option>
+													    			<option value="-6">Internal Use Only</option>
+													    			<option value="-5">Needs Repair</option>
+													    			<option value="-4">Scrapped</option>
+													    			<option value="-3">Use for Parts (Unrepairable)</option>
+													    			<option value="-2">Physical Damage</option>
+													    			<option value="-1">Tested Bad</option>
+													    			<option value="1">New</option>
+													    			<option selected="" value="2">Used (Untested)</option>
+													    			<option value="3">Tested Good</option>
+													    			<option value="4">Refurbished</option>
+													    			<option value="5">Repaired (Untested)</option>
+													    			<option value="6">Repaired (Tested)</option>
+													    			<option value="7">Unknown</option>
+									    			    		</select>
+									    	        		</div>
+									    	        	</td>
+											            <td>
+											            	<div class="">
+											            		<select id="warranty" class="form-control input-sm warranty ">	    
+											            			<option value="1">AS IS</option>
+											            			<option value="2">5 Days</option>
+											            			<option value="3">14 Days</option>
+											            			<option selected="" value="4">30 Days</option>
+											            			<option value="5">45 Days</option>
+											            			<option value="6">60 Days</option>
+											            			<option value="7">90 Days</option>
+											            			<option value="8">120 Days</option>
+											            			<option value="9">6 Months</option>
+											            			<option value="10">1 Year</option>
+											            			<option value="11">2 Years</option>
+											            			<option value="12">3 Years</option>
+											            			<option value="13">Lifetime</option>
+											            			<option value="14">N/A</option>
+									    			    		</select>
+									    	        		</div>
+									    	        	</td>
+									    	        	<td><input class="form-control input-sm oto_qty" type="text" name="ni_qty" placeholder="QTY" value="<?=$qty;?>" data-value="<?=$qty;?>"></td>
+											            <td><input class="form-control input-sm oto_price" type="text" name="ni_price" placeholder="0.00" value="0.00" data-value="0.00"></td>
+											            <td><input class="form-control input-sm oto_ext" readonly="readonly" type="text" name="ni_ext" placeholder="0.00"></td>
+											            <td style="display: none;" data-label=""><input class="form-control input-sm line_ref_1" readonly="readonly" type="text" name="" placeholder="0.00" value=""></td>
+														<td colspan="2" id="check_collumn">
+															<div class="btn-group">
+																<a class="btn-flat danger pull-right line_item_unsubmit" style="padding: 3px;margin-left:2px;">
+																	<i class="fa fa-minus fa-4" aria-hidden="true"></i>
+																</a>
+																
+																<a class="btn-flat success pull-right line_item_submit" style="padding: 3px;">
+																	<i class="fa fa-save fa-4" aria-hidden="true"></i>
+																</a>
+															</div>
+														</td>
+													</tr>
+							<?php 	
+												}
+											}
+			        					}
+			        				}
+		        				} 
+		        			?>
 			        	</tbody>
 				        
 				        <?php if(!$o['rtv'] && !$o['invoice']){ ?>
@@ -763,11 +925,11 @@
 								        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
 								?>
 								
-					            <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
+					            <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6; <?=(! empty($purchase_request) ? 'display:none;' : '')?>'>
 					        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
-							        <td id = 'search'>
-							            <div class='input-group'>
-							              <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...' value='<?=$keyword?>'>
+							        <td colspan='3' id = 'search'>
+							            <div class='input-group' style="width: 100%;">
+							            <input type='text' class='form-control input-sm' id = 'go_find_me' placeholder='SEARCH FOR...' value='<?=$keyword?>'>
 							              <span class='input-group-btn'>
 							                <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
 							            </span>
@@ -812,6 +974,8 @@
 					                <td></td>
 					                <td></td>
 					                <td></td>
+					                <td></td>
+					                <td></td>
 					                <td style='text-align:right;'>Subtotal:</td>
 					                <td><input class='form-control input-xs' readonly='readonly' tabIndex='-1' type='text' id ='subtotal' name='np_subtotal' placeholder='0.00'></td>
 					                <td></td>
@@ -822,6 +986,8 @@
 					                <td></td>
 					                <td></td>
 									<?php endif; ?>
+					                <td></td>
+					                <td></td>
 					                <td></td>
 					                <td></td>
 					                <td colspan="2">
@@ -848,6 +1014,8 @@
 					                <td></td>
 					                <td></td>
 								<?php endif; ?>
+					                <td></td>
+					                <td></td>
 					                <td></td>
 					                <td></td>
 					                <td colspan="2">
@@ -879,6 +1047,8 @@
 					                <td></td>
 					                <td></td>
 					                <td></td>
+					                <td></td>
+					                <td></td>
 					                <td style='text-align:right;'>Freight:</td>
 					                <td>
 					                	<div class="input-group">
@@ -893,6 +1063,8 @@
 					                <td></td>
 					                <td></td>
 								<?php endif; ?>
+					                <td></td>
+					                <td></td>
 					                <td></td>
 					                <td></td>
 					                <td></td>

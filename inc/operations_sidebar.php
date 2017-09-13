@@ -112,6 +112,27 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$private = "Purchase Request for Repair# " . $repair_item['ro_number'];
 			}
 		}
+
+		if($_REQUEST['purchase_request']) {
+			$private = "Purchase Request for Repair(s):\n";
+			foreach ($_REQUEST['purchase_request'] as $partid => $row) {
+				//echo $partid . '<br>';
+				foreach ($row as $ro_number => $row2) {
+					//echo $ro_number . '<br>';
+					foreach ($row2 as $qty => $row3) {
+						foreach($row3 as $check) {
+							$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($check).";";
+							$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+
+							if(mysqli_num_rows($repair_result)) {
+								$repair_item = mysqli_fetch_assoc($repair_result);
+								$private .= $repair_item['ro_number'] . "\n";
+							}
+						}
+					}
+				}
+			}
+		}
 		
 		if($o['rtv']){
 			//Overwrite the information from the purchase order based on the RTV Defaults

@@ -1444,19 +1444,31 @@
 								line_ref_1_label = 'purchase_item_id';
 								order_number = 'New';
 								// alert(line_ref_1);
+							} else if($(this).find(".line_ref_1").find(".ref_1").val()) {
+								// New additions added recently for calculations
+								line_ref_1 = $(this).find(".line_ref_1").find(".ref_1").val();
+								line_ref_1_label = $(this).find(".line_ref_1").find(".ref_1_label").val();
 							}
 							sum_qty += $(this).find(".line_qty").attr("data-qty");
+
 						var row = {
 							"line_number" : $(this).find(".line_line").attr("data-line-number"),
 							"part" : $(this).find(".line_part").attr("data-search"),
 							"id" : $(this).find(".line_part").attr("data-record"),
 							"date" : $(this).find(".line_date").attr("data-date"),
+
 							"conditionid" : $(this).find(".line_cond").attr("data-cond"),
 							"warranty" : $(this).find(".line_war").attr("data-war"),
 							"price" : $(this).find(".line_price").text(),
 							"qty" : $(this).find(".line_qty").attr("data-qty"),
+
 							"ref_1" : line_ref_1,
-							"ref_1_label" : line_ref_1_label
+							"ref_1_label" : line_ref_1_label,
+
+							"ref_2" : $(this).find(".line_ref_2").find(".ref_2").val(),
+							"ref_2_label" : $(this).find(".line_ref_2").find(".ref_2_label").val(),
+
+							"pr_id" : $(this).find(".line_ref_1").find(".pr_id").val(),
 						};
 
 						submit.push(row);
