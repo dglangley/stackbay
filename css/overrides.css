@@ -2046,18 +2046,18 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .table-inventory .in-stock td,
 .descr-row.in-stock {
     background-color: #f9edd8;
-    background: -webkit-linear-gradient(#f9edd8, #fbf4e6);
-    background: -o-linear-gradient(#f9edd8, #fbf4e6);
-    background: -moz-linear-gradient(#f9edd8, #fbf4e6);
-    background: linear-gradient(#f9edd8, #fbf4e6);
+    background: -webkit-linear-gradient(#f9edd8, #faeed9);
+    background: -o-linear-gradient(#f9edd8, #faeed9);
+    background: -moz-linear-gradient(#f9edd8, #faeed9);
+    background: linear-gradient(#f9edd8, #faeed9);
 }
 
 .table-inventory .bad-stock td {
-    background-color: #d5b8d5;
-    background: -webkit-linear-gradient(#d5b8d5, #ead8ea);
-    background: -o-linear-gradient(#d5b8d5, #ead8ea);
-    background: -moz-linear-gradient(#d5b8d5, #ead8ea);
-    background: linear-gradient(#d5b8d5, #ead8ea);
+    background-color: #ead8ea;
+    background: -webkit-linear-gradient(#ead8ea, #ebd9eb);
+    background: -o-linear-gradient(#ead8ea, #ebd9eb);
+    background: -moz-linear-gradient(#ead8ea, #ebd9eb);
+    background: linear-gradient(#ead8ea, #ebd9eb);
 }
 
 .table-inventory .never-stock td,
