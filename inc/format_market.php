@@ -66,27 +66,55 @@
 
 				$group_date = substr($r['datetime'],0,7);
 			}
-			if (! isset($grouped[$group_date])) {
-				$grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array(),'status'=>'');
-				if ($market_table=='purchases' OR $market_table=='sales' OR strpos($market_table, 'repair')!== false) { $grouped[$group_date]['order_num'] = ''; }
-			}
 
-			$fprice = format_price($r['price'],true,'',true);
-			$grouped[$group_date]['count']++;
-			if ($fprice>0) {
-				$grouped[$group_date]['sum_qty'] += $r['qty'];
-				$grouped[$group_date]['sum_price'] += ($fprice*$r['qty']);
-			}
-			$grouped[$group_date]['datetime'] = $r['datetime'];
-			$grouped[$group_date]['total_qty'] += $r['qty'];
+			// Create a new way to group items by date based on purchases and sales
+			if ($market_table=='purchases' OR $market_table=='sales') {
 
-			if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']]) AND array_search($r['name'],$grouped[$group_date]['companies'])===false) {
-				$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
+				if (! isset($grouped[$group_date])) {
+					$grouped[$group_date] = array();
+					$grouped[$group_date][$r['order_num']] = '';
+				}
+
+				$fprice = format_price($r['price'],true,'',true);
+
+				if ($fprice>0) {
+					$grouped[$group_date][$r['order_num']]['sum_qty'] += $r['qty'];
+					$grouped[$group_date][$r['order_num']]['sum_price'] += ($fprice*$r['qty']);
+				}
+
+				$grouped[$group_date][$r['order_num']]['total_qty'] += $r['qty'];
+
+				$grouped[$group_date][$r['order_num']]['company'] = $r['name'];
+				$grouped[$group_date][$r['order_num']]['companyid'] = $r['cid'];
+				if ($r['status']=='Void') { $grouped[$group_date][$r['order_num']]['status'] = 'Void'; }
+
+			} else {
+
+				if (! isset($grouped[$group_date])) {
+					$grouped[$group_date] = array('count'=>0,'sum_qty'=>0,'sum_price'=>0,'total_qty'=>0,'datetime'=>'','companies'=>array(),'status'=>'');
+					if (strpos($market_table, 'repair')!== false) { $grouped[$group_date]['order_num'] = ''; }
+				}
+
+				$fprice = format_price($r['price'],true,'',true);
+				$grouped[$group_date]['count']++;
+				if ($fprice>0) {
+					$grouped[$group_date]['sum_qty'] += $r['qty'];
+					$grouped[$group_date]['sum_price'] += ($fprice*$r['qty']);
+				}
+				$grouped[$group_date]['datetime'] = $r['datetime'];
+				$grouped[$group_date]['total_qty'] += $r['qty'];
+
+				if ($r['cid']>0 AND ! isset($grouped[$group_date]['companies'][$r['cid']]) AND array_search($r['name'],$grouped[$group_date]['companies'])===false) {
+					$grouped[$group_date]['companies'][$r['cid']] = $r['name'];
+				}
+				if (strpos($market_table, 'repair')!== false) { $grouped[$group_date]['order_num'] = $r['order_num']; }
+				if ($r['status']=='Void') { $grouped[$group_date]['status'] = 'Void'; }
+
 			}
-			if ($market_table=='purchases' OR $market_table=='sales' OR strpos($market_table, 'repair')!== false) { $grouped[$group_date]['order_num'] = $r['order_num']; }
-			if ($r['status']=='Void') { $grouped[$group_date]['status'] = 'Void'; }
 		}
 		ksort($grouped);
+
+		//print '<pre>' . print_r($grouped, true) . '</pre>';
 
 		$cls1 = '';
 		$cls2 = '';
@@ -96,7 +124,7 @@
 			$order_date = substr($order_date,0,10);
 
 			// summarized date for heading line
-			$sum_date = summarize_date($r['datetime']);
+			$sum_date = summarize_date($order_date);
 
 			// add group heading (date with summarized qty)
 			if ($last_sum AND $sum_date<>$last_sum) {
@@ -107,10 +135,10 @@
 			$cls1 = '';
 			$cls2 = '';
 			$summary_form = false;
-			if ($r['datetime']<$GLOBALS['summary_lastyear']) {
+			if ($order_date<$GLOBALS['summary_lastyear']) {
 				$cls1 = '<span class="archives">';
 				$cls2 = '</span>';
-			} else if ($r['datetime']<$summary_past) {
+			} else if ($order_date<$summary_past) {
 				$cls1 = '<span class="summary">';
 				$cls2 = '</span>';
 				$summary_form = true;
@@ -125,41 +153,78 @@
 
 			$last_date = $order_date;
 			$last_sum = $sum_date;
-			$dated_qty += $r['total_qty'];
 
 			$companies = '';
 			$cid = 0;
-			foreach ($r['companies'] as $cid => $name) {
-				if ((($market_table=='demand' OR $market_table=='sales' OR $market_table=='sales_summary' OR $market_table=='in_repair' OR $market_table=='repairs' OR $market_table=='repairs_completed') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['demand'][$cid])))
-					OR (($market_table=='purchases') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['supply'][$cid]))))
-				{
-					if ($companies) { $companies .= '<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'; }
-					$companies .= '<a href="profile.php?companyid='.$cid.'" class="market-company">'.$name.'</a>';
-				}
-			}
-			$price_str = '';
-			$uprice = round($r['sum_price']/$r['sum_qty']);
-			if (($r['sum_qty']>0) || strpos($market_table, 'repair') !== false) {
-				$fprice = format_price(format_price(round($r['sum_price']/$r['sum_qty'])),false);
-				if ($market_table=='purchases') {
-					$price_str = '<a target="_blank" href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
-				} else if ($market_table=='sales') {
-					$price_str = '<a target="_blank" href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
-				} else if (strpos($market_table, 'repair') !== false) {
-					$price_str = '<a target="_blank" href="/RO'.$r['order_num'].'">'.($fprice ? $fprice : '0.00').'</a>';
-				} else if($market_table!='sales_summary') {
-					$price_str = '<input type="text" class="form-control input-xxs market-price" value="'.$fprice.'" data-date="" data-cid="">';
-				}
-			}
 
-			$cls_add = '';
-			if ($r['status']=='Void' OR $r['total_qty']==0) { $cls_add = ' strikeout'; }
-			$line_str = '<div class="market-data'.$cls_add.' market-company-'.$cid.'">';
-			if (strlen($order_date)==7) {
-				$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
+			if($market_table=='sales' OR $market_table=='purchases') {
+				$line_str = '';
+				foreach($r as $order_number => $r2) {
+					$companies = '';
+					$price_str = '';
+
+					// Omitt repair SO's
+					if($r2['sum_price'] == 0) {
+						continue;
+					}
+
+					$companies .= '<a href="profile.php?companyid='.$r2['companyid'].'" class="market-company">'.$r2['company'].'</a>';
+
+					$uprice = round($r2['sum_price']/$r2['sum_qty']);
+					if (($r2['sum_qty']>0) || strpos($market_table, 'repair') !== false) {
+						$fprice = format_price(format_price(round($r2['sum_price']/$r2['sum_qty'])),false);
+						if ($market_table=='purchases') {
+							$price_str = '<a target="_blank" href="/PO'.$order_number.'">'.$fprice.'</a>';
+						} else if ($market_table=='sales') {
+							$price_str = '<a target="_blank" href="/SO'.$order_number.'">'.$fprice.'</a>';
+						} 
+					}
+
+					$cls_add = '';
+
+					if ($r2['status']=='Void' OR $r2['total_qty']==0) { $cls_add = ' strikeout'; }
+					else { $dated_qty += $r2['total_qty']; }
+					$line_str .= '<div class="market-data'.$cls_add.' market-company-'.$r2['companyid'].'">';
+					$line_str .= '<span class="pa">'.round($r2['total_qty']).'</span> &nbsp; '.
+					$companies.' <span class="pa '.$market_table.'_price" data-price="'.$uprice.'">'.$price_str.'</span></div>';
+
+				}
+
+			} else {
+				$dated_qty += $r['total_qty'];
+
+				foreach ($r['companies'] as $cid => $name) {
+					if ((($market_table=='demand' OR $market_table=='sales' OR $market_table=='sales_summary' OR $market_table=='in_repair' OR $market_table=='repairs' OR $market_table=='repairs_completed') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['demand'][$cid])))
+						OR (($market_table=='purchases') AND (! $summary_form OR $r['count']==1 OR isset($FREQS['supply'][$cid]))))
+					{
+						if ($companies) { $companies .= '<br> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'; }
+						$companies .= '<a href="profile.php?companyid='.$cid.'" class="market-company">'.$name.'</a>';
+					}
+				}
+				$price_str = '';
+				$uprice = round($r['sum_price']/$r['sum_qty']);
+				if (($r['sum_qty']>0) || strpos($market_table, 'repair') !== false) {
+					$fprice = format_price(format_price(round($r['sum_price']/$r['sum_qty'])),false);
+					if ($market_table=='purchases') {
+						$price_str = '<a target="_blank" href="/PO'.$r['order_num'].'">'.$fprice.'</a>';
+					} else if ($market_table=='sales') {
+						$price_str = '<a target="_blank" href="/SO'.$r['order_num'].'">'.$fprice.'</a>';
+					} else if (strpos($market_table, 'repair') !== false) {
+						$price_str = '<a target="_blank" href="/RO'.$r['order_num'].'">'.($fprice ? $fprice : '0.00').'</a>';
+					} else if($market_table!='sales_summary') {
+						$price_str = '<input type="text" class="form-control input-xxs market-price" value="'.$fprice.'" data-date="" data-cid="">';
+					}
+				}
+
+				$cls_add = '';
+				if ($r['status']=='Void' OR $r['total_qty']==0) { $cls_add = ' strikeout'; }
+				$line_str = '<div class="market-data'.$cls_add.' market-company-'.$cid.'">';
+				if (strlen($order_date)==7) {
+					$line_str .= '<span class="pa">'.$r['count'].'x</span> ';
+				}
+				$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
+					$companies.' <span class="pa '.$market_table.'_price" data-price="'.$uprice.'">'.$price_str.'</span></div>';
 			}
-			$line_str .= '<span class="pa">'.round($r['total_qty']/$r['count']).'</span> &nbsp; '.
-				$companies.' <span class="pa '.$market_table.'_price" data-price="'.$uprice.'">'.$price_str.'</span></div>';
 
 			// append to column string
 			$market_str = $cls1.$line_str.$cls2.$market_str;

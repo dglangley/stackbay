@@ -529,6 +529,10 @@
 			.ticket_status_warning {
 				color: #8a6d3b;
 			}
+
+			.line_ref_1, .line_ref_2 {
+				display: none !important;
+			}
 		</style>
 
 	</head>
