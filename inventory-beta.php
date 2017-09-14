@@ -13,17 +13,13 @@
 To do:
 1) Incoming PO's as top, italicized lines
 2) Action column functionality
-3) Location dropdown implementation
-4) Tie in all filter bar elements
-5) Show results count for each sub-type
 6) Serial results should show part# in multiple-select dropdown, with a filter on Serial that can be cleared to reveal all part results
 */
 
-	$T = order_type('Purchase');
 	function getSource($id,$order_type='Purchase') {
-		global $T;
-
 		if (! $id) { return false; }
+
+		$T = order_type('Purchase');
 
 		$query = "SELECT ".$T['order']." order_number FROM ".$T['items']." WHERE id = '".res($id)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -35,9 +31,9 @@ To do:
 	}
 
 	function getCompanyID($order_number,$order_type='Purchase') {
-		global $T;
-
 		if (! $order_number) { return false; }
+
+		$T = order_type('Purchase');
 
 		$query = "SELECT companyid FROM ".$T['orders']." WHERE ".$T['order']." = '".res($order_number)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -57,6 +53,9 @@ To do:
 	$locationid = 0;
 	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']>0) { $locationid = trim($_REQUEST['locationid']); }
 
+	$companyid = 0;
+	if (isset($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = trim($_REQUEST['companyid']); }
+
 	$expiry = time() + (7 * 24 * 60 * 60);
 	$past_time = time() - 1000;
 	$summary = '';
@@ -74,16 +73,21 @@ To do:
 		if (isset($_COOKIE['inventory-detail'])) { $detail = $_COOKIE['inventory-detail']; }
 	}
 
-	$summary_btn = 'default';
-	$detail_btn = 'default';
-	if ($summary) {
-		$summary_btn = 'primary active';
-	} else if ($detail) {
-		$detail_btn = 'primary active';
-	}
-
 	$order_search = '';
 	if (isset($_REQUEST['order_search']) AND trim($_REQUEST['order_search'])) { $order_search = trim($_REQUEST['order_search']); }
+
+	$startDate = '';
+	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+	}
+	$endDate = date('m/d/Y');
+	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
+		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
+	}
+	if ($startDate) {
+		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+	}
 
 	$goodstock_text = ' text-warning';
 	$badstock_text = ' text-purple';
@@ -124,28 +128,175 @@ To do:
 	// if selected, or if no buttons selected, select good stock by default
 	if ($goodstock OR (! $goodstock AND ! $badstock AND ! $outstock)) {
 		$goodstock = 1;
-		$goodstock_btn = 'warning active';
-		$goodstock_text = '';
 		setcookie('goodstock',$goodstock,$expiry);
 	} else {
 		$goodstock_btn = 'default';
 		setcookie('goodstock',$goodstock,$past_time);
 	}
 	if ($badstock) {
-		$badstock_btn = 'purple active';
-		$badstock_text = '';
 		setcookie('badstock',$badstock,$expiry);
 	} else {
 		$badstock_btn = 'default';
 		setcookie('badstock',$badstock,$past_time);
 	}
 	if ($outstock) {
-		$outstock_btn = 'danger active';
-		$outstock_text = '';
 		setcookie('outstock',$outstock,$expiry);
 	} else {
 		$outstock_btn = 'default';
 		setcookie('outstock',$outstock,$past_time);
+	}
+
+
+	/***** DON'T MOVE THIS CODE: strategically placed so we can activate stock buttons when user is looking for ORDER RESULTS *****/
+
+	// get all purchase_item_id, returns_item_id, repair_item_id and sales_item_id from respective orders matching $order_search
+	$ids = array('purchase_item_id'=>array(),'returns_item_id'=>array(),'repair_item_id'=>array(),'sales_item_id'=>array());
+	$order_matches = 0;
+	if ($order_search OR $companyid) {
+		$goodstock = 1;
+		$badstock = 1;
+		$outstock = 1;
+
+		$case_types = array('Purchase','Sale','Return','Repair');
+		foreach ($case_types as $order_type) {
+			$T = order_type($order_type);
+
+			$query = "SELECT items.id FROM ".$T['items']." items ";
+			if ($companyid) { $query .= ", ".$T['orders']." orders "; }
+			$query .= "WHERE 1 = 1 ";
+			if ($order_search) { $query .= "AND items.".$T['order']." = '".res($order_search)."' "; }
+			if ($companyid) { $query .= "AND items.".$T['order']." = orders.".$T['order']." AND orders.companyid = '".res($companyid)."' "; }
+			$query .= "; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$ids[$T['inventory_label']][] = $r['id'];
+				$order_matches++;
+			}
+		}
+	}
+
+	/***** END DONT MOVE *****/
+
+
+	$part_options = '';
+	$part_str = '';
+	$partids = array();
+	$partids_csv = '';
+	$qtys = array();
+	$inv_rows = '';
+	$serial_match = array();//when set, is keyed by partid so results on a given partid only show the discovered serial ($search)
+	if ($search) {
+		$results = hecidb($search);
+		foreach ($results as $partid => $P) {
+			// gather unique list of partids
+			$partids[$partid] = $P;
+
+			if ($partids_csv) { $partids_csv .= ','; }
+			$partids_csv .= $partid;
+		}
+
+		$query = "SELECT * FROM inventory WHERE serial_no = '".res($search)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$goodstock = 1;
+			$badstock = 1;
+			$outstock = 1;
+			$detail = 1;
+			$summary = 0;
+		}
+		while ($r = mysqli_fetch_assoc($result)) {
+			if (! isset($partids[$r['partid']])) {
+				$P = hecidb($r['partid'],'id');
+				$partids[$r['partid']] = $P[$r['partid']];
+
+				if ($partids_csv) { $partids_csv .= ','; }
+				$partids_csv .= $r['partid'];
+			}
+			$serial_match[$r['partid']] = $r['serial_no'];
+		}
+	}
+
+	// style settings for summary/detail buttons
+	$summary_btn = 'default';
+	$detail_btn = 'default';
+	if ($summary) {
+		$summary_btn = 'primary active';
+	} else if ($detail) {
+		$detail_btn = 'primary active';
+	}
+
+	// placed separately here for purposes of single-user overrides (such as in $order_search) instead of saving cookies
+	if ($goodstock) {
+		$goodstock_btn = 'warning active';
+		$goodstock_text = '';
+	}
+	if ($badstock) {
+		$badstock_btn = 'purple active';
+		$badstock_text = '';
+	}
+	if ($outstock) {
+		$outstock_btn = 'danger active';
+		$outstock_text = '';
+	}
+
+	$records = array();
+	if ($partids_csv OR $locationid OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
+		$query = "SELECT * FROM inventory i ";
+		if ($order_matches>0) {
+			$query .= ", inventory_history h ";
+		}
+		$query .= "WHERE 1 = 1 ";
+		if ($partids_csv) { $query .= "AND i.partid IN (".$partids_csv.") "; }
+		if ($locationid) { $query .= "AND i.locationid = '".res($locationid)."' "; }
+		if ($order_matches>0) {
+			$query .= "AND h.invid = i.id ";
+			$subquery = "";
+			foreach ($ids as $item_label => $arr) {
+				if (count($arr)==0) { continue; }
+	
+				foreach ($arr as $item_id) {
+					if ($subquery) { $subquery .= "OR "; }
+					$subquery .= "(h.field_changed = '".$item_label."' AND h.value = '".$item_id."') ";
+				}
+			}
+			if ($subquery) { $query .= "AND (".$subquery.") "; }
+		} else {
+/*
+			if (! $outstock) {
+				$query .= "AND (i.status = 'shelved' OR i.status = 'received') ";
+				if (! $badstock AND $goodstock) { $query .= "AND i.conditionid > 0 "; }
+				if (! $goodstock AND $badstock) { $query .= "AND i.conditionid < 0 "; }
+			}
+*/
+		}
+		if ($dbStartDate AND $dbEndDate) {
+			$query .= "AND i.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+		}
+		$query .= "ORDER BY IF(status='shelved' OR status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
+//		echo $query.'<BR>';
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			if (isset($serial_match[$r['partid']]) AND $serial_match[$r['partid']]<>$r['serial_no']) { continue; }
+
+			$key = $r['partid'].'.'.$r['locationid'].'.'.$r['conditionid'].'.'.$r['status'].'.'.$r['purchase_item_id'].'.'.substr($r['date_created'],0,10);
+
+			// gather unique list of partids
+			if (! isset($partids[$r['partid']])) {
+				$H = hecidb($r['partid'],'id');
+				$partids[$r['partid']] = $H[$r['partid']];
+			}
+
+			$qty = $r['qty'];
+			if ($r['serial_no']) { $qty = 1; }
+
+			if (! isset($records[$key])) {
+				$r['qty'] = 0;
+				$r['entries'] = array();
+				$records[$key] = $r;
+			}
+			$records[$key]['qty'] += $qty;
+			$records[$key]['entries'][] = array('serial_no'=>$r['serial_no'],'notes'=>$r['notes']);
+		}
 	}
 
 	$inner_display = ' style="display:none"';
@@ -162,90 +313,25 @@ To do:
 					</tr>
 	';
 
-	$part_options = '';
-	$part_str = '';
-	$partids = array();
-	$partids_csv = '';
-	$inv_rows = '';
-	if ($search) {
-		$results = hecidb($search);
-		foreach ($results as $partid => $P) {
-			// gather unique list of partids
-			$partids[$partid] = $P;
-
-			if ($partids_csv) { $partids_csv .= ','; }
-			$partids_csv .= $partid;
-		}
-	}
-
-	// get all purchase_item_id, returns_item_id, repair_item_id and sales_item_id from respective orders matching $order_search
-	$ids = array('purchase_item_id'=>array(),'returns_item_id'=>array(),'repair_item_id'=>array(),'sales_item_id'=>array());
-	$refs = array('purchase_items'=>'purchase_item_id','return_items'=>'returns_item_id','repair_items'=>'repair_item_id','sales_items'=>'sales_item_id');
-	$order_matches = 0;
-	if ($order_search) {
-		$tables = array('purchase_items'=>'po_number','return_items'=>'rma_number','repair_items'=>'ro_number','sales_items'=>'so_number');
-		foreach ($tables as $tablename => $tableid) {
-			$query = "SELECT id FROM ".$tablename." WHERE ".$tableid." = '".res($order_search)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				$ids[$refs[$tablename]][] = $r['id'];
-				$order_matches++;
-			}
-		}
-	}
-
-	$records = array();
-	$query = "SELECT * FROM inventory i ";
-	if ($order_matches>0) {
-		$query .= ", inventory_history h ";
-	}
-	$query .= "WHERE 1 = 1 ";
-	if ($partids_csv) { $query .= "AND i.partid IN (".$partids_csv.") "; }
-	if ($locationid) { $query .= "AND i.locationid = '".res($locationid)."' "; }
-	if (! $outstock) {
-		$query .= "AND (i.status = 'shelved' OR i.status = 'received') ";
-		if (! $badstock AND $goodstock) { $query .= "AND i.conditionid > 0 "; }
-		if (! $goodstock AND $badstock) { $query .= "AND i.conditionid < 0 "; }
-	}
-	if ($order_matches>0) {
-		$query .= "AND h.invid = i.id ";
-		$subquery = "";
-		foreach ($ids as $id => $arr) {
-			if (count($arr)==0) { continue; }
-
-			foreach ($arr as $item_id) {
-				if ($subquery) { $subquery .= "OR "; }
-				$subquery .= "(h.field_changed = '".$id."' AND h.value = '".$item_id."') ";
-			}
-		}
-		$query .= "AND ".$subquery;
-	}
-	$query .= "ORDER BY IF(status='shelved' OR status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
-echo $query.'<BR>';
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$key = $r['partid'].'.'.$r['locationid'].'.'.$r['conditionid'].'.'.$r['status'].'.'.$r['purchase_item_id'].'.'.substr($r['date_created'],0,10);
-
-		$qty = $r['qty'];
-		if ($r['serial_no']) { $qty = 1; }
-
-		if (! isset($records[$key])) {
-			$r['qty'] = 0;
-			$r['entries'] = array();
-			$records[$key] = $r;
-		}
-		$records[$key]['qty'] += $qty;
-		$records[$key]['entries'][] = array('serial_no'=>$r['serial_no'],'notes'=>$r['notes']);
-	}
-
+	$goodcount = 0;
+	$badcount = 0;
+	$outcount = 0;
 	foreach ($records as $r) {
 		$prefix = '';
 		$order_number = getSource($r['purchase_item_id'],'Purchase');
 		$order_ln = '';
 
+		if ($r['conditionid']>0 AND ($r['status']=='shelved' OR $r['status']=='received')) { $goodcount += $r['qty']; }
+		if ($r['conditionid']<0 AND ($r['status']=='shelved' OR $r['status']=='received')) { $badcount += $r['qty']; }
+		if ($r['status']<>'shelved' AND $r['status']<>'received') { $outcount += $r['qty']; }
+
+		// exclude results that the user hasn't included
 		if (! $goodstock AND $r['conditionid']>0) { continue; }
 		if (! $badstock AND $r['conditionid']<0) { continue; }
 		if (! $outstock AND ($r['status']<>'shelved' AND $r['status']<>'received')) { continue; }
+
+		if (! isset($qtys[$r['partid']])) { $qtys[$r['partid']] = 0; }
+		$qtys[$r['partid']] += $r['qty'];
 
 		$company = '';
 		$company_ln = '';
@@ -272,7 +358,7 @@ echo $query.'<BR>';
 		else { $qty = '0 <span class="info">('.$r['qty'].')</span>'; }
 
 		$inv_rows .= '
-		<tr class="'.$cls.'">
+		<tr class="'.$cls.'" data-partid="'.$r['partid'].'" data-role="summary">
 			<td>'.getLocation($r['locationid']).'</td>
 			<td>
 				<div class="qty inner-toggler">'.$qty.'</div>
@@ -284,7 +370,7 @@ echo $query.'<BR>';
 			<td></td>
 			<td></td>
 		</tr>
-		<tr class="inner-result"'.$inner_display.'>
+		<tr class="inner-result" data-partid="'.$r['partid'].'" data-role="inner"'.$inner_display.'>
 			<td colspan="8" class="text-center">
 				<table class="table table-condensed table-results text-left">
 		';
@@ -309,19 +395,12 @@ echo $query.'<BR>';
 		';
 	}
 
-	if ($search) {
-		$query = "SELECT * FROM inventory WHERE serial_no = '".res($search)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$P = hecidb($r['partid'],'id');
-			$partids[$r['partid']] = $P[$r['partid']];
-		}
-	}
-
 	foreach ($partids as $partid => $P) {
 		$part_str = trim($P['part'].' '.$P['heci']);
 
-		$part_options .= '<option value="'.$partid.'">'.$P['part'].' '.$P['heci'].'</option>'.chr(10);
+		$qty = 0;
+		if (isset($qtys[$partid]) AND $qtys[$partid]>0) { $qty = $qtys[$partid]; }
+		$part_options .= '<option value="'.$partid.'">Qty '.$qty.'- '.$P['part'].' '.$P['heci'].'</option>'.chr(10);
 	}
 
 	$n = count($partids);
@@ -367,8 +446,8 @@ echo $query.'<BR>';
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
 				<div class="btn-group">
-					<button type="submit" name="inventory-summary" value="1" class="btn btn-<?php echo $summary_btn; ?> btn-xs left" data-toggle="tooltip" data-placement="bottom" title="Summary Results (default)"><i class="fa fa-th-large"></i></button>
-					<button type="submit" name="inventory-detail" value="1" class="btn btn-<?php echo $detail_btn; ?> btn-xs right" data-toggle="tooltip" data-placement="bottom" title="Detail Results"><i class="fa fa-th"></i></button>
+					<button type="submit" name="inventory-summary" id="inventory-summary" value="1" class="btn btn-<?php echo $summary_btn; ?> btn-xs left" data-toggle="tooltip" data-placement="bottom" title="Summary Results (default)"><i class="fa fa-th-large"></i></button>
+					<button type="submit" name="inventory-detail" id="inventory-detail" value="1" class="btn btn-<?php echo $detail_btn; ?> btn-xs right" data-toggle="tooltip" data-placement="bottom" title="Detail Results"><i class="fa fa-th"></i></button>
 				</div>
 			</div>
 			<div class="col-sm-1">
@@ -423,15 +502,16 @@ echo $query.'<BR>';
 			</div>
 			<div class="col-sm-1 text-center">
 				<div class="btn-group">
-					<button class="btn btn-<?php echo $goodstock_btn; ?> btn-sm left" name="btn-goodstock" value="<?php echo !$goodstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Good Stock"><i class="fa fa-dot-circle-o<?php echo $goodstock_text; ?>"></i></button>
-					<button class="btn btn-<?php echo $badstock_btn; ?> btn-sm middle" name="btn-badstock" value="<?php echo !$badstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Bad Stock"><i class="fa fa-circle<?php echo $badstock_text; ?>"></i></button>
-					<button class="btn btn-<?php echo $outstock_btn; ?> btn-sm right" name="btn-outstock" value="<?php echo !$outstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Zero Stock"><i class="fa fa-minus-circle<?php echo $outstock_text; ?>"></i></button>
+					<button class="btn btn-<?php echo $goodstock_btn; ?> btn-narrow btn-sm left" name="btn-goodstock" value="<?php echo !$goodstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Good Stock"><i class="fa fa-dot-circle-o<?php echo $goodstock_text; ?>"></i> <?php echo $goodcount; ?></button>
+					<button class="btn btn-<?php echo $badstock_btn; ?> btn-narrow btn-sm middle" name="btn-badstock" value="<?php echo !$badstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Bad Stock"><i class="fa fa-circle<?php echo $badstock_text; ?>"></i> <?php echo $badcount; ?></button>
+					<button class="btn btn-<?php echo $outstock_btn; ?> btn-narrow btn-sm right" name="btn-outstock" value="<?php echo !$outstock; ?>" data-toggle="tooltip" data-placement="bottom" title="Zero Stock"><i class="fa fa-minus-circle<?php echo $outstock_text; ?>"></i> <?php echo $outcount; ?></button>
 				</div>
 			</div>
 			<div class="col-sm-2">
 				<div class="form-group pull-right">
 					<select name="companyid" size="1" class="company-selector">
 						<option value="">- Select Company -</option>
+						<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } ?>
 					</select>
 					<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
             	</div>
@@ -448,14 +528,14 @@ echo $query.'<BR>';
 	<div class="row">
 		<div class="col-sm-3">
 <?php if ($n>0) { ?>
-			<select name="revs[]" class="select2 form-control" data-placeholder="Select week(s) or leave blank for all" data-allow-clear="false" multiple="multiple">
+			<select name="revs[]" class="select2 form-control rev-select" data-placeholder="Select week(s) or leave blank for all" data-allow-clear="false" multiple="multiple">
 				<option value="">- <?php echo $n; ?> Result<?php echo $ext; ?> -</option>
 				<?php echo $part_options; ?>
 			</select>
 <?php } ?>
 		</div>
 		<div class="col-sm-6">
-			<h3 class="text-center"><?php echo $part_str; ?></h3>
+			<?php if ($n==1) { echo '<h3 class="text-center">'.$part_str.'</h3>'; } ?>
 		</div>
 		<div class="col-sm-3">
 		</div>
@@ -513,7 +593,26 @@ echo $query.'<BR>';
 				toggleResults($(this));
 			});
 			$(".location-selector").change(function() {
+				$('#loader-message').html('Please wait while Inventory is loaded...');
+				$('#loader').show();
+
 				$(this).closest("form").submit();
+			});
+			$(".rev-select").click(function() {
+				var partid = $(this).find("option:selected").val();
+
+				$(".table-inventory").find("tr").each(function() {
+					row_id = $(this).data('partid');
+					if (! row_id) { return; }
+
+					if (partid==0 || row_id==partid) {
+						if ($(this).data('role')!='inner' || ($(this).data('role')=='inner' && ! $("#inventory-detail").hasClass('btn-default'))) {
+							$(this).show();
+						}
+					} else {
+						$(this).hide();
+					}
+				});
 			});
 		});
 

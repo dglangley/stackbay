@@ -18,6 +18,7 @@
 	$seconds = array();//similar match (wildcard ending)
 	$thirds = array();//all others
 	$companies = array();
+	if (! $q) { $companies[] = array('id'=>0,'text'=>'- Reset Companies -'); }
 	$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-90));
 
 	// require string length to be at least 2 chars

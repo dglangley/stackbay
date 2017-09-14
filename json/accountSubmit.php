@@ -18,7 +18,7 @@
 
 
             $data = $_POST['test'];
-            $account = prep($data[0]);
+            $account = prep(strtoupper($data[0]));
             $carrier = prep($data[1]);
             $company = prep($data[2]);
             

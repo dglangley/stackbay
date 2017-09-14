@@ -131,12 +131,14 @@
 		$r = mysqli_fetch_assoc($result);
 		$r['oldid'] = 0;
 
+/*
 		$query2 = "SELECT inventory_companyid id FROM company_maps WHERE companyid = '".$r['id']."'; ";
 		$result2 = qdb($query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
 			$r['oldid'] = $r2['id'];
 		}
+*/
 
 		if (! $r['default_email']) {
 			$query2 = "SELECT email FROM contacts, emails WHERE companyid = '".res($r['id'])."' AND emails.contactid = contacts.id; ";

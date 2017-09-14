@@ -16,6 +16,7 @@
 		$query .= "AND (i.date_created IS NULL OR i.date_created >= '".$recent_date."') ";
 		$query .= "GROUP BY l.id ORDER BY IF(l.place LIKE '".res($q)."%',0,1), n DESC; ";
 	} else {
+		$locs[] = array('id'=>0,'text'=>'- Reset Locations -');
 		$query .= "WHERE (i.date_created >= '".$recent_date."') ";
 		$query .= "GROUP BY l.id ORDER BY n DESC LIMIT 0,10; ";
 	}

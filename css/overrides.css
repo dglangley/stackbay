@@ -1230,6 +1230,9 @@ hr.no-margin {
 .btn-flat.gray {
 	color:#fff;
 }
+.btn-narrow.btn-sm {
+	padding:5px 6px !important;
+}
 .btn-brown {
 	background-color:#ad683a;
 	color:#fff;
