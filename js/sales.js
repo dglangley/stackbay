@@ -1,4 +1,66 @@
 (function($){
+
+	// Declare functions up here
+
+	// This function toggles the red label when a company is selected
+	function companySelection(mode, companyid) {
+		var init = true;
+		$('.market-row').each(function(){
+			$(this).find(".market-company-"+ companyid).css({'font-weight': 'bold', 'font-size': '12px'});
+
+			//Count occurances in each of the columns
+			var aval = $(this).find('.bg-availability').find(".market-company-"+ companyid).length;
+			var demand = $(this).find('.bg-demand').find(".market-company-"+ companyid).length;
+
+			if(aval > 0 && demand > 0) {
+				$(this).find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+			}
+
+			if(mode == 'Buy') {
+				if(companyid) {
+					$(".market-data").find(".market-company").css({"color": "#428bca"});
+
+					$('.market-row').each(function(){
+						$(this).find('.bg-demand').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+						$(this).find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+						if(($(this).find('.bg-demand').find(".market-company-"+ companyid).length || $(this).find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').length) && init) {
+							$('#save_sales').attr("data-error", "true");
+							init = false;
+						} else if(init) {
+							$('#save_sales').attr("data-error", "");
+						}
+					});
+				}
+			} else {
+				if(companyid) {
+					$(".market-data").find(".market-company").css({"color": "#428bca"});
+					
+					$('.market-row').each(function(){
+						$(this).find('.bg-availability').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+						$(this).find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+
+						if(($(this).find('.bg-availability').find(".market-company-"+ companyid).length || $(this).find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').length) && init) {
+							$('#save_sales').attr("data-error", "true");
+							init = false;
+						} else if(init) {
+							$('#save_sales').attr("data-error", "");
+						}
+					});
+				}
+			}
+		});
+	}
+
+	$(document).on("click", "#save_sales", function(e){
+		e.preventDefault();
+
+		if($(this).attr("data-error") != "true") {
+			$('.results-form').submit();
+		} else {
+			modalAlertShow("Company Alert","Any red-highlighted companies on the page due to conflict-of-interest(s).",false);
+		}
+	});
+
 	$(document).on("keydown",".product-search",function(e){
 		if (e.keyCode == 13) {
 			e.preventDefault();
@@ -456,37 +518,7 @@
 		$(".market-data").css({'font-weight': 'normal', 'font-size': '10px'});
 		$(".market-data").find(".market-company").css({"color": "#428bca"});
 
-		$('.market-row').each(function(){
-			$(this).find(".market-company-"+ companyid).css({'font-weight': 'bold', 'font-size': '12px'});
-
-			//Count occurances in each of the columns
-			var aval = $(this).find('.bg-availability').find(".market-company-"+ companyid).length;
-			var demand = $(this).find('.bg-demand').find(".market-company-"+ companyid).length;
-
-			if(aval > 0 && demand > 0) {
-				$(this).find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-			}
-
-			if(mode == 'Buy') {
-				if(companyid) {
-					$(".market-data").find(".market-company").css({"color": "#428bca"});
-
-					$('.market-row').each(function(){
-						$(this).find('.bg-demand').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						$(this).find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					});
-				}
-			} else {
-				if(companyid) {
-					$(".market-data").find(".market-company").css({"color": "#428bca"});
-					
-					$('.market-row').each(function(){
-						$(this).find('.bg-availability').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						$(this).find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					});
-				}
-			}
-		});
+		companySelection(mode, companyid);
 	});
 
 	$(document).on("change", "#companyid", function(e){
@@ -496,37 +528,7 @@
 		$(".market-data").css({'font-weight': 'normal', 'font-size': '10px'});
 		$(".market-data").find(".market-company").css({"color": "#428bca"});
 
-		$('.market-row').each(function(){
-			$(this).find(".market-company-"+ companyid).css({'font-weight': 'bold', 'font-size': '12px'});
-
-			//Count occurances in each of the columns
-			var aval = $(this).find('.bg-availability').find(".market-company-"+ companyid).length;
-			var demand = $(this).find('.bg-demand').find(".market-company-"+ companyid).length;
-
-			if(aval > 0 && demand > 0) {
-				$(this).find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-			}
-
-			if(mode == 'Buy') {
-				if(companyid) {
-					$(".market-data").find(".market-company").css({"color": "#428bca"});
-
-					$('.market-row').each(function(){
-						$(this).find('.bg-demand').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						$(this).find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					});
-				}
-			} else {
-				if(companyid) {
-					$(".market-data").find(".market-company").css({"color": "#428bca"});
-					
-					$('.market-row').each(function(){
-						$(this).find('.bg-availability').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						$(this).find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					});
-				}
-			}
-		});
+		companySelection(mode, companyid);
 	});
 
 	$(document).on('click',".line-number-toggle",function() {
@@ -620,11 +622,11 @@
 					container.find('.bid_inputs, .seller_qty, .seller_x, .seller_price').show();
 					$('input[name="submit_type"]').val("availability");
 	
-					if(companyid) {
-						container.find(".market-company").css({"color": "#428bca"});
-						container.find('.bg-demand').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						container.find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					}
+					// if(companyid) {
+					// 	container.find(".market-company").css({"color": "#428bca"});
+					// 	container.find('.bg-demand').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+					// 	container.find('.bg-sales').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+					// }
 
 					qty = container.closest('.part_info').find('.search-qty').val();
 					price = container.closest('.part_info').find('.first .price-control').val();
@@ -651,11 +653,11 @@
 
 					var total = 0;
 
-					if(companyid) {
-						container.find(".market-company").css({"color": "#428bca"});
-						container.find('.bg-availability').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-						container.find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
-					}
+					// if(companyid) {
+					// 	container.find(".market-company").css({"color": "#428bca"});
+					// 	container.find('.bg-availability').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+					// 	container.find('.bg-purchases').find(".market-company-"+ companyid).find('.market-company').css({'color': 'red'});
+					// }
 
 					container.find('.descr-row').each(function(){
 						total += ($(this).find('.qty input').val()) * ($(this).find('.sell-price').val());
@@ -674,6 +676,8 @@
 						initial = false;
 					}
 				}
+
+				companySelection(mode, companyid);
 
 				if(row_status == 'Off') {
 					container.find('input').prop("disabled", true);

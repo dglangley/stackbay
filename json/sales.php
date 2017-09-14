@@ -80,6 +80,24 @@
 		return $data;
 	}
 
+	function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
+		global $QTYS;
+
+		$qty = 0;
+
+		if (! $partid OR ! is_numeric($partid)) { return ($qty); }
+
+		$QTYS[$partid] = 0;
+		$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
+		//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
+		$result = qdb($query) OR die(qe().' '.$query);
+		if (mysqli_num_rows($result)==0) { return ('null'); }
+		$r = mysqli_fetch_assoc($result);
+		$qty = $r['qty'];
+
+		return ($qty);
+	}
+
 	//This function loads in the entire line item
 	function listLoad($listid, $last_ln, $equipment_filter, $sort) {
 		$html = '';
@@ -264,8 +282,13 @@
 			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
-			$itemqty = getQty($partid);
-			$lineqty += $itemqty;
+			if(getQtyPatch($partid) != 'null') {
+				$itemqty = getQtyPatch($partid);
+				$lineqty += $itemqty;
+			} else {
+				$itemqty = 'null';
+			}
+
 			$results[$partid]['qty'] = $itemqty;
 
 			if ($partid_csv) { $partid_csv .= ","; }
@@ -391,7 +414,7 @@
 			$notes_flag = '<span class="item-notes"><i class="fa '.$notes_icon.'"></i></span>';
 
 			$html .= '
-                        <div class="row descr-row " style="padding:8px;">
+                        <div class="row descr-row '.($itemqty > 0 ? 'in-stock' : ($itemqty == null ? 'never-stock' : 'out-stock')).'" style="padding:8px;">
 	                        <div class="col-sm-3 remove-pad">
 								<div class="product-action text-center">
 	                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$counter.']" value="'.$partid.'"'.$chkd.'></div>
