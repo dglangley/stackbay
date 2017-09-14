@@ -30,7 +30,7 @@
 
 		$resArray = parse_bbSoap($res);
 
-		print_r($resArray);
+		//print_r($resArray);
 
 		return false;
 	}
