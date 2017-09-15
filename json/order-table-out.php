@@ -153,7 +153,7 @@
 	   if ($mode != 'update'){
 		   $row_out .= "<tr class='lazy-entry' style='display:none;'>
 					<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='".$row['line']."' data-value = '".$row['line']."' style='height:28px;padding:0;text-align:center;'></td>
-		            <td class='search_collumn'>
+		            <td class='search_collumn' colspan='3'>
 		            	<div class = 'item-selected'>
 							<select class='item_search input-xs'>
 								<option data-search = '$partid'>".$select_display."</option>
@@ -310,44 +310,45 @@
 		} else if ($mode == 'repair') {
 			$qty = 1;
 
-			// $query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
-			// $repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
+			$query_repair = "SELECT ro_number FROM repair_items WHERE id = ".prep($_REQUEST['repair']).";";
+			$repair_result = qdb($query_repair) or die(qe() . ' ' . $query_repair);
 
-			// if(mysqli_num_rows($repair_result)) {
-			// 	$repair_item = mysqli_fetch_assoc($repair_result);
-			// 	$query = "SELECT * FROM purchase_requests WHERE partid = ".prep($_REQUEST['search'])." AND ro_number = ".prep($repair_item['ro_number'])." ORDER BY requested DESC LIMIT 1;";
-			// 	$result_request = qdb($query);
+			if(mysqli_num_rows($repair_result)) {
+				$repair_item = mysqli_fetch_assoc($repair_result);
+				$query = "SELECT * FROM purchase_requests WHERE ro_number = ".prep($repair_item['ro_number'])." ORDER BY requested DESC LIMIT 1;";
+				$result_request = qdb($query);
 
-			// 	if(mysqli_num_rows($result_request)) {
-			// 		$request_item = mysqli_fetch_assoc($result_request);
-			// 		$qty = $request_item['qty'];
-			// 		//print_r($request_item);
-			// 	}
-			// }
+				if(mysqli_num_rows($result_request)) {
+					$request_item = mysqli_fetch_assoc($result_request);
+					$qty = $request_item['qty'];
+					//print_r($request_item);
+				}
+			}
 
 			//echo $qty . 'test';
 			$parts = $_REQUEST['part'];
 
-			//foreach($parts as $partid => $row) {
-				//foreach ($row as $ro_number => $row2) {
-					//foreach ($row2 as $qty => $checks) {
+			// foreach($parts as $partid => $row) {
+			// 	foreach ($row as $ro_number => $row2) {
+			// 		foreach ($row2 as $qty => $checks) {
 						$new_row = array(
 							'id' => 'new',
 							'line' => '',
-							'search' => '322405',
+							'search' => $_REQUEST['search'], 
 							'date' => date("n/j/Y"), //This is Aaron's cheater answer to an if statement. It will break when these are part of the same table
 							'qty' => $qty,
 							'uPrice' => 0.00,
 							'warranty' => 0,
 							'conditionid' => 2,
-							//'ref_1' => $r['ref_1'],
+							'ref_1' => $_REQUEST['repair'],
+							'ref_1_hidden' => $_REQUEST['repair'],
 							'ref_1_label' => 'repair_item_id',
 						);
 
 						$table .= build_row($new_row);
-					//}
-				//}
-			//}
+			// 		}
+			// 	}
+			// }
 
 				
 		} else if ($mode == 'build') {

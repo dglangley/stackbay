@@ -831,7 +831,7 @@
 
 									            	<tr class="lazy-entry" style="display:none;">
 														<td style="padding:0;"><input class="form-control input-sm" type="text" name="ni_line" placeholder="#" value="2" data-value="2" style="height:28px;padding:0;text-align:center;"></td>
-											            <td class="search_collumn">
+											            <td class="search_collumn" colspan="3">
 											            	<div class="item-selected">
 																<select class="item_search input-xs">
 																	<option data-search="<?=$partid;?>">ER-B</option>
@@ -925,7 +925,7 @@
 								        $warranty_dropdown = dropdown('warranty',$warranty,'','',false,'new_warranty');
 								?>
 								
-					            <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6; <?=(! empty($purchase_request) ? 'display:none;' : '')?>'>
+					            <tr id ='search_row' style = 'padding:50px;background-color:#eff0f6;'>
 					        		<td style='padding:0;'><input class='form-control input-sm' type='text' name='ni_line' placeholder='#' value='' style='height:28px;padding:0;text-align:center;'></td>
 							        <td colspan='3' id = 'search'>
 							            <div class='input-group' style="width: 100%;">
