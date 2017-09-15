@@ -769,7 +769,7 @@
 								<input type="checkbox" name="comm['.$C['id'].']" class="comm-item" data-repid="'.$comm_repid.'" data-amount="'.$comm_amount.'" value="'.$comm_amount.'" '.$chk.'>
 							</td>
 							<td class="col-md-2"> '.$part.' '.$heci.' </td>
-							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="history_button"><i class="fa fa-history"></i></a> </td>
+							<td class="col-md-2"> '.$serial.' <a href="javascript:void(0);" data-id="'.$inventoryid.'" class="btn-history"><i class="fa fa-history"></i></a> </td>
 							<td class="col-md-1">
 								'.$source_ln.'
 							</td>

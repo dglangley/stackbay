@@ -595,10 +595,10 @@
 											parts += "<a class='rm_button pointer text-left'><i class='fa fa-random' aria-hidden='true'></i> RM Serial</a>";
 											parts += '</li>';
 											parts += '<li>';
-											parts += "<a class='history_button pointer text-left' data-id='"+serial[0]+"'>";
+											parts += "<a class='btn-history pointer text-left' data-id='"+serial[0]+"'>";
 											parts += "<i style='margin-right: 5px;' class='fa fa-history' aria-hidden='true'></i> Show History";
 											parts += "</a>";
-												// parts += "<i style='margin-right: 5px;' class='fa fa-history history_button pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>";
+												// parts += "<i style='margin-right: 5px;' class='fa fa-history btn-history pointer' aria-hidden='true' data-id='"+serial[0]+"'></i>";
 											parts += '</li>';
 											parts += '<li>';
 											if(serial[3] != 'in repair') {

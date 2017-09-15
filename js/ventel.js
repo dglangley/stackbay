@@ -755,18 +755,73 @@
 		});
 
 		$(".location-selector").select2({
+			width: '100%',
 			placeholder: '- Select Location -',
 			ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 				url: "/json/locations.php",
 				dataType: 'json',
 				data: function (params) {
 					return {
+						noreset: $(this).data('noreset'),
 						q: params.term,//search term
 						page: params.page
 					};
 				},
 				allowClear: true,
 				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+		});
+
+		$('.condition-selector').select2({
+			width: '100%',
+			ajax: {
+				url: '/json/conditions.php',
+				dataType: 'json',
+				data: function (params) {
+					return {
+						q: params.term,//search term
+					};
+				},
+				processResults: function (data, params) {// parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+		});
+
+		$('.parts-selector').select2({
+			width: '100%',
+			ajax: {
+				url: '/json/parts-dropdown.php',
+				dataType: 'json',
+				data: function (params) {
+					return {
+						partid: $(this).data('partid'),
+						q: params.term,//search term
+					};
+				},
+				processResults: function (data, params) {// parse the results into the format expected by Select2.
 					// since we are using custom formatting functions we do not need to alter remote JSON data
 					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
@@ -865,17 +920,6 @@
 				}
 			}
 		});
-/*
-		$(".upload-type").change(function() {
-			var utype = $(this).data('target');
-			$(".datetime-picker").each(function() {
-				$(this).removeClass('hidden');
-				if ($(this).id!=utype) {
-					$(this).addClass('hidden');
-				}
-			});
-		});
-*/
 
 		$(".advanced-search").click(function() {
 			$("#advanced-search-options").toggleClass('hidden');
@@ -1068,21 +1112,6 @@
 			});
 			document.location.href = '/?listid='+$(this).data('listid')+'&pg='+$(this).data('pg')+urlstr;
 		});
-
-		/* when radio's change (see setSlider() above), hide/show product results based on the radio checkboxes */
-		// $(document).on('change', ".line-number",function() {
-		// 	var chkbox = $(this);
-		// 	var rowbody = chkbox.closest(".part_info");
-		// 	rowbody.find(".product-results").each(function() {
-		// 		if (chkbox.is(':checked')) {
-		// 			$(this).fadeOut('fast');
-		// 			rowbody.find("input").prop('disabled',true);
-		// 		} else {
-		// 			$(this).fadeIn('fast');
-		// 			rowbody.find("input").prop('disabled',false);
-		// 		}
-		// 	});
-		// });
 
 
 		$('.btn-remote').click(function() {
@@ -1297,7 +1326,7 @@
 //=================================== HISTORY ================================== 
 //==============================================================================
 
-		$(document).on("click",".history_button",function() {
+		$(document).on("click",".btn-history",function() {
 			
 			var invid = $(this).attr('data-id');
 			if(invid){
@@ -1340,6 +1369,18 @@
 //=================================== END HISTORY ================================== 
 
     });/* close $(document).ready */
+
+	jQuery.fn.populateSelected = function(id, text) {
+		/* build option that will populate the menu */
+		var option = $('<option></option>').
+			prop('selected', true).
+			text(text).
+			val(id);
+		/* insert the option (which is already 'selected'!) into the select */
+		option.appendTo($(this));
+		/* Let select2 do whatever it likes with this */
+		$(this).trigger('change');
+	};/*jQuery.fn.populateSelected*/
 
 	var last_week = '';
     // build jquery plugin for remote ajax call

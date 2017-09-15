@@ -23,14 +23,14 @@
     $query .= (($q) ? " `account_no` LIKE ".prep($q."%")." OR " : "");
 	$query .= "`companyid` = $cid ";
 	$query .= "AND `carrierid` = $carrierid ";
-	$query .= "GROUP BY `account_no` ";
+	$query .= "GROUP BY account_no, companyid ";
 	$query .= "ORDER BY IF(`companyid`=$cid,0,1), `account_no`;";
     $results = qdb($query) or die(qe()." $query");
     
     if (mysqli_num_rows($results)){
         foreach($results as $row){
 			$account = "";
-			if ($row['companyid']<>$companyid) {
+			if ($row['companyid']<>$companyid AND $row['companyid']) {
 				$account .= "<b>".getCompany($row['companyid']).":</b> ";
 			}
 			$account .= $row['account_no'];

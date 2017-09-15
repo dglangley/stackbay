@@ -1154,7 +1154,7 @@
 										<td><?=getDisposition($history['dispositionid']);?></td>
 										<td>
 											<?=getSerial($history['inventoryid']);?>
-											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="history_button" data-toggle="tooltip" data-placement="bottom" title="View Serial History"><i class="fa fa-history"></i></a><br/>
+											&nbsp;<a href="javascript:void(0);" data-id="<?=$history['inventoryid']?>" class="btn-history" data-toggle="tooltip" data-placement="bottom" title="View Serial History"><i class="fa fa-history"></i></a><br/>
 											<small class="info"><?=$history['reason']?></small>
 										</td>
 										<td><?=$status?></td>

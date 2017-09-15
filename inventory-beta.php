@@ -13,6 +13,7 @@
 To do:
 1) Incoming PO's as top, italicized lines
 2) Action column functionality
+3) What to do with customer property? In repair?
 6) Serial results should show part# in multiple-select dropdown, with a filter on Serial that can be cleared to reveal all part results
 */
 
@@ -241,7 +242,7 @@ To do:
 
 	$records = array();
 	if ($partids_csv OR $locationid OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
-		$query = "SELECT * FROM inventory i ";
+		$query = "SELECT i.* FROM inventory i ";
 		if ($order_matches>0) {
 			$query .= ", inventory_history h ";
 		}
@@ -295,7 +296,7 @@ To do:
 				$records[$key] = $r;
 			}
 			$records[$key]['qty'] += $qty;
-			$records[$key]['entries'][] = array('serial_no'=>$r['serial_no'],'notes'=>$r['notes']);
+			$records[$key]['entries'][] = array('serial_no'=>$r['serial_no'],'notes'=>$r['notes'],'id'=>$r['id']);
 		}
 	}
 
@@ -308,14 +309,16 @@ To do:
 	$inner_header = '
 					<tr class="inner-result"'.$inner_display.'>
 						<th class="col-sm-3">Serial</th>
-						<th class="col-sm-5">History</th>
+						<th class="col-sm-4">History</th>
 						<th class="col-sm-4">Notes</th>
+						<th class="col-sm-1">Action</th>
 					</tr>
 	';
 
 	$goodcount = 0;
 	$badcount = 0;
 	$outcount = 0;
+	$j = 0;
 	foreach ($records as $r) {
 		$prefix = '';
 		$order_number = getSource($r['purchase_item_id'],'Purchase');
@@ -358,30 +361,56 @@ To do:
 		else { $qty = '0 <span class="info">('.$r['qty'].')</span>'; }
 
 		$inv_rows .= '
-		<tr class="'.$cls.'" data-partid="'.$r['partid'].'" data-role="summary">
+		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
 			<td>'.getLocation($r['locationid']).'</td>
 			<td>
-				<div class="qty inner-toggler">'.$qty.'</div>
+				<div class="qty results-toggler">'.$qty.'</div>
 			</td>
 			<td>'.getCondition($r['conditionid']).'</td>
 			<td>'.$prefix.$order_number.$order_ln.'</td>
 			<td>'.$company.$company_ln.'</td>
 			<td>'.format_date($r['date_created'],'n/j/y').'</td>
 			<td></td>
-			<td></td>
+			<td class="text-center">
+				<input type="checkbox" name="partid[]" value="'.$r['partid'].'" class="item-check checkInner" checked>
+				<a href="javascript:void(0);" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
+				<div class="dropdown">
+					<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
+					<ul class="dropdown-menu pull-right text-left" role="menu">
+						<li><a href="javascript:void(0);"><i class="fa fa-pencil"></i> Edit group</i></a></li>
+					</ul>
+				</div>
+			</td>
 		</tr>
-		<tr class="inner-result" data-partid="'.$r['partid'].'" data-role="inner"'.$inner_display.'>
+		<tr class="inner-result" data-partid="'.$r['partid'].'" data-role="inner" data-row="'.$j.'"'.$inner_display.'>
 			<td colspan="8" class="text-center">
 				<table class="table table-condensed table-results text-left">
 		';
+
+		// repair link used for each serial
+		$repair_ln = '';
+		if ($r['status']=='shelved' OR $r['status']=='received') {
+			$repair_ln = '<li><a href="javascript:void(0);"><i class="fa fa-wrench"></i> Send to Repair</i></a></li>';
+		}
 
 		$inners = '';
 		foreach ($r['entries'] as $entry) {
 			$inners .= $inner_header.'
 					<tr class="">
 						<td class="col-sm-3">'.$entry['serial_no'].'</td>
-						<td class="col-sm-5"></td>
+						<td class="col-sm-4"></td>
 						<td class="col-sm-4">'.$entry['notes'].'</td>
+						<td class="col-sm-1 text-right">
+							<input type="checkbox" name="inventoryid[]" value="'.$entry['id'].'" class="item-check" checked>
+							<div class="dropdown" data-inventoryid="'.$entry['id'].'">
+								<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
+								<ul class="dropdown-menu pull-right text-left">
+									<li><a href="javascript:void(0);" data-id="'.$entry['id'].'" class="btn-history"><i class="fa fa-history"></i> History</i></a></li>
+									'.$repair_ln.'
+									<li><a href="javascript:void(0);" class="edit-inventory"><i class="fa fa-pencil"></i> Edit this entry</i></a></li>
+								</ul>
+							</div>
+						</td>
 					</tr>
 			';
 
@@ -393,6 +422,7 @@ To do:
 			</td>
 		</tr>
 		';
+		$j++;
 	}
 
 	foreach ($partids as $partid => $P) {
@@ -431,8 +461,11 @@ To do:
 			text-align:center;
 			font-weight:bold;
 		}
-		.inner-toggler {
+		.results-toggler {
 			cursor:pointer;
+		}
+		a.results-toggler {
+			margin-right:12px;
 		}
 	</style>
 </head>
@@ -441,7 +474,7 @@ To do:
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
-		<form class="form-inline" method="get" action="inventory-beta.php" enctype="multipart/form-data" >
+		<form class="form-inline" method="get" action="inventory-beta.php" enctype="multipart/form-data" id="filters-form" >
 
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
@@ -451,7 +484,7 @@ To do:
 				</div>
 			</div>
 			<div class="col-sm-1">
-				<select name="locationid" size="1" class="location-selector">
+				<select name="locationid" size="1" class="location-selector" id="location-filter">
 <?php
 					if ($locationid) { echo '<option value="'.$locationid.'" selected>'.getLocation($locationid).'</option>'.chr(10); }
 					else { echo '<option value="">- Select Location -</option>'; }
@@ -460,7 +493,7 @@ To do:
 			</div>
 			<div class="col-sm-1">
 				<div class="input-group">
-					<input type="text" name="order_search" value="<?php echo $order_search; ?>" class="form-control input-sm" placeholder="PO Search...">
+					<input type="text" name="order_search" value="<?php echo $order_search; ?>" class="form-control input-sm" placeholder="PO/RO/RMA...">
 					<span class="input-group-btn">
 						<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
 					</span>
@@ -568,7 +601,9 @@ To do:
 			<th class="col-sm-1">
 			</th>
 			<th class="col-sm-1">
-				<a href="javascript:void(0);" id="results-toggle"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
+				<input type="checkbox" value="1" class="checkAll" checked>
+				<a href="javascript:void(0);" id="results-toggle" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
+				<a href="javascript:void(0);"><i class="fa fa-chevron-down"></i></a>
 			</th>
 		</tr></thead>
 		<?php echo $inv_rows; ?>
@@ -581,18 +616,16 @@ To do:
 </div><!-- pad-wrapper -->
 
 
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/history.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/inventory.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
     <script type="text/javascript">
         $(document).ready(function() {
-			$(".inner-toggler").click(function() {
-//				$("#results-toggle").trigger();
-				toggleResults($("#results-toggle"));
+			$(".results-toggler").click(function() {
+				toggleResults();//$("#results-toggle"));
 			});
-			$("#results-toggle").click(function() {
-				toggleResults($(this));
-			});
-			$(".location-selector").change(function() {
+			$("#location-filter").change(function() {
 				$('#loader-message').html('Please wait while Inventory is loaded...');
 				$('#loader').show();
 
@@ -614,17 +647,88 @@ To do:
 					}
 				});
 			});
+			$(".checkInner").click(function(){
+				$(this).closest('tr').next('tr').find('.item-check:checkbox').not(this).prop('checked', this.checked);
+			});
+			$(".edit-inventory").click(function() {
+				var inventoryid = $(this).closest("div").data('inventoryid');
+				if (! inventoryid) { return; }
+
+				console.log(window.location.origin+"/json/inventory.php?inventoryid="+inventoryid);
+				$.ajax({
+					url: 'json/inventory.php',
+					type: 'get',
+					data: {'inventoryid':inventoryid},
+					success: function(json, status) {
+						if (json.message && json.message!='') {
+							// alert the user when there are errors
+							alert(json.message);
+							return;
+						}
+
+						var M = $("#modal-inventory");
+
+						$("#modalInventoryTitle").html(json.name);
+
+						$("#inventory-inventoryid").val(json.id);
+						$("#inventory-serial").val(json.serial_no);
+
+						$("#inventory-partid").data('partid',json.partid);
+						$("#inventory-partid").populateSelected(json.partid,json.name);
+
+						$("#inventory-locationid").populateSelected(json.locationid,json.location);
+
+						$("#inventory-conditionid").populateSelected(json.conditionid,json.condition);
+
+						$("#inventory-notes").val(json.notes);
+
+						$("#inventory-status").html(json.status);
+
+						M.modal("show");
+					},
+					error: function(xhr, desc, err) {
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+			});
+
+			$("#inventory-save").click(function() {
+				$('#loader-message').html('Please wait while updates are saved...');
+				$('#loader').show();
+
+				// check for filters form and add elements
+				var f = $(this).closest("form");
+
+				var ff = $("#filters-form");
+				ff.find("input").each(function() {
+					$('<input>').attr({
+						type: 'hidden',
+						name: $(this).attr('name'),
+						value: $(this).val(),
+					}).appendTo(f);
+				});
+				ff.find("select").each(function() {
+					$('<input>').attr({
+						type: 'hidden',
+						name: $(this).attr('name'),
+						value: $(this).val(),
+					}).appendTo(f);
+				});
+
+				f.submit();
+			});
 		});
 
-		function toggleResults(e) {
-			var toggler = e.find("sup i.fa");
+
+		function toggleResults() {
+			var toggler = $("#results-toggle").find("sup i.fa");
 			if (toggler.hasClass("fa-sort-desc")) {
 				var method = 'show';
 			} else {
 				var method = 'hide';
 			}
 
-			e.closest("table").find(".inner-result").each(function() {
+			$(".table-inventory").find(".inner-result").each(function() {
 				if (method=='show') {
 					$(this).fadeIn('fast');
 				} else {
@@ -632,7 +736,9 @@ To do:
 				}
 			});
 
-			toggler.toggleClass("fa-sort-asc fa-sort-desc");
+			$(".results-toggler").each(function() {
+				$(this).find("sup i.fa").toggleClass("fa-sort-asc fa-sort-desc");
+			});
 		}
 	</script>
 

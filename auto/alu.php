@@ -73,6 +73,46 @@
     $companyID = getCompany($manf,'name','id');
     $metaid = logSearchMeta($companyID,false,'','alu');
 
+	//CLEI: _ctl0_PageContent_myProductInfoControl_CLEI
+	//Comcode: _ctl0_PageContent_myProductInfoControl_Comcode
+	//Name: _ctl0_PageContent_myProductInfoControl_DescAbbr
+	//Descr: _ctl0_PageContent_myProductInfoControl_Descript
+	//List Price: _ctl0_PageContent_myProductInfoControl_SuggPrice
+	//Your Price: _ctl0_PageContent_myProductInfoControl_Price
+
+	$product_url = 'http://reuse.alcatel-lucent.com/ScoDotNet/Product.aspx?ProductID=';
+	for ($i=4151; $i<=4151; $i++) {
+		$res = call_remote($product_url,$i,$cookiefile,$cookiejarfile,'GET',$ch);
+
+		$dom = new domDocument;
+		$dom->loadHTML($res);
+
+		if (! $dom->getElementById('_ctl0_PageContent_myProductInfoControl_ProductInfoTable')) { continue; }
+echo $product_url.$i.'<BR>';
+
+		$clei = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_CLEI')->nodeValue);
+		$comcode = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_Comcode')->nodeValue);
+		$part = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_DescAbbr')->nodeValue);
+		$descr = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_Descript')->nodeValue);
+		$listprice = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_SuggPrice')->nodeValue);
+		$ourprice = trim($dom->getElementById('_ctl0_PageContent_myProductInfoControl_Price')->nodeValue);
+
+		if ($dom->getElementById('_ctl0_PageContent_myProductInfoControl_NoInventoryTable')) {
+			$noinv_table = $dom->getElementById('_ctl0_PageContent_myProductInfoControl_NoInventoryTable')->nodeValue;
+			if (strstr($noinv_table,'There is no available inventory for this product.')) { continue; }
+		}
+
+	    $partid = getPartId($part,$clei);
+echo $i.'. '.$part.':'.$clei.':'.$comcode.' '.$listprice.'/'.$ourprice.' = '.$partid.'<BR>';
+echo $res.'<BR>';
+echo '<BR>';
+continue;
+		if (! $partid) {
+			$partid = setPart(array('part'=>$part,'heci'=>$clei,'manf'=>'','sys'=>'','descr'=>$descr));//,'manf'=>$manf,'sys'=>'','descr'=>$desc));
+		}
+	}
+exit;
+
 
 while ($friday){
 	//While the search is still valid, loop through each page and store results

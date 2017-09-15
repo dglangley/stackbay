@@ -1,7 +1,5 @@
 <?php
-
-
-    //Standard includes section
+	include_once $_SERVER['ROOT_DIR']."/inc/dbconnect.php";
 	include_once $_SERVER['ROOT_DIR']."/inc/parts.php";
 	header('Content-Type: application/json');
     
