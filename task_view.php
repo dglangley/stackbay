@@ -7,11 +7,12 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/dictionary.php';
+	include_once $rootdir.'/inc/getCompany.php';
 
 	//Declared Variables
 	// Type of job (Service, Repair, etc.)
 	$type = ucwords(isset($_REQUEST['type']) ? $_REQUEST['type'] : 'Repair');
-	$order_number = ucwords(isset($_REQUEST['on']) ? $_REQUEST['on'] : '');
+	$order_number = ucwords(isset($_REQUEST['order']) ? $_REQUEST['order'] : '');
 	$edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
 
 	// List of subcategories
@@ -28,6 +29,11 @@
 	$expenses_data = array();
 	$closeout_data = array();
 
+	$order_details = orderDetails($order_number, $type);
+
+	// print '<pre>'.print_r($order_details, true).'</pre>';
+
+	// Contains the id of the line item (purchase_item_id, repair_item_id ....)
 	$item_id = 0;
 
 	// Disable the modules you want on the page here
@@ -40,6 +46,7 @@
 		$closeout = false;
 
 		$items = getItems($order_number);
+
 		$activity_data = grabActivities($order_number, $item_id, $type);
 		$component_data = getComponents($order_number, $item_id, $type);
 
@@ -227,7 +234,7 @@
 				}
 
 				// Grab actual available quantity for the requested component
-				$row['available'] = getAvailabled($row['partid'], $po_number);
+				$row['available'] = getAvailabled($row['partid'], $item_id);
 				$row['pulled'] = getPulled($row['partid'], $po_number);
 
 				$row['total'] = $total;
@@ -251,23 +258,17 @@
 		return $purchase_requests;
 	}
 
-	function getAvailabled($partid,$po_number=0) {
+	function getAvailabled($partid,$itemid=0) {
 		$qty = 0;
-		$query;
-		
-		$query = "SELECT SUM(i.qty) as sum FROM inventory i ";
-		if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-		$query .= "WHERE i.partid = ". prep($partid) ." AND (i.status = 'shelved' OR i.status = 'received') ";
-		if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
-		$query .= "GROUP BY i.partid ";
-		if ($po_number) { $query .= ", i.purchase_item_id "; }
-		$query .= "; ";
+
+		$query = "SELECT SUM(i.qty) as sum, i.id FROM purchase_items pi, inventory i WHERE pi.ref_1_label = 'repair_item_id' AND pi.ref_1='".res($itemid)."' AND pi.id = i.purchase_item_id AND i.partid = '".res($partid)."' AND i.qty > 0 AND (status = 'shelved' OR status = 'received')
+                UNION
+           SELECT SUM(i.qty) as sum, i.id FROM purchase_items pi, inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id = pi.id AND (pi.ref_1_label <> 'repair_item_id' OR pi.ref_1_label IS NULL) AND i.qty > 0 AND (status = 'shelved' OR status = 'received');";
 
 		$result = qdb($query) OR die(qe());
 				
-		if (mysqli_num_rows($result)>0) {
-			$results = mysqli_fetch_assoc($result);
-			$qty = ($results['sum'] ? $results['sum'] : 0);
+		 while ($row = $result->fetch_assoc()) {
+			$qty += ($row['sum'] ? $row['sum'] : 0);
 		}
 
 		return $qty;
@@ -285,6 +286,25 @@
 		}
 
 		return $qty;
+	}
+
+	function orderDetails($order, $type) {
+		$results = array();
+
+		if(strtolower($type) == 'repair') {
+			$query = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ".res($order)." AND ro.ro_number = ri.ro_number;";
+			$result = qdb($query) OR die(qe());
+					
+			// while ($row = $result->fetch_assoc()) {
+			// 	$results[] = $row;
+			// }
+
+			if (mysqli_num_rows($result)>0) {
+				$results = mysqli_fetch_assoc($result);
+			}
+		}
+
+		return $results;
 	}
 ?>
 
@@ -337,6 +357,12 @@
 			.companyid, .company_address, .company_contact {
 				overflow: hidden;
 			}
+
+			.alert-success {
+			    background-color: #dff0d8 !important;
+			    border-color: #d6e9c6 !important;
+			    color: #468847 !important;
+			}
 		</style>
 	</head>
 	
@@ -349,12 +375,12 @@
 					<?php if($type == 'Repair') { 
 						$btn_value = "test_out";
 						$btn_title = "Mark as Tested";
-						$btn_style = " btn-flat info";http://marketmanager:8888/job_view.php?type=service&on=331026&edit=true#
+						$btn_style = " btn-flat info";	//http://marketmanager:8888/job_view.php?type=service&on=331026&edit=true#
 					?>
 						<?php if($build): ?>
 							<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
-							<a href="/job_view.php?type=<?=$type;?>&on=<?=$order_number;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+							<a href="/task_view.php?type=<?=$type;?>&order=<?=$order_number;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php endif; ?>
 
 						<?php if(!$build || ($build && $ticketStatus)) { ?>
@@ -362,7 +388,7 @@
 						<?php } ?>
 						<button class="btn btn-sm btn-default <?=$btn_style;?>" type="submit" name="type" value="<?=$btn_value;?>" <?=$btn_disabled;?> title="<?=$btn_title;?>" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
 					<?php } else { ?>
-						<a href="/job_view.php?type=<?=$type;?>&on=<?=$order_number;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/task_view.php?type=<?=$type;?>&order=<?=$order_number;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
@@ -374,7 +400,7 @@
 					<div class="col-md-6" style="padding-top: 10px;">
 						<!-- <div class="col-md-8"> -->
 							<select name="task" class="form-control task-selector pull-right">
-								<option><?=$type . '# '.$order_number;?></option>
+								<option><?=$type . '# '.$order_number;?> COMPANY NAME</option>
 							</select>
 						<!-- </div> -->
 					</div>
@@ -384,110 +410,112 @@
 			</div>
 
 			<div class="row" style="height: 100%; margin: 0;">
-				<div class="col-md-2" data-page="addition" style="padding-top: 110px; background-color: #efefef; height: 100%;">
-					<p style="text-transform: uppercase; font-weight: bold;">Information</p>
-					<?php if(isset($edit) && $edit) { ?>
-						<select name="companyid" class="form-control input-xs company-selector required"><option value="25">Ventura Telephone</option></select>
+				<form action="/task_edit.php" method="post">
+					<div class="col-md-2" data-page="addition" style="padding-top: 110px; background-color: #efefef; height: 100%;">
+						<p style="text-transform: uppercase; font-weight: bold;">Information</p>
+						<?php if(isset($edit) && $edit) { ?>
+							<select name="companyid" class="form-control input-xs company-selector required"><option value="<?=$order_details['companyid'];?>"><?=getCompany($order_details['companyid']);?></option></select>
 
-						<input class="form-control input-sm" class="bid" type="text" placeholder="Bid No." value="23429879HHADI213" style="margin-bottom: 10px;">
+							<input name="bid" class="form-control input-sm" class="bid" type="text" placeholder="Bid No." value="23429879HHADI213" style="margin-bottom: 10px;">
 
-						<select name="contactid" class="form-control input-xs contact-selector required"><option value="David Langley">David Langley</option></select>
+							<select name="contactid" class="form-control input-xs contact-selector required"><option value="David Langley">David Langley</option></select>
 
-						<select name="addressid" class="form-control input-xs contact-selector required"><option value="25">3037 Golf Course Drive, Suite 2</option></select>
+							<select name="addressid" class="form-control input-xs contact-selector required"><option value="25">3037 Golf Course Drive, Suite 2</option></select>
 
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
-						<textarea id="scope" class="form-control" name="scope" rows="3" style="margin-bottom: 10px;" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
-
-						<?php if($type == 'Repair' OR $type == 'Build') { ?>
-							<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
-							<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
 							<br>
 
-							<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
-							<p>1231ASDJLK</p>
-						<?php } ?>
+							<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
+							<textarea id="scope" class="form-control" name="scope" rows="3" style="margin-bottom: 10px;" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
 
-						<?php if($type == 'Service') { ?>
-							<select name="site_contactid" class="form-control input-xs contact-selector required">
-								<option value="David Langley">David Langley</option>
-							</select>
+							<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
 
-							<select name="site_addressid" class="form-control input-xs contact-selector required"><option value="25">3037 Golf Course Drive, Suite 2</option></select>
-						<?php } ?>
-						<div class="input-group" style="margin-bottom: 10px;">
-  							<span class="input-group-addon">$</span>
-							<input class="form-control input-sm" class="total_charge" type="text" placeholder="Price" value="800.00">
-						</div>
+							<?php if($type == 'Repair' OR $type == 'Build') { ?>
+								<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
+								<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
+								<br>
 
-						<br>
+								<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
+								<p>1231ASDJLK</p>
+							<?php } ?>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
-						<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder="">Here is a scope of everything that is being done for the job.</textarea>
+							<?php if($type == 'Service') { ?>
+								<select name="site_contactid" class="form-control input-xs contact-selector required">
+									<option value="David Langley">David Langley</option>
+								</select>
 
-						<br>
+								<select name="site_addressid" class="form-control input-xs contact-selector required"><option value="25">3037 Golf Course Drive, Suite 2</option></select>
+							<?php } ?>
+							<div class="input-group" style="margin-bottom: 10px;">
+	  							<span class="input-group-addon">$</span>
+								<input class="form-control input-sm" class="total_charge" type="text" placeholder="Price" value="800.00">
+							</div>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
-
-						<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
-						<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder="">These notes are only seen by us and no one else.</textarea>
-
-					<?php } else { ?>
-						<p class="companyid" data-companyid="25"><span class="company_text" style="font-weight: bold; font-size: 15px;">Ventura Telephone</span></p>
-
-						<p class="bid">23429879HHADI213</p>
-					
-						<p class="company_contact" data-contactid="">David Langley</p>
-
-						<p class="company_address" data-addressid=""><span class="line_1">3037 Golf Course Drive, Suite 2</span><br>
-						Ventura, CA 93003</p>
-
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
-						<p class="scope">Here is a scope of everything that is being done for the job.</p>
-
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
-
-						<?php if($type == 'Repair' OR $type == 'Build') { ?>
-							<br>
-							<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
-							<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
 							<br>
 
-							<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
-							<p>1231ASDJLK</p>
+							<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
+							<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder="">Here is a scope of everything that is being done for the job.</textarea>
 
-							<p class="total_charge">$800.00</p>
+							<br>
+
+							<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
+
+							<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
+							<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder="">These notes are only seen by us and no one else.</textarea>
+
+						<?php } else { ?>
+							<p class="companyid" data-companyid="25"><span class="company_text" style="font-weight: bold; font-size: 15px;"><?=getCompany($order_details['companyid']);?></span></p>
+
+							<p class="bid">23429879HHADI213</p>
+						
+							<p class="company_contact" data-contactid="">David Langley</p>
+
+							<p class="company_address" data-addressid=""><span class="line_1">3037 Golf Course Drive, Suite 2</span><br>
+							Ventura, CA 93003</p>
+
+							<br>
+
+							<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
+							<p class="scope">Here is a scope of everything that is being done for the job.</p>
+
+							<br>
+
+							<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
+
+							<?php if($type == 'Repair' OR $type == 'Build') { ?>
+								<br>
+								<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
+								<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
+								<br>
+
+								<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
+								<p>1231ASDJLK</p>
+
+								<p class="total_charge">$800.00</p>
+							<?php } ?>
+
+							<?php if($type == 'Service') { ?>
+								<p class="site_contact">David Langley</p>
+
+								<p class="site_address"><span class="line_1">3037 Golf Course Drive, Suite 2</span><br>
+								Ventura, CA 93003<br></p>
+
+								<p class="total_charge">$800.00</p>
+							<?php } ?>
+
+							<br>
+
+							<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
+							<p class="public_notes">Here is a scope of everything that is being done for the job.</p>
+
+							<br>
+
+							<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
+
+							<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
+							<p class="private_notes">These notes are only seen by us and no one else.</p>
 						<?php } ?>
-
-						<?php if($type == 'Service') { ?>
-							<p class="site_contact">David Langley</p>
-
-							<p class="site_address"><span class="line_1">3037 Golf Course Drive, Suite 2</span><br>
-							Ventura, CA 93003<br></p>
-
-							<p class="total_charge">$800.00</p>
-						<?php } ?>
-
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
-						<p class="public_notes">Here is a scope of everything that is being done for the job.</p>
-
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
-
-						<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
-						<p class="private_notes">These notes are only seen by us and no one else.</p>
-					<?php } ?>
-				</div>
+					</div>
+				</form>
 						
 				<div class="col-sm-10" style="padding-top: 95px;">
 
@@ -548,7 +576,7 @@
 									</div>
 
 									<?php
-										if($activity_data)
+										if($activity_data) {
 										foreach($activity_data as $activity_row):
 									?>
 										<hr>
@@ -557,7 +585,7 @@
 											<div class="col-md-4"><?=getContact($activity_row['techid'], 'userid');?></div>
 											<div class="col-md-6"><?=$activity_row['notes'];?></div>
 										</div>
-									<?php endforeach; ?>
+									<?php endforeach; } ?>
 								</section>
 							<?php } ?>
 						</div><!-- Activity pane -->
@@ -692,7 +720,7 @@
 											<!-- <h4>Materials</h4> -->
 										</div>
 										<div class="col-sm-6">
-											<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status pull-right" type="submit">
+											<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status pull-right modal_request" type="submit">
 									        	<i class="fa fa-plus"></i>	
 									        </button>
 								        </div>
@@ -713,7 +741,7 @@
 
 										<div class="row list">
 											<div class="col-md-3">
-												<span class="descr-label"><?=trim(format($row['partid'], true));?></span>
+												<span class="descr-label part_description" data-request="<?=$row['totalOrdered'];?>"><?=trim(format($row['partid'], true));?></span>
 											</div>
 											<div class="col-md-1"><?=$row['totalOrdered'];?></div>
 											<div class="col-md-2">
@@ -723,7 +751,7 @@
 													} else if(($row['totalOrdered'] - $row['pulled'] > 0)) {
 														echo "<span style='color: #8a6d3b;'>Pending</span>";
 													} else if(($row['totalOrdered'] - $row['pulled'] <= 0)) {
-														echo "<span style='color: #3c763d;'>Completed</span>";
+														echo "<span style='color: #3c763d;'>Pull from Stock</span>";
 													} else if($row['status'] == 'Void') {
 														echo "<span style='color: #a94442;'>Canceled</span>";
 													}
@@ -731,10 +759,10 @@
 											</div>
 											<div class="col-md-1"><?=$row['available'];?></div>
 											<div class="col-md-1">
-												<?=$row['pulled'];?> 
+												<?=$row['totalReceived'];?> 
 												<?php
-													if(($row['available'] - $row['pulled']) > 0) {
-														echo '<a style="margin-left: 10px;" href="#" class="btn btn-default btn-sm text-info"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
+													if(($row['available'] - $row['totalReceived']) > 0) {
+														echo '<a style="margin-left: 10px;" href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 													}
 												?>
 											</div>
@@ -845,5 +873,17 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
+
+		<script type="text/javascript">
+			(function($) {
+				var url = window.location.href;
+				var activeTab = url.substring(url.indexOf("#") + 1);
+				//alert(activeTab);
+				// if(activeTab) {
+				// 	$(".tab-pane").removeClass("active in");
+				// 	$("#" + activeTab).addClass("active in");
+				// }
+			})(jQuery);
+		</script>
 	</body>
 </html>
