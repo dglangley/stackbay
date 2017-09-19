@@ -131,6 +131,7 @@
 		$grouped[$i]['warranty'] = $r['warranty'];
 		$grouped[$i]['ln'] = $r['line_number'];
 		$grouped[$i]['qty_recd'] = 0;
+		$qty_recd = 0;
 		$qty_billed = 0;
 		$amount_billed = $r['price'];
 

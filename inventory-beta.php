@@ -647,9 +647,6 @@ To do:
 					}
 				});
 			});
-			$(".checkInner").click(function(){
-				$(this).closest('tr').next('tr').find('.item-check:checkbox').not(this).prop('checked', this.checked);
-			});
 			$(".edit-inventory").click(function() {
 				var inventoryid = $(this).closest("div").data('inventoryid');
 				if (! inventoryid) { return; }

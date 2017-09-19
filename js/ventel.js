@@ -361,6 +361,9 @@
         $(".checkAll").on('click',function(){
             jQuery(this).closest('.table').find('.item-check:checkbox').not(this).prop('checked', this.checked);
         });
+		$(".checkInner").click(function(){
+			$(this).closest('tr').next('tr').find('.item-check:checkbox').not(this).prop('checked', this.checked);
+		});
 		/* must use this click method for ajax-generated content */
         $("body").on('click','.checkTargetAll',function(){
             jQuery(this).closest($(this).data('target')).find('.item-check:checkbox').not(this).prop('checked', this.checked);
