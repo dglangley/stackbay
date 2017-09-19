@@ -8,6 +8,8 @@
 				$T['order'] = '';
 				$T['items'] = '';
 				$T['item_label'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'IT';
 				break;
 
 			case 'Return':
@@ -16,6 +18,7 @@
 				$T['items'] = 'return_items';
 				$T['item_label'] = 'return_item_id';
 				$T['inventory_label'] = 'returns_item_id';
+				$T['abbrev'] = 'RMA';
 				break;
 
 			case 'Purchase':
@@ -24,6 +27,7 @@
 				$T['items'] = 'purchase_items';
 				$T['item_label'] = 'purchase_item_id';
 				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'PO';
 				break;
 
 			case 'Repair':
@@ -32,6 +36,7 @@
 				$T['items'] = 'repair_items';
 				$T['item_label'] = 'repair_item_id';
 				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'RO';
 				break;
 
 			case 'Sale':
@@ -41,6 +46,7 @@
 				$T['items'] = 'sales_items';
 				$T['item_label'] = 'sales_item_id';
 				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'SO';
 				break;
 		}
 

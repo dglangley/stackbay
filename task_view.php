@@ -342,9 +342,9 @@
 	
 	<body class="sub-nav" data-order-type="<?=$type?>" data-order-number="<?=$order_number?>">
 	<!---------------- Begin the header output  ---------------------->
-		<div class="container-fluid pad-wrapper data-load">
+		<div class="container-fluid data-load full-height">
 			<?php include 'inc/navbar.php'; include 'modal/package.php';?>
-			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
+			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
 					<?php if($type == 'Repair') { 
 						$btn_value = "test_out";
@@ -384,9 +384,9 @@
 			</div>
 
 			<div class="row" style="height: 100%; margin: 0;">
-				<div class="col-md-2" data-page="addition" style="padding-top: 110px; background-color: #efefef; height: 100%;">
-					<p style="text-transform: uppercase; font-weight: bold;">Information</p>
-					<?php if(isset($edit) && $edit) { ?>
+				<div class="col-md-2 sidebar" data-page="addition">
+					<h4 class="section-header">Information</h4>
+					<?php if($edit) { ?>
 						<select name="companyid" class="form-control input-xs company-selector required"><option value="25">Ventura Telephone</option></select>
 
 						<input class="form-control input-sm" class="bid" type="text" placeholder="Bid No." value="23429879HHADI213" style="margin-bottom: 10px;">
@@ -397,17 +397,17 @@
 
 						<br>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
+						<p class="section-header">Scope</p>
 						<textarea id="scope" class="form-control" name="scope" rows="3" style="margin-bottom: 10px;" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
+						<p class="section-header">Task Details</p>
 
 						<?php if($type == 'Repair' OR $type == 'Build') { ?>
 							<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
 							<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
 							<br>
 
-							<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
+							<p class="section-header">Serial(s):</p>
 							<p>1231ASDJLK</p>
 						<?php } ?>
 
@@ -425,18 +425,11 @@
 
 						<br>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
+						<p class="section-header">Public Notes</p>
 						<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder="">Here is a scope of everything that is being done for the job.</textarea>
-
-						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
-
-						<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
-						<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder="">These notes are only seen by us and no one else.</textarea>
-
 					<?php } else { ?>
-						<p class="companyid" data-companyid="25"><span class="company_text" style="font-weight: bold; font-size: 15px;">Ventura Telephone</span></p>
+
+						<p class="companyid" data-companyid="25"><span class="company-text">Ventura Telephone</span></p>
 
 						<p class="bid">23429879HHADI213</p>
 					
@@ -447,12 +440,12 @@
 
 						<br>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Scope</p>
+						<p class="section-header">Scope</p>
 						<p class="scope">Here is a scope of everything that is being done for the job.</p>
 
 						<br>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Task Details</p>
+						<p class="section-header">Task Details</p>
 
 						<?php if($type == 'Repair' OR $type == 'Build') { ?>
 							<br>
@@ -460,7 +453,7 @@
 							<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
 							<br>
 
-							<p style="text-transform: uppercase; font-weight: bold;">Serial(s):</p>
+							<p class="section-header">Serial(s):</p>
 							<p>1231ASDJLK</p>
 
 							<p class="total_charge">$800.00</p>
@@ -477,16 +470,21 @@
 
 						<br>
 
-						<p style="text-transform: uppercase; font-weight: bold;">Public Notes</p>
+						<p class="section-header">Public Notes</p>
 						<p class="public_notes">Here is a scope of everything that is being done for the job.</p>
+					<?php } ?>
 
 						<br>
-
-						<p style="text-transform: uppercase; font-weight: bold;">Internal Use Only</p>
-
-						<!-- <p style="text-transform: uppercase; font-weight: bold;">Private Notes</p> -->
-						<p class="private_notes">These notes are only seen by us and no one else.</p>
+						<div class="sidebar-footer">
+							<p class="section-header">Internal Use Only</p>
+					<?php if ($edit) { ?>
+							<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder="">These notes are only seen by us and no one else.</textarea>
+					<?php } else { ?>
+							<p class="private_notes">These notes are only seen by us and no one else.</p>
 					<?php } ?>
+
+						</div>
+
 				</div>
 						
 				<div class="col-sm-10" style="padding-top: 95px;">

@@ -576,18 +576,17 @@
 					if($order != 'ro' && $order != 'rma' && $order != 'bo') {
 						echo'    	<td class="status text-right">';		
 						if($order == 's') {
-							echo'			<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
+//							echo '<a href="/rma.php?on='.$order_num.'" class="rma_icon"><i style="margin-right: 5px;" class="fa fa-question-circle-o" aria-hidden="true"></i></a>';
 						}
 
 						echo'			<a href="/'.($order == 'p' ? 'inventory_add' : 'shipping').'.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
-						//if(in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES)) {
 						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
-							echo'		<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+							echo '<a href="/order_form.php?on='.$order_num.'&ps='.$order.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						}
 						echo'		</td>'; 			
 					} else if($order == 'rma'){
-						echo'    	<td class="status text-right">';	
-						echo'			<a href="/rma_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
+						echo '<td class="status text-right">';	
+						echo '<a href="/rma_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
 						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
 							echo'		<a href="/rma.php?rma='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 						}
