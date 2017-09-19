@@ -834,7 +834,7 @@
 											            <td class="search_collumn" colspan="3">
 											            	<div class="item-selected">
 																<select class="item_search input-xs">
-																	<option data-search="<?=$partid;?>">ER-B</option>
+																	<option data-search="<?=$partid;?>"><?=getPart($partid);?></option>
 																</select>
 															</div>
 														</td>

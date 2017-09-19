@@ -2895,10 +2895,11 @@
    		    var lineNumber = sub_row.find("input[name=ni_line]").val();
    		    var warranty = sub_row.find(".warranty").val();
 			var conditionid = sub_row.find(".conditionid").val();
-			var line_ref_1 = '';
-			var line_ref_1_label = '';
-				line_ref_1 = sub_row.find(".line_ref_1").val();
-				line_ref_1_label = sub_row.find(".line_ref_1").parent().data('label');
+			var line_ref_1 = sub_row.find(".line_ref_1").val();
+			var line_ref_1_label = sub_row.find(".line_ref_1").parent().data('label');
+
+			var clone_ref_1 = sub_row.prev().find(".line_ref_1").clone();
+			var clone_ref_2 = sub_row.prev().find(".line_ref_2").clone();
 //	    	var partid = row.attr("data-line-id");
 
 			console.log(window.location.origin+"/json/order-table-out.php?line="+lineNumber+"&search="+search+"&date="+date+"&qty="+qty+"&unitPrice="+price+"&warranty="+warranty+"&conditionid="+conditionid+"&id="+line_item_id+"&mode="+mode);
@@ -2926,6 +2927,8 @@
 				success: function(row_out) {
 					if (mode=='update') {
 						$("#right_side_main").find("tr:nth-child("+editRow+")").replaceWith(row_out);
+						$("#right_side_main").find("tr:nth-child("+editRow+")").find(".line_ref_1").replaceWith(clone_ref_1);
+						$("#right_side_main").find("tr:nth-child("+editRow+")").find(".line_ref_2").replaceWith(clone_ref_2);
 						$('#order_total').val(updateTotal());
 					} else if (mode=='append') {
 						$("#right_side_main").append(row_out);
