@@ -1818,12 +1818,18 @@ a > .icon-ar.icon-ar-inverse:hover {
 /*** SIDEBAR AND RELATED CLASSES ***/
 .sidebar {
 	padding-top:110px;
-	background-color:#efefef;
 	height:100%;
 	overflow:auto;
 	margin-bottom:150px;
-	box-shadow: 1px 0px 1px #ddd;
+	box-shadow: 1px -1px 1px #ddd;
 	border-right:1px solid #ccc;
+	border-bottom:0px;
+
+	background-color:#efefef;
+    background: -webkit-linear-gradient(#efefef, #f7f7f7;);
+    background: -o-linear-gradient(#efefef, #f7f7f7);
+    background: -moz-linear-gradient(#efefef, #f7f7f7);
+    background: linear-gradient(#efefef, #f7f7f7);
 }
 .section-header {
 	text-transform: uppercase;
