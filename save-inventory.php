@@ -1,5 +1,8 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setItem.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 
 	$inventoryid = 0;
@@ -14,6 +17,8 @@
 	if (isset($_REQUEST['inventory-serial']) AND trim($_REQUEST['inventory-serial'])) { $serial = trim($_REQUEST['inventory-serial']); }
 	$notes = '';
 	if (isset($_REQUEST['inventory-notes']) AND trim($_REQUEST['inventory-notes'])) { $notes = trim($_REQUEST['inventory-notes']); }
+	$status = '';
+	if (isset($_REQUEST['inventory-status']) AND trim($_REQUEST['inventory-status'])) { $status = trim($_REQUEST['inventory-status']); }
 
 	$serial = strtoupper($serial);
 
@@ -21,16 +26,47 @@
 		jsonDie("No inventoryid!");
 	}
 
+	$order_number = 0;
+
 	$query = "UPDATE inventory SET ";
-	$query .= "serial_no = ";
-	if ($serial) { $query .= "'".res($serial)."', "; } else { $query .= "NULL, "; }
-	$query .= "partid = '".res($partid)."', ";
-	$query .= "locationid = '".res($locationid)."', ";
-	$query .= "conditionid = '".res($conditionid)."', ";
-	$query .= "notes = ";
-	if ($notes) { $query .= "'".res($notes)."' "; } else { $query .= "NULL "; }
+	if ($status) {
+			$query .= "status = '".res($status)."' ";
+
+			if ($status=='in repair') {
+				// get partid for creating repair items record
+				$query2 = "SELECT partid FROM inventory WHERE id = '".res($inventoryid)."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				if (mysqli_num_rows($result2)==0) {
+					die("Could not find inventory record for $inventoryid");
+				}
+				$r2 = mysqli_fetch_assoc($result2);
+				$partid = $r2['partid'];
+
+				$due_date = format_date($today,'Y-m-d',array('d'=>30));
+
+				// when sending a unit to repair, generate the repair order here and then use the repair item id as part
+				// of the inventory update query that we started above
+				$order_number = setOrder('Repair');
+				$repair_item_id = setItem('Repair',$order_number,$partid,1,1,'0.00',$due_date,$inventoryid);
+
+				$query .= ", repair_item_id = '".res($repair_item_id)."' ";
+			}
+	} else {
+		$query .= "serial_no = ";
+		if ($serial) { $query .= "'".res($serial)."', "; } else { $query .= "NULL, "; }
+		$query .= "partid = '".res($partid)."', ";
+		$query .= "locationid = '".res($locationid)."', ";
+		$query .= "conditionid = '".res($conditionid)."', ";
+		$query .= "notes = ";
+		if ($notes) { $query .= "'".res($notes)."' "; } else { $query .= "NULL "; }
+	}
 	$query .= "WHERE id = '".res($inventoryid)."' LIMIT 1; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	if ($status=='in repair' AND $order_number) {
+		header('Location: /order_form.php?ps=repair&on='.$order_number);
+		exit;
+	}
 
 	$params = '';
 	if (isset($_REQUEST['order_search'])) {

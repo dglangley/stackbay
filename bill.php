@@ -151,7 +151,7 @@
 			$H = hecidb($r['partid'],'id');
 			$descr = display_part($H[$r['partid']]);
 		}
-//		$billed_qty = 0;
+		$billed_qty = 0;
 //		if ($bill_no) { $billed_qty = $r['billed_qty']; }
 
 		$bi_id = 0;
@@ -224,7 +224,9 @@
 					<tr class="warning">
 						<td>'.$r['line_number'].'</td>
 						<td>
-							<input type="hidden" name="items['.$i.']" value="'.$itemid.'">
+							<input type="hidden" name="items['.$i.']" value="'.$r['id'].'">
+							<input type="hidden" name="item_labels['.$i.']" value="'.$T['item_label'].'">
+							<input type="hidden" name="bill_items['.$i.']" value="'.$itemid.'">
 							<input type="hidden" name="partids['.$i.']" value="'.$r['partid'].'">
 							<input type="hidden" name="amounts['.$i.']" value="'.$r['price'].'">
 							<input type="hidden" name="warranties['.$i.']" value="'.$r['warranty'].'">

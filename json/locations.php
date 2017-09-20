@@ -14,12 +14,12 @@
 	$query .= "LEFT JOIN inventory i ON i.locationid = l.id ";
 	// get most recent popular locations
 	if ($q) {
-		$query .= "WHERE (CONCAT(l.place,'-',l.instance) RLIKE '".res($q)."' OR CONCAT(l.place,l.instance) RLIKE '".res($q)."') ";
+		$query .= "WHERE (CONCAT(l.place,'-',l.instance) RLIKE '".res($q)."' OR CONCAT(l.place,l.instance) RLIKE '".res($q)."' OR l.place RLIKE '".res($q)."') ";
 		$query .= "AND (i.date_created IS NULL OR i.date_created >= '".$recent_date."') ";
 		$query .= "GROUP BY l.id ORDER BY IF(l.place LIKE '".res($q)."%',0,1), n DESC; ";
 	} else {
 		if (! $noreset) {
-			$locs[] = array('id'=>0,'text'=>'- Reset Locations -');
+			$locs[] = array('id'=>0,'text'=>'- Reset Locs -');
 		}
 		$query .= "WHERE (i.date_created >= '".$recent_date."') ";
 		$query .= "GROUP BY l.id ORDER BY n DESC LIMIT 0,10; ";

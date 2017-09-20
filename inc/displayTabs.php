@@ -114,6 +114,7 @@
 					'aliases'=>array('/manage_inventory.php','/parts.php'),
 					'sub' => $inventory_sub,
 				),
+/*
 				array(
 					'action'=>'/inventory-beta.php',
 					'image'=>'<i class="fa fa-qrcode"></i>',
@@ -121,6 +122,7 @@
 					'aliases'=>array(),
 					'sub' =>'',
 				),
+*/
 			),
 		'right' =>
 			array(

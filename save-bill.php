@@ -2,8 +2,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
+	$bill_items = array();
+	if (isset($_REQUEST['bill_items'])) { $bill_items = $_REQUEST['bill_items']; }
 	$items = array();
 	if (isset($_REQUEST['items'])) { $items = $_REQUEST['items']; }
+	$item_labels = array();
+	if (isset($_REQUEST['item_labels'])) { $item_labels = $_REQUEST['item_labels']; }
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 	$qtys = array();
@@ -49,9 +53,14 @@
 		$bill_no = qid();
 	}
 
-	foreach ($items as $i => $itemid) {
+	foreach ($bill_items as $i => $id) {
 		$partid = 0;
 		if (isset($partids[$i])) { $partid = $partids[$i]; }
+		$item_id = 0;
+		if (isset($items[$i])) { $item_id = $items[$i]; }
+		$item_id_label = '';
+		if (isset($item_labels[$i])) { $item_id_label = $item_labels[$i]; }
+		if ($item_id AND ! $item_id_label) { $item_id_label = 'purchase_item_id'; }
 		$qty = 0;
 		if (isset($qtys[$i])) { $qty = $qtys[$i]; }
 		$amount = '';
@@ -61,27 +70,29 @@
 		$ln = 0;
 		if (isset($lns[$i])) { $ln = $lns[$i]; }
 
-		$query = "REPLACE bill_items (bill_no, partid, memo, qty, amount, warranty, line_number";
-		if ($itemid) { $query .= ", id"; }
-		$query .= ") VALUES ('".$bill_no."','".$partid."',NULL,'".$qty."','".$amount."','".$warrantyid."',";
+		$query = "REPLACE bill_items (bill_no, partid, memo, qty, amount, item_id, item_id_label, warranty, line_number";
+		if ($id) { $query .= ", id"; }
+		$query .= ") VALUES ('".$bill_no."','".$partid."',NULL,'".$qty."','".$amount."',";
+		if ($item_id) { $query .= "'".res($item_id)."','".res($item_id_label)."',"; } else { $query .= "NULL,NULL,"; }
+		$query .= "'".$warrantyid."',";
 		if ($ln OR $ln===0) { $query .= "'".$ln."'"; } else { $query .= "NULL"; }
-		if ($itemid) { $query .= ",'".$itemid."'"; }
+		if ($id) { $query .= ",'".$id."'"; }
 		$query .= "); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 		// delete before re-adding all
-		if ($itemid) {
-			$query = "DELETE FROM bill_shipments WHERE bill_item_id = '".$itemid."'; ";
+		if ($id) {
+			$query = "DELETE FROM bill_shipments WHERE bill_item_id = '".$id."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 		} else {
-			$itemid = qid();//from insert above
+			$id = qid();//from insert above
 		}
 
 		$inv = array();
 		if (isset($inventoryid[$i])) { $inv = $inventoryid[$i]; }
 		foreach ($inv as $invid) {
 			$query = "REPLACE bill_shipments (inventoryid, packageid, bill_item_id) ";
-			$query .= "VALUES ('".$invid."',NULL,'".$itemid."'); ";
+			$query .= "VALUES ('".$invid."',NULL,'".$id."'); ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 		}
 	}

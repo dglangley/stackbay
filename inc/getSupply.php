@@ -170,9 +170,21 @@
 			if (! isset($limited[$keyword])) { continue; }
 
 			if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
-			if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
+//			if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
 			if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //			$bbstr .= $keyword.chr(10);
+
+			// gotta hit brokerbin individually because SOAP
+			if ($RLOG['bb']) {
+				$bb = bb($keyword);
+				if ($bb_err) {
+					$err[] = 'bb';
+					$errmsgs[] = $bb_err;
+				}
+			} else if ($REMOTES['bb']['setting']=='N') {
+				$err[] = 'bb';
+				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
+			}
 
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
 			if ($RLOG['te']) {

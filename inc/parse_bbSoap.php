@@ -23,7 +23,7 @@
 
 		$searchid;
 
-		print '<pre>' . print_r($res, true) . '</pre>';
+		//print '<pre>' . print_r($res, true) . '</pre>';
 
 		$resArray = array();
 		$inserts = array();//all the records to be added
@@ -80,7 +80,7 @@
 			}
 		}
 
-		print '<pre>' . print_r($inserts, true) . '</pre>';
+		//print '<pre>' . print_r($inserts, true) . '</pre>';
 
 		if ($return_type=='db') { return true; }
 		else { return ($resArray); }
