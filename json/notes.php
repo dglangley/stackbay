@@ -3,10 +3,9 @@
 	include_once '../inc/format_date.php';
 	include_once '../inc/format_price.php';
 	include_once '../inc/getUser.php';
-	include_once '../inc/getPart.php';
-	header("Content-Type: application/json", true);
 
 	function reportError($err) {
+		header("Content-Type: application/json", true);
 		echo json_encode(array('message'=>$err));
 		exit;
 	}
@@ -32,7 +31,8 @@
 	if (! $messageid AND ! $partid) {
 		$query = "SELECT messages.id as messageid, messages.datetime, messages.message as note, messages.link, contacts.name, ";
 		$query .= "read_datetime, click_datetime, notifications.id, messages.ref_1, messages.ref_1_label ";
-		$query .= "FROM notifications, prices, users, contacts, messages ";
+		$query .= "FROM notifications, users, contacts, messages ";
+		$query .= "LEFT JOIN prices ON messageid = messages.id ";
 		$query .= "WHERE notifications.userid = '".$userid."' AND notifications.messageid = messages.id ";
 		$query .= "AND contacts.id = users.contactid AND users.id = messages.userid ";
 		$query .= "GROUP BY messages.id ";
@@ -99,6 +99,7 @@
 			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
 		}
 
+		header("Content-Type: application/json", true);
 		echo json_encode(array('results'=>$notes));
 		exit;
 	}
@@ -191,5 +192,6 @@
 		$notes[] = array('user'=>'Sam','date'=>'2/13/16 11:30am','note'=>'Sell this or die!');
 	}
 
+	header("Content-Type: application/json", true);
 	echo json_encode(array('results'=>$notes));
 	exit;

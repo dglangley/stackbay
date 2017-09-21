@@ -963,25 +963,28 @@ tr.info:hover td, td.info:hover {
 
 
 /***** NOTIFICATIONS *****/
+.pop-dialog .body {
+	padding:10px 10px 0px 10px;
+}
 .navbar-inverse .notification-dropdown .count {
 	background:#b94a48;
 }
 .notification-dropdown {
 	text-align:left;
 }
-.navbar-inverse .pop-dialog .notifications {
+.notifications {
 	width:400px;
 }
-.navbar-inverse .pop-dialog .notifications .item {
-	padding-left:0px;
+.notifications .item {
+	padding-left:0px !important;
 }
-.navbar-inverse .pop-dialog .notifications .item.unread {
+.notifications .item.unread {
 	background-color:#fffff5;
 }
-.navbar-inverse .pop-dialog .notifications .item.unread .time {
+.notifications .item.unread .time {
 	color:#b94a48;
 }
-.navbar-inverse .pop-dialog .notifications .item.unviewed {
+.notifications .item.unviewed {
 	background-color:#f3f7fa;
 }
 .notifications .item .user {

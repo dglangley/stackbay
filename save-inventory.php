@@ -96,6 +96,6 @@
 
 	if ($params) { $params = '?'.$params; }
 
-	header('Location: /inventory-beta.php'.$params);
+	header('Location: /inventory.php'.$params);
 	exit;
 ?>

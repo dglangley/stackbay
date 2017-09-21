@@ -311,6 +311,8 @@
 		});
 		$('.notification-dropdown .trigger').on('click',function(e) {
 			var notif = $(this).closest(".notification-dropdown").find(".notifications:first");
+			notif.html('<div class="text-center"><i class="fa fa-refresh fa-spin fa-5x fa-fw"></i></div>');
+
 			$(this).find(".count").css({display:'none',visibility:'hidden'});
 
 	        console.log(window.location.origin+"/json/notes.php");
@@ -320,7 +322,7 @@
 				dataType: 'json',
 				success: function(json, status) {
 					if (json.results) {
-						var notif_html = '';
+						notif.html("");
 
 	                	$.each(json.results, function(i, row) {
 							var read_class = '';
@@ -335,17 +337,18 @@
 									row.note += title[i] + ' ';
 								}
 							}
-							notif_html += '<a href="javascript:viewNotification(\''+row.messageid+'\',\''+row.search+'\',\''+row.link+'\')" class="item'+read_class+'">'+
+							var notif_html = '<a href="javascript:viewNotification(\''+row.messageid+'\',\''+row.search+'\',\''+row.link+'\')" class="item'+read_class+'">'+
 								'<div class="user fa-stack fa-lg">'+
 									'<i class="fa fa-user fa-stack-2x text-warning"></i><span class="fa-stack-1x user-text">'+row.name+'</span>'+
 								'</div> '+
 								'<span class="time pull-right"><i class="fa fa-clock-o"></i> '+row.since+'</span>'+
 								'<div class="note"><strong>'+row.part_label+'</strong><br/>'+row.note+'</div> '+
 								'</a>';
-						})
+							notif.append(notif_html);
+						});
 
-						notif.html(notif_html);
 					} else {
+						notif.html("");
 						var message = 'There was an error processing your request!';
 						if (json.message) { message = json.message; } // show response from the php script.
 						alert(message);

@@ -176,7 +176,7 @@
 	if ($num_notifications==0) { $read_notifications = 'no'; }
 	else { $read_notifications = $num_notifications; }
 ?>
-                <a href="#" class="trigger">
+                <a href="javascript:void(0);" class="trigger">
                     <i class="fa fa-comments-o"></i>
                     <?php if ($num_notifications>0) { echo '<span class="count" style="background:#b94a48">'.$num_notifications.'</span>'; } ?>
                 </a>

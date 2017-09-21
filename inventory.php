@@ -509,7 +509,7 @@ To do:
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
-		<form class="form-inline" method="get" action="inventory-beta.php" enctype="multipart/form-data" id="filters-form" >
+		<form class="form-inline" method="get" action="inventory.php" enctype="multipart/form-data" id="filters-form" >
 		<input type="hidden" name="inventoryid" value="">
 		<input type="hidden" name="inventory-status" value="">
 		<input type="hidden" name="inventory-partid" value="">
