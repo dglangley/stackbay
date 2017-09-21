@@ -159,8 +159,8 @@ function sub_rows($search = ''){
             
             //Get all the currently in hand
             $inventory = "SELECT SUM(qty) total, partid FROM inventory WHERE partid in ($match_string)
-            ".($page =="Repair" || $page=="Tech" || $page=='build' ?" AND (`status` = 'shelved' OR `status` = 'received') ":"")."
-            AND `status` != 'manifest'
+            ".($page =="Repair" || $page=="Tech" || $page=='build' ?" AND (`status` = 'received') ":"")."
+            AND (status != 'shipped' AND status != 'manifest')
             GROUP BY partid;";
             $in_stock  = qdb($inventory) or jsonDie(qe()." | $inventory");
             if (mysqli_num_rows($in_stock)){

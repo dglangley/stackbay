@@ -62,6 +62,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					if($debug){continue;}
 						while ($r = mysqli_fetch_assoc($data)) {
 						$inventoryid = $r['serialid'];
+
 						$query2 = "SELECT si.* FROM inventory i, sales_items si ";
 						$query2 .= "WHERE si.so_number = '".res($so_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
 						$result2 = qdb($query2);// OR die(qe().'<BR>'.$query2);
@@ -202,6 +203,10 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 							}
 						}
+
+						// changes from manifest to shipped
+						$query2 = "UPDATE inventory SET status = 'shipped' WHERE id = '".$inventoryid."'; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 					}
 				}
 				//Invoice Creation based off shipping

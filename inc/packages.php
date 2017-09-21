@@ -59,6 +59,7 @@
         }
         elseif($action == "update"){
             $row_id = prep($id);
+			$freight = grab("freight");
 
             $update = "UPDATE packages SET ";
             $update .= updateNull("width",grab("width"));
@@ -66,7 +67,7 @@
             $update .= updateNull("length",grab("length"));
             $update .= updateNull("weight",grab("weight"));
             $update .= updateNull("tracking_no",grab("tracking"));
-            $update .= rtrim(updateNull("freight_amount",grab("freight")),',');
+            $update .= rtrim(updateNull("freight_amount",$freight),',');
             $update .= " WHERE ";
             $update .= "id = $row_id;";
             qdb($update) or jsonDie(qe()." $update");
@@ -78,7 +79,7 @@
 				$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				while ($r = mysqli_fetch_assoc($result)) {
-					setCost($r['serialid']);
+//					setCost($r['serialid']);
 				}
 			}
 

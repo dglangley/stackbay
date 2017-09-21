@@ -40,7 +40,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($serial != '') {
 			
 			//Where there exists a serial number, get serial which is still in stock
-			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND qty > 0 LIMIT 0,1;";
+			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND status = 'received' LIMIT 0,1;";
 			$check = qdb($query);
 
 			if (mysqli_num_rows($check)==0) {
@@ -61,7 +61,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					qdb($query);
 					
 					//$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE id = $inventory_id; ";
-					$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
+					//dl 9-21-17
+					//$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
+					$query = "UPDATE inventory SET status = 'manifest', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
 					$result['query'] = qdb($query);
 					
 					//Check to see if the aty received and the qty ordered is matching or not
