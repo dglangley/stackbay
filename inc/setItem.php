@@ -1,6 +1,8 @@
 <?php
+	if (! isset($debug)) { $debug = 0; }
 	function setItem($type='Repair',$order_number,$partid,$ln=1,$qty=1,$price=false,$due_date='',$inventoryid=0) {
 		$userid = $GLOBALS['U']['id'];
+		$debug = $GLOBALS['debug'];
 
 		switch ($type) {
 			case 'Repair':
@@ -30,8 +32,13 @@
 				break;
 		}
 
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$item_id = qid();
+		if ($debug) {
+			echo $query.'<BR>';
+			$item_id = 999999;
+		} else {
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$item_id = qid();
+		}
 
 		return ($item_id);
 	}

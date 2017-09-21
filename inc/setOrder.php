@@ -1,6 +1,8 @@
 <?php
+	if (! isset($debug)) { $debug = 0; }
 	function setOrder($type='Repair') {
 		$userid = $GLOBALS['U']['id'];
+		$debug = $GLOBALS['debug'];
 
 		switch ($type) {
 			case 'Repair':
@@ -26,8 +28,13 @@
 				break;
 		}
 
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$order_number = qid();
+		if ($debug) {
+			echo $query.'<BR>';
+			$order_number = 999999;
+		} else {
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$order_number = qid();
+		}
 
 		return ($order_number);
 	}

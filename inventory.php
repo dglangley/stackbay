@@ -360,35 +360,6 @@ To do:
 		if ($r['status']=='shelved' OR $r['status']=='received') { $qty = $r['qty']; }
 		else { $qty = '0 <span class="info">('.$r['qty'].')</span>'; }
 
-		$inv_rows .= '
-		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
-			<td>'.getLocation($r['locationid']).'</td>
-			<td>
-				<div class="qty results-toggler">'.$qty.'</div>
-			</td>
-			<td>'.getCondition($r['conditionid']).'</td>
-			<td>'.$prefix.$order_number.$order_ln.'</td>
-			<td>'.$company.$company_ln.'</td>
-			<td>'.format_date($r['date_created'],'n/j/y').'</td>
-			<td></td>
-			<td class="text-center">
-				<input type="checkbox" name="partid[]" value="'.$r['partid'].'" class="item-check checkInner" checked>
-				<a href="javascript:void(0);" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
-<!--
-				<div class="dropdown">
-					<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
-					<ul class="dropdown-menu pull-right text-left" role="menu">
-						<li><a href="#"><span class="info"><i class="fa fa-pencil"></i> Edit group (disabled)</span></a></li>
-					</ul>
-				</div>
--->
-			</td>
-		</tr>
-		<tr class="inner-result" data-partid="'.$r['partid'].'" data-role="inner" data-row="'.$j.'"'.$inner_display.'>
-			<td colspan="8" class="text-center">
-				<table class="table table-condensed table-results text-left">
-		';
-
 		// repair link used for each serial
 		$repair_ln = '';
 		if ($r['status']=='shelved' OR $r['status']=='received') {
@@ -401,16 +372,19 @@ To do:
 			$scrap_ln = '<li><a href="javascript:void(0);" class="scrap"><i class="fa fa-recycle"></i> Scrap</i></a></li>';
 		}
 
+		$inventoryids = '';
 		$inners = '';
 		foreach ($r['entries'] as $entry) {
 			$status = $entry['status'];
+			if ($inventoryids) { $inventoryids .= ','; }
+			$inventoryids .= $entry['id'];
 
-			$cls = '';
+			$entry_cls = '';
 			$edit_ln = '<li><a href="javascript:void(0);" class="edit-inventory"><i class="fa fa-pencil"></i> Edit this entry</i></a></li>';
 			if ($status=='scrapped') {
 				$status = '<i class="fa fa-recycle"></i> '.$status;
 
-				$cls = ' text-danger';
+				$entry_cls = ' text-danger';
 				$edit_ln = '<li><a href="javascript:void(0);"><span class="info"><i class="fa fa-pencil"></i> Edit</i> (disabled)</span></a></li>';
 			} else if ($status=='in repair') {
 				$status_ln = '';
@@ -430,7 +404,7 @@ To do:
 						<td class="col-sm-3">'.$entry['serial_no'].'</td>
 						<td class="col-sm-3"></td>
 						<td class="col-sm-4">'.$entry['notes'].'</td>
-						<td class="col-sm-1 upper-case'.$cls.'" style="font-weight:bold">'.$status.'</td>
+						<td class="col-sm-1 upper-case'.$entry_cls.'" style="font-weight:bold">'.$status.'</td>
 						<td class="col-sm-1 text-right">
 							<input type="checkbox" name="inventoryids[]" value="'.$entry['id'].'" class="item-check" checked>
 							<div class="dropdown" data-inventoryid="'.$entry['id'].'">
@@ -449,7 +423,33 @@ To do:
 			$inner_header = '';
 		}
 
-		$inv_rows .= $inners.'
+		$inv_rows .= '
+		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
+			<td>'.getLocation($r['locationid']).'</td>
+			<td>
+				<div class="qty results-toggler">'.$qty.'</div>
+			</td>
+			<td>'.getCondition($r['conditionid']).'</td>
+			<td>'.$prefix.$order_number.$order_ln.'</td>
+			<td>'.$company.$company_ln.'</td>
+			<td>'.format_date($r['date_created'],'n/j/y').'</td>
+			<td></td>
+			<td class="text-center">
+				<input type="checkbox" name="partid[]" value="'.$r['partid'].'" class="item-check checkInner" checked>
+				<a href="javascript:void(0);" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
+				<div class="dropdown">
+					<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
+					<ul class="dropdown-menu pull-right text-left" role="menu" data-inventoryids="'.$inventoryids.'">
+						<li><a href="javascript:void(0);" class="scrap-group"><i class="fa fa-recycle"></i> Scrap group</i></a></li>
+						<li><a href="javascript:void(0);"><span class="info"><i class="fa fa-pencil"></i> Edit group (disabled)</span></a></li>
+					</ul>
+				</div>
+			</td>
+		</tr>
+		<tr class="inner-result" data-partid="'.$r['partid'].'" data-role="inner" data-row="'.$j.'"'.$inner_display.'>
+			<td colspan="8" class="text-center">
+				<table class="table table-condensed table-results text-left">
+					'.$inners.'
 				</table>
 			</td>
 		</tr>
@@ -734,12 +734,17 @@ To do:
 			$(".repair").click(function() {
 				var inventoryid = $(this).closest("ul").data('inventoryid');
 
-				modalAlertShow('<i class="fa fa-wrench"></i> Jefe! What is a "plethora"?','By sending this unit to Repair, it will be removed from sellable inventory. Are you ready to go?',true,'repair',inventoryid);
+				modalAlertShow('<i class="fa fa-wrench"></i> Oh GREAT! Real bullets! You\'re in a LOT of trouble, mister!','By sending this unit to Repair, it will be removed from sellable inventory. Are you ready to go?',true,'repair',inventoryid);
 			});
 			$(".scrap").click(function() {
 				var inventoryid = $(this).closest("ul").data('inventoryid');
 
 				modalAlertShow('<i class="fa fa-recycle"></i> All We Have is Tequila','You are scrapping this item, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryid);
+			});
+			$(".scrap-group").click(function() {
+				var inventoryids = $(this).closest("ul").data('inventoryids');
+
+				modalAlertShow('<i class="fa fa-recycle"></i> Jefe! What is a "plethora"?','You are scrapping a PLETHORA of items, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryids);
 			});
 
 			$("#inventory-save").click(function() {
