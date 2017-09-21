@@ -15,8 +15,9 @@
 	// get most recent popular locations
 	if ($q) {
 		$query .= "WHERE (CONCAT(l.place,'-',l.instance) RLIKE '".res($q)."' OR CONCAT(l.place,l.instance) RLIKE '".res($q)."' OR l.place RLIKE '".res($q)."') ";
-		$query .= "AND (i.date_created IS NULL OR i.date_created >= '".$recent_date."') ";
-		$query .= "GROUP BY l.id ORDER BY IF(l.place LIKE '".res($q)."%',0,1), n DESC; ";
+//		$query .= "AND (i.date_created IS NULL OR i.date_created >= '".$recent_date."') ";
+//		$query .= "GROUP BY l.id ORDER BY IF(l.place LIKE '".res($q)."%',0,1), n DESC; ";
+		$query .= "GROUP BY l.id ORDER BY IF(l.place LIKE '".res($q)."%',0,1), IF((i.date_created IS NULL OR i.date_created >= '".$recent_date."'),0,1), n DESC; ";
 	} else {
 		if (! $noreset) {
 			$locs[] = array('id'=>0,'text'=>'- Reset Locs -');

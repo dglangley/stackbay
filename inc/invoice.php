@@ -38,7 +38,7 @@
 			AND order_number = ".prep($order_number)." AND order_type = 'Sale'
 			AND ri.id = si.ref_1 
 			AND ri.price > 0
-			GROUP BY packages.id;
+			GROUP BY packages.id, ri.id;
 		";
 		$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
 		if(mysqli_num_rows($results) > 0 ){
@@ -56,7 +56,7 @@
 				AND i.sales_item_id = it.id
 				AND it.so_number = `packages`.`order_number`
 				AND price > 0.00
-				GROUP BY package_contents.packageid;
+				GROUP BY package_contents.packageid, it.id;
 			";
 				//GROUP BY it.id;
 			$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");

@@ -25,6 +25,7 @@
 	$serial = strtoupper($serial);
 
 	if (! $inventoryid) {
+		die("No inventoryid!");
 		jsonDie("No inventoryid!");
 	}
 
@@ -60,7 +61,7 @@
 	} else {
 		$query .= "serial_no = ";
 		if ($serial) { $query .= "'".res($serial)."', "; } else { $query .= "NULL, "; }
-		$query .= "partid = '".res($partid)."', ";
+		if ($partid) { $query .= "partid = '".res($partid)."', "; }
 		$query .= "locationid = '".res($locationid)."', ";
 		$query .= "conditionid = '".res($conditionid)."', ";
 		$query .= "notes = ";
@@ -78,27 +79,27 @@
 	}
 
 	$params = '';
-	if (isset($_REQUEST['order_search'])) {
+	if (isset($_REQUEST['order_search']) AND $_REQUEST['order_search']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'order_search='.trim($_REQUEST['order_search']);
 	}
-	if (isset($_REQUEST['START_DATE'])) {
+	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'START_DATE='.trim($_REQUEST['START_DATE']);
 	}
-	if (isset($_REQUEST['END_DATE'])) {
+	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'END_DATE='.trim($_REQUEST['END_DATE']);
 	}
-	if (isset($_REQUEST['s2'])) {
+	if (isset($_REQUEST['s2']) AND $_REQUEST['s2']) {
 		if ($params) { $params .= '&'; }
 		$params .= 's2='.trim($_REQUEST['s2']);
 	}
-	if (isset($_REQUEST['locationid'])) {
+	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'locationid='.trim($_REQUEST['locationid']);
 	}
-	if (isset($_REQUEST['companyid'])) {
+	if (isset($_REQUEST['companyid']) AND $_REQUEST['companyid']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'companyid='.trim($_REQUEST['companyid']);
 	}

@@ -617,7 +617,7 @@ To do:
 		<div class="table-wrapper">
 
 	<table class="table table-striped table-condensed table-inventory">
-		<thead><tr>
+		<thead><tr data-row="">
 			<th class="col-sm-2">
 				Location
 			</th>
@@ -665,7 +665,7 @@ To do:
 			$('#loader').hide();
 
 			$(".results-toggler").click(function() {
-				toggleResults();//$("#results-toggle"));
+				toggleResults($(this),$(this).closest("tr").data("row"));
 			});
 			$("#location-filter").change(function() {
 				$('#loader-message').html('Please wait while Inventory is loaded...');
@@ -756,16 +756,18 @@ To do:
 
 				var ff = $("#filters-form");
 				ff.find("input").each(function() {
-					$('<input>').attr({
+					if ($(this).prop('type')=='hidden' || f.find("input[name='"+$(this).prop('name')+"']").length>0) { return; }
+
+					$('<input>').prop({
 						type: 'hidden',
-						name: $(this).attr('name'),
+						name: $(this).prop('name'),
 						value: $(this).val(),
 					}).appendTo(f);
 				});
 				ff.find("select").each(function() {
-					$('<input>').attr({
+					$('<input>').prop({
 						type: 'hidden',
-						name: $(this).attr('name'),
+						name: $(this).prop('name'),
 						value: $(this).val(),
 					}).appendTo(f);
 				});
@@ -794,18 +796,27 @@ To do:
 			f.submit();
 		}
 
-		function toggleResults() {
+		function toggleResults(e,j) {
 			$('#loader-message').html('Please wait...');
 			$('#loader').show();
 
-			var toggler = $("#results-toggle").find("sup i.fa");
+//			var toggler = $("#results-toggle").find("sup i.fa");
+			var toggler = e.find("sup i.fa");
+			var showClass = '';
+			var hideClass = '';
 			if (toggler.hasClass("fa-sort-desc")) {
 				var method = 'show';
+				showClass = 'fa-sort-asc';
+				hideClass = 'fa-sort-desc';
 			} else {
 				var method = 'hide';
+				showClass = 'fa-sort-desc';
+				hideClass = 'fa-sort-asc';
 			}
 
 			$(".table-inventory").find(".inner-result").each(function() {
+				if (j!=='' && $(this).data('row')!==j) { return; }
+
 				if (method=='show') {
 					$(this).fadeIn('fast');
 				} else {
@@ -814,7 +825,9 @@ To do:
 			});
 
 			$(".results-toggler").each(function() {
-				$(this).find("sup i.fa").toggleClass("fa-sort-asc fa-sort-desc");
+				if (j!=='' && $(this).closest("tr").data("row")!==j) { return; }
+
+				$(this).find("sup i.fa").addClass(showClass).removeClass(hideClass);
 			});
 
 			$('#loader').hide();
