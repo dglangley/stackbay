@@ -89,6 +89,8 @@
 
 					if ($r2['status']=='received' OR $r2['status']=='manifest') {
 						/***** IN STOCK AVERAGE COST *****/
+
+//						setCost($r['serialid']);
 					} else {
 						/***** SOLD STOCK COGS *****/
 					}
@@ -99,7 +101,6 @@
 */
 
 
-//					setCost($r['serialid']);
 				}
 			}
 

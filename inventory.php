@@ -499,9 +499,6 @@ To do:
 		a.results-toggler {
 			margin-right:12px;
 		}
-		.col-location .select2-container {
-			width:150px !important;
-		}
 	</style>
 </head>
 <body>

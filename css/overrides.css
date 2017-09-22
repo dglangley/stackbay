@@ -658,6 +658,9 @@ textarea.freeform-text {
 .location-selector {
 	min-width:150px;
 }
+.col-location .select2-container {
+	width:150px !important;
+}
 .parts-selector {
 	width:100%;
 }

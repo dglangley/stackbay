@@ -190,33 +190,34 @@
 
 				$invid = qid();
 
-				$query = "UPDATE repair_items SET invid = $invid WHERE id = $rlineid;";
-				qdb($query) or die(qe()." $query");
-
-				//If this is a build then insert into inventory cost log and inventory cost
-				if($build) {
-					setCost($invid);
-
-					$query = "SELECT price FROM builds WHERE ro_number = ".prep($order_number).";";
-					$result = qdb($query) or die(qe()." | $query");
-
-					if(mysqli_num_rows($result)){
-						$result = mysqli_fetch_assoc($result);
-						$build_price = $result['price'];
-					}
-				}
-
 			} else {
-				//return"ALREADY SCANNED THIS PART FOR THIS RECORD";
 				$result = mysqli_fetch_assoc($res);
 
 				$invid = $result['id'];
 
 				$query = "UPDATE inventory SET repair_item_id = $rlineid WHERE id = $invid;";
 				qdb($query) or die(qe()." $query");
+			}
 
-				$query = "UPDATE repair_items SET invid = $invid WHERE id = $rlineid;";
-				qdb($query) or die(qe()." $query");
+			$query = "UPDATE repair_items SET invid = $invid WHERE id = $rlineid;";
+			qdb($query) or die(qe()." $query");
+
+			// DL: moved this from within the INSERT INTO inventory section above, thinking that even if this is an
+			// unlikely scenario where a build is taking an existing inventory item into its build, it's potentially
+			// still relevant and it's not hurting anything by being here...
+
+			//If this is a build then insert into inventory cost log and inventory cost
+			if($build) {
+				setCost($invid);
+
+/*
+				$query = "SELECT price FROM builds WHERE ro_number = ".prep($order_number).";";
+				$result = qdb($query) or die(qe()." | $query");
+				if(mysqli_num_rows($result)){
+					$result = mysqli_fetch_assoc($result);
+					$build_price = $result['price'];
+				}
+*/
 			}
 		}
 		if(isset($_REQUEST['notes'])){
