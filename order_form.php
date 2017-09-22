@@ -814,6 +814,7 @@
 											        				<option value="PN">PN</option>
 											        				<option value="SAP">SAP</option>
 											        				<option value="PO">PO</option>
+											        				<option value="FF">FF</option>
 											        			</select>
 											        		</div>
 											        	</td>

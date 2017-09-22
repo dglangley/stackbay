@@ -29,6 +29,24 @@
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 
+	function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
+		global $QTYS;
+
+		$qty = 0;
+
+		if (! $partid OR ! is_numeric($partid)) { return ($qty); }
+
+		$QTYS[$partid] = 0;
+		$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
+		//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
+		$result = qdb($query) OR die(qe().' '.$query);
+		if (mysqli_num_rows($result)==0) { return ('null'); }
+		$r = mysqli_fetch_assoc($result);
+		$qty = $r['qty'];
+
+		return ($qty);
+	}
+
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
 
@@ -240,26 +258,6 @@ if (! $r['partid']) { return ($results); }
 			width:60px;
 		}
 
-		.never-stock .first {
-			background: repeating-linear-gradient(
-		    -55deg,
-		    #eff0f6,
-		    #eff0f6 10px,
-		    #f1f2f8 10px,
-		    #f1f2f8 20px
-		  );
-		}
-
-		.out-stock .first {
-		  background: repeating-radial-gradient(
-		    circle,
-		    #eff0f6,
-		    #eff0f6 10px,
-		    #f1f2f8 10px, 
-		    #f1f2f8 20px
-		  );
-		}
-
 		.bg-demand .fa-circle-o {
 			visibility: hidden;
 		}
@@ -440,7 +438,7 @@ if (! $r['partid']) { return ($results); }
 					    </div>
 					    <div class="filter-group">
 							<button class="btn btn-xs btn-primary active filter_equipment" type="button" data-type="equipment" data-toggle="tooltip" data-placement="right" title="" data-original-title="Equipments"><i class="fa fa-cube"></i></button><br/>
-							<button class="btn btn-xs btn-default filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+							<button class="btn btn-xs btn-default filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-microchip" aria-hidden="true"></i></button>
 						</div>
 					<!-- </div> -->
 				</div>
@@ -502,7 +500,7 @@ if (! $r['partid']) { return ($results); }
 			</div>
 
 			<div class="col-md-4" style="padding-left: 0; padding-right: 10px;">
-				<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
+				<div class="col-md-3 col-sm-3 phone-hide" style="padding: 5px;">
 					<span style="font-size: 15px; font-weight: bold;">Total:</span> <span class="list_total">$0.00</span>
 				</div>
 				<div class="col-md-2 col-sm-2 col-xs-3">
@@ -514,7 +512,7 @@ if (! $r['partid']) { return ($results); }
 					</div>
 				</div>
 
-				<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
+				<div class="col-md-7 col-sm-7 col-xs-9 remove-pad">
 					<div class="col-sm-10 col-xs-8">
 						<div class="pull-right form-group" style="width: 100%;">
 							<select name="companyid" id="companyid" class="company-selector">
@@ -527,7 +525,7 @@ if (! $r['partid']) { return ($results); }
 					</div>
 
 					<div class="col-sm-2 col-xs-4 remove-pad">
-						<button class="btn btn-success btn-sm save_sales pull-right" type='submit' data-validation="left-side-main" style="padding: 5px 25px;">
+						<button class="btn btn-success btn-sm pull-right" id="save_sales" type='submit' data-error='' style="padding: 5px 25px;">
 							SAVE					
 						</button>
 					</div>
@@ -728,8 +726,13 @@ if (! $r['partid']) { return ($results); }
 			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
-			$itemqty = getQty($partid);
-			$lineqty += $itemqty;
+			if(getQtyPatch($partid) != 'null') {
+				$itemqty = getQtyPatch($partid);
+				$lineqty += $itemqty;
+			} else {
+				$itemqty = 'null';
+			}
+
 			$results[$partid]['qty'] = $itemqty;
 		}
 
@@ -784,7 +787,7 @@ if (! $r['partid']) { return ($results); }
 			}
 
 			$rowcls = '';
-			if ($itemqty>0) { $rowcls = ' info'; }
+			if ($itemqty>0 && $itemqty != 'null') { $rowcls = ' info'; }
 
 			$itemprice = "0.00";
 			$fav_flag = $favs[$partid];
@@ -793,7 +796,7 @@ if (! $r['partid']) { return ($results); }
 			$primary_part = $partstrs[0];
 
 			$chkd = '';
-			if ($k==0 OR $itemqty>0) { $chkd = ' checked'; }
+			if ($k==0 OR ($itemqty>0 && $itemqty != 'null')) { $chkd = ' checked'; }
 
 			$notes_icon = '';
 			if ($notes) {
@@ -809,7 +812,7 @@ if (! $r['partid']) { return ($results); }
 
 			$results_rows .= '
 					<div class="product-results" id="row-'.$partid.'">
-                        <div class="row descr-row" style="padding:8px">
+                        <div class="row descr-row '.($itemqty > 0 ? 'in-stock' : ($itemqty == null ? 'never-stock' : 'out-stock')).'" style="padding:8px">
                         	<div class="col-sm-3 remove-pad">
 								<div class="product-action text-center">
 	                            	<div class="action-box"><input type="checkbox" class="item-check" name="items['.$ln.']['.$k.']" value="'.$partid.'"'.$chkd.'></div>

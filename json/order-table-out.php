@@ -101,6 +101,8 @@
 			        						<option value='PN' ".($row['ref_1_label'] == 'PN' ? 'Selected' : '').">PN</option>
 					        				<option value='SAP' ".($row['ref_1_label'] == 'SAP' ? 'Selected' : '').">SAP</option>
 					        				<option value='PO' ".($row['ref_1_label'] == 'PO' ? 'Selected' : '').">PO</option>
+					        				<option value='FF' ".($row['ref_1_label'] == 'FF' ? 'Selected' : '').">FF</option>
+					        				<option value='Ref' ".($row['ref_1_label'] == 'Ref' ? 'Selected' : '').">Ref</option>
 			        					")."
 			        			</select>
 			        		</div>
@@ -115,6 +117,8 @@
 			        				<option value='PN' ".($row['ref_2_label'] == 'PN' ? 'Selected' : '').">PN</option>
 			        				<option value='SAP' ".($row['ref_2_label'] == 'SAP' ? 'Selected' : '').">SAP</option>
 			        				<option value='PO' ".($row['ref_2_label'] == 'PO' ? 'Selected' : '').">PO</option>
+			        				<option value='FF' ".($row['ref_2_label'] == 'FF' ? 'Selected' : '').">FF</option>
+			        				<option value='Ref' ".($row['ref_2_label'] == 'Ref' ? 'Selected' : '').">Ref</option>
 			        			</select>
 			        		</div>
 			        	</td>";
