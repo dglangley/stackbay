@@ -78,12 +78,9 @@
 				$partid = $serial_find['partid'];
 			}
 		}
-		
-		$place = grab('place');
-		$instance = grab('instance');
-		
-		$itemLocation = dropdown_processor($place,$instance);
-		
+
+		$itemLocation = $_REQUEST['locationid'];
+
 		//Find the items pertaining to the RMA number and the serial searched
 		$rmaArray = findRMAItems($rma_serial, $rma_number);
 	
@@ -549,14 +546,8 @@
 							<div class="col-md-7" style="padding-left: 0px !important;">
 								<div class="col-md-6 location">
 									<div class="row">
-										<div class="col-md-6" style="padding-left: 0px !important;">
-											<?=loc_dropdowns('place', $itemLocation)?>
-											<?=$locationid;?>
-										</div>
-										
-										<div class="col-md-6">
-											<?=loc_dropdowns('instance', $itemLocation)?>
-										</div>
+										<select name="locationid" size="1" class="location-selector">
+										</select>
 									</div>
 								</div>
 								
@@ -607,7 +598,7 @@
 							
 							<tbody>
 
-						<?php endif; ?>
+						<?php $init = false; endif; ?>
 
 								<tr class="valign-top">
 									<td>
