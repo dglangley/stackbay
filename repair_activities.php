@@ -73,7 +73,7 @@
 	function triggerBuildTest($invid, $ro_number, $repair_item_id, $notes, $techid) {
 		$now = $GLOBALS['now'];
 
-		$status = "shelved";
+		$status = "received";
 		$notes = '';
 
 		$select = "SELECT `status` FROM `inventory` where `id` = ".prep($invid).";";
@@ -81,7 +81,7 @@
 		if(mysqli_num_rows($result)){
 			$result = mysqli_fetch_assoc($result);
 			$status = $result['status'];
-			if(strtolower($status) == 'shelved'){
+			if(strtolower($status) == 'received'){
 				$status = 'in testing';
 				$notes = getSerialNumber($invid) . ' Marked as `In Testing`';
 			} else {
@@ -143,7 +143,7 @@
 	function addtoStock($place, $instance, $condition, $serial_no){
 		$locationid = getLocation($place, $instance);
 		foreach ($serial_no as $serial) {
-			$query = "UPDATE inventory SET locationid =".prep($locationid).", conditionid = ".prep($condition).", status = 'shelved', qty = 1 WHERE serial_no = ".prep($serial).";";
+			$query = "UPDATE inventory SET locationid =".prep($locationid).", conditionid = ".prep($condition).", status = 'received', qty = 1 WHERE serial_no = ".prep($serial).";";
 			//echo $query . "<br>";
 		}
 		qdb($query) OR die(qe());

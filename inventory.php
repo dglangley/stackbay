@@ -272,7 +272,7 @@ To do:
 		if ($dbStartDate AND $dbEndDate) {
 			$query .= "AND i.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
-		$query .= "ORDER BY IF(status='shelved' OR status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
+		$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
 //		echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -324,14 +324,14 @@ To do:
 		$order_number = getSource($r['purchase_item_id'],'Purchase');
 		$order_ln = '';
 
-		if ($r['conditionid']>0 AND ($r['status']=='shelved' OR $r['status']=='received')) { $goodcount += $r['qty']; }
-		if ($r['conditionid']<0 AND ($r['status']=='shelved' OR $r['status']=='received')) { $badcount += $r['qty']; }
-		if ($r['status']<>'shelved' AND $r['status']<>'received') { $outcount += $r['qty']; }
+		if ($r['conditionid']>0 AND $r['status']=='received') { $goodcount += $r['qty']; }
+		if ($r['conditionid']<0 AND $r['status']=='received') { $badcount += $r['qty']; }
+		if ($r['status']<>'received') { $outcount += $r['qty']; }
 
 		// exclude results that the user hasn't included
 		if (! $goodstock AND $r['conditionid']>0) { continue; }
 		if (! $badstock AND $r['conditionid']<0) { continue; }
-		if (! $outstock AND ($r['status']<>'shelved' AND $r['status']<>'received')) { continue; }
+		if (! $outstock AND $r['status']<>'received') { continue; }
 
 		if (! isset($qtys[$r['partid']])) { $qtys[$r['partid']] = 0; }
 		$qtys[$r['partid']] += $r['qty'];
@@ -347,7 +347,7 @@ To do:
 		}
 
 		$cls = '';
-		if ($r['status']=='shelved' OR $r['status']=='received') {
+		if ($r['status']=='received') {
 			if ($r['conditionid']>0) {
 				$cls = 'in-stock';
 			} else {
@@ -357,18 +357,18 @@ To do:
 			$cls = 'out-stock';
 		}
 
-		if ($r['status']=='shelved' OR $r['status']=='received') { $qty = $r['qty']; }
+		if ($r['status']=='received') { $qty = $r['qty']; }
 		else { $qty = '0 <span class="info">('.$r['qty'].')</span>'; }
 
 		// repair link used for each serial
 		$repair_ln = '';
-		if ($r['status']=='shelved' OR $r['status']=='received') {
+		if ($r['status']=='received') {
 			$repair_ln = '<li><a href="javascript:void(0);" class="repair"><i class="fa fa-wrench"></i> Send to Repair</i></a></li>';
 		}
 
 		// scrap link used for each serial
 		$scrap_ln = '';
-		if ($r['status']=='shelved' OR $r['status']=='received') {
+		if ($r['status']=='received') {
 			$scrap_ln = '<li><a href="javascript:void(0);" class="scrap"><i class="fa fa-recycle"></i> Scrap</i></a></li>';
 		}
 

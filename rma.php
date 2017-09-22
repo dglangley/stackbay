@@ -373,7 +373,7 @@
 							if(mysqli_num_rows($rows)>0){
 								$output = '
 								<div class ="btn-group">
-									<button type="button" class="btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
+									<button type="button" class="btn btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
 		                              <i class="fa fa-credit-card"></i>
 		                              <span class="caret"></span>
 		                            </button>';

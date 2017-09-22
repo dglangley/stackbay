@@ -30,7 +30,7 @@
 				$query = "UPDATE purchase_items SET qty_received = ".prep($amount)." WHERE id = ".prep($key).";";
 				qdb($query) OR die(qe());
 
-				$status = "shelved";
+				$status = "received";
 
 				$query = "SELECT partid FROM purchase_items WHERE id = ".prep($key).";";
 

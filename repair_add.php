@@ -184,7 +184,7 @@
 			if(!mysqli_num_rows($res)){
 				$insert = "INSERT INTO `inventory`(`serial_no`, `qty`, `partid`, 
 				`conditionid`, `status`, `locationid`, `repair_item_id`, `userid`, `date_created`, `notes`) 
-				VALUES ($serial,1,$partid,$condition,'".($_REQUEST['build'] ? 'shelved' : 'in repair')."',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
+				VALUES ($serial,1,$partid,$condition,'".($_REQUEST['build'] ? 'received' : 'in repair')."',$location_id,$rlineid,".$GLOBALS['U']['id'].",'".$GLOBALS['now']."',NULL)";
 				
 				qdb($insert) or die(qe()." $insert");
 

@@ -55,7 +55,7 @@
 		$html = "";
 		$inventory = array();
 
-		$query = "SELECT *, SUM(qty) as total FROM inventory WHERE partid = ".prep($partid)." AND (status = 'shelved' OR status = 'received') GROUP BY locationid;";
+		$query = "SELECT *, SUM(qty) as total FROM inventory WHERE partid = ".prep($partid)." AND (status = 'received') GROUP BY locationid;";
 		$result = qdb($query) or die(qe());
 
 		$html .= '<tr>
