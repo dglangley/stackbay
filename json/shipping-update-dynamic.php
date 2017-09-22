@@ -40,7 +40,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		if($serial != '') {
 			
 			//Where there exists a serial number, get serial which is still in stock
-			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND status = 'received' LIMIT 0,1;";
+			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND (status = 'received' OR status = 'in repair') LIMIT 0,1;";
 			$check = qdb($query);
 
 			if (mysqli_num_rows($check)==0) {

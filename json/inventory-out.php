@@ -21,26 +21,6 @@
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/filter.php';
 	
-	// Get Pages function determines how many pages the inventory should output.
-	// function getPages($show_num = '5') {
-	// 	//Find out what page number we are on.
-	// 	global $page;
-		
-	// 	//Set a null counter for the number of rows
-	// 	$rows = 0;
-		
-	// 	//Static query which gets all the parts from the inventory screen
-	// 	$query  = "SELECT COUNT(*) as rows FROM (SELECT DISTINCT  `partid` FROM  `inventory`) AS t1;";
-	// 	$result = mysqli_fetch_assoc(qdb($query));
-	// 	$rows = $result['rows'];
-	// 	$pages = ceil($rows / $show_num);
-		
-	// 	for($i = 1; $i <= $pages; $i++) {
-	// 		//echo $page;
-	// 		echo '<li class="' .($page == $i || ($page == '' && $i == 1) ? 'active':''). '"><a href="?page=' .$i. '">'.$i.'</a></li>';
-	// 	}
-	// }
-	
 	function getPartLocation($partid){
 		$partid = prep($partid);
 		$select = "SELECT DISTINCT locationid FROM inventory where partid = $partid";
@@ -60,7 +40,7 @@
 		if($stock == 'pending') {
 			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'ordered');";
 		} else if($stock == 'instock') {
-			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'received' OR status = 'shelved');";
+			$query  = "SELECT SUM(qty) FROM inventory WHERE partid =" . res($partid) . " AND (status = 'received');";
 		}
 		$result = qdb($query);
 		
@@ -69,9 +49,6 @@
 			$stockNumber = $result['SUM(qty)'];
 		}
 		
-		// while ($row = $result->fetch_assoc()) {
-		// 	$stockNumber= $row['serial_no'];
-		// }
 		if(!$stockNumber) {
 			$stockNumber = 0;
 		}

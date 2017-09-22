@@ -79,6 +79,13 @@
 				$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				while ($r = mysqli_fetch_assoc($result)) {
+/*
+1) if item is in stock, adds cost and adjusts average cost
+2) if item is in a manifest state, adds cost and adjusts average cost
+	1 in stock, 1 in manifest
+*/
+
+
 //					setCost($r['serialid']);
 				}
 			}

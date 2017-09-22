@@ -45,7 +45,7 @@
 	}
 
 	if ($debug) {
-		$addl_info .= "<BR>SELECT qty, serial_no FROM inventory WHERE partid = '".$partid."' AND (status = 'shelved' OR status = 'received') AND conditionid >= 0 AND qty > 0;";
+		$addl_info .= "<BR>SELECT qty, serial_no FROM inventory WHERE partid = '".$partid."' AND (status = 'received') AND conditionid >= 0 AND qty > 0;";
 		echo json_encode(array('message'=>'Incoming avg cost: '.$incoming_avgcost.', Target avg cost: '.$target_avgcost.', Diff: '.$diff.' ('.($diff*$source_qty).'), New Avg Cost: '.$avg_cost.$addl_info,'data'=>''));
 	} else {
 		echo json_encode(array('message'=>'Success','data'=>$avg_cost));

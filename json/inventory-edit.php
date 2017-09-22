@@ -44,7 +44,7 @@
 		
 		//Handle the repair toggle
 		if($action == 'repair' and $status == 'in repair'){
-			$status = "shelved";
+			$status = "received";
 		} else if($status){
 			$status = "in repair";
 		}
