@@ -550,6 +550,12 @@ include_once $rootdir.'/inc/default_addresses.php';
 				if ($selected_service){
 					$right .= " ".getFreight('services','',$selected_service,'method');
 				}
+
+				if($selected_account) {
+					$right .= "<br>";
+					$right .= getFreight("account","",$selected_account,"account_no");
+					$right .= "<br>";
+				}
 	
 				$right .= "<br><br>";
 			}
