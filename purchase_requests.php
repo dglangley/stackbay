@@ -19,10 +19,20 @@
 	 	header('Location: /operations.php');
 	}
 
+	$deletion;
+
+	if(isset($_REQUEST['delete'])) {
+		$deletion = voidRequest($_REQUEST['delete']);
+
+		//if(! $deletion) {
+			header('Location: /purchase_requests.php');
+		//}
+	}
+
 	//Query items from parts table
 	$itemList = array();
 
-	$query = "SELECT pr.*, p.part, p.classification FROM purchase_requests pr, parts p WHERE p.id = pr.partid AND (pr.status = 'Active' OR pr.status IS NULL) ORDER BY requested DESC LIMIT 100;";
+	$query = "SELECT pr.*, p.part, p.classification FROM purchase_requests pr, parts p WHERE p.id = pr.partid ORDER BY requested DESC LIMIT 100;";
 	$result = qdb($query) OR die(qe());
 		
 	while ($row = $result->fetch_assoc()) {
@@ -35,7 +45,7 @@
 		$repair_item_id;
 
 		$query = "SELECT id as repair_item_id FROM repair_items WHERE ro_number = ".prep($ro_number)." LIMIT 1;";
-		$result = qdb($query);
+		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
@@ -43,6 +53,29 @@
 		}
 
 		return $repair_item_id;
+	}
+
+	function voidRequest($pr_id) {
+		$results = false;
+
+		// First check if the item has been voided yet or not
+		$query = "SELECT * FROM purchase_requests WHERE id = ".res($pr_id)." AND status <> 'Void';";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		if (mysqli_num_rows($result)) {
+
+			// If there exists this purchase request id with a status Active then disable it and 
+			// mark the result as true to return that something has been updated
+			// This is used in conjunction with the clean url method to remove uneeded url parameters 
+			// and the have a 1 time success pop up when something is actually updated
+			$query = "UPDATE purchase_requests SET status = 'Void' WHERE id = ".res($pr_id).";";
+			qdb($query) OR die(qe() . ' ' . $query);
+
+			$results = true;
+
+		}
+
+		return $results;
 	}
 	
 ?>
@@ -71,7 +104,7 @@
 	    	background-color: #FFF !important;
 	    }
 
-	    .completed {
+	    .completed, .canceled {
 	    	display: none;
 	    }
 	</style>
@@ -127,6 +160,11 @@
 			</div>
 		</div>
 		<div id="pad-wrapper">
+
+<!-- 			<div class="alert alert-success" role="alert">
+				<strong>Request</strong> Successfully Deleted.
+			</div> -->
+
 			<div class="row">
 				<table class="table heighthover heightstriped table-condensed p_table">
 					<thead>
@@ -158,7 +196,11 @@
 									}
 									$completed_qty += $details['qty'];
 								} else if(! $details['po_number']) {
-									$status = 'active';
+									if($details['status'] != 'Void') {
+										$status = 'active';
+									} else {
+										$status = 'canceled';
+									}
 									$active_qty += $details['qty'];
 								}
 							}
@@ -180,12 +222,23 @@
 									$initial = false;
 								}
 
+								$statusValue = 'Pending';
+								$statusColor = '#8a6d3b';
+
+								if($details['status'] == 'Void') {
+									$statusValue = 'Canceled';
+									$statusColor = 'red';
+								}
+
 								$rowHTML .= '
 												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
 													<td>'.$details['ro_number'].' <a target="_blank" href="/repair.php?on='.$details['ro_number'].'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
-													<td>'.(! $details['po_number'] ? '<span style="color: #8a6d3b;">Pending</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
-													<td><input type="checkbox" name="purchase_request['.$details['partid'].']['.$details['ro_number'].']['.$details['qty'].']['.$details['id'].']" value="'.getRepairItemId($details['ro_number']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'></td>
+													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
+													<td>
+														<input type="checkbox" name="purchase_request['.$details['partid'].']['.$details['ro_number'].']['.$details['qty'].']['.$details['id'].']" value="'.getRepairItemId($details['ro_number']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
+															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '') .'
+													</td>
 												</tr>';
 							}
 
@@ -216,10 +269,9 @@
     <script type="text/javascript">
     	(function($){
     		$(document).on('click', '.disable_trash', function(e) {
-    			if( !confirm('Are you sure you want to cancel this purchase request?')) {
-            		event.preventDefault();
-    			} else {
-    				$(this).closest('form').submit();
+    			e.preventDefault();
+    			if(confirm('Are you sure you want to cancel this purchase request?')) {
+            		window.location = $(this).attr('href');
     			}
     		});
 
@@ -233,8 +285,6 @@
     				$(".row-"+data).hide();
     				$(".row-"+data).find('input').prop("checked", false);
     			}
-
-    			
     		});
 
     		$(document).on("change", ".detailed_check", function(e){
@@ -270,15 +320,19 @@
 					$(this).addClass('btn-warning');
 					$('.active').show();
 					$('.completed').hide();
+					$('.canceled').hide();
 					$('.part_details').hide();
 				} else if(value == 'completed') {
 					$(this).addClass('btn-success');
 					$('.completed').show();
 					$('.active').hide();
+					$('.canceled').hide();
 					$('.part_details').hide();
+					$('.completed.part_details').show();
 				} else {
 					$('.active').show()
 					$('.completed').show()
+					$('.canceled').show();
 					$(this).addClass('btn-info');
 					$('.part_details').show();
 				}
