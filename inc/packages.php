@@ -79,6 +79,19 @@
 				$query = "SELECT serialid FROM package_contents WHERE packageid = $row_id; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				while ($r = mysqli_fetch_assoc($result)) {
+
+					// check inventory status on this unit so we can determine if the cost gets allocated
+					// to inventory current AVERAGE cost, or COGS on sale of unit
+					$query2 = "SELECT status FROM inventory WHERE id = '".$r['serialid']."'; ";
+					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+					if (mysqli_num_rows($result2)==0) { continue; }//really should not be a real scenario, but hey, account for it
+					$r2 = mysqli_fetch_assoc($result2);
+
+					if ($r2['status']=='received' OR $r2['status']=='manifest') {
+						/***** IN STOCK AVERAGE COST *****/
+					} else {
+						/***** SOLD STOCK COGS *****/
+					}
 /*
 1) if item is in stock, adds cost and adjusts average cost
 2) if item is in a manifest state, adds cost and adjusts average cost
