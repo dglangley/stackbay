@@ -8,6 +8,7 @@
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
 	include_once 'inc/getCost.php';
+	include_once 'inc/getQty.php';
 	include_once 'inc/array_stristr.php';
 	include_once 'inc/calcQuarters.php';
 	include_once 'inc/format_market.php';
@@ -29,23 +30,23 @@
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 
-	function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
-		global $QTYS;
+	// function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
+	// 	global $QTYS;
 
-		$qty = 0;
+	// 	$qty = 0;
 
-		if (! $partid OR ! is_numeric($partid)) { return ($qty); }
+	// 	if (! $partid OR ! is_numeric($partid)) { return ($qty); }
 
-		$QTYS[$partid] = 0;
-		$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
-		//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
-		$result = qdb($query) OR die(qe().' '.$query);
-		if (mysqli_num_rows($result)==0) { return ('null'); }
-		$r = mysqli_fetch_assoc($result);
-		$qty = $r['qty'];
+	// 	$QTYS[$partid] = 0;
+	// 	$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
+	// 	//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
+	// 	$result = qdb($query) OR die(qe().' '.$query);
+	// 	if (mysqli_num_rows($result)==0) { return ('null'); }
+	// 	$r = mysqli_fetch_assoc($result);
+	// 	$qty = $r['qty'];
 
-		return ($qty);
-	}
+	// 	return ($qty);
+	// }
 
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
@@ -726,8 +727,8 @@ if (! $r['partid']) { return ($results); }
 			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
-			if(getQtyPatch($partid) != 'null') {
-				$itemqty = getQtyPatch($partid);
+			if(getQty($partid) != 'null') {
+				$itemqty = getQty($partid);
 				$lineqty += $itemqty;
 			} else {
 				$itemqty = 'null';
