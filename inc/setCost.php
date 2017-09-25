@@ -132,13 +132,27 @@
 			}
 		}
 
+		// added 9-25-17 by dl to accommodate new method of carrying average cost across inventory states, whether changing
+		// status or condition code to move in and out of good "sellable" stock; the moment an item hits inventory, it gets
+		// an average cost, but if we move it out (i.e., to repair or anything other than good stock) and then move it back
+		// in, the cost needs to be associated with its original AVERAGE basis, not the actual. this is our scenario here
+		$carry_average = false;
+		$query = "SELECT average FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$carry_average = $r['average'];
+		}
+
 		// reset inventory costs with latest cost data
 		$query = "DELETE FROM inventory_costs WHERE inventoryid = '".$inventoryid."'; ";
 		if ($debug==1) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
 		$query = "REPLACE inventory_costs (inventoryid, datetime, actual, average) ";
-		$query .= "VALUES ('".$inventoryid."','".$GLOBALS['now']."','".$cost."','".$cost."'); ";
+		$query .= "VALUES ('".$inventoryid."','".$GLOBALS['now']."','".$cost."',";
+		if ($carry_average!==false) { $query .= "'".$carry_average."'"; } else { $query .= "NULL"; }
+		$query .= "); ";
 		if ($debug==1) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
