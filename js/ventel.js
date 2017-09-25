@@ -1556,8 +1556,10 @@
         return;
     };
 
-	
-	
+	function submitConflict(e) {
+		$('.results-form').submit();
+	}
+
 	function toggleLoader(msg) {
 		if ($("#loading-bar").is(':visible')) {
 			$("#loading-bar").fadeOut('fast');

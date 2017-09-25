@@ -39,7 +39,8 @@
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				// if we want to know the last-available average cost (for example, when shipping the last item in stock for COGS purposes),
-				// absolute stock is set to true so that we assume an absolute value of qty 1
+				// absolute stock is set to true so that we assume an absolute value of qty 1; this would NOT be used when $partid is an
+				// array of qtys, for example.
 				if ($absolute_stock) {
 					$qty = 1;
 				} else {

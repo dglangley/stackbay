@@ -58,6 +58,7 @@
 		'BID'=>1,
 		'BID:'=>1,
 		'CT'=>1,
+		'PLEASES'=>1,
 		'ARD'=>1,
 		'TRANCEIVER'=>1,
 		'HOURS'=>1,

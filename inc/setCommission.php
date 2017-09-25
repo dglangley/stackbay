@@ -13,7 +13,7 @@
 	if (! isset($debug)) { $debug = 0; }
 
 	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0,$comm_repid=0) {
-		global $COMM_REPS;
+		global $COMM_REPS,$debug;
 
 		$comm_output = '';
 
@@ -97,6 +97,8 @@
 					if ($comm_repid AND $rep_id<>$comm_repid) { continue; }
 
 					foreach ($cogsids as $cogsid => $cogs) {
+						if ($debug) { $cogs += 25; }
+
 						// this is profit from cogs in each sales_cogs record, and comm due based on that profit
 						$profit = $r2['amount']-$cogs;
 						$comm_due = ($profit*($rate/100));
@@ -122,9 +124,14 @@
 							$query4 .= "VALUES ($invoice, '".$r2['id']."', '".$r2['inventoryid']."', $item_id, '".$item_id_label."', '".$GLOBALS['now']."', ";
 							if ($cogsid) { $query4 .= "$cogsid, "; } else { $query4 .= "NULL, "; }
 							$query4 .= "$rep_id, '".$rate."', '".$comm_due."'); ";
-							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
-							$commissionid = qid();
-							if ($GLOBALS['debug']) { $comm_output .= '$'.$comm_due.', '.$commissionid.': '.$query4.'<BR>'; }
+							if ($debug) {
+								$commissionid = 999999;
+								$comm_output .= '$'.$comm_due.', '.$commissionid.': '.$query4.'<BR>';
+								echo $query4.'<BR>';
+							} else {
+								$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+								$commissionid = qid();
+							}
 						}
 					}
 				}

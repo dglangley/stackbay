@@ -114,7 +114,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								// repair, since this is the warranty repair for that original billable repair
 								if (! $NONBILLABLE) {//this means it's BILLABLE
 									// for billable repairs, set cost of goods directly against repair item
-									$profitid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs);
+									$cogsid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs);
 									continue;
 								}
 
@@ -158,7 +158,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 									$existing_cogs = getCOGS($inventoryid, $r5['id'], 'sales_item_id');
 									$cogs = $existing_cogs+$repair_cogs;
 
-									$profitid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
+									$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
 								} else if ($r4['order_type']=='Repair') {
 									$query5 = "SELECT ri.id FROM repair_items ri WHERE ri.ro_number = '".res($r4['order_number'])."' AND ri.invid = '".res($inventoryid)."'; ";
 									$result5 = qdb($query5) OR die(qe().'<BR>'.$query5);
@@ -169,7 +169,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 									$existing_cogs = getCOGS($inventory, $r5['id'], 'repair_item_id');
 									$cogs = $existing_cogs+$repair_cogs;
 
-									$profitid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
+									$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
 								}
 							} else if (($r2['ref_1'] AND $r2['ref_1_label']=='sales_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='sales_item_id')) {
 								/***** RMA REPLACEMENT *****/
@@ -187,7 +187,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$existing_cogs = getCOGS($inventoryid,$sales_item_id,'sales_item_id');
 								$cogs = $existing_cogs+$replacement_cogs;
 
-								$profitid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
+								$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
 							} else if (($r2['ref_1'] AND $r2['ref_1_label']=='purchase_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='purchase_item_id')) {
 								/***** RTV *****/
 								$purchase_item_id = 0;
@@ -207,13 +207,13 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								}
 
 								$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
-								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+								$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 */
 							} else {
 								/***** SALE ITEM *****/
 								// this item is a billable sale and very straightforward; $r2['id'] is the sales item id
 								$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
-								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+								$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 							}
 						}
 

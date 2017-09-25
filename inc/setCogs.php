@@ -1,5 +1,7 @@
 <?php
 	function setCogs($inventoryid=0,$item_id=0,$item_id_label='',$cogs_avg=0,$cogs_actual=0) {
+		global $debug;
+
 		$query = "SELECT id, cogs_avg FROM sales_cogs WHERE inventoryid = '".res($inventoryid)."' ";
 		$query .= "AND item_id ";
 		if ($item_id) { $query .= "= '".res($item_id)."' "; } else { $query .= "IS NULL "; }
@@ -12,7 +14,11 @@
 			if ($r['cogs_avg']==$cogs_avg) { return ($r['id']); }
 
 			$query2 = "UPDATE sales_cogs SET cogs_avg = '".res($cogs_avg)."' WHERE id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR die("Could not update sales cogs with id ".$r['id']." for ".$cogs_avg);
+			if ($debug) {
+				echo $query2.'<BR>';
+			} else {
+				$result2 = qdb($query2) OR die("Could not update sales cogs with id ".$r['id']." for ".$cogs_avg);
+			}
 			return ($r['id']);
 		}
 
@@ -21,6 +27,8 @@
 	}
 
 	function addCOGS($inventoryid=0,$item_id=0,$item_id_label='',$cogs_avg=0,$cogs_actual=0) {
+		global $debug;
+
 		$query = "INSERT INTO sales_cogs (inventoryid, item_id, item_id_label, cogs_avg, cogs_actual) ";
 		$query .= "VALUES ('".res($inventoryid)."',";
 		if ($item_id) { $query .= "'".res($item_id)."',"; } else { $query .= "NULL,"; }
@@ -28,8 +36,13 @@
 		if ($cogs_avg) { $query .= "'".res($cogs_avg)."',"; } else { $query .= "NULL,"; }
 		if ($cogs_actual) { $query .= "'".res($cogs_actual)."'"; } else { $query .= "NULL"; }
 		$query .= "); ";
-// echo $query.'<BR>';
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		return (qid());
+		if ($debug) {
+			echo $query.'<BR>';
+			$cogsid = 999999;
+		} else {
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$cogsid = qid();
+		}
+		return ($cogsid);
 	}
 ?>
