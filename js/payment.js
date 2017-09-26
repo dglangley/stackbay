@@ -69,7 +69,13 @@
 
             		$.each(data, function(key, row) {
             			//console.log(row);
-            			var row_amount = parseFloat(row.amount * row.qty);
+            			var row_amount = parseFloat(row.total_amount);
+
+                        // Catch for when no invoice exists
+                        if(! row_amount) {
+                            row_amount = parseFloat(row.amount * row.qty);
+                        }
+
             			rowHTML += "<tr class='payment_info'>\
 										<td style='padding: 0px 10px;' class='col-md-3 capitalize'>";
 						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
