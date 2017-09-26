@@ -544,11 +544,11 @@
 						<?php if(!$rma_status) { ?>
 						
 							<div class="col-md-7" style="padding-left: 0px !important;">
-								<div class="col-md-6 location">
-									<div class="row">
-										<select name="locationid" size="1" class="location-selector">
-										</select>
-									</div>
+								<div class="col-md-3">
+								</div>
+								<div class="col-md-3 location">
+									<select name="locationid" size="1" class="location-selector" data-noreset="1">
+									</select>
 								</div>
 								
 								<div class="col-md-6" style="padding: 0 0 0 5px;">

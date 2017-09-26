@@ -16,7 +16,7 @@
 
 		// get qty of inventory record in case it's a lot purchase price
 		$cost = 0;
-		$query = "SELECT qty, serial_no, partid, date_created FROM inventory WHERE id = '".res($inventoryid)."'; ";
+		$query = "SELECT qty, serial_no, partid, date_created, status FROM inventory WHERE id = '".res($inventoryid)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$r = mysqli_fetch_assoc($result);
@@ -25,6 +25,7 @@
 		$serial = $r['serial_no'];
 		$partid = $r['partid'];
 		$date_created = $r['date_created'];
+		$status = $r['status'];
 
 		// get all purchase records in case we've purchased it multiple times
 		$query = "SELECT * FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
@@ -99,33 +100,36 @@
 			}
 		}
 
-		if ($force_avg) {
-			if ($force_datetime) {
-				setAverageCost($partid,$force_avg,true,$force_datetime);
-			} else {
-				setAverageCost($partid,$force_avg,true);
-			}
-		} else {
-			// calculate diff in cost so we can adjust cost average
-			$actual = 0;
-			// this is set here so we get our $cost_datetimes initialized for purposes below
-			$current_cost = getCost($partid);
-
-			/* NEWLY-ADDED INVENTORY ITEM THAT HAS NOT YET BEEN AVERAGE-CALCULATED */
-			if (! isset($cost_datetimes[$partid]) OR $date_created>$cost_datetimes[$partid]) {
-				$actual = $current_cost;
-			} else {
-				/* EXISTING INVENTORY ITEM THAT HAS ALREADY PREVIOUSLY BEEN AVERAGE-CALCULATED */
-				$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$actual = $r['actual'];
+		// added by dl 9-25-17 because we don't update average cost when manipulating costs records on SOLD/SHIPPED items
+		if ($status=='received' OR $status=='manifest') {
+			if ($force_avg) {
+				if ($force_datetime) {
+					setAverageCost($partid,$force_avg,true,$force_datetime);
+				} else {
+					setAverageCost($partid,$force_avg,true);
 				}
-			}
-			$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+			} else {
+				// calculate diff in cost so we can adjust cost average
+				$actual = 0;
+				// this is set here so we get our $cost_datetimes initialized for purposes below
+				$current_cost = getCost($partid,'average',true);
 
-			setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
+				/* NEWLY-ADDED INVENTORY ITEM THAT HAS NOT YET BEEN AVERAGE-CALCULATED */
+				if (! isset($cost_datetimes[$partid]) OR $date_created>$cost_datetimes[$partid]) {
+					$actual = $current_cost;
+				} else {
+					/* EXISTING INVENTORY ITEM THAT HAS ALREADY PREVIOUSLY BEEN AVERAGE-CALCULATED */
+					$query = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$inventoryid."' ORDER BY id DESC LIMIT 0,1; ";
+					$result = qdb($query) OR die(qe().'<BR>'.$query);
+					if (mysqli_num_rows($result)>0) {
+						$r = mysqli_fetch_assoc($result);
+						$actual = $r['actual'];
+					}
+				}
+				$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+
+				setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
+			}
 		}
 
 		// reset inventory costs with latest cost data

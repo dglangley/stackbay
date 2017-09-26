@@ -727,11 +727,11 @@ if (! $r['partid']) { return ($results); }
 			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
-			if(getQty($partid) != 'null') {
+			if(getQty($partid) !== false) {
 				$itemqty = getQty($partid);
 				$lineqty += $itemqty;
 			} else {
-				$itemqty = 'null';
+				$itemqty = '';
 			}
 
 			$results[$partid]['qty'] = $itemqty;

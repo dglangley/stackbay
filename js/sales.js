@@ -57,7 +57,7 @@
 		if($(this).attr("data-error") != "true") {
 			$('.results-form').submit();
 		} else {
-			modalAlertShow("Company Alert","Any red-highlighted companies on the page due to conflict-of-interest(s).",false);
+			modalAlertShow("Company Alert","Please note the conflicts of interest on this page. Do you really want to proceed?",true,'submitConflict','');
 		}
 	});
 

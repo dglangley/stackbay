@@ -107,14 +107,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								}
 
 								// get cost of repair order for this unit
-								$cogs = calcRepairCost($ro_number,$repair_item_id,$inventoryid,$NONBILLABLE);//get repair cost
+								$repair_cogs = calcRepairCost($ro_number,$repair_item_id,$inventoryid,$NONBILLABLE);//get repair cost
 
-								// If billable (! $NONBILLABLE), the $cogs gets added to the repair itself; if NON-billable,
-								// the $cogs should be added to the *originating* repair, not this most direct
+								// If billable (! $NONBILLABLE), the $repair_cogs gets added to the repair itself; if NON-billable,
+								// the $repair_cogs should be added to the *originating* repair, not this most direct
 								// repair, since this is the warranty repair for that original billable repair
-								if (! $NONBILLABLE) {
+								if (! $NONBILLABLE) {//this means it's BILLABLE
 									// for billable repairs, set cost of goods directly against repair item
-									$profitid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $cogs);
+									$cogsid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs);
 									continue;
 								}
 
@@ -154,27 +154,40 @@ $rootdir = $_SERVER['ROOT_DIR'];
 									if (mysqli_num_rows($result5)==0) { continue; }
 									$r5 = mysqli_fetch_assoc($result5);
 
-									$profitid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
+									// sum the new repair cogs with the existing cogs because setCogs() below will SUM and UPDATE the existing COGS record
+									$existing_cogs = getCOGS($inventoryid, $r5['id'], 'sales_item_id');
+									$cogs = $existing_cogs+$repair_cogs;
+
+									$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
 								} else if ($r4['order_type']=='Repair') {
 									$query5 = "SELECT ri.id FROM repair_items ri WHERE ri.ro_number = '".res($r4['order_number'])."' AND ri.invid = '".res($inventoryid)."'; ";
 									$result5 = qdb($query5) OR die(qe().'<BR>'.$query5);
 									if (mysqli_num_rows($result5)==0) { continue; }
 									$r5 = mysqli_fetch_assoc($result5);
 
-									$profitid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
+									// sum the new repair cogs with the existing cogs because setCogs() below will SUM and UPDATE the existing COGS record
+									$existing_cogs = getCOGS($inventory, $r5['id'], 'repair_item_id');
+									$cogs = $existing_cogs+$repair_cogs;
+
+									$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
 								}
 							} else if (($r2['ref_1'] AND $r2['ref_1_label']=='sales_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='sales_item_id')) {
 								/***** RMA REPLACEMENT *****/
 								// this is a replacement unit for a previous sale; get the avg cost of the replacement unit and apply it
 								// towards the cogs of the original sale
-								$cogs = getCost($partid);//get existing avg cost at this point in time
+								$replacement_cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
 
 								// We're adding the $cogs to the originating sales item id, which is what the ref1/ref2 label refers to
 								if ($r2['ref_1_label']=='sales_item_id') {
-									$profitid = setCogs($inventoryid, $r2['ref_1'], 'sales_item_id', $cogs);
+									$sales_item_id = $r2['ref_1'];
 								} else {/*$r2['ref_2_label']=='sales_item_id']*/
-									$profitid = setCogs($inventoryid, $r2['ref_2'], 'sales_item_id', $cogs);
+									$sales_item_id = $r2['ref_2'];
 								}
+
+								$existing_cogs = getCOGS($inventoryid,$sales_item_id,'sales_item_id');
+								$cogs = $existing_cogs+$replacement_cogs;
+
+								$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
 							} else if (($r2['ref_1'] AND $r2['ref_1_label']=='purchase_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='purchase_item_id')) {
 								/***** RTV *****/
 								$purchase_item_id = 0;
@@ -193,14 +206,14 @@ $rootdir = $_SERVER['ROOT_DIR'];
 									$cogs += $r3['cogs_avg'];
 								}
 
-								$cogs = getCost($partid);//get existing avg cost at this point in time
-								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+								$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
+								$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 */
 							} else {
 								/***** SALE ITEM *****/
 								// this item is a billable sale and very straightforward; $r2['id'] is the sales item id
 								$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
-								$profitid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+								$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 							}
 						}
 
