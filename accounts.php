@@ -349,10 +349,9 @@
 		$status = 'complete';
 		if ($order AND $order<>$id) { continue; }
 
-		$r['price'] = format_price($r['price'],true,'',true);
+		$row['price'] = format_price($row['price'],true,'',true);
 		$ext_amt = $row['price']*$row['qty'];
 		$total_pcs += $row['qty'];
-		$total_sub += $ext_amt;
 
 		if(!array_key_exists($id, $summary_rows)){
 			$summary_rows[$id] = array(
@@ -365,6 +364,7 @@
 
 		//Query to get the credit per item
 		//test for sales first
+		$charges_table = '';
 		$item_id = 0;
 		$complete_qty = 0;
 		switch ($row['order_type']) {
@@ -400,11 +400,11 @@
 		if ($charges_table) {
 			$query = "SELECT * FROM ".$charges_table." WHERE ".$order_field." = ".prep($id)."; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r2 = mysqli_fetch_assoc($result);
-				$total_sub += $r2['qty']*$r2['price'];
+			while ($r2 = mysqli_fetch_assoc($result)) {
+				$ext_amt += $r2['qty']*$r2['price'];
 			}
 		}
+		$total_sub += $ext_amt;
 
         $credit = 0;
         $credit_total = 0;

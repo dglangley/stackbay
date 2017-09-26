@@ -271,14 +271,14 @@
 			WHERE order_number=".prep($order_number)." 
 			AND order_type = '".$order_type."' 
 			AND r.`rma_number` = ri.`rma_number`
-			AND i.id = `inventoryid`
-			AND i.`qty` > 0;
+			AND i.id = `inventoryid` AND i.status = 'received';
+			/*AND i.`qty` > 0;*/
 		";
 		$limit_result = qdb($limiter) or die(qe()." | $limiter");
 		$limit = '';
 		$limit_arr = array();
 
-		//here is where I take out the results of the serials I have already RMA'ed
+		//here is where I take out the results of the serials I have already RMA'd
 		if (mysqli_num_rows($limit_result)){
 			foreach ($limit_result as $invid){
 				$limit_arr[$invid['inventoryid']] = true;
@@ -474,7 +474,7 @@
 									<!-- Grab the old serial values from the database and display them-->
 										<td class="serials-col" style="">											
 											<div class="input-group serial_box">
-											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?><?=($inf['already'])? "&nbsp;(RMA'ed)" : ''?>" readonly>
+											    <input class="form-control input-sm" type="text" name="serial_<?=$line?>" placeholder="Serial" data-inv-id ="" value="<?=$inf['serial_no']?><?=($inf['already'])? "&nbsp;(RMA'd)" : ''?>" readonly>
 
 												<!--Array Version-->
 												<input type="text" name="return[<?=$inf['inventoryid']?>]" style="display:none;" value = "<?=$inf['id']?>"/>

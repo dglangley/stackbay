@@ -14,6 +14,7 @@
     $package_no = grab('package_no');
     $order_number = grab('order');
     $order_type = grab('type');
+	if ($order_type=='undefined') { $order_type = ''; }
     $name = grab('name');
     $id = grab('id');
 
