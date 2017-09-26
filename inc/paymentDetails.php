@@ -12,7 +12,7 @@
             // Get information per order number selected
             // If paying a purchase then look into bills
             if($row['type'] == 'Purchase') {
-                $query = "SELECT *, 'Bill' as ref_type FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($row['order_number'])."';";
+                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($row['order_number'])."' GROUP BY i.bill_no;";
 
                 $result = qdb($query) OR die(qe().' '.$query);
 
@@ -33,7 +33,7 @@
 
             // If paying a sales then look into invoice and credits
             } else if($row['type'] == 'Sale' OR $row['type']=='Repair') {
-                $query = "SELECT *, 'Invoice' as ref_type FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."';";
+                $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
