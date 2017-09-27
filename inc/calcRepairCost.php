@@ -33,13 +33,13 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 
-			$query2 = "SELECT ss_number FROM service_orders so ";
+			$query2 = "SELECT os_number FROM outsourced_orders os ";
 			$query2 .= "WHERE order_number = '".res($ro_number)."' AND order_type = 'Repair'; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$so = $r2['ss_number'];
+				$os = $r2['os_number'];
 
-				$query3 = "SELECT qty, price FROM service_items si WHERE si.ss_number = $so; ";
+				$query3 = "SELECT qty, price FROM outsourced_items oi WHERE oi.os_number = $os; ";
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				while ($r3 = mysqli_fetch_assoc($result3)) {
 					$cost += ($r3['qty']*$r3['price']);

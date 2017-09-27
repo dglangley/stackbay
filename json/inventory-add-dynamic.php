@@ -74,7 +74,7 @@
 				//DEPRECATED To find this later on
 				$query = "UPDATE purchase_items SET qty_received = qty_received + 1 WHERE id = '".res($item_id)."'; ";//po_number = ". res($po_number) ." AND partid = ". res($partid) .";";
 				if ($GLOBALS['debug']) { echo $query.'<BR>'; } else { $res = qdb($query) OR die(qe().'<BR>'.$query); }
-				
+
 				//Insert the item into the inventory
 		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, ";
 				$query .= "purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) ";
