@@ -35,7 +35,7 @@
 			var modalBody = $("#marketModal .modal-body");
 			var rowHtml = '';
 
-			first.find(".btn-resultsmode").find(".btn").each(function() {
+			$(this).closest(".product-results").find(".btn-resultsmode").find(".btn").each(function() {
 				if (! $(this).hasClass('btn-primary')) { return; }
 				results_mode = $(this).data('results');
 			});
