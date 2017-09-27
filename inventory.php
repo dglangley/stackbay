@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
@@ -42,6 +43,13 @@ To do:
 		}
 		$r = mysqli_fetch_assoc($result);
 		return ($r['companyid']);
+	}
+
+	$pricing_header1 = '';
+	$pricing_header2 = '';
+	if (in_array("1", $USER_ROLES) OR in_array("4", $USER_ROLES) OR in_array("5", $USER_ROLES)) {
+		$pricing_header1 = 'Cost';
+		$pricing_header2 = 'Actual Cost';
 	}
 
 	$search = '';
@@ -308,7 +316,8 @@ To do:
 	$inner_header = '
 					<tr class="inner-result"'.$inner_display.'>
 						<th class="col-sm-3">Serial</th>
-						<th class="col-sm-3">History</th>
+						<th class="col-sm-1">'.$pricing_header2.'</th>
+						<th class="col-sm-2">History</th>
 						<th class="col-sm-4">Notes</th>
 						<th class="col-sm-1">Status</th>
 						<th class="col-sm-1">Action</th>
@@ -372,6 +381,7 @@ To do:
 			$scrap_ln = '<li><a href="javascript:void(0);" class="scrap"><i class="fa fa-recycle"></i> Scrap</i></a></li>';
 		}
 
+		$sum_actual = 0;
 		$inventoryids = '';
 		$inners = '';
 		foreach ($r['entries'] as $entry) {
@@ -399,10 +409,22 @@ To do:
 				$status = '<i class="fa fa-wrench"></i> '.$status.' '.$status_ln;
 			}
 
+			$actual_cost = '';
+			if ($pricing_header1) {
+				$query2 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".$entry['id']."' ORDER BY id DESC LIMIT 0,1; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					$actual_cost = format_price($r2['actual'],true,' ');
+					$sum_actual += $r2['actual'];
+				}
+			}
+
 			$inners .= $inner_header.'
 					<tr class="">
 						<td class="col-sm-3">'.$entry['serial_no'].'</td>
-						<td class="col-sm-3"></td>
+						<td class="col-sm-1">'.$actual_cost.'</td>
+						<td class="col-sm-2"></td>
 						<td class="col-sm-4">'.$entry['notes'].'</td>
 						<td class="col-sm-1 upper-case'.$entry_cls.'" style="font-weight:bold">'.$status.'</td>
 						<td class="col-sm-1 text-right">
@@ -423,17 +445,22 @@ To do:
 			$inner_header = '';
 		}
 
+		$fsum_price = '';
+		if ($pricing_header1) {
+			$fsum_price = format_price($sum_actual,true,' ');
+		}
+
 		$inv_rows .= '
 		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
 			<td>'.getLocation($r['locationid']).'</td>
 			<td>
 				<div class="qty results-toggler">'.$qty.'</div>
 			</td>
+			<td>'.$fsum_price.'</td>
 			<td>'.getCondition($r['conditionid']).'</td>
 			<td>'.$prefix.$order_number.$order_ln.'</td>
 			<td>'.$company.$company_ln.'</td>
 			<td>'.format_date($r['date_created'],'n/j/y').'</td>
-			<td></td>
 			<td class="text-center">
 				<input type="checkbox" name="partid[]" value="'.$r['partid'].'" class="item-check checkInner" checked>
 				<a href="javascript:void(0);" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
@@ -621,6 +648,9 @@ To do:
 			<th class="col-sm-1">
 				Qty
 			</th>
+			<th class="col-sm-1">
+				<?php echo $pricing_header1; ?>
+			</th>
 			<th class="col-sm-2">
 				Condition
 			</th>
@@ -632,8 +662,6 @@ To do:
 			</th>
 			<th class="col-sm-1">
 				Date
-			</th>
-			<th class="col-sm-1">
 			</th>
 			<th class="col-sm-1">
 				<input type="checkbox" value="1" class="checkAll" checked>
@@ -798,7 +826,7 @@ To do:
 			$('#loader').show();
 
 //			var toggler = $("#results-toggle").find("sup i.fa");
-			var toggler = e.find("sup i.fa");
+			var toggler = e.closest("tr").find("sup i.fa");
 			var showClass = '';
 			var hideClass = '';
 			if (toggler.hasClass("fa-sort-desc")) {

@@ -14,7 +14,9 @@
     include_once $rootdir.'/inc/setCost.php';
     include_once $rootdir.'/inc/setCostsLog.php';
     include_once $rootdir.'/inc/setCommission.php';
+    include_once $rootdir.'/inc/setInvoiceCOGS.php';
     include_once $rootdir.'/inc/getCOGS.php';
+    include_once $rootdir.'/inc/getCostsLog.php';
 
 	if (! isset($debug)) { $debug = 0; }
 
@@ -94,6 +96,8 @@
 				$query = "SELECT serialid FROM package_contents WHERE packageid = $pid; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				$num_rows = mysqli_num_rows($result);
+				// note that freight per unit is per RECORD in inventory; the qty per inventory record is irrelevant at this
+				// point because inventory costs get associated per RECORD anyway, not per piece
 				$freight_per = 0;
 				if ($num_rows>0) { $freight_per = $freight/$num_rows; }//calc for the sake of updating sold stock cogs below
 
@@ -105,7 +109,12 @@
 					if (mysqli_num_rows($result2)==0) { continue; }//really should not be a real scenario, but hey, account for it
 					$r2 = mysqli_fetch_assoc($result2);
 
-					// we don't need to call setCostsLog() as we do below in the SOLD STOCK COGS section because setCost() handles it
+					// has this freight already been applied, or possibly in part? if so, we're only taking the difference
+					$existing_freight = getCostsLog($r['serialid'],$packageid,'packageid');
+					$freight_per -= $existing_freight;
+					if ($freight_per==0) { continue; }
+
+					// sets cost, costs log, and average cost
 					setCost($r['serialid']);
 
 					// neither of these statuses have COGS applied to them yet, so best practice is to update the average cost
@@ -152,6 +161,17 @@
 								// this function should be called every time COGS is updated after invoicing!
 								setCommission($r4['invoice_no'],$r4['invoice_item_id'],$r['serialid']);
 							}
+						}
+
+						// get all related invoices and update COGS to Journal Entries
+						$query2 = "SELECT i.invoice_no, i.order_type ";
+						$query2 .= "FROM invoices i, invoice_items ii, invoice_shipments s, package_contents pc ";
+						$query2 .= "WHERE pc.serialid = '".$r['serialid']."' AND i.invoice_no = ii.invoice_no ";
+						$query2 .= "AND s.invoice_item_id = ii.id AND pc.packageid = s.packageid ";
+						$query2 .= "GROUP BY i.invoice_no; ";
+						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						while ($r2 = mysqli_fetch_assoc($result2)) {
+							setInvoiceCOGS($r2['invoice_no'],$order_type);
 						}
 					}
 /*
