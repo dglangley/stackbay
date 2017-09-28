@@ -20,6 +20,7 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getWarranty.php';
+	include_once $rootdir.'/inc/setInventory.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
@@ -213,6 +214,10 @@
 			//echo $insert;
 			qdb($insert);
 			$repair_item_id = qid();
+
+			// update inventory with repair item id so that the user doesn't have to re-receive the item
+			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id);
+			setInventory($I);
 		}
 
 		header("Location: /order_form.php?ps=repair&on=" . $ro_number);
@@ -297,8 +302,8 @@
 		$receive_check = qdb($query);
 		
 		if (mysqli_num_rows($receive_check)>0) {
-			$query = "UPDATE inventory SET returns_item_id = ". res($data['rmaid']) .", status = 'received', qty = 1, locationid = '". res($locationid) ."', conditionid = '-5' WHERE id = '". res($id) ."';";
-			$result = (qdb($query) ? '' : qe());
+			$I = array('returns_item_id'=>$data['rmaid'],'status'=>'received','locationid'=>$locationid,'conditionid'=>'-5','id'=>$id);
+			setInventory($I);
 
 			// notify accounting when disposition is Credit, so that they can generate the Credit Memo
 			if ($data['dispositionid']==1) {

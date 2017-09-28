@@ -89,7 +89,7 @@
 			if ($userid) { $query .= "$userid, "; } else { $query .= "0, "; }
 			$query .= "'".res($datetime)."',";
 			if ($notes) { $query .= "'".res($notes)."' "; } else { $query .= "NULL "; }
-			$query .= "; ";
+			$query .= "); ";
 			if ($debug) {
 				echo $query.'<BR>';
 				$inventoryid = 999999;
