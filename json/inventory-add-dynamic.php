@@ -143,7 +143,7 @@
 							//if ($userid==$each_userid) { continue; }
 							$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
 							$query .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
-							$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+							qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
 						}	
 					}
 
