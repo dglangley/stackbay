@@ -404,7 +404,6 @@
 				$ext_amt += $r2['qty']*$r2['price'];
 			}
 		}
-		$total_sub += $ext_amt;
 
         $credit = 0;
         $credit_total = 0;
@@ -492,9 +491,13 @@
 
 		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
 		$status  = ($total <= 0 ? 'complete' : 'active');
-		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
+
+		if ($filter<>$status AND $filter<>'all') { continue; }
+		$total_sub += $info['summed'];
+
+//		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
        	$rows .= '
-				<tr class="'.$status.' '.$filter_comb.'">
+				<tr class="'.$status.'">
 					<td>'.format_date($info['date'], 'M j, Y').'</td>
 		';
 
