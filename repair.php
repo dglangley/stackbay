@@ -246,21 +246,36 @@
 		return $purchase_requests;
 	}
 
-	function getQuantity($partid,$po_number=0) {
-		$qty = 0;
-		$query;
+	// function getQuantity($partid,$po_number=0) {
+	// 	$qty = 0;
+	// 	$query;
 		
-		$query = "SELECT SUM(i.qty) as sum FROM inventory i ";
-		if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-		$query .= "WHERE i.partid = ". prep($partid) ." AND (i.status = 'shelved' OR i.status = 'received') ";
-		if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
-		$query .= "GROUP BY i.partid ";
-		if ($po_number) { $query .= ", i.purchase_item_id "; }
-		$query .= "; ";
-		$qty = rsrq($query);
+	// 	$query = "SELECT SUM(i.qty) as sum FROM inventory i ";
+	// 	if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+	// 	$query .= "WHERE i.partid = ". prep($partid) ." AND (i.status = 'shelved' OR i.status = 'received') ";
+	// 	if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+	// 	$query .= "GROUP BY i.partid ";
+	// 	//if ($po_number) { $query .= ", i.purchase_item_id "; }
+	// 	$query .= "; ";
+	// 	$qty = rsrq($query);
+	// 	return $qty;
+	// }
+
+	function getQuantity($partid,$itemid=0) {
+		$qty = 0;
+
+		$query = "SELECT SUM(i.qty) as sum, i.id FROM purchase_items pi, inventory i WHERE pi.ref_1_label = 'repair_item_id' AND pi.ref_1='".res($itemid)."' AND pi.id = i.purchase_item_id AND i.partid = '".res($partid)."' AND i.qty > 0 AND (status = 'shelved' OR status = 'received')
+                UNION
+           SELECT SUM(i.qty) as sum, i.id FROM purchase_items pi, inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id = pi.id AND (pi.ref_1_label <> 'repair_item_id' OR pi.ref_1_label IS NULL) AND i.qty > 0 AND (status = 'shelved' OR status = 'received');";
+
+		$result = qdb($query) OR die(qe());
+				
+		 while ($row = $result->fetch_assoc()) {
+			$qty += ($row['sum'] ? $row['sum'] : 0);
+		}
+
 		return $qty;
 	}
-
 
 
 	function getRepairQty($partid, $ro_number) {
@@ -792,6 +807,7 @@
 										</thead>
 										<?php
 											$components = getComponents($repair_order, $repair_item_id);
+
 											$total = 0.00;
 											if($components)
 												foreach($components as $comp):
@@ -837,7 +853,8 @@
 														$total += $ext;
 													}
 
-													$avail_qty = getQuantity($comp['partid'],$comp['po_number']);
+													$avail_qty = getQuantity($comp['partid'],$repair_item_id);
+													//echo $repair_item_id;
 													$pulled_qty = getRepairQty($comp['partid'],$comp['po_number']);
 										?>
 											<tr class="" style = "padding-bottom:6px;">
@@ -846,7 +863,7 @@
 												<td class=""><?=($comp['po_number'] ? '<span class="label label-success complete_label status_label" style=""><a href="/PO'.$comp['po_number'].'">'.$comp['po_number'].'</a></span>' : ($comp['totalOrdered'] - getRepairQty($comp['partid'], $order_number) > 0 && ($comp['status'] != 'Void') ? "<span class='label label-warning active_label status_label' >Pending</span>" : "<span class='label label-danger active_label status_label' >Canceled</span>"));?></td>
 												<!-- <td><?=$ordered;?></td> -->
 												<!-- "<span class='label label-danger active_label status_label' >Canceled</span>" -->
-												<td><?=(getQuantity($comp['partid']) ? getQuantity($comp['partid']) : '0');?></td> 
+												<td><?=(getQuantity($comp['partid'],$repair_item_id) ? getQuantity($comp['partid'],$repair_item_id) : '0');?></td> 
 												<td class=""><?=($comp['totalReceived'] ? $comp['totalReceived'] :(getRepairQty($comp['partid'], $order_number) ? getRepairQty($comp['partid'], $order_number) : '0'))?></td>
 												<td><?=format_price($price)?></td>
 												<td><?=format_price($ext)?></td>
