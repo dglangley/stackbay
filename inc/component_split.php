@@ -5,20 +5,11 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/getCompany.php';
-	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/keywords.php';
-	include_once $rootdir.'/inc/getRecords.php';
-	include_once $rootdir.'/inc/getRep.php';
-	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/display_part.php';
-	include_once $rootdir.'/inc/invoice.php';
-	include_once $rootdir.'/inc/renderOrder.php';
-	include_once $rootdir.'/inc/setPart.php';
-	
-	
+	include_once $rootdir.'/inc/setInventory.php';
+
 	function split_components($invid, $new_qty, $id_type = "", $id_number = ""){
 	//Function which takes an old inventory_id and returns a new record.
 	    $pinvid = prep($invid);
@@ -46,7 +37,7 @@
                 //echo($inv_insert."<br>");
                 $new_invid = qid();
                 $pnew_invid = prep($new_invid);
-                
+
                 $qty_update = "UPDATE `inventory` SET `qty` = ".prep($adj_qty)." WHERE `id` = $pinvid;";
                 qdb($qty_update) or die(qe()." | $qty_update");
                 //echo($qty_update."<br>");

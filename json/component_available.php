@@ -25,6 +25,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/component_split.php';
+	include_once $rootdir.'/inc/setInventory.php';
 
 	$result;
 

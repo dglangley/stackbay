@@ -23,7 +23,7 @@
 			// strip off non-alphanumerics
 			$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 
-			$ord = "ORDER BY part, rel, heci; ";
+			$ord = "ORDER BY IF(parts.classification = 'equipment',0,1), part, rel, heci; ";
 			$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 			$keyword_query .= "WHERE keyword = '".res($fpart)."' AND keywords.id = parts_index.keywordid ";
 			$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";

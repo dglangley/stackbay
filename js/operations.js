@@ -3100,9 +3100,7 @@
 								$serial.closest('tr').find('.infiniteComments').append('<input style="margin-bottom: 6px;" class="form-control input-sm iso_comment" type="text" name="partComment" value="" placeholder="Comments" data-serial="'+serial+'" data-inv-id="'+item_id+'" data-part="'+partid+'">');
 
 								if(qty == 0) {
-							    	//$serial.closest('.infiniteSerials').find('input:first').attr('readonly', true);
-							    	//alert('Part: ' + part + ' has been received.');
-									modalAlertShow('Item Received!','Item "'+part+'" has now been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
+									modalAlertShow('Item Received!','Item has now been RECEIVED in full!<br/><br/>If you continue receiving, the units will be received as non-billable overages.',false);
 							    }
 							    
 							    $serial.attr("data-saved", serial);

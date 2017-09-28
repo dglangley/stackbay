@@ -69,6 +69,7 @@
 		$check = qdb($query);
 		if($check->num_rows > 0 AND ! $GLOBALS['debug']) {
 			$result['query'] = false;
+			$result['saved'] = $serial;
 		} else {//== 0
 			if($savedSerial == '') {// no record for this item previously, so creating a new record
 
@@ -86,6 +87,7 @@
 					$result['package'] = qdb($package_query) OR die(qe());
 					$result['package_q'] = $package_query;
 				}
+//				$result['saved'] = $serial;
 			} else {
 				// get current status and item ids so we need how to update them in setInventory() below
 				$inv = getInventory($savedSerial,$partid);
@@ -93,7 +95,6 @@
 
 				$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,'purchase_item_id'=>$item_id,'id'=>$inventoryid);
 				$inventoryid = setInventory($I);
-				$result['saved'] = $serial;
 			}
 
 			//Quick Query to check if all the line items of a PO have been met in full
@@ -143,7 +144,7 @@
 							//if ($userid==$each_userid) { continue; }
 							$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
 							$query .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
-							$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+							$res = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
 						}	
 					}
 
