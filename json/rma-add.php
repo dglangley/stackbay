@@ -16,6 +16,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/setInventory.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 
@@ -53,8 +54,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			foreach($productid as $product) {
 				$locationid = getLocation($product['place'], $product['instance']);
 
-				$query = "UPDATE inventory SET returns_item_id = ". res($product['id']) .", status = 'received', qty = qty + 1, locationid = '". res($locationid) ."' WHERE id = '". res($product['invid']) ."';";
-				$result = qdb($query) or die(qe());
+				$I = array('id'=>$product['invid'],'returns_item_id'=>$product['id'],'status'=>'received','locationid'=>$locationid);
+				$inventoryid = setInventory($I);
 			}
 		}
 		

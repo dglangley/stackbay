@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/setCost.php';
+	include_once $rootdir.'/inc/setInventory.php';
 
 	include_once $rootdir.'/inc/renderOrder.php';
 	include_once($rootdir."/inc/send_gmail.php");
@@ -76,17 +77,8 @@
 				if ($GLOBALS['debug']) { echo $query.'<BR>'; } else { $res = qdb($query) OR die(qe().'<BR>'.$query); }
 
 				//Insert the item into the inventory
-		 		$query  = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, ";
-				$query .= "purchase_item_id, sales_item_id, returns_item_id, userid, date_created, id) ";
-				$query .= "VALUES ('". res($serial) ."', '1','". res($partid) ."', '". res($conditionid) ."', 'received', '". res($locationid) ."', ";
-				$query .= "'". res($item_id) ."', NULL, NULL, ".$GLOBALS['U']['id'].", '".$GLOBALS['now']."' , NULL);";
-				if ($GLOBALS['debug']) {
-					echo $query.'<BR>';
-					$inventoryid = 29843;
-				} else {
-					$result['query'] = qdb($query) OR die(qe().'<BR>'.$query);
-					$inventoryid = qid();
-				}
+				$I = array('serial_no'=>$serial,'qty'=>1,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>'received','locationid'=>$locationid,'purchase_item_id'=>$item_id);
+				$inventoryid = setInventory($I);
 
 				//Pair the package to the line item of the inventory number we changed.
 				$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$packageid','$inventoryid');";
@@ -95,16 +87,13 @@
 					$result['package_q'] = $package_query;
 				}
 			} else {
-				$query = "UPDATE inventory SET serial_no = '". res($serial) ."', conditionid = '". res($conditionid) . "', locationid = '". res($locationid) ."', purchase_item_id = '".res($item_id)."' ";
-				$query .= "WHERE serial_no = '". res($savedSerial) ."' AND partid = '". res($partid) ."';";
-				if ($GLOBALS['debug']) {
-					echo $query.'<BR>';
-					$inventoryid = 29843;
-				} else {
-					$result['query'] = qdb($query) or die(qe());
-					$result['saved'] = $serial;
-					$inventoryid = qid();
-				}
+				// get current status and item ids so we need how to update them in setInventory() below
+				$inv = getInventory($savedSerial,$partid);
+				$inventoryid = $inv['id'];
+
+				$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,'purchase_item_id'=>$item_id,'id'=>$inventoryid);
+				$inventoryid = setInventory($I);
+				$result['saved'] = $serial;
 			}
 
 			//Quick Query to check if all the line items of a PO have been met in full

@@ -5,9 +5,8 @@
 	include_once $rootdir.'/inc/form_handle.php';
 
 	$csv_partids = '';
-	$query = "SELECT SUM(`qty`) total, `partid` FROM `inventory`  ";
-	$query .= "WHERE `qty` > 0 AND partid IS NOT NULL AND `conditionid` > 0 ";
-	$query .= "AND (`status` = 'shelved' OR `status` = 'received') ";
+	$query = "SELECT SUM(qty) total, partid FROM inventory  ";
+	$query .= "WHERE partid IS NOT NULL AND conditionid > 0 AND status = 'received' ";
 	$query .= "GROUP BY partid;";
 	$result = qdb($query) or die(qe()." $query");
 	while ($r = mysqli_fetch_assoc($result)) {
