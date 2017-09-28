@@ -16,6 +16,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/setInventory.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/jsonDie.php';
@@ -34,7 +35,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		
 		//First make sure that the serial and the partid combination exists in the inventory database
-		$query = "SELECT * FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
+		$query = "SELECT serial_no, qty, partid, conditionid cid, locationid, bin, ";
+		$query .= "purchase_item_id pid, sales_item_id sid, returns_item_id rmaid, repair_item_id rid, userid, date_created, id ";
+		$query .= "FROM inventory WHERE partid = '" . res($partid) . "' AND serial_no = '" . res($serial) . "';";
 		$check = qdb($query);
 		
 		//If the item exists then delete the inventory row
@@ -67,18 +70,16 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$return_status = $r['changed_from'];
 				}
 
-				$query = "UPDATE inventory SET sales_item_id = NULL, status = '".$return_status."' WHERE id = $inventoryid; ";
-				$result['query'] = qdb($query) OR jsonDie(qe().'<BR>'.$query);
+				$I = array('sales_item_id'=>false,'status'=>$return_status,'id'=>$inventoryid);
+				$inventoryid = setInventory($I);
 
 				//Remove the item from package contents
 				$pc_delete  ="DELETE FROM `package_contents` WHERE `packageid` in (SELECT `id` FROM packages where `order_type` = 'Sale' and order_number = ".prep($po_number).") and `serialid` = $inventoryid;";
 				qdb($pc_delete) or jsonDie(qe()." | $pc_delete");
 	
 				//If the item is deleted from the inventory then increment the sales items back to original state, before the serial was scanned
-//				if($result['query']) {
-					$query = "UPDATE sales_items SET qty_shipped = qty_shipped - 1, ship_date = NULL WHERE so_number = ". res($po_number) ." AND partid = ". res($partid) .";";
-					qdb($query);
-//				}
+				$query = "UPDATE sales_items SET qty_shipped = qty_shipped - 1, ship_date = NULL WHERE so_number = ". res($po_number) ." AND partid = ". res($partid) .";";
+				qdb($query);
 			}
 		} else {
 			$result['query'] = false;
