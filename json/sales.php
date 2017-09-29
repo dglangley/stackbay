@@ -288,7 +288,7 @@
 				$itemqty = getQty($partid);
 				$lineqty += $itemqty;
 			} else {
-				$itemqty = 'null';
+				$itemqty = '';
 			}
 
 			$results[$partid]['qty'] = $itemqty;

@@ -40,6 +40,11 @@
 	foreach ($inventoryids as $id) {
 		$I = array('id'=>$id);
 
+		$source_partid = 0;
+		$source_qty = 0;
+		$source_avgcost = 0;
+		$target_avgcost = 0;
+
 		// status change is a singular event, and does not happen in coordination with other updates as in serial/location/condition
 		if ($status) {
 			$I['status'] = $status;
@@ -60,13 +65,41 @@
 		} else {
 			// this is not the place where we would be resetting a serial, so only update it if passed in
 			if ($serial) { $I['serial_no'] = $serial; }
-			// we're not resetting partid to null, so only update if it's passed in
-			if ($partid) { $I['partid'] = $partid; }
+
+			// we're not resetting partid to null, so only update if it's passed in; this is also where we RM a part, and update average costs
+			if ($partid) {
+				$I['partid'] = $partid;
+
+				/***** RM PROCESSOR AND AVERAGE COSTS UPDATER *****/
+				$INVENTORY = getInventory($id);
+				$source_partid = $INVENTORY['partid'];
+				$source_qty = $INVENTORY['qty'];
+				// just in case, considering legacy qty method
+				if (! $source_qty) { $source_qty = 1; }
+
+				// see setCost() for comparison of doing this method; get source cost, then target cost, and use it to calc
+				// $diff which is used by setAverageCost() for updating...
+				$source_avgcost = getCost($source_partid);
+				// target avg is the current avg of the new partid
+				$target_avgcost = getCost($partid);//$partid is target/new partid
+			}
 			$I['locationid'] = $locationid;
 			$I['conditionid'] = $conditionid;
 			$I['notes'] = $notes;
 		}
 		setInventory($I);
+
+		// if RMing a part, $source_partid will be set from above; since the partid needs to be updated first, we have this
+		// section of code post-setInventory() above
+		if ($source_partid) {
+			// if none in stock, we're absolutely overriding any past average cost records that are now irrelevant
+			if (! $QTYS[$partid]) {
+				$avg_cost = setAverageCost($partid,$source_avgcost,true);
+			} else {
+				$diff = $source_avgcost-$target_avgcost;
+				$avg_cost = setAverageCost($partid,($diff*$source_qty));
+			}
+		}
 	}
 
 	if ($debug) { exit; }
