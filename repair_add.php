@@ -32,7 +32,7 @@
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getRepairCode.php';
-	include_once $rootdir.'/inc/setCostsLog.php';
+	include_once $rootdir.'/inc/setCost.php';
 
 
 	//Set initials to be used throughout the page

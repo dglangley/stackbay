@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setItem.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
 	$debug = 0;
 
@@ -26,7 +26,6 @@
 
 	if (! $inventoryid) {
 		die("No inventoryid!");
-		jsonDie("No inventoryid!");
 	}
 
 	$order_number = 0;
@@ -35,41 +34,40 @@
 	$inventoryids = explode(',',$inventoryid);
 	$num_inventoryids = count($inventoryids);
 
-	$query = "UPDATE inventory SET ";
-	if ($status) {
-		$query .= "status = '".res($status)."' ";
+	// set globally if used below for creating RO(s)
+	$due_date = format_date($today,'Y-m-d',array('d'=>30));
 
-		if ($status=='in repair') {
-			// get partid for creating repair items record
-			$query2 = "SELECT partid FROM inventory WHERE id = '".res($inventoryid)."'; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-			if (mysqli_num_rows($result2)==0) {
-				die("Could not find inventory record for $inventoryid");
+	foreach ($inventoryids as $id) {
+		$I = array('id'=>$id);
+
+		// status change is a singular event, and does not happen in coordination with other updates as in serial/location/condition
+		if ($status) {
+			$I['status'] = $status;
+
+			if ($status=='in repair') {
+				// get partid for creating repair items record
+				$INVENTORY = getInventory($inventoryid);
+				$partid = $INVENTORY['partid'];
+
+				// when sending a unit to repair, generate the repair order here and then use the repair item id as part
+				// of the inventory update query that we started above
+				$order_number = setOrder('Repair');
+				$repair_item_id = setItem('Repair',$order_number,$partid,1,1,'0.00',$due_date,$inventoryid);
+
+				// add new repair item id to inventory array for updating below
+				$I['repair_item_id'] = $repair_item_id;
 			}
-			$r2 = mysqli_fetch_assoc($result2);
-			$partid = $r2['partid'];
-
-			$due_date = format_date($today,'Y-m-d',array('d'=>30));
-
-			// when sending a unit to repair, generate the repair order here and then use the repair item id as part
-			// of the inventory update query that we started above
-			$order_number = setOrder('Repair');
-			$repair_item_id = setItem('Repair',$order_number,$partid,1,1,'0.00',$due_date,$inventoryid);
-
-			$query .= ", repair_item_id = '".res($repair_item_id)."' ";
+		} else {
+			// this is not the place where we would be resetting a serial, so only update it if passed in
+			if ($serial) { $I['serial_no'] = $serial; }
+			// we're not resetting partid to null, so only update if it's passed in
+			if ($partid) { $I['partid'] = $partid; }
+			$I['locationid'] = $locationid;
+			$I['conditionid'] = $conditionid;
+			$I['notes'] = $notes;
 		}
-	} else {
-		$query .= "serial_no = ";
-		if ($serial) { $query .= "'".res($serial)."', "; } else { $query .= "NULL, "; }
-		if ($partid) { $query .= "partid = '".res($partid)."', "; }
-		$query .= "locationid = '".res($locationid)."', ";
-		$query .= "conditionid = '".res($conditionid)."', ";
-		$query .= "notes = ";
-		if ($notes) { $query .= "'".res($notes)."' "; } else { $query .= "NULL "; }
+		setInventory($I);
 	}
-	$query .= "WHERE id IN (".res($inventoryid).") LIMIT ".$num_inventoryids."; ";
-	if ($debug) { echo $query.'<BR>'; }
-	else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
 	if ($debug) { exit; }
 

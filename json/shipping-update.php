@@ -22,6 +22,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/invoice.php';
+	include_once $rootdir.'/inc/setInventory.php';
 
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
@@ -218,8 +219,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						}
 
 						// changes from manifest to shipped
-						$query2 = "UPDATE inventory SET status = 'shipped' WHERE id = '".$inventoryid."'; ";
-						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+						$I = array('id'=>$inventoryid,'status'=>'shipped');
+						setInventory($I);
 					}
 				}
 				//Invoice Creation based off shipping

@@ -80,6 +80,7 @@
 		return $data;
 	}
 
+/*
 	function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
 		global $QTYS;
 
@@ -97,6 +98,7 @@
 
 		return ($qty);
 	}
+*/
 
 	//This function loads in the entire line item
 	function listLoad($listid, $last_ln, $equipment_filter, $sort) {
@@ -282,8 +284,8 @@
 			$results[$partid]['notes'] = '';
 
 			// change to this after migration, remove ~7-10 lines above
-			if(getQtyPatch($partid) != 'null') {
-				$itemqty = getQtyPatch($partid);
+			if(getQty($partid) !== false) {
+				$itemqty = getQty($partid);
 				$lineqty += $itemqty;
 			} else {
 				$itemqty = 'null';

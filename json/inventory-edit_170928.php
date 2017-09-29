@@ -24,6 +24,7 @@
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/setInventory.php';
 	include_once $rootdir.'/inc/locations.php';
 
 	
@@ -33,7 +34,7 @@
 		$query = '';
 		
 		//Grab all the line item parts from the inventory submission
-		$serial = $_REQUEST['serial_no'];
+		$serial = strtoupper(trim($_REQUEST['serial_no']));
 		$place = $_REQUEST['place'];
 		$instance = $_REQUEST['instance'];
 		$conditionid = $_REQUEST['conditionid'];
@@ -52,26 +53,12 @@
 			$status = "scrapped";
 		}
 		$locationid = dropdown_processor($place, $instance);
-		//Prep Query information
-		$serial = prep($serial);
-		$locationid = prep($locationid);
-		$qty = prep($qty);
-		$conditionid = prep($conditionid);
-		$notes = prep($notes);
-		$id = prep($id);
-		
+
 		if($action != 'repair') {
 			//Some reason, this was still updating with no id
 		    if($id) {
-			    $query  = "UPDATE inventory SET serial_no = $serial, locationid = $locationid, conditionid = $conditionid, notes = $notes";
-				if($status){
-					$status = prep($status, '');
-					$query .= " ,status = $status";
-				}
-				if($locationid){
-					$query .= " ,locationid = $locationid";
-				}
-			    $query .= " WHERE id = $id;";
+				$I = array('id'=>$id,'serial_no'=>$serial,'locationid'=>$locationid,'conditionid'=>$conditionid,'status'=>$status,'notes'=>$notes);
+				setInventory($I);
 		    } else {
 		    	return 'Failed to Update';
 		    }
@@ -150,7 +137,6 @@
 	if($action == 'delete') {
 		$result = deleteToDatabase($id);
 	} else {
-		// $result = updateToDatabase($serial, dropdown_processor($place, $instance), $qty, $conditionid, $status, $id, $notes);
 		$result = updateToDatabase($id,$action);
 	}
 	

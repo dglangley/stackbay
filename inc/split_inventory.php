@@ -5,6 +5,7 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
     function split_inventory($invid, $qty){
         $now = $GLOBALS['now'];
@@ -24,19 +25,33 @@
 
         // If this doesn't run then that means that the pulled item was fully pulled and does not need to have the extra components created
         if($parsedQty > 0) {
+			$I = array('id'=>$invid,'qty'=>$qty);
+			setInventory($I);
+
+/*
             // If the qty is a partial pull of the current qty for the inventory id then split the 2 apart
             $query = "UPDATE inventory SET qty = ".res($qty).", status ='manifest' WHERE id = ".res($invid).";";
             qdb($query) OR die(qe() . ' ' . $query);
+*/
 
+			$I = getInventory($invid);
+			$I['qty'] = $parsedQty;
+			$I['notes'] = 'SPLIT: '.$invid;
+			$new_invid = setInventory($I);
+
+/*
             $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, bin, purchase_item_id, sales_item_id, returns_item_id, repair_item_id, userid, date_created, notes) 
                     SELECT serial_no, '".res($parsedQty)."' as qty, partid, conditionid, 'shelved' as status, locationid, bin, purchase_item_id, sales_item_id, returns_item_id, repair_item_id, userid, date_created,  'SPLIT: ".res($invid)."' as notes FROM inventory WHERE id = ".res($invid).";";
             qdb($query) OR die(qe() . ' ' . $query);
 
             $new_invid = qid();
+*/
         } else if($parsedQty == 0) {
+/*
             // If inventory is pulled in full then just update the status
             $query = "UPDATE inventory SET status ='manifest' WHERE id = ".res($invid).";";
             qdb($query) OR die(qe() . ' ' . $query);
+*/
         }
 
         return $new_invid;

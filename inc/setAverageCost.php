@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 
 	if (! isset($debug)) { $debug = 0; }
+
 	function setAverageCost($partid,$diff,$setAbsolute=false,$setDatetime='') {
 		global $debug;
 

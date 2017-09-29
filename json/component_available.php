@@ -24,7 +24,7 @@
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
-	include_once $rootdir.'/inc/component_split.php';
+	include_once $rootdir.'/inc/split_inventory.php';
 	include_once $rootdir.'/inc/setInventory.php';
 
 	$result;
@@ -90,17 +90,15 @@
 		$result = true;
 		foreach($components as $item) {
 			if($item['qty']) {
-				//function split_components($invid, $new_qty, $id_type = "", $id_number = "")
-				//$newID = split_components($item['invid'], $item['qty'], "repair", $repair_item_id);
-				$newID = split_components($item['invid'], $item['qty']);//, "repair", $repair_item_id);
+//				$newID = split_components($item['invid'], $item['qty']);
+				$newID = split_inventory($item['invid'], $item['qty']);
 
-				if($newID) {
-					$query = "UPDATE inventory SET status = 'in repair' WHERE id = ".prep($newID).";";
-					qdb($query) or die(qe());
+				$I = array('id'=>$item['invid'],'status'=>'installed');
+				setInventory($I);
 
-					$query = "INSERT INTO repair_components (invid, ro_number, qty) VALUES (".prep($newID).", ".prep($order_number).", ".prep($item['qty']).");";
-					$result = qdb($query) or die(qe());
-				}
+				$query = "INSERT INTO repair_components (invid, ro_number, datetime, qty) ";
+				$query .= "VALUES ('".res($item['invid'])."', '".res($order_number)."', '".$GLOBALS['now']."', '".res($item['qty'])."');";
+				$result = qdb($query) or die(qe());
 			}
 		}
 

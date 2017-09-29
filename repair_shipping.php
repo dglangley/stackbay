@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
@@ -85,13 +86,12 @@
 		return $locationid;
 	}
 
-	function updatetoStock($place, $instance, $condition, $serial_no){
+	function updatetoStock($place, $instance, $condition, $inventoryids){
 		$locationid = getLocation($place, $instance);
-		foreach ($serial_no as $serial) {
-			$query = "UPDATE inventory SET conditionid = '5', qty = '1' WHERE serial_no = ".prep($serial).";";
-			//echo $query . "<br>";
+		foreach ($inventoryids as $inventoryid) {
+			$I = array('id'=>$inventoryid,'conditionid'=>'5');
+			setInventory($I);
 		}
-		qdb($query) OR die(qe());
 	}
 	
 	//Declare variables
@@ -99,17 +99,17 @@
 	$place;
 	$instance;
 	$condition;
-	$serial_no = array();
+	$inventoryids = array();
 
 	if (isset($_REQUEST['place'])) { $place = $_REQUEST['place']; }
 	if (isset($_REQUEST['instance'])) { $instance = $_REQUEST['instance']; }
 	if (isset($_REQUEST['condition'])) { $condition = $_REQUEST['condition']; }
-	if (isset($_REQUEST['serial_no'])) { $serial_no = $_REQUEST['serial_no']; }
+	if (isset($_REQUEST['inventoryids'])) { $inventoryids = $_REQUEST['inventoryids']; }
 	//if (isset($_REQUEST['bill_option'])) { $bill_option = $_REQUEST['bill_option']; }
 	
 	if (isset($_REQUEST['ro_number'])) { 
 		$ro_number = $_REQUEST['ro_number']; 
-		updatetoStock($place, $instance, $condition, $serial_no);
+		updatetoStock($place, $instance, $condition, $inventoryids);
 		$order_number = triggerNewSO($ro_number, $now);
 	}
 	

@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
 	function getRepairItemId($ro_number, $partid) {
 		$repair_item_id;
@@ -134,7 +135,11 @@
 							VALUES ('".res($partid)."', '".res($new_average)."', '".res($GLOBALS['now'])."');";
 				qdb($query) OR die(qe() . ' ' .$query);
 				//echo $query;
+
 				$new_invid = split_inventory($invid, $pulled);
+
+				$I = array('id'=>$invid,'status'=>'installed');
+				setInventory($I);
 			}
 		}
 	}

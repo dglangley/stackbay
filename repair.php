@@ -209,8 +209,6 @@
 			//Check to see what has been received and sum it into the total Ordered
 			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 			if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-			//$query .= "WHERE i.repair_item_id = ". prep($repair_item_id) ." AND i.serial_no IS NULL AND i.partid = ".prep($row['partid'])." ";
-			//$query .= "AND i.serial_no IS NULL AND i.partid = ".prep($row['partid'])." ";
 			$query .= "WHERE c.ro_number = '".res($ro_number)."' AND c.invid = i.id ";
 			$query .= "AND i.partid = ".prep($row['partid'])." ";
 			if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
@@ -229,7 +227,6 @@
 
 		// if(empty($purchase_requests)) {
 			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
-			//$query .= "WHERE repair_item_id = ". prep($repair_item_id) ." AND serial_no IS NULL GROUP BY partid;"; 
 			$query .= "WHERE c.ro_number = '".res($ro_number)."' AND c.invid = i.id ";
 			$query .= "AND serial_no IS NULL GROUP BY i.partid; ";
     		$result = qdb($query) OR die(qe()); 

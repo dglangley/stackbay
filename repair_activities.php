@@ -5,32 +5,30 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
 	function triggerActivity($ro_number, $repair_item_id, $inventoryid=0, $notes, $techid, $trigger, $check_in){
 		$now = $GLOBALS['now'];
 
 		if ($_REQUEST['type'] == 'test_in' || $_REQUEST['type'] == 'test_out'){
 			$status = "in repair";
-			$select = "SELECT `status` FROM `inventory` WHERE ";
+
+			$select = "SELECT id, status FROM `inventory` WHERE ";
 			if ($inventoryid) { $select .= "id = '".res($inventoryid)."' "; }
 			else { $select .= "`repair_item_id` = ".prep($repair_item_id)." "; }
 			$select .= "; ";
 			$result = qdb($select) OR die(qe()." | $select");
-			if(mysqli_num_rows($result)){
-				$result = mysqli_fetch_assoc($result);
+			while ($r = mysqli_fetch_assoc($result)) {
 				$status = $result['status'];
 				if(strtolower($status) == 'in repair'){
 					$status = 'testing';
 				} else {
 					$status = 'in repair';
 				}
-			}
 
-			$query = "UPDATE `inventory` SET `status`='$status' WHERE ";//`repair_item_id` = ".prep($repair_item_id).";";
-			if ($inventoryid) { $query .= "id = '".res($inventoryid)."' "; }
-			else { $query .= "`repair_item_id` = ".prep($repair_item_id)." "; }
-			$query .= "; ";
-			qdb($query) or die(qe()." | $query");
+				$I = array('id'=>$r['id'],'status'=>$status);
+				setInventory($I);
+			}
 		}
 
 		if($trigger == "complete" && $check_in == 'check_out') {
@@ -89,8 +87,8 @@
 			}
 		}
 
-		$query = "UPDATE `inventory` SET `status`='$status' WHERE `id` = ".prep($invid).";";
-			qdb($query) or die(qe()." | $query");
+		$I = array('id'=>$invid,'status'=>$status);
+		setInventory($I);
 
 		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
 		$result = qdb($query) OR die(qe());
@@ -99,8 +97,12 @@
 	function stockUpdate($repair_item_id, $ro_number, $repair_code){
 		$status = '';
 
-		$query = "UPDATE inventory SET status ='in repair' WHERE repair_item_id = ".prep($repair_item_id).";";
-		qdb($query) OR die(qe());
+		$query = "SELECT id FROM inventory WHERE repair_item_id = '".res($repair_item_id)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$I = array('id'=>$r['id'],'status'=>'in repair');
+			setInventory($I);
+		}
 
 		$query = "UPDATE repair_orders SET repair_code_id = ".prep($repair_code)." WHERE ro_number = ".prep($ro_number).";";
 		qdb($query) OR die(qe());
@@ -140,13 +142,12 @@
 		// qdb($query) or die(qe() . ' ' . $query);
 	}
 
-	function addtoStock($place, $instance, $condition, $serial_no){
+	function addtoStock($place, $instance, $condition, $inventoryids){
 		$locationid = getLocation($place, $instance);
-		foreach ($serial_no as $serial) {
-			$query = "UPDATE inventory SET locationid =".prep($locationid).", conditionid = ".prep($condition).", status = 'received' WHERE serial_no = ".prep($serial).";";
-			//echo $query . "<br>";
+		foreach ($inventoryids as $inventoryid) {
+			$I = array('id'=>$inventoryid,'locationid'=>$locationid,'conditionid'=>$condition,'status'=>'received');
+			setInventory($I);
 		}
-		qdb($query) OR die(qe());
 	}
 
 	function getSerialNumber($invid){
@@ -187,7 +188,7 @@
 	$ro_number;
 	if (isset($_REQUEST['ro_number'])) { $ro_number = $_REQUEST['ro_number']; }
 
-	if(isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive' || $notes || isset($_REQUEST['build_test'])) {
+	if ((isset($_REQUEST['type']) && $_REQUEST['type'] != 'receive') || isset($_REQUEST['build_test'])) {
 		//Declare variables within this scope
 		$repair_item_id;
 		$inventoryid;
@@ -252,15 +253,15 @@
 		$place;
 		$instance;
 		$condition;
-		$serial_no;
+		$inventoryids = array();
 
 		if (isset($_REQUEST['place'])) { $place = $_REQUEST['place']; }
 		if (isset($_REQUEST['instance'])) { $instance = $_REQUEST['instance']; }
 		if (isset($_REQUEST['condition'])) { $condition = $_REQUEST['condition']; }
-		if (isset($_REQUEST['serial_no'])) { $serial_no = $_REQUEST['serial_no']; }
+		if (isset($_REQUEST['inventoryids'])) { $inventoryids = $_REQUEST['inventoryids']; }
 		if (isset($_REQUEST['bill_option'])) { $bill_option = $_REQUEST['bill_option']; }
 
-		addtoStock($place, $instance, $condition, $serial_no);
+		addtoStock($place, $instance, $condition, $inventoryids);
 
 		header('Location: /order_form.php?ps=repair&on=' . $ro_number);
 	}

@@ -18,6 +18,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
+	include_once $rootdir.'/inc/setInventory.php';
 
 	//This is a list of everything
 	$partid = grab('partid');
@@ -50,7 +51,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			//If the serial exists then run the single serial query... (This is assuming that the serial law is well maintained and not the same item has the same serial number)
 			while ($row = mysqli_fetch_assoc($check)) {
-				$inventory_id = $row['id'];
+				$inventoryid = $row['id'];
 					 
 				//Check to make sure that the conditions match, else trigger an error (Future dev: trigger a warning to override the order specified condition)
 //dgl 2-28-17 at this point we don't care about mismatching condition
@@ -60,18 +61,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE id = '".$item_id."'; ";//partid='". res($partid) ."' AND so_number = '". res($so_number) ."';";
 					qdb($query);
 					
-					//$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', last_sale = '". res($so_number) ."' WHERE id = $inventory_id; ";
-					//dl 9-21-17
-					//$query = "UPDATE inventory SET qty = qty - 1, status = 'outbound', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
-					$query = "UPDATE inventory SET status = 'manifest', sales_item_id = '". res($item_id) ."' WHERE id = $inventory_id; ";
-					$result['query'] = qdb($query);
-					
+					$I = array('id'=>$inventoryid,'status'=>'manifest','sales_item_id'=>$item_id);
+					setInventory($I);
+
 					//Check to see if the aty received and the qty ordered is matching or not
 					$query = "SELECT qty, qty_shipped, CASE WHEN qty = qty_shipped THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE id = '".$item_id."'; ";//so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
 					$match = qdb($query) or die(qe());
 					
 					//Pair the package to the line item of the inventory number we changed.
-					$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$package','$inventory_id');";
+					$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$package','$inventoryid');";
 					$result['package'] = qdb($package_query) OR die(qe());
 					
 					if (mysqli_num_rows($match)>0) {
@@ -85,7 +83,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						}
 					}
 					
-					$result['invid'] = $inventory_id;
+					$result['invid'] = $inventoryid;
 //dgl 2-28-17 at this point we don't care about mismatching condition
 //				} else {
 //					$result['query'] = false;

@@ -74,7 +74,7 @@
                                 foreach($repair_inventory as $item) {
                                     echo "<tr>";
                                     echo "<td>".$item['partid']."</td>";
-                                    echo "<td>".$item['serial_no']." <input class='hidden' name='serial_no[]' value='".$item['serial_no']."'></td>";
+                                    echo "<td>".$item['serial_no']." <input class='hidden' name='inventoryids[]' value='".$item['id']."'></td>";
                                     echo "</tr>";
                                 }
                             ?>

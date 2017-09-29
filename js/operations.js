@@ -2416,67 +2416,6 @@
 			$(this).closest(".row").find(".instance option[data-place='"+place+"']:first").prop("selected", true);
 		});
 
-//==============================================================================
-//===================================== RM =====================================
-//==============================================================================
-	
-	$(document).on("click",".rm_button",function(){
-		var partid = $(this).closest("tr").attr("data-part");
-		var text = $(this).closest("tr").attr("data-name");
-		var invid = $(this).closest("tr").attr("data-invid");
-		$("#modalRMBody").find(".item_search").initSelect2("/json/part-search.php","Select a Part","purchase");
-		$("#modalRMBody").find(".item_search").setDefault(text,partid);
-		$("#modalRMBody").attr("data-partid",partid);
-		$("#modalRMBody").attr("data-invid",invid);
-		$("#modal-RM").modal("show");
-	});
-	$(document).on("click","#RM-continue",function() {
-		var e = $("#modalRMBody");
-		var partid = e.attr("data-partid");
-		var new_partid = e.find(".item_search").val();
-
-		// if the user has changed the partid, send to processor
-		if (new_partid != partid) {
-			updatePartid("modalRMBody");
-		}
-	});
-	function updatePartid(element_name,debug_mode) {
-		if (! debug_mode) { var debug_mode = 0; }
-		var e = $("#"+element_name);
-		var partid = e.attr("data-partid");
-		var new_partid = e.find(".item_search").val();
-		var invid = e.attr("data-invid");
-
-		console.log(window.location.origin+"/json/rm-processor.php?invid="+invid+"&partid="+new_partid+"&debug="+debug_mode);
-		$.ajax({
-			type: "POST",
-			url: '/json/rm-processor.php',
-			data: {
-				"invid" : invid,
-				"partid" : new_partid,
-				"debug" : debug_mode
-			},
-			dataType: 'json',
-			success: function(json, status) {
-				//console.log(json.message);
-				if (json.message=='Success') {
-					//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Success", 'New average cost: '+json.data);
-					location.reload();
-				} else {
-					//modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", json.message);
-				}
-			},
-			error: function(xhr, status, error) {
-				alert(error+" | "+status+" | "+xhr);
-				//submitProblem("SYSTEM","JSON RM PROCESSOR | Failure | /json/rm-processor.php?invid="+invid+"&part="+new_partid);
-			}
-		});
-	}
-	
-
-//=================================== End RM ===================================
-
-
 
 
 //==============================================================================
