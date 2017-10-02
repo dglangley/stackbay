@@ -11,13 +11,15 @@
 
 	$companyid = 0;
 	$lumpid = 0;
+	$order_type = '';
 	$table_rows = '';
 	$lump_grouping = array();
 	$lump_created_msg = "";
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['lumpid'])) { $lumpid = $_REQUEST['lumpid']; }
+	if (isset($_REQUEST['order_type']) AND ($_REQUEST['order_type']=='Repair' OR $_REQUEST['order_type']=='Sale')) { $order_type = $_REQUEST['order_type']; }
 
-	$startDate = '';//date('m/d/Y');
+	$startDate = format_date($today,'01/01/Y',array('y'=>-1));//date('m/d/Y');
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']){
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
@@ -65,14 +67,17 @@
 	}
 
 	if ($companyid OR $lumpid) {
-		$query = "SELECT * FROM invoices i ";
+		$query = "SELECT i.* FROM invoices i ";
 		if ($lumpid) { $query .= ", invoice_lump_items ili "; }
+		else { $query .= "LEFT JOIN invoice_lump_items ili ON ili.invoice_no = i.invoice_no "; }
 		$query .= "WHERE 1 = 1 ";
 		if ($companyid) { $query .= "AND i.companyid = '".res($companyid)."' "; }
 		if ($lumpid) { $query .= "AND ili.invoice_no = i.invoice_no AND ili.lumpid = '".res($lumpid)."' "; }
+		else { $query .= "AND ili.invoice_no IS NULL "; }
 		if ($dbStartDate) {
 			$query .= "AND (i.date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME)) ";
 		}
+		if ($order_type) { $query .= "AND i.order_type = '".res($order_type)."' "; }
 		$query .= "ORDER BY i.invoice_no DESC; ";
 		$result = qdb($query) or die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -122,7 +127,14 @@
 	<form id="lump_sub" method="GET" action="/lumps.php">
 		<div class="table-header" style="width: 100%; height: 60px;">
 			<div class="row" style="padding: 8px;" id = "filterBar">
-				<div class = "col-md-2 col-sm-2">
+				<div class = "col-md-1 col-sm-1">
+					<select name="order_type" id="order_type" class="input-sm form-control">
+						<option value="">- Order Type -</option>
+						<option value="Repair"<?php if ($order_type=='Repair') { echo ' selected'; } ?>>Repair</option>
+						<option value="Sale"<?php if ($order_type=='Sale') { echo ' selected'; } ?>>Sale</option>
+					</select>
+				</div>
+				<div class = "col-md-1 col-sm-1">
 <?php if ($lumpid) { ?>
 						<a target="_blank" href="/docs/LUMP<?php echo $lumpid; ?>.pdf" class="btn btn-brown btn-sm pull-left"><i class="fa fa-file-pdf-o"></i></a>
 <?php } ?>
@@ -227,7 +239,7 @@
 		}
 
 		$(".lump_checks").click(function(){
-			if($(".lump_checks:checked").length > 1){
+			if($(".lump_checks:checked").length > 0){
 				$("#lump_these").prop( "disabled", false );
 				$("#lump_these").addClass("btn-success");
 			} else {
@@ -235,8 +247,8 @@
 				$("#lump_these").removeClass("btn-success");
 			}
 		});
-		$("#lumpid").select2();
-		$("#lumpid").change(function() {
+		$("#lumpid,#order_type").select2();
+		$("#lumpid,#order_type").change(function() {
 			$(this).closest("form").submit();
 		});
 		
