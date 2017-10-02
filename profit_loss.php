@@ -412,6 +412,8 @@
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 
+	$dbStartDate = '';
+	$dbEndDate = '';
 	if ($startDate) {
 		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
 		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';

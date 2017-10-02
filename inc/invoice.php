@@ -46,8 +46,9 @@
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
 		} else {
+				//Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 			$invoice_item_select = "
-				Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
+				Select i.partid, datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
 				WHERE package_contents.packageid = packages.id
 				AND package_contents.serialid = i.id

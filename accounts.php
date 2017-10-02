@@ -502,7 +502,7 @@
 		';
 
 		if(!$company_filter){
-			$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+			$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'" target="_blank"><i class="fa fa-book" aria-hidden="true"></i></a></td>';
 		}
 		$rows .='
             		<td>
@@ -513,7 +513,7 @@
 		if($_REQUEST['invoice']) {		
            	$rows .= '
 							<div class="col-md-6">
-								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>': 'N/A').'
+								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': 'N/A').'
 							</div>
 			';
 		}
@@ -540,7 +540,7 @@
 	           		<td>
 						<div class="row">
 							<div class="col-md-6"></div>
-							<div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
+							<div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
 						</div>
 					</td>
 	           		<td></td>

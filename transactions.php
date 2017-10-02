@@ -12,6 +12,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/locations.php';
+	include_once $rootdir.'/inc/order_type.php';
 
 	/***** POST DATA *****/
 	$sorter = '';
@@ -229,23 +230,32 @@
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$completed = $r['date_completed'];
+				$edit_ln = '';
 			} else {
 				$invoices_open++;
+				$edit_ln = '<a href="invoice.php?invoice='.$row['invoice_no'].'"><i class="fa fa-pencil"></i></a>';
 			}
 
-	    	$invoices .= "
-	            <tr class = '".($completed? "complete" : "pending" )."'>
-	            	<td><a href='docs/INV".$row['invoice_no'].".pdf' target='_new'>".$row['invoice_no']."</td>
-                    <td>".getCompany($row['companyid'])."</td>
-                    <td>".$address['street']."</td>
-                    <td>".format_date($row['date_invoiced'])."</td>
-                    <td><a href='/".substr($row['order_type'],0,1)."O".$row['order_number']."'>".$row['order_number']."</a></td>
-                    <td>".$term."</td>
-                    <td>".format_date($row['date_invoiced'],'D n/j/y')."</td>
-                    <td class='text-right'>".format_price($amount)."</td>
-                    <td class='text-center'><input type='checkbox' name='invoices_checkbox[]' value='".$row['invoice_no']."' ".($completed ? 'disabled checked' : '')."> ".format_date($completed,'n/d/y')."</td>
+			$T = order_type($row['order_type']);
+
+	    	$invoices .= '
+	            <tr class = "'.($completed? 'complete' : 'pending' ).'">
+	            	<td>
+						'.$row['invoice_no'].' <a href="docs/INV'.$row['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i>
+					</td>
+                    <td>'.getCompany($row['companyid']).'</td>
+                    <td>'.$address['street'].'</td>
+                    <td>'.format_date($row['date_invoiced']).'</td>
+                    <td>'.$T['abbrev'].' '.$row['order_number'].' <a href="/'.$T['abbrev'].$row['order_number'].'"><i class="fa fa-arrow-right"></i></a></td>
+                    <td>'.$term.'</td>
+                    <td>'.format_date($row['date_invoiced'],'D n/j/y').'</td>
+                    <td class="text-right">'.format_price($amount).'</td>
+                    <td class="text-center">
+						<input type="checkbox" name="invoices_checkbox[]" value="'.$row['invoice_no'].'" '.($completed ? 'disabled checked' : '').'> '.format_date($completed,'n/d/y').'
+						'.$edit_ln.'
+					</td>
 	            </tr>
-            ";
+            ';
 	    }
 	} else {
 	    $invoices = "

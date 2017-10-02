@@ -75,22 +75,22 @@
     function printLumpedInvoices($lumpid){
             $plumpid = prep($lumpid);
             $select = "
-            SELECT il.date lumpdate, ili.invoice_no, ii.id invoice_item_id, il.id id, companyid, i.order_type, i.order_number, ii.partid, p.tracking_no, ii.ref_1, ii.ref_1_label, ii.ref_2, ii.ref_2_label, ii.qty, ii.amount, iss.*
-              FROM `invoice_lumps` il,`invoice_lump_items` ili, `invoices` i, `invoice_items` ii, invoice_shipments iss, packages p
+            SELECT il.date lumpdate, ili.invoice_no, ii.id invoice_item_id, il.id id, i.order_type, i.order_number, ii.partid,
+			  ii.ref_1, ii.ref_1_label, ii.ref_2, ii.ref_2_label, ii.qty, ii.amount/*, p.tracking_no, iss.* */
+              FROM `invoice_lumps` il,`invoice_lump_items` ili, `invoices` i, `invoice_items` ii/*, invoice_shipments iss, packages p*/
               WHERE il.id = ili.lumpid 
               AND i.invoice_no = ili.invoice_no 
               AND i.invoice_no = ii.invoice_no
+/*
               AND p.order_number = i.order_number
               AND i.order_type = p.order_type
               AND iss.packageid = p.id
               AND iss.invoice_item_id = ii.id
+*/
               AND il.id = $plumpid
               ORDER by ii.id ;";
             $results = qdb($select) or die(qe()." | $select");
-            // echo("<pre>");
-            // echo($select);
-            $return = array();
-            $return['subtotal'] = 0.00;
+            $return = array('subtotal'=>0.00);
             $main_table_structure = array(
                 "line_no" => array(
                     "title" => "Line #",
@@ -132,7 +132,6 @@
                 $repair_code = '';
                 $order_number = '';
                 $part = array();
-                $row = array();
                 // print_r($r);
 
                 //Get the order level information
@@ -158,8 +157,9 @@
                         } else {
                             $item_status = "Shipped";
                         }
+                		$row = array();
                         $row['line_no'] = ++$line_no;
-                        $row['item'] = ucwords($o['type'])." Order # ".$order_number;
+                        $row['item'] = strtoupper(substr($o['type'],0,1))."O ".$order_number;
                         $row['description'] = "
                         P/N: ".getPart($r['partid'])."<br>
                         S/N: ".$mac['serial_no']."<br>
@@ -168,16 +168,15 @@
                         ".($r['ref_1_label']? $r['ref_1_label'].": ".$r['ref_1'] : "")."<br>
                         ".($r['ref_2_label']? $r['ref_2_label'].": ".$r['ref_2'] : "");
                         $row['qty'] = $r['qty'];
-                        $row['price'] = format_price($r['amount']);
-                        $row['ext'] = format_price($r['qty'] * $r['amount']);
-                        $return['main_table_rows'][] = $row;
+                        $row['price'] = format_price($r['amount'],false,'',true);
+                        $row['ext'] = $r['qty'] * $r['amount'];
                         $return['subtotal'] += $row['ext'];
-                        // print_r($row);
+                        $row['ext'] = format_price($row['ext'],true,' ');
+                        $return['main_table_rows'][] = $row;
                     }
-                    $return['subtotal'] = format_price($return['subtotal']);
                 }
             }
-            // echo("</pre>");
+			$return['subtotal'] = format_price($return['subtotal']);
             return $return;
         }
 
@@ -632,8 +631,8 @@ if(!$o['lump']){
             <!-- Subtotal -->
             <tr>
                 <td style="text-align:right;border:none;">Subtotal</td>
-                <td class="text-price">
-                    '.format_price($subtotal).'
+                <td class="text-right">
+                    '.format_price($subtotal,true,' ').'
                 </td>
             </tr>
             <!--  -->
@@ -660,12 +659,12 @@ if(!$o['lump']){
 } else {
     $cols = 0;
     $main = "<table class ='table-full'>";
-    $main .="<thead>";
+    $main .="<thead><tr>";
     foreach($lumps['mts'] as $type => $info){
         $main .="<th class='".$info['size']."'>".$info['title']."</th>";
         $cols++;
     }
-    $main .= "</thead>";
+    $main .= "</tr></thead>";
     $main .= "<tbody>";
     foreach($lumps['main_table_rows'] as $i => $info){
         $main .= "<tr>";
@@ -678,7 +677,7 @@ if(!$o['lump']){
     $main .= "<tfoot>";
     $main .= "<tr>
                 <td colspan='".($cols-1)."' style='text-align:right;'>Subtotal:</td>
-                <td>".$lumps['subtotal']."</td>
+                <td class='text-right'>".format_price($lumps['subtotal'],true,' ')."</td>
             </tr>";
     $main .= "</tfoot>";
     $main .= "</table>";
