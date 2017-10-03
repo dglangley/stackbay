@@ -45,6 +45,22 @@
 		qdb($query) OR die(qe().' '.$query);
 	}
 
+	function editTech($techid, $status, $item_id) {
+		if(! empty($status)) {
+			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND service_item_id = ".res($item_id).";";
+			qdb($query) OR die(qe() . ' ' . $query);
+		} else {
+			// Check first if the user has already been assigned to this job
+			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($techid).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
+
+			if(mysqli_num_rows($result) == 0) {
+				$query = "INSERT INTO service_assignments (service_item_id, userid) VALUES (".res($item_id).", ".res($techid).");";
+				qdb($query) OR die(qe() . ' ' . $query);
+			}
+		}
+	}
+
 	//print '<pre>' . print_r($_REQUEST, true). '</pre>';
 	
 	$order = 0;
@@ -60,6 +76,11 @@
 	$quote_rate = 0;
 	$mileage_rate = 0;
 	$tax_rate = 0;
+
+	$techid = 0;
+	$item_id = 0;
+	$tech_status = '';
+
 		
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
@@ -75,8 +96,16 @@
 	if (isset($_REQUEST['tax_rate'])) { $tax_rate = $_REQUEST['tax_rate']; }
 	if (isset($_REQUEST['partid'])) { $partid = $_REQUEST['partid']; }
 
-	editTask($order, $companyid, $bid, $contactid, $addressid, $public_notes, $private_notes, $partid, $quote_hours, $quote_rate, $mileage_rate, $tax_rate);
+	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
+	if (isset($_REQUEST['tech_status'])) { $tech_status = $_REQUEST['tech_status']; }
+	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
 
-	header('Location: /task_view.php?type='.$type.'&order=' . $order);
+	if(! empty($item_id) && ($techid || ! empty($tech_status))) {
+		editTech($techid, $tech_status, $item_id);
+		header('Location: /task_view.php?type='.$type.'&order=' . $order . '&tab=labor');
+	} else {
+		editTask($order, $companyid, $bid, $contactid, $addressid, $public_notes, $private_notes, $partid, $quote_hours, $quote_rate, $mileage_rate, $tax_rate);
+		header('Location: /task_view.php?type='.$type.'&order=' . $order);
+	}
 
 	exit;

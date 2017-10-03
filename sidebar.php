@@ -30,13 +30,13 @@
 <?php } ?>
 
 	<?php if (isset($edit) AND $edit) { ?>
-		<select name="companyid" class="form-control input-xs company-selector required"><option value="<?=$order_details['companyid'];?>"><?=getCompany($order_details['companyid']);?></option></select>
+		<select name="companyid" class="form-control input-xs company-selector required"><option value="<?=$ORDER['companyid'];?>"><?=getCompany($ORDER['companyid']);?></option></select>
 
-		<input name="bid" class="form-control input-sm" class="bid" type="text" placeholder="<?=(($type != 'repair' AND ($task != 'repair' AND ! empty($task))) ? 'Bid No.' : 'Customer Ref#');?>" value="<?=$order_details['cust_ref'];?>" style="margin-bottom: 10px;">
+		<input name="bid" class="form-control input-sm" class="bid" type="text" placeholder="<?=(($type != 'repair' AND ($task != 'repair' AND ! empty($task))) ? 'Bid No.' : 'Customer Ref#');?>" value="<?=$ORDER['cust_ref'];?>" style="margin-bottom: 10px;">
 
-		<select name="contactid" class="form-control input-xs contact-selector required"><option value="<?=$order_details['contactid'];?>"><?=getContact($order_details['contactid']);?></option></select>
+		<select name="contactid" class="form-control input-xs contact-selector required"><option value="<?=$ORDER['contactid'];?>"><?=getContact($ORDER['contactid']);?></option></select>
 
-		<select name="addressid" class="form-control input-xs address-selector required"><option value="<?=$order_details['bill_to_id'];?>"><?=address_out($order_details['bill_to_id']);?></option></select>
+		<select name="addressid" class="form-control input-xs address-selector required"><option value="<?=$ORDER['bill_to_id'];?>"><?=address_out($ORDER['bill_to_id']);?></option></select>
 
 		<br>
 
@@ -76,17 +76,17 @@
 		<br>
 
 		<p class="section-header">Public Notes</p>
-		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$order_details['public_notes'];?></textarea>
+		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$ORDER['public_notes'];?></textarea>
 
 	<?php } else {/* ! $edit */ ?>
 
-		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($order_details['companyid']);?></span></p>
+		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($ORDER['companyid']);?></span></p>
 
-		<p class="bid"><?=($order_details['cust_ref']);?></p>
+		<p class="bid"><?=($ORDER['cust_ref']);?></p>
 	
-		<p class="company_contact" data-contactid=""><?=getContact($order_details['contactid']);?></p>
+		<p class="company_contact" data-contactid=""><?=getContact($ORDER['contactid']);?></p>
 
-		<p class="company_address" data-addressid=""><?=address_out($order_details['bill_to_id']);?></p>
+		<p class="company_address" data-addressid=""><?=address_out($ORDER['bill_to_id']);?></p>
 
 		<?php if($type == 'service') { ?>
 			<br>
@@ -99,7 +99,7 @@
 
 		<?php if($type == 'repair' OR $type == 'build') { ?>
 			
-			<?=format($order_details['partid']);?>
+			<?=format($ORDER['partid']);?>
 			<br>
 
 			<p class="section-header">Serial(s):</p>
@@ -121,16 +121,16 @@
 		<br>
 
 		<p class="section-header">Public Notes</p>
-		<p class="public_notes"><?=$order_details['public_notes'];?></p>
+		<p class="public_notes"><?=$ORDER['public_notes'];?></p>
 	<?php } ?>
 
 	<br>
 	<div class="sidebar-footer">
 		<p class="section-header">Internal Use Only</p>
 		<?php if ($edit) { ?>
-			<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$order_details['private_notes'];?></textarea>
+			<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$ORDER['private_notes'];?></textarea>
 		<?php } else { ?>
-			<p class="private_notes"><?=$order_details['private_notes'];?></p>
+			<p class="private_notes"><?=$ORDER['private_notes'];?></p>
 		<?php } ?>
 	</div>
 </div>					
