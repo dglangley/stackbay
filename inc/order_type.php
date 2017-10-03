@@ -3,6 +3,15 @@
 		$T = array();
 
 		switch ($order_type) {
+			case 'Invoice':
+				$T['orders'] = 'invoices';
+				$T['order'] = 'invoice_no';
+				$T['items'] = 'invoice_items';
+				$T['item_label'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'INV';
+				break;
+
 			case 'IT':
 				$T['orders'] = '';
 				$T['order'] = '';
