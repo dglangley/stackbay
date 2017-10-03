@@ -140,36 +140,7 @@
 <?php } ?>
 				</div>
 				<div class = "col-md-3 col-sm-3">
-					<div class="form-group col-md-4 nopadding">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				        </div>
-					</div>
-					<div class="form-group col-md-4 nopadding">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-					    </div>
-					</div>
-					<div class="form-group col-md-4 nopadding">
-						<div class="btn-group" id="dateRanges">
-							<div id="btn-range-options">
-								<button class="btn btn-default btn-sm">&gt;</button>
-								<div class="animated fadeIn hidden" id="date-ranges" style = 'width:217px;'>
-							        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-					    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("01/01/Y"); ?>" data-end="<?php echo date("03/31/Y"); ?>">Q1</button>
-									<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("04/01/Y"); ?>" data-end="<?php echo date("06/30/Y"); ?>">Q2</button>
-									<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("07/01/Y"); ?>" data-end="<?php echo date("09/30/Y"); ?>">Q3</button>
-									<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="<?php echo date("10/01/Y"); ?>" data-end="<?php echo date("12/31/Y"); ?>">Q4</button>
-								</div><!-- animated fadeIn -->
-							</div><!-- btn-range-options -->
-						</div><!-- btn-group -->
-					</div><!-- form-group -->
+					<?php include_once $_SERVER["ROOT_DIR"].'/inc/filter-date.php'; ?>
 				</div>
 				<div class="col-md-2 col-sm-2 text-center">
 	            	<h2 class="minimal">Lumps</h2>

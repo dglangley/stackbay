@@ -234,6 +234,7 @@ select.input-sm {
 	margin-top:2px;
 	float:none;
 }
+div.valign-top,
 .table tr.valign-top td,
 .table .first,
 .table .first .product-action div {
