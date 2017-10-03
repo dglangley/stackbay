@@ -1,7 +1,22 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
-	$TITLE = '';
+	$invoice = '';
+	if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
+
+	$TITLE = 'Invoice';
+	if ($invoice) {
+		$TITLE .= ' '.$invoice;
+
+		$query = "SELECT * FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)==0) {
+			die("Invalid Invoice!");
+		}
+		$r = mysqli_fetch_assoc($result);
+		$invoice_info = format_date($r['date_invoiced'],'D n/j/y g:ia');
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -35,7 +50,7 @@
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
-			<span class="info"></span>
+			<span class="info"><?php echo $invoice_info; ?></span>
 		</div>
 		<div class="col-sm-2">
 		</div>
@@ -48,8 +63,11 @@
 	</form>
 </div>
 
+<?php include_once $_SERVER["ROOT_DIR"].'/sidebar.php'; ?>
+
 <div id="pad-wrapper">
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+
 
 </form>
 </div><!-- pad-wrapper -->
