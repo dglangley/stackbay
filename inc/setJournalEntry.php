@@ -23,14 +23,30 @@
 		$confirmed = prep($confirmed);
 		$confirmed_by = prep($confirmed_by);
 
-		$query = "INSERT INTO journal_entries (entry_no, datetime, debit_account, credit_account, memo, trans_number, trans_type, amount, confirmed_datetime, confirmed_by) ";
-		$query .= "VALUES ($q_entryno, $date, $debit_account, $credit_account, $memo, $trans_num, $trans_type, $amount, $confirmed, $confirmed_by); ";
+		// can we consolidate an existing entry with this one if all fields match? if so, sum the result
+		$id = 0;
+		$query = "SELECT id, amount FROM journal_entries WHERE datetime = $date AND debit_account = $debit_account AND credit_account = $credit_account ";
+		$query .= "AND memo = $memo AND trans_number = $trans_num AND trans_type = $trans_type AND confirmed_datetime IS NULL AND confirmed_by IS NULL; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$id = $r['id'];
+			$amount += $r['amount'];
+		}
+
+		$query = "REPLACE journal_entries (entry_no, datetime, debit_account, credit_account, memo, trans_number, trans_type, amount, ";
+		$query .= "confirmed_datetime, confirmed_by";
+		if ($id) { $query .= ", id"; }
+		$query .= ") VALUES ($q_entryno, $date, $debit_account, $credit_account, $memo, $trans_num, $trans_type, $amount, ";
+		$query .= "$confirmed, $confirmed_by";
+		if ($id) { $query .= ", $id"; }
+		$query .= "); ";
 		if ($debug) {
 			echo $query.'<BR>';
-			$id = 999999;
+			if (! $id) { $id = 999999; }
 		} else {
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
-			$id = qid();
+			if (! $id) { $id = qid(); }
 		}
 
 		// go back and update now with ID; this is kind of legacy crap, maybe revisit this at some point; dl 6-30-17
