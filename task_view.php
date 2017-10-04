@@ -16,10 +16,20 @@
 	//Declared Variables
 	// Type of job (Service, Repair, etc.)
 	$type = isset($_REQUEST['type']) ? $_REQUEST['type'] : '';
-	$order_number = ucwords(isset($_REQUEST['order']) ? $_REQUEST['order'] : '');
+	$order_number_details = (isset($_REQUEST['order']) ? $_REQUEST['order'] : '');
 	$edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
 	$task = (isset($_REQUEST['task']) ? $_REQUEST['task'] : '');
 	$tab = (isset($_REQUEST['tab']) ? $_REQUEST['tab'] : '');
+
+	preg_match_all("/\d+/", $order_number_details, $order_number_split);
+
+	$order_number_split = reset($order_number_split);
+
+	$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
+	$task_number = ($order_number_split[1] ? $order_number_split[1] : 1);
+
+	// Contains the id of the line item (purchase_item_id, repair_item_id ....)
+	$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
 
 	// List of subcategories
 	$documentation = true;
@@ -53,11 +63,6 @@
 		$ticketStatus = getRepairCode($ORDER['repair_code_id']);
 	}
 
-	//print '<pre>' . print_r($ORDER, true) . '</pre>';
-
-	// Contains the id of the line item (purchase_item_id, repair_item_id ....)
-	$item_id = 0;
-
 	// Disable the modules you want on the page here
 	if($type == 'service') {
 
@@ -78,24 +83,6 @@
 		$activity_data = grabActivities($order_number, $item_id, $type);
 		$component_data = getComponents($order_number, $item_id, $type);
 
-		// $check_status = ""; 
-		// $claimed = "";
-
-		// if(! empty($activities)){
-		// 	foreach($activities as $activity):
-		// 		if(strpos($activity['notes'], 'Checked') !== false && !$check_status) {
-		// 			if(strtolower($activity['notes']) == 'checked in') {
-		// 				$check_status = 'closed';
-		// 			} else if(strtolower($activity['notes']) == 'checked out') {
-		// 				$check_status = 'opened';
-		// 			}
-		// 		}
-
-		// 		if(strpos($activity['notes'], 'Claimed') !== false && !$claimed) {
-		// 			$claimed = "Claimed on <b>" . format_date($activity['datetime']) . "</b> by <b>". getContact($activity['techid'], 'userid') . "</b>";
-		// 		}
-		// 	endforeach; 
-		// }
 	} else if($quote){
 		// Create the option for the user to create a quote or create an order
 		$activity = false;
@@ -135,9 +122,8 @@
 		return $serials;
 	}
 
-	// Function are mostly used for Repair OR Builds
 	function getItems($order_number = 0, $table = 'repair_items', $field = 'ro_number') {
-		global $item_id;
+		// global $item_id;
 
 		$items = array();
 
@@ -146,10 +132,32 @@
 				
 		while ($row = $result->fetch_assoc()) {
 			$items[] = $row;
-			$item_id = $row['id'];
+			//$item_id = $row['id'];
 		}
 		
 		return $items;
+	}
+
+	function getItemID($order_number, $line_number, $table = 'repair_items', $field = 'ro_number'){
+		$item_id = 0;
+
+		$query = "SELECT id FROM $table WHERE $field = ".res($order_number).";";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		if(mysqli_num_rows($result) == 1){
+			$r = mysqli_fetch_assoc($result);
+			$item_id = $r['id'];
+		} else if(mysqli_num_rows($result) > 1) {
+			$query = "SELECT id FROM $table WHERE line_number = ".res($line_number)." AND $field = ".res($order_number).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
+
+			if(mysqli_num_rows($result)){
+				$r = mysqli_fetch_assoc($result);
+				$item_id = $r['id'];
+			}
+		}
+
+		return $item_id;
 	}
 
 	function grabActivities($ro_number, $repair_item_id, $type = 'Repair'){
@@ -511,7 +519,7 @@
 			    position: initial;
 			}
 
-			.found_parts td {
+			.found_parts_quote td {
 				max-height: 100px;
 				height: 100px;
 				overflow: hidden;
@@ -562,7 +570,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' : ucwords($task)) . $order_number;?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' : ucwords($task)) . $order_number . '-' . $task_number;?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-6">
@@ -938,7 +946,7 @@
 														<td class="col-md-1">
 															<?=$row['totalReceived'];?> 
 															<?php
-																if(($row['available'] - $row['totalReceived']) > 0) {
+																if(($row['totalOrdered'] - $row['totalReceived']) > 0 && $row['available']) {
 																	echo '&emsp;<a style="margin-left: 10px;" href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 																}
 															?>

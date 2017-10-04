@@ -9,6 +9,8 @@
 	if (isset($_REQUEST['scope'])) { $scope = trim($_REQUEST['scope']); }
 	$noreset = 0;
 	if (isset($_REQUEST['noreset'])) { $noreset = trim($_REQUEST['noreset']); }
+	$userid = 0;
+	if (isset($_REQUEST['userid'])) { $userid = trim($_REQUEST['userid']); }
 
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-90));
 

@@ -6,21 +6,21 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
-	function getRepairItemId($ro_number, $partid) {
-		$repair_item_id;
+	function getItemId($ro_number, $partid) {
+		$item_id;
 
 		$query = "SELECT id as repair_item_id FROM repair_items WHERE ro_number = ".prep($ro_number)." LIMIT 1;";
 		$result = qdb($query);
 
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
-			$repair_item_id = $result['repair_item_id'];
+			$item_id = $result['repair_item_id'];
 		}
 
-		return $repair_item_id;
+		return $item_id;
 	}
 
-	function saveReq($techid, $order_number, $requested, $notes) {
+	function saveReq($techid, $item_id, $requested, $notes) {
 		global $SEND_ERR;
 		global $_SERVER;
 		global $now;
@@ -29,7 +29,7 @@
 		$link = '';
 		$message = '';
 
-		$repair_item_id = 0;
+		$item_id = 0;
 
 		foreach($requested as $partid => $qty) {
 
@@ -41,11 +41,12 @@
 				$part = $r['part'];
 			}
 
-			$repair_item_id = getRepairItemId($order_number, $partid);
+			//$item_id = getItemId($order_number, $partid);
 
 			$message = 'requested for Repair# ' . $order_number;
 
-			$link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$repair_item_id;
+			// $link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$item_id;
+			$link = '/purchase_requests.php';
 
 			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($order_number).", ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
@@ -61,7 +62,7 @@
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result && !$DEV_ENV) {
-				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$partid."&repair=".$repair_item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
+				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				//$recipients = 'andrew@ven-tel.com';
 				$recipients = 'ssabedra@ven-tel.com';
@@ -180,5 +181,5 @@
 
 		
 	// Determine the location to redirect to...
-	header('Location: /task_view.php?type='.$type.'&order='.$order_number);
+	header('Location: /task_view.php?type='.$type.'&order='.$order_number.($action == 'pull' ? '&tab=materials' : ''));
     exit;

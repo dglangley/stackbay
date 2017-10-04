@@ -35,25 +35,59 @@
 					} 
 
 					if(type == 'quote') {
-						rowHTML += '<tr class="found_parts">';
-						rowHTML += '	<td class="part"><span class="descr-label">'+row.part+ ' ' +heci+' </span><div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div></td>';
-						rowHTML += '	<td><input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value=""></td>';
-						rowHTML += '	<td><input class="form-control input-sm" type="text" name="amount" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="0.00" value=""></td>';
+						rowHTML += '<tr class="found_parts found_parts_quote part_listing" style="overflow:hidden;">';
+						rowHTML += '	<td class="part">\
+											<div class="remove-pad col-md-1">\
+												<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\
+											</div>\
+											<div class="col-md-11">\
+												<span class="descr-label">'+row.part+ ' ' +heci+' </span>\
+												<div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div>\
+											</div>\
+										</td>';
 						rowHTML += '	<td>\
-											<div class="col-md-4 remove-pad">\
-												<input class="form-control input-sm" type="text" name="leadtime" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="#" value="">\
+											<div class="col-md-4 remove-pad" style="padding-right: 5px;">\
+												<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value="">\
+											</div>\
+											<div class="col-md-8 remove-pad">\
+												<div class="form-group" style="margin-bottom: 0;">\
+													<div class="input-group">\
+														<span class="input-group-addon">\
+											                <i class="fa fa-usd" aria-hidden="true"></i>\
+											            </span>\
+											            <input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="">\
+											        </div>\
+												</div>\
+											</div>\
+										</td>';
+						// rowHTML += '	<td></td>';
+						rowHTML += '	<td style="background: #FFF;"><div class="table market-table" data-partids="'+row.id+'">\
+											<div class="bg-availability">\
+												<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">\
+													Supply <i class="fa fa-window-restore"></i>\
+												</a>\
+												<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">\
+													<i class="fa fa-download"></i>\
+												</a>\
+												<div class="market-results" id="'+row.id+'" data-ln="0" data-type="supply">\
+												</div>\
+											</div>\
+										</div></td>';
+						rowHTML += '	<td class="datetime">\
+											<div class="col-md-2 remove-pad">\
+												<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="#" value="">\
 											</div>\
 											<div class="col-md-4">\
-												<select class="form-control input-sm">\
-													<option value="day">Days</option>\
-													<option value="week">Weeks</option>\
-													<option value="month">Months</option>\
+												<select class="form-control input-sm date_span">\
+													<option value="days">Days</option>\
+													<option value="weeks">Weeks</option>\
+													<option value="months">Months</option>\
 												</select>\
 											</div>\
-											<div class="col-md-4 remove-pad">\
+											<div class="col-md-6 remove-pad">\
 												<div class="form-group" style="margin-bottom: 0; width: 100%;">\
 													<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
-											            <input type="text" name="delivery_date" class="form-control input-sm" value="">\
+											            <input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">\
 											            <span class="input-group-addon">\
 											                <span class="fa fa-calendar"></span>\
 											            </span>\
@@ -63,7 +97,7 @@
 										</td>';
 						rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
 											<div class="input-group">\
-									            <input type="text" name="profit_perc" class="form-control input-sm" value="">\
+									            <input type="text" name="profit_perc" class="form-control input-sm part_tax" value="" placeholder="0">\
 									            <span class="input-group-addon">\
 									                <i class="fa fa-percent" aria-hidden="true"></i>\
 									            </span>\
@@ -74,10 +108,13 @@
 												<span class="input-group-addon">\
 									                <i class="fa fa-usd" aria-hidden="true"></i>\
 									            </span>\
-									            <input type="text" name="profit_perc" class="form-control input-sm" value="">\
+									            <input type="text" name="quote_amount" placeholder="0.00" class="form-control input-sm quote_amount" value="">\
 									        </div>\
 										</div></td>';
-						rowHTML += '<td></td>';
+
+						rowHTML += '	<td><button class="btn btn-primary btn-sm pull-right quote_add">\
+							        		<i class="fa fa-plus"></i>\
+								        </button></td>';
 						rowHTML += '</tr>';
 					} else {
 						rowHTML += '<tr class="found_parts">';
@@ -90,6 +127,10 @@
 
 				if(type == 'quote') {
 					$('#quote_input').after(rowHTML);
+					$(".market-results").each(function() {
+						// $(this).loadResults(0,1);
+						$(this).loadResults(1,1);
+					});
 				} else {
 					$('#search_input').append(rowHTML);
 				}
@@ -101,32 +142,36 @@
    	}
 
    	// This function just clones what the user selected and makes a header in the main table
-   	function createListings(){
+   	function createListings(object = ''){
 		var hasElements = false;
 
 		// Universal determine what type of screen the taskview is currently
 		var type = $('body').data("order-type");
 
-		$(".part_qty").each(function(){
-			var qty = $(this).val();
+		if(! object) {
+			$(".part_qty").each(function(){
+				var qty = $(this).val();
 
-			if(qty > 0) {
-				if(type == 'quote') {
-					$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
-				} else {
-					$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#search_input");
+				if(qty > 0) {
+					if(type == 'quote') {
+						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
+					} else {
+						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#search_input");
+					}
+
+					$(".part_listing").find(".stock").remove();
+					if(type != 'quote') {
+						$(".part_listing").find("input").prop("readonly", true);
+					}
+
+					hasElements = true;
 				}
-
-				$(".part_listing").find(".stock").remove();
-				if(type != 'quote') {
-					$(".part_listing").find("input").prop("readonly", true);
-				}
-
-				hasElements = true;
-			}
-		});
+			});
+		} else {
+			object.removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
+		}
 	
-		if(! hasElements) {
+		if(! hasElements && ! object) {
 			alert("No Component or QTY found.");
 		} else {
 			$(".found_parts").remove();
@@ -237,6 +282,74 @@
 	    }); // end ajax call
 	}
 
+	function addMonths(after = 1, now = new Date()) {
+        var current;
+
+        if (now.getMonth() == 11) {
+            current = new Date(now.getFullYear() + 1, 0, now.getDate());
+        } else {
+            current = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());            
+        }
+
+        return (after == 1) ? current : addMonths(after - 1, new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()))
+    }
+
+    function calculateCost(object){
+    	var container = object.closest(".part_listing");
+
+    	var qty = 0;
+    	var amount = 0;
+    	var tax = 0;
+
+    	var quote = 0;
+
+    	if(container.find(".part_qty").val()) {
+    		qty = parseFloat(container.find(".part_qty").val());	
+    	}
+
+    	if(container.find(".part_amount").val()) {
+    		amount = parseFloat(container.find(".part_amount").val());	
+    	}
+
+    	if(container.find(".part_tax").val()) {
+    		tax = parseFloat(container.find(".part_tax").val());	
+    	}
+
+    	// alert(qty + ' ' + amount + ' ' +tax);
+
+    	quote = (qty * amount) + (qty * amount * (tax / 100));
+
+    	container.find(".quote_amount").val(quote.toFixed(2));
+    }
+
+    function calculateTax(object){
+    	var container = object.closest(".part_listing");
+
+    	var qty = 0;
+    	var amount = 0;
+    	var tax = 0;
+
+    	var quote = 0;
+
+    	if(container.find(".part_qty").val()) {
+    		qty = parseFloat(container.find(".part_qty").val());	
+    	}
+
+    	if(container.find(".part_amount").val()) {
+    		amount = parseFloat(container.find(".part_amount").val());	
+    	}
+
+    	if(container.find(".quote_amount").val()) {
+    		quote = parseFloat(container.find(".quote_amount").val());	
+    	}
+
+    	// alert(qty + ' ' + amount + ' ' +tax);
+
+    	tax = ((quote - (qty * amount)) / (qty * amount)) * 100;
+
+    	container.find(".part_tax").val(tax);
+    }
+
 	$(document).on("click", ".pull_part, .add_component", function(e){
 
 		e.preventDefault();
@@ -282,6 +395,12 @@
 		}
 	});
 
+	$(document).on("click", ".quote_add", function(e) {
+		e.preventDefault();
+
+		createListings($(this).closest('.found_parts'));
+	})
+
 	$(document).on("click", "#part_entry", function(){
 		createListings();
 	});
@@ -294,6 +413,37 @@
 		e.preventDefault();
 
 		$("#save_form").submit();
+	});
+
+	$(document).on("change", ".date_number, .date_span", function(){
+		var container = $(this).closest(".datetime");
+
+		var number = container.find(".date_number").val();
+		var span = container.find(".date_span").val();
+		var days = 0;
+
+		var date = new Date();
+
+		// Make sure both are set before trying to execute the calculations
+		if(number && span) {
+			if(span == "days") {
+				days = parseFloat(number);
+				date.setDate(date.getDate() + days); 
+			} else if(span == "weeks") {
+				days = parseFloat(number) * 7;
+
+				date.setDate(date.getDate() + days); 
+			} else if(span == "months") {
+				date = addMonths(number, date);
+			}
+
+			var newDate = new Date(date);
+
+			var formatDate = (newDate.getMonth()+1) + "/" + newDate.getDate() + "/" + newDate.getFullYear();
+		}
+
+		container.find(".delivery_date").val(formatDate);
+		//alert(formatDate);
 	});
 
 	//Create middle modal to show the tech avaiable components and the option to partial / request or fulfill the request straight from the inventory
@@ -316,5 +466,13 @@
 		} else {
 			alert("No Parts Entered");
 		}
+	});
+
+	$(document).on("change", ".part_amount, .part_qty, .part_tax", function(){
+		calculateCost($(this));
+	});
+
+	$(document).on("change", ".quote_amount", function(){
+		calculateTax($(this));
 	});
 })(jQuery);

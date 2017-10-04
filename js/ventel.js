@@ -732,6 +732,35 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+		$(".tech-selector").select2({
+			placeholder: '- Select a Tech -',
+	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+	            url: "/json/techs.php",
+	            type: 'get',
+	            dataType: 'json',
+				/*delay: 250,*/
+	            data: function (params) {
+	                return {
+	                    q: params.term,//search term
+						page: params.page,
+						'type' : $('body').data('order-type')
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+	        },
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+	        minimumInputLength: 0
+		});
 		$(".address-selector").select2({
 			placeholder: '- Select an Address -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -843,43 +872,37 @@
 			minimumInputLength: 0
 		});
 
-		$(".task-selector").select2({
-	    	placeholder: '- Select a Task -',
-	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/companies.php",
-	            dataType: 'json',
-				/*delay: 250,*/
-	            data: function (params) {
-	                return {
-	                    add_custom: add_custom,
-	                    q: params.term,//search term
-						page: params.page
-	                };
-	            },
+		$(".repair-task-selector").select2({
+	        width: '100%',
+			placeholder: '- Select a Task -',
+			ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+				url: "/json/tasks.php",
+				dataType: 'json',
+				data: function (params) {
+					return {
+						noreset: $(this).data('noreset'),
+						q: params.term,//search term
+						page: params.page,
+						scope: 'repair',
+						userid: $('body').data('techid'),
+					};
+				},
 				allowClear: true,
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
+				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
 					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
-		            return {
+					return {
 						results: $.map(data, function(obj) {
 							return { id: obj.id, text: obj.text };
 						})
-/*
-						results: data.results,
-						pagination: {
-							more: (params.page * 30) < data.total_count
-						}
-*/
 					};
 				},
 				cache: true
-	        },
+			},
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 0
+			minimumInputLength: 0
 	    });
-	    $(".terms-select2").select2({
-		});
 	}
 
 		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
