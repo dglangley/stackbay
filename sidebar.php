@@ -8,7 +8,7 @@
 		position: fixed;
 		padding-left: 10px;
 		padding-right: 10px;
-		overflow-y: scroll;
+		overflow-y: auto;
 		top: 0;
 		bottom: 0;
 		padding-bottom: 150px;
@@ -22,10 +22,14 @@
 <div class="sidebar" data-page="addition">
 	<h4 class="section-header">Information</h4>
 
+<?php if (isset($order_number)) { ?>
 	<input type="hidden" name="order" value="<?=$order_number;?>">
+<?php } ?>
+<?php if (isset($type)) { ?>
 	<input type="hidden" name="type" value="<?=$type;?>">
+<?php } ?>
 
-	<?php if($edit) { ?>
+	<?php if (isset($edit) AND $edit) { ?>
 		<select name="companyid" class="form-control input-xs company-selector required"><option value="<?=$ORDER['companyid'];?>"><?=getCompany($ORDER['companyid']);?></option></select>
 
 		<input name="bid" class="form-control input-sm" class="bid" type="text" placeholder="<?=(($type != 'repair' AND ($task != 'repair' AND ! empty($task))) ? 'Bid No.' : 'Customer Ref#');?>" value="<?=$ORDER['cust_ref'];?>" style="margin-bottom: 10px;">
@@ -74,7 +78,7 @@
 		<p class="section-header">Public Notes</p>
 		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$ORDER['public_notes'];?></textarea>
 
-	<?php } else { ?>
+	<?php } else {/* ! $edit */ ?>
 
 		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($ORDER['companyid']);?></span></p>
 

@@ -286,8 +286,10 @@
 		}
 
 		// pull all items on this order
-		$query2 = "SELECT i.serial_no, i.partid, i.id inventoryid, items.price FROM ".$T['items']." items, inventory i ";
-		$query2 .= "WHERE ".$T['order']." = ".prep($order_number)." AND i.".$T['item_label']." = items.id; ";
+		$query2 = "SELECT i.serial_no, i.partid, i.id inventoryid, items.price ";
+		$query2 .= "FROM ".$T['items']." items, inventory i, inventory_history h ";
+		$query2 .= "WHERE ".$T['order']." = ".prep($order_number)." ";
+		$query2 .= "AND h.field_changed = '".$T['inventory_label']."' AND h.value = items.id AND h.invid = i.id; ";//i.".$T['item_label']." = items.id; ";
 		$result2 = qdb($query2) or die(qe()." | $query2");
 		foreach ($result2 as $line_item){
 			$partid = '';

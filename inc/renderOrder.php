@@ -248,13 +248,12 @@
 
 		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
 		if($o['credit'] && is_numeric($order_number)){
-		    //$items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, COUNT(i.serial_no) as qty,i.partid 
-		    $items = 'SELECT sci.*, sci.id as scid, sci.amount as price ,GROUP_CONCAT(i.serial_no) as serials, sci.qty,i.partid 
-		    FROM inventory_history ih, inventory i, '.$o['tables'].' 
-		    AND sc.`'.$o['id'].'` = '.$order_number.' 
-		    AND ih.field_changed = "sales_item_id" 
-		    AND sci.sales_item_id = ih.value 
-		    AND i.id = ih.invid GROUP BY sci.cid;';
+			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, sci.qty, i.partid ";
+			$items .= "FROM sales_credits sc, sales_credit_items sci, return_items ri, inventory i, inventory_history ih ";
+			$items .= "WHERE sc.id = '".$order_number."' AND sci.cid = sc.id ";
+			$items .= "AND sci.return_item_id = ri.id AND ri.inventoryid = i.id AND i.id = ih.invid ";
+			$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.sales_item_id ";
+		    $items .= "GROUP BY sci.cid; ";
 		}
 		//Make a call here to grab RMA's items instead
 

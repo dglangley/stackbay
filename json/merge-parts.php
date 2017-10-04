@@ -200,7 +200,7 @@
 	$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
-	$query = "UPDATE service_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$query = "UPDATE outsourced_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
