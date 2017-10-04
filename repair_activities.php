@@ -18,8 +18,9 @@
 			else { $select .= "`repair_item_id` = ".prep($repair_item_id)." "; }
 			$select .= "; ";
 			$result = qdb($select) OR die(qe()." | $select");
+
 			while ($r = mysqli_fetch_assoc($result)) {
-				$status = $result['status'];
+				$status = $r['status'];
 				if(strtolower($status) == 'in repair'){
 					$status = 'testing';
 				} else {
@@ -54,7 +55,7 @@
 				$query = "SELECT qty FROM builds WHERE ro_number = ".prep($ro_number).";";
 				$result = qdb($query) or die(qe()." | $query");
 				if(mysqli_num_rows($result)){
-					$result = mysqli_fetch_assoc($result);
+					$r = mysqli_fetch_assoc($result);
 					$qty = $result['qty'];
 				}
 
@@ -77,8 +78,8 @@
 		$select = "SELECT `status` FROM `inventory` where `id` = ".prep($invid).";";
 		$result = qdb($select) OR die(qe()." | $select");
 		if(mysqli_num_rows($result)){
-			$result = mysqli_fetch_assoc($result);
-			$status = $result['status'];
+			$r = mysqli_fetch_assoc($result);
+			$status = $r['status'];
 			if(strtolower($status) == 'received'){
 				$status = 'in testing';
 				$notes = getSerialNumber($invid) . ' Marked as `In Testing`';
@@ -157,8 +158,8 @@
 		$result = qdb($query);
 		
 		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$serial = $result['serial_no'];
+			$r = mysqli_fetch_assoc($result);
+			$serial = $r['serial_no'];
 		}
 		
 		return $serial;
@@ -223,8 +224,8 @@
 				$results = qdb($select) or die(qe()." | $select");
 		
 				if (mysqli_num_rows($results)>0) {
-					$results = mysqli_fetch_assoc($results);
-					$repair_text = $results['description'];
+					$r = mysqli_fetch_assoc($results);
+					$repair_text = $r['description'];
 				}
 
 				$notes = ($_REQUEST['build'] ? 'Build' : 'Repair Ticket')." Completed. Final Status: <b>" . $repair_text . "</b>";
@@ -246,7 +247,8 @@
 			stockUpdate($repair_item_id, $ro_number, $repair_code);
 		}
 
-		header('Location: /repair.php?on=' . ($_REQUEST['build'] ? $_REQUEST['build'] . '&build=true' : $ro_number));
+		//header('Location: /repair.php?on=' . ($_REQUEST['build'] ? $_REQUEST['build'] . '&build=true' : $ro_number));
+		header('Location: /task_view.php?type=repair&order='.$ro_number);
 
 	} else if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'receive') { 
 		//Declare Variables within this scope

@@ -437,7 +437,7 @@
 	<head>
 		<?php 
 			include_once $rootdir.'/inc/scripts.php';
-			include_once $rootdir.'/modal/component_request.php';
+			include_once $rootdir.'/modal/materials_request.php';
 			include_once $rootdir.'/modal/service_complete.php';
 		?>
 
@@ -934,7 +934,7 @@
 																} else if ($row['status'] == 'Void') {
 																	echo "<span style='color: red;'>Canceled</span>";
 																} else if(($row['totalOrdered'] - $row['pulled'] > 0)) {
-																	echo "<span style='color: #8a6d3b;'>Pending</span>";
+																	echo "<span style='color: #8a6d3b;'>Pending</span> <a target='_blank' href='/purchase_requests.php'><i class='fa fa-arrow-right'></i></a>";
 																} else if(($row['totalOrdered'] - $row['pulled'] <= 0)) {
 																	echo "<span style='color: #3c763d;'>Pulled from Stock</span>";
 																} else if($row['status'] == 'Void') {
