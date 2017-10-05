@@ -489,7 +489,8 @@
 				</div>
 		';
 
-		$total = ($info['summed'] - $info['credit'] - $paymentTotal);
+		$total = (floatval(trim($info['summed'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
+
 		$status  = ($total <= 0 ? 'complete' : 'active');
 
 		if ($filter<>$status AND $filter<>'all') { continue; }
