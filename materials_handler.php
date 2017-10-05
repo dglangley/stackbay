@@ -20,7 +20,7 @@
 		return $item_id;
 	}
 
-	function saveReq($techid, $item_id, $requested, $notes) {
+	function purchaseRequest($techid, $order_number, $item_id, $requested, $notes, $field = 'repair_item_id') {
 		global $SEND_ERR;
 		global $_SERVER;
 		global $now;
@@ -28,8 +28,6 @@
 
 		$link = '';
 		$message = '';
-
-		$item_id = 0;
 
 		foreach($requested as $partid => $qty) {
 
@@ -48,7 +46,7 @@
 			// $link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$item_id;
 			$link = '/purchase_requests.php';
 
-			$query = "INSERT INTO purchase_requests (techid, ro_number, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($order_number).", ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
+			$query = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($item_id).", '".res($field)."', ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
@@ -78,7 +76,7 @@
 		}
 	}
 
-	function pullComponent($pulled, $order_number) {
+	function pullComponent($pulled, $item_id, $label = 'repair_item_id') {
 		foreach($pulled as $invid => $pulled) {
 			if($pulled > 0) {
 				// Set all used variables to 0 upon each iteration
@@ -128,8 +126,8 @@
 				// echo $total . '<br>';
 				// echo $removal_cost . '<br>';
 
-				$query = "INSERT INTO repair_components (invid, ro_number, datetime, qty) 
-							VALUES ('".res($invid)."', '".res($order_number)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
+				$query = "INSERT INTO repair_components (invid, item_id, item_id_label, datetime, qty) 
+							VALUES ('".res($invid)."', '".res($item_id)."' , '".res($label)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
 				qdb($query) OR die(qe() . ' ' .$query);
 
 				$query = "INSERT INTO average_costs (partid, amount, datetime) 
@@ -154,6 +152,7 @@
 	$techid = $U['id'];
 
 	$order_number = 0;
+	$item_id = 0;
 	$requested = 0;
 	$notes = '';
 	$type = '';
@@ -162,6 +161,7 @@
 	$task = '';
 
 	if (isset($_REQUEST['order_number'])) { $order_number = $_REQUEST['order_number']; }
+	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
 	if (isset($_REQUEST['requested'])) { $requested = $_REQUEST['requested']; }
 	if (isset($_REQUEST['comment'])) { $notes = $_REQUEST['comment']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
@@ -171,9 +171,9 @@
 
 	// Identifer type determines what type of component option is being ran (Component Request or Component Pull, etc.)
 	if($action == 'request'){
-		saveReq($techid, $order_number, $requested, $notes);
+		purchaseRequest($techid, $order_number, $item_id, $requested, $notes);
 	} else if($action == 'pull'){
-		pullComponent($pulled, $order_number);
+		pullComponent($pulled, $item_id);
 	} else if($type == 'quote' OR $type == 'create'){
 		$order_number = quoteMaterials($techid, $requested);
 		$type = $task;

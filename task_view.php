@@ -81,7 +81,7 @@
 		$serials = getSerials($item_id);
 
 		$activity_data = grabActivities($order_number, $item_id, $type);
-		$component_data = getComponents($order_number, $item_id, $type);
+		$component_data = getMaterials($order_number, $item_id, $type);
 
 	} else if($quote){
 		// Create the option for the user to create a quote or create an order
@@ -234,15 +234,15 @@
 		return $repair_activities;
 	}
 
-	function getComponents($order_number, $item_id, $type = 'repair') {
+	function getMaterials($order_number, $item_id, $type = 'repair', $field = 'repair_item_id') {
 		$purchase_requests = array();
 		$query;
 		
 		if($type == 'repair') {
-			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($order_number) ." GROUP BY partid, po_number ORDER BY requested DESC;";
+			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
 					
-			while ($row = $result->fetch_assoc()) {
+			while ($row = mysqli_fetch_assoc($result)) {
 				$qty = 0;
 				$po_number = $row['po_number'];
 
@@ -270,14 +270,15 @@
 					$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
 					$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
 					$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
-					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = " . $order_number . " ";
+					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.iten_id_label = 'repair_item_id' ";
 					$query .= "AND rc.ro_number = pr.ro_number ";
 					$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
 					$query .= "GROUP BY i.id; ";
-					$result3 = qdb($query) OR die(qe().'<BR>'.$query);
+					echo $query;
+					$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-					if (mysqli_num_rows($result3)>0) {
-						$query_row = mysqli_fetch_assoc($result3);
+					if (mysqli_num_rows($result)>0) {
+						$query_row = mysqli_fetch_assoc($result);
 						$row['status'] = $query_row['status'];
 						$row['price'] = $query_row['price'];
 						if($status == 'Active') {
@@ -349,7 +350,7 @@
 		$results = array();
 
 		if(strtolower($type) == 'repair' AND $order) {
-			$query = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ".res($order)." AND ro.ro_number = ri.ro_number;";
+			$query = "SELECT * FROM repair_orders ro WHERE ro.ro_number = ".res($order).";";
 			$result = qdb($query) OR die(qe());
 
 			if (mysqli_num_rows($result)>0) {
