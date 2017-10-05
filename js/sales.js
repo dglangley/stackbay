@@ -349,6 +349,7 @@
 	});
 
 	function infiniteScroll(elem) {
+
 	    var docViewTop = $(window).scrollTop();
 	    var docViewBottom = docViewTop + $(window).height();
 
@@ -383,6 +384,7 @@
 
 	    if(visible) {
 	    	elem.removeClass('infinite_scroll');
+	    	$('#sales_loader').show();
 
 			$.ajax({
 		        url: 'json/sales.php',
@@ -419,6 +421,8 @@
 							});
 						});
 					}
+
+					$('#sales_loader').hide();
 		        },
 		        error: function(xhr, desc, err) {
 		            console.log("Details: " + desc + "\nError:" + err);
