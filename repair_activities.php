@@ -247,8 +247,8 @@
 			stockUpdate($repair_item_id, $ro_number, $repair_code);
 		}
 
-		//header('Location: /repair.php?on=' . ($_REQUEST['build'] ? $_REQUEST['build'] . '&build=true' : $ro_number));
-		header('Location: /task_view.php?type=repair&order='.$ro_number);
+		header('Location: /repair.php?on=' . ($_REQUEST['build'] ? $_REQUEST['build'] . '&build=true' : $ro_number));
+		//header('Location: /task_view.php?type=repair&order='.$ro_number);
 
 	} else if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'receive') { 
 		//Declare Variables within this scope
