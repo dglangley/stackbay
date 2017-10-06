@@ -23,38 +23,14 @@
 		$TITLE = 'Invoice '.$invoice;
 
 		$ORDER = getOrder($invoice,'Invoice');
-/*
-		$query = "SELECT * FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)==0) {
-			die("Invalid Invoice!");
-		}
-		$ORDER = mysqli_fetch_assoc($result);
-
 		$T = order_type($ORDER['order_type']);
-
-		$query = "SELECT *, ".$T['addressid']." addressid FROM ".$T['orders']." WHERE ".$T['order']." = '".res($ORDER['order_number'])."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$ORDER['bill_to_id'] = $r['addressid'];
-			$ORDER['ship_to_id'] = $r['ship_to_id'];
-			$ORDER['cust_ref'] = $r['cust_ref'];
-			$ORDER['ref_ln'] = $r['ref_ln'];
-			$ORDER['termsid'] = $r['termsid'];
-			$ORDER['contactid'] = $r['contactid'];
-			$ORDER['freight_carrier_id'] = $r['freight_carrier_id'];
-			$ORDER['freight_account_id'] = $r['freight_account_id'];
-			$ORDER['public_notes'] = $r['public_notes'];
-			$ORDER['private_notes'] = $r['private_notes'];
-		}
-*/
 
 		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
 	} else {
-		$TITLE = $order_type.' Order '.$order_number;
-
 		$T = order_type($order_type);
+		$TITLE = $T['abbrev'];
+		if ($order_number) { $TITLE .= '# '.$order_number; }
+		else { $TITLE = 'New '.$TITLE; }
 
 		$ORDER = getOrder($order_number,$order_type);
 		if ($ORDER===false) { die("Invalid Order"); }
@@ -75,9 +51,12 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.input-shadow input:focus {
+			box-shadow: 2px 2px 3px #888888;
+		}
 	</style>
 </head>
-<body data-scope="Purchase">
+<body data-scope="<?php echo $T['order_type']; ?>">
 
 <?php include_once 'inc/navbar.php'; ?>
 
@@ -109,6 +88,8 @@
 	</form>
 </div>
 
+<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+
 <?php
 	if (! isset($EDIT)) { $EDIT = false; }
 $EDIT = true;
@@ -117,13 +98,31 @@ $EDIT = true;
 ?>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+
+<table class="table table-responsive table-condensed table-striped" id="search_input">
+	<tbody>
+	<tr class="search-row">
+		<td class="col-md-5">
+			<div class="input-group input-shadow">
+				<input type="text" name="" value="" class="form-control input-sm">
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="button"><i class="fa fa-search"></i></button>
+				</span>
+			</div>
+		</td>
+		<td class="col-md-7">
+		</td>
+	</tr>
+	</tbody>
+</table>
+
+</div><!-- pad-wrapper -->
 
 </form>
-</div><!-- pad-wrapper -->
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
+<script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
 	});

@@ -1,13 +1,16 @@
 (function($){
 	// Create a generic funtion to invoke the ajax call for part searches
-	function partSearch(search, filter) {
+	function partSearch(search, filter, cid, order_type) {
+		if (! cid) { var cid = ''; }
+		if (! order_type) { var order_type = ''; }
+
 		var type = $('body').data("order-type");
 		console.log(window.location.origin+"/json/part_search.php?search="+escape(search));
 		$.ajax({
 	        url: 'json/part_search.php',
 	        type: 'get',
 	        dataType: "json",
-	        data: {'search': search, 'filter': filter},
+	        data: {'search': search, 'filter': filter, 'companyid': cid, 'order_type': order_type},
 	        success: function(json) {
 	        	$(".found_parts").remove();
 

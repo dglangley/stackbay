@@ -981,10 +981,13 @@
 						$("#carrierid").val(json.carrierid).trigger('change');
 					}
 					$("#freight_account_id").populateSelected(json.freight_account_id,json.freight_account);
+
+					partSearch('','',companyid,scope);
+//					$("#item-table").populateItems(json.items);
 				},
                 error: function(xhr, desc, err) {
-//                    console.log(xhr);
-                    console.log("Details: " + desc + "\nError:" + err);
+//					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
                 }
             }); // end ajax call
 		}

@@ -4,6 +4,21 @@
 	function getOrder($order_number,$order_type) {
 		$T = order_type($order_type);
 
+		$results = array();
+
+		// no order number, we still need the fields from the $order_type table for new orders (see sidebar usage)
+		if (! $order_number) {
+			$query = "SHOW COLUMNS FROM ".$T['orders'].";";
+			$fields = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($fields)==0) {
+				return false;
+			}
+			while ($r = mysqli_fetch_assoc($fields)) {
+				$results[$r['Field']] = false;
+			}
+			return ($results);
+		}
+
 		$alt = array();
 		// accommodate invoice lookup by which we get order number and type below
 		if ($order_type=='Invoice') {
@@ -21,12 +36,10 @@
 			$T = order_type($order_type);
 		}
 
-		$results = array();
-
 		// get order information
 		$query = "SELECT *, ".$T['addressid']." addressid, ".$T['datetime']." dt FROM ".$T['orders']." WHERE ".$T['order']." = '".res($order_number)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)==0) { return ($results); }
+		if (mysqli_num_rows($result)==0) { return false; }
 		$results = mysqli_fetch_assoc($result);
 		$results['bill_to_id'] = $results['addressid'];
 
