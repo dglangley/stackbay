@@ -15,8 +15,8 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
         <h4 class="modal-title" id="modalAlertTitle">Complete Order</h4>
 	  </div>
-	  
-	   <form action="repair_activities.php" method="post">
+
+	   <form action="tasks_log.php" method="post">
 	      <div class="modal-body" id="modalAlertBody">
 			<div class="row">
 				<?php if(empty($serials)) { ?>
@@ -29,11 +29,11 @@
 	
 			<div class="row">
 
-				<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
-				<input type="text" name="techid" value="<?=$U['id'];?>" class="hidden">
+				<input type="text" name="item_id" value="<?=$item_id;?>" class="hidden">
+				<input type="text" name="order_number" value="<?=$order_number;?>" class="hidden">
 
 				<div class="col-md-12">
-					<select class="form-control" name="repair_code">
+					<select class="form-control" name="repair_code_id">
 						<option selected="" value="null">- Select Status -</option>
 						<?php 
 							foreach($repair_codes as $code):
@@ -50,7 +50,7 @@
 		</div>
 	      <div class="modal-footer text-center">
 	   		<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
-	        <button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete_ticket"><i class="fa fa-save"></i> Complete Ticket</button>
+	        <button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Complete Ticket</button>
 		  </div>
 		</div>
 	</form>
