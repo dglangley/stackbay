@@ -55,6 +55,20 @@
 		return $repair_item_id;
 	}
 
+	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
+		$order_number = 0;
+
+		$query = "SELECT $field as order_number FROM $table WHERE id = ".res($item_id).";";
+		$result = qdb($query) OR die(qe().' '.$query);
+
+		if(mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+			$order_number = $r['order_number'];
+		}
+
+		return $order_number;
+	}
+
 	function voidRequest($pr_id) {
 		$results = false;
 
@@ -161,10 +175,6 @@
 		</div>
 		<div id="pad-wrapper">
 
-<!-- 			<div class="alert alert-success" role="alert">
-				<strong>Request</strong> Successfully Deleted.
-			</div> -->
-
 			<div class="row">
 				<table class="table heighthover heightstriped table-condensed p_table">
 					<thead>
@@ -232,11 +242,11 @@
 
 								$rowHTML .= '
 												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
-													<td>'.$details['ro_number'].' <a target="_blank" href="/repair.php?on='.$details['ro_number'].'"><i class="fa fa-arrow-right"></i></a></td>
+													<td>'.getOrderNumber($details['item_id']).' <a target="_blank" href="/repair.php?on='.getOrderNumber($details['item_id']).'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
 													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
 													<td>
-														<input type="checkbox" name="purchase_request['.$details['partid'].']['.$details['ro_number'].']['.$details['qty'].']['.$details['id'].']" value="'.getRepairItemId($details['ro_number']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
+														<input type="checkbox" name="purchase_request['.$details['partid'].']['.getOrderNumber($details['item_id']).']['.$details['qty'].']['.$details['id'].']" value="'.($details['item_id']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
 															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '') .'
 													</td>
 												</tr>';

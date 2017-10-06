@@ -735,6 +735,35 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+		$(".tech-selector").select2({
+			placeholder: '- Select a Tech -',
+	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+	            url: "/json/techs.php",
+	            type: 'get',
+	            dataType: 'json',
+				/*delay: 250,*/
+	            data: function (params) {
+	                return {
+	                    q: params.term,//search term
+						page: params.page,
+						'type' : $('body').data('order-type')
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+	        },
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+	        minimumInputLength: 0
+		});
 		$(".address-selector").select2({
 			placeholder: '- Select an Address -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -848,40 +877,36 @@
 			minimumInputLength: 0
 		});
 
-		$(".task-selector").select2({
-	    	placeholder: '- Select a Task -',
-	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/companies.php",
-	            dataType: 'json',
-				/*delay: 250,*/
-	            data: function (params) {
-	                return {
-	                    add_custom: add_custom,
-	                    q: params.term,//search term
-						page: params.page
-	                };
-	            },
+		$(".repair-task-selector").select2({
+	        width: '100%',
+			placeholder: '- Select a Task -',
+			ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+				url: "/json/tasks.php",
+				dataType: 'json',
+				data: function (params) {
+					return {
+						noreset: $(this).data('noreset'),
+						q: params.term,//search term
+						page: params.page,
+						scope: 'repair',
+						userid: $('body').data('techid'),
+					};
+				},
 				allowClear: true,
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
+				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
 					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
-		            return {
+					return {
 						results: $.map(data, function(obj) {
 							return { id: obj.id, text: obj.text };
 						})
-/*
-						results: data.results,
-						pagination: {
-							more: (params.page * 30) < data.total_count
-						}
-*/
 					};
 				},
 				cache: true
-	        },
+			},
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 0
+			minimumInputLength: 0
 	    });
 	    $(".terms-select2").select2({
 		});
@@ -1581,7 +1606,8 @@
     	var last_year = '';
 		var init = true;
 
-		var hr = true;
+		var hr = false;
+		var init = true;
 
         console.log(window.location.origin+"/json/availability.php?attempt="+attempt+"&partids="+partids+"&ln="+ln+"&results_mode="+results_mode+"&type="+type);
 
@@ -1593,7 +1619,6 @@
             success: function(json, status) {
                 $.each(json.results, function(dateKey, item) {
                 	var rowDate = '';
-                	var curDate = new Date();
 
                 	var cls1 = '';
                 	var cls2 = '';
@@ -1604,6 +1629,7 @@
                 		//Get the first date from the item array (probably a way better way to implement this feature)
                 		$.each(item, function(key, row) {
                 			var dateParts = row.date.split("-");
+                			curDate = new Date();
 							date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
 							return false;
@@ -1611,10 +1637,14 @@
 
 						if(date) {
 	                		//Based on the first date of entries found
-							last_month = date.setMonth(date.getMonth() - 1, 1);
-							last_year = date.setMonth(date.getMonth() - 11, 1);
+	                		var curDate = new Date();
+							last_month = curDate.setMonth(curDate.getMonth() - 1, 1);
 
-							last_week = new Date(curDate.setTime(curDate.getTime() - (6 * 24 * 60 * 60 * 1000)));
+							var curDate = new Date();
+							last_year = curDate.setMonth(curDate.getMonth() - 11, 1);
+
+							var curDate = new Date();
+							last_week = new Date(curDate.setDate((curDate.getDate() - curDate.getDay()) - 7));
 
 							init = false;
 						}
@@ -1652,21 +1682,24 @@
 						return false;
 					});
 
-					if(last_week!='' && rowDate >= last_week) { 
+					if(last_week != '' && Date.parse(rowDate) >= last_week) { 
 						cls1 += '<span class="last_week">';
 						cls2 += '</span>';
 					} 
 
 					if(type == 'demand') {
 
-						if(rowDate < last_year) { 
+						//console.log((last_year) + ' > ' + Date.parse(rowDate));
+
+						if(Date.parse(rowDate) < last_year) { 
+							//alert('hi');
 							if(hr) {
 								cls1 = '<hr>';
 								hr = false;
 							}
 							cls1 += '<span class="archives">';
 							cls2 += '</span>';
-						} else if (rowDate < last_month) {
+						} else if (Date.parse(rowDate) < last_month) {
 							if(hr) {
 								cls1 = '<hr>';
 								hr = false;
@@ -1679,6 +1712,10 @@
                     /* add section header of date and qty total */
                     //if(type == 'supply') {
 	                    newHtml += cls1+addDateGroup(dateKey,qtyTotal,doneFlag, type)+rowHtml+cls2;
+	                    if(init) {
+	                    	hr = true;
+	                    	init = false;
+	                    }
 	                // } else {
 	                // 	newHtml += rowHtml;
 	                // }

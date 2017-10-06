@@ -265,6 +265,7 @@
                 UNION
            SELECT SUM(i.qty) as sum, i.id FROM purchase_items pi, inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id = pi.id AND (pi.ref_1_label <> 'repair_item_id' OR pi.ref_1_label IS NULL) AND i.qty > 0 AND (status = 'shelved' OR status = 'received');";
 
+
 		$result = qdb($query) OR die(qe());
 				
 		 while ($row = $result->fetch_assoc()) {
@@ -868,8 +869,8 @@
 													<div class="row">
 														<div class="col-md-12">
 															<?php if($comp['status'] != 'Void') { ?>
-																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid']) > 0 ? '' : 'disabled');?>>
-																	<?=(getQuantity($comp['partid']) > 0 ? 'Pull from Stock' : 'No Stock');?> 	
+																<button <?=($ticketStatus ? 'disabled' : '');?> data-toggle="modal" data-target="#modal-component-available" class="btn btn-flat info btn-sm btn-status middle modal_component_available pull-right" type="submit" data-partid="<?=$comp['partid'];?>" data-requested="<?=$comp['totalOrdered'];?>" data-received="<?=getRepairQty($comp['partid'], $order_number)?>" <?=(getQuantity($comp['partid'], $repair_item_id) > 0 ? '' : 'disabled');?>>
+																	<?=(getQuantity($comp['partid'], $repair_item_id) > 0 ? 'Pull from Stock' : 'No Stock');?> 
 														        </button>
 													        <?php } ?>
 														</div>

@@ -35,10 +35,13 @@
 		window.location.href = "/task_view.php?type="+task_label+"&order="+order_number;
 	}
 
-	// var taskid = $('body').data('order-number');
-	// var task_label = $('body').data('order-type');
+	// Initiates the initial login if the user is assigned to the task
+	var taskid = $('body').data('taskid');
+	var task_label = $('body').data('order-type');
 
-	// clockin(taskid, task_label);
+	if(task_label != 'quote') {
+		clock(taskid, task_label, 'init');
+	}
 	// window.onbeforeunload = clockout(taskid, task_label);
 
 	//function clockout(taskid, task_label, type) {
@@ -50,11 +53,24 @@
 	        dataType: "json",
 	        async: false,
 	        data: {'taskid': taskid, 'task_label': task_label, 'type' : type},
-	        success: function(order_number) {
+	        success: function(data) {
+	        	var taskid = $('body').data('taskid');
+				var task_label = $('body').data('order-type').toLowerCase();
+						
 	        	if(type == 'in') {
-	        		loadTask(task_label, order_number);
+	        		loadTask(task_label, data);
 	        	}
-	        	return order_number;
+
+	        	if(! $.isNumeric(data)) {
+	        		// Consider the data as an error, otherwise it should be the order number to invoke the redirect
+	        		if(confirm(data)) {
+	        			clock('', '', 'out');
+						clock(taskid, task_label, 'init');
+	        		}
+	        	}
+
+	        	 console.log(data);
+	        	//return order_number;
 			}
 		});
 	}

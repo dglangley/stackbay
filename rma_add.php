@@ -115,20 +115,31 @@
 			$result = mysqli_fetch_assoc($result);
 			$return_item_id = $result['id'];
 		}
+
+		$query = "SELECT * FROM sales_items si, inventory i 
+					WHERE si.ref_1 = ".res($return_item_id)." AND si.ref_1_label = 'return_item_id' AND i.id = ".res($_REQUEST['exchange_trigger'])." AND i.sales_item_id = si.ref_2 AND ref_2_label = 'sales_item_id';";
+
+		$result = qdb($query) OR die(qe() . ' ' . $query);
 		
-		//Insertion of the values of from the exhange parameters
-		$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, ref_1, ref_1_label,`ref_2`, `ref_2_label`, `warranty`, `conditionid`)
-		SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, `ship_date`, $return_item_id AS ref_1, 'return_item_id' AS ref_1_label,`inventory`.`sales_item_id` AS `ref_2`, 'sales_item_id' AS `ref_2_label`, `warranty`, s.`conditionid`
-		FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
-		qdb($insert);
-		$exchangeid = qid();
-		
-		$query = "SELECT so_number FROM sales_items WHERE id = ".res($exchangeid).";";
-		
-		$result = qdb($query) or die(qe());
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$new_so = $result['so_number'];
+		if(mysqli_num_rows($result) == 0) {
+			//Insertion of the values of from the exhange parameters
+			$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, ref_1, ref_1_label,`ref_2`, `ref_2_label`, `warranty`, `conditionid`)
+			SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, null as `ship_date`, $return_item_id AS ref_1, 'return_item_id' AS ref_1_label,`inventory`.`sales_item_id` AS `ref_2`, 'sales_item_id' AS `ref_2_label`, `warranty`, s.`conditionid`
+			FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
+
+			qdb($insert);
+			$exchangeid = qid();
+			
+			$query = "SELECT so_number FROM sales_items WHERE id = ".res($exchangeid).";";
+			
+			$result = qdb($query) or die(qe());
+			if (mysqli_num_rows($result)>0) {
+				$result = mysqli_fetch_assoc($result);
+				$new_so = $result['so_number'];
+			}
+		} else {
+			$r = mysqli_fetch_assoc($result);
+			$new_so = $r['so_number'];
 		}
 		
 		header("Location: /shipping.php?on=".$new_so."&exchange=true");

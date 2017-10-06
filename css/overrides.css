@@ -1836,7 +1836,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 .sidebar {
 	height:100%;
 	overflow:auto;
-	margin-bottom:150px;
+	/*margin-bottom:35px;*/
 	box-shadow: 1px -1px 1px #ddd;
 	border-right:1px solid #ccc;
 	border-bottom:0px;
