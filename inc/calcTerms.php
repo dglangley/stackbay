@@ -7,7 +7,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
     include_once $rootdir.'/inc/order_parameters.php'; 
 
-	function terms_calc($order_number, $order_type){
+	function calcTerms($order_number, $order_type){
 		$o = o_params($order_type);
 		$due_select = "
 		SELECT created, days FROM ".$o['order'].", terms WHERE termsid = terms.id and ".$o['id']." = ".prep($order_number).";";
@@ -22,23 +22,6 @@
 		return($due_estimate);
 	}
 	
-	$TERMS_INFO = array();
-	function getTermsInfo($value,$input = 'terms',$return = "id"){
-		global $TERMS_INFO;
-
-		if (isset($TERMS_INFO[$value]) AND isset($TERMS_INFO[$value][$input])) {
-			return ($TERMS_INFO[$value][$input][$return]);
-		}
-		$TERMS_INFO[$value][$input] = array($return=>false);
-
-		$select = "SELECT * FROM `terms` where `$input` LIKE ".prep($value).";"; //Assume days
-		$result = qdb($select) or die(qe()." | $select");
-		if (mysqli_num_rows($result)>0) {
-			$r = mysqli_fetch_assoc($result);
-			$TERMS_INFO[$value][$input] = $r;
-		}
-		return ($TERMS_INFO[$value][$input][$return]);
-	}
 	function getDays($id){
 		return rsrq("SELECT `days` FROM `terms` where `id` = ".prep($id).";");
 	}

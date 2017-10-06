@@ -22,4 +22,21 @@
 		}
 		return (count($a) < count($b)) ? 1 : -1;
 	}
+
+	// sort by count of $b results
+	function cmp_rcount($a, $b) {
+		if (count($a) == count($b)) {
+			return 0;
+		}
+		return (count($a) > count($b)) ? 1 : -1;
+	}
+
+	$CMP = function ($keyname) {
+		return function($a, $b) use ($keyname) {
+			if ($a[$keyname] == $b[$keyname]) {
+				return 0;
+			}
+			return ($a[$keyname] > $b[$keyname]) ? 1 : -1;
+		};
+	};
 ?>

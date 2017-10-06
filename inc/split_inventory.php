@@ -35,6 +35,7 @@
 */
 
 			$I = getInventory($invid);
+			unset($I['id']);
 			$I['qty'] = $parsedQty;
 			$I['notes'] = 'SPLIT: '.$invid;
 			$new_invid = setInventory($I);

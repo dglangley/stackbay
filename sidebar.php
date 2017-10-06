@@ -2,135 +2,220 @@
 	#pad-wrapper {
 		margin-left: 310px;
 	}
-
-	.sidebar {
-		width: 300px;
-		position: fixed;
-		padding-left: 10px;
-		padding-right: 10px;
-		overflow-y: auto;
-		top: 0;
-		bottom: 0;
-		padding-bottom: 150px;
-	}
-
-	.sidebar-footer {
-		width: 300px !important;
-	}
 </style>
 
-<div class="sidebar" data-page="addition">
-	<h4 class="section-header">Information</h4>
+<div class="sidebar">
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCarrier.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAccount.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightService.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
-<?php if (isset($order_number)) { ?>
-	<input type="hidden" name="order" value="<?=$order_number;?>">
-<?php } ?>
-<?php if (isset($type)) { ?>
-	<input type="hidden" name="type" value="<?=$type;?>">
-<?php } ?>
+	$cust_ref_placeholder = 'PO# / Ref#';
+	if (! isset($ORDER)) {
+		$ORDER = array(
+			'order_number' => 0,
+			'order_type' => '',
+			'companyid' => 0,
+			'contactid' => 0,
+			'bill_to_id' => 0,
+			'ship_to_id' => 0,
+			'freight_carrier_id' => 0,
+			'cust_ref' => '',
+			'termsid' => 12,
+		);
+	}
 
-	<?php if (isset($edit) AND $edit) { ?>
-		<select name="companyid" class="form-control input-xs company-selector required"><option value="<?=$ORDER['companyid'];?>"><?=getCompany($ORDER['companyid']);?></option></select>
+	$carriers_list = '';
+	if (isset($ORDER['freight_carrier_id'])) {
+		getCarrier();
+		foreach ($CARRIERS as $id => $name) {
+			$s = '';
+			if ($id==$ORDER['freight_carrier_id']) { $s = ' selected'; }
+			$carriers_list .= '<option value="'.$id.'"'.$s.'>'.$name.'</option>'.chr(10);
+		}
+	}
 
-		<input name="bid" class="form-control input-sm" class="bid" type="text" placeholder="<?=(($type != 'repair' AND ($task != 'repair' AND ! empty($task))) ? 'Bid No.' : 'Customer Ref#');?>" value="<?=$ORDER['cust_ref'];?>" style="margin-bottom: 10px;">
+	$termsid = 0;
+	$terms_list = '<option value="">- Select -</option>'.chr(10);
+	if (isset($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
+	if ($termsid) {
+		$terms_list = '<option value="'.$termsid.'" selected>'.getTerms($termsid,'id','terms').'</option>'.chr(10);
+	}
 
-		<select name="contactid" class="form-control input-xs contact-selector required"><option value="<?=$ORDER['contactid'];?>"><?=getContact($ORDER['contactid']);?></option></select>
+	if (! isset($EDIT)) { $EDIT = false; }
+//$EDIT = true;
+?>
 
-		<select name="addressid" class="form-control input-xs address-selector required"><option value="<?=$ORDER['bill_to_id'];?>"><?=address_out($ORDER['bill_to_id']);?></option></select>
+	<div class="sidebar-section">
+<?php
+	$T = order_type($ORDER['order_type']);
+	if ($ORDER['order_number'] AND $ORDER['order_type']) {
+		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
+	}
+?>
+	</div>
 
-		<br>
+	<div class="sidebar-section">
+		<h4 class="section-header"><i class="fa fa-book"></i> Company</h4>
 
-		<?php if($type == 'service') { ?>
-			<p class="section-header">Scope</p>
-			<textarea id="scope" class="form-control" name="scope" rows="3" style="margin-bottom: 10px;" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
-		<?php } ?>
+		<input type="hidden" name="order_number" value="<?=$ORDER['order_number'];?>">
+		<input type="hidden" name="order_type" value="<?=$ORDER['order_type'];?>">
 
-		<p class="section-header">Task Details</p>
-
-		<?php if(($type == 'repair' OR $type == 'build')  OR ($task == 'repair' AND ! empty($task))) { ?>
-			<span class="descr-label">ERB5 &nbsp; T3PQAGCAAC</span>
-			<div class="description desc_second_line descr-label" style="color:#aaa;">ALCATEL-LUCENT &nbsp;  <span class="description-label"><abbr title="DIGITAL ACCESS AND CROSS-CONNECT SYSTEM">DACS</abbr> IV PRIMARY NON-VOLATILE M</span></div>
-			<br>
-
-			<p class="section-header">Serial(s):</p>
-			<?php foreach($serials as $serial): ?>
-				<p><?=$serial;?></p>
-			<?php endforeach; ?>
-		<?php } ?>
-
-		<?php if($type != 'repair'  AND ($task != 'repair' AND ! empty($task))) { ?>
-			<select name="site_contactid" class="form-control input-xs contact-selector required">
-				<option value="David Langley">David Langley</option>
-			</select>
-
-			<select name="site_addressid" class="form-control input-xs contact-selector required"><option value="25">3037 Golf Course Drive, Suite 2</option></select>
-		<?php } ?>
-
-		<?php if($type != 'repair'  AND ($task != 'repair' AND ! empty($task))) { ?>
-			<div class="input-group" style="margin-bottom: 10px;">
-					<span class="input-group-addon">$</span>
-				<input class="form-control input-sm" name="quote" class="total_charge" type="text" placeholder="Price" value="800.00">
-			</div>
-		<?php } ?>
-
-		<br>
-
-		<p class="section-header">Public Notes</p>
-		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$ORDER['public_notes'];?></textarea>
-
-	<?php } else {/* ! $edit */ ?>
-
+<?php if ($EDIT) { ?>
+		<select name="companyid" id="sidebar-companyid" class="form-control input-xs company-selector required" data-noreset="true">
+			<option value="">- Select a Company -</option>
+			<?php if ($ORDER['companyid']) { echo '<option value="'.$ORDER['companyid'].'" selected>'.getCompany($ORDER['companyid']).'</option>'; } ?>
+		</select>
+<?php } else { ?>
 		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($ORDER['companyid']);?></span></p>
+<?php } ?>
+	</div>
 
-		<p class="bid"><?=($ORDER['cust_ref']);?></p>
-	
-		<p class="company_contact" data-contactid=""><?=getContact($ORDER['contactid']);?></p>
+	<div class="sidebar-section">
+		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-		<p class="company_address" data-addressid=""><?=address_out($ORDER['bill_to_id']);?></p>
+<?php if ($EDIT) { ?>
+		<select name="contactid" class="form-control input-xs contact-selector required">
+			<option value="">- Select a Contact -</option>
+			<?php if ($ORDER['contactid']) { echo '<option value="'.$ORDER['contactid'].'" selected>'.getContact($ORDER['contactid']).'</option>'; } ?>
+		</select>
+<?php } else { ?>
+		<?php echo getContact($ORDER['contactid']); ?>
+		<?php if (getContact($ORDER['contactid'],'id','email')) { echo '<a href="mailto:'.getContact($ORDER['contactid'],'id','email').'"><i class="fa fa-envelope"></i></a>'; } ?>
+<?php } ?>
+	</div>
 
-		<?php if($type == 'service') { ?>
-			<br>
-			<p class="section-header">Scope</p>
-			<p class="scope">Here is a scope of everything that is being done for the job.</p>
-			<br>
-		<?php } ?>
+	<div class="sidebar-section">
+		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-		<p class="section-header">Task Details</p>
+<?php if ($EDIT) { ?>
+		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required">
+			<option value="">- Select an Address -</option>
+			<option value="<?=$ORDER['bill_to_id'];?>"><?=format_address($ORDER['bill_to_id'], ',');?></option>
+		</select>
+<?php } else { ?>
+		<p class="company_address info" data-addressid=""><?=format_address($ORDER['bill_to_id']);?></p>
+<?php } ?>
+	</div>
 
-		<?php if($type == 'repair' OR $type == 'build') { ?>
-			
-			<?=format($ORDER['partid']);?>
-			<br>
+	<div class="sidebar-section">
+		<div class="row">
+			<div class="col-sm-7">
+				<h4 class="section-header">Customer Order</h4>
+<?php if ($EDIT) { ?>
+				<div class="input-group">
+					<input name="cust_ref" class="form-control input-sm" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
+					<span class="input-group-btn" style="vertical-align:top !important">
+						<button class="btn btn-info btn-sm" type="button" for="order_upload"><i class="fa fa-paperclip"></i></button>
+					</span>
+				</div>
+				<input id="order_upload" class="file-upload" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
+<?php } else { ?>
+				<?php echo $ORDER['cust_ref']; ?> <a href="<?php echo $ORDER['ref_ln']; ?>" target="_new"><i class="fa fa-file"></i></a>
+<?php } ?>
+			</div>
+			<div class="col-sm-5 nopadding-left">
+				<h4 class="section-header">Terms</h4>
 
-			<p class="section-header">Serial(s):</p>
-			<?php foreach($serials as $serial): ?>
-				<p><?=$serial;?></p>
-			<?php endforeach; ?>
-		<?php } ?>
+<?php if ($EDIT) { ?>
+				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2">
+					<?php echo $terms_list; ?>
+				</select>
+<?php } else { ?>
+				<?php echo getTerms($ORDER['termsid'],'id','terms'); ?>
+<?php } ?>
+			</div>
+		</div>
+	</div>
 
-		<?php if($type == 'service') { ?>
-			<p class="total_charge">$800.00</p>
-			<p class="site_contact">David Langley</p>
+<?php if (isset($ORDER['ship_to_id'])) { ?>
+	<div class="sidebar-section">
+<?php if ($EDIT) { ?>
+		<div class="pull-right"><input type="checkbox" name="sync_addresses" value="1" id="sync_addresses"><label for="sync addresses"> Same as Billing</label></div>
+<?php } ?>
+		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-			<p class="site_address"><span class="line_1">3037 Golf Course Drive, Suite 2</span><br>
-			Ventura, CA 93003<br></p>
+<?php if ($EDIT) { ?>
+		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required">
+			<option value="">- Select an Address -</option>
+			<option value="<?=$ORDER['ship_to_id'];?>"><?=format_address($ORDER['ship_to_id'], ',');?></option>
+		</select>
+<?php } else { ?>
+		<p class="company_address" data-addressid=""><?=format_address($ORDER['ship_to_id']);?></p>
+<?php } ?>
+	</div>
 
-			<p class="total_charge">$800.00</p>
-		<?php } ?>
+	<div class="sidebar-section">
+		<div class="row">
+			<div class="col-sm-5 nopadding-right">
+				<h4 class="section-header">Carrier</h4>
 
-		<br>
+<?php if ($EDIT) { ?>
+				<select name="carrierid" id="carrierid" size="1" class="select2 form-control input-sm">
+					<?php echo $carriers_list; ?>
+				</select>
+<?php } else { ?>
+				<?php echo getCarrier($ORDER['freight_carrier_id']); ?>
+<?php } ?>
+			</div>
+			<div class="col-sm-7">
+				<h4 class="section-header">Freight Terms</h4>
 
-		<p class="section-header">Public Notes</p>
-		<p class="public_notes"><?=$ORDER['public_notes'];?></p>
-	<?php } ?>
+<?php if ($EDIT) { ?>
+				<select name="freight_account_id" id="freight_account_id" size="1" class="form-control input-sm select2">
+					<option value="">PREPAID</option>
+				</select>
+<?php } else { ?>
+				<?php echo getFreightAccount($ORDER['freight_account_id']); ?>
+<?php } ?>
+			</div>
+		</div><!-- row -->
+	</div><!-- sidebar-section -->
 
-	<br>
-	<div class="sidebar-footer">
-		<p class="section-header">Internal Use Only</p>
-		<?php if ($edit) { ?>
-			<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" style="margin-bottom: 10px;" placeholder=""><?=$ORDER['private_notes'];?></textarea>
+	<div class="sidebar-section">
+		<h4 class="section-header">Freight Service</h4>
+
+<?php if ($EDIT) { ?>
+		<select name="freight_service_id" id="freight_service_id" size="1" class="form-control input-sm">
+		</select>
+<?php } else { ?>
+		<?php echo getFreightService($ORDER['freight_service_id']); ?>
+<?php } ?>
+	</div>
+
+<?php } /* ship_to_id */ ?>
+
+<?php if($ORDER['order_type'] == 'Service') { ?>
+	<div class="sidebar-section">
+		<h4 class="section-header">Scope</h4>
+		<?php if ($EDIT) { ?>
+			<textarea id="scope" class="form-control" name="scope" rows="3" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
 		<?php } else { ?>
-			<p class="private_notes"><?=$ORDER['private_notes'];?></p>
+			<p>Here is a scope of everything that is being done for the job.</p>
 		<?php } ?>
 	</div>
-</div>					
+<?php } ?>
+
+	<div class="sidebar-section">
+		<p class="section-header">Public Notes</p>
+<?php if ($EDIT) { ?>
+		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" placeholder=""><?=$ORDER['public_notes'];?></textarea>
+<?php } else { ?>
+		<p><?php echo str_replace(chr(10),'<BR>',$ORDER['public_notes']); ?></p>
+<?php } ?>
+	</div>
+
+	<div class="sidebar-footer">
+		<p class="section-header">Internal Use Only</p>
+<?php if ($EDIT) { ?>
+		<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" placeholder="Private Notes"><?=$ORDER['private_notes'];?></textarea>
+<?php } else { ?>
+		<p><?php echo str_replace(chr(10),'<BR>',$ORDER['private_notes']);?></p>
+<?php } ?>
+	</div>
+</div>

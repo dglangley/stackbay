@@ -11,7 +11,6 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/terms.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	
 	$itemList = array();

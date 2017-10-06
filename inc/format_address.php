@@ -1,12 +1,13 @@
 <?php
-	function format_address($addressid,$line_sep='<br/>') {
+	function format_address($addressid,$line_sep='<br/>',$include_name=true) {
 		$address = '';
 
 		$query = "SELECT * FROM addresses WHERE id = '".res($addressid)."'; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
-			$address = $r['name'];
+			$address = '';
+			if ($include_name) { $address = $r['name']; }
 			if ($address AND $r['street']) { $address .= $line_sep; }
 			if ($r['street']) { $address .= $r['street']; }
 			if ($address AND $r['addr2']) { $address .= $line_sep; }

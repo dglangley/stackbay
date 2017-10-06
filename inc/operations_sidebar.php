@@ -28,7 +28,7 @@ include_once $rootdir.'/inc/dropPop.php';
 include_once $rootdir.'/inc/packages.php';
 include_once $rootdir.'/inc/order_parameters.php';
 include_once $rootdir.'/inc/getAccount.php';
-include_once $rootdir.'/inc/terms.php';
+include_once $rootdir.'/inc/getTerms.php';
 include_once $rootdir.'/inc/default_addresses.php';
 
 
@@ -158,7 +158,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 				$associated_order = $rtv_result['cust_ref'];
 				$ref_ln = $rtv_result['ref_ln'];
 				$rtv_po = $order_number;
-				$terms = getTermsInfo("N/A");
+				$terms = getTerms("N/A");
 				$private = 'RTV From PO #'.$order_number;
 				$b_name = getAddresses($b_add,'street');
 				//THE SHIP to works like the default ship to address.
@@ -562,7 +562,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 			
 			if($terms){
 				$right .= "<b style='color: #526273;font-size: 14px;'>Payment Terms</b><br>";
-				$right .= "Terms: ".getTermsInfo($terms, 'id', 'terms');
+				$right .= "Terms: ".getTerms($terms, 'id', 'terms');
 				$right .= "<br><br>";
 			}
 			
