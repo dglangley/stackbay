@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
@@ -21,6 +22,8 @@
 	if ($order_type=='Invoice') {
 		$TITLE = 'Invoice '.$invoice;
 
+		$ORDER = getOrder($invoice,'Invoice');
+/*
 		$query = "SELECT * FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
@@ -45,19 +48,16 @@
 			$ORDER['public_notes'] = $r['public_notes'];
 			$ORDER['private_notes'] = $r['private_notes'];
 		}
+*/
 
-		$title_helper = format_date($r['date_invoiced'],'D n/j/y g:ia');
+		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
 	} else {
 		$TITLE = $order_type.' Order '.$order_number;
 
 		$T = order_type($order_type);
 
-		$query = "SELECT *, ".$T['addressid']." addressid, ".$T['datetime']." dt FROM ".$T['orders']." ";
-		$query .= "WHERE ".$T['order']." = '".res($order_number)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)==0) { die("Invalid order"); }
-
-		$ORDER = mysqli_fetch_assoc($result);
+		$ORDER = getOrder($order_number,$order_type);
+		if ($ORDER===false) { die("Invalid Order"); }
 		$ORDER['bill_to_id'] = $ORDER['addressid'];
 		$ORDER['datetime'] = $ORDER['dt'];
 
@@ -109,20 +109,15 @@
 	</form>
 </div>
 
-<?php include_once $_SERVER["ROOT_DIR"].'/sidebar.php'; ?>
-
-<div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
-
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
-
 	if (! isset($EDIT)) { $EDIT = false; }
 $EDIT = true;
 
-	$ORDER = getOrder($invoice,'Invoice');
 	include_once $_SERVER["ROOT_DIR"].'/sidebar.php';
 ?>
+
+<div id="pad-wrapper">
+<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
 </form>
 </div><!-- pad-wrapper -->

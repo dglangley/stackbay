@@ -174,7 +174,11 @@
 				<?php echo getFreightAccount($ORDER['freight_account_id']); ?>
 <?php } ?>
 			</div>
-		</div>
+		</div><!-- row -->
+	</div><!-- sidebar-section -->
+
+	<div class="sidebar-section">
+		<h4 class="section-header">Freight Service</h4>
 
 <?php if ($EDIT) { ?>
 		<select name="freight_service_id" id="freight_service_id" size="1" class="form-control input-sm">
@@ -183,7 +187,8 @@
 		<?php echo getFreightService($ORDER['freight_service_id']); ?>
 <?php } ?>
 	</div>
-<?php } ?>
+
+<?php } /* ship_to_id */ ?>
 
 <?php if($ORDER['order_type'] == 'Service') { ?>
 	<div class="sidebar-section">
