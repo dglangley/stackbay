@@ -1,148 +1,150 @@
-(function($){
-	// Create a generic funtion to invoke the ajax call for part searches
-	function partSearch(search, filter, cid, order_type) {
-		if (! cid) { var cid = ''; }
-		if (! order_type) { var order_type = ''; }
+// Create a generic funtion to invoke the ajax call for part searches
+function partSearch(search, filter, cid, order_type) {
+	if (! cid) { var cid = ''; }
+	if (! order_type) { var order_type = ''; }
 
-		var type = $('body').data("order-type");
-		console.log(window.location.origin+"/json/part_search.php?search="+escape(search));
-		$.ajax({
-	        url: 'json/part_search.php',
-	        type: 'get',
-	        dataType: "json",
-	        data: {'search': search, 'filter': filter, 'companyid': cid, 'order_type': order_type},
-	        success: function(json) {
-	        	$(".found_parts").remove();
+	var type = $('body').data("order-type");
+	console.log(window.location.origin+"/json/part_search.php?search="+escape(search));
+	$.ajax({
+        url: 'json/part_search.php',
+        type: 'get',
+        dataType: "json",
+        data: {'search': search, 'filter': filter, 'companyid': cid, 'order_type': order_type},
+        success: function(json) {
+        	$(".found_parts").remove();
 
-				console.log(json);
-				var rowHTML = '';
-				$.each(json, function(key, row){
-					// Key is the part id
-					// Row is the detail of the part
-					// Quick check to see if all elements exist
+			console.log(json);
+			var rowHTML = '';
+			$.each(json, function(key, row){
+				// Key is the part id
+				// Row is the detail of the part
+				// Quick check to see if all elements exist
 
-					var heci = '';
-					var description = '';
-					var stock = '';
+				var heci = '';
+				var description = '';
+				var stock = '';
 
-					if(row.heci != null) {
-						heci = row.heci;
-					}
+				if(row.heci != null) {
+					heci = row.heci;
+				}
 
-					if(row.description != null) {
-						description = row.description;
-					}
+				if(row.description != null) {
+					description = row.description;
+				}
 
-					if(row.stock > 0) {
-						stock = '<span style="color: #3c763d; text-align: right;">'+row.stock+'</span>';
-					} 
-
-					if(type == 'quote') {
-						rowHTML += '<tr class="found_parts found_parts_quote part_listing" style="overflow:hidden;">';
-						rowHTML += '	<td class="part">\
-											<div class="remove-pad col-md-1">\
-												<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\
-											</div>\
-											<div class="col-md-11">\
-												<span class="descr-label">'+row.part+ ' ' +heci+' </span>\
-												<div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div>\
-											</div>\
-										</td>';
-						rowHTML += '	<td>\
-											<div class="col-md-4 remove-pad" style="padding-right: 5px;">\
-												<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value="">\
-											</div>\
-											<div class="col-md-8 remove-pad">\
-												<div class="form-group" style="margin-bottom: 0;">\
-													<div class="input-group">\
-														<span class="input-group-addon">\
-											                <i class="fa fa-usd" aria-hidden="true"></i>\
-											            </span>\
-											            <input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="">\
-											        </div>\
-												</div>\
-											</div>\
-										</td>';
-						// rowHTML += '	<td></td>';
-						rowHTML += '	<td style="background: #FFF;"><div class="table market-table" data-partids="'+row.id+'">\
-											<div class="bg-availability">\
-												<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">\
-													Supply <i class="fa fa-window-restore"></i>\
-												</a>\
-												<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">\
-													<i class="fa fa-download"></i>\
-												</a>\
-												<div class="market-results" id="'+row.id+'" data-ln="0" data-type="supply">\
-												</div>\
-											</div>\
-										</div></td>';
-						rowHTML += '	<td class="datetime">\
-											<div class="col-md-2 remove-pad">\
-												<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="#" value="">\
-											</div>\
-											<div class="col-md-4">\
-												<select class="form-control input-sm date_span">\
-													<option value="days">Days</option>\
-													<option value="weeks">Weeks</option>\
-													<option value="months">Months</option>\
-												</select>\
-											</div>\
-											<div class="col-md-6 remove-pad">\
-												<div class="form-group" style="margin-bottom: 0; width: 100%;">\
-													<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
-											            <input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">\
-											            <span class="input-group-addon">\
-											                <span class="fa fa-calendar"></span>\
-											            </span>\
-											        </div>\
-												</div>\
-											</div>\
-										</td>';
-						rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
-											<div class="input-group">\
-									            <input type="text" name="profit_perc" class="form-control input-sm part_tax" value="" placeholder="0">\
-									            <span class="input-group-addon">\
-									                <i class="fa fa-percent" aria-hidden="true"></i>\
-									            </span>\
-									        </div>\
-										</div></td>';
-						rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
-											<div class="input-group">\
-												<span class="input-group-addon">\
-									                <i class="fa fa-usd" aria-hidden="true"></i>\
-									            </span>\
-									            <input type="text" name="quote_amount" placeholder="0.00" class="form-control input-sm quote_amount" value="">\
-									        </div>\
-										</div></td>';
-
-						rowHTML += '	<td><button class="btn btn-primary btn-sm pull-right quote_add">\
-							        		<i class="fa fa-plus"></i>\
-								        </button></td>';
-						rowHTML += '</tr>';
-					} else {
-						rowHTML += '<tr class="found_parts">';
-						rowHTML += '	<td class="part"><span class="descr-label">'+row.part+ ' ' +heci+' </span><div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div></td>';
-						rowHTML += '	<td><input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value=""></td>';
-						rowHTML += '	<td class="stock">'+stock+'</td>';
-						rowHTML += '</tr>';
-					}
-				});
+				if(row.stock > 0) {
+					stock = '<span style="color: #3c763d; text-align: right;">'+row.stock+'</span>';
+				} 
 
 				if(type == 'quote') {
-					$('#quote_input').after(rowHTML);
-					$(".market-results").each(function() {
-						// $(this).loadResults(0,1);
-						$(this).loadResults(1,1);
-					});
+					rowHTML += '<tr class="found_parts found_parts_quote part_listing" style="overflow:hidden;">';
+					rowHTML += '	<td class="part">\
+										<div class="remove-pad col-md-1">\
+											<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\
+										</div>\
+										<div class="col-md-11">\
+											<span class="descr-label">'+row.part+ ' ' +heci+' </span>\
+											<div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div>\
+										</div>\
+									</td>';
+					rowHTML += '	<td>\
+										<div class="col-md-4 remove-pad" style="padding-right: 5px;">\
+											<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value="">\
+										</div>\
+										<div class="col-md-8 remove-pad">\
+											<div class="form-group" style="margin-bottom: 0;">\
+												<div class="input-group">\
+													<span class="input-group-addon">\
+										                <i class="fa fa-usd" aria-hidden="true"></i>\
+										            </span>\
+										            <input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="">\
+										        </div>\
+											</div>\
+										</div>\
+									</td>';
+					// rowHTML += '	<td></td>';
+					rowHTML += '	<td style="background: #FFF;"><div class="table market-table" data-partids="'+row.id+'">\
+										<div class="bg-availability">\
+											<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">\
+												Supply <i class="fa fa-window-restore"></i>\
+											</a>\
+											<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">\
+												<i class="fa fa-download"></i>\
+											</a>\
+											<div class="market-results" id="'+row.id+'" data-ln="0" data-type="supply">\
+											</div>\
+										</div>\
+									</div></td>';
+					rowHTML += '	<td class="datetime">\
+										<div class="col-md-2 remove-pad">\
+											<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="#" value="">\
+										</div>\
+										<div class="col-md-4">\
+											<select class="form-control input-sm date_span">\
+												<option value="days">Days</option>\
+												<option value="weeks">Weeks</option>\
+												<option value="months">Months</option>\
+											</select>\
+										</div>\
+										<div class="col-md-6 remove-pad">\
+											<div class="form-group" style="margin-bottom: 0; width: 100%;">\
+												<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
+										            <input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">\
+										            <span class="input-group-addon">\
+										                <span class="fa fa-calendar"></span>\
+										            </span>\
+										        </div>\
+											</div>\
+										</div>\
+									</td>';
+					rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
+										<div class="input-group">\
+								            <input type="text" name="profit_perc" class="form-control input-sm part_tax" value="" placeholder="0">\
+								            <span class="input-group-addon">\
+								                <i class="fa fa-percent" aria-hidden="true"></i>\
+								            </span>\
+								        </div>\
+									</div></td>';
+					rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
+										<div class="input-group">\
+											<span class="input-group-addon">\
+								                <i class="fa fa-usd" aria-hidden="true"></i>\
+								            </span>\
+								            <input type="text" name="quote_amount" placeholder="0.00" class="form-control input-sm quote_amount" value="">\
+								        </div>\
+									</div></td>';
+
+					rowHTML += '	<td><button class="btn btn-primary btn-sm pull-right quote_add">\
+						        		<i class="fa fa-plus"></i>\
+							        </button></td>';
+					rowHTML += '</tr>';
 				} else {
-					$('#search_input').append(rowHTML);
+					rowHTML += '<tr class="found_parts">';
+					rowHTML += '	<td class="part"><span class="descr-label">'+row.part+ ' ' +heci+' </span><div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div></td>';
+					rowHTML += '	<td><input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value=""></td>';
+					rowHTML += '	<td class="stock">'+stock+'</td>';
+					rowHTML += '</tr>';
 				}
-	        },
-	        error: function(xhr, desc, err) {
-	            console.log("Details: " + desc + "\nError:" + err);
-	        }
-	    }); // end ajax call
-   	}
+			});
+
+			if(type == 'quote') {
+				$('#quote_input').after(rowHTML);
+				$(".market-results").each(function() {
+					// $(this).loadResults(0,1);
+					$(this).loadResults(1,1);
+				});
+			} else {
+				$('#search_input').append(rowHTML);
+			}
+        },
+        error: function(xhr, desc, err) {
+            console.log("Details: " + desc + "\nError:" + err);
+        }
+    }); // end ajax call
+	}
+
+(function($){
+	
 
    	// This function just clones what the user selected and makes a header in the main table
    	function createListings(object = ''){
@@ -410,12 +412,6 @@
 
 	$(document).on("click", ".remove_part", function(e){
 		$(this).closest(".part_listing").remove();
-	});
-
-	$(document).on("click", ".toggle-save", function(e){
-		e.preventDefault();
-
-		$("#save_form").submit();
 	});
 
 	$(document).on("change", ".date_number, .date_span", function(){
