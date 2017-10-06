@@ -10,7 +10,6 @@
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/display_part.php';

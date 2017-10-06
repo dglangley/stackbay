@@ -640,7 +640,9 @@
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 
-		$(document).on(".company-selector")
+//		$(document).on(".company-selector")
+	var scope = 'Sale';
+	if ($("body").data('scope')) { scope = $("body").data('scope'); }
 	/**** Invoke all select2() modules *****/
 	if (!!$.prototype.select2) {
 	    $(".company-selector").select2({
@@ -651,6 +653,7 @@
 				/*delay: 250,*/
 	            data: function (params) {
 	                return {
+	                    scope: scope,
 	                    add_custom: add_custom,
 	                    q: params.term,//search term
 						page: params.page
@@ -735,13 +738,15 @@
 		$(".address-selector").select2({
 			placeholder: '- Select an Address -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/address-picker.php",
+	            url: "/json/addresses.php",
 	            dataType: 'json',
 				/*delay: 250,*/
 	            data: function (params) {
 	                return {
+	                    companyid: companyid,
 	                    q: params.term,//search term
-						page: params.page
+						order_type: scope,
+						address_field: $(this).attr('id'),
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
@@ -879,6 +884,170 @@
 	        minimumInputLength: 0
 	    });
 	    $(".terms-select2").select2({
+		});
+		$("select.select2").select2({
+		});
+
+		var companyid = $(".sidebar select[name='companyid']").val();
+		$(".sidebar select[name='companyid']").on('change', function() {
+			var sidebar = $(this).closest(".sidebar");
+			sidebar.find("select[name='bill_to_id']").select2('val', '');
+			sidebar.find("select[name='ship_to_id']").select2('val', '');
+
+			companyid = $(this).val();
+
+			$("#bill_to_id").val('');
+			termsid = 0;
+			$("#termsid").val(12);//default to Credit Card
+			carrierid = 0;
+			$("#carrierid").val(1);//default to UPS
+			$("#freight_account_id").populateSelected("","PREPAID");
+			$("#ship_to_id").val('');
+
+			orderOptionsWaterfall();
+		});
+
+		var carrierid = 0;
+		var termsid = 0;
+		function orderOptionsWaterfall() {
+			var bill_to_id = 0;
+			var ship_to_id = 0;
+			var freight_account_id = 0;
+
+			// only proceed with a real company selected
+			if (! companyid || companyid==0) { return; }
+
+			var params = '?companyid='+companyid;
+			if ($("#bill_to_id").val()>0) {
+				bill_to_id = $("#bill_to_id").val();
+				params += '&bill_to_id='+bill_to_id;
+			}
+			if ($("#ship_to_id").val()>0) {
+				ship_to_id = $("#ship_to_id").val();
+				params += '&ship_to_id='+ship_to_id;
+			}
+			if (termsid>0) {
+				params += '&termsid='+termsid;
+			}
+			if (carrierid>0) {
+				params += '&carrierid='+carrierid;
+			}
+			if ($("#freight_account_id").val()>0) {
+				freight_account_id = $("#freight_account_id").val();
+				params += '&freight_account_id='+freight_account_id;
+			}
+
+            console.log(window.location.origin+"/json/company_defaults.php"+params);
+            $.ajax({
+                url: 'json/company_defaults.php',
+                type: 'get',
+                data: {'companyid': companyid, 'order_type': scope, 'bill_to_id': bill_to_id, 'ship_to_id': ship_to_id, 'termsid': termsid, 'carrierid': carrierid, 'freight_account_id': freight_account_id},
+                success: function(json, status) {
+					if (json.bill_to_id>0) {
+						$("#bill_to_id").populateSelected(json.bill_to_id,json.bill_to_address);
+					}
+					if (json.termsid>0) {
+						$("#termsid").populateSelected(json.termsid,json.terms);
+					}
+					if (json.ship_to_id>0) {
+						$("#ship_to_id").populateSelected(json.ship_to_id,json.ship_to_address);
+					}
+					if (json.carrierid>0) {
+						$("#carrierid").val(json.carrierid).trigger('change');
+					}
+					$("#freight_account_id").populateSelected(json.freight_account_id,json.freight_account);
+				},
+                error: function(xhr, desc, err) {
+//                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                }
+            }); // end ajax call
+		}
+
+		$("#carrierid").on('change', function() {
+			carrierid = $(this).val();
+
+			$("#freight_account_id").val('').trigger('change');
+
+			// reset freight services selector
+			$("#freight_service_id").select2('val', '');
+		});
+		$("#termsid").on('change', function() {
+			termsid = $(this).val();
+		});
+		$("#termsid").select2({
+			placeholder: '- Select -',
+			ajax: {
+				type: 'POST',
+				url: '/json/terms.php',
+				dataType: 'json',
+	            data: function (params) {
+	                return {
+	                    companyid: companyid,
+	                    scope: scope,
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: false
+			},
+		});
+		$("#freight_account_id").select2({
+			placeholder: 'PREPAID',
+			ajax: {
+				type: 'POST',
+				url: '/json/freight_accounts.php',
+				dataType: 'json',
+	            data: function (params) {
+	                return {
+	                    companyid: companyid,
+	                    carrierid: $("#carrierid").val(),
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: false
+			},
+		});
+		$("#freight_service_id").select2({
+			placeholder: '- Select Freight Service -',
+			ajax: {
+				type: 'POST',
+				url: '/json/freight_services.php',
+				dataType: 'json',
+	            data: function (params) {
+	                return {
+	                    carrierid: $("#carrierid").val(),
+	                };
+	            },
+		        processResults: function (data, params) { // parse the results into the format expected by Select2.
+		            // since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+		            return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: false
+			},
 		});
 	}
 

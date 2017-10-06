@@ -68,6 +68,7 @@
 		'ENCLOSURE'=>1,
 		'APPROVALS'=>1,
 		'TRANSACTION'=>1,
+		'HECI:'=>1,
 		'FRONTIER'=>1,
 		'ARD'=>1,
 		'TRANCEIVER'=>1,

@@ -14,7 +14,6 @@
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 

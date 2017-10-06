@@ -20,7 +20,7 @@
     //$id = $o[$box];
     $short = $o['short'];
     $order = $o['order'];
-    
+
 	if($companyid){
 	    //If there is a value set for the company, load their defaults to the top result always.
 	    $default = default_addresses($companyid, $o['type']);

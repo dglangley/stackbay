@@ -37,9 +37,9 @@
 	}
 
 	if ($q) {
-		krsort($firsts);
-		krsort($seconds);
-		krsort($thirds);
+//		krsort($firsts);
+//		krsort($seconds);
+//		krsort($thirds);
 	}
 
 	foreach ($firsts as $r) { $lists[] = $r; }

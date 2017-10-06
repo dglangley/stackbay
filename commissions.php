@@ -6,9 +6,9 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getRep.php';
+	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/terms.php';
 
 	function getSource($pi_id) {
 		if (! $pi_id) { return (''); }
@@ -579,7 +579,7 @@
 		$days = floor(($date_today-$order_date)/($secs_per_day));
 		$due_days = 0;
 		if ($r['termsid']) {
-			$due_days = getTermsInfo($r['termsid'],'id','days');
+			$due_days = getTerms($r['termsid'],'id','days');
 		}
 
 		$paid = false;//trips when paid so we can default to checked or not
