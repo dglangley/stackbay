@@ -31,7 +31,7 @@
 	<style type="text/css">
 	</style>
 </head>
-<body>
+<body data-scope="Purchase">
 
 <?php include_once 'inc/navbar.php'; ?>
 
@@ -68,6 +68,15 @@
 <div id="pad-wrapper">
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+
+	if (! isset($EDIT)) { $EDIT = false; }
+$EDIT = true;
+
+	$ORDER = getOrder($invoice,'Invoice');
+	include_once $_SERVER["ROOT_DIR"].'/sidebar.php';
+?>
 
 </form>
 </div><!-- pad-wrapper -->
