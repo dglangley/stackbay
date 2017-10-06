@@ -1,145 +1,138 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
-	function getOrder($str,$type='') {
-		$arr = array('search'=>$str,'type'=>$type);
+	$order_number = 0;
+	$order_type = '';
 
-		if ($type) {
-			$search = $str;
-		} else {
-			$search_parts = explode('|',preg_replace('/^([\/])([SPR]O)?([[:alnum:].-]{3,25})$/i','$2|$3',trim($str)));
-			if (count($search_parts)<>2) { return $arr; }
+	$invoice = '';
+	if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
 
-			$type = $search_parts[0];
-			$search = $search_parts[1];
-		}
-		if (! $search) { return $arr; }
-
-		$arr['search'] = $search;
-
-		if ($type=='SO') {
-			$query = "SELECT so_number FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$search);
-			if (mysqli_num_rows($result)==1) {
-				$r = mysqli_fetch_assoc($result);
-				$arr['search'] = $r['so_number'];
-				$arr['type'] = 'SO';
-			}
-		} else if ($type=='RO') {
-			$query = "SELECT ro_number FROM repair_orders WHERE cust_ref = '".res($search)."' OR ro_number = '".res($search)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$search);
-			if (mysqli_num_rows($result)==1) {
-				$r = mysqli_fetch_assoc($result);
-				$arr['search'] = $r['ro_number'];
-				$arr['type'] = 'RO';
-			}
-		} else if ($type=='PO') {
-			$query = "SELECT po_number FROM purchase_orders WHERE assoc_order = '".res($search)."' OR po_number = '".res($search)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$search);
-			if (mysqli_num_rows($result)==1) {
-				$r = mysqli_fetch_assoc($result);
-				$arr['search'] = $r['po_number'];
-				$arr['type'] = 'PO';
-			}
-		} else if ($type=='RMA') {
-			$query = "SELECT rma_number FROM returns WHERE rma_number = '".res($search)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$search);
-			if (mysqli_num_rows($result)==1) {
-				$r = mysqli_fetch_assoc($result);
-				$arr['search'] = $r['rma_number'];
-				$arr['type'] = 'RMA';
-			}
-		}
-
-		return ($arr);
-	}
-
-	//$order = preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
-	$type = trim($_SERVER["REQUEST_URI"]);
-	$order = '';
-	$order_str = explode('|',preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
-	if (count($order_str)==2) {
-		$type = $order_str[0];
-		$order = $order_str[1];
-	}
-
-	$O = array('search'=>'','type'=>'');
-	// if there's already an assumed language (ie, "SO123456"), try to confirm the data before assuming we know what the user wants;
-	// for example, they may be looking up a SO by customer PO# as in "765728", but because the navbar prepends the "SO" as the
-	// *type* of order, it will confuse the data...
-	if ($type AND $order) {
-		$O = getOrder($order,$type);
-		if ($O['search'] AND ! $O['type']) {
-			header('Location: /operations.php?s='.$O['search']);
-			exit;
-		}
-		$order = $O['search'];
-		$type = $O['type'];
-	}
-
-	// user is searching by customer PO#?
-	$search_parts = '';
-	if (! $order AND $type==$_SERVER["REQUEST_URI"]) {
-		$O = getOrder($_SERVER["REQUEST_URI"]);
-
-		if ($O['search']) {
-			header('Location: /order_form.php?on='.$O['search'].'&ps='.strtolower(substr($O['type'],0,1)));
-			exit;
-		} else {
-			header('Location: /operations.php?s='.$O['search']);
-			exit;
-		}
-	}
-
-	// if no prefixed type ("PO123456") we are going to auto-determine (or try!)
-	if (! $type) {
-		$query = "SELECT * FROM purchase_orders WHERE po_number = '".$order."' AND created >= CONCAT(DATE_SUB(CURDATE(),INTERVAL 365 DAY),' 00:00:00'); ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$po_matches = mysqli_num_rows($result);
-
-		$query = "SELECT * FROM sales_orders WHERE so_number = '".$order."' AND created >= CONCAT(DATE_SUB(CURDATE(),INTERVAL 365 DAY),' 00:00:00'); ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$so_matches = mysqli_num_rows($result);
-
-		$query = "SELECT * FROM repair_orders WHERE ro_number = '".$order."' AND created >= CONCAT(DATE_SUB(CURDATE(),INTERVAL 365 DAY),' 00:00:00'); ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$ro_matches = mysqli_num_rows($result);
-
-		if ($po_matches>0 AND $so_matches==0 AND $ro_matches==0) {
-			$type = 'PO';
-		} else if ($po_matches==0 AND $so_matches>0 AND $ro_matches==0) {
-			$type = 'SO';
-		} else if ($po_matches==0 AND $so_matches==0 AND $ro_matches>0) {
-			$type = 'RO';
-		}
-/*
-		$query = "SELECT * FROM repair_orders WHERE ro_number = '".$order."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$ro_matches = mysqli_num_rows($result);
-*/
-		$_REQUEST['on'] = $order;
+	if ($invoice) {
+		$order_number = $invoice;
+		$order_type = 'Invoice';
 	} else {
-		//$type = substr($order,0,2);
-		$_REQUEST['on'] = $O['search'];//substr($order,2);
+		if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
+		if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 	}
 
-	if ($type=='SO') { $_REQUEST['ps'] = 'Sale'; }
-	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
-	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
+	$title_helper = '';
+	if ($order_type=='Invoice') {
+		$TITLE = 'Invoice '.$invoice;
 
-	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
-		if ($type=='RMA') {
-			$_REQUEST['rma'] = $O['search'];
-			$_REQUEST['on'] = '';
-			include 'rma.php';
-		} else {
-			include 'order_form.php';
+		$query = "SELECT * FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)==0) {
+			die("Invalid Invoice!");
 		}
+		$ORDER = mysqli_fetch_assoc($result);
+
+		$T = order_type($ORDER['order_type']);
+
+		$query = "SELECT *, ".$T['addressid']." addressid FROM ".$T['orders']." WHERE ".$T['order']." = '".res($ORDER['order_number'])."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$ORDER['bill_to_id'] = $r['addressid'];
+			$ORDER['ship_to_id'] = $r['ship_to_id'];
+			$ORDER['cust_ref'] = $r['cust_ref'];
+			$ORDER['ref_ln'] = $r['ref_ln'];
+			$ORDER['termsid'] = $r['termsid'];
+			$ORDER['contactid'] = $r['contactid'];
+			$ORDER['freight_carrier_id'] = $r['freight_carrier_id'];
+			$ORDER['freight_account_id'] = $r['freight_account_id'];
+			$ORDER['public_notes'] = $r['public_notes'];
+			$ORDER['private_notes'] = $r['private_notes'];
+		}
+
+		$title_helper = format_date($r['date_invoiced'],'D n/j/y g:ia');
 	} else {
-		if ($type=='PO') {
-			include 'inventory_add.php';
-		} else {
-			include 'shipping.php';
-		}
+		$TITLE = $order_type.' Order '.$order_number;
+
+		$T = order_type($order_type);
+
+		$query = "SELECT *, ".$T['addressid']." addressid, ".$T['datetime']." dt FROM ".$T['orders']." ";
+		$query .= "WHERE ".$T['order']." = '".res($order_number)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		if (mysqli_num_rows($result)==0) { die("Invalid order"); }
+
+		$ORDER = mysqli_fetch_assoc($result);
+		$ORDER['bill_to_id'] = $ORDER['addressid'];
+		$ORDER['datetime'] = $ORDER['dt'];
+
+		$title_helper = format_date($ORDER['datetime'],'D n/j/y g:ia');
 	}
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title><?php echo $TITLE; ?></title>
+	<?php
+		/*** includes all required css includes ***/
+		include_once 'inc/scripts.php';
+	?>
+
+	<!-- any page-specific customizations -->
+	<style type="text/css">
+	</style>
+</head>
+<body data-scope="Purchase">
+
+<?php include_once 'inc/navbar.php'; ?>
+
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"><?php echo $title_helper; ?></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+	</div>
+
+	</form>
+</div>
+
+<?php include_once $_SERVER["ROOT_DIR"].'/sidebar.php'; ?>
+
+<div id="pad-wrapper">
+<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+
+	if (! isset($EDIT)) { $EDIT = false; }
+$EDIT = true;
+
+	$ORDER = getOrder($invoice,'Invoice');
+	include_once $_SERVER["ROOT_DIR"].'/sidebar.php';
+?>
+
+</form>
+</div><!-- pad-wrapper -->
+
+<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	});
+</script>
+
+</body>
+</html>

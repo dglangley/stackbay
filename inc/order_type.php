@@ -12,6 +12,7 @@
 				$T['abbrev'] = 'INV';
 				$T['datetime'] = 'date_invoiced';
 				$T['addressid'] = '';
+				$T['alert'] = 'default';
 				break;
 
 			case 'IT':
@@ -23,6 +24,7 @@
 				$T['abbrev'] = 'IT';
 				$T['datetime'] = '';
 				$T['addressid'] = '';
+				$T['alert'] = 'default';
 				break;
 
 			case 'Return':
@@ -34,6 +36,7 @@
 				$T['abbrev'] = 'RMA';
 				$T['datetime'] = 'created';
 				$T['addressid'] = '';
+				$T['alert'] = 'default';
 				break;
 
 			case 'Purchase':
@@ -45,6 +48,7 @@
 				$T['abbrev'] = 'PO';
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'remit_to_id';
+				$T['alert'] = 'warning';
 				break;
 
 			case 'Repair':
@@ -56,6 +60,7 @@
 				$T['abbrev'] = 'RO';
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'bill_to_id';
+				$T['alert'] = 'info';
 				break;
 
 			case 'Service':
@@ -67,6 +72,7 @@
 				$T['abbrev'] = 'SO';
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = 'bill_to_id';
+				$T['alert'] = 'info';
 				break;
 
 			case 'Sale':
@@ -79,6 +85,7 @@
 				$T['abbrev'] = 'SO';
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'bill_to_id';
+				$T['alert'] = 'success';
 				break;
 		}
 
