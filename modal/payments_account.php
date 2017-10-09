@@ -27,7 +27,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3" style="padding: 0 5px">
-                                <input class="form-control input-sm total_amount" type="text" name="payment_amount" placeholder="Total" style="text-align: right;">
+                                <input class="form-control input-sm total_amount" type="text" name="payment_amount" placeholder="Total" style="text-align: right;" readonly>
                             </div>
                         </div>
                     </div>
