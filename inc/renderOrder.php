@@ -629,6 +629,7 @@ if(!$o['lump']){
         <table class="table-full '.($o['rma'] ? 'remove' : '').'">
             <!-- Subtotal -->
             <tr>
+				<td rowspan=3>'.$oi['public_notes'].'</td>
                 <td style="text-align:right;border:none;">Subtotal</td>
                 <td class="text-right">
                     '.format_price($subtotal,true,' ').'
@@ -648,6 +649,7 @@ if(!$o['lump']){
                 </td>
             </tr>
             <tr class="total">
+				<td> </td>
                 <td style="text-align:right;"><b>Total</b></td>
                 <td id = "total" class="text-price">
                     <b>'.format_price($total).'</b>

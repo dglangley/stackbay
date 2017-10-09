@@ -397,6 +397,9 @@ div.valign-top,
 }
 .qty-header {
 	padding-left:64px;
+}
+.padding-right20,
+.qty-header {
 	padding-right:20px;
 }
 .first {
@@ -417,6 +420,17 @@ div.valign-top,
 	width:40px;
 	margin-left:4px;
 	font-weight:bold;
+}
+.input-sm.line-number {
+	width:30px;
+	margin-left:0px;
+	margin-right:4px;
+	font-weight:bold;
+	padding-left:4px;
+	padding-right:4px;
+	text-align:center;
+	background-color:#fafafa;
+	color:#777;
 }
 .product-results .price .btn i {
 	color:#aaa;

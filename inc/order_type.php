@@ -13,6 +13,7 @@
 				$T['datetime'] = 'date_invoiced';
 				$T['addressid'] = '';
 				$T['alert'] = 'default';
+				$T['warrantyid'] = 4;
 				break;
 
 			case 'IT':
@@ -25,6 +26,7 @@
 				$T['datetime'] = '';
 				$T['addressid'] = '';
 				$T['alert'] = 'default';
+				$T['warrantyid'] = 0;
 				break;
 
 			case 'Return':
@@ -37,6 +39,7 @@
 				$T['datetime'] = 'created';
 				$T['addressid'] = '';
 				$T['alert'] = 'default';
+				$T['warrantyid'] = 14;
 				break;
 
 			case 'Purchase':
@@ -49,6 +52,7 @@
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'remit_to_id';
 				$T['alert'] = 'warning';
+				$T['warrantyid'] = 7;
 				break;
 
 			case 'Repair':
@@ -61,6 +65,7 @@
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'info';
+				$T['warrantyid'] = 10;
 				break;
 
 			case 'Service':
@@ -73,6 +78,7 @@
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'info';
+				$T['warrantyid'] = 7;
 				break;
 
 			case 'Sale':
@@ -86,6 +92,7 @@
 				$T['datetime'] = 'created';
 				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'success';
+				$T['warrantyid'] = 4;
 				break;
 		}
 

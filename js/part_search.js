@@ -12,6 +12,7 @@ function partSearch(search, filter, cid, order_type) {
         data: {'search': search, 'filter': filter, 'companyid': cid, 'order_type': order_type},
         success: function(json) {
         	$(".found_parts").remove();
+			var ti = 2;//tabindex
 
 			console.log(json);
 			var rowHTML = '';
@@ -121,10 +122,17 @@ function partSearch(search, filter, cid, order_type) {
 				} else {
 					rowHTML += '<tr class="found_parts">';
 					rowHTML += '	<td class="part"><span class="descr-label">'+row.part+ ' ' +heci+' </span><div class="description desc_second_line descr-label" style="color:#aaa;"><span class="description-label">'+description+'</span></div></td>';
-					rowHTML += '	<td><input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value=""></td>';
-					rowHTML += '	<td class="stock">'+stock+'</td>';
+					if ($("body").data("scope")!='') { rowHTML += '<td colspan="5"> </td>'; }
+					rowHTML += '	<td>\
+										<div class="input-group">\
+											<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="'+row.id+'" data-stock="'+row.stock+'" placeholder="QTY" value="" tabindex="'+ti+'">\
+											<span class="input-group-btn"><button class="btn btn-default input-sm" disabled><strong>'+row.stock+'</strong></button></span>\
+										</div>\
+									</td>';
+//					rowHTML += '	<td class="stock">'+stock+'</td>';
 					rowHTML += '</tr>';
 				}
+				ti++;
 			});
 
 			if(type == 'quote') {
@@ -390,6 +398,9 @@ function partSearch(search, filter, cid, order_type) {
 			var search = $(this).val();
 			partSearch(search, '');
 		}
+	});
+	$(document).on("click", "#btn-partsearch", function(e) {
+		partSearch($("#partSearch").val());
 	});
 
 	$(document).on("keydown",".part_qty, .found_parts input",function(e){

@@ -623,7 +623,7 @@ To do:
 	<div class="row">
 		<div class="col-sm-3">
 <?php if ($n>0) { ?>
-			<select name="revs[]" class="select2 form-control rev-select" data-placeholder="Select week(s) or leave blank for all" data-allow-clear="false" multiple="multiple">
+			<select name="revs[]" class="form-control rev-select" data-placeholder="" data-allow-clear="false" multiple="multiple">
 				<option value="">- <?php echo $n; ?> Result<?php echo $ext; ?> -</option>
 				<?php echo $part_options; ?>
 			</select>

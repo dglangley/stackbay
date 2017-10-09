@@ -372,6 +372,14 @@
             jQuery(this).closest($(this).data('target')).find('.item-check:checkbox').not(this).prop('checked', this.checked);
         });
 
+		/* dropdown menu for input-group-btn groups that have hidden form elements for selected value */
+		$(".dropdown-button li").on('click', function() {
+			var v = $(this).text();
+			var toggleln = $(this).closest(".dropdown").find(".dropdown-toggle");
+			toggleln.find("input[type='hidden']").val(v);
+			toggleln.find(".btn-dropdown").html(v);
+		});
+
 /*
 		$(".checkAll").click(function(){
 		    $('input:checkbox').not(this).prop('checked', this.checked);
@@ -809,6 +817,32 @@
 				},
 				allowClear: true,
 				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+		});
+
+		$('.warranty-selector').select2({
+			width: '100%',
+			ajax: {
+				url: '/json/warranties.php',
+				dataType: 'json',
+				data: function (params) {
+					return {
+						companyid: companyid,//search term
+					};
+				},
+				processResults: function (data, params) {// parse the results into the format expected by Select2.
 					// since we are using custom formatting functions we do not need to alter remote JSON data
 					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;

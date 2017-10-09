@@ -31,10 +31,10 @@
 			} else if ($order_type=='Purchase') {
 				$query = "SELECT * FROM availability items, ";
 			}
-			$query .= "search_meta m, parts p ";
-			$query .= "WHERE m.datetime >= '".format_date($today,'Y-m-d 00:00:00',array('d'=>-30))."' AND m.id = items.metaid ";
-			$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid ";
-			$query .= "GROUP BY p.id ORDER BY m.datetime DESC; ";
+			$query .= "search_meta m, parts p, inventory i ";
+			$query .= "WHERE m.datetime >= '".format_date($GLOBALS['today'],'Y-m-d 00:00:00',array('d'=>-30))."' AND m.id = items.metaid ";
+			$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid AND p.id = i.partid AND i.status = 'received' ";
+			$query .= "GROUP BY p.id ORDER BY m.datetime DESC LIMIT 0,10; ";
 			$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$items[$r['partid']] = hecidb($r['partid'],'id');
@@ -62,11 +62,11 @@
             $stock = 0;
 
             // Key is also the partid
-            $query = "SELECT SUM(qty) as stock FROM inventory WHERE partid = '".res($key)."' AND (status = 'shelved' OR status = 'received');";
+            $query = "SELECT SUM(qty) as stock FROM inventory WHERE partid = '".res($key)."' AND (status = 'received') AND conditionid > 0;";
             $result = qdb($query) OR die(qe() .' '. $query);
             if (mysqli_num_rows($result)>0) {
-                $result = mysqli_fetch_assoc($result);
-                $stock = ($result['stock'] ? $result['stock'] : 0);
+                $r = mysqli_fetch_assoc($result);
+                $stock = ($r['stock'] ? $r['stock'] : 0);
             }
 
             $results[$key]['stock'] = $stock;
@@ -81,7 +81,7 @@
     
     $results = array();
 
-    $results = searchParts($search, $filter, $companyid);
+    $results = searchParts($search, $filter, $companyid, $order_type);
 
     //print "<pre>".print_r($results,true)."</pre>";
 
