@@ -7,9 +7,21 @@
 	function createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes = '', $paymentid) {
 		$id = 0;
 
+		// Query to check if the payment already exists when trying to add a new payment
+		$query = "SELECT id FROM payments WHERE companyid = ".res($companyid)." AND payment_type = '".res($payment_type)."' AND number = '".res($payment_number)."';";
+		$result = qdb($query) OR die(qe().' '.$query);
+
+		if(mysqli_num_rows($result) && empty($paymentid)) {
+			$r = mysqli_fetch_assoc($result);
+
+			$paymentid = $r['id'];
+
+			echo 'Error: the payment already exists. Please edit the existing payment# ' . $r['id']; die();
+		}
+
 		$query = "REPLACE payments (companyid, date, payment_type, number, amount, notes";
 		if($paymentid) { $query .= ", id"; }
-		$query .= ") VALUES (".prep($companyid).", ".prep(format_date($payment_date, 'Y-m-d')).", ".prep($payment_type).", ".prep($payment_number).", ".prep($payment_amount).", ".prep($notes);
+		$query .= ") VALUES (".prep($companyid).", ".prep(format_date($payment_date, 'Y-m-d')).", ".prep($payment_type).", ".prep(trim($payment_number)).", ".prep($payment_amount).", ".prep(trim($notes));
 		if($paymentid) { $query .= ", ".prep($paymentid); }
 		$query .= ");";
 

@@ -68,12 +68,16 @@
 
 
             		$.each(data, function(key, row) {
-            			//console.log(row);
+            			console.log(row);
             			var row_amount = parseFloat(row.total_amount);
 
                         // Catch for when no invoice exists
                         if(! row_amount) {
                             row_amount = parseFloat(row.amount * row.qty);
+                        }
+
+                        if(row.bill_no) {
+                            row.invoice_no = row.bill_no;
                         }
 
             			rowHTML += "<tr class='payment_info'>\
@@ -168,6 +172,10 @@
             			payment_date = new Date(row.date);
             			payment_total = row.total;
             			payment_notes = row.notes;
+
+                        if((row.bill_no)) {
+                            row.invoice_no = row.bill_no;
+                        }
 
             			rowHTML += "<tr class='payment_info'>\
 										<td style='padding: 0px 10px;' class='col-md-3 capitalize'>";
