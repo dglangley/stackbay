@@ -19,9 +19,9 @@
 			echo 'Error: the payment already exists. Please edit the existing payment# ' . $r['id']; die();
 		}
 
-		$query = "REPLACE payments (companyid, date, payment_type, number, amount, notes";
+		$query = "REPLACE payments (companyid, date, payment_type, number, amount, notes, userid, datetime ";
 		if($paymentid) { $query .= ", id"; }
-		$query .= ") VALUES (".prep($companyid).", ".prep(format_date($payment_date, 'Y-m-d')).", ".prep($payment_type).", ".prep(trim($payment_number)).", ".prep($payment_amount).", ".prep(trim($notes));
+		$query .= ") VALUES (".prep($companyid).", ".prep(format_date($payment_date, 'Y-m-d')).", ".prep($payment_type).", ".prep(trim($payment_number)).", ".prep($payment_amount).", ".prep(trim($notes)).", ".prep($GLOBALS['U']['id']).", ".prep($GLOBALS['now']);
 		if($paymentid) { $query .= ", ".prep($paymentid); }
 		$query .= ");";
 
