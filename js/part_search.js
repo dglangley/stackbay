@@ -37,7 +37,7 @@ function partSearch(search, filter, cid, order_type) {
 				} 
 
 				if(type == 'quote') {
-					rowHTML += '<tr class="found_parts found_parts_quote part_listing" style="overflow:hidden;">';
+					rowHTML += '<tr class="found_parts found_parts_quote" style="overflow:hidden;">';
 					rowHTML += '	<td class="part">\
 										<div class="remove-pad col-md-1">\
 											<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\
@@ -99,7 +99,7 @@ function partSearch(search, filter, cid, order_type) {
 									</td>';
 					rowHTML += '	<td><div class="form-group" style="margin-bottom: 0;">\
 										<div class="input-group">\
-								            <input type="text" name="profit_perc" class="form-control input-sm part_tax" value="" placeholder="0">\
+								            <input type="text" class="form-control input-sm part_perc" value="" placeholder="0">\
 								            <span class="input-group-addon">\
 								                <i class="fa fa-percent" aria-hidden="true"></i>\
 								            </span>\
@@ -110,7 +110,7 @@ function partSearch(search, filter, cid, order_type) {
 											<span class="input-group-addon">\
 								                <i class="fa fa-usd" aria-hidden="true"></i>\
 								            </span>\
-								            <input type="text" name="quote_amount" placeholder="0.00" class="form-control input-sm quote_amount" value="">\
+								            <input type="text" placeholder="0.00" class="form-control input-sm quote_amount" value="">\
 								        </div>\
 									</div></td>';
 
@@ -300,7 +300,7 @@ function partSearch(search, filter, cid, order_type) {
     }
 
     function calculateCost(object){
-    	var container = object.closest(".part_listing");
+    	var container = object.closest(".found_parts_quote");
 
     	var qty = 0;
     	var amount = 0;
@@ -316,8 +316,8 @@ function partSearch(search, filter, cid, order_type) {
     		amount = parseFloat(container.find(".part_amount").val());	
     	}
 
-    	if(container.find(".part_tax").val()) {
-    		tax = parseFloat(container.find(".part_tax").val());	
+    	if(container.find(".part_perc").val()) {
+    		tax = parseFloat(container.find(".part_perc").val());	
     	}
 
     	// alert(qty + ' ' + amount + ' ' +tax);
@@ -352,7 +352,7 @@ function partSearch(search, filter, cid, order_type) {
 
     	tax = ((quote - (qty * amount)) / (qty * amount)) * 100;
 
-    	container.find(".part_tax").val(tax);
+    	container.find(".part_perc").val(tax);
     }
 
 	$(document).on("click", ".pull_part, .add_component", function(e){
@@ -467,7 +467,7 @@ function partSearch(search, filter, cid, order_type) {
 		}
 	});
 
-	$(document).on("change", ".part_amount, .part_qty, .part_tax", function(){
+	$(document).on("change", ".part_amount, .part_qty, .part_perc", function(){
 		calculateCost($(this));
 	});
 

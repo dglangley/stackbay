@@ -94,4 +94,6 @@
 		testTask($item_id);
 	}
 
+	header('Location: /task_view.php?type=repair&order='.$order_number);
+
 	exit;
