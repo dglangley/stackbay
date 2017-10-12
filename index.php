@@ -590,7 +590,14 @@ if (! $r['partid']) { return ($results); }
 	}
 	unset($lines);
 
-	$per_pg = 10;
+	$per_pg;
+
+	if(! $listid) {
+		$per_pg = 50;
+	} else {
+		$per_pg = 10;
+	}
+
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -747,7 +754,10 @@ if (! $r['partid']) { return ($results); }
 		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
 		if ($favorites OR $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
-			else if ($x>$max_ln) { break; }
+			else if ($x>$max_ln) { 
+				echo '<div class="row infinite_scroll spinner_lock" data-page="'.(isset($ln) ? $ln + 1 : '1').'" data-list="'.$listid.'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+				break; 
+			}
 			$x++;
 		}
 

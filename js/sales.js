@@ -386,17 +386,43 @@
 	    	elem.removeClass('infinite_scroll');
 	    	$('#sales_loader').show();
 
+	    	var record_start = $('input[name="startDate"]').val();
+	    	var record_end = $('input[name="endDate"]').val();
+	    	var sales_min = $('input[name="sales_min"]').val();
+	    	var sales_max = $('input[name="sales_max"]').val();
+	    	var demand_min = $('input[name="demand_min"]').val();
+	    	var demand_max = $('input[name="demand_max"]').val();
+	    	var stock_min = $('input[name="stock_min"]').val();
+	    	var stock_max = $('input[name="stock_max"]').val();
+
 			$.ajax({
 		        url: 'json/sales.php',
 		        type: 'get',
-		        data: {'listid': listid, 'ln': ln, 'equipment_filter': filter, 'type': type, 'sort': sort},
+		        data: {
+		        	'listid': listid, 
+		        	'ln': ln, 
+		        	'equipment_filter': filter, 
+		        	'type': type, 
+		        	'sort': sort, 
+		        	'record_start': record_start, 
+		        	'record_end': record_end, 
+		        	'sales_min': sales_min, 
+		        	'sales_max': sales_max, 
+		        	'demand_min': demand_min, 
+		        	'demand_max': demand_max, 
+		        	'stock_min': stock_min, 
+		        	'stock_max': stock_max,
+		        },
 		        success: function(result) {
 		        	if(result) {			        	
 			        	console.log(result);
+			        	var numItems = $('.part_info').length;
+			        	
 			        	elem.remove();
 			        	$('.part_info:last').after(result);
 
-			        	$(".part_info:gt("+(ln-1)+")").each(function(){
+
+			        	$(".part_info:gt("+(numItems-1)+")").each(function(){
 				        	var container = $(this);
 
 				        	var marketTable = container.find('.market-table');

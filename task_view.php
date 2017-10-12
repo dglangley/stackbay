@@ -1247,10 +1247,10 @@
 				                                </th>
 				                            </tr>
 				                        </thead>
-				                        <tbody>
+				                        <tbody id="os_table">
 				                        	<?php $line_number = 1; foreach($outsourced as $list) { ?>
 				                        	<?php } ?>
-				                        	<tr class="expense_row">
+				                        	<tr class="expense_row" data_line="<?=$line_number;?>">
 			                            		<td>
 				                            		<select name="companyid" class="form-control input-xs company-selector required"></select>
 			                            		</td>
@@ -1274,7 +1274,7 @@
 													</div>
 												</td>
 												<td>
-													<button class="btn btn-flat btn-sm btn-status pull-right expense_add">
+													<button class="btn btn-flat btn-sm pull-right os_expense_add">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 												</td>

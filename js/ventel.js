@@ -23,10 +23,18 @@
 
         $("body").on('click','a.modal-results',function(e) {
 			var first = $(this).closest(".product-results").siblings(".first");
-			var productSearch = first.find(".product-search").val().toUpperCase();
+
+			var results_mode = '0';//default
+
+			var productSearch = '';
+			if(first.find(".product-search").val()) {
+				productSearch = first.find(".product-search").val().toUpperCase();
+			} else {
+				productSearch = $(this).closest(".found_parts_quote").find(".part_description .descr-label").text().toUpperCase().trim();
+				results_mode = 1;
+			}
 			var partids = $(this).closest(".market-table").data('partids');
 			var ln = $(this).closest(".market-results").data('ln');
-			var results_mode = '0';//default
 			var results_title = $(this).data('title');
 			var results_type = $(this).data('type');
 

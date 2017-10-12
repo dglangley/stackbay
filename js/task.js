@@ -211,7 +211,16 @@ function calculateTax(object){
 		$('.labor_cost').html('$' + priceFormat(parseFloat(total).toFixed(2)));
 	});
 
-	$(document).on("click", ".expense_add", function(){
-		
+	$(document).on("click", ".os_expense_add", function(e){
+		e.preventDefault();
+
+		var container = $(this).closest(".expense_row");
+		var line_number = container.data("line");
+		line_number++;
+
+		var object = container.clone().find("input").val("").end().find(".expense_row").attr("data_line", line_number).end();
+		container.find(".os_expense_add").remove();
+
+		container.after(object);
 	});
 })(jQuery);
