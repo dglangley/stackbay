@@ -121,7 +121,9 @@ select.input-sm {
 
 /*.sub-nav #pad-wrapper {*/
 #pad-wrapper {
+	/*margin-left:300px !important;*/
 	margin-top:120px;
+	padding:0px 20px;
 }
 
 .input-primary {
@@ -416,10 +418,18 @@ div.valign-top,
 	margin:4px 12px 4px 4px;
 	display:inline-block;
 }
+.item-qty,
 .search-qty {
-	width:40px;
+	padding-left:6px;
+	padding-right:6px;
 	margin-left:4px;
 	font-weight:bold;
+}
+.search-qty {
+	width:40px;
+}
+.item-qty {
+	width:60px;
 }
 .input-sm.line-number {
 	width:30px;
@@ -1348,6 +1358,7 @@ tr.grayout td a {
 .btn-default.text-success {
   color: #468847;
 }
+span.text-info,
 .btn-default.text-info {
   color: #3a87ad;
 }
@@ -1846,6 +1857,12 @@ a > .icon-ar.icon-ar-inverse:hover {
 
 
 
+.has-error {
+	border: 1px solid #a94442 !important;
+}
+
+
+
 /*** SIDEBAR AND RELATED CLASSES ***/
 .sidebar {
 	height:100%;
@@ -1854,11 +1871,11 @@ a > .icon-ar.icon-ar-inverse:hover {
 	box-shadow: 1px -1px 1px #ddd;
 	border-right:1px solid #ccc;
 	border-bottom:0px;
-	width:300px;
+	width:320px;
 	position:fixed;
 	top:0;
 	bottom:0;
-	padding:120px 10px 150px 10px;
+	padding:110px 10px 150px 10px;
 	overflow-y: auto;
 
 	background-color:#efefef;
@@ -1885,7 +1902,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 	left:0px;
 	bottom:0px;
 	height:150px;
-	width: 300px !important;
+	width: 320px !important;
 	border-top:1px solid #999;
 	border-right:1px solid #999;
 	padding:15px;

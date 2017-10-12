@@ -1,6 +1,6 @@
 <style type="text/css">
 	#pad-wrapper {
-		margin-left: 310px;
+		margin-left: 320px;
 	}
 </style>
 
@@ -40,11 +40,9 @@
 		}
 	}
 
-	$termsid = 0;
 	$terms_list = '<option value="">- Select -</option>'.chr(10);
-	if (isset($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
-	if ($termsid) {
-		$terms_list = '<option value="'.$termsid.'" selected>'.getTerms($termsid,'id','terms').'</option>'.chr(10);
+	if (isset($ORDER['termsid'])) {
+		$terms_list = '<option value="'.$ORDER['termsid'].'" selected>'.getTerms($ORDER['termsid'],'id','terms').'</option>'.chr(10);
 	}
 
 	if (! isset($EDIT)) { $EDIT = false; }
@@ -53,18 +51,18 @@
 
 	<div class="sidebar-section">
 <?php
-	$T = order_type($ORDER['order_type']);
 	if ($ORDER['order_number'] AND $ORDER['order_type']) {
+		$T = order_type($ORDER['order_type']);
 		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
 	}
+
+	// replace temp dir location (if exists) to uploads reader script
+	$ORDER['upload_ln'] = str_replace($TEMP_DIR,'uploads/',$ORDER['ref_ln']);
 ?>
 	</div>
 
 	<div class="sidebar-section">
 		<h4 class="section-header"><i class="fa fa-book"></i> Company</h4>
-
-		<input type="hidden" name="order_number" value="<?=$ORDER['order_number'];?>">
-		<input type="hidden" name="order_type" value="<?=$ORDER['order_type'];?>">
 
 <?php if ($EDIT) { ?>
 		<select name="companyid" id="sidebar-companyid" class="form-control input-xs company-selector required" data-noreset="true">
@@ -95,8 +93,11 @@
 
 <?php if ($EDIT) { ?>
 		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required">
+	<?php if ($ORDER['bill_to_id']) { ?>
+			<option value="<?=$ORDER['bill_to_id'];?>" selected><?=format_address($ORDER['bill_to_id'], ', ', false);?></option>
+	<?php } else { ?>
 			<option value="">- Select an Address -</option>
-			<option value="<?=$ORDER['bill_to_id'];?>"><?=format_address($ORDER['bill_to_id'], ',');?></option>
+	<?php } ?>
 		</select>
 <?php } else { ?>
 		<p class="company_address info" data-addressid=""><?=format_address($ORDER['bill_to_id']);?></p>
@@ -106,17 +107,18 @@
 	<div class="sidebar-section">
 		<div class="row">
 			<div class="col-sm-7">
-				<h4 class="section-header">Customer Order</h4>
+				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
 <?php if ($EDIT) { ?>
 				<div class="input-group">
 					<input name="cust_ref" class="form-control input-sm" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
 					<span class="input-group-btn" style="vertical-align:top !important">
-						<button class="btn btn-info btn-sm" type="button" for="order_upload"><i class="fa fa-paperclip"></i></button>
+						<button class="btn btn-info btn-sm btn-order-upload" type="button" for="order-upload"><i class="fa fa-paperclip"></i></button>
 					</span>
 				</div>
-				<input id="order_upload" class="file-upload" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
+				<input id="order-upload" class="file-upload" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
+				<input type="hidden" name="ref_ln" value="<?php echo $ORDER['ref_ln']; ?>">
 <?php } else { ?>
-				<?php echo $ORDER['cust_ref']; ?> <a href="<?php echo $ORDER['ref_ln']; ?>" target="_new"><i class="fa fa-file"></i></a>
+				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->
 <?php } ?>
 			</div>
 			<div class="col-sm-5 nopadding-left">
@@ -142,8 +144,11 @@
 
 <?php if ($EDIT) { ?>
 		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required">
+	<?php if ($ORDER['ship_to_id']) { ?>
+			<option value="<?=$ORDER['ship_to_id'];?>" selected><?=format_address($ORDER['ship_to_id'], ', ', false);?></option>
+	<?php } else { ?>
 			<option value="">- Select an Address -</option>
-			<option value="<?=$ORDER['ship_to_id'];?>"><?=format_address($ORDER['ship_to_id'], ',');?></option>
+	<?php } ?>
 		</select>
 <?php } else { ?>
 		<p class="company_address" data-addressid=""><?=format_address($ORDER['ship_to_id']);?></p>
@@ -168,7 +173,11 @@
 
 <?php if ($EDIT) { ?>
 				<select name="freight_account_id" id="freight_account_id" size="1" class="form-control input-sm select2">
+	<?php if ($ORDER['freight_account_id']) { ?>
+					<option value="<?php echo $ORDER['freight_account_id']; ?>" selected><?php echo getFreightAccount($ORDER['freight_account_id']); ?></option>
+	<?php } else { ?>
 					<option value="">PREPAID</option>
+	<?php } ?>
 				</select>
 <?php } else { ?>
 				<?php echo getFreightAccount($ORDER['freight_account_id']); ?>
@@ -181,10 +190,13 @@
 		<h4 class="section-header">Freight Service</h4>
 
 <?php if ($EDIT) { ?>
-		<select name="freight_service_id" id="freight_service_id" size="1" class="form-control input-sm">
+		<select name="freight_services_id" id="freight_services_id" size="1" class="form-control input-sm">
+	<?php if ($ORDER['freight_services_id']) { ?>
+			<option value="<?php echo $ORDER['freight_services_id']; ?>" selected><?php echo getFreightService($ORDER['freight_services_id']); ?></option>
+	<?php } ?>
 		</select>
 <?php } else { ?>
-		<?php echo getFreightService($ORDER['freight_service_id']); ?>
+		<?php echo getFreightService($ORDER['freight_services_id']); ?>
 <?php } ?>
 	</div>
 

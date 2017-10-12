@@ -221,7 +221,7 @@
 						$("#mismo").prop("checked",true);
 
 					}
-					$(".contact-selector").initSelect2("/json/contacts.php",'Select Contact',company);
+					$(".contact-selector").initSelect2("/json/contacts-aaron.php",'Select Contact',company);
 
 				}
 				else{
@@ -255,29 +255,6 @@
 					window.location = "/shipping.php?on="+change;
 				}
 			});	
-
-			/* David, Flame Broiler is at stake */
-			$(document).on("click",".btn-order-upload",function() {
-				$("#order-upload").click();
-			});
-			var orderUploadFiles;
-			$(document).on("change","input#order-upload",function(e) {
-				orderUploadFiles = e.target.files;
-
-				// get new upload file name
-				var upload_file = $(this).val().replace("C:\\fakepath\\","");
-
-				// change "Customer Order:" label with name of upload file, and color with primary text
-				var order_label = $("#customer_order").find("label[for='assoc']");
-				order_label.html(upload_file);
-				order_label.prop('class','text-info');
-
-				// change icon on upload button as additional indicator of successful selection
-				$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
-				console.log(orderUploadFiles);
-				console.log(order_label);
-				console.log(upload_file);
-			});
 	
 		
 			//If the company information changes, run
@@ -297,7 +274,7 @@
 				// alert("Limit: "+company+" | Carrier "+carrier);
 				
 				// alert(id);
-				$(".contact-selector").initSelect2("/json/contacts.php","Select Contact",company);
+				$(".contact-selector").initSelect2("/json/contacts-aaron.php","Select Contact",company);
 				
 				//$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":$(this).attr("id")});
 				$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":company,"page":order_type,"id":"bill"});

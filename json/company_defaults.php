@@ -7,6 +7,8 @@
 	include_once '../inc/format_address.php';
 	include_once '../inc/getFreightAccount.php';
 	include_once '../inc/getTerms.php';
+	include_once '../inc/getWarranty.php';
+	include_once '../inc/getCondition.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -30,6 +32,10 @@
 	$billings = array();
 	$shippings = array();
 	$terms = array();
+	$warrantyid = 0;
+	$warranties = array();
+	$conditionid = 0;
+	$conditions = array();
 
 	// in stages of months (3 months, 6 months, etc), try to get a minimum number of results from which
 	// we can build auto-defaults based on use cases
@@ -54,6 +60,20 @@
 			$billings[$r['bill_to_id']][] = true;
 			if ($r['ship_to_id']) { $shippings[$r['ship_to_id']][] = true; }
 			if ($r['termsid']) { $terms[$r['termsid']][] = true; }
+
+			if ($T['warranty'] OR $T['condition']) {
+				$query2 = "SELECT ";
+				if ($T['warranty']) { $query2 .= $T['warranty']." warrantyid "; }
+				if ($T['warranty'] AND $T['condition']) { $query2 .= ", "; }
+				if ($T['condition']) { $query2 .= $T['condition']." conditionid "; }
+				$query2 .= "FROM ".$T['items']." WHERE ".$T['order']." = '".$r['order_number']."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				while ($r2 = mysqli_fetch_assoc($result2)) {
+					if ($r2['warrantyid']) { $warranties[$r2['warrantyid']][] = true; }
+					if ($r2['conditionid']) { $conditions[$r2['conditionid']][] = true; }
+				}
+			}
+
 			$i++;
 		}
 
@@ -65,30 +85,49 @@
 	// get first result which is sorted by most frequent first
 	foreach ($freight_carriers as $id => $r) {
 		$carrierid = $id;
+		break;
 	}
 
 	uasort($freight_accounts, 'cmp_rcount');
 	// get first result which is sorted by most frequent first
 	foreach ($freight_accounts as $id => $r) {
 		$freight_account_id = $id;
+		break;
 	}
 
 	uasort($shippings, 'cmp_rcount');
 	// get first result which is sorted by most frequent first
 	foreach ($shippings as $id => $r) {
 		$ship_to_id = $id;
+		break;
 	}
 
 	uasort($billings, 'cmp_rcount');
 	// get first result which is sorted by most frequent first
 	foreach ($billings as $id => $r) {
 		$bill_to_id = $id;
+		break;
 	}
 
 	uasort($terms, 'cmp_rcount');
 	// get first result which is sorted by most frequent first
 	foreach ($terms as $id => $r) {
 		$termsid = $id;
+		break;
+	}
+
+	uasort($warranties, 'cmp_rcount');
+	// get first result which is sorted by most frequent first
+	foreach ($warranties as $id => $r) {
+		$warrantyid = $id;
+		break;
+	}
+
+	uasort($conditions, 'cmp_rcount');
+	// get first result which is sorted by most frequent first
+	foreach ($conditions as $id => $r) {
+		$conditionid = $id;
+		break;
 	}
 
 	header("Content-Type: application/json", true);
@@ -102,6 +141,10 @@
 		'ship_to_address'=>format_address($ship_to_id, ', ', false),
 		'termsid'=>$termsid,
 		'terms'=>getTerms($termsid,'id','terms'),
+		'warrantyid'=>$warrantyid,
+		'warranty'=>getWarranty($warrantyid,'warranty'),
+		'conditionid'=>$conditionid,
+		'condition'=>getCondition($conditionid),
 	);
 	echo json_encode($results);
 	exit;

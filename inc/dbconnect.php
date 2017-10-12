@@ -29,6 +29,12 @@
 	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
 	function qedb($query){return(qdb($query) or die(qe()." | ".$query." | ")); }
 	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
+	function fres($str,$repl_str = "NULL",$db_connection='WLI') {
+		$str = trim($str);
+		$output = (! empty($str)) ? "'".res($str,$db_connection)."'" : $repl_str;
+
+		return ($output);
+	}
 
 	if (isset($NO_CACHE) AND $NO_CACHE===true) {
 		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
@@ -329,5 +335,5 @@
 	}
 
 	// version control for css and js includes
-	$V = '20170902';
+	$V = '20170903';
 ?>

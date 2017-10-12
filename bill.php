@@ -108,7 +108,7 @@
 			<input type="hidden" name="order_number" value="<?php echo $order; ?>">
 			<input type="hidden" name="companyid" value="<?php echo $companyid; ?>">
 
-			<div class="col-md-2 sidebar">
+			<div class="col-md-2 sidebar" style="width:auto; position:inherit">
 				<div class="sidebar-section company-text">
 					<h4 class="section-header">Information</h4>
 					<?php echo getCompany($companyid); ?> <a href="/profile.php?companyid=<?php echo $companyid; ?>"><i class="fa fa-book"></i></a>

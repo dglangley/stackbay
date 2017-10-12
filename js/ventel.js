@@ -725,6 +725,7 @@
 	            data: function (params) {
 	                return {
 	                    q: params.term,//search term
+						companyid: companyid,
 						page: params.page
 	                };
 	            },
@@ -1015,6 +1016,12 @@
 						$("#carrierid").val(json.carrierid).trigger('change');
 					}
 					$("#freight_account_id").populateSelected(json.freight_account_id,json.freight_account);
+					if (json.warrantyid>0) {
+						$(".search-row").find(".warranty-selector").populateSelected(json.warrantyid,json.warranty);
+					}
+					if (json.conditionid>0) {
+						$(".search-row").find(".condition-selector").populateSelected(json.conditionid,json.condition);
+					}
 
 					partSearch('','',companyid,scope);
 //					$("#item-table").populateItems(json.items);
@@ -1032,7 +1039,7 @@
 			$("#freight_account_id").val('').trigger('change');
 
 			// reset freight services selector
-			$("#freight_service_id").select2('val', '');
+			$("#freight_services_id").select2('val', '');
 		});
 		$("#termsid").on('change', function() {
 			termsid = $(this).val();
@@ -1087,7 +1094,7 @@
 				cache: false
 			},
 		});
-		$("#freight_service_id").select2({
+		$("#freight_services_id").select2({
 			placeholder: '- Select Freight Service -',
 			ajax: {
 				type: 'POST',
@@ -1557,6 +1564,25 @@
 				document.location.href = '/rma.php?rma='+search_field.val();
 			}
 			
+		});
+
+		/* David, Flame Broiler is at stake */
+		$(document).on("click",".btn-order-upload",function() {
+			$("#order-upload").click();
+		});
+		var orderUploadFiles;
+		$(document).on("change","input#order-upload",function(e) {
+			orderUploadFiles = e.target.files;
+
+			// get new upload file name
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+
+			// change "Customer Order" label with name of upload file, and color with primary text
+//			var order_label = $("#order-label");//$("#customer_order").find("label[for='assoc']");
+//			order_label.html(order_label.text()+' <span class="text-info"><i class="fa fa-download"></i></span>');
+
+			// change icon on upload button as additional indicator of successful selection
+			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
 		});
 
 //==============================================================================

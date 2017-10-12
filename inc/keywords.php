@@ -194,6 +194,7 @@
 			$r['Key'] = $part_key;
 			$r['sub'] = $sub;
 			$r['search'] = $search;
+			$r['name'] = trim($r['part'].' '.$r['heci']);
 			$keywords[$r['heci']] = $k;
 			$keywords[$r['heci7']] = $k;
 			$keywords[$r['fpart']] = $k;

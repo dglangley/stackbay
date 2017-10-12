@@ -234,7 +234,7 @@ include_once $rootdir.'/inc/default_addresses.php';
 							<input name='assoc_order_upload' type='file' id='order-upload' class='order-upload required' accept='image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml' value=''/>
 				";
 			} else {
-				$right .= "	<label for='assoc'>Customer Order</label>
+				$right .= "	<label for='assoc' id='order-label'>Customer Order</label>
 							<div class='input-group'>
 								<input class='form-control input-sm required' id = 'assoc_order' name='assoc' type='text' placeholder = 'Order #' value='RTV-PO$rtv_po'>
 								<span class='input-group-btn'>
