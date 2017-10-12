@@ -7,8 +7,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAmount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 
 	$labels = getRefLabels();
 	$ref_labels = '';
@@ -17,13 +19,14 @@
 	}
 	$LN = 1;
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
+	$SUBTOTAL = 0;
 	function addItemRow($id,$T) {
-		global $ref_labels,$LN,$WARRANTYID;
+		global $ref_labels,$LN,$WARRANTYID,$SUBTOTAL;
 
 		$dropdown1_attr = ' data-toggle="dropdown"';
 		$dropdown2_attr = ' data-toggle="dropdown"';
 		if ($id) {
-			$row_cls = '';
+			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			if (mysqli_num_rows($result)==0) { return (''); }
@@ -73,6 +76,9 @@
 			}
 			// increment so that new rows don't start at 1
 			if ($r['line_number']>0) { $LN = ($r['line_number']+1); }
+
+			$ext_amount = '$ '.number_format(($r['qty']*$r['amount']),2);
+			$SUBTOTAL += ($r['qty']*$r['amount']);
 		} else {
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
@@ -80,6 +86,7 @@
 			foreach ($WARRANTYID as $wid => $n) { $warrantyid = $wid; }
 
 			$row_cls = 'search-row';
+			$ext_amount = '';
 			$r = array(
 				'line_number'=>$LN,
 				'part_cls'=>'hidden',
@@ -109,7 +116,7 @@
 				'save'=>'<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>',
 			);
 		}
-		if (round($r['amount'],2)==$r['amount']) { $amount = number_format($r['amount'],2); }
+		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
 		$row = '
@@ -131,7 +138,6 @@
 				</button></span>
 				'.$r['ref_1_field'].'
 				'.$r['ref_1_hidden'].'
-				<input type="hidden" name="ref_1['.$id.']" class="form-control input-sm" value="'.$r['ref_1'].'">
 				<ul class="dropdown-menu dropdown-button">
 					'.$ref_labels.'
 				</ul>
@@ -152,19 +158,19 @@
 		</td>
 		<td class="col-md-1">
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
-				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm" value="'.format_date($r['delivery_date'],'m/d/y').'">
+				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r['delivery_date'],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
 			</div>
 		</td>
 		<td class="col-md-1">
-			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector">
+			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
 				<option value="'.$r['conditionid'].'" selected>'.getCondition($r['conditionid']).'</option>
 			</select>
 		</td>
 		<td class="col-md-1">
-			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector">
+			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
 				<option value="'.$r['warranty'].'" selected>'.getWarranty($r['warranty'],'warranty').'</option>
 			</select>
 		</td>
@@ -172,14 +178,61 @@
 			<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>
 		</td>
 		<td class="col-md-1">
-			<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm text-right" tabindex="100">
+			<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">
 		</td>
 		<td class="col-md-1 text-right">
-			<div id="extamount_new" class="ext_amount"></div>
+			<input type="hidden" name="item_id['.$id.']" value="'.$id.'">
+			<div class="ext-amount">'.$ext_amount.'</div>
 			'.$r['save'].'
 		</td>
 	</tr>
 		';
+
+		return ($row);
+	}
+	$charge_options = array(
+		'CC Proc Fee',
+		'Sales Tax',
+		'Freight',
+		'Restocking Fee',
+	);
+	function addChargeRow($descr='',$qty=1,$price=0,$id=0) {
+		global $charge_options,$SUBTOTAL;
+
+		$options = '';
+		$sel_match = false;
+		foreach ($charge_options as $opt) {
+			$s = '';
+			if ($opt==$descr) { $s = ' selected'; $sel_match = true; }
+			$options .= '<option value="'.$opt.'"'.$s.'>'.$opt.'</option>'.chr(10);
+		}
+		// add descr to options if not matched above
+		if ($descr AND ! $sel_match) { $options .= '<option value="'.$descr.'" selected>'.$descr.'</option>'.chr(10); }
+
+		if ($price==round($price,2)) { $price = number_format($price,2); }
+
+		$row = '
+		<tr class="item-row">
+			<td class="col-md-10"> </td>
+			<td class="col-md-1">
+				<select name="charge_description['.$id.']" size="1" class="select2 form-control input-xs">
+					<option value="">Add Charge...</option>
+					'.$options.'
+				</select>
+				<input type="hidden" name="charge_qty['.$id.']" value="'.$qty.'" class="item-qty">
+			</td>
+			<td class="col-md-1">
+				<span class="input-group">
+					<span class="input-group-btn">
+						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
+					</span>
+					<input type="text" name="charge_amount['.$id.']" value="'.$price.'" class="form-control input-sm text-right item-amount" placeholder="0.00">
+				</span>
+			</td>
+		</tr>
+		';
+
+		$SUBTOTAL += ($qty*$price);
 
 		return ($row);
 	}
@@ -217,6 +270,7 @@
 		if ($ORDER===false) { die("Invalid Order"); }
 		$ORDER['bill_to_id'] = $ORDER['addressid'];
 		$ORDER['datetime'] = $ORDER['dt'];
+		if (! $ORDER['status']) { $ORDER['status'] = 'Active'; }
 
 		$title_helper = format_date($ORDER['datetime'],'D n/j/y g:ia');
 	}
@@ -238,6 +292,20 @@
 		.part-container .select2 {
 			width:90% !important;
 		}
+		.item-amount {
+			text-align:right;
+		}
+		.ext-amount {
+			display:inline-block;
+			text-align:right;
+			font-weight:bold;
+		}
+		#total, #subtotal {
+			border:1px inset gray;
+			background-color:#fff;
+			padding:3px 3px;
+			border-radius:3px;
+		}
 	</style>
 </head>
 <body data-scope="<?php echo $order_type; ?>">
@@ -253,6 +321,15 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
+			<select name="status" size="1" class="form-control input-sm select2">
+				<option value="Active"<?=($ORDER['status']=='Active' ? ' selected' : '');?>>Active</option>
+				<option value="Void"<?=($ORDER['status']=='Void' ? ' selected' : '');?>>Void</option>
+<?php
+	if ($ORDER['status'] AND $ORDER['status']<>'Active' AND $ORDER['status']<>'Void') { echo '<option value="'.$ORDER['status'].'" selected>'.$ORDER['status'].'</option>'; }
+?>
+			</select>
+		</div>
+		<div class="col-sm-1">
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
 <?php
 	$users = getUsers(array(4,5));
@@ -263,8 +340,6 @@
 	}
 ?>
 			</select>
-		</div>
-		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -328,6 +403,49 @@ $EDIT = true;
 	</tbody>
 </table>
 
+<?php
+	$charges = '';
+	if ($T['charges']) {
+		$query = "SELECT * FROM ".$T['charges']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$charges .= addChargeRow($r['memo'],$r['qty'],$r['price'],$r['id']);
+		}
+	}
+	$charges .= addChargeRow();
+
+	$existing_freight = getFreightAmount($order_number,$order_type);
+	$TOTAL = ($SUBTOTAL+$existing_freight);
+?>
+
+<table class="table table-responsive table-condensed table-striped">
+	<tbody>
+		<?php echo $charges; ?>
+		<tr>
+			<td class="col-md-10"> </td>
+			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
+			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
+		</tr>
+		<tr>
+			<td class="col-md-10"> </td>
+			<td class="col-md-1 text-right"><h5>FREIGHT</h5></td>
+			<td class="col-md-1">
+				<span class="input-group">
+					<span class="input-group-btn">
+						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
+					</span>
+					<input type="text" name="freight_total" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm text-right" placeholder="0.00" readonly>
+				</span>
+			</td>
+		</tr>
+		<tr>
+			<td class="col-md-10"> </td>
+			<td class="col-md-1 text-right"><h3>TOTAL</h3></td>
+			<td class="col-md-1 text-right"><h5 id="total">$ <?php echo number_format($TOTAL,2); ?></h5></td>
+		</tr>
+	</tbody>
+</table>
+
 </div><!-- pad-wrapper -->
 
 </form>
@@ -337,20 +455,35 @@ $EDIT = true;
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
+		$(".item-qty, .item-amount").on('change keyup',function() {
+			updateTotals();
+		});
 		$(".btn-submit").on('click', function() {
 			var errs = false;
 			$(".required").each(function() {
 				if (! $(this).val()) {
-					$(this).addClass('has-error');
-					$(this).closest("div").find(".select2-selection").addClass('has-error');
+					var f = $(this);
+					if ($(this).attr('type')=='file') {
+						f = $("button[for="+$(this).attr('id')+"]");
+					}
+					f.addClass('has-error');
+					f.closest("div").find(".select2-selection").addClass('has-error');
 					errs = true;
 				} else {
-					$(this).removeClass('has-error');
-					$(this).closest("div").find(".select2-selection").removeClass('has-error');
+					var f = $(this);
+					if ($(this).attr('type')=='file') {
+						f = $("button[for="+$(this).attr('id')+"]");
+					}
+					f.removeClass('has-error');
+					f.closest("div").find(".select2-selection").removeClass('has-error');
 				}
 			});
 			if (errs===true) {
 				modalAlertShow("Form Error","This form requires certain fields to be completed. You have not done your job.");
+				return;
+			}
+			if ($("#search_input").find(".item-row").length==0) {
+				modalAlertShow("Items Error","This form requires at least one item. You have not done your job.");
 				return;
 			}
 
@@ -369,15 +502,21 @@ $EDIT = true;
 			new_ln++;
 			ln.val(new_ln);
 
-			$(this).closest("tr").find("input[type=text]").not(".line-number").val("");
+			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date").val("");
 		});
 		jQuery.fn.saveItem = function(e) {
 			var qty_field = e.find(".part_qty");
 			var qty = qty_field.val().trim();
 			if (qty == '' || qty == '0') { return; }
 
-			var part_sel = $(this).find(".part-selector");
-			var cloned_row = $(this).clone();
+			var original_row = $(this);
+
+			original_row.find("select.form-control").select2("destroy");
+
+			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
+
+			original_row.find(".condition-selector").selectize();
+			original_row.find(".warranty-selector").selectize();
 
 			// set qty of new row to qty of user-specified qty on revision found
 			cloned_row.find(".item-qty").val(qty);
@@ -388,18 +527,54 @@ $EDIT = true;
 			part.select2();
 			part.show();
 
-			cloned_row.insertBefore($(this));
+			var orig_cond = original_row.find(".condition-selector");
+			var cloned_cond = cloned_row.find(".condition-selector");
+			cloned_cond.selectize(orig_cond.val(),orig_cond.text());
+			cloned_cond.populateSelected(orig_cond.val(),orig_cond.text());
+
+			var orig_warr = original_row.find(".warranty-selector");
+			var cloned_warr = cloned_row.find(".warranty-selector");
+			cloned_warr.selectize(orig_warr.val(),orig_warr.text());
+			cloned_warr.populateSelected(orig_warr.val(),orig_warr.text());
 
 			// do not want this new row confused with the original search row
-			cloned_row.removeClass('search-row');
+			cloned_row.removeClass('search-row').addClass('item-row');
 			// remove search field from new cloned row
 			cloned_row.find(".input-search").remove();
 			// remove save button
 			cloned_row.find(".btn-saveitem").remove();
 			// remove readonly status on qty field
 			cloned_row.find(".item-qty").prop('readonly',false);
+
+			cloned_row.insertBefore(original_row);
+
+			updateTotals();
+//			var row_total = cloned_row.calcRowTotal();
+		};
+		jQuery.fn.calcRowTotal = function() {
+			if ($(this).find(".item-qty:not([readonly])").length==0) {
+				$(this).find(".ext-amount").text('');
+				return;
+			}
+			var qty = $(this).find(".item-qty").val().trim();
+			if (! qty) { qty = 0; }
+			var amount = $(this).find(".item-amount").val().trim();
+			if (! amount) { amount = 0; }
+			var ext_amount = qty*amount;
+
+			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
+			return (ext_amount);
 		};
 	});
+	function updateTotals() {
+		var total = 0;
+		$(".item-row").each(function() {
+			var row_total = $(this).calcRowTotal();
+			total += row_total;
+		});
+		$("#subtotal").text('$ '+total.formatMoney());
+		$("#total").text('$ '+total.formatMoney());
+	}
 </script>
 
 </body>

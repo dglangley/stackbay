@@ -2,6 +2,9 @@
 	#pad-wrapper {
 		margin-left: 320px;
 	}
+	.sidebar label {
+		margin:0px;
+	}
 </style>
 
 <div class="sidebar">
@@ -110,12 +113,12 @@
 				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
 <?php if ($EDIT) { ?>
 				<div class="input-group">
-					<input name="cust_ref" class="form-control input-sm" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
+					<input name="cust_ref" class="form-control input-sm required" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
 					<span class="input-group-btn" style="vertical-align:top !important">
 						<button class="btn btn-info btn-sm btn-order-upload" type="button" for="order-upload"><i class="fa fa-paperclip"></i></button>
 					</span>
 				</div>
-				<input id="order-upload" class="file-upload" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
+				<input id="order-upload" class="file-upload <?=(! $order_number ? 'required' : '');?>" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
 				<input type="hidden" name="ref_ln" value="<?php echo $ORDER['ref_ln']; ?>">
 <?php } else { ?>
 				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->
@@ -125,7 +128,7 @@
 				<h4 class="section-header">Terms</h4>
 
 <?php if ($EDIT) { ?>
-				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2">
+				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2 required">
 					<?php echo $terms_list; ?>
 				</select>
 <?php } else { ?>
@@ -161,7 +164,7 @@
 				<h4 class="section-header">Carrier</h4>
 
 <?php if ($EDIT) { ?>
-				<select name="carrierid" id="carrierid" size="1" class="select2 form-control input-sm">
+				<select name="carrierid" id="carrierid" size="1" class="select2 form-control input-sm required">
 					<?php echo $carriers_list; ?>
 				</select>
 <?php } else { ?>
@@ -190,7 +193,7 @@
 		<h4 class="section-header">Freight Service</h4>
 
 <?php if ($EDIT) { ?>
-		<select name="freight_services_id" id="freight_services_id" size="1" class="form-control input-sm">
+		<select name="freight_services_id" id="freight_services_id" size="1" class="form-control input-sm required">
 	<?php if ($ORDER['freight_services_id']) { ?>
 			<option value="<?php echo $ORDER['freight_services_id']; ?>" selected><?php echo getFreightService($ORDER['freight_services_id']); ?></option>
 	<?php } ?>
@@ -206,7 +209,7 @@
 	<div class="sidebar-section">
 		<h4 class="section-header">Scope</h4>
 		<?php if ($EDIT) { ?>
-			<textarea id="scope" class="form-control" name="scope" rows="3" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
+			<textarea id="scope" class="form-control" name="scope" rows="2" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
 		<?php } else { ?>
 			<p>Here is a scope of everything that is being done for the job.</p>
 		<?php } ?>
@@ -216,10 +219,24 @@
 	<div class="sidebar-section">
 		<p class="section-header">Public Notes</p>
 <?php if ($EDIT) { ?>
-		<textarea id="public_notes" class="form-control" name="public_notes" rows="3" placeholder=""><?=$ORDER['public_notes'];?></textarea>
+		<textarea id="public_notes" class="form-control" name="public_notes" rows="2" placeholder=""><?=$ORDER['public_notes'];?></textarea>
 <?php } else { ?>
 		<p><?php echo str_replace(chr(10),'<BR>',$ORDER['public_notes']); ?></p>
 <?php } ?>
+	</div>
+
+<?php
+	$email_chk = '';
+	if (! $order_number) { $email_chk = 'checked'; }
+?>
+
+	<div class="sidebar-section">
+		<p class="section-header">
+			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>
+			<label for="email_confirmation">Send Order Confirmation</label>
+		</p>
+		<select name="email_to" id="email_to" class="form-control input-xs contact-selector"></select>
+		<p style="margin-top:10px"><strong>CC</strong> <i class="fa fa-check-square-o"></i> shipping@ven-tel.com</p>
 	</div>
 
 	<div class="sidebar-footer">

@@ -58,7 +58,7 @@
 	}
 	
 	function status($table, $state){
-		//State expects: Active, Complete, Voided
+		//State expects: Active, Complete, Void
 		$f = f_params($table);
 		$o = o_params($table);
 	}

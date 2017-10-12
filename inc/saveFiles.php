@@ -60,6 +60,9 @@
 
 		$file_uploads = array();
 		foreach ($files as $file) {
+			//4=no file uploaded
+			if ($file['error']==4) { return false; }
+
 			$file_uploads[] = saveFile($file);
 			if ($FILE_ERR) {
 				return false;
@@ -68,8 +71,10 @@
 
 		if (count($file_uploads)==1) {
 			return ($file_uploads[0]);
-		} else {
+		} else if (count($file_uploads)>0) {
 			return ($file_uploads);
+		} else {
+			return false;
 		}
 	}
 ?>

@@ -252,7 +252,11 @@
 			$items .= "FROM credits sc, credit_items sci, return_items ri, inventory i, inventory_history ih ";
 			$items .= "WHERE sc.id = '".$order_number."' AND sci.cid = sc.id ";
 			$items .= "AND sci.return_item_id = ri.id AND ri.inventoryid = i.id AND i.id = ih.invid ";
-			$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.item_id AND sci.item_id_label = 'sales_item_id' ";
+			if ($oi['order_type']=='Repair') {
+				$items .= "AND ih.field_changed = 'repair_item_id' AND ih.value = sci.item_id AND sci.item_id_label = 'repair_item_id' ";
+			} else {
+				$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.item_id AND sci.item_id_label = 'sales_item_id' ";
+			}
 		    $items .= "GROUP BY sci.cid; ";
 		}
 		//Make a call here to grab RMA's items instead
@@ -491,7 +495,7 @@ $html_page_str .='
     <th>Customer</th>
     <th>Credit Date</th>
     <th>PO #</th>
-    <th>SO #</th>';
+    <th>'.strtoupper(substr($oi['order_type'],0,1)).'O #</th>';
     if ($oi['rma_number']){
     $html_page_str.='
         <th>RMA #</th>

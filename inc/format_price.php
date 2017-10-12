@@ -1,6 +1,6 @@
 <?php
 	function format_price($price,$ext=true,$sep='',$dbformat=false) {
-		//$ext = show extension
+		//$ext = show full price extension out to 4 decimal places
 		//$sep = separator between "$" and dollar value
 		//$dbformat = output in db format
 

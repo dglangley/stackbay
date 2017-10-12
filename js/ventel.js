@@ -1,4 +1,5 @@
 	if (typeof RESULTS_MODE === 'undefined') { RESULTS_MODE = 0; }
+	var companyid = 0;
     $(document).ready(function() {
 
 		$('#loader').hide();
@@ -841,6 +842,7 @@
 			minimumInputLength: 0
 		});
 
+/*
 		$('.warranty-selector').select2({
 			width: '100%',
 			ajax: {
@@ -866,32 +868,10 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 			minimumInputLength: 0
 		});
+*/
 
-		$('.condition-selector').select2({
-			width: '100%',
-			ajax: {
-				url: '/json/conditions.php',
-				dataType: 'json',
-				data: function (params) {
-					return {
-						q: params.term,//search term
-					};
-				},
-				processResults: function (data, params) {// parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-					return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: true
-			},
-			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-			minimumInputLength: 0
-		});
+		$(".warranty-selector").selectize('/json/warranties.php');
+		$(".condition-selector").selectize('/json/conditions.php');
 
 		$('.parts-selector').select2({
 			width: '100%',
@@ -956,7 +936,7 @@
 		$("select.select2").select2({
 		});
 
-		var companyid = $(".sidebar select[name='companyid']").val();
+		companyid = $(".sidebar select[name='companyid']").val();
 		$(".sidebar select[name='companyid']").on('change', function() {
 			var sidebar = $(this).closest(".sidebar");
 			sidebar.find("select[name='bill_to_id']").select2('val', '');
@@ -1641,7 +1621,45 @@
 
     });/* close $(document).ready */
 
+	jQuery.fn.selectize = function(remote_url) {
+		if ($(this).data('url')) { var remote_url = $(this).data('url'); }
+		if (! remote_url) { return; }
+
+		$(this).select2({
+			width: '100%',
+			ajax: {
+				url: remote_url,/*'/json/conditions.php',*/
+				dataType: 'json',
+				data: function (params) {
+					return {
+						q: params.term,//search term
+						companyid: companyid,
+					};
+				},
+				processResults: function (data, params) {// parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+		});
+	};
+
 	jQuery.fn.populateSelected = function(id, text) {
+		if ($(this).find("option[value="+id+"]").length>0) {
+			$(this).find("option[value="+id+"]").prop('selected',true);
+			$(this).trigger('change');
+			return;
+		}
+
 		/* build option that will populate the menu */
 		var option = $('<option></option>').
 			prop('selected', true).

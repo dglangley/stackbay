@@ -786,7 +786,7 @@
 		$cogs_credit = '';
 		$cogs_debit = '';
 		$cls = '';
-		if ($r['status']=='Void' OR $r['status']=='Voided') {
+		if ($r['status']=='Void') {
 			$cls = ' class="strikeout"';
 		} else {
 //			if ($r['order_type']=='Sale' OR $r['order_type']=='Repair' OR $r['order_type']=='IT') {

@@ -197,7 +197,7 @@
         SELECT * FROM `invoices` 
         WHERE `order_number` = ".prep($order_number)." 
         AND `order_type` = ".prep($type)."
-		AND status <> 'Voided'
+		AND status <> 'Void'
         ;";
         $results = qdb($select) or die(qe()." $select");
         if (mysqli_num_rows($results) > 0){

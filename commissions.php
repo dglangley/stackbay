@@ -373,7 +373,7 @@
 		}
 		$query .= "FROM ".$order_table." o, invoices i ";
 		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
-		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Voided' ";
+		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Void' ";
 		if ($history_date) {
 			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
 		} else {

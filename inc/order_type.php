@@ -19,6 +19,7 @@
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'amount';
 				$T['delivery_date'] = '';
+				$T['charges'] = 'sales_charges';
 				break;
 
 			case 'Return':
@@ -38,6 +39,7 @@
 				$T['warrantyid'] = 14;
 				$T['amount'] = '';
 				$T['delivery_date'] = '';
+				$T['charges'] = '';
 				break;
 
 			case 'Purchase':
@@ -56,6 +58,7 @@
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'price';
 				$T['delivery_date'] = 'receive_date';
+				$T['charges'] = 'purchase_charges';
 				break;
 
 			case 'Repair':
@@ -73,6 +76,7 @@
 				$T['warranty'] = 'warrantyid';
 				$T['warrantyid'] = 10;
 				$T['delivery_date'] = 'due_date';
+				$T['charges'] = '';
 				break;
 
 			case 'Service':
@@ -91,6 +95,7 @@
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'price';
 				$T['delivery_date'] = '';
+				$T['charges'] = '';
 				break;
 
 			case 'Sale':
@@ -109,6 +114,7 @@
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'price';
 				$T['delivery_date'] = 'delivery_date';
+				$T['charges'] = 'sales_charges';
 				break;
 
 			case 'IT':
@@ -127,6 +133,7 @@
 				$T['warrantyid'] = 0;
 				$T['amount'] = '';
 				$T['delivery_date'] = '';
+				$T['charges'] = '';
 				break;
 		}
 
