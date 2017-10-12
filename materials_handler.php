@@ -143,12 +143,6 @@
 		}
 	}
 
-	function quoteMaterials($techid, $requested, $task){
-		$order_number = 0;
-
-		return $order_number;
-	}
-
 	$techid = $U['id'];
 
 	$order_number = 0;
@@ -181,5 +175,5 @@
 
 		
 	// Determine the location to redirect to...
-	header('Location: /task_view.php?type='.$type.'&order='.$order_number.($action == 'pull' ? '&tab=materials' : ''));
+	header('Location: /service.php?order_type='.$type.'&order_number='.$order_number.($action == 'pull' ? '&tab=materials' : ''));
     exit;
