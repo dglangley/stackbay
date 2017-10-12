@@ -13,24 +13,6 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getRepairCode.php';
 
-	//Declared Variables
-	// Type of job (Service, Repair, etc.)
-	$type = isset($_REQUEST['type']) ? $_REQUEST['type'] : '';
-	$order_number_details = (isset($_REQUEST['order']) ? $_REQUEST['order'] : '');
-	$edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
-	$task = (isset($_REQUEST['task']) ? $_REQUEST['task'] : '');
-	$tab = (isset($_REQUEST['tab']) ? $_REQUEST['tab'] : '');
-
-	preg_match_all("/\d+/", $order_number_details, $order_number_split);
-
-	$order_number_split = reset($order_number_split);
-
-	$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
-	$task_number = ($order_number_split[1] ? $order_number_split[1] : 1);
-
-	// Contains the id of the line item (purchase_item_id, repair_item_id ....)
-	$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
-
 	// List of subcategories
 	$documentation = true;
 	$labor = true;
@@ -40,13 +22,11 @@
 	$closeout = true;
 	$outside = true;
 
-	$quote = false;
-
 	// Trigger point for a quote or new order based on if order number is present or not
-	if(empty($order_number)) {
-		$quote = true;
-		$type = 'quote';
-	}
+	// if(empty($order_number) OR $type == 'quote') {
+	// 	$quote = true;
+	// 	$type = 'quote';
+	// }
 
 	// Dynamic Variables Used
 	$documentation_data = array();
@@ -56,9 +36,21 @@
 	$closeout_data = array();
 	$ticketStatus = '';
 
-	// Get the details of the order for the sidebar
-	$ORDER = getOrder($order_number, $type);
+	$materials_total = 0.00;
+	$labor_total = 0.00;
+	$expenses_total = 0.00;
+	$outside_services_total = 0.00;
+	$total_amount = 0.00;
 
+	if($order_number) {
+		// Get the details of the order for the sidebar
+		$ORDER = getOrder($order_number, $type);
+	} else {
+		// Send them back as order number is required for both quote or view or create
+		// header('Location: /order.php');
+	}
+
+	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 	if($ORDER['repair_code_id']) {
 		$ticketStatus = getRepairCode($ORDER['repair_code_id']);
 	}
@@ -70,13 +62,12 @@
 
 	} else if($type == 'repair') {
 		// Diable Modules for Repair
+		$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
+
 		$documentation = false;
 		$closeout = false;
 		$expenses = false;
 		$outside = false;
-
-		// getItems uses $item_id as a global to change the value of $item_id from 0
-		$items = getItems($order_number);
 
 		$serials = getSerials($item_id);
 
@@ -87,7 +78,18 @@
 		// Create the option for the user to create a quote or create an order
 		$activity = false;
 		$documentation = false;
-		$edit = true; 
+		$task_edit = true; 
+
+		if(! empty($task_number)) {
+			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
+			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
+			$component_data = getMaterials($order_number, $item_id, $type, 'quote_item_id');
+			$outsourced = getOutsourced($item_id, $type);
+		}
+
+		$labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
+		$expenses_total = $item_details['expenses'];
+		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 	}
 
 	// Get the current users access
@@ -97,7 +99,7 @@
 		echo "<script>location.href='/';</script>";
 	}
 
-	function format($partid, $desc = true){
+	function partDescription($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
 		$parts = explode(' ',$r['part']);
 
@@ -122,20 +124,19 @@
 		return $serials;
 	}
 
-	function getItems($order_number = 0, $table = 'repair_items', $field = 'ro_number') {
-		// global $item_id;
+	function getItemDetails($item_id, $table, $field) {
+		$data = array();
 
-		$items = array();
+		$query = "SELECT * FROM $table WHERE $field = ".res($item_id).";";
+		$result = qdb($query) OR die(qe().' '.$query);
 
-		$query = "SELECT * FROM $table WHERE $field = ". res($order_number) .";";
-		$result = qdb($query) OR die(qe());
-				
-		while ($row = $result->fetch_assoc()) {
-			$items[] = $row;
-			//$item_id = $row['id'];
+		if(mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+
+			$data = $r;
 		}
-		
-		return $items;
+
+		return $data;
 	}
 
 	function getItemID($order_number, $line_number, $table = 'repair_items', $field = 'ro_number'){
@@ -235,6 +236,8 @@
 	}
 
 	function getMaterials($order_number, $item_id, $type = 'repair', $field = 'repair_item_id') {
+		global $materials_total;
+
 		$purchase_requests = array();
 		$query;
 		
@@ -249,7 +252,7 @@
 				// Check to see what has been received and sum it into the total Ordered
 				$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 				if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-				$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+				$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
 				$query .= "AND i.partid = ".prep($row['partid'])." ";
 				if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
 				$query .= "; ";
@@ -270,11 +273,11 @@
 					$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
 					$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
 					$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
-					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.iten_id_label = 'repair_item_id' ";
+					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.item_id_label = 'repair_item_id' ";
 					$query .= "AND rc.ro_number = pr.ro_number ";
 					$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
 					$query .= "GROUP BY i.id; ";
-					echo $query;
+					//echo $query;
 					$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 					if (mysqli_num_rows($result)>0) {
@@ -293,7 +296,7 @@
 
 				// Grab actual available quantity for the requested component
 				$row['available'] = getAvailable($row['partid'], $item_id);
-				$row['pulled'] = getPulled($row['partid'], $po_number);
+				$row['pulled'] = getPulled($row['partid'], $item_id);
 
 				$row['total'] = $total;
 
@@ -310,6 +313,14 @@
 				//if(!in_array_r($row['partid'] , $purchase_requests)) {
 				$purchase_requests[] = $row;
 				//}
+			}
+		} else if($type == 'quote') {
+			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+
+			while($row = mysqli_fetch_assoc($result)) {
+				$purchase_requests[] = $row;
+				$materials_total += $row['quote'];
 			}
 		}
 
@@ -332,10 +343,10 @@
 		return $qty;
 	}
 
-	function getPulled($partid, $ro_number) {
+	function getPulled($partid, $item_id) {
 		$qty = 0;
 		
-		$query = "SELECT SUM(r.qty) as sum FROM repair_components r, inventory i WHERE r.ro_number = ". prep($ro_number) ." AND r.invid = i.id AND i.partid = ".prep($partid).";";
+		$query = "SELECT SUM(r.qty) as sum FROM repair_components r, inventory i WHERE r.item_id = ". prep($item_id) ." AND r.invid = i.id AND i.partid = ".prep($partid).";";
 		$result = qdb($query) OR die(qe());
 				
 		if (mysqli_num_rows($result)>0) {
@@ -349,9 +360,18 @@
 	function getOrder($order, $type) {
 		$results = array();
 
-		if(strtolower($type) == 'repair' AND $order) {
+		if(strtolower($type) == 'repair') {
 			$query = "SELECT * FROM repair_orders ro WHERE ro.ro_number = ".res($order).";";
 			$result = qdb($query) OR die(qe());
+
+			if (mysqli_num_rows($result)>0) {
+				$results = mysqli_fetch_assoc($result);
+			}
+		} else if(strtolower($type) == 'quote') {
+			$query = "SELECT * FROM service_quotes WHERE id = ".res($order).";";
+			$result = qdb($query) OR die(qe());
+			
+			// echo $query;
 
 			if (mysqli_num_rows($result)>0) {
 				$results = mysqli_fetch_assoc($result);
@@ -359,6 +379,21 @@
 		}
 
 		return $results;
+	}
+
+	function getOutsourced($item_id, $type) {
+		$outsourced = array();
+
+		if($type == 'quote') {
+			$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($item_id).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+
+			while($r = mysqli_fetch_assoc($result)){
+				$outsourced[] = $r;
+			}
+		}
+
+		return $outsourced;
 	}
 
 	// Creating an array for the current task based on total time spent per unique userid on the task
@@ -418,15 +453,18 @@
 	}
 
 	function accessControl($userid, $item_id){
+		global $quote;
 		// Guilty until proven innocent
 		$access = false;
 
-		$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($userid).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
+		if(! $quote) {
+			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($userid).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 
-		if(mysqli_num_rows($result)) {
-			$access = true;
+			if(mysqli_num_rows($result)) {
+				$access = true;
+			}
 		}
 
 		return $access;
@@ -440,6 +478,7 @@
 			include_once $rootdir.'/inc/scripts.php';
 			include_once $rootdir.'/modal/materials_request.php';
 			include_once $rootdir.'/modal/service_complete.php';
+			include_once $rootdir.'/modal/results.php';
 		?>
 
 		<title><?=ucwords($type);?></title>
@@ -548,19 +587,33 @@
 			.ticket_status_warning {
 				color: #8a6d3b;
 			}
+
+			.nav-tabs.nav-tabs-ar + .tab-content {
+				overflow: visible;
+			}
+
+			.part_listing .add_button {
+				display: none;
+			}
 		</style>
 	</head>
 	
 	<body class="sub-nav" data-order-type="<?=$type?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
+		<div id="loader" class="loader text-muted" style="display: none;">
+			<div>
+				<i class="fa fa-refresh fa-5x fa-spin"></i><br>
+				<h1 id="loader-message">Please wait while your search result is populating...</h1>
+			</div>
+		</div>
 		<div class="container-fluid data-load full-height">
 			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
 					<?php if(!$build && ! $quote) { ?>
-							<?php if(!$edit) { ?>
-								<a href="/task_view.php?type=<?=$type;?>&order=<?=$order_number;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+							<?php if(! $task_edit) { ?>
+								<a href="/task_view.php?type=<?=$type;?>&order=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 							<?php } else { ?>
-								<a href="#" class="text-success btn btn-default btn-sm toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+								<a href="javascript:void(0)" class="text-success btn btn-default btn-sm toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
 							<?php } ?>
 
 							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
@@ -571,7 +624,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' : ucwords($task)) . $order_number . '-' . $task_number;?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : 'Quote# ' . $order_number_details);?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-6">
@@ -581,7 +634,7 @@
 							<?php if(! $quote){ ?>
 								<div class="col-md-9" style="padding-top: 10px;">
 									<select name="task" class="form-control repair-task-selector task_selection pull-right">
-										<option><?=ucwords($type) . '# '.$order_number;?> - <?=getCompany($ORDER['companyid']);?></option>
+										<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								</div>
 
@@ -591,20 +644,28 @@
 									</button>
 								</div>
 							<?php } else { ?>
-								<button type="button" class="btn btn-sm btn-success success pull-right" id="save_button" data-validation="left-side-main">
+
+								<?php if(empty($task_number)) { ?>
+									<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
+								<?php } else { ?>
+									<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+								<?php } ?>
+
+								<button type="button" class="text-primary btn btn-sm btn-default create_order pull-right" data-type="create" data-validation="left-side-main">
 									<i class="fa fa-save"></i> Create
 								</button>
-								<a href="#" class="text-primary btn btn-default btn-sm toggle-save pull-right"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
+
 							<?php } ?>
 						<!-- </div> -->
 					</div>
-					<!-- <button class="btn btn-warning btn-sm pull-right btn-update" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-briefcase" aria-hidden="true"></i> Regular Pay</button>
-					<button class="btn btn-default btn-sm pull-right btn-update" style="margin-top: 10px; margin-right: 10px;"><i class="fa fa-car" aria-hidden="true"></i> Travel Time</button> -->
 				</div>
 			</div>
 
 			<form id="save_form" action="/task_edit.php" method="post">
 				<input type="hidden" name="item_id" value="<?=$item_id;?>">
+				<input type="hidden" name="order" value="<?=$order_number;?>">
+				<input type="hidden" name="line_number" value="<?=$task_number;?>">
+				<input type="hidden" name="type" value="<?=$type;?>">
 				<div class="row" style="height: 100%; margin: 0;">
 					
 					<?php include 'sidebar.php'; ?>
@@ -632,7 +693,7 @@
 					            <div class="row stats-row">
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
-					                        <span class="number text-brown">$0.00</span>
+					                        <span class="number text-brown"><?=format_price($total_amount);?></span>
 											<span class="info">Quote</span>
 					                    </div>
 					                </div>
@@ -669,19 +730,19 @@
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> Documentation</a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor '.((in_array("4", $USER_ROLES)) ?'&nbsp; $0.00':'').'</a></li>';
+								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; $0.00</a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; $0.00</a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; $0.00</a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
-								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; $0.00</strong></a></li>
+								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
 							<?php } ?>
 						</ul>
 
@@ -764,17 +825,17 @@
 							<?php if($labor) { ?>
 								<!-- Labor pane -->
 								<div class="tab-pane <?=(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '');?>" id="labor">
-									<?php if($edit){ ?>
+									<?php if($task_edit){ ?>
 										<div class="row labor_edit">
 
 											<div class="col-md-12">
 												<div class="input-group pull-left" style="margin-bottom: 10px; margin-right: 15px; max-width: 200px">
 						  							<!-- <span class="input-group-addon">$</span> -->
-													<input class="form-control input-sm" class="quote_hourly" type="text" placeholder="Hours" value="">
+													<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=$item_details['labor_hours'];?>">
 												</div>
 												<div class="input-group" style="margin-bottom: 10px; max-width: 200px">
 						  							<span class="input-group-addon">$</span>
-													<input class="form-control input-sm" class="quote_price" type="text" placeholder="Rate" value="">
+													<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)$item_details['labor_rate'], 2, '.', '');?>">
 												</div>
 											</div>
 										</div>
@@ -803,7 +864,10 @@
 				                            </tr>
 				                        </thead>
 				                        <tbody>
-				                        	<?php $totalSeconds = 0; foreach(getLaborTime($item_id, $type) as $user => $labor_seconds) { 
+				                        	<?php 
+				                        		$totalSeconds = 0; 
+				                        		if(! $quote):
+				                        		foreach(getLaborTime($item_id, $type) as $user => $labor_seconds) { 
 				                        			$hours_worked = ($labor_seconds / 3600);
 				                        			$totalSeconds += $labor_seconds;
 				                        			$rate = 0;
@@ -818,27 +882,30 @@
 
 													$cost = round($rate * $hours_worked, 2);
 				                        	?>
-					                        	<tr class="valign-top">
-					                                <td>
-														<?=getUser($user);?>
-					                                </td>
-					                                <td>
-														<?=toTime($labor_seconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($labor_seconds));?></span>
-					                                </td>
-					                                <td class="text-right">
-					                                	<?php if(in_array("4", $USER_ROLES)){ ?>
-															<?=format_price($cost);?>
-														<?php } ?>
-					                                </td>
-					                                <td class="text-center">
-					                                	<?php if(in_array("4", $USER_ROLES)){ ?>
-						                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
-													        	<i class="fa fa-trash" aria-hidden="true"></i>
-													        </button>
-												        <?php } ?>
-					                                </td>
-					                            </tr>
-				                            <?php } ?>
+						                        	<tr class="valign-top">
+						                                <td>
+															<?=getUser($user);?>
+						                                </td>
+						                                <td>
+															<?=toTime($labor_seconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($labor_seconds));?></span>
+						                                </td>
+						                                <td class="text-right">
+						                                	<?php if(in_array("4", $USER_ROLES)){ ?>
+																<?=format_price($cost);?>
+															<?php } ?>
+						                                </td>
+						                                <td class="text-center">
+						                                	<?php if(in_array("4", $USER_ROLES)){ ?>
+							                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
+														        	<i class="fa fa-trash" aria-hidden="true"></i>
+														        </button>
+													        <?php } ?>
+						                                </td>
+						                            </tr>
+				                            <?php 
+				                        		} 
+				                        		endif;
+				                        	?>
 
 				                            <?php if(in_array("4", $USER_ROLES)){ ?>
 					                            <tr>
@@ -846,7 +913,7 @@
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
 				                            		</td>
 					                            	<td>
-					                            		<button type="submit" class="btn btn-primary btn-sm add_tech" <?=($quote ? 'disabled' : '');?>>
+					                            		<button type="submit" class="btn btn-primary btn-sm add_tech" <?=(($quote && empty($task_number)) ? 'disabled' : '');?>>
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 												    </td>
@@ -863,7 +930,7 @@
 														</div>
 					                                </td>
 					                                <td>
-														$0.00 profit of $0.00 quoted Labor
+														$0.00 profit of <span class="labor_cost"><?=format_price($labor_total);?></span> quoted Labor
 					                                </td>
 					                                <td>
 														<strong><?=toTime($totalSeconds);?> &nbsp; </strong>
@@ -921,47 +988,134 @@
 											</thead>
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
-
+												<?php //print '<pre>' . print_r($component_data, true) . '</pre>';?>
 												<?php $total = 0; foreach($component_data as $row){ ?>
-													<tr class="list">
-														<td class="col-md-3">
-															<span class="descr-label part_description" data-request="<?=$row['totalOrdered'];?>"><?=trim(format($row['partid'], true));?></span>
-														</td>
-														<td class="col-md-1"><?=$row['totalOrdered'];?></td>
-														<td class="col-md-2">
-															<?php
-																if($row['po_number']) {
-																	echo $row['po_number'].' <a href="/PO'.$row['po_number'].'"><i class="fa fa-arrow-right"></i></a>';
-																} else if ($row['status'] == 'Void') {
-																	echo "<span style='color: red;'>Canceled</span>";
-																} else if(($row['totalOrdered'] - $row['pulled'] > 0)) {
-																	echo "<span style='color: #8a6d3b;'>Pending</span> <a target='_blank' href='/purchase_requests.php'><i class='fa fa-arrow-right'></i></a>";
-																} else if(($row['totalOrdered'] - $row['pulled'] <= 0)) {
-																	echo "<span style='color: #3c763d;'>Pulled from Stock</span>";
-																} else if($row['status'] == 'Void') {
-																	echo "<span style='color: #a94442;'>Canceled</span>";
-																}
-															?>
-														</td>
-														<td class="col-md-1"><?=$row['available'];?></td>
-														<td class="col-md-1">
-															<?=$row['totalReceived'];?> 
-															<?php
-																if(($row['totalOrdered'] - $row['totalReceived']) > 0 && $row['available']) {
-																	echo '&emsp;<a style="margin-left: 10px;" href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
-																}
-															?>
-														</td>
-														<td class="col-md-2 text-right">$0.00</td>
-														<td class="col-md-2 text-right">$0.00</td>
-													</tr>
+													<?php if(! $quote) { ?>
+														<tr class="list">
+															<td>
+																<span class="descr-label part_description" data-request="<?=$row['totalOrdered'];?>"><?=trim(partDescription($row['partid'], true));?></span>
+															</td>
+															<td><?=$row['totalOrdered'];?></td>
+															<td>
+																<?php
+																	if($row['po_number']) {
+																		echo $row['po_number'].' <a href="/PO'.$row['po_number'].'"><i class="fa fa-arrow-right"></i></a>';
+																	} else if ($row['status'] == 'Void') {
+																		echo "<span style='color: red;'>Canceled</span>";
+																	} else if(($row['totalOrdered'] - $row['pulled'] > 0)) {
+																		echo "<span style='color: #8a6d3b;'>Pending</span> <a target='_blank' href='/purchase_requests.php'><i class='fa fa-arrow-right'></i></a>";
+																	} else if(($row['totalOrdered'] - $row['pulled'] <= 0)) {
+																		echo "<span style='color: #3c763d;'>Pulled from Stock</span>";
+																	} else if($row['status'] == 'Void') {
+																		echo "<span style='color: #a94442;'>Canceled</span>";
+																	}
+																?>
+															</td>
+															<td><?=$row['available'];?></td>
+															<td>
+																<?=$row['totalReceived'];?> 
+																<?php
+																	if(($row['totalOrdered'] - $row['totalReceived']) > 0 && $row['available']) {
+																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
+																	}
+																?>
+															</td>
+															<td>$0.00</td>
+															<td>$0.00</td>
+														</tr>
+													<?php } else { ?>
+														<tr class="part_listing found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$row['id'];?>">
+															<td>
+																<div class="remove-pad col-md-1">
+																	<div class="product-img">
+																		<img class="img" src="/img/parts/ER-B.jpg" alt="pic" data-part="ER-B">
+																	</div>										
+																</div>
+																<div class="col-md-11">
+																	<span class="descr-label part_description" data-request="<?=$row['qty'];?>"><?=trim(partDescription($row['partid'], true));?></span>
+																</div>
+															</td>
+															<td>										
+																<div class="col-md-4 remove-pad" style="padding-right: 5px;">											
+																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$row['partid'];?>" placeholder="QTY" value="<?=$row['qty'];?>">										
+																</div>										
+																<div class="col-md-8 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0;">												
+																		<div class="input-group">													
+																			<span class="input-group-addon">										                
+																				<i class="fa fa-usd" aria-hidden="true"></i>										            
+																			</span>										            
+																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$row['amount'], 2, '.', '');?>">										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td style="background: #FFF;">
+																<div class="table market-table" data-partids="<?=$row['partid'];?>">
+																	<div class="bg-availability">
+																		<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">
+																			Supply <i class="fa fa-window-restore"></i>
+																		</a>
+																		<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">
+																			<i class="fa fa-download"></i>
+																		</a>
+																		<div class="market-results" id="<?=$row['partid'];?>" data-ln="0" data-type="supply">
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td class="datetime">										
+																<div class="col-md-2 remove-pad">											
+																	<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="<?=$row['partid'];?>" data-stock="2" placeholder="#" value="<?=$row['leadtime'];?>">										
+																</div>										
+																<div class="col-md-4">											
+																	<select class="form-control input-sm date_span">												
+																		<option value="days" <?=($row['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>												
+																		<option value="weeks" <?=($row['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>												
+																		<option value="months" <?=($row['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>											
+																	</select>										
+																</div>										
+																<div class="col-md-6 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																			<input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">										            
+																			<span class="input-group-addon">										                
+																				<span class="fa fa-calendar"></span>										            
+																			</span>										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">								            
+																		<input type="text" class="form-control input-sm part_perc" value="<?=number_format((float)$row['profit_pct'], 2, '.', '');?>" placeholder="0">								            
+																		<span class="input-group-addon">								                
+																			<i class="fa fa-percent" aria-hidden="true"></i>								            
+																		</span>								        
+																	</div>									
+																</div>
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">											
+																		<span class="input-group-addon">								                
+																			<i class="fa fa-usd" aria-hidden="true"></i>								           
+																		</span>								            
+																		<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" value="<?=number_format((float)$row['quote'], 2, '.', '');?>">								        
+																	</div>									
+																</div>
+															</td>
+															<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>
+														</tr>
+													<?php } ?>
 												<?php } ?>
 
 												<tr id='quote_input'>
 													<?php if($quote) { ?>
 														<td colspan="5">
 															<div class='input-group' style="width: 100%;">
-			                                                    <input type='text' class='form-control input-sm' id='partSearch' placeholder='SEARCH FOR MATERIAL...'>
+			                                                    <input type='text' class='form-control input-sm' id='partSearch' autocomplete="off" placeholder='SEARCH FOR MATERIAL...'>
 			                                                    <span class='input-group-btn'>
 			                                                        <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
 			                                                    </span>
@@ -971,7 +1125,7 @@
 		                                            <?php } else { ?>
 		                                            	<td colspan="6"></td>
 		                                            <?php } ?>
-													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>><?=($quote ? 'Quote' : '');?> Total: <?=format_price($total);?></td>
+													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>><strong><?=($quote ? 'Quote' : '');?> Total:</strong> <span class="materials_cost"><?=format_price($materials_total);?></span></td>
 												</tr>
 											</tbody>
 										</table>
@@ -986,23 +1140,66 @@
 									<section>
 										<div class="row">
 											<div class="col-sm-6">
-												<?php if(isset($edit) && $edit) { ?>
+												<?php if($task_edit) { ?>
 													<div class="input-group" style="margin-bottom: 10px; max-width: 250px">
-							  							<span class="input-group-addon">$</span>
-														<input class="form-control input-sm" class="mileage_rate" type="text" placeholder="Price" value="1.25">
+							  							<span class="input-group-addon"><i class="fa fa-car" aria-hidden="true"></i></span>
+														<input class="form-control input-sm" class="mileage_rate" name="expenses" type="text" placeholder="Price" value="<?=number_format((float)$item_details['expenses'], 2, '.', '');?>">
 													</div>
 												<?php } else { ?>
 													<b>Mileage Rate</b>: <span class="mileage_rate">$1.25</span>
 												<?php } ?>
 											</div>
 											<div class="col-sm-6">
-												<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status pull-right" type="submit">
-										        	<i class="fa fa-plus"></i>	
-										        </button>
+												
 									        </div>
 										</div>
 
-										<div class="row list table-first">
+										<table class="table table-striped">
+											<thead class="table-first">
+												<th class="col-md-2">Date/Time</th>
+												<th class="col-md-2">User</th>
+												<th class="col-md-5">Notes</th>
+												<th class="col-md-2">Amount</th>
+												<th class="col-md-1">Action</th>
+											</thead>
+
+											<tbody>
+												<tr>
+													<td class="datetime">																			
+														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
+																<span class="input-group-addon">										                
+																	<span class="fa fa-calendar"></span>										            
+																</span>										        
+															</div>											
+														</div>																		
+													</td>
+													<td>
+					                            		<select name="techid" class="form-control input-xs contact-selector required"></select>
+				                            		</td>
+													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
+													<td>
+														<div class="input-group">													
+															<span class="input-group-addon">										                
+																<i class="fa fa-usd" aria-hidden="true"></i>										            
+															</span>										            
+															<input class="form-control input-sm part_amount" type="text" name="expense[amount]" placeholder="0.00" value="">
+														</div>
+													</td>
+													<td style="cursor: pointer;">
+														<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status pull-right" type="submit">
+												        	<i class="fa fa-plus"></i>	
+												        </button>
+												       <!--  <div class="remove_expense pull-right">
+															<i class="fa fa-trash fa-4" aria-hidden="true"></i>
+														</div> -->
+													</td>
+												</tr>
+											</tbody>
+										</table>
+
+										<!-- <div class="row list table-first">
 											<div class="col-md-2">Date/Time</div>
 											<div class="col-md-2">User</div>
 											<div class="col-md-4">Notes</div>
@@ -1013,12 +1210,16 @@
 										<hr>
 
 										<div class="row list">
+											
+										</div> -->
+
+										<!-- <div class="row list">
 											<div class="col-md-2">8/12/2017</div>
 											<div class="col-md-2">Scott</div>
 											<div class="col-md-4">Wishes he could eat a delicious pastrami sandwich from Stackz</div>
 											<div class="col-md-2 text-right">$12.00</div>
 											<div class="col-md-2"><a href="#"><i class="fa fa-download" aria-hidden="true"></i></a></div>
-										</div>
+										</div> -->
 									</section>
 								</div><!-- Expenses pane -->
 							<?php } ?>
@@ -1029,30 +1230,60 @@
 				                    <table class="table table-hover table-condensed">
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-md-1">
-				                                    Employee
-				                                </th>
 				                                <th class="col-md-2">
 				                                    Vendor
 				                                </th>
-				                                <th class="col-md-1">
+				                                <th class="col-md-2">
 				                                    Date
 				                                </th>
-				                                <th class="col-md-6">
+				                                <th class="col-md-5">
 				                                    Description
 				                                </th>
-				                                <th class="col-md-2 text-center">
+				                                <th class="col-md-2">
 				                                    Amount
+				                                </th>
+				                                 <th class="col-md-1 text-right">
+				                                    Action
 				                                </th>
 				                            </tr>
 				                        </thead>
 				                        <tbody>
-											                            <!-- row -->
-				                            <tr class="first">
+				                        	<?php $line_number = 1; foreach($outsourced as $list) { ?>
+				                        	<?php } ?>
+				                        	<tr class="expense_row">
+			                            		<td>
+				                            		<select name="companyid" class="form-control input-xs company-selector required"></select>
+			                            		</td>
+												<td class="datetime">																			
+													<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+														<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+															<input type="text" name="expense[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
+															<span class="input-group-addon">										                
+																<span class="fa fa-calendar"></span>										            
+															</span>										        
+														</div>											
+													</div>																		
+												</td>
+												<td><input class="form-control input-sm" type="text" name="expense[<?=$line_number;?>][notes]"></td>
+												<td>
+													<div class="input-group">													
+														<span class="input-group-addon">										                
+															<i class="fa fa-usd" aria-hidden="true"></i>										            
+														</span>										            
+														<input class="form-control input-sm part_amount" type="text" name="expense[<?=$line_number;?>][amount]" placeholder="0.00" value="">
+													</div>
+												</td>
+												<td>
+													<button class="btn btn-flat btn-sm btn-status pull-right expense_add">
+											        	<i class="fa fa-plus"></i>	
+											        </button>
+												</td>
+											</tr>
+				                            <tr class="">
 				                                <td colspan="4">
 				                                </td>
 				                                <td class="text-right">
-				                                    <strong>$ 0.00</strong>
+				                                    <strong><span class="outside_cost">$0.00</span></strong>
 				                                </td>
 				                            </tr>
 										</tbody>
@@ -1068,11 +1299,6 @@
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
 		<script type="text/javascript" src="js/lici.js"></script>
-
-		<script type="text/javascript">
-			(function($) {
-
-			})(jQuery);
-		</script>
+		<script type="text/javascript" src="js/task.js"></script>
 	</body>
 </html>

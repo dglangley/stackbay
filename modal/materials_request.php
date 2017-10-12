@@ -112,6 +112,7 @@
                     <div class="tab-pane" id="item_stock">
                         <form action="/materials_handler.php" method="post">
                             <input type="hidden" name="order_number" value="<?=$_REQUEST['order'];?>">
+                            <input type="hidden" name="item_id" value="<?=$item_id;?>">
                             <input type="hidden" name="type" value="<?=$_REQUEST['type'];?>">
                             <input type="hidden" name="action" value="pull">
                             <div class="table-responsive">
