@@ -382,6 +382,7 @@
 	}
 
 	function getOutsourced($item_id, $type) {
+		global $outside_services_total;
 		$outsourced = array();
 
 		if($type == 'quote') {
@@ -390,6 +391,15 @@
 
 			while($r = mysqli_fetch_assoc($result)){
 				$outsourced[] = $r;
+				$outside_services_total += $r['amount'];
+			}
+		} else {
+			$query = "SELECT * FROM outsourced_orders WHERE item_id = ".res($item_id).";";
+			$result = qdb($query) OR die(qe().' '.$query);
+
+			while($r = mysqli_fetch_assoc($result)){
+				$outsourced[] = $r;
+				$outside_services_total += $r['amount'];
 			}
 		}
 
@@ -611,7 +621,7 @@
 				<div class="col-md-4">
 					<?php if(!$build && ! $quote) { ?>
 							<?php if(! $task_edit) { ?>
-								<a href="/task_view.php?type=<?=$type;?>&order=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+								<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 							<?php } else { ?>
 								<a href="javascript:void(0)" class="text-success btn btn-default btn-sm toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
 							<?php } ?>
@@ -624,7 +634,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : 'Quote# ' . $order_number_details);?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($task_number ? '' : 'New ') . 'Quote# ' . $order_number_details);?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-6">
@@ -1230,13 +1240,13 @@
 				                    <table class="table table-hover table-condensed">
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-md-2">
+				                                <th class="col-md-3">
 				                                    Vendor
 				                                </th>
-				                                <th class="col-md-2">
+				                                <!-- <th class="col-md-2">
 				                                    Date
-				                                </th>
-				                                <th class="col-md-5">
+				                                </th> -->
+				                                <th class="col-md-6">
 				                                    Description
 				                                </th>
 				                                <th class="col-md-2">
@@ -1249,41 +1259,72 @@
 				                        </thead>
 				                        <tbody id="os_table">
 				                        	<?php $line_number = 1; foreach($outsourced as $list) { ?>
-				                        	<?php } ?>
-				                        	<tr class="expense_row" data_line="<?=$line_number;?>">
-			                            		<td>
-				                            		<select name="companyid" class="form-control input-xs company-selector required"></select>
+				                        		<tr class="outsourced_row" data-line="<?=$line_number;?>">
+				                            		<td>
+				                            			<input type="hidden" name="outsourced[<?=$line_number;?>][quoteid]" value="<?=$list['id'];?>">
+					                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required">
+					                            			<option value="<?=$list['companyid'];?>"><?=getCompany($list['companyid']);?></option>
+					                            		</select>
+				                            		</td>
+													<!-- <td class="datetime">																			
+														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																<input type="text" name="outsourced[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
+																<span class="input-group-addon">										                
+																	<span class="fa fa-calendar"></span>										            
+																</span>										        
+															</div>											
+														</div>																		
+													</td> -->
+													<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]" value="<?=$list['description'];?>"></td>
+													<td>
+														<div class="input-group">													
+															<span class="input-group-addon">										                
+																<i class="fa fa-usd" aria-hidden="true"></i>										            
+															</span>										            
+															<input class="form-control input-sm part_amount" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="<?=$list['amount'];?>">
+														</div>
+													</td>
+													<td class="os_action">
+														<i class="fa fa-trash fa-4 remove_outsourced pull-right" style="cursor: pointer; margin-top: 10px;" aria-hidden="true"></i>
+													</td>
+												</tr>
+					                   
+				                        	<?php $line_number ++;} ?>
+				                        	<tr class="outsourced_row" data-line="<?=$line_number;?>">
+			                            		<td class="select2_os">
+				                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required"></select>
 			                            		</td>
-												<td class="datetime">																			
+												<!-- <td class="datetime">																			
 													<div class="form-group" style="margin-bottom: 0; width: 100%;">												
 														<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-															<input type="text" name="expense[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
+															<input type="text" name="outsourced[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
 															<span class="input-group-addon">										                
 																<span class="fa fa-calendar"></span>										            
 															</span>										        
 														</div>											
 													</div>																		
-												</td>
-												<td><input class="form-control input-sm" type="text" name="expense[<?=$line_number;?>][notes]"></td>
+												</td> -->
+												<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]"></td>
 												<td>
 													<div class="input-group">													
 														<span class="input-group-addon">										                
 															<i class="fa fa-usd" aria-hidden="true"></i>										            
 														</span>										            
-														<input class="form-control input-sm part_amount" type="text" name="expense[<?=$line_number;?>][amount]" placeholder="0.00" value="">
+														<input class="form-control input-sm part_amount" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="">
 													</div>
 												</td>
-												<td>
+												<td class="os_action">
 													<button class="btn btn-flat btn-sm pull-right os_expense_add">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 												</td>
 											</tr>
 				                            <tr class="">
-				                                <td colspan="4">
+				                                <td colspan="3">
 				                                </td>
 				                                <td class="text-right">
-				                                    <strong><span class="outside_cost">$0.00</span></strong>
+				                                    <strong><span class="outside_cost"><?=format_price($outside_services_total);?></span></strong>
 				                                </td>
 				                            </tr>
 										</tbody>

@@ -34,8 +34,8 @@
 
 		$query = "REPLACE INTO service_quote_items (quoteid, line_number, qty, amount, item_id, item_label, description, ref_1, ref_1_label, ref_2, ref_2_label, labor_hours, labor_rate, expenses";
 		if($item_id) { $query .= " ,id"; }
-		$query .= ") VALUES (".res($quoteid).", ".res($line_number).", ".res($qty).", '".res($amount)."', '".res($item_id)."', '".res($item_label)."', '".res($description)."', '".res($ref_1)."', '".res($ref_1_label)."', '".res($ref_2)."', '".res($ref_2_label)."', '".res($labor_hours)."', '".res($labor_rate)."', '".res($expenses)."'";
-		if($item_id) { $query .= ", " . res($item_id); }
+		$query .= ") VALUES (".fres($quoteid).", ".fres($line_number).", ".fres($qty).", ".fres($amount).", ".fres($item_id).", ".fres($item_label).", ".fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label).", ".fres($labor_hours).", ".fres($labor_rate).", ".fres($expenses);
+		if($item_id) { $query .= ", " . fres($item_id); }
 		$query .= ");";
 
 		qdb($query) OR die(qe().' '.$query);
@@ -47,18 +47,8 @@
 	}
 
 	function quotedMaterials($materials, $quoteid){
-		$item_id = 0;
-
 		// Get the ID of all the currently / existing quoted items
 		$quotedItems = array();
-		//$savedIDs = array();
-
-		// $query = "SELECT id FROM service_quote_materials WHERE quote_item_id = ".res($quoteid).";";
-		// $result = qdb($query) OR die(qe().' '.$query);
-
-		// while($r = mysqli_fetch_assoc($result)){
-		// 	$quotedItems[] = $r['id'];
-		// }
 
 		if(! empty($materials)){
 			foreach($materials as $partid => $data) {
@@ -66,8 +56,8 @@
 
 					$query = "REPLACE INTO service_quote_materials (quote_item_id, partid, qty, amount, leadtime, leadtime_span, profit_pct, quote";
 					if($line['quoteid']) { $query .= " ,id"; }
-					$query .= ") VALUES ('".res($quoteid)."', '".res($partid)."', '".res($line['qty'])."', '".res($line['amount'])."', '".res($line['leadtime'])."', '".res(ucwords($line['lead_span']))."', '".res($line['profit'])."', '".res($line['quote'])."'";
-					if($line['quoteid']) { $query .= ", " . res($line['quoteid']); }
+					$query .= ") VALUES (".fres($quoteid).", ".fres($partid).", ".fres($line['qty']).", ".fres($line['amount']).", ".fres($line['leadtime']).", ".fres(ucwords($line['lead_span'])).", ".fres($line['profit']).", ".fres($line['quote']);
+					if($line['quoteid']) { $query .= ", " . fres($line['quoteid']); }
 					$query .= ");";
 					//echo $query;
 					qdb($query) OR die(qe().' '.$query);
@@ -77,7 +67,34 @@
 			}
 
 			// DELETE all records that did not get pushed back up into the update
-			$query = "DELETE FROM service_quote_materials WHERE id NOT IN ('".join("','", $quotedItems)."') AND quote_item_id = ".res($quoteid).";";
+			$query = "DELETE FROM service_quote_materials WHERE id NOT IN ('".join("','", $quotedItems)."') AND quote_item_id = ".fres($quoteid).";";
+			qdb($query) OR die(qe().' '.$query);
+		}
+	}
+
+	function quotedOutsource($outsourced, $quoteid){
+		// Get the ID of all the currently / existing quoted items
+		$quotedItems = array();
+
+		if(! empty($outsourced)){
+			foreach($outsourced as $line) {
+				//foreach($line_item as $line) {
+					if($line['companyid']) {
+						$query = "REPLACE INTO service_quote_outsourced(quote_item_id, companyid, description, amount";
+						if($line['quoteid']) { $query .= " ,id"; }
+						$query .= ") VALUES (".fres($quoteid).", ".fres($line['companyid']).", ".fres($line['description']).", ".fres($line['amount']);
+						if($line['quoteid']) { $query .= ", " . fres($line['quoteid']); }
+						$query .= ");";
+						//echo $query;
+						qdb($query) OR die(qe().' '.$query);
+
+						$quotedItems[] = qid();
+					}
+				//}
+			}
+
+			// DELETE all records that did not get pushed back up into the update
+			$query = "DELETE FROM service_quote_outsourced WHERE id NOT IN ('".join("','", $quotedItems)."') AND quote_item_id = ".fres($quoteid).";";
 			qdb($query) OR die(qe().' '.$query);
 		}
 	}
@@ -130,6 +147,7 @@
 	$expenses = 0;
 
 	$materials = array();
+	$outsourced = array();
 
 	$techid = 0;
 	$tech_status = '';
@@ -155,6 +173,7 @@
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
 
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
+	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
 
 	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
 	if (isset($_REQUEST['tech_status'])) { $tech_status = $_REQUEST['tech_status']; }
@@ -169,6 +188,7 @@
 	} else if($create == 'quote' || $create == 'save') {
 		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses);
 		quotedMaterials($materials, $qid);
+		quotedOutsource($outsourced, $qid);
 
 		header('Location: /quote.php?order_number=' . $order .'-'. $LINE_NUMBER);
 	} 
