@@ -49,7 +49,7 @@
 					break;
 			}
 
-			$query2 = "INSERT INTO sales_credits (companyid, date_created, order_num, order_type, rma, repid, contactid) ";
+			$query2 = "INSERT INTO credits (companyid, date_created, order_number, order_type, rma_number, repid, contactid) ";
 			$query2 .= "VALUES ($companyid, '".$GLOBALS['now']."', '".$order_number."', '".$order_type."', '".$rma_number."', '".$GLOBALS['U']['id']."', ";
 			if ($contactid) { $query2 .= "'".$contactid."'"; } else { $query2 .= "NULL"; }
 			$query2 .= "); ";
@@ -65,8 +65,10 @@
 				$item_id = $r2['id'];
 				$price = $r2['price'];
 
-				$query3 = "INSERT INTO sales_credit_items (cid, sales_item_id, return_item_id, qty, amount) ";
-				$query3 .= "VALUES ('".$scid."','".$item_id."','".$return_item_id."','".$qty."','".$price."'); ";
+				$query3 = "INSERT INTO credit_items (cid, item_id, item_id_label, return_item_id, qty, amount) ";
+				$query3 .= "VALUES ('".$scid."','".$item_id."',";
+				if ($order_type=='Repair') { $query3 .= "'repair_item_id',"; } else { $query3 .= "'sales_item_id',"; } 
+				$query3 .= "'".$return_item_id."','".$qty."','".$price."'); ";
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 			}
 		}
@@ -98,7 +100,7 @@
 				break;
 			}
 
-			$query2 = "SELECT * FROM sales_credit_items WHERE return_item_id = $rma_item_id; ";
+			$query2 = "SELECT * FROM credit_items WHERE return_item_id = $rma_item_id; ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$credited = true;
@@ -114,7 +116,7 @@
     }
     function get_assoc_credit($rma_number){
         $rma_number = prep($rma_number);
-        $select = "SELECT * FROM sales_credits WHERE rma = $rma_number;";
+        $select = "SELECT * FROM credits WHERE rma_number = $rma_number;";
         return qdb($select);
     }
 ?>

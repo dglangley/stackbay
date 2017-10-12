@@ -1134,8 +1134,8 @@
 										$action = '';
 										if ($history['dispositionid']==1) {
 											// look for credits issued against Credit disposition, and if exists then link to it
-											$query = "SELECT * FROM sales_credits c, sales_credit_items i ";
-											$query .= "WHERE c.order_num = '".$order_number."' AND c.order_type = '".$o['type']."' AND rma = '".$history['rma_number']."' ";
+											$query = "SELECT * FROM credits c, credit_items i ";
+											$query .= "WHERE c.order_number = '".$order_number."' AND c.order_type = '".$o['type']."' AND rma_number = '".$history['rma_number']."' ";
 											$query .= "AND c.id = i.cid AND return_item_id = '".$history['id']."'; ";
 											$result = qdb($query) OR die(qe().'<BR>'.$query);
 											if (mysqli_num_rows($result)>0) {

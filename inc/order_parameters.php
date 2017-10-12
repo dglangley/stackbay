@@ -106,7 +106,7 @@
 
 //Charges
 			$info['charges'] = "sales_charges";
-			$info['credit_items'] = "sales_credit_items"; 
+			$info['credit_items'] = "credit_items"; 
 	
 
 		}
@@ -211,7 +211,7 @@
 			$info[strtolower($info['short'])] = true;
 		}
 		else if (
-		    strtolower($type) == "rma"  || strtolower($type) == "return"  || strtolower($type) == "returns"  || strtolower($type) == "returns_item_id"  || strtolower($type) == "returns"){
+		    strtolower($type) == "rma"  || strtolower($type)=="rma_number" || strtolower($type) == "return"  || strtolower($type) == "returns"  || strtolower($type) == "returns_item_id"  || strtolower($type) == "returns"){
 			//RMA acts as a purchase order
 			$info['type'] = "RMA";
 			//Convenient type check
@@ -265,7 +265,7 @@
 
 		}
 		else if (
-		    strtolower($type) == "credit"  || strtolower($type) == "cm"  || strtolower($type) == "c"  || strtolower($type) == "sales_credits"){
+		    strtolower($type) == "credit"  || strtolower($type) == "cm"  || strtolower($type) == "c"  || strtolower($type)=="credits" || strtolower($type) == "sales_credits"){
 			// Remember: Invoice has few edits, but is built from a Sales Order
 			$info['type'] = "Credit";
 			$info['purchase'] = false;
@@ -278,12 +278,12 @@
 			$info['bill'] = false;
 			$info['lump'] = false;
 			
-			$info['order'] = "sales_credits";
+			$info['order'] = "credits";
 			$info['id'] = "id";
 			$info['item_id'] = 'rma';
 			$info['item_order'] = 'line_number';
 			$info['header'] = "Credit Memo ";
-			$info['item'] = "sales_credit_items";
+			$info['item'] = "credit_items";
 			$info['client'] = "Customer";
 			$info['address_type'] = '';
 			$info['contact_col'] = 'Sales Rep';
@@ -291,7 +291,7 @@
 			$info['ext'] = 'Ext Price';
 			$info['rep_type'] = "Sales";
 			$info['date_label'] = "Invoice";
-			$info['tables'] = " sales_credits sc, sales_credit_items sci WHERE sci.cid = sc.id ";
+			$info['tables'] = " credits sc, credit_items sci WHERE sci.cid = sc.id ";
 			$info['short'] = "INV";
 			//$info['event'] = '';
 			$info['active'] = " AND i.status = 'Pending' ";

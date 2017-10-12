@@ -122,15 +122,15 @@
 		$credits = array();
 
 		$query = "SELECT c.name, sc.companyid, sci.qty, sci.amount price, ri.inventoryid, ri.partid, part, heci, ";
-		$query .= "sc.id ref, sc.rma order_number, sc.date_created date, 'Credit' order_type, sc.order_num og_order, sc.order_type og_type, ";
+		$query .= "sc.id ref, sc.rma_number order_number, sc.date_created date, 'Credit' order_type, sc.order_number og_order, sc.order_type og_type, ";
 		$query .= "NULL line_number, NULL item_id, NULL serial_no, NULL invoice_no, NULL packageid, 'Active' status ";
-		$query .= "FROM companies c, sales_credits sc, sales_credit_items sci ";//, return_items ri, parts p ";
+		$query .= "FROM companies c, credits sc, credit_items sci ";//, return_items ri, parts p ";
 		$query .= "LEFT JOIN return_items ri ON sci.return_item_id = ri.id ";
 		$query .= "LEFT JOIN parts p ON ri.partid = p.id ";
 		$query .= "WHERE sc.companyid = c.id ";
-//		$query .= "AND sc.order_num = '".$order_number."' AND sc.order_type = '".$order_type."' ";
+//		$query .= "AND sc.order_number = '".$order_number."' AND sc.order_type = '".$order_type."' ";
 		if ($companyid) { $query .= "AND sc.companyid = '".$companyid."' "; }
-		if ($order_search) { $query .= "AND (sc.rma = '".res($order_search)."' OR sc.id = '".res($order_search)."' OR sc.order_num = '".res($order_search)."') "; }
+		if ($order_search) { $query .= "AND (sc.rma_number = '".res($order_search)."' OR sc.id = '".res($order_search)."' OR sc.order_number = '".res($order_search)."') "; }
 		else if ($dbStartDate) {
 			$query .= "AND sc.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}

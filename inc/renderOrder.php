@@ -200,7 +200,7 @@
 		$orig_order = $order_number;
 		if(!$o['lump']){
     		$query = "SELECT * ";
-			if ($order_type=='CM') { $query .= ", order_num order_number "; }
+			if ($order_type=='CM') { $query .= ", order_number "; }
 			$query .= "FROM `".$o['order']."` ";
 			$query .= "WHERE `".$o['id']."` = $order_number;";
     		$result = qdb($query) or die(qe()." | $query");
@@ -249,10 +249,10 @@
 		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
 		if($o['credit'] && is_numeric($order_number)){
 			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, sci.qty, i.partid ";
-			$items .= "FROM sales_credits sc, sales_credit_items sci, return_items ri, inventory i, inventory_history ih ";
+			$items .= "FROM credits sc, credit_items sci, return_items ri, inventory i, inventory_history ih ";
 			$items .= "WHERE sc.id = '".$order_number."' AND sci.cid = sc.id ";
 			$items .= "AND sci.return_item_id = ri.id AND ri.inventoryid = i.id AND i.id = ih.invid ";
-			$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.sales_item_id ";
+			$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.item_id AND sci.item_id_label = 'sales_item_id' ";
 		    $items .= "GROUP BY sci.cid; ";
 		}
 		//Make a call here to grab RMA's items instead
@@ -492,7 +492,7 @@ $html_page_str .='
     <th>Credit Date</th>
     <th>PO #</th>
     <th>SO #</th>';
-    if ($oi['rma']){
+    if ($oi['rma_number']){
     $html_page_str.='
         <th>RMA #</th>
     ';
@@ -530,8 +530,8 @@ else if (!$o['lump']){
     <td class="text-center">'.$oi['cust_ref'].'</td>
     <td class="text-center">'.$oi['order_number'].'</td>';
     
-    if($oi['rma']){
-        $html_page_str .= '<td class= "pull-center">'.$oi['rma'].'</td>';
+    if($oi['rma_number']){
+        $html_page_str .= '<td class= "pull-center">'.$oi['rma_number'].'</td>';
     }
 }
 $html_page_str .= '

@@ -56,8 +56,8 @@
                     }
 	            }
 
-                if($row['type'] == 'Sale') {
-	                $query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."'; ";
+                if($row['type'] == 'Sale' OR $row['type']=='Repair') {
+	                $query = "SELECT * FROM credits i, credit_items t WHERE i.id = t.cid AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."'; ";
 	                $result = qdb($query) OR die(qe().' '.$query);
 
 	                while ($rows = mysqli_fetch_assoc($result)) {

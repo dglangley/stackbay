@@ -341,7 +341,7 @@
 
 	$credits_rows = '';
 	$credits_open = 0;
-	$query = "SELECT * FROM sales_credits sc ";
+	$query = "SELECT * FROM credits sc ";
 	if ($sorter=='company') { $query .= ", companies c "; }
 	$query .= "WHERE 1 = 1 ";
 	if ($sorter=='company') { $query .= "AND c.id = sc.companyid "; }
@@ -376,7 +376,7 @@
 		$terms = '';
 //		$address = '';
 		$query2 = "SELECT created, bill_to_id, terms FROM ".$order_table." o, terms t ";
-		$query2 .= "WHERE ".$order_field." = '".$r['order_num']."' AND o.termsid = t.id; ";
+		$query2 .= "WHERE ".$order_field." = '".$r['order_number']."' AND o.termsid = t.id; ";
 		$result2 = qdb($query2) OR die(qe().' '.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
@@ -390,7 +390,7 @@
 		$invoice_ln = '';
 		$invoice_date = '';
 		$amount = 0;
-		$query2 = "SELECT qty, amount, return_item_id FROM sales_credit_items WHERE cid = '".$r['id']."'; ";
+		$query2 = "SELECT qty, amount, return_item_id FROM credit_items WHERE cid = '".$r['id']."'; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$amount += $r2['qty']*$r2['amount'];
@@ -427,10 +427,10 @@
 					<td>'.$r['id'].' <a href="/docs/CM'.$r['id'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
 					<td>'.getCompany($r['companyid']).'</td>
 					<td>'.format_date($r['date_created'],'n/d/y').'</td>
-					<td>'.substr($r['order_type'],0,1).'O '.$r['order_num'].' <a href="/'.substr($r['order_type'],0,1).'O'.$r['order_num'].'" target="_new"><i class="fa fa-arrow-right"></i></a></td>
+					<td>'.substr($r['order_type'],0,1).'O '.$r['order_number'].' <a href="/'.substr($r['order_type'],0,1).'O'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a></td>
 					<td>'.format_date($order_date,'n/d/y').'</td>
 					<td>'.$terms.'</td>
-					<td>'.$r['rma'].'</td>
+					<td>'.$r['rma_number'].'</td>
 					<td>'.$invoice_ln.'</td>
 					<td>'.$invoice_date.'</td>
 					<td class="text-right">'.format_price($amount).'</td>

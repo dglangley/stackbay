@@ -28,7 +28,7 @@
         	$invoice_items[] = $rows;
         }
     	
-    	$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = '".res($order_number)."' AND i.order_type = '".$o['type']."'; ";// AND i.companyid = '".res(25)."';";
+    	$query = "SELECT * FROM credits i, credit_items t WHERE i.id = t.cid AND i.order_number = '".res($order_number)."' AND i.order_type = '".$o['type']."'; ";// AND i.companyid = '".res(25)."';";
         
         $result = qdb($query) OR die(qe().' '.$query);
     
@@ -114,9 +114,9 @@
                                     <?php if(!empty($credit_items)) { ?>
                                         <?php foreach($credit_items as $radio_item): ?>
                                         <tr>
-                                            <td><input type="radio" name="reference_button" value="credit <?=$radio_item['order_num'];?>"></td>
+                                            <td><input type="radio" name="reference_button" value="credit <?=$radio_item['order_number'];?>"></td>
                                             <td>Credit</td>
-                                            <td><?=$radio_item['order_num'];?></td>
+                                            <td><?=$radio_item['order_number'];?></td>
                                             <td>-<?=format_price($radio_item['qty'] * $radio_item['amount']);?></td>
                                         </tr>
                                         <?php endforeach; ?>

@@ -103,6 +103,9 @@
 		.capitalize {
 		    text-transform: capitalize;
 		}
+		#pad-wrapper {
+			padding:0px 50px;
+		}
 /*	    .complete {
 	    	color: rgb(129, 189, 130) !important;
 	    }*/
@@ -409,7 +412,7 @@
         $credit_total = 0;
         if ($item_id) {
 			if ($row['order_type']=='Sale') {
-				$query = "SELECT amount, SUM(amount) as total FROM ".$o['credit_items']." WHERE ".$o['inv_item_id']." = ".prep($item_id).";";
+				$query = "SELECT amount, SUM(amount) AS total FROM ".$o['credit_items']." WHERE item_id = ".prep($item_id)." AND item_id_label = '".$o['inv_item_id']."'; ";
 				$result = qdb($query) OR die(qe().'<BR>'.$query);
 				if (mysqli_num_rows($result)>0) {
 					$query_row = mysqli_fetch_assoc($result);

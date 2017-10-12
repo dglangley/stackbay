@@ -42,7 +42,7 @@
         }
 
 		if ($orders_table=='Sale') {
-			$query = "SELECT * FROM sales_credits i, sales_credit_items t WHERE i.id = t.cid AND i.order_num = $q_ordernum AND i.order_type = '".$orders_table."'; ";//AND i.companyid = '".res(25)."';";
+			$query = "SELECT * FROM credits i, credit_items t WHERE i.id = t.cid AND i.order_number = $q_ordernum AND i.order_type = '".$orders_table."'; ";//AND i.companyid = '".res(25)."';";
 			$result = qdb($query) OR die(qe().' '.$query);
 			while ($rows = mysqli_fetch_assoc($result)) {
 				$credit_items[] = $rows;
@@ -77,9 +77,9 @@
     if(!empty($credit_items)) {
         foreach($credit_items as $radio_item):
         $output .= '<tr>
-            <td><input type="radio" name="reference_button" value="credit '.$radio_item['order_num'].'"></td>
+            <td><input type="radio" name="reference_button" value="credit '.$radio_item['order_number'].'"></td>
             <td>Credit</td>
-            <td>'.$radio_item['order_num'].'</td>
+            <td>'.$radio_item['order_number'].'</td>
             <td>-'.format_price($radio_item['qty'] * $radio_item['amount']).'</td>
         </tr>';
         endforeach; 
