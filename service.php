@@ -1,4 +1,8 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getServiceClass.php';
+
 	$quote = false;
 
 	$type = isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : $type;
@@ -15,6 +19,12 @@
 
 	if(empty($task_number)) {
 		$task_number = 1;
+	}
+
+	$ORDER = getOrder($order_number, ucwords($type));
+	
+	if($ORDER['classid']) {
+		$service_class = getServiceClass($ORDER['classid']);
 	}
 
 	include 'task_view.php';
