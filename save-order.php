@@ -9,7 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 
-	$debug = 1;
+	$debug = 0;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
@@ -182,8 +182,8 @@
 			} else {
 				$partkey .= '.'.$part_strs[0];
 			}
-			if (! isset($email_rows[$partkey])) { $email_rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$ln[$id]); }
-			$email_rows[$partkey]['qty'] += $qty[$id];
+			if (! isset($email_rows[$partkey])) { $email_rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$ln[$key]); }
+			$email_rows[$partkey]['qty'] += $qty[$key];
 		}
 	}
 
@@ -202,6 +202,7 @@
 		if ($id AND (! $charge_amount[$id] OR trim($charge_amount[$id]=='0.00'))) {
 			$query = "DELETE FROM ".$T['charges']." WHERE id = '".res($id)."'; ";
 			if ($debug) { echo $query.'<BR>'; }
+			else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 			continue;
 		}
 
@@ -217,7 +218,7 @@
 	// build freight service and terms descriptors for email confirmation
 	$freight_service = '';
 	$freight_terms = '';
-	if ($email_confirmation AND ! $debug) {
+	if ($email_confirmation) {
 		$query = "SELECT method, name FROM freight_services fs, freight_carriers fc, companies c ";
 		$query .= "WHERE fs.id = '".res($freight_services_id)."' AND fs.carrierid = fc.id AND fc.companyid = c.id; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
@@ -250,7 +251,7 @@
 
 		// send order confirmation
 //		if ($email_confirmation AND ! $DEV_ENV) {
-		foreach ($rows as $partkey => $r) {
+		foreach ($email_rows as $partkey => $r) {
 			if ($r['ln']) { $msg .= '<span style="color:#aaa">'.$r['ln'].'.</span> '; }
 			if ($r['heci']) { $msg .= $r['heci'].' '; }
 			$msg .= $r['part'];
@@ -283,11 +284,15 @@
 		if ($public_notes) {
 			$msg .= '<br/>'.str_replace(chr(10),'<BR/>',$public_notes).'<br/>';
 		}
-		$send_success = send_gmail($msg,$sbj,$recps,$bcc);
-		if ($send_success) {
-//			die('Success');
+		if ($debug) {
+			echo $msg.'<BR><BR>';
 		} else {
-//			die($SEND_ERR);
+			$send_success = send_gmail($msg,$sbj,$recps,$bcc);
+			if ($send_success) {
+//				die('Success');
+			} else {
+//				die($SEND_ERR);
+			}
 		}
 	}
 

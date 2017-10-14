@@ -15,23 +15,7 @@
 			include_once $rootdir.'/inc/getRep.php';
 			include_once $rootdir.'/inc/form_handle.php';
 			
-			// function prep($var){
-			// 	if($var){
-			// 		$ressed = res($var);
-			// 		$output = "'$ressed'";
-			// 	}	
-			// 	else{
-			// 		$output = "NULL";
-			// 	}
-			// 	return $output;
-			// }
             $address = $_POST['address'];
-			// $name = prep($address["name"]);
-			// $street = prep($address["line_1"].' '.$address["line2"]);
-			// $city = prep($address["city"]);
-			// $state = prep($address["state"]);
-			// $zip = prep($address["zip"]);
-			// $id = $address["id"];
             
             $name = prep(grab('name'));
 			$line_1 = grab('line_1');

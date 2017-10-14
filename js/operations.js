@@ -213,7 +213,7 @@
 
 
 					//Initialize each of the select2 fields when the left side loads.
-					$("#companyid").initSelect2("/json/companies.php", "Select Company",{"scope":order_type});
+					$("#companyid").initSelect2("/json/companies.php", "Select Company",{"order_type":order_type});
 					$("#bill_to").initSelect2("/json/address-picker.php","Select Address", {"limit":company,"page":order_type,"id":"bill"});
 					$("#account_select").initSelect2("/json/freight-account-search.php","PREPAID",{"limit":receiver_companyid,"carrierid":$("#carrier").val()});
 					$("#ship_to").initSelect2("/json/address-picker.php","Select Address", {"limit":receiver_companyid,"page":order_type,"id":"ship"});

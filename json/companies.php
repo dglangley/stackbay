@@ -5,12 +5,14 @@
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-	$scope = '';
-	if (isset($_REQUEST['scope'])) { $scope = trim($_REQUEST['scope']); }
-	if ($scope=='S' OR $scope=='Sale' OR $scope=='Sales') { $scope = 'sales'; }
-	else if ($scope=='P' OR $scope=='Purchase' OR $scope=='Purchases') { $scope = 'purchases'; }
+	$order_type = '';
+	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
+	if ($order_type=='S' OR $order_type=='Sale' OR $order_type=='Sales') { $order_type = 'sales'; }
+	else if ($order_type=='P' OR $order_type=='Purchase' OR $order_type=='Purchases') { $order_type = 'purchases'; }
 	$add_custom = false;
 	if (isset($_REQUEST['add_custom'])) { $add_custom = $_REQUEST['add_custom']; }
+	$noreset = false;
+	if (isset($_REQUEST['noreset'])) { $noreset = trim($_REQUEST['noreset']); }
 
 	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 
@@ -18,7 +20,7 @@
 	$seconds = array();//similar match (wildcard ending)
 	$thirds = array();//all others
 	$companies = array();
-	if (! $q) { $companies[] = array('id'=>0,'text'=>'- Reset Companies -'); }
+	if (! $q AND ! $noreset) { $companies[] = array('id'=>0,'text'=>'- Reset Companies -'); }
 	$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-90));
 
 	// require string length to be at least 2 chars
@@ -89,7 +91,7 @@
 
 		krsort($firsts);
 	} else {
-		if (! $scope OR $scope=='search') {
+		if (! $order_type OR $order_type=='search') {
 			$query = "SELECT companyid id, name, COUNT(search_meta.id) n FROM search_meta, companies ";
 			$query .= "WHERE datetime >= '".$past_date."' AND search_meta.companyid = companies.id ";
 			$query .= "AND (source IS NULL OR (LENGTH(source)<>2 AND source NOT RLIKE '^[0-9]+$')) ";//this is to filter out ebay results and broker-sites that are amea-pulled
@@ -104,7 +106,7 @@
 			}
 		}
 
-		if ($scope=='orders' OR $scope=='sales') {
+		if ($order_type=='orders' OR $order_type=='sales') {
 			$query = "SELECT companyid id, name, COUNT(so_number) n FROM sales_orders, companies ";
 			$query .= "WHERE created >= '".$past_date."' AND sales_orders.companyid = companies.id ";
 			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
@@ -123,7 +125,7 @@
 			}
 		}
 
-		if ($scope=='orders' OR $scope=='purchases') {
+		if ($order_type=='orders' OR $order_type=='purchases') {
 			$query = "SELECT companyid id, name, COUNT(po_number) n FROM purchase_orders, companies ";
 			$query .= "WHERE created >= '".$past_date."' AND purchase_orders.companyid = companies.id ";
 			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
@@ -144,7 +146,7 @@
 		uasort($firsts,'cmp_n');
 	}
 
-//now sorted only within scope of a user search ($q)
+//now sorted only within order_type of a user search ($q)
 //	krsort($firsts);
 //this array is now sorted above, in priority rather than straight key-order
 //	krsort($seconds);

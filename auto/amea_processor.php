@@ -74,6 +74,7 @@
 		'ER'=>1,
 		'ER.'=>1,
 		'HESS'=>1,
+		'CFP'=>1,
 		'FRONTIER'=>1,
 		'ARD'=>1,
 		'TRANCEIVER'=>1,
