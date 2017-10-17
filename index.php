@@ -839,7 +839,7 @@ if (! $r['partid']) { return ($results); }
 	                            </div>
 	                        </div>
 
-	                        <div class="col-sm-7">
+	                        <div class="col-sm-7 remove-pad">
 	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
 									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
 	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>

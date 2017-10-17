@@ -679,6 +679,7 @@
 					
 					<!-- Output the sales-rep dropdown in the top right corner -->
 					<div class="forms_section">
+            			<h3 class="pull-left text-center" style="width:80%; margin:20px 0px 0px 0px">Order view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/order.php?order_number=<?=$_REQUEST['on'];?>&order_type=<?=$_REQUEST['ps'];?>">Preview it now.</a></h3>
 						<?php if(!$o['invoice'] && !$o['repair']){?>
 							<div style="float:right;padding-top:15px;">
 							<div class="ui-select" style="width:125px; 'margin-bottom:0;">

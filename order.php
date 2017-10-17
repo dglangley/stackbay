@@ -6,7 +6,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRefLabels.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoices.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAmount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -21,10 +23,11 @@
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
 	$SUBTOTAL = 0;
 	function addItemRow($id,$T) {
-		global $ref_labels,$LN,$WARRANTYID,$SUBTOTAL;
+		global $ref_labels,$LN,$WARRANTYID,$SUBTOTAL,$EDIT;
 
 		$dropdown1_attr = ' data-toggle="dropdown"';
 		$dropdown2_attr = ' data-toggle="dropdown"';
+		$H = array();
 		if ($id) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
@@ -119,18 +122,16 @@
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
-		$row = '
-	<tr class="'.$row_cls.'">
-		<td class="col-md-4 part-container">
+		if ($EDIT) {
+			$part_col = '
 			<div class="pull-left" style="width:9%">
 				<input type="text" name="ln['.$id.']" value="'.$r['line_number'].'" class="form-control input-sm line-number">
 			</div>
 			<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'">
 				'.$r['name'].'
 			</select>
-			'.$r['input-search'].'
-		</td>
-		<td class="col-md-1">
+			';
+			$ref_1_col = '
 			<div class="input-group dropdown">
 				<span class="input-group-btn dropdown-toggle"'.$dropdown1_attr.'>
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$r['ref_1_label_btn'].'</button>
@@ -142,8 +143,8 @@
 					'.$ref_labels.'
 				</ul>
 			</div>
-        </td>
-		<td class="col-md-1">
+			';
+			$ref_2_col = '
 			<div class="input-group dropdown">
 				<span class="input-group-btn dropdown-toggle"'.$dropdown2_attr.'">
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$r['ref_2_label_btn'].'</button>
@@ -155,30 +156,66 @@
 					'.$ref_labels.'
 				</ul>
 			</div>
-		</td>
-		<td class="col-md-1">
+			';
+			$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
 				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r['delivery_date'],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
 			</div>
-		</td>
-		<td class="col-md-1">
+			';
+			$condition_col = '
 			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
 				<option value="'.$r['conditionid'].'" selected>'.getCondition($r['conditionid']).'</option>
 			</select>
-		</td>
-		<td class="col-md-1">
+			';
+			$warranty_col = '
 			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
 				<option value="'.$r['warranty'].'" selected>'.getWarranty($r['warranty'],'warranty').'</option>
 			</select>
-		</td>
-		<td class="col-md-1 text-center">
-			<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>
+			';
+			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
+			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
+		} else {
+			$part_col = '<div class="pull-left" style="width:9%"><span class="info">'.$r['line_number'].'.</span></div> '.$H[$r['partid']]['name'];
+			$ref_1_col = '';
+			if ($r['ref_1']) { $ref_1_col = $r['ref_1'].' '.$r['ref_1_label']; }
+			$ref_2_col = '';
+			if ($r['ref_2']) { $ref_2_col = $r['ref_2'].' '.$r['ref_2_label']; }
+			$delivery_col = format_date($r['delivery_date'],'m/d/y');
+			$condition_col = getCondition($r['conditionid']);
+			$warranty_col = getWarranty($r['warranty'],'warranty');
+			$qty_col = $r['qty'];
+			$amount_col = format_price($amount);
+		}
+
+		$row = '
+	<tr class="'.$row_cls.'">
+		<td class="col-md-4 part-container">
+			'.$part_col.'
+			'.$r['input-search'].'
 		</td>
 		<td class="col-md-1">
-			<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">
+			'.$ref_1_col.'
+        </td>
+		<td class="col-md-1">
+			'.$ref_2_col.'
+		</td>
+		<td class="col-md-1">
+			'.$delivery_col.'
+		</td>
+		<td class="col-md-1">
+			'.$condition_col.'
+		</td>
+		<td class="col-md-1">
+			'.$warranty_col.'
+		</td>
+		<td class="col-md-1 text-center">
+			'.$qty_col.'
+		</td>
+		<td class="col-md-1">
+			'.$amount_col.'
 		</td>
 		<td class="col-md-1 text-right">
 			<input type="hidden" name="item_id['.$id.']" value="'.$id.'">
@@ -248,7 +285,14 @@
 		$order_type = 'Invoice';
 	} else {
 		if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
+		else if (isset($_REQUEST['on']) AND trim($_REQUEST['on'])) { $order_number = trim($_REQUEST['on']); }//legacy support
 		if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
+		else if (isset($_REQUEST['ps']) AND trim($_REQUEST['ps'])) {
+			$order_type = trim($_REQUEST['ps']);
+			if ($order_type=='s') { $order_type = 'Sale'; }
+			else if ($order_type=='p') { $order_type = 'Purchase'; }
+			else if ($order_type=='r') { $order_type = 'Repair'; }
+		}
 	}
 
 	$title_helper = '';
@@ -306,6 +350,9 @@
 			padding:3px 3px;
 			border-radius:3px;
 		}
+		h2 a.small {
+			font-size:70%;
+		}
 	</style>
 </head>
 <body data-scope="<?php echo $order_type; ?>">
@@ -321,32 +368,65 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
+<?php if ($EDIT) { ?>
 			<select name="status" size="1" class="form-control input-sm select2">
 				<option value="Active"<?=($ORDER['status']=='Active' ? ' selected' : '');?>>Active</option>
 				<option value="Void"<?=($ORDER['status']=='Void' ? ' selected' : '');?>>Void</option>
-<?php
-	if ($ORDER['status'] AND $ORDER['status']<>'Active' AND $ORDER['status']<>'Void') { echo '<option value="'.$ORDER['status'].'" selected>'.$ORDER['status'].'</option>'; }
-?>
+	<?php
+		if ($ORDER['status'] AND $ORDER['status']<>'Active' AND $ORDER['status']<>'Void') { echo '<option value="'.$ORDER['status'].'" selected>'.$ORDER['status'].'</option>'; }
+	?>
 			</select>
+<?php } else { ?>
+			<a href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default"><i class="fa fa-pencil"></i> Edit</a>
+<?php } ?>
 		</div>
 		<div class="col-sm-1">
+<?php if ($EDIT) { ?>
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
-<?php
-	$users = getUsers(array(4,5));
-	foreach ($users as $uid => $uname) {
-		$s = '';
-		if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
-		echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
-	}
-?>
+	<?php
+		$users = getUsers(array(4,5));
+		foreach ($users as $uid => $uname) {
+			$s = '';
+			if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
+			echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
+		}
+	?>
 			</select>
+<?php } else { ?>
+			<h4><?=getRep($ORDER['sales_rep_id']);?></h4>
+<?php } ?>
 		</div>
 		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<h2 class="minimal"><?php echo $TITLE; ?>
+			<span class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu text-left">
+<?php
+	$invoices = getInvoices($order_number,$order_type);
+	if (count($invoices)>0) {
+		echo '
+					<li class="dropdown-header">
+						<i class="fa fa-file-pdf-o"></i> Invoices
+					</li>
+		';
+	}
+	foreach ($invoices as $invoice) {
+		echo '
+					<li>
+						<a href="/docs/INV'.$invoice['invoice_no'].'.pdf" target="_new">
+							'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/y').')
+						</a>
+					</li>
+		';
+	}
+?>
+				</ul>
+			</span>
+			</h2>
 			<span class="info"><?php echo $title_helper; ?></span>
 		</div>
 		<div class="col-sm-2">
@@ -354,7 +434,11 @@
 		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2 text-right">
+<?php if ($EDIT) { ?>
+			<a href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
+			&nbsp; &nbsp;
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
+<?php } ?>
 		</div>
 	</div>
 
@@ -362,9 +446,6 @@
 
 <?php
 	if (! isset($EDIT)) { $EDIT = false; }
-if (! $invoice) {
-$EDIT = true;
-}
 
 	include_once $_SERVER["ROOT_DIR"].'/sidebar.php';
 ?>
@@ -379,12 +460,20 @@ $EDIT = true;
 		<th class="col-md-1">Ref 2</th>
 		<th class="col-md-1">Delivery</th>
 		<th class="col-md-1">
+<?php if ($EDIT) { ?>
 			<select name="conditionid_master" size="1" class="form-control input-sm condition-selector" data-placeholder="- Condition -">
 			</select>
+<?php } else { ?>
+			Condition
+<?php } ?>
 		</th>
 		<th class="col-md-1">
+<?php if ($EDIT) { ?>
 			<select name="warrantyid_master" size="1" class="form-control input-sm warranty-selector" data-placeholder="- Warranty -">
 			</select>
+<?php } else { ?>
+			Warranty
+<?php } ?>
 		</th>
 		<th class="col-md-1">Qty</th>
 		<th class="col-md-1">Amount</th>
@@ -398,7 +487,7 @@ $EDIT = true;
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	echo addItemRow(false,$T);
+	if ($EDIT) { echo addItemRow(false,$T); }
 ?>
 	</tbody>
 </table>
@@ -412,7 +501,7 @@ $EDIT = true;
 			$charges .= addChargeRow($r['memo'],$r['qty'],$r['price'],$r['id']);
 		}
 	}
-	$charges .= addChargeRow();
+	if ($EDIT) { $charges .= addChargeRow(); }
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
 	$TOTAL = ($SUBTOTAL+$existing_freight);
