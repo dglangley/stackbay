@@ -45,7 +45,9 @@
 					return false;
 				}
 			} else {
-                $upload = $S3->upload($BUCKET, $filename, fopen($file['tmp_name'], 'rb'), 'public-read');
+				if (! $GLOBALS['debug']) {
+	                $upload = $S3->upload($BUCKET, $filename, fopen($file['tmp_name'], 'rb'), 'public-read');
+				}
 				$file_upload = "https://s3-us-west-2.amazonaws.com/".$BUCKET."/".$filename;
 			}
        	} catch(Exception $e) {

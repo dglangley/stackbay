@@ -978,11 +978,11 @@
 						$("#carrierid").val(json.carrierid).trigger('change');
 					}
 					$("#freight_account_id").populateSelected(json.freight_account_id,json.freight_account);
-					if (json.warrantyid>0) {
-						$(".search-row").find(".warranty-selector").populateSelected(json.warrantyid,json.warranty);
-					}
 					if (json.conditionid>0) {
 						$(".search-row").find(".condition-selector").populateSelected(json.conditionid,json.condition);
+					}
+					if (json.warrantyid>0) {
+						$(".search-row").find(".warranty-selector").populateSelected(json.warrantyid,json.warranty);
 					}
 
 					partSearch('','',companyid,scope);
@@ -1644,14 +1644,20 @@
 	jQuery.fn.populateSelected = function(id, text) {
 		if (! id) { var id = 0; }
 
-/*
-		if ($(this).find("option[value="+id+"]").length>0) {
-			$(this).find("option[value="+id+"]").text(text);
-return;
+		// is this item already loaded in the select2?
+		if ($(this).find("option[value='"+id+"']").length>0) {
+			// select the option with the id
+			$(this).val(id);
+			// update the text of the identified <option> in case it's changed
+			var opt = $(this).find("option[value='"+id+"']");
+			opt.text(text);
+
+			// trigger change for select2
 			$(this).trigger('change');
+
+			// don't continue beyond this point
 			return;
 		}
-*/
 
 		/* build option that will populate the menu */
 		var option = $('<option></option>').

@@ -9,7 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 
-	$debug = 1;
+	$debug = 0;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/

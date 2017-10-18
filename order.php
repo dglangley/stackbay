@@ -315,14 +315,9 @@
 		else if (isset($_REQUEST['ps']) AND trim($_REQUEST['ps'])) {
 			$order_type = strtolower(trim($_REQUEST['ps']));
 		}
-		if ($order_type=='s') { $order_type = 'Sale'; }
-		else if ($order_type=='p') { $order_type = 'Purchase'; }
-		else if ($order_type=='r') { $order_type = 'Repair'; }
-		else if ($order_type=='ro') { $order_type = 'Repair'; }
-		else if ($order_type=='SO') { $order_type = 'Sale'; }
-		else if ($order_type=='PO') { $order_type = 'Purchase'; }
-		else if ($order_type=='R') { $order_type = 'Repair'; }
-		else if ($order_type=='RO') { $order_type = 'Repair'; }
+		if ($order_type=='s' OR $order_type=='sale' OR $order_type=='SO') { $order_type = 'Sale'; }
+		else if ($order_type=='p' OR $order_type=='purchase' OR $order_type=='PO') { $order_type = 'Purchase'; }
+		else if ($order_type=='r' OR $order_type=='repair' OR $order_type=='RO' OR $order_type=='ro' OR $order_type=='R') { $order_type = 'Repair'; }
 
 		// user is creating a new order
 		if ($order_type AND ! $EDIT AND ! $order_number) { $EDIT = true; }
@@ -904,6 +899,14 @@
 
 			var original_row = $(this);
 
+			var orig_cond = original_row.find(".condition-selector");
+			var cond_id = orig_cond.val();
+			var cond_text = orig_cond.text();
+
+			var orig_warr = original_row.find(".warranty-selector");
+			var warr_id = orig_warr.val();
+			var warr_text = orig_warr.text();
+
 			original_row.find("select.form-control").select2("destroy");
 
 			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
@@ -920,15 +923,13 @@
 			part.select2();
 			part.show();
 
-			var orig_cond = original_row.find(".condition-selector");
 			var cloned_cond = cloned_row.find(".condition-selector");
-			cloned_cond.selectize(orig_cond.val(),orig_cond.text());
-			cloned_cond.populateSelected(orig_cond.val(),orig_cond.text());
+			cloned_cond.selectize();
+			cloned_cond.populateSelected(cond_id,cond_text);
 
-			var orig_warr = original_row.find(".warranty-selector");
 			var cloned_warr = cloned_row.find(".warranty-selector");
-			cloned_warr.populateSelected(orig_warr.val(),orig_warr.text());
-			cloned_warr.selectize();//orig_warr.val(),orig_warr.text());
+			cloned_warr.selectize();
+			cloned_warr.populateSelected(warr_id,warr_text);
 
 			// do not want this new row confused with the original search row
 			cloned_row.removeClass('search-row').addClass('item-row');
@@ -940,7 +941,6 @@
 			cloned_row.find(".item-qty").prop('readonly',false);
 
 			cloned_row.insertBefore(original_row);
-alert(orig_warr.val());
 
 			updateTotals();
 //			var row_total = cloned_row.calcRowTotal();
