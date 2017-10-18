@@ -323,6 +323,9 @@
 		else if ($order_type=='PO') { $order_type = 'Purchase'; }
 		else if ($order_type=='R') { $order_type = 'Repair'; }
 		else if ($order_type=='RO') { $order_type = 'Repair'; }
+
+		// user is creating a new order
+		if ($order_type AND ! $EDIT AND ! $order_number) { $EDIT = true; }
 	}
 
 	$title_helper = '';

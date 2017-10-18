@@ -144,7 +144,7 @@
 									  '<div class="form-group">
 										<div class="input-group pull-left">
 											<span class="input-group-btn">
-												<a href="/order_form.php?ps=Sale" class="btn btn-default btn-xs bg-sales" title="Start New SO"><i class="fa fa-plus"></i></a>
+												<a href="/order.php?order_type=Sale" class="btn btn-default btn-xs bg-sales" title="Start New SO"><i class="fa fa-plus"></i></a>
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Sales..." data-type="SO">
 											<span class="input-group-btn">
