@@ -35,6 +35,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getCharges.php';
+	include_once $rootdir.'/inc/getSerial.php';
 
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
@@ -220,19 +221,6 @@
 		}
 
 		return $RMA;
-	}
-
-	function getSerial($invid) {
-		$serial;
-
-		$query = "SELECT serial_no FROM inventory WHERE id = ".prep($invid).";";
-		$result = qdb($query) or die(qe());
-		if (mysqli_num_rows($result)){
-			$row = mysqli_fetch_assoc($result);
-			$serial = $row['serial_no'];
-		}
-
-		return $serial;
 	}
 
 	$ORDER = array('fcreated'=>'','companyid'=>0);

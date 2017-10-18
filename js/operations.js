@@ -1084,11 +1084,13 @@
 					}
 				});
 			});
+/* moved to js/ventel.js 10-18-17 dl
 			$(document).on("shown.bs.modal","#modal-contact",function(e) {
 				var first_field = $(this).find("input[type=text]")[0];
 				first_field.select();
 				first_field.focus();
 			});
+*/
 
 			/* save contact info and close modal */
 			$(document).on("click","#save-contact",function() {

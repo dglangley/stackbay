@@ -13,7 +13,7 @@
 				  Name
                 </label>
                 <div class="col-md-9">
-                  <input class="form-control input-sm required" name="name" id="contact_name" placeholder="First and Last Names" type="text">
+                  <input class="form-control input-sm contact-name required" name="name" id="contact_name" placeholder="First and Last Names" type="text">
                 </div>
                 <div class="col-md-1">
                 </div>
@@ -25,7 +25,7 @@
 				  Title
                 </label>
                 <div class="col-md-9">
-                  <input class="form-control input-sm required" name="title" id="contact_title" placeholder="Title (optional)" type="text">
+                  <input class="form-control input-sm contact-title" name="title" id="contact_title" placeholder="Title (optional)" type="text">
                 </div>
                 <div class="col-md-1">
                 </div>
@@ -37,7 +37,7 @@
 				  Email
                 </label>
                 <div class="col-md-9">
-                  <input class="form-control input-sm" name="email" id="contact_email" placeholder="Email (optional)" type="email">
+                  <input class="form-control input-sm contact-email" name="email" id="contact_email" placeholder="Email (optional)" type="email">
                 </div>
                 <div class="col-md-1">
                 </div>
@@ -49,7 +49,7 @@
 				  Notes
                 </label>
                 <div class="col-md-9">
-                  <input class="form-control input-sm required" name="notes" id="contact_notes" placeholder="Notes (optional)" type="text">
+                  <input class="form-control input-sm contact-notes" name="notes" id="contact_notes" placeholder="Notes (optional)" type="text">
                 </div>
                 <div class="col-md-1">
                 </div>
@@ -57,6 +57,7 @@
             </div>
       </div>
       <div class="modal-footer text-center">
+			<input type="hidden" name="id" class="contact-id" value="">
      		<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
 			<button type="button" class="btn btn-primary btn-sm" id="save-contact">Save</button>
   	  </div>

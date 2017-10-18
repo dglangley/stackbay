@@ -9,7 +9,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoices.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getReturns.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getHistory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAmount.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSerial.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getDisposition.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
@@ -75,6 +81,7 @@
 				$r['ref_2_hidden'] = '';
 			}
 			if ($T['warranty']) {
+				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = 0; }
 				$WARRANTYID[$r[$T['warranty']]]++;
 			}
 			// increment so that new rows don't start at 1
@@ -178,11 +185,28 @@
 			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
-			$part_col = '<div class="pull-left" style="width:9%"><span class="info">'.$r['line_number'].'.</span></div> '.$H[$r['partid']]['name'];
+			$part_col = '';
+			if ($r['line_number']) { $part_col = '<div class="pull-left" style="width:9%"><span class="info">'.$r['line_number'].'.</span></div> '.$H[$r['partid']]['name']; }
 			$ref_1_col = '';
-			if ($r['ref_1']) { $ref_1_col = $r['ref_1'].' '.$r['ref_1_label']; }
+			if ($r['ref_1']) {
+				if (strstr($r['ref_1_label'],'item_id')) {
+					$T2 = order_type($r['ref_1_label']);
+					$ref_1_order = getOrderNumber($r['ref_1'],$T2['items'],$T2['order']);
+					$ref_1_col = $T2['abbrev'].' '.$ref_1_order;
+				} else {
+					$ref_1_col = $r['ref_1'].' '.$r['ref_1_label'];
+				}
+			}
 			$ref_2_col = '';
-			if ($r['ref_2']) { $ref_2_col = $r['ref_2'].' '.$r['ref_2_label']; }
+			if ($r['ref_2']) {
+				if (strstr($r['ref_2_label'],'item_id')) {
+					$T2 = order_type($r['ref_2_label']);
+					$ref_2_order = getOrderNumber($r['ref_2'],$T2['items'],$T2['order']);
+					$ref_2_col = $T2['abbrev'].' '.$ref_2_order;
+				} else {
+					$ref_2_col = $r['ref_2'].' '.$r['ref_2_label'];
+				}
+			}
 			$delivery_col = format_date($r['delivery_date'],'m/d/y');
 			$condition_col = getCondition($r['conditionid']);
 			$warranty_col = getWarranty($r['warranty'],'warranty');
@@ -276,6 +300,7 @@
 
 	$order_number = 0;
 	$order_type = '';
+	if (! isset($EDIT)) { $EDIT = false; }
 
 	$invoice = '';
 	if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
@@ -288,14 +313,20 @@
 		else if (isset($_REQUEST['on']) AND trim($_REQUEST['on'])) { $order_number = trim($_REQUEST['on']); }//legacy support
 		if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 		else if (isset($_REQUEST['ps']) AND trim($_REQUEST['ps'])) {
-			$order_type = trim($_REQUEST['ps']);
-			if ($order_type=='s') { $order_type = 'Sale'; }
-			else if ($order_type=='p') { $order_type = 'Purchase'; }
-			else if ($order_type=='r') { $order_type = 'Repair'; }
+			$order_type = strtolower(trim($_REQUEST['ps']));
 		}
+		if ($order_type=='s') { $order_type = 'Sale'; }
+		else if ($order_type=='p') { $order_type = 'Purchase'; }
+		else if ($order_type=='r') { $order_type = 'Repair'; }
+		else if ($order_type=='ro') { $order_type = 'Repair'; }
+		else if ($order_type=='SO') { $order_type = 'Sale'; }
+		else if ($order_type=='PO') { $order_type = 'Purchase'; }
+		else if ($order_type=='R') { $order_type = 'Repair'; }
+		else if ($order_type=='RO') { $order_type = 'Repair'; }
 	}
 
 	$title_helper = '';
+	$returns = array();
 	if ($order_type=='Invoice') {
 		$invoice = $order_number;
 		$TITLE = 'Invoice '.$order_number;
@@ -317,6 +348,69 @@
 		if (! $ORDER['status']) { $ORDER['status'] = 'Active'; }
 
 		$title_helper = format_date($ORDER['datetime'],'D n/j/y g:ia');
+
+
+		$returns = getReturns($order_number,$order_type);
+
+		/***** Handle RMA Support options *****/
+		$support = '';
+		if (getTerms($ORDER['termsid'],'id','type')) {//billable type as opposed to null type
+			$support = '
+				<div class ="btn-group">
+					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+						<i class="fa fa-question-circle-o"></i> Support
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu text-left">
+			';
+			$dupes = array();//avoid duplicates in the following loop because this shows each individual item for every RMA
+			foreach ($returns as $r) {
+				if (isset($dupes[$r['rma_number']])) { continue; }
+				$dupes[$r['rma_number']] = true;
+
+				$support .= '
+						<li>
+							<a href="/rma.php?rma='.$r['rma_number'].'">RMA '.$r['rma_number'].' ('.format_date($r['created'],'n/j/y').')</a>
+						</li>
+				';
+			}
+			$support .= '
+						<li>
+							<a href="/rma.php?on='.$order_number.($order_type=='Repair' ? '&repair=true' : ($order_type=='Builds' ? '&repair=true' : '')).'">
+								<i class ="fa fa-plus"></i> Create RMA
+							</a>
+						</li>
+					</ul>
+				</div>
+			';
+		}
+	}
+
+	/***** Invoices *****/
+	$invoices_dropdown = '';
+	$invoices = getInvoices($order_number,$order_type);
+	if (count($invoices)>0) {
+		$invoices_dropdown = '
+			<span class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu text-left">
+					<li class="dropdown-header">
+						<i class="fa fa-file-pdf-o"></i> Invoices
+					</li>
+		';
+		foreach ($invoices as $invoice) {
+			$invoices_dropdown .= '
+					<li>
+						<a href="/docs/INV'.$invoice['invoice_no'].'.pdf" target="_new">
+							'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/y').')
+						</a>
+					</li>
+			';
+		}
+		$invoices_dropdown .= '
+				</ul>
+			</span>
+		';
 	}
 ?>
 <!DOCTYPE html>
@@ -353,6 +447,13 @@
 		h2 a.small {
 			font-size:70%;
 		}
+		#footer {
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			padding-left:321px;
+			min-height:250px;
+		}
 	</style>
 </head>
 <body data-scope="<?php echo $order_type; ?>">
@@ -369,7 +470,7 @@
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
 <?php if ($EDIT) { ?>
-			<select name="status" size="1" class="form-control input-sm select2">
+			<select name="status" id="order_status" size="1" class="form-control input-sm select2">
 				<option value="Active"<?=($ORDER['status']=='Active' ? ' selected' : '');?>>Active</option>
 				<option value="Void"<?=($ORDER['status']=='Void' ? ' selected' : '');?>>Void</option>
 	<?php
@@ -401,37 +502,13 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?>
-			<span class="dropdown">
-				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
-				<ul class="dropdown-menu text-left">
-<?php
-	$invoices = getInvoices($order_number,$order_type);
-	if (count($invoices)>0) {
-		echo '
-					<li class="dropdown-header">
-						<i class="fa fa-file-pdf-o"></i> Invoices
-					</li>
-		';
-	}
-	foreach ($invoices as $invoice) {
-		echo '
-					<li>
-						<a href="/docs/INV'.$invoice['invoice_no'].'.pdf" target="_new">
-							'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/y').')
-						</a>
-					</li>
-		';
-	}
-?>
-				</ul>
-			</span>
-			</h2>
+			<h2 class="minimal"><?php echo $TITLE; ?><?=$invoices_dropdown;?></h2>
 			<span class="info"><?php echo $title_helper; ?></span>
 		</div>
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-1">
+			<?php echo $support; ?>
 		</div>
 		<div class="col-sm-2 text-right">
 <?php if ($EDIT) { ?>
@@ -543,15 +620,119 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/address.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/contact.php'; ?>
 
+
+<div id="footer">
+
+<?php
+	if (count($returns)>0) {
+?>
+
+<h4 class="text-center">Returns and Credits</h4>
+<table class="table table-responsive table-condensed table-striped">
+	<thead>
+	<tr class="bg-warning">
+		<th>Date</th>
+		<th>RMA #</th>
+		<th>Description</th>
+		<th>Disposition</th>
+		<th>Serial</th>
+		<th>Status</th>
+		<th>Action</th>
+	</tr>
+	</thead>
+
+	<tbody>
+<?php
+	foreach ($returns as $r) {
+		$return_status = 'Pending';//default
+
+		$history = '';
+		if ($r['receive_date']) {
+			$return_status = '<strong>'.format_date($r['receive_date'],'D n/d/y').'</strong> Received back<BR>';
+			$return_status .= getHistory($r['inventoryid'],$order_number,$order_type,'item_id',$r['receive_date'],'returns_item_id',$r['id']);
+		}
+
+		$action = '';
+		if ($r['dispositionid']==1) {
+			// look for credits issued against Credit disposition, and if exists then link to it
+			$query2 = "SELECT * FROM credits c, credit_items i ";
+			$query2 .= "WHERE c.order_number = '".$order_number."' AND c.order_type = '".$order_type."' AND rma_number = '".$r['rma_number']."' ";
+			$query2 .= "AND c.id = i.cid AND return_item_id = '".$r['id']."'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$action = '<a href="/docs/CM'.$r2['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+			} else if ($r['receive_date']) {//if already received back, eligible for credit
+				$action = '<a href="/credit.php?rma_number='.$r['rma_number'].'&order_number='.$order_number.'&order_type='.$order_type.'" '.
+					'class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="bottom" title="Issue Credit Memo">'.
+					'<i class="fa fa-inbox"></i></a>';
+			}
+		}
+
+		echo '
+	<tr class="valign-top">
+		<td>'.format_date($r['created']).'</td>
+		<td>'.$r['rma_number'].' <a href="/rma.php?rma='.$r['rma_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a></td>
+		<td><small>'.display_part(current(hecidb($r['partid'], 'id'))).'</small></td>
+		<td>'.getDisposition($r['dispositionid']).'</td>
+		<td>
+			'.getSerial($r['inventoryid']).'
+			&nbsp;<a href="javascript:void(0);" data-id="'.$r['inventoryid'].'" class="btn-history" data-toggle="tooltip" data-placement="bottom" title="View Serial History"><i class="fa fa-history"></i></a><br/>
+			<small class="info">'.$r['reason'].'</small>
+		</td>
+		<td>'.$return_status.'</td>
+		<td>'.$action.'</td>
+	</tr>
+		';
+	}
+?>
+	</tbody>
+</table>
+
+<?php
+	}/*end count($returns)>0*/
+?>
+
+</div><!-- footer -->
+
+
+<!-- VOID DISPLAY -->
+<div class="modal modal-alert fade" id="modal-void" tabindex="-1" role="dialog" aria-labelledby="modalVoidTitle">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalVoidTitle"><i class="fa fa-stop-circle fa-lg text-danger"></i> Voided!</h3>
+	  </div>
+      <div class="modal-body" id="modalVoidBody">
+		This order is VOIDED and cannot be edited without Un-Voiding.
+      </div>
+      <div class="modal-footer text-center">
+		<a class="btn btn-default btn-sm" href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>">Close</a>
+		<a class="btn btn-danger btn-sm" id="unvoid">Un-Void</a>
+	  </div>
+	</div>
+  </div>
+</div>
+<!-- END VOID DISPLAY -->
+
+
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
+<?php if ($ORDER['status']=='Void' AND $EDIT) { ?>
+	$('#modal-void').modal('show');
+<?php } ?>
+		$("#unvoid").on('click', function() {
+			$("#order_status").val("Active");
+			$("#order_status").closest("form").submit();
+		});
+
 		$(".item-qty, .item-amount").on('change keyup',function() {
 			updateTotals();
 		});
 		$(".btn-submit").on('click', function() {
 			var errs = false;
-			$(".required").each(function() {
+			$(this).closest("form").find(".required").each(function() {
 				if (! $(this).val()) {
 					var f = $(this);
 					if ($(this).attr('type')=='file') {
@@ -586,6 +767,19 @@
 
 			$(this).closest("form").submit();
 		});
+		$(".contact-editor").on('click', function() {
+			var contactid = $("#contactid").val();
+
+			$("#modal-contact").populateContact(contactid);
+		});
+		$(".contact-selector").on('change', function() {
+			var contactid = $("#contactid").val();
+			var str = $(this).find("option:selected").text();
+			if (str.indexOf('Add')==-1) { return; }
+			str = str.replace('Add ','').replace('...','');
+
+			$("#modal-contact").populateContact(contactid,str);
+		});
 		$(".address-editor").on('click', function() {
 			var idname = $(this).data('name');
 			if (! idname) { return; }
@@ -613,7 +807,7 @@
 			var state = address.find(".address-state").val().trim();
 			var postal_code = address.find(".address-postal_code").val().trim();
 
-			console.log(window.location.origin+"/json/save-address.php?addressid="+addressid+"&name="+escape(name)+"&street="+escape(state)+"&addr2="+escape(addr2)+"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code));
+			console.log(window.location.origin+"/json/save-address.php?addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code));
 			$.ajax({
 				url: 'json/save-address.php',
 				type: 'get',
@@ -634,6 +828,41 @@
 					$("#"+idname).populateSelected(json.id,json.text);
 					address.modal('hide');
 					toggleLoader("Address successfully saved");
+				},
+				error: function(xhr, desc, err) {
+//					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
+		});
+		$("#save-contact").on('click', function() {
+			var contact = $(".modal");
+//			var contactid = contact.find(".contact-id").val();
+			var contactid = $("#contactid").val();
+			var name = contact.find(".contact-name").val().trim();
+			var title = contact.find(".contact-title").val().trim();
+			var email = contact.find(".contact-email").val().trim();
+			var notes = contact.find(".contact-notes").val().trim();
+
+			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
+			$.ajax({
+				url: 'json/save-contact.php',
+				type: 'get',
+				data: {
+					'contactid': contactid,
+					'name': name,
+					'title': title,
+					'email': email,
+					'notes': notes,
+					'companyid': companyid,
+				},
+				dataType: 'json',
+				success: function(json, status) {
+					if (json.message && json.message!='Success') { alert(json.message); return; }
+
+					$("#contactid").populateSelected(json.contactid,json.name);
+					contact.modal('hide');
+					toggleLoader("Contact successfully saved");
 				},
 				error: function(xhr, desc, err) {
 //					console.log(xhr);
@@ -717,8 +946,58 @@
 			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
 			return (ext_amount);
 		};
+		jQuery.fn.populateContact = function(contactid,str) {
+			var contact = $(this);
+			if (! contactid) { var contactid = 0; }
+			if (! str) { var str = ''; }
+
+			/* defaults */
+			contact.find(".contact-name").val(str);
+			contact.find(".contact-title").val('');
+			contact.find(".contact-email").val('');
+			contact.find(".contact-notes").val('');
+//			contact.find(".contact-id").val(contactid);
+
+			if (contactid>0) {
+				console.log(window.location.origin+"/json/contact.php?contactid="+contactid);
+				$.ajax({
+					url: 'json/contact.php',
+					type: 'get',
+					data: {'contactid': contactid},
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message && json.message!='Success') { alert(json.message); return; }
+
+						contact.find(".contact-name").val(json.name);
+						contact.find(".contact-title").val(json.title);
+						contact.find(".contact-email").val(json.email);
+						contact.find(".contact-notes").val(json.notes);
+
+						contact.modal('show');
+					},
+					error: function(xhr, desc, err) {
+//						console.log(xhr);
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+			} else {
+				contact.modal('show');
+			}
+		};
 		jQuery.fn.populateAddress = function(addressid,idname,str) {
 			var address = $(this);
+			if (! addressid) { var addressid = 0; }
+			if (! str) { var str = ''; }
+
+			/* defaults */
+			address.find(".modal-title").text("Add New Address");
+			address.find(".address-name").val('');
+			address.find(".address-street").val(str);
+			address.find(".address-addr2").val('');
+			address.find(".address-city").val('');
+			address.find(".address-state").val('');
+			address.find(".address-postal_code").val('');
+			address.find(".address-modal").data('oldid',addressid);
 
 			if (addressid>0) {
 				console.log(window.location.origin+"/json/address.php?addressid="+addressid);
@@ -737,8 +1016,6 @@
 						address.find(".address-city").val(json.city);
 						address.find(".address-state").val(json.state);
 						address.find(".address-postal_code").val(json.postal_code);
-						address.find(".address-modal").data('oldid',addressid);
-						address.find(".address-modal").data('idname',idname);
 
 						address.modal('show');
 					},
@@ -748,18 +1025,6 @@
 					}
 				}); // end ajax call
 			} else {
-				if (! str) { var str = ''; }
-
-				address.find(".modal-title").text("Add New Address");
-				address.find(".address-name").val('');
-				address.find(".address-street").val(str);
-				address.find(".address-addr2").val('');
-				address.find(".address-city").val('');
-				address.find(".address-state").val('');
-				address.find(".address-postal_code").val('');
-				address.find(".address-modal").data('oldid',0);
-				address.find(".address-modal").data('idname',idname);
-
 				address.modal('show');
 			}
 		};

@@ -54,7 +54,7 @@
 
 	<div class="sidebar-section">
 <?php
-	if ($ORDER['order_number'] AND $ORDER['order_type']) {
+	if (isset($ORDER['order_number']) AND $ORDER['order_number'] AND isset($ORDER['order_type']) AND $ORDER['order_type']) {
 		$T = order_type($ORDER['order_type']);
 		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
 	}
@@ -78,10 +78,10 @@
 	</div>
 
 	<div class="sidebar-section">
-		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="contact-editor"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 <?php if ($EDIT) { ?>
-		<select name="contactid" class="form-control input-xs contact-selector required">
+		<select name="contactid" id="contactid" class="form-control input-xs contact-selector required">
 			<option value="">- Select a Contact -</option>
 			<?php if ($ORDER['contactid']) { echo '<option value="'.$ORDER['contactid'].'" selected>'.getContact($ORDER['contactid']).'</option>'; } ?>
 		</select>
@@ -205,7 +205,7 @@
 
 <?php } /* ship_to_id */ ?>
 
-<?php if($ORDER['order_type'] == 'Service') { ?>
+<?php if(isset($ORDER['order_type']) AND $ORDER['order_type'] == 'Service') { ?>
 	<div class="sidebar-section">
 		<h4 class="section-header">Scope</h4>
 		<?php if ($EDIT) { ?>

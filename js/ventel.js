@@ -726,12 +726,12 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+/*
 		$(".contact-selector").select2({
 			placeholder: '- Select a Contact -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/contacts.php",
 	            dataType: 'json',
-				/*delay: 250,*/
 	            data: function (params) {
 	                return {
 	                    q: params.term,//search term
@@ -754,6 +754,7 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+*/
 		$(".tech-selector").select2({
 			placeholder: '- Select a Tech -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -845,6 +846,7 @@
 		$(".address-selector").selectize('/json/addresses.php','- Select an Address -');
 		$(".warranty-selector").selectize('/json/warranties.php');
 		$(".condition-selector").selectize('/json/conditions.php');
+		$(".contact-selector").selectize('/json/contacts.php','- Select a Contact -');
 
 		$('.parts-selector').select2({
 			width: '100%',
@@ -1126,6 +1128,11 @@
 			}
 		});
 
+		$(document).on("shown.bs.modal",".modal",function(e) {
+			var first_field = $(this).find("input[type=text]")[0];
+			//first_field.select();
+			first_field.focus();
+		});
 //		$('.modal').on('shown.bs.modal', function () {
 //			$('input[type=text]:first').focus();
 //		});
