@@ -456,6 +456,7 @@
 			width: 100%;
 			padding-left:321px;
 			min-height:250px;
+			z-index:2;
 		}
 	</style>
 </head>
@@ -722,8 +723,13 @@
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
+		// for some reason, this empty function causes the following two lines to be invoked, which resets the loader and submit elements
+		window.onunload = function(){};
+		$('#loader').hide();
+		$(this).prop('disabled',false);
+
 <?php if ($ORDER['status']=='Void' AND $EDIT) { ?>
-	$('#modal-void').modal('show');
+		$('#modal-void').modal('show');
 <?php } ?>
 		$("#unvoid").on('click', function() {
 			$("#order_status").val("Active");
@@ -768,6 +774,9 @@
 				return;
 			}
 
+			$('#loader-message').html('Please wait while your order is being processed...');
+			$('#loader').show();
+			$(this).prop('disabled',true);
 			$(this).closest("form").submit();
 		});
 		$(".contact-editor").on('click', function() {
@@ -918,8 +927,8 @@
 
 			var orig_warr = original_row.find(".warranty-selector");
 			var cloned_warr = cloned_row.find(".warranty-selector");
-			cloned_warr.selectize(orig_warr.val(),orig_warr.text());
 			cloned_warr.populateSelected(orig_warr.val(),orig_warr.text());
+			cloned_warr.selectize();//orig_warr.val(),orig_warr.text());
 
 			// do not want this new row confused with the original search row
 			cloned_row.removeClass('search-row').addClass('item-row');
@@ -931,6 +940,7 @@
 			cloned_row.find(".item-qty").prop('readonly',false);
 
 			cloned_row.insertBefore(original_row);
+alert(orig_warr.val());
 
 			updateTotals();
 //			var row_total = cloned_row.calcRowTotal();

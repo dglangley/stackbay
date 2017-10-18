@@ -667,7 +667,6 @@
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
 	            dataType: 'json',
-				/*delay: 250,*/
 	            data: function (params) {
 	                return {
 						noreset: $(this).data('noreset'),

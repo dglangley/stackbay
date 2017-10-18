@@ -82,7 +82,6 @@
 
 <?php if ($EDIT) { ?>
 		<select name="contactid" id="contactid" class="form-control input-xs contact-selector required">
-			<option value="">- Select a Contact -</option>
 			<?php if ($ORDER['contactid']) { echo '<option value="'.$ORDER['contactid'].'" selected>'.getContact($ORDER['contactid']).'</option>'; } ?>
 		</select>
 <?php } else { ?>

@@ -2,13 +2,14 @@
 	include '../inc/dbconnect.php';
 	include '../inc/format_date.php';
 	include '../inc/cmp.php';
+	include '../inc/order_type.php';
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
 	$order_type = '';
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
-	if ($order_type=='S' OR $order_type=='Sale' OR $order_type=='Sales') { $order_type = 'sales'; }
-	else if ($order_type=='P' OR $order_type=='Purchase' OR $order_type=='Purchases') { $order_type = 'purchases'; }
+	if ($order_type=='S' OR $order_type=='Sale' OR $order_type=='Sales' OR $order_type=='sales') { $order_type = 'Sale'; }
+	else if ($order_type=='P' OR $order_type=='Purchase' OR $order_type=='Purchases' OR $order_type=='purchases') { $order_type = 'Purchase'; }
 	$add_custom = false;
 	if (isset($_REQUEST['add_custom'])) { $add_custom = $_REQUEST['add_custom']; }
 	$noreset = false;
@@ -25,8 +26,18 @@
 
 	// require string length to be at least 2 chars
 	if (strlen($q)>1) {
-		$query = "SELECT * FROM companies WHERE name RLIKE '".res($q)."' ";
-		$query .= "ORDER BY IF(name = '".res($q)."',0,1), IF(name LIKE '".res($q)."%',0,1), name ASC LIMIT 0,20; ";
+		$T = array();
+		if ($order_type) { $T = order_type($order_type); }
+
+		$query = "SELECT * ";
+		if ($order_type) { $query .= ", COUNT(*) n "; }
+		$query .= "FROM companies c ";
+		if ($order_type) { $query .= "LEFT JOIN ".$T['orders']." o ON o.companyid = c.id "; }
+		$query .= "WHERE c.name RLIKE '".res($q)."' ";
+		if ($order_type) { $query .= "GROUP BY c.id "; }
+		$query .= "ORDER BY ";
+		if ($order_type) { $query .= "n DESC, "; }
+		$query .= "IF(c.name = '".res($q)."',0,1), IF(c.name LIKE '".res($q)."%',0,1), c.name ASC LIMIT 0,20; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$namelower = strtolower(preg_replace('/[^[:alnum:]]+/','',$r['name']));
@@ -106,7 +117,7 @@
 			}
 		}
 
-		if ($order_type=='orders' OR $order_type=='sales') {
+		if ($order_type=='orders' OR $order_type=='Sale') {
 			$query = "SELECT companyid id, name, COUNT(so_number) n FROM sales_orders, companies ";
 			$query .= "WHERE created >= '".$past_date."' AND sales_orders.companyid = companies.id ";
 			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }

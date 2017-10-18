@@ -1877,6 +1877,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 	bottom:0;
 	padding:110px 10px 150px 10px;
 	overflow-y: auto;
+	z-index:3;
 
 	background-color:#efefef;
     background: -webkit-linear-gradient(#efefef, #f7f7f7;);

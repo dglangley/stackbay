@@ -9,7 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 
-	$debug = 0;
+	$debug = 1;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
@@ -56,7 +56,7 @@
 	$termsid = 0;
 	if (isset($_REQUEST['termsid']) AND is_numeric($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
 	$cust_ref = '';
-	if (isset($_REQUEST['cust_ref'])) { $cust_ref = trim($_REQUEST['cust_ref']); }
+	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
 	$public_notes = '';
 	if (isset($_REQUEST['public_notes'])) { $public_notes = $_REQUEST['public_notes']; }
 	$private_notes = '';
@@ -74,6 +74,14 @@
 	$file_url = false;
 	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST') {
 		$file_url = saveFiles($_FILES);
+	}
+
+	// if re-saving a form that has a tmp file instead of uploaded to S3, retry the upload since maybe
+	// the connection was previously down; we don't want to be in the habit of keeping uploads in our tmp folder
+	if (! $file_url AND strstr($ref_ln,$TEMP_DIR)) {
+		// file uploads are arrays, so we're simulating the same array for the saveFile() function, which expects an upload
+		$file = array('name'=>str_replace($TEMP_DIR,'',$ref_ln),'tmp_name'=>$ref_ln);
+		$file_url = saveFile($file);
 	}
 
 	$datetime = $now;

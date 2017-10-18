@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/vendor/autoload.php';
 
 	// this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
-	if (!$DEV_ENV) {
+	if (! $DEV_ENV) {
 		$S3 = Aws\S3\S3Client::factory(array('region'=>'us-west-2'));
 		$BUCKET = getenv('S3_ORDER_UPLOADS')?: die('No "S3_ORDER_UPLOADS" config var in found in env!');
 	}
@@ -29,7 +29,11 @@
 			}
 			if ($DEV_ENV) {
 				$temp_file = $TEMP_DIR.$filename;
-				if ($GLOBALS['debug']) { return ($temp_file); }
+				if ($GLOBALS['debug']) {
+					return ($temp_file);
+					//$file_upload = "https://s3-us-west-2.amazonaws.com/".$BUCKET."/".$filename;
+					//return ($file_upload);
+				}
 
 				// store uploaded file in temp dir so we can use it later
 				if (move_uploaded_file($file['tmp_name'], $temp_file)) {
