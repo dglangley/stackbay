@@ -386,14 +386,16 @@
 	    	elem.removeClass('infinite_scroll');
 	    	$('#sales_loader').show();
 
-	    	var record_start = $('input[name="startDate"]').val();
-	    	var record_end = $('input[name="endDate"]').val();
-	    	var sales_min = $('input[name="sales_min"]').val();
-	    	var sales_max = $('input[name="sales_max"]').val();
-	    	var demand_min = $('input[name="demand_min"]').val();
-	    	var demand_max = $('input[name="demand_max"]').val();
-	    	var stock_min = $('input[name="stock_min"]').val();
-	    	var stock_max = $('input[name="stock_max"]').val();
+			var f = $("form.results-form");
+	    	var record_start = f.find('input[name="startDate"]').val();
+	    	var record_end = f.find('input[name="endDate"]').val();
+	    	var sales_min = f.find('input[name="sales_min"]').val();
+	    	var sales_max = f.find('input[name="sales_max"]').val();
+	    	var demand_min = f.find('input[name="demand_min"]').val();
+	    	var demand_max = f.find('input[name="demand_max"]').val();
+	    	var stock_min = f.find('input[name="stock_min"]').val();
+	    	var stock_max = f.find('input[name="stock_max"]').val();
+	    	var favorites = f.find('input[name="favorites"]').val();
 
 			$.ajax({
 		        url: 'json/sales.php',
@@ -412,6 +414,7 @@
 		        	'demand_max': demand_max, 
 		        	'stock_min': stock_min, 
 		        	'stock_max': stock_max,
+		        	'favorites': favorites,
 		        },
 		        success: function(result) {
 		        	if(result) {			        	

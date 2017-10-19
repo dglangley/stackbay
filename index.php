@@ -7,6 +7,7 @@
 	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
+	include_once 'inc/getDQ.php';
 	include_once 'inc/getCost.php';
 	include_once 'inc/getQty.php';
 	include_once 'inc/array_stristr.php';
@@ -761,8 +762,9 @@ if (! $r['partid']) { return ($results); }
 			$x++;
 		}
 
-		$id_array = "";//pass in comma-separated values for getShelflife()
-		$shelflife = getShelflife($id_array);
+		$shelflife = getShelflife($partid_csv);
+		$DQ = getDQ($partid_csv);
+		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
@@ -1028,7 +1030,7 @@ if (! $r['partid']) { return ($results); }
 						</div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
-						<div class="col-sm-2 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $DQ; ?></span><br/><span class="info">usage rating</span></div>
 						<div class="col-sm-2 text-center">
 							<span class="header-text"></span><br/><span class="info">summary</span>
 						</div>

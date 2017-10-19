@@ -11,12 +11,39 @@
 	include_once $rootdir . '/inc/format_price.php';
 	include_once $rootdir . '/inc/format_date.php';
 	include_once $rootdir . '/inc/getUser.php';
+	include_once $rootdir . '/inc/getShelflife.php';
+	include_once $rootdir . '/inc/getDQ.php';
 
 	header("Content-Type: application/json", true);
 
-	function reportError($err) {
-		echo json_encode(array('message'=>$err));
-		exit;
+    if (! isset($startDate)) { $startDate = ''; }//format_date($today,'m-d-Y',array('d'=>-7)); }
+    else { $startDate = format_date($startDate,'m/d/Y'); }
+    if (isset($_REQUEST['startDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['startDate'])) { $startDate = $_REQUEST['startDate']; }
+	if (! isset($endDate)) { $endDate = format_date($today,'m/d/Y'); }
+    if (isset($_REQUEST['endDate']) AND preg_match('/^[0-9]{2}.[0-9]{2}.[0-9]{4}$/',$_REQUEST['endDate'])) { $endDate = $_REQUEST['endDate']; }
+
+	/* FILTERS */
+	$sales_count = false;
+	if (isset($_REQUEST['sales_count']) AND trim($_REQUEST['sales_count'])<>'') { $sales_count = trim($_REQUEST['sales_count']); }
+	$sales_min = false;
+	if (isset($_REQUEST['sales_min']) AND trim($_REQUEST['sales_min'])<>'') { $sales_min = trim($_REQUEST['sales_min']); }
+	$sales_max = false;
+	if (isset($_REQUEST['sales_max']) AND trim($_REQUEST['sales_max'])<>'') { $sales_max = trim($_REQUEST['sales_max']); }
+	$stock_min = false;
+	if (isset($_REQUEST['stock_min']) AND trim($_REQUEST['stock_min'])<>'') { $stock_min = trim($_REQUEST['stock_min']); }
+	$stock_max = false;
+	if (isset($_REQUEST['stock_max']) AND trim($_REQUEST['stock_max'])<>'') { $stock_max = trim($_REQUEST['stock_max']); }
+	$demand_min = false;
+	if (isset($_REQUEST['demand_min']) AND trim($_REQUEST['demand_min'])<>'') { $demand_min = trim($_REQUEST['demand_min']); }
+	$demand_max = false;
+	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
+	$favorites = 0;
+	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']) { $favorites = 1; }
+
+	// check for any filters to be set
+	$filtersOn = false;
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
+		$filtersOn = true;
 	}
 
 	//toggle between repair / sales table view / or toggle new partid
@@ -102,6 +129,8 @@
 
 	//This function loads in the entire line item
 	function listLoad($listid, $last_ln, $equipment_filter, $sort) {
+		global $favorites,$filtersOn;
+
 		$html = '';
 
 		$lines = array();
@@ -219,6 +248,8 @@
 
 	//Generates the left portion of the sales tables (AKA the revisions, but also generates the first row)
 	function partTable($search_str, $ln, $equipment_filter, $search_qty = 1, $search_price = '0.00'){
+		global $demand_min,$demand_max;
+
 		//Grabbing code from original sales view to generate results for the parts table
 		// can contain additional info about the results, if set; presents itself after the "X results" row below the row's search field
 		$explanation = '';
@@ -297,9 +328,19 @@
 				$partid_csv .= $partid;
 		}
 
-		$avg_cost = getCost($partid_csv);
-
 		$html = '';
+
+		$demand = getRecords($search_str,$partid_csv,'csv','demand');
+		$demand_count = count($demand);
+
+		// exclude results not meeting minimum demand count or exceeding max count, if set
+		if (($demand_min!==false AND $demand_count<$demand_min) OR ($demand_max!==false AND $demand_count>$demand_max)) { return ($html); }
+
+		$shelflife = getShelflife($partid_csv);
+		$DQ = getDQ($partid_csv);
+		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
+
+		$avg_cost = getCost($partid_csv);
 
 		//Generate first row
 		$html .= '<div class="row first" style="padding: 8px;">
@@ -348,7 +389,7 @@
 						</div>
 						<div class="col-sm-2 text-center"><span class="header-text">'.format_price($avg_cost).'</span><br/><span class="info">avg cost</span></div>
 						<div class="col-sm-2 text-center"><span class="header-text">'.$shelflife.'</span><br/><span class="info">shelflife</span></div>
-						<div class="col-sm-2 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text">'.$DQ.'</span><br/><span class="info">usage rating</span></div>
 						<div class="col-sm-2 text-center">
 							<span class="header-text"></span><br/><span class="info">summary</span>
 						</div>

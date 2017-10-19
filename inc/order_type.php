@@ -99,7 +99,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'price';
-				$T['delivery_date'] = '';
+				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
 				break;

@@ -55,9 +55,9 @@
 	if (isset($_REQUEST['demand_min']) AND trim($_REQUEST['demand_min'])<>'') { $demand_min = trim($_REQUEST['demand_min']); }
 	$demand_max = false;
 	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
-
 	$favorites = 0;
-	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) { $favorites = 1; }
+	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']) { $favorites = 1; }
+
 	$invlistid = 0;
 	if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
 		// validate id in uploads table

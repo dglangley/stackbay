@@ -231,7 +231,7 @@
 	if (! $order_number) { $email_chk = 'checked'; }
 ?>
 
-<?php if ($EDIT) { ?>
+<?php if ($EDIT AND isset($ORDER['cust_ref'])) { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
 			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>

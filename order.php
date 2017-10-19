@@ -167,7 +167,7 @@
 			';
 			$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
-				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r['delivery_date'],'m/d/y').'">
+				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r[$T['delivery_date']],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
@@ -210,7 +210,7 @@
 					$ref_2_col = $r['ref_2'].' '.$r['ref_2_label'];
 				}
 			}
-			$delivery_col = format_date($r['delivery_date'],'m/d/y');
+			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
 			if ($T["condition"]) {
 				$condition_col = getCondition($r['conditionid']);
 			}
@@ -461,6 +461,9 @@
 			padding-left:321px;
 			min-height:250px;
 			z-index:2;
+		}
+		#order_status {
+			max-width:120px;
 		}
 	</style>
 </head>
