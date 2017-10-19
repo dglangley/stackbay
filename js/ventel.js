@@ -1040,6 +1040,7 @@
 	            data: function (params) {
 	                return {
 	                    companyid: companyid,
+	                    order_type: scope,
 	                    carrierid: $("#carrierid").val(),
 	                };
 	            },

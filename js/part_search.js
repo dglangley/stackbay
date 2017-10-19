@@ -4,6 +4,7 @@ function partSearch(search, filter, cid, order_type) {
 	if (! order_type) { var order_type = ''; }
 
 	// Show a load image if you have one
+	$('#loader-message').html('Please wait while your request is being processed...');
 	$("#loader").show();
 
 	var type = $('body').data("order-type");
@@ -151,6 +152,7 @@ function partSearch(search, filter, cid, order_type) {
         },
         error: function(xhr, desc, err) {
             console.log("Details: " + desc + "\nError:" + err);
+			$("#loader").hide();
         }
     }); // end ajax call
 	}

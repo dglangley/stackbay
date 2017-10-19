@@ -109,8 +109,9 @@
 	<div class="sidebar-section">
 		<div class="row">
 			<div class="col-sm-7">
+<?php if (isset($ORDER['cust_ref'])) { ?>
 				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<div class="input-group">
 					<input name="cust_ref" class="form-control input-sm required" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
 					<span class="input-group-btn" style="vertical-align:top !important">
@@ -119,11 +120,12 @@
 				</div>
 				<input id="order-upload" class="file-upload <?=(! $order_number ? 'required' : '');?>" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
 				<input type="hidden" name="ref_ln" value="<?php echo $ORDER['ref_ln']; ?>">
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->
-<?php } ?>
+	<?php } ?>
 			</div>
 			<div class="col-sm-5 nopadding-left">
+<?php } ?>
 				<h4 class="section-header">Terms</h4>
 
 <?php if ($EDIT) { ?>

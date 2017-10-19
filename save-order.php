@@ -100,13 +100,16 @@
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
 	$query .= $T['datetime'].", created_by, sales_rep_id, ";
-	$query .= "companyid, contactid, cust_ref, ref_ln, ".$T['addressid'].", ship_to_id, ";
+	$query .= "companyid, contactid, ";
+	if ($T['cust_ref']) { $query .= $T['cust_ref'].", ref_ln, "; }
+	$query .= $T['addressid'].", ship_to_id, ";
 	$query .= "freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
 	$query .= "public_notes, private_notes, status) ";
 	$query .= "VALUES (";
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
 	$query .= "'".$datetime."', ".fres($created_by).", ".fres($sales_rep_id).", ";
-	$query .= "'".res($companyid)."', ".fres($contactid).", ".fres($cust_ref).", ".fres($file_url).", ";
+	$query .= "'".res($companyid)."', ".fres($contactid).", ";
+	if ($T['cust_ref']) { $query .= fres($cust_ref).", ".fres($file_url).", "; }
 	$query .= fres($bill_to_id).", ".fres($ship_to_id).", ";
 	$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
 	$query .= fres($termsid).", ".fres($public_notes).", ".fres($private_notes).", ".fres($status);
@@ -152,8 +155,8 @@
 		if ($T['amount']) { $query .= $T['amount'].", "; }
 		if ($T['delivery_date']) { $query .= $T['delivery_date'].", "; }
 		if ($T['items']<>'return_items') { $query .= "ref_1, ref_1_label, ref_2, ref_2_label, "; }
-		if ($T['warranty']) { $query .= $T['warranty'].", "; }
-		if ($T['condition']) { $query .= $T['condition']." "; }
+		if ($T['warranty']) { $query .= $T['warranty']; }
+		if ($T['condition']) { $query .= ", ".$T['condition']." "; }
 		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES ('".res($partid)."', '".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
 		if ($T['amount']) { $query .= fres($amount[$key]).", "; }
@@ -169,8 +172,8 @@
 
 			$query .= fres($r1).", ".fres($r1l).", ".fres($r2).", ".fres($r2l).", ";
 		}
-		if ($T['warranty']) { $query .= fres($warrantyid[$key]).", "; }
-		if ($T['condition']) { $query .= fres($conditionid[$key])." "; }
+		if ($T['warranty']) { $query .= fres($warrantyid[$key]); }
+		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
 		if ($id) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
 		if ($debug) { echo $query.'<BR>'; }

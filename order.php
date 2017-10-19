@@ -129,6 +129,7 @@
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
+		$condition_col = '';
 		if ($EDIT) {
 			$part_col = '
 			<div class="pull-left" style="width:9%">
@@ -172,14 +173,16 @@
 				</span>
 			</div>
 			';
-			$condition_col = '
+			if ($T["condition"]) {
+				$condition_col = '
 			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
 				<option value="'.$r['conditionid'].'" selected>'.getCondition($r['conditionid']).'</option>
 			</select>
-			';
+				';
+			}
 			$warranty_col = '
 			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
-				<option value="'.$r['warranty'].'" selected>'.getWarranty($r['warranty'],'warranty').'</option>
+				<option value="'.$r[$T['warranty']].'" selected>'.getWarranty($r[$T['warranty']],'warranty').'</option>
 			</select>
 			';
 			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
@@ -208,8 +211,10 @@
 				}
 			}
 			$delivery_col = format_date($r['delivery_date'],'m/d/y');
-			$condition_col = getCondition($r['conditionid']);
-			$warranty_col = getWarranty($r['warranty'],'warranty');
+			if ($T["condition"]) {
+				$condition_col = getCondition($r['conditionid']);
+			}
+			$warranty_col = getWarranty($r[$T['warranty']],'warranty');
 			$qty_col = $r['qty'];
 			$amount_col = format_price($amount);
 		}
@@ -422,6 +427,10 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		#filter_bar .btn {
+			margin-left:3px;
+			margin-right:3px;
+		}
 		.input-shadow input:focus {
 			box-shadow: 2px 2px 3px #888888;
 		}
@@ -467,7 +476,7 @@
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
+		<div class="col-sm-2">
 <?php if ($EDIT) { ?>
 			<select name="status" id="order_status" size="1" class="form-control input-sm select2">
 				<option value="Active"<?=($ORDER['status']=='Active' ? ' selected' : '');?>>Active</option>
@@ -477,7 +486,12 @@
 	?>
 			</select>
 <?php } else { ?>
-			<a href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default"><i class="fa fa-pencil"></i> Edit</a>
+			<a href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
+	<?php if ($order_type=='Repair') { ?>
+			<a href="/repair_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+			<a href="/repair.php?on=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
+	<?php } else if ($order_type=='Purchase') { ?>
+	<?php } ?>
 <?php } ?>
 		</div>
 		<div class="col-sm-1">
@@ -495,8 +509,6 @@
 <?php } else { ?>
 			<h4><?=getRep($ORDER['sales_rep_id']);?></h4>
 <?php } ?>
-		</div>
-		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
 		</div>
@@ -536,10 +548,10 @@
 		<th class="col-md-1">Ref 2</th>
 		<th class="col-md-1">Delivery</th>
 		<th class="col-md-1">
-<?php if ($EDIT) { ?>
+<?php if ($EDIT AND $T["condition"]) { ?>
 			<select name="conditionid_master" size="1" class="form-control input-sm condition-selector" data-placeholder="- Condition -">
 			</select>
-<?php } else { ?>
+<?php } else if ($T["condition"]) { ?>
 			Condition
 <?php } ?>
 		</th>

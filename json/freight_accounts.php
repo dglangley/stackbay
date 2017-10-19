@@ -6,6 +6,13 @@
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$carrierid = 0;
 	if (isset($_REQUEST['carrierid'])) { $carrierid = $_REQUEST['carrierid']; }
+	$order_type = 0;
+	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
+
+	// purchases should always have VenTel (user company) as it's companyid
+	if ($order_type=='Purchase') {
+		$companyid = 25;
+	}
 
 	$accounts = array(
 		0 => array('id'=>0,'text'=>'PREPAID'),

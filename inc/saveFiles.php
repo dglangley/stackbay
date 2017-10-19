@@ -25,7 +25,9 @@
 			}
 			if ($keyExists) {//file has already been uploaded
 				$FILE_ERR = 'File has already been uploaded!';
-				return false;
+
+				$file_upload = "https://s3-us-west-2.amazonaws.com/".$BUCKET."/".$filename;
+				return ($file_upload);
 			}
 			if ($DEV_ENV) {
 				$temp_file = $TEMP_DIR.$filename;
