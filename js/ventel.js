@@ -658,10 +658,11 @@
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 
-//		$(document).on(".company-selector")
-	if ($("body").data('scope')) { scope = $("body").data('scope'); }
+		if ($("body").data('scope')) { scope = $("body").data('scope'); }
+
 	/**** Invoke all select2() modules *****/
 	if (!!$.prototype.select2) {
+
 	    $(".company-selector").select2({
 	    	placeholder: '- Select a Company -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper

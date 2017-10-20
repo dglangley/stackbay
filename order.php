@@ -605,7 +605,7 @@
 	$TOTAL = ($SUBTOTAL+$existing_freight);
 ?>
 
-<table class="table table-responsive table-condensed table-striped">
+<table class="table table-responsive table-condensed table-striped" style="margin-bottom:300px">
 	<tbody>
 		<?php echo $charges; ?>
 		<tr>
@@ -826,7 +826,7 @@
 
 			$("#modal-address").populateAddress(0,idname,str);
 		});
-		$("#address-continue").on('click', function() {
+		$("#address-save").on('click', function() {
 			var address = $(".modal");
 			var addressid = address.find(".address-modal").data('oldid');
 			var idname = address.find(".address-modal").data('idname');
@@ -871,10 +871,11 @@
 			var contactid = $("#contactid").val();
 			var name = contact.find(".contact-name").val().trim();
 			var title = contact.find(".contact-title").val().trim();
+			var phone = contact.find(".contact-phone").val().trim();
 			var email = contact.find(".contact-email").val().trim();
 			var notes = contact.find(".contact-notes").val().trim();
 
-			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
+			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&phone="+escape(phone)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
 			$.ajax({
 				url: 'json/save-contact.php',
 				type: 'get',
@@ -882,6 +883,7 @@
 					'contactid': contactid,
 					'name': name,
 					'title': title,
+					'phone': phone,
 					'email': email,
 					'notes': notes,
 					'companyid': companyid,
@@ -1034,6 +1036,7 @@
 			address.find(".address-state").val('');
 			address.find(".address-postal_code").val('');
 			address.find(".address-modal").data('oldid',addressid);
+			address.find(".address-modal").data('idname',idname);
 
 			if (addressid>0) {
 				console.log(window.location.origin+"/json/address.php?addressid="+addressid);

@@ -8,8 +8,9 @@
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
 	$order_type = '';
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
-	if ($order_type=='S' OR $order_type=='Sale' OR $order_type=='Sales' OR $order_type=='sales') { $order_type = 'Sale'; }
-	else if ($order_type=='P' OR $order_type=='Purchase' OR $order_type=='Purchases' OR $order_type=='purchases') { $order_type = 'Purchase'; }
+	if ($order_type=='S' OR $order_type=='Sales' OR $order_type=='sales') { $order_type = 'Sale'; }
+	else if ($order_type=='P' OR $order_type=='Purchases' OR $order_type=='purchases') { $order_type = 'Purchase'; }
+	else if ($order_type=='R' OR $order_type=='Repairs' OR $order_type=='repairs') { $order_type = 'Repair'; }
 	$add_custom = false;
 	if (isset($_REQUEST['add_custom'])) { $add_custom = $_REQUEST['add_custom']; }
 	$noreset = false;
@@ -136,9 +137,28 @@
 			}
 		}
 
-		if ($order_type=='orders' OR $order_type=='purchases') {
+		if ($order_type=='orders' OR $order_type=='Purchase') {
 			$query = "SELECT companyid id, name, COUNT(po_number) n FROM purchase_orders, companies ";
 			$query .= "WHERE created >= '".$past_date."' AND purchase_orders.companyid = companies.id ";
+			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
+			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
+
+				// sum results if already present
+				if (isset($firsts[$key])) {
+					$firsts[$key]['n'] += $r['n'];
+				} else {
+					$firsts[$key] = $arr;
+				}
+			}
+		}
+
+		if ($order_type=='orders' OR $order_type=='Repair') {
+			$query = "SELECT companyid id, name, COUNT(ro_number) n FROM repair_orders, companies ";
+			$query .= "WHERE created >= '".$past_date."' AND repair_orders.companyid = companies.id ";
 			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
 			$query .= "GROUP BY companyid ORDER BY n DESC; ";
 			$result = qdb($query);

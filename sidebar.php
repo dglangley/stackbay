@@ -164,28 +164,28 @@
 			<div class="col-sm-5 nopadding-right">
 				<h4 class="section-header">Carrier</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<select name="carrierid" id="carrierid" size="1" class="select2 form-control input-sm required">
 					<?php echo $carriers_list; ?>
 				</select>
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo getCarrier($ORDER['freight_carrier_id']); ?>
-<?php } ?>
+	<?php } ?>
 			</div>
 			<div class="col-sm-7">
 				<h4 class="section-header">Freight Terms</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<select name="freight_account_id" id="freight_account_id" size="1" class="form-control input-sm select2">
-	<?php if ($ORDER['freight_account_id']) { ?>
+		<?php if ($ORDER['freight_account_id']) { ?>
 					<option value="<?php echo $ORDER['freight_account_id']; ?>" selected><?php echo getFreightAccount($ORDER['freight_account_id']); ?></option>
-	<?php } else { ?>
+		<?php } else { ?>
 					<option value="">PREPAID</option>
-	<?php } ?>
+		<?php } ?>
 				</select>
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo getFreightAccount($ORDER['freight_account_id']); ?>
-<?php } ?>
+	<?php } ?>
 			</div>
 		</div><!-- row -->
 	</div><!-- sidebar-section -->
@@ -193,16 +193,17 @@
 	<div class="sidebar-section">
 		<h4 class="section-header">Freight Service</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<select name="freight_services_id" id="freight_services_id" size="1" class="form-control input-sm required">
-	<?php if ($ORDER['freight_services_id']) { ?>
+		<?php if ($ORDER['freight_services_id']) { ?>
 			<option value="<?php echo $ORDER['freight_services_id']; ?>" selected><?php echo getFreightService($ORDER['freight_services_id']); ?></option>
-	<?php } ?>
+		<?php } ?>
 		</select>
-<?php } else { ?>
+	<?php } else { ?>
 		<?php echo getFreightService($ORDER['freight_services_id']); ?>
-<?php } ?>
-	</div>
+	<?php } ?>
+
+	</div><!-- sidebar-section -->
 
 <?php } /* ship_to_id */ ?>
 

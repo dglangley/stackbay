@@ -920,7 +920,7 @@
 			    $("#address-modal-body").find('input[name="na_city"]').focus();
 			}); 
 
-			$(document).on("click", "#address-continue", function(e) {
+			$(document).on("click", "#address-save", function(e) {
 			
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
 				//('object initiating the validation', the event, 'type of item being validated aka modal')

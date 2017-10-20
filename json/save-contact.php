@@ -16,6 +16,8 @@
 
 	$name = '';
 	if (isset($_REQUEST['name']) AND trim($_REQUEST['name'])) { $name = trim($_REQUEST['name']); }
+	$phone = '';
+	if (isset($_REQUEST['phone']) AND trim($_REQUEST['phone'])) { $phone = trim($_REQUEST['phone']); }
 	$email = '';
 	if (isset($_REQUEST['email']) AND trim($_REQUEST['email'])) { $email = trim($_REQUEST['email']); }
 	$title = '';
@@ -31,6 +33,11 @@
 		$query .= "WHERE id = '".res($contactid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 
+		if ($phone) {
+			$query = "DELETE FROM phones WHERE contactid = '".res($contactid)."'; ";
+			$result = qdb($query) OR jsonDie(qe().' '.$query);
+		}
+
 		if ($email) {
 			$query = "DELETE FROM emails WHERE contactid = '".res($contactid)."'; ";
 			$result = qdb($query) OR jsonDie(qe().' '.$query);
@@ -40,6 +47,11 @@
 		$query .= "VALUES (".fres($name).", ".fres($title).", ".fres($notes).", $companyid); ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 		$contactid = qid();
+	}
+
+	if ($phone) {
+		$query = "INSERT INTO phones (phone, type, contactid) VALUES (".fres($phone).",'Office','".res($contactid)."'); ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}
 
 	if ($email) {

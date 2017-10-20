@@ -22,6 +22,42 @@
 				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','aliases'=>array(),'sub'=>'','privilege'=>array(1,4,5,7)),
 				array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','aliases'=>array('/job.php'),'sub'=>'','privilege'=>array(1,4,5,7)),
 				array(
+					'action'=>'/services.php',
+					'image'=>'<i class="fa fa-cogs"></i>',
+					'title'=>'Services',
+					'aliases'=>array(),
+					'sub'=>'
+                <ul class="dropdown-menu text-left animated-2x animated fadeIn dropdown-mega" style="min-width:200px">
+					<li>
+					  <div class="yamm-content">
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-megamenu" style="height: 340px; border-right:0px">
+                                <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/services.php">Services</a></h4>
+                                    <h4 class="megamenu-block-title">
+									  <div class="form-group">
+										<div class="input-group pull-left">
+											<span class="input-group-btn">
+												<a href="/order.php?order_type=Service" class="btn btn-default btn-xs bg-services" title="Start New Service"><i class="fa fa-plus"></i></a>
+											</span>
+											<input type="text" class="form-control input-xs order-search" placeholder="Services..." data-type="SO">
+											<span class="input-group-btn">
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+											</span>
+										</div>
+									  </div>
+									</h4>
+                                    <ul id="service-orders-list">
+                                    </ul>
+                                </div>
+                            </div>
+						</div>
+					  </div>
+					</li>
+				</ul>
+					',
+				),
+				array(
 					'action'=>'/operations.php',
 					'image'=>'<i class="fa fa-truck"></i>',
 					'title'=>'Operations',
@@ -56,9 +92,6 @@
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/returns.php">Returns</a></h4>
                                     <h4 class="megamenu-block-title">
-<!--
-										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Returns</a> <span class="pull-right"><a href="/order_form.php?ps=Return" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
--->
 									  <div class="form-group">
 										<div class="input-group pull-left">'.
 									((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
@@ -114,15 +147,6 @@
 					'aliases'=>array('/manage_inventory.php','/parts.php'),
 					'sub' => $inventory_sub,
 				),
-/*
-				array(
-					'action'=>'/inventory-beta.php',
-					'image'=>'<i class="fa fa-qrcode"></i>',
-					'title'=>'Inv BETA',
-					'aliases'=>array(),
-					'sub' =>'',
-				),
-*/
 			),
 		'right' =>
 			array(

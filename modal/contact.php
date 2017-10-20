@@ -10,10 +10,34 @@
             <div class="row">
 			  <div class="form-group">
                 <label class="col-md-2 control-label">
-				  Name
+				  <i class="fa fa-user"></i> Name
                 </label>
                 <div class="col-md-9">
                   <input class="form-control input-sm contact-name required" name="name" id="contact_name" placeholder="First and Last Names" type="text">
+                </div>
+                <div class="col-md-1">
+                </div>
+			  </div>
+            </div>
+            <div class="row">
+			  <div class="form-group">
+                <label class="col-md-2 control-label">
+				  <i class="fa fa-envelope"></i> Email
+                </label>
+                <div class="col-md-9">
+                  <input class="form-control input-sm contact-email" name="email" id="contact_email" placeholder="Email (optional)" type="email">
+                </div>
+                <div class="col-md-1">
+                </div>
+			  </div>
+            </div>
+            <div class="row">
+			  <div class="form-group">
+                <label class="col-md-2 control-label">
+				  <i class="fa fa-phone"></i> Phone
+                </label>
+                <div class="col-md-9">
+                  <input class="form-control input-sm contact-phone" name="phone" id="contact_phone" placeholder="Phone (optional)" type="phone">
                 </div>
                 <div class="col-md-1">
                 </div>
@@ -26,18 +50,6 @@
                 </label>
                 <div class="col-md-9">
                   <input class="form-control input-sm contact-title" name="title" id="contact_title" placeholder="Title (optional)" type="text">
-                </div>
-                <div class="col-md-1">
-                </div>
-			  </div>
-            </div>
-            <div class="row">
-			  <div class="form-group">
-                <label class="col-md-2 control-label">
-				  Email
-                </label>
-                <div class="col-md-9">
-                  <input class="form-control input-sm contact-email" name="email" id="contact_email" placeholder="Email (optional)" type="email">
                 </div>
                 <div class="col-md-1">
                 </div>
