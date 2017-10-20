@@ -39,10 +39,12 @@
 	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
 	$favorites = 0;
 	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']) { $favorites = 1; }
+	$dq_count = false;
+	if (isset($_REQUEST['dq_count']) AND trim($_REQUEST['dq_count'])<>'') { $dq_count = trim($_REQUEST['dq_count']); }
 
 	// check for any filters to be set
 	$filtersOn = false;
-	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today OR $dq_count!==false) {
 		$filtersOn = true;
 	}
 
@@ -248,7 +250,7 @@
 
 	//Generates the left portion of the sales tables (AKA the revisions, but also generates the first row)
 	function partTable($search_str, $ln, $equipment_filter, $search_qty = 1, $search_price = '0.00'){
-		global $demand_min,$demand_max;
+		global $demand_min,$demand_max,$dq_count;
 
 		//Grabbing code from original sales view to generate results for the parts table
 		// can contain additional info about the results, if set; presents itself after the "X results" row below the row's search field
@@ -338,6 +340,8 @@
 
 		$shelflife = getShelflife($partid_csv);
 		$DQ = getDQ($partid_csv);
+		if ($dq_count!==false AND $DQ<$dq_count) { continue; }
+
 		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 
 		$avg_cost = getCost($partid_csv);

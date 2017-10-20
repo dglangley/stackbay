@@ -26,24 +26,6 @@
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
 
-	// function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
-	// 	global $QTYS;
-
-	// 	$qty = 0;
-
-	// 	if (! $partid OR ! is_numeric($partid)) { return ($qty); }
-
-	// 	$QTYS[$partid] = 0;
-	// 	$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
-	// 	//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
-	// 	$result = qdb($query) OR die(qe().' '.$query);
-	// 	if (mysqli_num_rows($result)==0) { return ('null'); }
-	// 	$r = mysqli_fetch_assoc($result);
-	// 	$qty = $r['qty'];
-
-	// 	return ($qty);
-	// }
-
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
 
@@ -298,7 +280,7 @@ if (! $r['partid']) { return ($results); }
 
 	// check for any filters to be set
 	$filtersOn = false;
-	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today) {
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today OR $dq_count!==false) {
 		$filtersOn = true;
 	}
 
@@ -759,6 +741,8 @@ if (! $r['partid']) { return ($results); }
 
 		$shelflife = getShelflife($partid_csv);
 		$DQ = getDQ($partid_csv);
+		if ($dq_count!==false AND $DQ<$dq_count) { continue; }
+
 		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 
 		$s = '';
@@ -1025,7 +1009,7 @@ if (! $r['partid']) { return ($results); }
 						</div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
-						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $DQ; ?></span><br/><span class="info">usage rating</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $DQ; ?></span><br/><span class="info">DQ rating</span></div>
 						<div class="col-sm-2 text-center">
 							<span class="header-text"></span><br/><span class="info">summary</span>
 						</div>
