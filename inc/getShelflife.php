@@ -1,8 +1,9 @@
 <?php
-	function getShelflife($partid_csv) {
+	function getShelflife($partid_csv,$integer_only=false) {
 		$now = $GLOBALS['now'];
 
-		$shelflife = "";
+		if ($integer_only) { $shelflife = false; }
+		else { $shelflife = ""; }
 		if (! $partid_csv) { return ($shelflife); }
 
 		$results = array();
@@ -30,9 +31,14 @@
 		$num_results = count($results);
 		if ($num_results>0) {
 			$days = round(array_sum($results)/$num_results);
-			$s = '';
-			if ($days<>1) { $s = 's'; }
-			$shelflife = $days.' day'.$s;
+
+			if ($integer_only) {
+				$shelflife = $days;
+			} else {
+				$s = '';
+				if ($days<>1) { $s = 's'; }
+				$shelflife = $days.' day'.$s;
+			}
 		}
 
 		return ($shelflife);

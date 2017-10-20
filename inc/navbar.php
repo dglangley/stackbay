@@ -155,6 +155,7 @@
 	                    <b class="caret"></b>
 	                </a>
 	                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+	                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Inventory</a></li>
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
 	                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>

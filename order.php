@@ -477,7 +477,6 @@
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
-
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
 <?php if ($EDIT) { ?>

@@ -6,6 +6,8 @@
 	function getDQ($partid_csv,$start_date,$end_date) {
 		global $DQ_date;
 
+		if (! $partid_csv) { return false; }
+
 		$results = array();
 
 		$query = "SELECT datetime, d.request_qty qty, companyid FROM demand d, search_meta m ";
