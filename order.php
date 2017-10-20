@@ -9,6 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoices.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getBills.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getReturns.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getHistory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAmount.php';
@@ -357,7 +358,7 @@
 
 		/***** Handle RMA Support options *****/
 		$support = '';
-		if (getTerms($ORDER['termsid'],'id','type')) {//billable type as opposed to null type
+		if (! $EDIT AND getTerms($ORDER['termsid'],'id','type')) {//billable type as opposed to null type
 			$support = '
 				<div class ="btn-group">
 					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
@@ -389,11 +390,16 @@
 		}
 	}
 
-	/***** Invoices *****/
-	$invoices_dropdown = '';
-	$invoices = getInvoices($order_number,$order_type);
-	if (count($invoices)>0) {
-		$invoices_dropdown = '
+	/***** COLLECTIONS: Invoices / Bills *****/
+	$coll_dropdown = '';
+	$records = array();
+	if ($T['collection']=='invoices') {
+		$records = getInvoices($order_number,$order_type);
+	} else if ($T['collection']=='bills') {
+		$records = getBills($order_number,$order_type);
+	}
+	if (count($records)>0) {
+		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
 				<ul class="dropdown-menu text-left">
@@ -401,16 +407,16 @@
 						<i class="fa fa-file-pdf-o"></i> Invoices
 					</li>
 		';
-		foreach ($invoices as $invoice) {
-			$invoices_dropdown .= '
+		foreach ($records as $rec) {
+			$coll_dropdown .= '
 					<li>
-						<a href="/docs/INV'.$invoice['invoice_no'].'.pdf" target="_new">
-							'.$invoice['invoice_no'].' ('.format_date($invoice['date_invoiced'],'n/j/y').')
+						<a href="/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new">
+							'.$rec[$T['collection_no']].' ('.format_date($rec['datetime'],'n/j/y').')
 						</a>
 					</li>
 			';
 		}
-		$invoices_dropdown .= '
+		$coll_dropdown .= '
 				</ul>
 			</span>
 		';
@@ -476,7 +482,7 @@
 <input type="hidden" name="order_type" value="<?php echo $order_type; ?>">
 
 <!-- FILTER BAR -->
-<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header table-<?=$order_type;?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
 <?php if ($EDIT) { ?>
@@ -493,6 +499,8 @@
 			<a href="/repair_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 			<a href="/repair.php?on=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 	<?php } else if ($order_type=='Purchase') { ?>
+			<a href="/inventory_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>
@@ -634,12 +642,12 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/contact.php'; ?>
 
 
-<div id="footer">
 
 <?php
 	if (count($returns)>0) {
 ?>
 
+<div id="footer">
 <h4 class="text-center">Returns and Credits</h4>
 <table class="table table-responsive table-condensed table-striped">
 	<thead>
@@ -702,11 +710,11 @@
 	</tbody>
 </table>
 
+</div><!-- footer -->
+
 <?php
 	}/*end count($returns)>0*/
 ?>
-
-</div><!-- footer -->
 
 
 <!-- VOID DISPLAY -->
@@ -795,6 +803,7 @@
 		});
 		$(".contact-selector").on('change', function() {
 			var contactid = $("#contactid").val();
+
 			var str = $(this).find("option:selected").text();
 			if (str.indexOf('Add')==-1) { return; }
 			str = str.replace('Add ','').replace('...','');

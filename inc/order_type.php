@@ -21,6 +21,8 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = '';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
 				break;
 
 			case 'Return':
@@ -42,6 +44,8 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
 				break;
 
 			case 'Purchase':
@@ -62,6 +66,8 @@
 				$T['delivery_date'] = 'receive_date';
 				$T['charges'] = 'purchase_charges';
 				$T['cust_ref'] = '';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
 				break;
 
 			case 'Repair':
@@ -82,6 +88,8 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
 				break;
 
 			case 'Service':
@@ -102,6 +110,7 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
+				$T['collection'] = 'invoices';
 				break;
 
 			case 'Sale':
@@ -122,6 +131,8 @@
 				$T['delivery_date'] = 'delivery_date';
 				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = 'cust_ref';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
 				break;
 
 			case 'IT':
@@ -142,6 +153,8 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
 				break;
 		}
 

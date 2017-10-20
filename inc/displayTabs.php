@@ -38,7 +38,7 @@
 									  <div class="form-group">
 										<div class="input-group pull-left">
 											<span class="input-group-btn">
-												<a href="/order_form.php?ps=RO" class="btn btn-default btn-xs bg-repairs" title="Start New Repair"><i class="fa fa-plus"></i></a>
+												<a href="/order.php?order_type=Repair" class="btn btn-default btn-xs bg-repairs" title="Start New Repair"><i class="fa fa-plus"></i></a>
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Repairs..." data-type="RO">
 											<span class="input-group-btn">
@@ -170,7 +170,7 @@
 									  '<div class="form-group">
 										<div class="input-group pull-left">
 											<span class="input-group-btn">
-												<a href="/order_form.php?ps=Purchase" class="btn btn-default btn-xs bg-purchases" title="Start New SO"><i class="fa fa-plus"></i></a>
+												<a href="/order.php?order_type=Purchase" class="btn btn-default btn-xs bg-purchases" title="Start New SO"><i class="fa fa-plus"></i></a>
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Purchases..." data-type="PO">
 											<span class="input-group-btn">

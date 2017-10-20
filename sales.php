@@ -264,13 +264,6 @@ if (! $r['partid']) { return ($results); }
 
 	<?php include_once 'inc/navbar.php'; ?>
 
-	<div id="sales_loader" class="loader text-muted">
-		<div>
-			<i class="fa fa-refresh fa-5x fa-spin"></i><br>
-			<h1 id="loader-message">Please wait for Sales results to load...</h1>
-		</div>
-	</div>
-
 <?php
 	/* FILTER CONTROLS */
 	$start_date = '';

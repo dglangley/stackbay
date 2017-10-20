@@ -240,7 +240,8 @@
 
 		var container = $(this).closest('.filter-group');
 
-		$('#sales_loader').show();
+		$('#loader-message').html('Please wait for Sales results to load...');
+		$('#loader').show();
 
 		//Get the values currently set
 		var count = 0;
@@ -297,10 +298,11 @@
 							setSlider($(this));
 						});
 
-						$('#sales_loader').hide();
+						$('#loader').hide();
 			        },
 			        error: function(xhr, desc, err) {
 			            console.log("Details: " + desc + "\nError:" + err);
+						$('#loader').hide();
 			        }
 			    }); // end ajax call
 			});
@@ -384,7 +386,8 @@
 
 	    if(visible) {
 	    	elem.removeClass('infinite_scroll');
-	    	$('#sales_loader').show();
+			$('#loader-message').html('Please wait for Sales results to load...');
+	    	$('#loader').show();
 
 			var f = $("form.results-form");
 	    	var record_start = f.find('input[name="startDate"]').val();
@@ -455,10 +458,11 @@
 						});
 					}
 
-					$('#sales_loader').hide();
+					$('#loader').hide();
 		        },
 		        error: function(xhr, desc, err) {
 		            console.log("Details: " + desc + "\nError:" + err);
+					$('#loader').hide();
 		        }
 		    }); // end ajax call
 	    }
@@ -495,9 +499,8 @@
 			$(this).addClass('btn-success');
 		}
 
-		//alert(sort);
-
-		$('#sales_loader').show();
+		$('#loader-message').html('Please wait for Sales results to load...');
+		$('#loader').show();
 
 		$.ajax({
 	        url: 'json/sales.php',
@@ -536,12 +539,14 @@
 							setSlider($(this));
 						});
 
-						$('#sales_loader').hide();
+						$('#loader').hide();
 					});
 				}
 	        },
 	        error: function(xhr, desc, err) {
 	            console.log("Details: " + desc + "\nError:" + err);
+
+				$('#loader').hide();
 	        }
 	    }); // end ajax call
 	});

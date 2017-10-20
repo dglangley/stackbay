@@ -249,8 +249,14 @@
 		}
 		$sbj = 'Order '.$cust_ref.' Confirmation';
 		// build confirmation email headers, then line items below
-		$msg = "<p>Here's your confirmation for order number ".$cust_ref.". <em>Please review for accuracy.</em></p><br/><br/>";
-		$msg .= "<p><strong>Order number:</strong> ".$cust_ref."</p>";
+		$msg = "<p>Your confirmation number is ".$T['abbrev'].$order_number.". <em>Please review the details below for accuracy.</em></p><br/><br/>";
+		if ($order_type=='Repair') {
+			$msg .= "<p><strong>Send your unit(s) to:</strong><br/>";
+			$msg .= "Attn: ".$T['abbrev'].$order_number."<br/>";
+			$msg .= format_address(91)."</p>";
+			$msg .= "<p><strong>Turn-Around Time:</strong> 30-day standard</p>";
+		}
+		$msg .= "<p><strong>Order Number:</strong> ".$cust_ref."</p>";
 		$msg .= "<p><strong>Shipping Service:</strong> ".$freight_service."</p>";
 		$msg .= "<p><strong>Shipping Terms:</strong> ".$freight_terms."</p>";
 		$msg .= "<p><strong>Shipping Address:</strong><br/>";

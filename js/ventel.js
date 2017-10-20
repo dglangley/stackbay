@@ -1512,7 +1512,7 @@
 				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
-					document.location.href = '/order_form.php?ps='+$(this).data('type')+'&on='+$(this).val();
+					document.location.href = '/order.php?order_type='+$(this).data('type')+'&order_number='+$(this).val();
 				} else if($(this).data('type') == 'BO') {
 					document.location.href = '/builds_management.php?on='+$(this).val();
 				} else {
@@ -1528,7 +1528,7 @@
 			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
-				document.location.href = '/order_form.php?ps='+search_field.data('type')+'&on='+search_field.val();
+				document.location.href = '/order.php?order_type='+search_field.data('type')+'&order_number='+search_field.val();
 			} else if(search_field.data('type') == 'BO') {
 				document.location.href = '/builds_management.php?on='+search_field.val();
 			} else {
@@ -2223,21 +2223,21 @@
 					$(this).remove();
 				});
 				$.each(json.sales, function(key, order) {
-					sales.append('<li><a href="/order_form.php?ps=Sale&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					sales.append('<li><a href="/order.php?order_type=Sale&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 				var purchases = $("#purchase-orders-list");
 				purchases.find("li").each(function() {
 					$(this).remove();
 				});
 				$.each(json.purchases, function(key, order) {
-					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					purchases.append('<li><a href="/order.php?order_type=Purchase&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 				var repairs = $("#repair-orders-list");
 				repairs.find("li").each(function() {
 					$(this).remove();
 				});
 				$.each(json.repairs, function(key, order) {
-					repairs.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					repairs.append('<li><a href="/order.php?order_type=Repair&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 
 				var returns = $("#return-orders-list");

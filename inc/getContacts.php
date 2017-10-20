@@ -5,7 +5,7 @@
 		$contacts = array();
 		$q = trim($q);
 
-		$query = "SELECT * FROM contacts ";
+		$query = "SELECT contacts.* FROM contacts ";
 		if ($q) { $query .= "LEFT JOIN emails ON contacts.id = emails.contactid "; }
 		$query .= "WHERE companyid = '".res($companyid)."' ";
 		if ($q) { $query .= "AND (emails.email RLIKE '".res($q)."' OR contacts.name RLIKE '".res($q)."') GROUP BY contacts.id "; }
