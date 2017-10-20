@@ -390,7 +390,7 @@
 						</p>
 					</div>
 					<div class="col-sm-2 text-center">
-						<span class="info">Min Usage</span>
+						<span class="info">Min DQ</span>
 						<p>
 							<input type="text" name="dq_count" value="" class="form-control input-xs" size="3" placeholder="0">
 						</p>

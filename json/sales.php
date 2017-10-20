@@ -290,8 +290,11 @@
 			$results = array_slice($results,$start,$end,true);
 		}
 
+		$html = '';
+
 		$num_results = count($results);
 		$last_element = $num_results - 1;
+		$num_favs = 0;
 
 		foreach ($results as $partid => $P) {
 			$exploded_strs = explode(' ',$P['part']);
@@ -299,9 +302,6 @@
 			if ($P['heci']) {
 				$search_strs[] = substr($P['heci'],0,7);
 			}
-
-			// if ($partid_csv) { $partid_csv .= ","; }
-			// $partid_csv .= $partid;
 
 			// check favorites
 			$favs[$partid] = 'star-o';
@@ -330,7 +330,7 @@
 				$partid_csv .= $partid;
 		}
 
-		$html = '';
+		if ($favorites AND $num_favs==0) { return ($html); }
 
 		$demand = getRecords($search_str,$partid_csv,'csv','demand');
 		$demand_count = count($demand);
@@ -340,7 +340,7 @@
 
 		$shelflife = getShelflife($partid_csv);
 		$DQ = getDQ($partid_csv);
-		if ($dq_count!==false AND $DQ<$dq_count) { continue; }
+		if ($dq_count!==false AND $DQ<$dq_count) { return ($html); }
 
 		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 

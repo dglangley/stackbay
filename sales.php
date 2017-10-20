@@ -299,9 +299,8 @@ if (! $r['partid']) { return ($results); }
 			if (($demand_min!==false AND count($r['demand'])<$demand_min) OR ($demand_max!==false AND count($r['demand'])>$demand_max)) { continue; }
 
 			$keystr = '';
-			// verify data is sound from pipe
-			if ($r['clei'] AND ! is_numeric($r['clei']) AND preg_match('/^[[:alnum:]]{10}$/',$r['clei'])) { $keystr = substr($r['clei'],0,7); }
-			else if ($r['heci'] AND ! is_numeric($r['heci']) AND preg_match('/^[[:alnum:]]{10}$/',$r['heci'])) { $keystr = substr($r['heci'],0,7); }
+			// verify data is sound (legacy from pipe data)
+			if ($r['heci'] AND ! is_numeric($r['heci']) AND preg_match('/^[[:alnum:]]{10}$/',$r['heci'])) { $keystr = substr($r['heci'],0,7); }
 			else { $keystr = format_part($r['part_number']); }
 
 			$groups[$keystr] = true;
@@ -651,13 +650,10 @@ if (! $r['partid']) { return ($results); }
 		$num_favs = 0;
 
 		$lineqty = 0;
-		$pipe_ids = array();
-		// stores exact 10-digit heci matched pipe id with partid
-		$pipe_id_assoc = array();
 
 		$num_results = count($results);
 		// pre-process results so that we can build a partid string for this group as well as to group results
-		// if the user is showing just favorites; lastly, also get all pipe ids for qty gathering
+		// if the user is showing just favorites
 		foreach ($results as $partid => $P) {
 			$exploded_strs = explode(' ',$P['part']);
 			$search_strs = array_merge($search_strs,$exploded_strs);
@@ -728,6 +724,15 @@ if (! $r['partid']) { return ($results); }
 			continue;
 		}
 
+		$shelflife = getShelflife($partid_csv);
+		$DQ = getDQ($partid_csv);
+		if ($dq_count!==false AND $DQ<$dq_count) {
+			$num_rows--;//mostly impacting pagination
+			continue;
+		}
+
+		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
+
 		// if favorites is set, we're counting rows based on favorites results; we do NOT WANT TO MOVE THIS code until after
 		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
 		if ($favorites OR $filtersOn) {
@@ -738,12 +743,6 @@ if (! $r['partid']) { return ($results); }
 			}
 			$x++;
 		}
-
-		$shelflife = getShelflife($partid_csv);
-		$DQ = getDQ($partid_csv);
-		if ($dq_count!==false AND $DQ<$dq_count) { continue; }
-
-		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
@@ -767,9 +766,8 @@ if (! $r['partid']) { return ($results); }
 		foreach ($results as $partid => $P) {
 			$itemqty = $P['qty'];
 			$notes = $P['notes'];
-			$pipeids_str = '';//$P['pipeids_str'];
 
-			// if no notes through pipe, check new db (this is just for the notes flag)
+			// check for notes if none already set (legacy pipe method)
 			if (! $notes) {
 				$query2 = "SELECT * FROM messages, prices WHERE ref_1 = '".$partid."' AND ref_1_label = 'partid' AND messages.id = prices.messageid; ";
 				$result2 = qdb($query2);
@@ -821,7 +819,7 @@ if (! $r['partid']) { return ($results); }
 	                        </div>
 
 	                        <div class="col-sm-7 remove-pad">
-	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
+	                            <div class="product-descr" data-partid="'.$partid.'">
 									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
 	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
 
@@ -1067,6 +1065,7 @@ if (! $r['partid']) { return ($results); }
 	<input type="hidden" name="stock_max" value="<?php echo $stock_max; ?>" class="search-filter">
 	<input type="hidden" name="demand_min" value="<?php echo $demand_min; ?>" class="search-filter">
 	<input type="hidden" name="demand_max" value="<?php echo $demand_max; ?>" class="search-filter">
+	<input type="hidden" name="dq_count" value="<?php echo $dq_count; ?>" class="search-filter">
 
 	</form>
 

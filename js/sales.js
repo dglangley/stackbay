@@ -389,12 +389,14 @@
 			var f = $("form.results-form");
 	    	var record_start = f.find('input[name="startDate"]').val();
 	    	var record_end = f.find('input[name="endDate"]').val();
+	    	var sales_count = f.find('input[name="sales_count"]').val();
 	    	var sales_min = f.find('input[name="sales_min"]').val();
 	    	var sales_max = f.find('input[name="sales_max"]').val();
 	    	var demand_min = f.find('input[name="demand_min"]').val();
 	    	var demand_max = f.find('input[name="demand_max"]').val();
 	    	var stock_min = f.find('input[name="stock_min"]').val();
 	    	var stock_max = f.find('input[name="stock_max"]').val();
+	    	var dq_count = f.find('input[name="dq_count"]').val();
 	    	var favorites = f.find('input[name="favorites"]').val();
 
 			$.ajax({
@@ -408,6 +410,7 @@
 		        	'sort': sort, 
 		        	'record_start': record_start, 
 		        	'record_end': record_end, 
+		        	'sales_count': sales_count,
 		        	'sales_min': sales_min, 
 		        	'sales_max': sales_max, 
 		        	'demand_min': demand_min, 
@@ -415,6 +418,7 @@
 		        	'stock_min': stock_min, 
 		        	'stock_max': stock_max,
 		        	'favorites': favorites,
+		        	'dq_count': dq_count,
 		        },
 		        success: function(result) {
 		        	if(result) {			        	

@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	$DQ_date = format_date($today,'Y-m-d',array('y'=>-1));
-	function getDQ($partid_csv,$start_date,$end_date) {
+	function getDQ($partid_csv) {
 		global $DQ_date;
 
 		if (! $partid_csv) { return false; }
