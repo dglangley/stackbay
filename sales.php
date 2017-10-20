@@ -1,12 +1,10 @@
 <?php
 	include_once 'inc/dbconnect.php';
-	include_once 'inc/pipe.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
-	include_once 'inc/getPipeIds.php';
-	include_once 'inc/getPipeQty.php';
 	include_once 'inc/getRecords.php';
 	include_once 'inc/getShelflife.php';
+	include_once 'inc/getDQ.php';
 	include_once 'inc/getCost.php';
 	include_once 'inc/getQty.php';
 	include_once 'inc/array_stristr.php';
@@ -18,8 +16,6 @@
 		exit;
 	}
 
-
-
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid']) AND $_REQUEST['listid']>0) { $listid = $_REQUEST['listid']; }
 	else if (isset($_REQUEST['upload_listid']) AND is_numeric($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']>0) { $listid = $_REQUEST['upload_listid']; }
@@ -29,6 +25,24 @@
 	$yesterday = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-1));
 	$lastWeek = format_date(date("Y-m-d"),'Y-m-d',array('d'=>-7));
 	$lastYear = format_date(date("Y-m-d"),'Y-m-01',array('m'=>-11));
+
+	// function getQtyPatch($partid=0) { // Creating a temporary fix to no-stock and never-stock to prevent getQty usage from breaking on other pages
+	// 	global $QTYS;
+
+	// 	$qty = 0;
+
+	// 	if (! $partid OR ! is_numeric($partid)) { return ($qty); }
+
+	// 	$QTYS[$partid] = 0;
+	// 	$query = "SELECT SUM(qty) qty FROM inventory WHERE partid = '".$partid."';";
+	// 	//$query .= "AND conditionid >= 0 AND (status = 'shelved' OR status = 'received'); ";//status <> 'scrapped' AND status <> 'in repair'; ";
+	// 	$result = qdb($query) OR die(qe().' '.$query);
+	// 	if (mysqli_num_rows($result)==0) { return ('null'); }
+	// 	$r = mysqli_fetch_assoc($result);
+	// 	$qty = $r['qty'];
+
+	// 	return ($qty);
+	// }
 
 	function filterResults($search_strs='',$partid_csv='') {//,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date) {
 		global $record_start,$record_end,$today,$SALES,$DEMAND,$sales_count,$sales_min,$sales_max,$demand_min,$demand_max,$start_date,$end_date;
@@ -264,6 +278,7 @@ if (! $r['partid']) { return ($results); }
 	<?php include_once 'inc/dictionary.php'; ?>
 	<?php include_once 'inc/logSearch.php'; ?>
 	<?php include_once 'inc/format_price.php'; ?>
+	<?php include_once 'inc/getQty.php'; ?>
 
 	<?php include_once 'inc/navbar.php'; ?>
 
@@ -571,7 +586,14 @@ if (! $r['partid']) { return ($results); }
 	}
 	unset($lines);
 
-	$per_pg = 10;
+	$per_pg;
+
+	if(! $listid) {
+		$per_pg = 50;
+	} else {
+		$per_pg = 10;
+	}
+
 	$min_ln = ($pg*$per_pg)-$per_pg;
 	$max_ln = ($min_ln+$per_pg)-1;
 	$num_rows = count($rows);
@@ -728,12 +750,16 @@ if (! $r['partid']) { return ($results); }
 		// above filters, even though it costs us extra processing, because numbered results may be impacted by filters
 		if ($favorites OR $filtersOn) {
 			if ($x<$min_ln) { $x++; continue; }
-			else if ($x>$max_ln) { break; }
+			else if ($x>$max_ln) { 
+				echo '<div class="row infinite_scroll spinner_lock" data-page="'.(isset($ln) ? $ln + 1 : '1').'" data-list="'.$listid.'"><i style="display: block; text-align: center;" class="fa fa-circle-o-notch fa-spin"></i></div>';
+				break; 
+			}
 			$x++;
 		}
 
-		$id_array = "";//pass in comma-separated values for getShelflife()
-		$shelflife = getShelflife($id_array);
+		$shelflife = getShelflife($partid_csv);
+		$DQ = getDQ($partid_csv);
+		if ($DQ<0) { $DQ = '<span class="text-danger">'.$DQ.'</span>'; }
 
 		$s = '';
 		if ($num_results<>1) { $s = 's'; }
@@ -810,7 +836,7 @@ if (! $r['partid']) { return ($results); }
 	                            </div>
 	                        </div>
 
-	                        <div class="col-sm-7">
+	                        <div class="col-sm-7 remove-pad">
 	                            <div class="product-descr" data-partid="'.$partid.'" data-pipeids="'.$pipeids_str.'">
 									<span class="descr-label"><span class="part-label">'.$P['Part'].'</span> &nbsp; <span class="heci-label">'.$P['HECI'].'</span> &nbsp; '.$notes_flag.'</span><a style="margin-left: 5px;" href="javascript:void(0);" class="part-modal-show" data-partid="'.$partid.'" data-ln="'.($ln+1).'" style="cursor:pointer;"><i class="fa fa-pencil"></i></a>
 	                               	<div class="description descr-label"><span class="manfid-label">'.dictionary($P['manf']).'</span> <span class="systemid-label">'.dictionary($P['system']).'</span> <span class="description-label">'.dictionary($P['description']).'</span></div>
@@ -999,7 +1025,7 @@ if (! $r['partid']) { return ($results); }
 						</div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo format_price($avg_cost); ?></span><br/><span class="info">avg cost</span></div>
 						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $shelflife; ?></span><br/><span class="info">shelflife</span></div>
-						<div class="col-sm-2 text-center"><span class="header-text"></span><br/><span class="info">quotes-to-sale</span></div>
+						<div class="col-sm-2 text-center"><span class="header-text"><?php echo $DQ; ?></span><br/><span class="info">usage rating</span></div>
 						<div class="col-sm-2 text-center">
 							<span class="header-text"></span><br/><span class="info">summary</span>
 						</div>

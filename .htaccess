@@ -20,6 +20,10 @@ RewriteRule .* https://www.stackbay.com%{REQUEST_URI} [R=301,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)uploads/(.*)$ uploads/reader.php [L]
 
+# inventory download handler
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)downloads/(.*)$ downloads/exporter.php [L]
+
 # product image handler
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)img/parts/(.*)$ prodimg.php [L]

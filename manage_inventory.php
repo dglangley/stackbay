@@ -29,6 +29,7 @@
 	if (isset($_REQUEST['shelflife_min']) AND trim($_REQUEST['shelflife_min'])<>'') { $shelflife_min = trim($_REQUEST['shelflife_min']); }
 	$shelflife_max = false;
 	if (isset($_REQUEST['shelflife_max']) AND trim($_REQUEST['shelflife_max'])<>'') { $shelflife_max = trim($_REQUEST['shelflife_max']); }
+	$search_str = '';
 
 	$equip_class = ' btn-default';
 	$equip_checked = '';
@@ -74,7 +75,7 @@
 		}
 	}
 
-    $query = "SELECT q.* FROM qtys q, parts p ";
+    $query = "SELECT q.*, p.part, p.heci FROM qtys q, parts p ";
 	$query .= "WHERE q.partid = p.id AND q.qty > 0 ";
 	if ($partid_csv) { $query .= "AND q.partid IN (".$partid_csv.") "; }
 	if (! $search AND ($equipment OR $components)) {
@@ -109,6 +110,13 @@
 			</td>
         </tr>
         ';
+
+		if ($r['heci']) {
+			$search_str .= $r['heci'].chr(10);
+		} else {
+			$part_strs = explode(' ',$r['part']);
+			$search_str .= $part_strs[0].chr(10);
+		}
     }
 ?>
 <!DOCTYPE html>
@@ -141,29 +149,24 @@
 <form class="form-inline form-filter" method="POST" action="/manage_inventory.php">
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
-	    	<button class="btn btn-danger btn-sm btn-export" type="button"><i class="fa fa-share-square-o"></i> Export Inventory</button>
+		<div class="col-sm-3">
+	    	<button class="btn btn-danger btn-sm btn-export" type="button"><i class="fa fa-share-square-o"></i> Export</button>
+	    	<button class="btn btn-primary btn-sm btn-sales" type="button"><i class="fa fa-cubes"></i> Open in Sales</button>
+	    	<button class="btn btn-default btn-sm btn-download" type="button"><i class="fa fa-download"></i> Download</button>
 		</div>
-		<div class="col-sm-1">
-		    <div class="filter-group">
+		<div class="col-sm-2">
+		    <div class="filter-group" style="display:inline-block">
 				<label class="btn btn-xs btn-toggle<?=$equip_class;?>" type="button" for="equipment_class" data-toggle="tooltip" data-placement="right" title="Equipment"><i class="fa fa-cube"></i></label><br/>
 				<input type="checkbox" name="equipment_class" id="equipment_class" value="1" class="checkbox-submit hidden"<?=$equip_checked;?>>
 				<label class="btn btn-xs btn-toggle<?=$comp_class;?>" type="button" for="component_class" data-toggle="tooltip" data-placement="right" title="Components"><i class="fa fa-microchip"></i></label>
 				<input type="checkbox" name="component_class" id="component_class" value="1" class="checkbox-submit hidden"<?=$comp_checked;?>>
 			</div>
-		</div>
-		<div class="col-sm-2">
-			<div class="form-group" style="width:35%;">
-				<input type="text" name="shelflife_min" value="<?=$shelflife_min;?>" class="form-control input-sm" placeholder="Min shelflife">
+		    <div style="display:inline-block; vertical-align:top; text-align:center">
+				<input type="text" name="shelflife_min" value="<?=$shelflife_min;?>" class="form-control input-sm" placeholder="Min" style="width:80px">
+				<input type="text" name="shelflife_max" value="<?=$shelflife_max;?>" class="form-control input-sm" placeholder="Max" style="width:80px">
+				<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter"></i></button><br/>
+				<strong>Shelflife</strong>
 			</div>
-			<div class="form-group" style="width:35%;">
-				<input type="text" name="shelflife_max" value="<?=$shelflife_max;?>" class="form-control input-sm" placeholder="Max shelflife">
-			</div>
-			<div class="form-group" style="width:10%;">
-				<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter"></i></button>
-			</div>
-		</div>
-		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
            	<h2 class="minimal">Inventory Manager</h2>
@@ -226,19 +229,32 @@
         </div>
     </div>
 </form>
-	
+
+<form class="form-inline form-search" method="POST" action="/sales.php">
+	<textarea name="s2" class="form-control hidden" rows="5"><?=$search_str;?></textarea>
+</form>
+
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
 		$(document).ready(function() {
 			$(".btn-submit").on("click",function() {
+				$(".form-inventory").prop('action','/manage_inventory.php');
 				$(".form-inventory").find("input[name='s2']").val($("#s2").val());
 				$(".form-inventory").submit();
 			});
 
 			$(".btn-export").on("click",function() {
-				var modal_msg = "This is one of those Don't-Take-It-Lightly things that you only do if you know what you're doing.<br/></br/>Like walking down a dark alley by yourself at night, singing 'I got money in my pocket, money in my pocket...'";
+				var modal_msg = "This is one of those Don't-Take-It-Lightly things that you only do if you know what you're doing.<br/></br/>"+
+					"Like walking down a dark alley by yourself at night, singing 'I got money in my pocket, money in my pocket...'";
 				modalAlertShow('An important warning...',modal_msg,true,'exportInventory');
+			});
+			$(".btn-sales").on("click",function() {
+				$(".form-search").submit();
+			});
+			$(".btn-download").on("click",function() {
+				$(".form-inventory").prop('action','downloads/inventory-export-<?=$today;?>.csv');
+				$(".form-inventory").submit();
 			});
 			$(".btn-toggle").on("click",function() {
 				$(this).toggleClass('active');

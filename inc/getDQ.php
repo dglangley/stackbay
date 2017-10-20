@@ -72,6 +72,8 @@
 		}
 
 		$DQ -= $sum_qty;
+		// half the number since we counted two years' total above
+		$DQ = ceil($DQ/2);
 
 		return ($DQ);
 	}
