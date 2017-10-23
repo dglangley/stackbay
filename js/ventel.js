@@ -1,5 +1,6 @@
 	if (typeof RESULTS_MODE === 'undefined') { RESULTS_MODE = 0; }
 	var companyid = 0;
+	var scope = 'Sale';
     $(document).ready(function() {
 
 		$('#loader').hide();
@@ -658,7 +659,6 @@
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 
 //		$(document).on(".company-selector")
-	var scope = 'Sale';
 	if ($("body").data('scope')) { scope = $("body").data('scope'); }
 	/**** Invoke all select2() modules *****/
 	if (!!$.prototype.select2) {
@@ -670,7 +670,8 @@
 				/*delay: 250,*/
 	            data: function (params) {
 	                return {
-	                    scope: scope,
+						noreset: $(this).data('noreset'),
+	                    order_type: scope,
 	                    add_custom: add_custom,
 	                    q: params.term,//search term
 						page: params.page
@@ -782,35 +783,6 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
-		$(".address-selector").select2({
-			placeholder: '- Select an Address -',
-	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/addresses.php",
-	            dataType: 'json',
-				/*delay: 250,*/
-	            data: function (params) {
-	                return {
-	                    companyid: companyid,
-	                    q: params.term,//search term
-						order_type: scope,
-						address_field: $(this).attr('id'),
-	                };
-	            },
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-		            return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: true
-	        },
-			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 0
-		});
 
 		$(".location-selector").select2({
 			width: '100%',
@@ -870,6 +842,7 @@
 		});
 */
 
+		$(".address-selector").selectize('/json/addresses.php','- Select an Address -');
 		$(".warranty-selector").selectize('/json/warranties.php');
 		$(".condition-selector").selectize('/json/conditions.php');
 
@@ -911,7 +884,7 @@
 						noreset: $(this).data('noreset'),
 						q: params.term,//search term
 						page: params.page,
-						scope: 'repair',
+						order_type: 'repair',
 						userid: $('body').data('techid'),
 					};
 				},
@@ -1041,7 +1014,7 @@
 	            data: function (params) {
 	                return {
 	                    companyid: companyid,
-	                    scope: scope,
+	                    order_type: scope,
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
@@ -1153,6 +1126,9 @@
 			}
 		});
 
+//		$('.modal').on('shown.bs.modal', function () {
+//			$('input[type=text]:first').focus();
+//		});
 		$(".advanced-search").click(function() {
 			$("#advanced-search-options").toggleClass('hidden');
 			$("#s2").focus();
@@ -1621,11 +1597,14 @@
 
     });/* close $(document).ready */
 
-	jQuery.fn.selectize = function(remote_url) {
+	/***** David and Andrew's global solution for portable select2 invocations *****/
+	jQuery.fn.selectize = function(remote_url,placeholder) {
 		if ($(this).data('url')) { var remote_url = $(this).data('url'); }
 		if (! remote_url) { return; }
+		if (! placeholder) { var placeholder = false; }
 
 		$(this).select2({
+			placeholder: placeholder,
 			width: '100%',
 			ajax: {
 				url: remote_url,/*'/json/conditions.php',*/
@@ -1634,6 +1613,8 @@
 					return {
 						q: params.term,//search term
 						companyid: companyid,
+						order_type: scope,
+						fieldid: $(this).attr('id'),
 					};
 				},
 				processResults: function (data, params) {// parse the results into the format expected by Select2.
@@ -1653,12 +1634,18 @@
 		});
 	};
 
+
 	jQuery.fn.populateSelected = function(id, text) {
+		if (! id) { var id = 0; }
+
+/*
 		if ($(this).find("option[value="+id+"]").length>0) {
-			$(this).find("option[value="+id+"]").prop('selected',true);
+			$(this).find("option[value="+id+"]").text(text);
+return;
 			$(this).trigger('change');
 			return;
 		}
+*/
 
 		/* build option that will populate the menu */
 		var option = $('<option></option>').

@@ -398,7 +398,7 @@ $EDIT = true;
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	echo addItemRow(0,$T);
+	echo addItemRow(false,$T);
 ?>
 	</tbody>
 </table>
@@ -451,6 +451,8 @@ $EDIT = true;
 </form>
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/address.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/contact.php'; ?>
 
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script type="text/javascript">
@@ -482,12 +484,73 @@ $EDIT = true;
 				modalAlertShow("Form Error","This form requires certain fields to be completed. You have not done your job.");
 				return;
 			}
+
+			// save pending rows before continuing; if there's really not an eligible item added as a result, the ensuing check will find out
+			if ($(".found_parts").length>0) {
+				$(".search-row").find(".btn-saveitem").trigger('click');
+			}
+
 			if ($("#search_input").find(".item-row").length==0) {
 				modalAlertShow("Items Error","This form requires at least one item. You have not done your job.");
 				return;
 			}
 
 			$(this).closest("form").submit();
+		});
+		$(".address-editor").on('click', function() {
+			var idname = $(this).data('name');
+			if (! idname) { return; }
+
+			var addressid = $("#"+idname).val();
+
+			$("#modal-address").populateAddress(addressid,idname);
+		});
+		$(".address-selector").on('change', function() {
+			var idname = $(this).prop('id');
+			var str = $(this).find("option:selected").text();
+			if (str.indexOf('Add')==-1) { return; }
+			str = str.replace('Add ','').replace('...','');
+
+			$("#modal-address").populateAddress(0,idname,str);
+		});
+		$("#address-continue").on('click', function() {
+			var address = $(".modal");
+			var addressid = address.find(".address-modal").data('oldid');
+			var idname = address.find(".address-modal").data('idname');
+			var name = address.find(".address-name").val().trim();
+			var street = address.find(".address-street").val().trim();
+			var addr2 = address.find(".address-addr2").val().trim();
+			var city = address.find(".address-city").val().trim();
+			var state = address.find(".address-state").val().trim();
+			var postal_code = address.find(".address-postal_code").val().trim();
+
+			console.log(window.location.origin+"/json/save-address.php?addressid="+addressid+"&name="+escape(name)+"&street="+escape(state)+"&addr2="+escape(addr2)+"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code));
+			$.ajax({
+				url: 'json/save-address.php',
+				type: 'get',
+				data: {
+					'addressid': addressid,
+					'name': name,
+					'street': street,
+					'addr2': addr2,
+					'city': city,
+					'state': state,
+					'postal_code': postal_code,
+					'companyid': companyid,
+				},
+				dataType: 'json',
+				success: function(json, status) {
+					if (json.message) { alert(json.message); return; }
+
+					$("#"+idname).populateSelected(json.id,json.text);
+					address.modal('hide');
+					toggleLoader("Address successfully saved");
+				},
+				error: function(xhr, desc, err) {
+//					console.log(xhr);
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
 		});
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
@@ -564,6 +627,52 @@ $EDIT = true;
 
 			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
 			return (ext_amount);
+		};
+		jQuery.fn.populateAddress = function(addressid,idname,str) {
+			var address = $(this);
+
+			if (addressid>0) {
+				console.log(window.location.origin+"/json/address.php?addressid="+addressid);
+				$.ajax({
+					url: 'json/address.php',
+					type: 'get',
+					data: {'addressid': addressid},
+					dataType: 'json',
+					success: function(json, status) {
+						if (json.message) { alert(json.message); return; }
+
+						address.find(".modal-title").text(json.title);
+						address.find(".address-name").val(json.name);
+						address.find(".address-street").val(json.street);
+						address.find(".address-addr2").val(json.addr2);
+						address.find(".address-city").val(json.city);
+						address.find(".address-state").val(json.state);
+						address.find(".address-postal_code").val(json.postal_code);
+						address.find(".address-modal").data('oldid',addressid);
+						address.find(".address-modal").data('idname',idname);
+
+						address.modal('show');
+					},
+					error: function(xhr, desc, err) {
+//						console.log(xhr);
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+			} else {
+				if (! str) { var str = ''; }
+
+				address.find(".modal-title").text("Add New Address");
+				address.find(".address-name").val('');
+				address.find(".address-street").val(str);
+				address.find(".address-addr2").val('');
+				address.find(".address-city").val('');
+				address.find(".address-state").val('');
+				address.find(".address-postal_code").val('');
+				address.find(".address-modal").data('oldid',0);
+				address.find(".address-modal").data('idname',idname);
+
+				address.modal('show');
+			}
 		};
 	});
 	function updateTotals() {

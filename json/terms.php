@@ -5,9 +5,9 @@
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
-	$scope = '';
-	if (isset($_REQUEST['scope'])) { $scope = $_REQUEST['scope']; }
-	if ($scope=='Sale' OR $scope=='Repair' OR $scope=='Invoice') {
+	$order_type = '';
+	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
+	if ($order_type=='Sale' OR $order_type=='Repair' OR $order_type=='Invoice') {
 		$accounting_system = 'AR';
 	} else {
 		$accounting_system = 'AP';

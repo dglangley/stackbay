@@ -5,8 +5,8 @@
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-	$scope = '';
-	if (isset($_REQUEST['scope'])) { $scope = trim($_REQUEST['scope']); }
+	$order_type = '';
+	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 	$noreset = 0;
 	if (isset($_REQUEST['noreset'])) { $noreset = trim($_REQUEST['noreset']); }
 	$userid = 0;
@@ -32,7 +32,7 @@
 	}
 
 	while ($r = mysqli_fetch_assoc($result)) {
-		$task_label = ucwords($scope);
+		$task_label = ucwords($order_type);
 		if ($r['ro_number']) { $task_label .= '# ' .$r['ro_number']. ' - '.getCompany($r['companyid']); }
 		$tasks[] = array('id'=>$r['item_id'],'text'=>$task_label);
 	}

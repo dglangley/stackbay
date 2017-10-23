@@ -89,45 +89,39 @@
 	}
 
 	uasort($freight_accounts, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($freight_accounts as $id => $r) {
 		$freight_account_id = $id;
-		break;
 	}
 
 	uasort($shippings, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($shippings as $id => $r) {
 		$ship_to_id = $id;
-		break;
 	}
 
 	uasort($billings, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($billings as $id => $r) {
 		$bill_to_id = $id;
-		break;
 	}
 
 	uasort($terms, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($terms as $id => $r) {
 		$termsid = $id;
-		break;
 	}
 
 	uasort($warranties, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($warranties as $id => $r) {
 		$warrantyid = $id;
-		break;
 	}
 
 	uasort($conditions, 'cmp_rcount');
-	// get first result which is sorted by most frequent first
+	// get results and end with most often sorted last
 	foreach ($conditions as $id => $r) {
 		$conditionid = $id;
-		break;
 	}
 
 	header("Content-Type: application/json", true);

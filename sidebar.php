@@ -92,10 +92,10 @@
 	</div>
 
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 <?php if ($EDIT) { ?>
-		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required">
+		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
 	<?php if ($ORDER['bill_to_id']) { ?>
 			<option value="<?=$ORDER['bill_to_id'];?>" selected><?=format_address($ORDER['bill_to_id'], ', ', false);?></option>
 	<?php } else { ?>
@@ -143,10 +143,10 @@
 <?php if ($EDIT) { ?>
 		<div class="pull-right"><input type="checkbox" name="sync_addresses" value="1" id="sync_addresses"><label for="sync addresses"> Same as Billing</label></div>
 <?php } ?>
-		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="ship_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 <?php if ($EDIT) { ?>
-		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required">
+		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
 	<?php if ($ORDER['ship_to_id']) { ?>
 			<option value="<?=$ORDER['ship_to_id'];?>" selected><?=format_address($ORDER['ship_to_id'], ', ', false);?></option>
 	<?php } else { ?>
@@ -230,6 +230,7 @@
 	if (! $order_number) { $email_chk = 'checked'; }
 ?>
 
+<?php if ($EDIT) { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
 			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>
@@ -238,6 +239,7 @@
 		<select name="email_to" id="email_to" class="form-control input-xs contact-selector"></select>
 		<p style="margin-top:10px"><strong>CC</strong> <i class="fa fa-check-square-o"></i> shipping@ven-tel.com</p>
 	</div>
+<?php } ?>
 
 	<div class="sidebar-footer">
 		<p class="section-header">Internal Use Only</p>
