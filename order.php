@@ -391,7 +391,11 @@
 	}
 
 	/***** COLLECTIONS: Invoices / Bills *****/
-	$coll_dropdown = '';
+	$coll_dropdown = '
+			<span class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu text-left">
+	';
 	$records = array();
 	if ($T['collection']=='invoices') {
 		$records = getInvoices($order_number,$order_type);
@@ -399,28 +403,40 @@
 		$records = getBills($order_number,$order_type);
 	}
 	if (count($records)>0) {
-		$coll_dropdown = '
-			<span class="dropdown">
-				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
-				<ul class="dropdown-menu text-left">
+		$coll_dropdown .= '
 					<li class="dropdown-header">
-						<i class="fa fa-file-pdf-o"></i> Invoices
+						<i class="fa fa-file-pdf-o"></i> '.ucfirst($T['collection']).'
 					</li>
 		';
 		foreach ($records as $rec) {
+			if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
+			else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
 			$coll_dropdown .= '
 					<li>
-						<a href="/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new">
+						<a href="'.$ln.'">
 							'.$rec[$T['collection_no']].' ('.format_date($rec['datetime'],'n/j/y').')
 						</a>
 					</li>
 			';
 		}
+	}
+	if ($T['collection']=='invoices') {
 		$coll_dropdown .= '
-				</ul>
-			</span>
+					<li>
+						<a target="_blank" href="/invoice.php?on='.$order_number.'"><i class="fa fa-plus"></i> Proforma Invoice</a>
+					</li>
+		';
+	} else if ($T['collection']=='bills') {
+		$coll_dropdown .= '
+					<li>
+						<a href="/bill.php?on='.$order_number.'&bill="><i class="fa fa-plus"></i> Add New Bill</a>
+					</li>
 		';
 	}
+	$coll_dropdown .= '
+				</ul>
+			</span>
+	';
 ?>
 <!DOCTYPE html>
 <html>
@@ -523,7 +539,7 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?><?=$invoices_dropdown;?></h2>
+			<h2 class="minimal"><?php echo $TITLE; ?><?=$coll_dropdown;?></h2>
 			<span class="info"><?php echo $title_helper; ?></span>
 		</div>
 		<div class="col-sm-2">
