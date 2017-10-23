@@ -54,7 +54,7 @@
 
 	<div class="sidebar-section">
 <?php
-	if ($ORDER['order_number'] AND $ORDER['order_type']) {
+	if (isset($ORDER['order_number']) AND $ORDER['order_number'] AND isset($ORDER['order_type']) AND $ORDER['order_type']) {
 		$T = order_type($ORDER['order_type']);
 		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
 	}
@@ -78,11 +78,10 @@
 	</div>
 
 	<div class="sidebar-section">
-		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="contact-editor"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 <?php if ($EDIT) { ?>
-		<select name="contactid" class="form-control input-xs contact-selector required">
-			<option value="">- Select a Contact -</option>
+		<select name="contactid" id="contactid" class="form-control input-xs contact-selector required">
 			<?php if ($ORDER['contactid']) { echo '<option value="'.$ORDER['contactid'].'" selected>'.getContact($ORDER['contactid']).'</option>'; } ?>
 		</select>
 <?php } else { ?>
@@ -110,8 +109,9 @@
 	<div class="sidebar-section">
 		<div class="row">
 			<div class="col-sm-7">
+<?php if (isset($ORDER['cust_ref'])) { ?>
 				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<div class="input-group">
 					<input name="cust_ref" class="form-control input-sm required" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">
 					<span class="input-group-btn" style="vertical-align:top !important">
@@ -120,11 +120,12 @@
 				</div>
 				<input id="order-upload" class="file-upload <?=(! $order_number ? 'required' : '');?>" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
 				<input type="hidden" name="ref_ln" value="<?php echo $ORDER['ref_ln']; ?>">
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->
-<?php } ?>
+	<?php } ?>
 			</div>
 			<div class="col-sm-5 nopadding-left">
+<?php } ?>
 				<h4 class="section-header">Terms</h4>
 
 <?php if ($EDIT) { ?>
@@ -163,28 +164,28 @@
 			<div class="col-sm-5 nopadding-right">
 				<h4 class="section-header">Carrier</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<select name="carrierid" id="carrierid" size="1" class="select2 form-control input-sm required">
 					<?php echo $carriers_list; ?>
 				</select>
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo getCarrier($ORDER['freight_carrier_id']); ?>
-<?php } ?>
+	<?php } ?>
 			</div>
 			<div class="col-sm-7">
 				<h4 class="section-header">Freight Terms</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<select name="freight_account_id" id="freight_account_id" size="1" class="form-control input-sm select2">
-	<?php if ($ORDER['freight_account_id']) { ?>
+		<?php if ($ORDER['freight_account_id']) { ?>
 					<option value="<?php echo $ORDER['freight_account_id']; ?>" selected><?php echo getFreightAccount($ORDER['freight_account_id']); ?></option>
-	<?php } else { ?>
+		<?php } else { ?>
 					<option value="">PREPAID</option>
-	<?php } ?>
+		<?php } ?>
 				</select>
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo getFreightAccount($ORDER['freight_account_id']); ?>
-<?php } ?>
+	<?php } ?>
 			</div>
 		</div><!-- row -->
 	</div><!-- sidebar-section -->
@@ -192,20 +193,21 @@
 	<div class="sidebar-section">
 		<h4 class="section-header">Freight Service</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<select name="freight_services_id" id="freight_services_id" size="1" class="form-control input-sm required">
-	<?php if ($ORDER['freight_services_id']) { ?>
+		<?php if ($ORDER['freight_services_id']) { ?>
 			<option value="<?php echo $ORDER['freight_services_id']; ?>" selected><?php echo getFreightService($ORDER['freight_services_id']); ?></option>
-	<?php } ?>
+		<?php } ?>
 		</select>
-<?php } else { ?>
+	<?php } else { ?>
 		<?php echo getFreightService($ORDER['freight_services_id']); ?>
-<?php } ?>
-	</div>
+	<?php } ?>
+
+	</div><!-- sidebar-section -->
 
 <?php } /* ship_to_id */ ?>
 
-<?php if($ORDER['order_type'] == 'Service') { ?>
+<?php if(isset($ORDER['order_type']) AND $ORDER['order_type'] == 'Service') { ?>
 	<div class="sidebar-section">
 		<h4 class="section-header">Scope</h4>
 		<?php if ($EDIT) { ?>
@@ -230,7 +232,7 @@
 	if (! $order_number) { $email_chk = 'checked'; }
 ?>
 
-<?php if ($EDIT) { ?>
+<?php if ($EDIT AND isset($ORDER['cust_ref'])) { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
 			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>

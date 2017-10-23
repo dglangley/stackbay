@@ -56,7 +56,7 @@
 	$termsid = 0;
 	if (isset($_REQUEST['termsid']) AND is_numeric($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
 	$cust_ref = '';
-	if (isset($_REQUEST['cust_ref'])) { $cust_ref = trim($_REQUEST['cust_ref']); }
+	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
 	$public_notes = '';
 	if (isset($_REQUEST['public_notes'])) { $public_notes = $_REQUEST['public_notes']; }
 	$private_notes = '';
@@ -76,6 +76,14 @@
 		$file_url = saveFiles($_FILES);
 	}
 
+	// if re-saving a form that has a tmp file instead of uploaded to S3, retry the upload since maybe
+	// the connection was previously down; we don't want to be in the habit of keeping uploads in our tmp folder
+	if (! $file_url AND strstr($ref_ln,$TEMP_DIR)) {
+		// file uploads are arrays, so we're simulating the same array for the saveFile() function, which expects an upload
+		$file = array('name'=>str_replace($TEMP_DIR,'',$ref_ln),'tmp_name'=>$ref_ln);
+		$file_url = saveFile($file);
+	}
+
 	$datetime = $now;
 	$created_by = $U['id'];
 	$sales_rep_id = $U['id'];//default unless passed in
@@ -92,13 +100,16 @@
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
 	$query .= $T['datetime'].", created_by, sales_rep_id, ";
-	$query .= "companyid, contactid, cust_ref, ref_ln, ".$T['addressid'].", ship_to_id, ";
+	$query .= "companyid, contactid, ";
+	if ($T['cust_ref']) { $query .= $T['cust_ref'].", ref_ln, "; }
+	$query .= $T['addressid'].", ship_to_id, ";
 	$query .= "freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
 	$query .= "public_notes, private_notes, status) ";
 	$query .= "VALUES (";
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
 	$query .= "'".$datetime."', ".fres($created_by).", ".fres($sales_rep_id).", ";
-	$query .= "'".res($companyid)."', ".fres($contactid).", ".fres($cust_ref).", ".fres($file_url).", ";
+	$query .= "'".res($companyid)."', ".fres($contactid).", ";
+	if ($T['cust_ref']) { $query .= fres($cust_ref).", ".fres($file_url).", "; }
 	$query .= fres($bill_to_id).", ".fres($ship_to_id).", ";
 	$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
 	$query .= fres($termsid).", ".fres($public_notes).", ".fres($private_notes).", ".fres($status);
@@ -144,8 +155,8 @@
 		if ($T['amount']) { $query .= $T['amount'].", "; }
 		if ($T['delivery_date']) { $query .= $T['delivery_date'].", "; }
 		if ($T['items']<>'return_items') { $query .= "ref_1, ref_1_label, ref_2, ref_2_label, "; }
-		if ($T['warranty']) { $query .= $T['warranty'].", "; }
-		if ($T['condition']) { $query .= $T['condition']." "; }
+		if ($T['warranty']) { $query .= $T['warranty']; }
+		if ($T['condition']) { $query .= ", ".$T['condition']." "; }
 		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES ('".res($partid)."', '".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
 		if ($T['amount']) { $query .= fres($amount[$key]).", "; }
@@ -161,8 +172,8 @@
 
 			$query .= fres($r1).", ".fres($r1l).", ".fres($r2).", ".fres($r2l).", ";
 		}
-		if ($T['warranty']) { $query .= fres($warrantyid[$key]).", "; }
-		if ($T['condition']) { $query .= fres($conditionid[$key])." "; }
+		if ($T['warranty']) { $query .= fres($warrantyid[$key]); }
+		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
 		if ($id) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
 		if ($debug) { echo $query.'<BR>'; }
@@ -238,8 +249,14 @@
 		}
 		$sbj = 'Order '.$cust_ref.' Confirmation';
 		// build confirmation email headers, then line items below
-		$msg = "<p>Here's your confirmation for order number ".$cust_ref.". <em>Please review for accuracy.</em></p><br/><br/>";
-		$msg .= "<p><strong>Order number:</strong> ".$cust_ref."</p>";
+		$msg = "<p>Your confirmation number is ".$T['abbrev'].$order_number.". <em>Please review the details below for accuracy.</em></p><br/><br/>";
+		if ($order_type=='Repair') {
+			$msg .= "<p><strong>Send your unit(s) to:</strong><br/>";
+			$msg .= "Attn: ".$T['abbrev'].$order_number."<br/>";
+			$msg .= format_address(91)."</p>";
+			$msg .= "<p><strong>Turn-Around Time:</strong> 30-day standard</p>";
+		}
+		$msg .= "<p><strong>Order Number:</strong> ".$cust_ref."</p>";
 		$msg .= "<p><strong>Shipping Service:</strong> ".$freight_service."</p>";
 		$msg .= "<p><strong>Shipping Terms:</strong> ".$freight_terms."</p>";
 		$msg .= "<p><strong>Shipping Address:</strong><br/>";

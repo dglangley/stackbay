@@ -240,7 +240,8 @@
 
 		var container = $(this).closest('.filter-group');
 
-		$('#sales_loader').show();
+		$('#loader-message').html('Please wait for Sales results to load...');
+		$('#loader').show();
 
 		//Get the values currently set
 		var count = 0;
@@ -297,10 +298,11 @@
 							setSlider($(this));
 						});
 
-						$('#sales_loader').hide();
+						$('#loader').hide();
 			        },
 			        error: function(xhr, desc, err) {
 			            console.log("Details: " + desc + "\nError:" + err);
+						$('#loader').hide();
 			        }
 			    }); // end ajax call
 			});
@@ -384,16 +386,21 @@
 
 	    if(visible) {
 	    	elem.removeClass('infinite_scroll');
-	    	$('#sales_loader').show();
+			$('#loader-message').html('Please wait for Sales results to load...');
+	    	$('#loader').show();
 
-	    	var record_start = $('input[name="startDate"]').val();
-	    	var record_end = $('input[name="endDate"]').val();
-	    	var sales_min = $('input[name="sales_min"]').val();
-	    	var sales_max = $('input[name="sales_max"]').val();
-	    	var demand_min = $('input[name="demand_min"]').val();
-	    	var demand_max = $('input[name="demand_max"]').val();
-	    	var stock_min = $('input[name="stock_min"]').val();
-	    	var stock_max = $('input[name="stock_max"]').val();
+			var f = $("form.results-form");
+	    	var record_start = f.find('input[name="startDate"]').val();
+	    	var record_end = f.find('input[name="endDate"]').val();
+	    	var sales_count = f.find('input[name="sales_count"]').val();
+	    	var sales_min = f.find('input[name="sales_min"]').val();
+	    	var sales_max = f.find('input[name="sales_max"]').val();
+	    	var demand_min = f.find('input[name="demand_min"]').val();
+	    	var demand_max = f.find('input[name="demand_max"]').val();
+	    	var stock_min = f.find('input[name="stock_min"]').val();
+	    	var stock_max = f.find('input[name="stock_max"]').val();
+	    	var dq_count = f.find('input[name="dq_count"]').val();
+	    	var favorites = f.find('input[name="favorites"]').val();
 
 			$.ajax({
 		        url: 'json/sales.php',
@@ -406,12 +413,15 @@
 		        	'sort': sort, 
 		        	'record_start': record_start, 
 		        	'record_end': record_end, 
+		        	'sales_count': sales_count,
 		        	'sales_min': sales_min, 
 		        	'sales_max': sales_max, 
 		        	'demand_min': demand_min, 
 		        	'demand_max': demand_max, 
 		        	'stock_min': stock_min, 
 		        	'stock_max': stock_max,
+		        	'favorites': favorites,
+		        	'dq_count': dq_count,
 		        },
 		        success: function(result) {
 		        	if(result) {			        	
@@ -448,10 +458,11 @@
 						});
 					}
 
-					$('#sales_loader').hide();
+					$('#loader').hide();
 		        },
 		        error: function(xhr, desc, err) {
 		            console.log("Details: " + desc + "\nError:" + err);
+					$('#loader').hide();
 		        }
 		    }); // end ajax call
 	    }
@@ -488,9 +499,8 @@
 			$(this).addClass('btn-success');
 		}
 
-		//alert(sort);
-
-		$('#sales_loader').show();
+		$('#loader-message').html('Please wait for Sales results to load...');
+		$('#loader').show();
 
 		$.ajax({
 	        url: 'json/sales.php',
@@ -529,12 +539,14 @@
 							setSlider($(this));
 						});
 
-						$('#sales_loader').hide();
+						$('#loader').hide();
 					});
 				}
 	        },
 	        error: function(xhr, desc, err) {
 	            console.log("Details: " + desc + "\nError:" + err);
+
+				$('#loader').hide();
 	        }
 	    }); // end ajax call
 	});

@@ -829,6 +829,27 @@ textarea.freeform-text {
     background: -moz-linear-gradient(#f5dfba, #fff); /* For Firefox 3.6 to 15 */
     background: linear-gradient(#f5dfba, #fff); /* Standard syntax */
 }
+.table-Repair {
+	background-color:#dde3fc;
+    background: -webkit-linear-gradient(#ddd, #dde3fc); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #dde3fc); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #dde3fc); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #dde3fc); /* Standard syntax */
+}
+.table-Sale {
+	background-color:#f7fff0;
+    background: -webkit-linear-gradient(#ddd, #f7fff0); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #f7fff0); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #f7fff0); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #f7fff0); /* Standard syntax */
+}
+.table-Purchase {
+	background-color:#f5dfba;
+    background: -webkit-linear-gradient(#ddd, #f5dfba); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #f5dfba); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #f5dfba); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #f5dfba); /* Standard syntax */
+}
 .market-table tr:hover td.bg-repair, .bg-repair, .bg-repair:hover {
 	background-color:#d9edf7;
     background: -webkit-linear-gradient(#d9edf7, #fff); /* For Safari 5.1 to 6.0 */
@@ -1877,6 +1898,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 	bottom:0;
 	padding:110px 10px 150px 10px;
 	overflow-y: auto;
+	z-index:3;
 
 	background-color:#efefef;
     background: -webkit-linear-gradient(#efefef, #f7f7f7;);

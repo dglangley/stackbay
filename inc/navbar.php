@@ -55,9 +55,11 @@
 	if (isset($_REQUEST['demand_min']) AND trim($_REQUEST['demand_min'])<>'') { $demand_min = trim($_REQUEST['demand_min']); }
 	$demand_max = false;
 	if (isset($_REQUEST['demand_max']) AND trim($_REQUEST['demand_max'])<>'') { $demand_max = trim($_REQUEST['demand_max']); }
-
+	$dq_count = false;
+	if (isset($_REQUEST['dq_count']) AND trim($_REQUEST['dq_count'])<>'') { $dq_count = trim($_REQUEST['dq_count']); }
 	$favorites = 0;
-	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) { $favorites = 1; }
+	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']) { $favorites = 1; }
+
 	$invlistid = 0;
 	if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
 		// validate id in uploads table
@@ -155,6 +157,7 @@
 	                    <b class="caret"></b>
 	                </a>
 	                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+	                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Inventory</a></li>
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
 	                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
@@ -386,7 +389,13 @@
 							<button type="button" class="btn btn-default btn-xs btn-favorites"><i class="fa fa-star"></i></button>
 						</p>
 					</div>
-					<div class="col-sm-10 text-center">
+					<div class="col-sm-2 text-center">
+						<span class="info">Min DQ</span>
+						<p>
+							<input type="text" name="dq_count" value="" class="form-control input-xs" size="3" placeholder="0">
+						</p>
+					</div>
+					<div class="col-sm-8 text-center">
 						<span class="info">Date Range</span>
 						<p>
 							<div class="form-group">

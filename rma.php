@@ -376,8 +376,7 @@
 								$output = '
 								<div class ="btn-group">
 									<button type="button" class="btn btn-flat btn-default dropdown-toggle" data-toggle="dropdown">
-		                              <i class="fa fa-credit-card"></i>
-		                              <span class="caret"></span>
+		                              <i class="fa fa-file"></i> <i class="fa fa-caret-down"></i>
 		                            </button>';
 	                            
 								$output .= '<ul class="dropdown-menu">';

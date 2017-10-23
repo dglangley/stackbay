@@ -1,5 +1,6 @@
 <?php
     $rootdir = $_SERVER['ROOT_DIR'];
+    include_once $root_dir."/inc/keywords.php";
     include_once $root_dir."/inc/dictionary.php";
 
     function display_part($parts, $partid = false, $desc = true){

@@ -2,6 +2,7 @@
     include '../inc/dbconnect.php';
     include '../inc/format_date.php';
     include '../inc/keywords.php';
+    include '../inc/jsonDie.php';
     include_once '../inc/form_handle.php';
     
     //if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
@@ -26,21 +27,26 @@
 
 		if ($companyid AND $order_type) {
 			$items = array();
+			$query = "";
 			if ($order_type=='Sale') {
 				$query = "SELECT * FROM demand items, ";
 			} else if ($order_type=='Purchase') {
 				$query = "SELECT * FROM availability items, ";
+			} else if ($order_type=='Repair') {
+				$query = "SELECT * FROM repair_quotes items, ";
 			}
-			$query .= "search_meta m, parts p, inventory i ";
-			$query .= "WHERE m.datetime >= '".format_date($GLOBALS['today'],'Y-m-d 00:00:00',array('d'=>-30))."' AND m.id = items.metaid ";
-			$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid AND p.id = i.partid AND i.status = 'received' ";
-			$query .= "GROUP BY p.id ORDER BY m.datetime DESC LIMIT 0,10; ";
-			$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
-				$items[$r['partid']] = hecidb($r['partid'],'id');
-			}
-			foreach ($items as $partid => $r) {
-				$results[$partid] = $r[$partid];
+			if ($query) {
+				$query .= "search_meta m, parts p, inventory i ";
+				$query .= "WHERE m.datetime >= '".format_date($GLOBALS['today'],'Y-m-d 00:00:00',array('d'=>-30))."' AND m.id = items.metaid ";
+				$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid AND p.id = i.partid AND i.status = 'received' ";
+				$query .= "GROUP BY p.id ORDER BY m.datetime DESC LIMIT 0,10; ";
+				$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					$items[$r['partid']] = hecidb($r['partid'],'id');
+				}
+				foreach ($items as $partid => $r) {
+					$results[$partid] = $r[$partid];
+				}
 			}
 		} else {
 	        $results = hecidb($search);
@@ -79,11 +85,10 @@
         return $results;
     }
     
-    $results = array();
-
     $results = searchParts($search, $filter, $companyid, $order_type);
 
     //print "<pre>".print_r($results,true)."</pre>";
 
+	header("Content-Type: application/json", true);
     echo json_encode($results);
     exit;

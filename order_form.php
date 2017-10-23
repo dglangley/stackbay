@@ -35,6 +35,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	include_once $rootdir.'/inc/getCharges.php';
+	include_once $rootdir.'/inc/getSerial.php';
 
 	//use this variable when RTV is used to grab all the checked items from the last post
 	$rtv_items = array();
@@ -220,19 +221,6 @@
 		}
 
 		return $RMA;
-	}
-
-	function getSerial($invid) {
-		$serial;
-
-		$query = "SELECT serial_no FROM inventory WHERE id = ".prep($invid).";";
-		$result = qdb($query) or die(qe());
-		if (mysqli_num_rows($result)){
-			$row = mysqli_fetch_assoc($result);
-			$serial = $row['serial_no'];
-		}
-
-		return $serial;
 	}
 
 	$ORDER = array('fcreated'=>'','companyid'=>0);
@@ -679,6 +667,7 @@
 					
 					<!-- Output the sales-rep dropdown in the top right corner -->
 					<div class="forms_section">
+            			<h3 class="pull-left text-center" style="width:80%; margin:20px 0px 0px 0px">Order view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/order.php?order_number=<?=$_REQUEST['on'];?>&order_type=<?=$_REQUEST['ps'];?>">Preview it now.</a></h3>
 						<?php if(!$o['invoice'] && !$o['repair']){?>
 							<div style="float:right;padding-top:15px;">
 							<div class="ui-select" style="width:125px; 'margin-bottom:0;">

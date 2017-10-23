@@ -920,7 +920,7 @@
 			    $("#address-modal-body").find('input[name="na_city"]').focus();
 			}); 
 
-			$(document).on("click", "#address-continue", function(e) {
+			$(document).on("click", "#address-save", function(e) {
 			
 				//Non-form case uses data-validation tag on the button which points to the container of all inputs to be validated by a required class
 				//('object initiating the validation', the event, 'type of item being validated aka modal')
@@ -1084,11 +1084,13 @@
 					}
 				});
 			});
+/* moved to js/ventel.js 10-18-17 dl
 			$(document).on("shown.bs.modal","#modal-contact",function(e) {
 				var first_field = $(this).find("input[type=text]")[0];
 				first_field.select();
 				first_field.focus();
 			});
+*/
 
 			/* save contact info and close modal */
 			$(document).on("click","#save-contact",function() {

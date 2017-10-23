@@ -168,7 +168,7 @@
 			$line_item_sel = "SELECT * FROM repair_items WHERE id = $prep_rid;";
 			$result = qdb($line_item_sel) or die(qe()." $line_item_sel");
 			$row = mysqli_fetch_assoc($result);
-			$prep_partid = prep($row['partid']);
+			$partid = $row['partid'];
 			$locationid = 0;
 			if($place){
 				$locationid = dropdown_processor($place, $instance);
@@ -244,9 +244,6 @@
 		endforeach;
 	}
 ?>
-
-
-
 <!DOCTYPE html>
 <html>
 	<head>

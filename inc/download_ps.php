@@ -83,13 +83,13 @@
 			$res = call_remote($loginUrl,'',$cookiefile,$cookiejarfile,'GET',$PS_CH);
 
             // get session token
-            $dom = new domDocument;
-            $dom->loadHTML($res);
-//          $form = $dom->getElementById('signInForm');
+			$dom = new domDocument;
+			$dom->loadHTML($res);
+//			$form = $dom->getElementById('signInForm');
 			if ($dom->getElementById('Session_LoginId')) {
-	            $loginid = $dom->getElementById('Session_LoginId')->getAttribute('value');
+				$loginid = $dom->getElementById('Session_LoginId')->getAttribute('value');
 
-	            // re-query site now with loginid
+				// re-query site now with loginid
 				$params = 'Session_Username='.urlencode(trim($_REQUEST['remote_login'])).
 					'&Session_Password='.urlencode(trim($_REQUEST['remote_password'])).
 					'&Session_Remember_Password=true&Session_LoginId='.$loginid.'&Session_PageName=Index'.

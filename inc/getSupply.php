@@ -262,7 +262,8 @@
 		$prices = array();//track prices in query results below so we can post-humously price later-dated results
 		$rows = array();
 
-		$query = "SELECT availability.partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, ";
+		//$query = "SELECT availability.partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, ";
+		$query = "SELECT availability.partid, companies.name, search_meta.datetime, MAX(avail_qty) qty, ";
 		$query .= "avail_price price, source, search_meta.companyid, '' rfq, searchid, availability.id ";
 		$query .= "FROM availability, search_meta, companies ";
 		// view only ghosted inventories
@@ -654,7 +655,8 @@
 		// string unique searches now into single line-separated string
 		$rows = array();
 
-		$query = "SELECT demand.partid, companies.name, search_meta.datetime, SUM(request_qty) qty, ";
+		//$query = "SELECT demand.partid, companies.name, search_meta.datetime, SUM(request_qty) qty, ";
+		$query = "SELECT demand.partid, companies.name, search_meta.datetime, MAX(request_qty) qty, ";
 		$query .= "quote_price price, source, search_meta.companyid, searchid, demand.id ";
 		$query .= "FROM demand, search_meta, companies ";
 		$query .= "WHERE demand.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";

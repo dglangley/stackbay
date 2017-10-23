@@ -1,9 +1,15 @@
 <?php
-	function getContacts($companyid) {
+	function getContacts($companyid,$q='') {
 		$empty_email = array('email'=>'','type'=>'','id'=>0);
 		$empty_phone = array('phone'=>'','type'=>'','id'=>0);
 		$contacts = array();
-		$query = "SELECT * FROM contacts WHERE companyid = '".res($companyid)."' ORDER BY name ASC; ";
+		$q = trim($q);
+
+		$query = "SELECT contacts.* FROM contacts ";
+		if ($q) { $query .= "LEFT JOIN emails ON contacts.id = emails.contactid "; }
+		$query .= "WHERE companyid = '".res($companyid)."' ";
+		if ($q) { $query .= "AND (emails.email RLIKE '".res($q)."' OR contacts.name RLIKE '".res($q)."') GROUP BY contacts.id "; }
+		$query .= "ORDER BY name ASC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['emails'] = array();

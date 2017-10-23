@@ -3,7 +3,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	header("Content-Type: application/json", true);
 
 	$contactid = 0;
@@ -14,20 +13,30 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) {
 		$companyid = $_REQUEST['companyid'];
 	}
-	$name = grab('name');
-	$contact_name = prep($name);
-	$contact_title = prep(grab('title'));
-	$email = grab('email');
-	$contact_email = prep($email);
-	$contact_notes = prep(grab('notes'));
+
+	$name = '';
+	if (isset($_REQUEST['name']) AND trim($_REQUEST['name'])) { $name = trim($_REQUEST['name']); }
+	$phone = '';
+	if (isset($_REQUEST['phone']) AND trim($_REQUEST['phone'])) { $phone = trim($_REQUEST['phone']); }
+	$email = '';
+	if (isset($_REQUEST['email']) AND trim($_REQUEST['email'])) { $email = trim($_REQUEST['email']); }
+	$title = '';
+	if (isset($_REQUEST['title']) AND trim($_REQUEST['title'])) { $title = trim($_REQUEST['title']); }
+	$notes = '';
+	if (isset($_REQUEST['notes']) AND trim($_REQUEST['notes'])) { $notes = trim($_REQUEST['notes']); }
 
 	$msg = 'Success';
 
 	// updating existing contact
 	if ($contactid) {
-		$query = "UPDATE contacts SET name = $contact_name, title = $contact_title, notes = $contact_notes, companyid = $companyid ";
+		$query = "UPDATE contacts SET name = ".fres($name).", title = ".fres($title).", notes = ".fres($notes).", companyid = $companyid ";
 		$query .= "WHERE id = '".res($contactid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		if ($phone) {
+			$query = "DELETE FROM phones WHERE contactid = '".res($contactid)."'; ";
+			$result = qdb($query) OR jsonDie(qe().' '.$query);
+		}
 
 		if ($email) {
 			$query = "DELETE FROM emails WHERE contactid = '".res($contactid)."'; ";
@@ -35,13 +44,18 @@
 		}
 	} else {//creating new contact
 		$query = "INSERT INTO contacts (name, title, notes, companyid) ";
-		$query .= "VALUES ($contact_name, $contact_title, $contact_notes, $companyid); ";
+		$query .= "VALUES (".fres($name).", ".fres($title).", ".fres($notes).", $companyid); ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 		$contactid = qid();
 	}
 
+	if ($phone) {
+		$query = "INSERT INTO phones (phone, type, contactid) VALUES (".fres($phone).",'Office','".res($contactid)."'); ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+	}
+
 	if ($email) {
-		$query = "INSERT INTO emails (email, type, contactid) VALUES ($contact_email,'Work','".res($contactid)."'); ";
+		$query = "INSERT INTO emails (email, type, contactid) VALUES (".fres($email).",'Work','".res($contactid)."'); ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}
 

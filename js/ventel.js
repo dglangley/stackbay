@@ -658,16 +658,16 @@
 		var add_custom = 1;
 		if ($(".accounts-body").length>0) { add_custom = 0; }
 
-//		$(document).on(".company-selector")
-	if ($("body").data('scope')) { scope = $("body").data('scope'); }
+		if ($("body").data('scope')) { scope = $("body").data('scope'); }
+
 	/**** Invoke all select2() modules *****/
 	if (!!$.prototype.select2) {
+
 	    $(".company-selector").select2({
 	    	placeholder: '- Select a Company -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/companies.php",
 	            dataType: 'json',
-				/*delay: 250,*/
 	            data: function (params) {
 	                return {
 						noreset: $(this).data('noreset'),
@@ -726,12 +726,12 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+/*
 		$(".contact-selector").select2({
 			placeholder: '- Select a Contact -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
 	            url: "/json/contacts.php",
 	            dataType: 'json',
-				/*delay: 250,*/
 	            data: function (params) {
 	                return {
 	                    q: params.term,//search term
@@ -754,6 +754,7 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
+*/
 		$(".tech-selector").select2({
 			placeholder: '- Select a Tech -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -845,6 +846,7 @@
 		$(".address-selector").selectize('/json/addresses.php','- Select an Address -');
 		$(".warranty-selector").selectize('/json/warranties.php');
 		$(".condition-selector").selectize('/json/conditions.php');
+		$(".contact-selector").selectize('/json/contacts.php','- Select a Contact -');
 
 		$('.parts-selector').select2({
 			width: '100%',
@@ -977,11 +979,11 @@
 						$("#carrierid").val(json.carrierid).trigger('change');
 					}
 					$("#freight_account_id").populateSelected(json.freight_account_id,json.freight_account);
-					if (json.warrantyid>0) {
-						$(".search-row").find(".warranty-selector").populateSelected(json.warrantyid,json.warranty);
-					}
 					if (json.conditionid>0) {
 						$(".search-row").find(".condition-selector").populateSelected(json.conditionid,json.condition);
+					}
+					if (json.warrantyid>0) {
+						$(".search-row").find(".warranty-selector").populateSelected(json.warrantyid,json.warranty);
 					}
 
 					partSearch('','',companyid,scope);
@@ -1039,6 +1041,7 @@
 	            data: function (params) {
 	                return {
 	                    companyid: companyid,
+	                    order_type: scope,
 	                    carrierid: $("#carrierid").val(),
 	                };
 	            },
@@ -1126,6 +1129,11 @@
 			}
 		});
 
+		$(document).on("shown.bs.modal",".modal",function(e) {
+			var first_field = $(this).find("input[type=text]")[0];
+			//first_field.select();
+			first_field.focus();
+		});
 //		$('.modal').on('shown.bs.modal', function () {
 //			$('input[type=text]:first').focus();
 //		});
@@ -1505,7 +1513,7 @@
 				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
-					document.location.href = '/order_form.php?ps='+$(this).data('type')+'&on='+$(this).val();
+					document.location.href = '/order.php?order_type='+$(this).data('type')+'&order_number='+$(this).val();
 				} else if($(this).data('type') == 'BO') {
 					document.location.href = '/builds_management.php?on='+$(this).val();
 				} else {
@@ -1521,7 +1529,7 @@
 			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
-				document.location.href = '/order_form.php?ps='+search_field.data('type')+'&on='+search_field.val();
+				document.location.href = '/order.php?order_type='+search_field.data('type')+'&order_number='+search_field.val();
 			} else if(search_field.data('type') == 'BO') {
 				document.location.href = '/builds_management.php?on='+search_field.val();
 			} else {
@@ -1638,14 +1646,20 @@
 	jQuery.fn.populateSelected = function(id, text) {
 		if (! id) { var id = 0; }
 
-/*
-		if ($(this).find("option[value="+id+"]").length>0) {
-			$(this).find("option[value="+id+"]").text(text);
-return;
+		// is this item already loaded in the select2?
+		if ($(this).find("option[value='"+id+"']").length>0) {
+			// select the option with the id
+			$(this).val(id);
+			// update the text of the identified <option> in case it's changed
+			var opt = $(this).find("option[value='"+id+"']");
+			opt.text(text);
+
+			// trigger change for select2
 			$(this).trigger('change');
+
+			// don't continue beyond this point
 			return;
 		}
-*/
 
 		/* build option that will populate the menu */
 		var option = $('<option></option>').
@@ -2210,21 +2224,21 @@ return;
 					$(this).remove();
 				});
 				$.each(json.sales, function(key, order) {
-					sales.append('<li><a href="/order_form.php?ps=Sale&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					sales.append('<li><a href="/order.php?order_type=Sale&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 				var purchases = $("#purchase-orders-list");
 				purchases.find("li").each(function() {
 					$(this).remove();
 				});
 				$.each(json.purchases, function(key, order) {
-					purchases.append('<li><a href="/order_form.php?ps=Purchase&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					purchases.append('<li><a href="/order.php?order_type=Purchase&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 				var repairs = $("#repair-orders-list");
 				repairs.find("li").each(function() {
 					$(this).remove();
 				});
 				$.each(json.repairs, function(key, order) {
-					repairs.append('<li><a href="/order_form.php?ps=ro&on='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					repairs.append('<li><a href="/order.php?order_type=Repair&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 
 				var returns = $("#return-orders-list");

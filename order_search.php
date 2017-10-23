@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-	function getOrder($str,$type='') {
+	function getOrderData($str,$type='') {
 		$arr = array('search'=>$str,'type'=>$type);
 
 		if ($type) {
@@ -68,7 +68,7 @@
 	// for example, they may be looking up a SO by customer PO# as in "765728", but because the navbar prepends the "SO" as the
 	// *type* of order, it will confuse the data...
 	if ($type AND $order) {
-		$O = getOrder($order,$type);
+		$O = getOrderData($order,$type);
 		if ($O['search'] AND ! $O['type']) {
 			header('Location: /operations.php?s='.$O['search']);
 			exit;
@@ -80,10 +80,10 @@
 	// user is searching by customer PO#?
 	$search_parts = '';
 	if (! $order AND $type==$_SERVER["REQUEST_URI"]) {
-		$O = getOrder($_SERVER["REQUEST_URI"]);
+		$O = getOrderData($_SERVER["REQUEST_URI"]);
 
 		if ($O['search']) {
-			header('Location: /order_form.php?on='.$O['search'].'&ps='.strtolower(substr($O['type'],0,1)));
+			header('Location: /order.php?order_number='.$O['search'].'&order_type='.strtolower(substr($O['type'],0,1)));
 			exit;
 		} else {
 			header('Location: /operations.php?s='.$O['search']);
@@ -133,7 +133,7 @@
 			$_REQUEST['on'] = '';
 			include 'rma.php';
 		} else {
-			include 'order_form.php';
+			include 'order.php';
 		}
 	} else {
 		if ($type=='PO') {

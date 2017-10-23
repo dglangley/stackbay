@@ -58,7 +58,7 @@
 				curl_close($BB_CH);
 
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$BB_ID."'; ";
-				$dbres = qdb($query);
+//				$dbres = qdb($query);
 				return false;
 			}
 			$res = call_remote($bb_base,$BB_CREDS,$cookiefile,$cookiejarfile,'POST',$BB_CH);
