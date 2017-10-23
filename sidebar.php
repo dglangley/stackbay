@@ -34,7 +34,7 @@
 	}
 
 	$carriers_list = '';
-	if (isset($ORDER['freight_carrier_id'])) {
+	if (array_key_exists('freight_carrier_id',$ORDER)) {
 		getCarrier();
 		foreach ($CARRIERS as $id => $name) {
 			$s = '';
@@ -44,7 +44,7 @@
 	}
 
 	$terms_list = '<option value="">- Select -</option>'.chr(10);
-	if (isset($ORDER['termsid'])) {
+	if (array_key_exists('termsid',$ORDER)) {
 		$terms_list = '<option value="'.$ORDER['termsid'].'" selected>'.getTerms($ORDER['termsid'],'id','terms').'</option>'.chr(10);
 	}
 
@@ -54,7 +54,7 @@
 
 	<div class="sidebar-section">
 <?php
-	if (isset($ORDER['order_number']) AND $ORDER['order_number'] AND isset($ORDER['order_type']) AND $ORDER['order_type']) {
+	if (array_key_exists('order_number',$ORDER) AND $ORDER['order_number'] AND array_key_exists('order_type',$ORDER) AND $ORDER['order_type']) {
 		$T = order_type($ORDER['order_type']);
 		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
 	}
@@ -109,7 +109,7 @@
 	<div class="sidebar-section">
 		<div class="row">
 			<div class="col-sm-7">
-<?php if (isset($ORDER['cust_ref'])) { ?>
+<?php if (array_key_exists('cust_ref',$ORDER)) { ?>
 				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
 	<?php if ($EDIT) { ?>
 				<div class="input-group">
@@ -139,11 +139,11 @@
 		</div>
 	</div>
 
-<?php if (isset($ORDER['ship_to_id'])) { ?>
+<?php if (array_key_exists('ship_to_id',$ORDER)) { ?>
 	<div class="sidebar-section">
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<div class="pull-right"><input type="checkbox" name="sync_addresses" value="1" id="sync_addresses"><label for="sync addresses"> Same as Billing</label></div>
-<?php } ?>
+	<?php } ?>
 		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="ship_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 <?php if ($EDIT) { ?>
@@ -207,7 +207,7 @@
 
 <?php } /* ship_to_id */ ?>
 
-<?php if(isset($ORDER['order_type']) AND $ORDER['order_type'] == 'Service') { ?>
+<?php if(array_key_exists('order_type',$ORDER) AND $ORDER['order_type'] == 'Service') { ?>
 	<div class="sidebar-section">
 		<h4 class="section-header">Scope</h4>
 		<?php if ($EDIT) { ?>
@@ -232,7 +232,7 @@
 	if (! $order_number) { $email_chk = 'checked'; }
 ?>
 
-<?php if ($EDIT AND isset($ORDER['cust_ref'])) { ?>
+<?php if ($EDIT AND array_key_exists('cust_ref',$ORDER)) { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
 			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>

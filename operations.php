@@ -530,16 +530,16 @@
 					if($o['build']){
 						echo'        <td>'.$order_num.' <a href="/repair.php?build=true&on='.$order_num.'&ps=bo"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					} else if($o['ro']) {
-						echo'        <td>'.$order_num.' <a href="/order_form.php?ps=repair&on='.$order_num.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+						echo'        <td>'.$order_num.' <a href="/order.php?order_number='.$order_num.'&order_type=Repair"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 					}
 
 					//Either go to inventory add or PO or shipping for SO
 					if($o['po'] || $o['so']) {
 						$base = $o['url'].'.php';
 						if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
-							$base = 'order_form.php';
+							$base = 'order.php';
 						}
-						echo'    <td>'.$order_num.'&nbsp;<a href="/'.$base.'?on='.$order_num.'&ps='.$order.'"><i class="fa fa-arrow-right"></i></a></td>';
+						echo'    <td>'.$order_num.'&nbsp;<a href="/'.$base.'?order_number='.$order_num.'&order_type='.strtoupper($order).'O"><i class="fa fa-arrow-right"></i></a></td>';
 					} else if($order == 'rma') {
 						echo'        <td>'.$order_num.' <a href="/rma.php?rma='.$order_num.'"><i class="fa fa-arrow-right"></i></a></td>';
 					}
@@ -597,7 +597,7 @@
 							echo'			<a href="/repair.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-wrench" aria-hidden="true"></i></a>';
 							echo'			<a href="/repair_add.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-truck" aria-hidden="true"></i></a>';
 							if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) {
-								echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
+//								echo'			<a href="/order_form.php?on='.$order_num.'&ps=ro"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
 							}
 						} else {
 							echo'			<a href="/builds_management.php?on='.$order_num.'"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';
