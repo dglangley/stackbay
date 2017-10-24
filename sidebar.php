@@ -25,7 +25,7 @@
 			'order_type' => '',
 			'companyid' => 0,
 			'contactid' => 0,
-			'bill_to_id' => 0,
+			$T['addressid'] => 0,
 			'ship_to_id' => 0,
 			'freight_carrier_id' => 0,
 			'cust_ref' => '',
@@ -55,8 +55,22 @@
 	<div class="sidebar-section">
 <?php
 	if (array_key_exists('order_number',$ORDER) AND $ORDER['order_number'] AND array_key_exists('order_type',$ORDER) AND $ORDER['order_type']) {
-		$T = order_type($ORDER['order_type']);
-		echo '<div class="alert alert-'.$T['alert'].'"><h4>'.$T['abbrev'].$ORDER['order_number'].' <a href="'.$T['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4></div>';
+		$T2 = order_type($ORDER['order_type']);
+
+		$addl_info = '';
+		if (array_key_exists('shipmentid',$ORDER) AND $ORDER['shipmentid']) {
+			$addl_info = '
+			<a href="/docs/PS'.$ORDER['order_number'].'D'.$ORDER['shipmentid'].'.pdf" target="_blank"><i class="fa fa-list-alt"></i> Shipment Contents</a>
+			<input type="hidden" name="shipmentid" value="'.$ORDER['shipmentid'].'">
+			';
+		}
+
+		echo '
+		<div class="alert alert-'.$T2['alert'].'">
+			<h4>'.$T2['abbrev'].$ORDER['order_number'].' <a href="'.$T2['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
+			'.$addl_info.'
+		</div>
+		';
 	}
 
 	// replace temp dir location (if exists) to uploads reader script
@@ -77,34 +91,38 @@
 <?php } ?>
 	</div>
 
+<?php if (array_key_exists('contactid',$ORDER)) { ?>
 	<div class="sidebar-section">
 		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="contact-editor"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<select name="contactid" id="contactid" class="form-control input-xs contact-selector required">
 			<?php if ($ORDER['contactid']) { echo '<option value="'.$ORDER['contactid'].'" selected>'.getContact($ORDER['contactid']).'</option>'; } ?>
 		</select>
-<?php } else { ?>
+	<?php } else { ?>
 		<?php echo getContact($ORDER['contactid']); ?>
 		<?php if (getContact($ORDER['contactid'],'id','email')) { echo '<a href="mailto:'.getContact($ORDER['contactid'],'id','email').'"><i class="fa fa-envelope"></i></a>'; } ?>
-<?php } ?>
-	</div>
-
-	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
-
-<?php if ($EDIT) { ?>
-		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
-	<?php if ($ORDER['bill_to_id']) { ?>
-			<option value="<?=$ORDER['bill_to_id'];?>" selected><?=format_address($ORDER['bill_to_id'], ', ', false);?></option>
-	<?php } else { ?>
-			<option value="">- Select an Address -</option>
 	<?php } ?>
-		</select>
-<?php } else { ?>
-		<p class="company_address info" data-addressid=""><?=format_address($ORDER['bill_to_id']);?></p>
-<?php } ?>
 	</div>
+<?php } ?>
+
+<?php if ($T['addressid'] AND array_key_exists($T['addressid'],$ORDER)) {?>
+	<div class="sidebar-section">
+		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="'.$T['addressid'].'"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+
+	<?php if ($EDIT) { ?>
+		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
+		<?php if ($ORDER[$T['addressid']]) { ?>
+			<option value="<?=$ORDER[$T['addressid']];?>" selected><?=format_address($ORDER[$T['addressid']], ', ', false);?></option>
+		<?php } else { ?>
+			<option value="">- Select an Address -</option>
+		<?php } ?>
+		</select>
+	<?php } else { ?>
+		<p class="company_address info" data-addressid=""><?=format_address($ORDER[$T['addressid']]);?></p>
+	<?php } ?>
+	</div>
+<?php } ?>
 
 	<div class="sidebar-section">
 		<div class="row">
@@ -123,17 +141,19 @@
 	<?php } else { ?>
 				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->
 	<?php } ?>
+<?php } ?>
 			</div>
 			<div class="col-sm-5 nopadding-left">
-<?php } ?>
+<?php if (array_key_exists('termsid',$ORDER)) { ?>
 				<h4 class="section-header">Terms</h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2 required">
 					<?php echo $terms_list; ?>
 				</select>
-<?php } else { ?>
+	<?php } else { ?>
 				<?php echo getTerms($ORDER['termsid'],'id','terms'); ?>
+	<?php } ?>
 <?php } ?>
 			</div>
 		</div>
@@ -243,12 +263,14 @@
 	</div>
 <?php } ?>
 
+<?php if ($EDIT AND array_key_exists('private_notes',$ORDER)) { ?>
 	<div class="sidebar-footer">
 		<p class="section-header">Internal Use Only</p>
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" placeholder="Private Notes"><?=$ORDER['private_notes'];?></textarea>
-<?php } else { ?>
+	<?php } else { ?>
 		<p><?php echo str_replace(chr(10),'<BR>',$ORDER['private_notes']);?></p>
-<?php } ?>
+	<?php } ?>
 	</div>
+<?php } ?>
 </div>

@@ -230,7 +230,7 @@
 			}
 			$r2 = mysqli_fetch_assoc($result2);
 			foreach ($r2 as $k => $v) {
-				$oi[$k] = $v;
+				if (! isset($oi[$k])) { $oi[$k] = $v; }
 			}
 		}
 

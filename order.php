@@ -130,15 +130,23 @@
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
+		$delivery_col = '';
 		$condition_col = '';
 		if ($EDIT) {
 			$part_col = '
-			<div class="pull-left" style="width:9%">
+			<div class="pull-left" style="width:7%">
 				<input type="text" name="ln['.$id.']" value="'.$r['line_number'].'" class="form-control input-sm line-number">
 			</div>
-			<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'">
-				'.$r['name'].'
-			</select>
+			<div class="pull-left" style="width:93%">
+				<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'">
+					'.$r['name'].'
+				</select>
+			';
+			if (array_key_exists('memo',$r) AND $r['memo']<>'') {
+				$part_col .= '<br/><textarea name="memo['.$id.']" rows="2" class="form-control input-sm">'.$r['memo'].'</textarea>';
+			}
+			$part_col .= '
+			</div>
 			';
 			$ref_1_col = '
 			<div class="input-group dropdown">
@@ -166,14 +174,16 @@
 				</ul>
 			</div>
 			';
-			$delivery_col = '
+			if ($T["delivery_date"]) {
+				$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
 				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r[$T['delivery_date']],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
 			</div>
-			';
+				';
+			}
 			if ($T["condition"]) {
 				$condition_col = '
 			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
@@ -189,8 +199,15 @@
 			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
-			$part_col = '';
-			if ($r['line_number']) { $part_col = '<div class="pull-left" style="width:9%"><span class="info">'.$r['line_number'].'.</span></div> '.$H[$r['partid']]['name']; }
+			$part_col = '<div class="pull-left" style="width:7%">';
+			if ($r['line_number']) {
+				$part_col .= '<span class="info">'.$r['line_number'].'.</span>';
+			}
+			$part_col .= '&nbsp;</div> <div class="pull-left" style="width:93%">'.$H[$r['partid']]['name'];
+			if (array_key_exists('memo',$r) AND $r['memo']<>'') {
+				$part_col .= '<br/>'.$r['memo'];
+			}
+			$part_col .= '</div>';
 			$ref_1_col = '';
 			if ($r['ref_1']) {
 				if (strstr($r['ref_1_label'],'item_id')) {
@@ -198,7 +215,7 @@
 					$ref_1_order = getOrderNumber($r['ref_1'],$T2['items'],$T2['order']);
 					$ref_1_col = $T2['abbrev'].' '.$ref_1_order;
 				} else {
-					$ref_1_col = $r['ref_1'].' '.$r['ref_1_label'];
+					$ref_1_col = $r['ref_1_label'].' '.$r['ref_1'];
 				}
 			}
 			$ref_2_col = '';
@@ -208,7 +225,7 @@
 					$ref_2_order = getOrderNumber($r['ref_2'],$T2['items'],$T2['order']);
 					$ref_2_col = $T2['abbrev'].' '.$ref_2_order;
 				} else {
-					$ref_2_col = $r['ref_2'].' '.$r['ref_2_label'];
+					$ref_2_col = $r['ref_2_label'].' '.$r['ref_2'];
 				}
 			}
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
@@ -336,7 +353,7 @@
 		$TITLE = 'Invoice '.$order_number;
 
 		$ORDER = getOrder($order_number,'Invoice');
-		$T = order_type($ORDER['order_type']);
+		$T = order_type($order_type);//$ORDER['order_type']);
 
 		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
 	} else {
@@ -391,52 +408,58 @@
 	}
 
 	/***** COLLECTIONS: Invoices / Bills *****/
-	$coll_dropdown = '
+	$coll_dropdown = '';
+	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
+	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
+	if ($order_number AND ! $ORDER['order_number']) {
+		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
 				<ul class="dropdown-menu text-left">
-	';
-	$records = array();
-	if ($T['collection']=='invoices') {
-		$records = getInvoices($order_number,$order_type);
-	} else if ($T['collection']=='bills') {
-		$records = getBills($order_number,$order_type);
-	}
-	if (count($records)>0) {
-		$coll_dropdown .= '
+		';
+
+		$records = array();
+		if ($T['collection']=='invoices') {
+			$records = getInvoices($order_number,$order_type);
+		} else if ($T['collection']=='bills') {
+			$records = getBills($order_number,$order_type);
+		}
+		if (count($records)>0) {
+			$coll_dropdown .= '
 					<li class="dropdown-header">
 						<i class="fa fa-file-pdf-o"></i> '.ucfirst($T['collection']).'
 					</li>
-		';
-		foreach ($records as $rec) {
-			if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
-			else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
-			$coll_dropdown .= '
+			';
+			foreach ($records as $rec) {
+				if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
+				else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
+				$coll_dropdown .= '
 					<li>
 						<a href="'.$ln.'">
 							'.$rec[$T['collection_no']].' ('.format_date($rec['datetime'],'n/j/y').')
 						</a>
 					</li>
-			';
+				';
+			}
 		}
-	}
-	if ($T['collection']=='invoices') {
-		$coll_dropdown .= '
+		if ($T['collection']=='invoices') {
+			$coll_dropdown .= '
 					<li>
 						<a target="_blank" href="/invoice.php?on='.$order_number.'"><i class="fa fa-plus"></i> Proforma Invoice</a>
 					</li>
-		';
-	} else if ($T['collection']=='bills') {
-		$coll_dropdown .= '
+			';
+		} else if ($T['collection']=='bills') {
+			$coll_dropdown .= '
 					<li>
 						<a href="/bill.php?on='.$order_number.'&bill="><i class="fa fa-plus"></i> Add New Bill</a>
 					</li>
-		';
-	}
-	$coll_dropdown .= '
+			';
+		}
+		$coll_dropdown .= '
 				</ul>
 			</span>
-	';
+		';
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -473,12 +496,18 @@
 			padding:3px 3px;
 			border-radius:3px;
 		}
+		#subtotal {
+			margin-top:0px;
+		}
+		#total {
+			margin-top:4px;
+		}
 		h2 a.small {
 			font-size:70%;
 		}
 		#footer {
-			position: fixed;
-			bottom: 0;
+			/*position: fixed;*/
+			/*bottom: 0;*/
 			width: 100%;
 			padding-left:321px;
 			min-height:250px;
@@ -486,6 +515,9 @@
 		}
 		#order_status {
 			max-width:120px;
+		}
+		.table tr td {
+			vertical-align:top !important;
 		}
 	</style>
 </head>
@@ -517,23 +549,27 @@
 	<?php } else if ($order_type=='Purchase') { ?>
 			<a href="/inventory_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Sale') { ?>
+			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } ?>
 <?php } ?>
 		</div>
 		<div class="col-sm-1">
-<?php if ($EDIT) { ?>
+<?php if (array_key_exists('sales_rep_id',$ORDER)) { ?>
+	<?php if ($EDIT) { ?>
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
-	<?php
-		$users = getUsers(array(4,5));
-		foreach ($users as $uid => $uname) {
-			$s = '';
-			if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
-			echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
-		}
-	?>
+		<?php
+			$users = getUsers(array(4,5));
+			foreach ($users as $uid => $uname) {
+				$s = '';
+				if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
+				echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
+			}
+		?>
 			</select>
-<?php } else { ?>
+	<?php } else { ?>
 			<h4><?=getRep($ORDER['sales_rep_id']);?></h4>
+	<?php } ?>
 <?php } ?>
 		</div>
 		<div class="col-sm-2">
@@ -572,7 +608,11 @@
 		<th class="col-md-4"><div class="pull-left padding-right20">Ln</div> Description of Charges</th>
 		<th class="col-md-1">Ref 1</th>
 		<th class="col-md-1">Ref 2</th>
-		<th class="col-md-1">Delivery</th>
+		<th class="col-md-1">
+<?php if ($EDIT AND $T["delivery_date"]) { ?>
+			Delivery
+<?php } ?>
+		</th>
 		<th class="col-md-1">
 <?php if ($EDIT AND $T["condition"]) { ?>
 			<select name="conditionid_master" size="1" class="form-control input-sm condition-selector" data-placeholder="- Condition -">
@@ -601,7 +641,7 @@
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	if ($EDIT) { echo addItemRow(false,$T); }
+	if ($EDIT AND ! $ORDER['order_number']) { echo addItemRow(false,$T); }
 ?>
 	</tbody>
 </table>
@@ -614,14 +654,19 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$charges .= addChargeRow($r['memo'],$r['qty'],$r['price'],$r['id']);
 		}
+		if ($EDIT) { $charges .= addChargeRow(); }
 	}
-	if ($EDIT) { $charges .= addChargeRow(); }
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
+	$freight_prop = ' readonly';
+	if (array_key_exists('freight',$ORDER) AND $ORDER['freight']>0) {
+		$existing_freight += $ORDER['freight'];
+		if ($EDIT) { $freight_prop = ''; }
+	}
 	$TOTAL = ($SUBTOTAL+$existing_freight);
 ?>
 
-<table class="table table-responsive table-condensed table-striped" style="margin-bottom:300px">
+<table class="table table-responsive table-condensed table-striped" style="margin-bottom:150px">
 	<tbody>
 		<?php echo $charges; ?>
 		<tr>
@@ -637,7 +682,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="freight_total" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm text-right" placeholder="0.00" readonly>
+					<input type="text" name="freight" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm input-freight text-right" placeholder="0.00"<?=$freight_prop;?>>
 				</span>
 			</td>
 		</tr>
@@ -769,7 +814,7 @@
 			$("#order_status").closest("form").submit();
 		});
 
-		$(".item-qty, .item-amount").on('change keyup',function() {
+		$(".item-qty, .item-amount, .input-freight").on('change keyup',function() {
 			updateTotals();
 		});
 		$(".btn-submit").on('click', function() {
@@ -1091,6 +1136,12 @@
 			total += row_total;
 		});
 		$("#subtotal").text('$ '+total.formatMoney());
+
+		// add freight to Total but not Subtotal above
+		$(".input-freight").each(function() {
+			var freight = parseFloat($(this).val().trim());
+			total += freight;
+		});
 		$("#total").text('$ '+total.formatMoney());
 	}
 </script>
