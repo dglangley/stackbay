@@ -661,7 +661,7 @@
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
 	$freight_prop = ' readonly';
-	if (array_key_exists('freight',$ORDER) AND $ORDER['freight']>0) {
+	if (array_key_exists('freight',$ORDER)) {// AND $ORDER['freight']>0) {
 		$existing_freight += $ORDER['freight'];
 		if ($EDIT) { $freight_prop = ''; }
 	}
@@ -965,6 +965,7 @@
 				}
 			}); // end ajax call
 		});
+		$(".part-selector").selectize('/json/parts-dropdown.php');
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
 			$(this).closest("tbody").find(".found_parts").each(function() {

@@ -6,7 +6,8 @@
     include_once '../inc/form_handle.php';
     
     //if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
-    $search = (isset($_REQUEST['search']) ? $_REQUEST['search'] : '');
+    $search = (isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '');
+	if (isset($_REQUEST['q']) AND ! $search) { $search = trim($_REQUEST['q']); }
     $filter = (isset($_REQUEST['filter']) ? $_REQUEST['filter'] : '');
     $companyid = (isset($_REQUEST['companyid']) ? $_REQUEST['companyid'] : '');
     $order_type = (isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '');
@@ -25,7 +26,7 @@
     function searchParts($search, $remove = '', $companyid=0, $order_type='') {
         $results = array();
 
-		if ($companyid AND $order_type) {
+		if ($companyid AND $order_type) {// AND ! $search) {
 			$items = array();
 			$query = "";
 			if ($order_type=='Sale') {
@@ -84,10 +85,10 @@
 
         return $results;
     }
-    
+
     $results = searchParts($search, $filter, $companyid, $order_type);
 
-    //print "<pre>".print_r($results,true)."</pre>";
+//	print "<pre>".print_r($results,true)."</pre>";
 
 	header("Content-Type: application/json", true);
     echo json_encode($results);

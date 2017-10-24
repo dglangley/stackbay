@@ -15,7 +15,7 @@
 		foreach ($db as $partid => $r) {
 			$results[$partid] = array('id'=>$partid,'text'=>trim($r['part'].' '.$r['heci']));
 		}
-	} else {
+	} else if ($partid) {
 		$query = "SELECT part, heci FROM parts WHERE id = '".res($partid)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
