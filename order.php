@@ -138,7 +138,7 @@
 				<input type="text" name="ln['.$id.']" value="'.$r['line_number'].'" class="form-control input-sm line-number">
 			</div>
 			<div class="pull-left" style="width:93%">
-				<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'">
+				<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'" data-url="/json/parts-dropdown.php">
 					'.$r['name'].'
 				</select>
 			';
@@ -611,7 +611,7 @@
 		<th class="col-md-1">Ref 1</th>
 		<th class="col-md-1">Ref 2</th>
 		<th class="col-md-1">
-<?php if ($EDIT AND $T["delivery_date"]) { ?>
+<?php if ($T["delivery_date"]) { ?>
 			Delivery
 <?php } ?>
 		</th>
@@ -965,7 +965,7 @@
 				}
 			}); // end ajax call
 		});
-		$(".part-selector").selectize('/json/parts-dropdown.php');
+		$(".item-row .part-selector").selectize();
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
 			$(this).closest("tbody").find(".found_parts").each(function() {
@@ -1009,7 +1009,8 @@
 			var partid = qty_field.data('partid');
 			var descr = e.find(".part").find(".descr-label").html();
 			part.populateSelected(partid, descr);
-			part.select2();
+			part.selectize();
+			//part.select2();
 			part.show();
 
 			var cloned_cond = cloned_row.find(".condition-selector");
