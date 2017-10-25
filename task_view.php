@@ -35,6 +35,7 @@
 	$expenses_data = array();
 	$closeout_data = array();
 	$labor_data = array();
+	$repair_codes = array();
 	$ticketStatus = '';
 
 	$materials_total = 0.00;
@@ -59,8 +60,17 @@
 	} else if($type == 'build') {
 
 	} else if($type == 'repair') {
+
 		if($ORDER['repair_code_id']) {
 			$ticketStatus = getRepairCode($ORDER['repair_code_id']);
+		}
+
+		$query = "SELECT * FROM repair_codes;";
+
+		$result = qdb($query) or die(qe() . ' ' . $query);
+
+		while ($row = $result->fetch_assoc()) {
+			$repair_codes[] = $row;
 		}
 
 		// Diable Modules for Repair
@@ -78,9 +88,11 @@
 		getLaborTime($item_id, $type);
 
 	} else if($quote){
+
 		// Create the option for the user to create a quote or create an order
 		$activity = false;
 		$documentation = false;
+		$details = false;
 		$task_edit = true; 
 
 		if(! empty($task_number)) {
@@ -114,7 +126,6 @@
 	    return $display;
 	}
 
-	// Get 2 things either the partid for repairs or the addressid for others
 	function getDetails($itemid) {
 		$serials = array();
 
@@ -124,6 +135,8 @@
 		while ($row = $result->fetch_assoc()) {
 			$serials[] = $row['serial_no'];
 		}
+
+		//print_r($serials);
 
 		return $serials;
 	}
@@ -240,13 +253,54 @@
 		return $repair_activities;
 	}
 
+	function in_array_r($item , $array){
+	    return preg_match('/"'.$item.'"/i' , json_encode($array));
+	}
+
 	function getMaterials($order_number, $item_id, $type = 'repair', $field = 'repair_item_id') {
 		global $materials_total;
 
 		$purchase_requests = array();
-		$query;
 		
 		if($type == 'repair') {
+			// $query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($order_number) ." GROUP BY partid, po_number;";
+			// $result = qdb($query) OR die(qe());
+					
+			// while ($row = $result->fetch_assoc()) {
+			// 	$qty = 0;
+
+			// 	$po_number = $row['po_number'];
+
+			// 	//Check to see what has been received and sum it into the total Ordered
+			// 	$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+			// 	if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+			// 	$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+			// 	$query .= "AND i.partid = ".prep($row['partid'])." ";
+			// 	if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+			// 	$query .= "; ";
+			// 	$received = qdb($query) OR die('<BR><BR><BR><BR>'.qe().'<BR>'.$query);
+
+			// 	if (mysqli_num_rows($received)>0) {
+			// 		$receivedr = mysqli_fetch_assoc($received);
+			// 		$qty = $receivedr['totalReceived'];
+			// 	}
+
+
+			// 	$row['totalReceived'] = $qty;
+			// 	$purchase_requests[] = $row;
+			// }
+
+			// $query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+			// $query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+			// $query .= "AND serial_no IS NULL GROUP BY i.partid; ";
+   //  		$result = qdb($query) OR die(qe()); 
+
+   //  		while ($row = $result->fetch_assoc()) {
+			// 	if(!in_array_r($row['partid'] , $purchase_requests)) {
+			// 		$purchase_requests[] = $row;
+			// 	}
+			// }
+
 			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
 					
@@ -261,6 +315,8 @@
 				$query .= "AND i.partid = ".prep($row['partid'])." ";
 				if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
 				$query .= "; ";
+
+				//echo $query;
 
 				$result2 = qdb($query) OR die(qe().' '.$query);
 
@@ -315,9 +371,9 @@
 			$result = qdb($query) OR die(qe()); 
 
 			while ($row = $result->fetch_assoc()) {
-				//if(!in_array_r($row['partid'] , $purchase_requests)) {
-				$purchase_requests[] = $row;
-				//}
+				if(!in_array_r($row['partid'] , $purchase_requests)) {
+					$purchase_requests[] = $row;
+				}
 			}
 		} else if($type == 'quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
@@ -409,6 +465,23 @@
 			$totalSeconds_data[$r['userid']] += 0;
 		}
 
+		// If no user is assigned to this task and ONLY single-user class then auto add them into the system as the assigned person
+		if(empty($totalSeconds_data)) {
+			// Check by type of work if there is only 1 user in this class
+			$query = "SELECT u.id as userid, c.name 
+    			FROM service_classes sc, user_classes uc, users u, contacts c 
+    			WHERE LOWER(sc.class_name) = '".res(strtolower($type))."' AND uc.classid = sc.id AND u.id = uc.userid AND c.id = u.contactid;";
+    		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+    		if(mysqli_num_rows($result) == 1) {
+    			$r = mysqli_fetch_assoc($result);
+    			//print_r($r);
+    			$query = "REPLACE INTO service_assignments (service_item_id, userid) VALUES (".fres($item_id).", ".fres($r['userid']).")";
+    			qdb($query) OR die(qe() .' ' . $query);
+
+    			$totalSeconds_data[$r['userid']] += 0;
+    		}
+		}
 
 		// From the data given
 		foreach($totalSeconds_data as $userid => $labor_seconds) {
@@ -505,8 +578,11 @@
 		<?php 
 			include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/materials_request.php';
-			include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/results.php';
+
+			if(! $quote) {
+				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
+			}
 		?>
 
 		<title><?=ucwords($type);?></title>
@@ -645,40 +721,59 @@
 						<?php if(! $task_edit) { ?>
 							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php } else { ?>
-							<a href="javascript:void(0)" class="text-success btn btn-default btn-sm toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+							<div class="col-md-6" style="padding-top: 10px;">
+								<?php if(! empty($repair_codes)) { ?>
+									<select style="margin-top: 10px;" id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
+										<option selected="" value="null">- Select Status -</option>
+										<?php 
+											foreach($repair_codes as $code):
+												echo "<option value='".$code['id']."' ".($ORDER['repair_code_id'] == $code['id'] ? 'selected' : '').">".$code['description']."\t".$code['code']."</option>";
+											endforeach;
+										?>
+									</select>
+								<?php } ?>
+							</div>
 						<?php } ?>
 
+						<?php if(! $task_edit) { ?>
 						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
 							<i class="fa fa-qrcode"></i> Receive
 						</a>
+						<?php } ?>
 
-						<form action="tasks_log.php" style="display: inline-block;">
-							<input type="hidden" name="item_id" value="<?=$item_id;?>">
-							<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
-								<i class="fa fa-terminal"></i>
-							</button>
-						</form>
+						<!-- <div class="col-md-5"> -->
+							<form action="tasks_log.php" style="display: inline-block;">
+								<input type="hidden" name="item_id" value="<?=$item_id;?>">
+								<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
+									<i class="fa fa-terminal"></i>
+								</button>
+							</form>
+						<!-- </div> -->
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
 					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></h2>
 				</div>
 				<div class="col-sm-4">
-					<div class="col-md-6">
+					<div class="col-md-4">
 					</div>
-					<div class="col-md-6">
+					<div class="col-md-8">
 						<!-- <div class="col-md-8"> -->
 							<?php if(! $quote){ ?>
 								<div class="col-md-9" style="padding-top: 10px;">
-									<select name="task" class="form-control repair-task-selector task_selection pull-right">
+									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
 										<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								</div>
 
 								<div class="col-md-3 remove-pad">
-									<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
-										<i class="fa fa-save"></i> Complete
-									</button>
+									<?php if($task_edit) { ?>
+										<a href="#" class="btn btn-success toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+									<?php } else if(! $ticketStatus) { ?>
+										<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+											<i class="fa fa-save"></i> Complete
+										</button>
+									<?php } ?>
 								</div>
 							<?php } else { ?>
 
@@ -802,7 +897,7 @@
 											<div class="input-group">
 												<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
 												<span class="input-group-btn">
-													<button class="btn btn-sm btn-primary" name="type" value="note_log" id="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
+													<button class="btn btn-sm btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
 												</span>
 											</div>
 										</div>
@@ -828,14 +923,19 @@
 									<section>
 										<div class="row list table-first">
 											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Company')?></div>
-											<div class="col-md-4"><?=($type == 'repair' ? 'Serial(s)' : 'Site Address')?></div>
+											<div class="col-md-2"><?=($type == 'repair' ? 'Serial(s)' : 'Site Address')?></div>
+											<div class="col-md-2"><?=($type == 'repair' ? 'RMA#' : '')?></div>
 											<div class="col-md-5">Notes</div>
 										</div>
 										<hr>
-										<?php //print_r($row); ?>
+										<?php //print_r($item_details); ?>
 											<div class="row list">
 												<div class="col-md-3"><?=trim(partDescription($item_details['partid'], true));?></div>
-												<div class="col-md-4"></div>
+												<div class="col-md-4">
+													<?php foreach(getDetails($item_id) as $serial) {
+														echo $serial;
+													} ?>
+												</div>
 												<div class="col-md-5"><?=$item_details['notes'];?></div>
 											</div>
 									</section>
@@ -862,7 +962,9 @@
 											<div class="col-md-3">MOP</div>
 											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
 										</div>
+
 										<hr>
+
 										<div class="row list">
 											<div class="col-md-3">7/18/2017</div>
 											<div class="col-md-3">David</div>
@@ -998,8 +1100,6 @@
 					                                <td class="text-right">
 					                                    <strong>$ 0.00</strong>
 					                                </td>
-					                               <!--  <td colspan="2">
-					                                </td> -->
 					                            </tr>
 				                            <?php } ?>
 										</tbody>
@@ -1048,7 +1148,7 @@
 											</thead>
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
-												<?php //print '<pre>' . print_r($component_data, true) . '</pre>';?>
+												<?php // print '<pre>' . print_r($component_data, true) . '</pre>';?>
 												<?php $total = 0; foreach($component_data as $row){ ?>
 													<?php if(! $quote) { ?>
 														<tr class="list">

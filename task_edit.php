@@ -6,13 +6,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
-	// function editTask($order, $companyid, $bid, $contactid, $addressid, $public_notes, $private_notes, $partid, $quote_hours, $quote_rate, $mileage_rate, $tax_rate){
-	// 	$now = $GLOBALS['now'];
-		
-	// 	$query = "UPDATE repair_orders SET companyid = ".prep($companyid).", cust_ref = ".prep($bid).", bill_to_id = ".prep($addressid).", public_notes = ".prep($public_notes).", private_notes = ".prep($private_notes).", contactid = ".prep($contactid)." WHERE ro_number = ".prep($order).";";
-	// 	qdb($query) OR die(qe() . ' ' . $query);
-	// }
-
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
 		global $LINE_NUMBER;
 
@@ -157,7 +150,42 @@
 
 	}
 
-	// print '<pre>' . print_r($_REQUEST, true). '</pre>';
+	function addNotes($notes, $order_number, $repair_item_id) {
+		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".fres($order_number).", ".fres($repair_item_id).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
+		//echo $query;
+		qdb($query) OR die(qe() . ' ' . $query);
+	}
+
+	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'repair_activities', $field = 'repair_item_id', $type = 'repair') {
+
+		$notes = '';
+
+		$query = "SELECT description FROM repair_codes WHERE id = ".res($repair_code_id).";";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		//echo $query;
+
+		if(mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+			$notes = ucwords($type) . ' completed. Final Status: <b>' . $r['description'].'</b>';
+		}
+
+		//$order_number = getOrderNumber($item_id);
+
+		$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
+		//echo $query;
+		qdb($query) OR die(qe().' '.$query);
+//echo $query;
+		// Update the repair_code_id to the order
+		if($type == 'repair') {
+			$query = "UPDATE repair_orders SET repair_code_id = ".res($repair_code_id)." WHERE ro_number = ".res($order_number).";";
+			qdb($query) OR die(qe().' '.$query);
+		}
+
+	}
+
+	//print '<pre>' . print_r($_REQUEST, true). '</pre>';
+
 	$order = 0;
 	$line_number = 0; 
 	$qty = 0; 
@@ -178,15 +206,14 @@
 
 	$techid = 0;
 	$tech_status = '';
-
 	$LINE_NUMBER = 1;
-
 	$service_item_id = 0;
+	$notes = '';
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; }
 	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
+
 	if (isset($_REQUEST['quote_item_id'])) { $service_item_id = $_REQUEST['quote_item_id']; }
-		
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; } 
 	if (isset($_REQUEST['line_number'])) { $line_number = $_REQUEST['line_number']; }
@@ -201,17 +228,19 @@
 	if (isset($_REQUEST['labor_hours'])) { $labor_hours = $_REQUEST['labor_hours']; }
 	if (isset($_REQUEST['labor_rate'])) { $labor_rate = $_REQUEST['labor_rate']; }
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
-
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
-
 	if (isset($_REQUEST['techid'])) { $techid = $_REQUEST['techid']; }
 	if (isset($_REQUEST['tech_status'])) { $tech_status = $_REQUEST['tech_status']; }
-
 	if (isset($_REQUEST['create'])) { $create = $_REQUEST['create']; }
+	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
+	if(! empty($notes) && ! empty($service_item_id)) {
+		addNotes($notes, $order, $service_item_id);
+
+		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
 	// Add permission to a certain user ipon the create or quote screen
-	if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
+	} else if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
 		editTech($techid, $tech_status, $service_item_id);
 		header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
 
@@ -229,12 +258,15 @@
 		editMaterials($materials, $qid, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order .'-'. $LINE_NUMBER);
+		//header('Location: /service.php?order_type='.$type.'&order_number=' . $order .'-'. $LINE_NUMBER);
 
 	// Else editing the task
 	} else {
-		$service_item_id = '';
-		//header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+		if (isset($_REQUEST['repair_item_id'])) {
+			completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
+		}
+
+		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
 	}
 
 	exit;

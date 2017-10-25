@@ -675,6 +675,8 @@
 					<!--======================= End Left half ======================-->
 					
 					<div class="col-sm-10 shipping-list" style="padding-top: 20px">
+
+						<h3 class="pull-left text-center" style="width:80%; margin:0px 0px 20px 0px">Tech view is getting a new look! <i class="fa fa-eye"></i> <a class="btn btn-sm btn-info" href="/service.php?order_type=repair&order_number=<?=$order_number?>">Preview it now.</a></h3>
 						<div class="row">
 							<div class="col-md-6">
 								<div class="table-responsive">

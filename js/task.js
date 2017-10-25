@@ -107,7 +107,15 @@ function calculateTax(object){
 	$(document).on("click", ".toggle-save", function(e){
 		e.preventDefault();
 
-		$("#save_form").submit();
+		var repair_code = $('#repair_code_select').val();
+
+		if(repair_code) {
+			var input = $("<input>").attr("type", "hidden").attr("name", "repair_code_id").val(repair_code);
+			//console.log(input);
+			$('#save_form').append($(input));
+		}
+
+		$('#save_form').submit();
 	});
 
 	$(document).on("click", ".quote_order, .create_order, .save_quote_order", function(e){
@@ -161,16 +169,16 @@ function calculateTax(object){
 		$("#save_form").submit();
 	});
 
-	$(document).on("click", ".create_order", function(e){
-		e.preventDefault();
+	// $(document).on("click", ".create_order", function(e){
+	// 	e.preventDefault();
 
-		var input = $("<input>")
-		               .attr("type", "hidden")
-		               .attr("name", "create").val("create");
-		$('#save_form').append($(input));
+	// 	var input = $("<input>")
+	// 	               .attr("type", "hidden")
+	// 	               .attr("name", "create").val("create");
+	// 	$('#save_form').append($(input));
 
-		$("#save_form").submit();
-	});
+	// 	$("#save_form").submit();
+	// });
 
 	$(document).on("change", ".part_amount, .part_qty, .part_perc", function(){
 		calculateCost($(this));

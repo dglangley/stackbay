@@ -46,7 +46,7 @@
 			// $link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$item_id;
 			$link = '/purchase_requests.php';
 
-			$query = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty, notes) VALUES (".prep($techid).", ".prep($item_id).", '".res($field)."', ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
+			$query = "INSERT INTO purchase_requests (techid, ro_number, item_id, item_id_label, requested, partid, qty, notes) VALUES (".prep($techid).", ".fres($order_number).",".prep($item_id).", '".res($field)."', ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
@@ -76,7 +76,7 @@
 		}
 	}
 
-	function pullComponent($pulled, $item_id, $label = 'repair_item_id') {
+	function pullComponent($pulled, $item_id, $label = 'repair_item_id', $order_number) {
 		foreach($pulled as $invid => $pulled) {
 			if($pulled > 0) {
 				// Set all used variables to 0 upon each iteration
@@ -126,8 +126,8 @@
 				// echo $total . '<br>';
 				// echo $removal_cost . '<br>';
 
-				$query = "INSERT INTO repair_components (invid, item_id, item_id_label, datetime, qty) 
-							VALUES ('".res($invid)."', '".res($item_id)."' , '".res($label)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
+				$query = "INSERT INTO repair_components (invid, ro_number, item_id, item_id_label, datetime, qty) 
+							VALUES ('".res($invid)."',  ".fres($order_number).", '".res($item_id)."' , '".res($label)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
 				qdb($query) OR die(qe() . ' ' .$query);
 
 				$query = "INSERT INTO average_costs (partid, amount, datetime) 
@@ -167,7 +167,7 @@
 	if($action == 'request'){
 		purchaseRequest($techid, $order_number, $item_id, $requested, $notes);
 	} else if($action == 'pull'){
-		pullComponent($pulled, $item_id);
+		pullComponent($pulled, $item_id, '', $order_number);
 	} else if($type == 'quote' OR $type == 'create'){
 		$order_number = quoteMaterials($techid, $requested);
 		$type = $task;
@@ -175,5 +175,5 @@
 
 		
 	// Determine the location to redirect to...
-	header('Location: /service.php?order_type='.$type.'&order_number='.$order_number.($action == 'pull' ? '&tab=materials' : ''));
+	header('Location: /service.php?order_type='.$type.'&order_number='.$order_number.'&tab=materials'); //($action == 'pull' ? '&tab=materials' : ''))
     exit;

@@ -8,6 +8,7 @@
 			//Sanitize right away for any sequel injections before even dealing with user input values
 			$username = '';
 			$email = '';
+			$type = 'password';
 			
 			//If no an email then user is using username otherwise login with an email check
 			if (!filter_var($_POST["username"], FILTER_VALIDATE_EMAIL)) {
@@ -22,6 +23,15 @@
 			//Clean up the password field from any possible injections
 			$user_password = $this->Sanitize(trim($_POST["password"]));
 
+			//Clean up the password field from any possible injections
+			$user_pin = $this->Sanitize(trim($_POST["pin"]));
+
+			if(empty($user_password) && $user_pin) {
+				// Passing off the pin as the users way of logging in
+				$user_password = $user_pin;
+				$type = 'pin';
+			}
+
 			//Set all user defined variables either email or username will be empty and null
 			$this->setEmail($email);
 			$this->setUsername($username);
@@ -32,7 +42,7 @@
 
 			//Authenticate the user password and create a cookie/token/expiry for the user if the password is correct
 			//Parameter sets the length of the token
-			$this->authenticateUser();
+			$this->authenticateUser($type);
 		}
 
 	}

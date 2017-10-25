@@ -23,17 +23,17 @@
 		$query = "SELECT description FROM repair_codes WHERE id = ".res($repair_code_id).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
-		echo $query;
+		//echo $query;
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
-			$notes = ucwords($type) . ' completed. Final Status: ' . $r['description'];
+			$notes = ucwords($type) . ' completed. Final Status: <b>' . $r['description'] . '</b>';
 		}
 
 		//$order_number = getOrderNumber($item_id);
 
 		$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
-		echo $query;
+		//echo $query;
 		qdb($query) OR die(qe().' '.$query);
 
 		// Update the repair_code_id to the order
@@ -87,6 +87,8 @@
 	if (isset($_REQUEST['repair_code_id'])) { $repair_code_id = $_REQUEST['repair_code_id']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 
+	$order_number = getOrderNumber($item_id);
+
 	if($type == 'complete'){
 		// completeTask($item_id, $repair_code_id, $techid, $table = 'repair_activites', $field = 'repair_item_id', $type = 'repair')
 		completeTask($item_id, $order_number, $repair_code_id, $techid);
@@ -94,6 +96,6 @@
 		testTask($item_id);
 	}
 
-	header('Location: /task_view.php?type=repair&order='.$order_number);
+	header('Location: /service.php?order_type=repair&order_number='.$order_number);
 
 	exit;
