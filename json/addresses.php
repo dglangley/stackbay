@@ -23,16 +23,18 @@
 
 	$ids = array();
 	$strs = array();
-	$query = "SELECT *, addresses.id addyid FROM ".$T['orders']." o, addresses WHERE ";
+	$query = "SELECT *, addresses.id addyid FROM ".$T['orders']." o, addresses a WHERE ";
 	if ($companyid) { $query .= "o.companyid = '".res($companyid)."' "; }
 	if ($companyid AND $q) { $query .= "AND "; }
-	if ($q) { $query .= "(name RLIKE '".res($q)."' OR street RLIKE '".res($q)."' OR addr2 RLIKE '".res($q)."' OR city RLIKE '".res($q)."' OR notes RLIKE '".res($q)."') "; }
+	if ($q) {
+		$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
+	}
 	$query .= "AND o.".res($fieldid)." = addresses.id ";//AND o.".res($fieldid)." IS NOT NULL ";
 	$query .= "GROUP BY addresses.id ORDER BY ".$T['datetime']." DESC; ";
 	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$ids[$r['addyid']] = true;
-		$str = format_address($r['addyid'],', ',false);
+		$str = utf8_encode(format_address($r['addyid'],', ',false));
 		if (isset($strs[$str])) { continue; }
 		$strs[$str] = true;
 
@@ -48,13 +50,16 @@
 	if ($companyid) {
 		$query = "SELECT * FROM company_addresses ca, addresses a ";
 		$query .= "WHERE ca.companyid = '".res($companyid)."' AND ca.addressid = a.id ";
-		if ($q) { $query .= "AND (name RLIKE '".res($q)."' OR street RLIKE '".res($q)."' OR addr2 RLIKE '".res($q)."' OR city RLIKE '".res($q)."' OR notes RLIKE '".res($q)."') "; }
+		if ($q) {
+			$query .= "AND (a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."' ";
+			$query .= "AND ca.name RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
+		}
 		if ($id_str) { $query .= "AND ca.addressid NOT IN (".$id_str.") "; }
 		$query .= "; ";
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['addressid']] = true;
-			$str = format_address($r['addressid'],', ',false);
+			$str = utf8_encode(format_address($r['addressid'],', ',false));
 			if (isset($strs[$str])) { continue; }
 			$strs[$str] = true;
 
@@ -76,7 +81,7 @@
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['id']] = true;
-			$addresses[] = array('id'=>$r['id'],'text'=>format_address($r['id'],', ',false));
+			$addresses[] = array('id'=>$r['id'],'text'=>utf8_encode(format_address($r['id'],', ',false)));
 		}
 	}
 
