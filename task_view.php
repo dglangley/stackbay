@@ -87,6 +87,14 @@
 		$component_data = getMaterials($order_number, $item_id, $type);
 		getLaborTime($item_id, $type);
 
+		foreach ($labor_data as $cost) {
+			$labor_total += $cost['cost'];
+		}
+		// $labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
+		// print_r($labor_data);
+
+		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
+
 	} else if($quote){
 
 		// Create the option for the user to create a quote or create an order
@@ -305,6 +313,8 @@
 			$result = qdb($query) OR die(qe());
 					
 			while ($row = mysqli_fetch_assoc($result)) {
+
+				// print_r($row);
 				$qty = 0;
 				$po_number = $row['po_number'];
 
@@ -315,8 +325,6 @@
 				$query .= "AND i.partid = ".prep($row['partid'])." ";
 				if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
 				$query .= "; ";
-
-				//echo $query;
 
 				$result2 = qdb($query) OR die(qe().' '.$query);
 
@@ -329,31 +337,31 @@
 
 				// This piece grabs more information on the component requested such as status, price and how many ordered if PO is active (AKA created)
 				$total = 0;
-				if($po_number) {
-					$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
-					$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
-					$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
-					$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
-					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.item_id_label = 'repair_item_id' ";
-					$query .= "AND rc.ro_number = pr.ro_number ";
-					$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
-					$query .= "GROUP BY i.id; ";
-					//echo $query;
-					$result = qdb($query) OR die(qe().'<BR>'.$query);
+				// if($po_number) {
+				// 	$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
+				// 	$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
+				// 	$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
+				// 	$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
+				// 	$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.item_id_label = 'repair_item_id' ";
+				// 	$query .= "AND rc.ro_number = pr.ro_number ";
+				// 	$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
+				// 	$query .= "GROUP BY i.id; ";
+				// 	//echo $query;
+				// 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-					if (mysqli_num_rows($result)>0) {
-						$query_row = mysqli_fetch_assoc($result);
-						$row['status'] = $query_row['status'];
-						$row['price'] = $query_row['price'];
-						if($status == 'Active') {
-							$row['ordered'] = $query_row['qty'];
-						} else {
-							$row['ordered'] = 0;
-						}
-					}
-					$row['ext'] = ($row['price'] * $row['ordered']);
-					$total += $ext;
-				}
+				// 	if (mysqli_num_rows($result)>0) {
+				// 		$query_row = mysqli_fetch_assoc($result);
+				// 		$row['status'] = $query_row['status'];
+				// 		$row['price'] = $query_row['price'];
+				// 		if($status == 'Active') {
+				// 			$row['ordered'] = $query_row['qty'];
+				// 		} else {
+				// 			$row['ordered'] = 0;
+				// 		}
+				// 	}
+				// 	$row['ext'] = ($row['price'] * $row['ordered']);
+				// 	$total += $ext;
+				// }
 
 				// Grab actual available quantity for the requested component
 				$row['available'] = getAvailable($row['partid'], $item_id);
@@ -363,6 +371,8 @@
 
 				$purchase_requests[] = $row;
 			}
+
+			//print_r($purchase_requests);
 
 			// Also grab elements that were fulfilled by the in stock
 			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
@@ -585,7 +595,7 @@
 			}
 		?>
 
-		<title><?=ucwords($type);?></title>
+		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.list {
