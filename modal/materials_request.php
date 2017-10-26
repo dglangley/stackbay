@@ -30,24 +30,25 @@
                             <input type="hidden" name="task" value="<?=$_REQUEST['task'];?>">
                     <?php } ?>
                         <!-- Materials pane -->
-                        <div class="tab-pane active" id="request">
+                        <div class="tab-pane active" id="request" style="padding-bottom: 25px;">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
                                     <thead>  
-                                        <th class='col-md-<?=((empty($order_number)) ? '8' : '10');?>'>Item Information</th>
-                                        <th class='col-md-2'>Qty</th>
+                                        <th class='col-md-<?=((empty($order_number)) ? '8' : '8');?>'>Item Information</th>
+                                        <th colspan="5" class="col-md-1"></th>
+                                        <th class='col-md-3'>Qty</th>
                                         <?php if(empty($order_number)){
                                             echo '<th class="col-md-2">PRICE</th>';
                                             echo '<th></th>';
                                         } else {
-                                            echo '<th></th>';
+
                                         } ?>
                                     </thead>
                                     <tbody id="search_input">                                             
                                         <tr id='search_row' style = 'padding:50px;background-color:#eff0f6;'>
-                                            <td id='search' colspan="<?=((empty($order_number)) ? '3' : '2');?>">
+                                            <td id='search' colspan="<?=((empty($order_number)) ? '3' : '6');?>">
                                                 <div class='input-group' style="width: 100%;">
-                                                    <input type='text' class='form-control input-sm' id='partSearch' placeholder='SEARCH FOR MATERIAL...'>
+                                                    <input type='text' class='form-control input-sm' id='partSearch' placeholder='SEARCH FOR MATERIAL...' autocomplete="off">
                                                     <span class='input-group-btn'>
                                                         <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
                                                     </span>
@@ -81,11 +82,11 @@
                     <?php if(empty($order_number)) { ?>
                         </form>
                     <?php } ?>
-                    <div class="tab-pane" id="stock">
+                    <div class="tab-pane" id="stock" style="padding-bottom: 25px;">
                         <form action="/materials_handler.php" method="post" class="list">
                             <input type="hidden" name="item_id" value="<?=$item_id;?>">
-                            <input type="hidden" name="order_number" value="<?=$_REQUEST['order'];?>">
-                            <input type="hidden" name="type" value="<?=$_REQUEST['type'];?>">
+                            <input type="hidden" name="order_number" value="<?=$_REQUEST['order_number'];?>">
+                            <input type="hidden" name="type" value="<?=$_REQUEST['order_type'];?>">
                             <input type="hidden" name="action" value="request">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">
@@ -109,11 +110,11 @@
                         </form>
                     </div>
 
-                    <div class="tab-pane" id="item_stock">
+                    <div class="tab-pane" id="item_stock" style="padding-bottom: 25px;">
                         <form action="/materials_handler.php" method="post">
-                            <input type="hidden" name="order_number" value="<?=$_REQUEST['order'];?>">
+                            <input type="hidden" name="order_number" value="<?=$_REQUEST['order_number'];?>">
                             <input type="hidden" name="item_id" value="<?=$item_id;?>">
-                            <input type="hidden" name="type" value="<?=$_REQUEST['type'];?>">
+                            <input type="hidden" name="type" value="<?=$_REQUEST['order_type'];?>">
                             <input type="hidden" name="action" value="pull">
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped table-condensed" id="items_table" style="margin-top:1.5%;">

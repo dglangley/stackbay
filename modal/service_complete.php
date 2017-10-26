@@ -19,7 +19,7 @@
 	   <form action="tasks_log.php" method="post">
 	      <div class="modal-body" id="modalAlertBody">
 			<div class="row">
-				<?php if(empty($serials)) { ?>
+				<?php if(empty(getDetails($item_id))) { ?>
 					<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
 						<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 						<strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
@@ -33,7 +33,7 @@
 				<input type="text" name="order_number" value="<?=$order_number;?>" class="hidden">
 
 				<div class="col-md-12">
-					<select class="form-control" name="repair_code_id">
+					<select class="form-control input-sm select2" name="repair_code_id">
 						<option selected="" value="null">- Select Status -</option>
 						<?php 
 							foreach($repair_codes as $code):

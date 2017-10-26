@@ -32,7 +32,7 @@
 	});
 
 	function loadTask(task_label, order_number){
-		window.location.href = "/task_view.php?type="+task_label+"&order="+order_number;
+		window.location.href = "/service.php?order_type="+task_label+"&order_number="+order_number;
 	}
 
 	// Initiates the initial login if the user is assigned to the task

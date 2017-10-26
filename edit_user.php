@@ -17,6 +17,7 @@
     $firstErr = '';
     $lastErr = '';
     $passwordErr = '';
+    $pinErr = '';
     $emailErr = '';
     $phoneErr = '';
     //End User Reg variables
@@ -368,7 +369,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6 pb-30">
+                                <div class="col-md-4 pb-30">
                                     <div class="input-group">
                                         <!-- Create password field if the update is successful or allow the admin to see the password typed in if has errors -->
                                         <input id="pass" type="text" name="password" class="form-control" rel="gp" data-size="10" data-character-set="a-z,A-Z,0-9,#" placeholder="New Password"  value="<?php echo ($edited ? '' : $password); ?>">
@@ -379,6 +380,12 @@
                                         <input id="gen" type="checkbox" name="generated_pass" hidden>
                                     </div>
                                     <label class="pull-right">*Generated passwords require user to reset password</label>
+                                </div>
+                                 <div class="col-md-2 pb-30">
+                                    <!-- <span class="error"><?php echo $passwordErr;?></span> -->
+                                    <input type="text" name="pin" class="form-control" placeholder="New/Reset Pin"  value="">
+
+                                    <label class="pull-right">*Minimum 4 digit value</label>
                                 </div>
                                 <div class="col-md-6 pb-30">
                                     <select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
@@ -522,6 +529,8 @@
 
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript">
+
+        // This massive jQuery function allows the user to select more than 1 line in multi-select fields without having to hold down control or shift
         (function(b){"function"===typeof define&&define.amd?define(["jquery"],b):"object"===typeof exports?module.exports=b(require("jquery")):b(jQuery||Zepto)})(function(b){var y=function(a,e,d){var c={invalid:[],getCaret:function(){try{var r,b=0,e=a.get(0),d=document.selection,f=e.selectionStart;if(d&&-1===navigator.appVersion.indexOf("MSIE 10"))r=d.createRange(),r.moveStart("character",-c.val().length),b=r.text.length;else if(f||"0"===f)b=f;return b}catch(g){}},setCaret:function(r){try{if(a.is(":focus")){var c,
 b=a.get(0);b.setSelectionRange?(b.focus(),b.setSelectionRange(r,r)):(c=b.createTextRange(),c.collapse(!0),c.moveEnd("character",r),c.moveStart("character",r),c.select())}}catch(e){}},events:function(){a.on("keydown.mask",function(c){a.data("mask-keycode",c.keyCode||c.which)}).on(b.jMaskGlobals.useInput?"input.mask":"keyup.mask",c.behaviour).on("paste.mask drop.mask",function(){setTimeout(function(){a.keydown().keyup()},100)}).on("change.mask",function(){a.data("changed",!0)}).on("blur.mask",function(){n===
 c.val()||a.data("changed")||a.trigger("change");a.data("changed",!1)}).on("blur.mask",function(){n=c.val()}).on("focus.mask",function(a){!0===d.selectOnFocus&&b(a.target).select()}).on("focusout.mask",function(){d.clearIfNotMatch&&!p.test(c.val())&&c.val("")})},getRegexMask:function(){for(var a=[],c,b,d,f,l=0;l<e.length;l++)(c=g.translation[e.charAt(l)])?(b=c.pattern.toString().replace(/.{1}$|^.{1}/g,""),d=c.optional,(c=c.recursive)?(a.push(e.charAt(l)),f={digit:e.charAt(l),pattern:b}):a.push(d||
@@ -535,9 +544,6 @@ d,e))},z=function(a,e,d){d=d||{};var c=b(a).data("mask"),g=JSON.stringify;a=b(a)
 g));return this};b.fn.masked=function(a){return this.data("mask").getMaskedVal(a)};b.fn.unmask=function(){clearInterval(b.maskWatchers[this.selector]);delete b.maskWatchers[this.selector];return this.each(function(){var a=b(this).data("mask");a&&a.remove().removeData("mask")})};b.fn.cleanVal=function(){return this.data("mask").getCleanVal()};b.applyDataMask=function(a){a=a||b.jMaskGlobals.maskElements;(a instanceof b?a:b(a)).filter(b.jMaskGlobals.dataMaskAttr).each(A)};var p={maskElements:"input,td,span,div",
 dataMaskAttr:"*[data-mask]",dataMask:!0,watchInterval:300,watchInputs:!0,useInput:function(a){var b=document.createElement("div"),d;a="on"+a;d=a in b;d||(b.setAttribute(a,"return;"),d="function"===typeof b[a]);return d}("input"),watchDataMask:!1,byPassKeys:[9,16,17,18,36,37,38,39,40,91],translation:{0:{pattern:/\d/},9:{pattern:/\d/,optional:!0},"#":{pattern:/\d/,recursive:!0},A:{pattern:/[a-zA-Z0-9]/},S:{pattern:/[a-zA-Z]/}}};b.jMaskGlobals=b.jMaskGlobals||{};p=b.jMaskGlobals=b.extend(!0,{},p,b.jMaskGlobals);
 p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMask&&b.applyDataMask()},p.watchInterval)});
-    </script>
-
-    <script type="text/javascript">
 
         // Generate a password string function
         function randString(id){

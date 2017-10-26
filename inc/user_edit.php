@@ -229,6 +229,7 @@
 	    	$new_username = '';
 	    	$new_email = '';
 	    	$new_password = '';
+	    	$new_pin = '';
 	    	$new_status = '';
 	    	$new_privilege = '';
 	    	$new_phone = '';
@@ -244,6 +245,9 @@
 		    }
 	    	if(isset($_REQUEST["password"])) {
 		    	$new_password = $this->Sanitize($_REQUEST['password']);
+		    }
+		    if(isset($_REQUEST["pin"])) {
+		    	$new_pin = $this->Sanitize($_REQUEST['pin']);
 		    }
 
 	    	$new_company = ( isset($_REQUEST['companyid']) ? $this->Sanitize( $_REQUEST['companyid']) : 25);
@@ -292,9 +296,17 @@
 	    	//Check if there is a new password and valid that it is strong
 	    	if(isset($new_password) && $new_password != '') {
 	    		if($this->validPassword($new_password)) {
-	    			$this->bcrypt($new_password);
+	    			$this->bCrypt($new_password);
 	    		}
 	    	}
+
+	    	if(! empty($new_pin)) {
+	    		// Adding 2nd parameter sets the pin instead of the password in the encrypted variables
+	    		// Valid pin a simple function that allows future advancements in pin requirements (Currently must be a digit and a minimum of 4 characters)
+	    		if($this->validPin($new_pin)) {
+					$this->bCrypt($new_pin, 'pin');
+				}
+			}
 
 	    	//Check if the user status is still active or not
 	    	//If blank then is inactive, remove the checked from active status and update database accordingly
@@ -313,7 +325,11 @@
 	    	//If no errors are present
 	    	$errors = $this->getError();
 	    	if(!isset($errors)) {
+	    		// savePin saves the pin post encryption
+				$this->savePin();
+				
 	    		$this->savetoDatabase('update');
+
 	    		return true;
 	    	}
 

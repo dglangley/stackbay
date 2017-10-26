@@ -11,6 +11,7 @@
 		private $username;
 		private $user_email;
 		private $user_password;
+		private $user_pin;
 		private $user_token;
 		private $user_salt;
 		//private $company;
@@ -92,6 +93,11 @@
 		function setPassword($password) {
 			//set user specific password (This will be the encrypted password for the user, not the plaintext)
 			$this->user_password = $password;
+		}
+
+		function setPin($pin) {
+			//set user specific password (This will be the encrypted password for the user, not the plaintext)
+			$this->user_pin = $pin;
 		}
 
 		function setToken($token) {
@@ -196,6 +202,11 @@
 			return $this->user_password;
 		}
 
+		function getPin() {
+			//get user specific encrypted password (We need this for private/protected variables)
+			return $this->user_pin;
+		}
+
 		function getToken() {
 			//get user specific token (We need this for private/protected variables)
 			return $this->user_token;
@@ -272,14 +283,20 @@
 		}
 
 		//This hashes password to bcrypt and generates a user salt
-		function bCrypt($password) {
+		function bCrypt($password, $type) {
 	        $this->salt($this->getUserID());
 
 	        $salt = $this->getSalt();
 
 	        //Using php bcrypt and the generated salt to encrypt password
 	        $encrypted = crypt($password, $salt);
-	        $this->setPassword($encrypted);
+
+	        // Add type to encrypt and designate data to determined areas
+	        if($type == 'pin') {
+	        	$this->setPin($encrypted);
+	        } else {
+	        	$this->setPassword($encrypted);
+	        }
 	    }
 
 	    //This function checks if the password fits the strength meter required 8 Min words with at least 1 cap and 1 symbol
@@ -332,6 +349,28 @@
 				$this->setError("<strong>Password validation failure</strong>: <br> $errorListing");
 				return (false);
 			} 
+			return (true);
+	    }
+
+	    function validPin($pin) {
+	    	$error = false;
+	    	$errorListing = '';
+
+	    	if( strlen($pin) < 4 ) {
+				$error = true;
+				$errorListing .= "Requires 4 or more characters<br>";
+			}
+
+			if(! is_numeric ($pin) ) {
+				$error = true;
+				$errorListing .= "Pin can only be numeric<br>";
+			}
+
+			if($error){
+				$this->setError("<strong>Pin validation failure</strong>: <br> $errorListing");
+				return (false);
+			} 
+
 			return (true);
 	    }
 
@@ -724,6 +763,25 @@
 	    	}
 	    }
 
+	    function savePin() {
+	    	global $WLI;
+
+	    	//If the password is null lets not update it
+			$encrypted_pin = $this->getPin();
+			$userid = $this->getUserID();
+
+			if(! empty($encrypted_pin)) {
+				//Prepare and Bind for Users
+				$stmt = $WLI->prepare('
+					UPDATE users SET encrypted_pin = ? WHERE id = ?
+				');
+				//s = string, i - integer, d = double, b = blob for params of mysqli
+				$stmt->bind_param("si", $encrypted_pin, $userid);
+				$stmt->execute();
+				$stmt->close();
+			}
+	    }
+
 	    //Function to check if the username already exists in the database
 	    //Should add a new parameter to also allow email checks
 	    function checkUsername($username = '', $form = '') {
@@ -828,7 +886,7 @@
 
 		//Function used to authenticate the user
 		//We will also use this to grab user information and see if this is the users first loggin of a admin generated password
-		function authenticateUser() {
+		function authenticateUser($type = 'password') {
 			$ePassword = '';
 			$initLogin = '';
 			$initexpiry = '';

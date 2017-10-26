@@ -1,20 +1,20 @@
 <?php
-	$rootdir = $_SERVER['ROOT_DIR'];
-	include_once $rootdir.'/inc/dbconnect.php';
-	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/getContact.php';
-	include_once $rootdir.'/inc/format_date.php';
-	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/keywords.php';
-	include_once $rootdir.'/inc/dictionary.php';
-	include_once $rootdir.'/inc/getAddresses.php';
-	include_once $rootdir.'/inc/getCompany.php';
-	include_once $rootdir.'/inc/getUser.php';
-	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/form_handle.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getAddresses.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
 
 	// List of subcategories
 	$documentation = true;
+	$details = true;
 	$labor = true;
 	$activity = true;
 	$materials = true;
@@ -34,6 +34,8 @@
 	$materials_data = array();
 	$expenses_data = array();
 	$closeout_data = array();
+	$labor_data = array();
+	$repair_codes = array();
 	$ticketStatus = '';
 
 	$materials_total = 0.00;
@@ -42,25 +44,35 @@
 	$outside_services_total = 0.00;
 	$total_amount = 0.00;
 
-	if($order_number) {
-		// Get the details of the order for the sidebar
-		$ORDER = getOrder($order_number, $type);
-	} else {
-		// Send them back as order number is required for both quote or view or create
-		// header('Location: /order.php');
-	}
+	// if($order_number) {
+	// 	// Get the details of the order for the sidebar
+	// 	$ORDER = getOrder($order_number, ucwords($type));
+	// } else {
+	// 	// Send them back as order number is required for both quote or view or create
+	// 	// header('Location: /order.php');
+	// }
 
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
-	if($ORDER['repair_code_id']) {
-		$ticketStatus = getRepairCode($ORDER['repair_code_id']);
-	}
 
 	// Disable the modules you want on the page here
-	if($type == 'service') {
+	if($type == 'installation') {
 
 	} else if($type == 'build') {
 
 	} else if($type == 'repair') {
+
+		if($ORDER['repair_code_id']) {
+			$ticketStatus = getRepairCode($ORDER['repair_code_id']);
+		}
+
+		$query = "SELECT * FROM repair_codes;";
+
+		$result = qdb($query) or die(qe() . ' ' . $query);
+
+		while ($row = $result->fetch_assoc()) {
+			$repair_codes[] = $row;
+		}
+
 		// Diable Modules for Repair
 		$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
 
@@ -69,15 +81,26 @@
 		$expenses = false;
 		$outside = false;
 
-		$serials = getSerials($item_id);
+		$item_details = getItemDetails($item_id, 'repair_items', 'id');
 
 		$activity_data = grabActivities($order_number, $item_id, $type);
 		$component_data = getMaterials($order_number, $item_id, $type);
+		getLaborTime($item_id, $type);
+
+		foreach ($labor_data as $cost) {
+			$labor_total += $cost['cost'];
+		}
+		// $labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
+		// print_r($labor_data);
+
+		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 
 	} else if($quote){
+
 		// Create the option for the user to create a quote or create an order
 		$activity = false;
 		$documentation = false;
+		$details = false;
 		$task_edit = true; 
 
 		if(! empty($task_number)) {
@@ -111,7 +134,7 @@
 	    return $display;
 	}
 
-	function getSerials($itemid) {
+	function getDetails($itemid) {
 		$serials = array();
 
 		$query = "SELECT serial_no FROM inventory WHERE repair_item_id = ".res($itemid).";";
@@ -121,9 +144,12 @@
 			$serials[] = $row['serial_no'];
 		}
 
+		//print_r($serials);
+
 		return $serials;
 	}
 
+	// Get the details of the current item_id (repair_item_id, service_item_id etc)
 	function getItemDetails($item_id, $table, $field) {
 		$data = array();
 
@@ -235,17 +261,60 @@
 		return $repair_activities;
 	}
 
+	function in_array_r($item , $array){
+	    return preg_match('/"'.$item.'"/i' , json_encode($array));
+	}
+
 	function getMaterials($order_number, $item_id, $type = 'repair', $field = 'repair_item_id') {
 		global $materials_total;
 
 		$purchase_requests = array();
-		$query;
 		
 		if($type == 'repair') {
+			// $query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($order_number) ." GROUP BY partid, po_number;";
+			// $result = qdb($query) OR die(qe());
+					
+			// while ($row = $result->fetch_assoc()) {
+			// 	$qty = 0;
+
+			// 	$po_number = $row['po_number'];
+
+			// 	//Check to see what has been received and sum it into the total Ordered
+			// 	$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+			// 	if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+			// 	$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+			// 	$query .= "AND i.partid = ".prep($row['partid'])." ";
+			// 	if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+			// 	$query .= "; ";
+			// 	$received = qdb($query) OR die('<BR><BR><BR><BR>'.qe().'<BR>'.$query);
+
+			// 	if (mysqli_num_rows($received)>0) {
+			// 		$receivedr = mysqli_fetch_assoc($received);
+			// 		$qty = $receivedr['totalReceived'];
+			// 	}
+
+
+			// 	$row['totalReceived'] = $qty;
+			// 	$purchase_requests[] = $row;
+			// }
+
+			// $query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+			// $query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+			// $query .= "AND serial_no IS NULL GROUP BY i.partid; ";
+   //  		$result = qdb($query) OR die(qe()); 
+
+   //  		while ($row = $result->fetch_assoc()) {
+			// 	if(!in_array_r($row['partid'] , $purchase_requests)) {
+			// 		$purchase_requests[] = $row;
+			// 	}
+			// }
+
 			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
 					
 			while ($row = mysqli_fetch_assoc($result)) {
+
+				// print_r($row);
 				$qty = 0;
 				$po_number = $row['po_number'];
 
@@ -268,31 +337,31 @@
 
 				// This piece grabs more information on the component requested such as status, price and how many ordered if PO is active (AKA created)
 				$total = 0;
-				if($po_number) {
-					$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
-					$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
-					$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
-					$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
-					$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.item_id_label = 'repair_item_id' ";
-					$query .= "AND rc.ro_number = pr.ro_number ";
-					$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
-					$query .= "GROUP BY i.id; ";
-					//echo $query;
-					$result = qdb($query) OR die(qe().'<BR>'.$query);
+				// if($po_number) {
+				// 	$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
+				// 	$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
+				// 	$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
+				// 	$query .= "WHERE po.po_number = ".prep($po_number)." AND pr.partid = ".prep($row['partid'])." ";
+				// 	$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.item_id = " . $item_id . " AND pr.item_id_label = 'repair_item_id' ";
+				// 	$query .= "AND rc.ro_number = pr.ro_number ";
+				// 	$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
+				// 	$query .= "GROUP BY i.id; ";
+				// 	//echo $query;
+				// 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-					if (mysqli_num_rows($result)>0) {
-						$query_row = mysqli_fetch_assoc($result);
-						$row['status'] = $query_row['status'];
-						$row['price'] = $query_row['price'];
-						if($status == 'Active') {
-							$row['ordered'] = $query_row['qty'];
-						} else {
-							$row['ordered'] = 0;
-						}
-					}
-					$row['ext'] = ($row['price'] * $row['ordered']);
-					$total += $ext;
-				}
+				// 	if (mysqli_num_rows($result)>0) {
+				// 		$query_row = mysqli_fetch_assoc($result);
+				// 		$row['status'] = $query_row['status'];
+				// 		$row['price'] = $query_row['price'];
+				// 		if($status == 'Active') {
+				// 			$row['ordered'] = $query_row['qty'];
+				// 		} else {
+				// 			$row['ordered'] = 0;
+				// 		}
+				// 	}
+				// 	$row['ext'] = ($row['price'] * $row['ordered']);
+				// 	$total += $ext;
+				// }
 
 				// Grab actual available quantity for the requested component
 				$row['available'] = getAvailable($row['partid'], $item_id);
@@ -303,6 +372,8 @@
 				$purchase_requests[] = $row;
 			}
 
+			//print_r($purchase_requests);
+
 			// Also grab elements that were fulfilled by the in stock
 			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 			$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
@@ -310,9 +381,9 @@
 			$result = qdb($query) OR die(qe()); 
 
 			while ($row = $result->fetch_assoc()) {
-				//if(!in_array_r($row['partid'] , $purchase_requests)) {
-				$purchase_requests[] = $row;
-				//}
+				if(!in_array_r($row['partid'] , $purchase_requests)) {
+					$purchase_requests[] = $row;
+				}
 			}
 		} else if($type == 'quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
@@ -357,30 +428,6 @@
 		return $qty;
 	}
 
-	function getOrder($order, $type) {
-		$results = array();
-
-		if(strtolower($type) == 'repair') {
-			$query = "SELECT * FROM repair_orders ro WHERE ro.ro_number = ".res($order).";";
-			$result = qdb($query) OR die(qe());
-
-			if (mysqli_num_rows($result)>0) {
-				$results = mysqli_fetch_assoc($result);
-			}
-		} else if(strtolower($type) == 'quote') {
-			$query = "SELECT * FROM service_quotes WHERE id = ".res($order).";";
-			$result = qdb($query) OR die(qe());
-			
-			// echo $query;
-
-			if (mysqli_num_rows($result)>0) {
-				$results = mysqli_fetch_assoc($result);
-			}
-		}
-
-		return $results;
-	}
-
 	function getOutsourced($item_id, $type) {
 		global $outside_services_total;
 		$outsourced = array();
@@ -408,13 +455,16 @@
 
 	// Creating an array for the current task based on total time spent per unique userid on the task
 	function getLaborTime($item_id, $type){
-		$totalSeconds = array();
+		global $labor_data;
+		$totalSeconds = 0; 
+		$totalSeconds_data = array();
+
 
 		$query = "SELECT * FROM timesheets WHERE taskid = ".res($item_id)." AND task_label = '".res(strtolower($type))."' AND clockin IS NOT NULL AND clockout IS NOT NULL;";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		while($r = mysqli_fetch_assoc($result)){
-			$totalSeconds[$r['userid']] += strtotime($r['clockout']) - strtotime($r['clockin']);
+			$totalSeconds_data[$r['userid']] += strtotime($r['clockout']) - strtotime($r['clockin']);
 		}
 
 		// Also pull assigned users and set them to 0 hours worked
@@ -422,10 +472,61 @@
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		while($r = mysqli_fetch_assoc($result)){
-			$totalSeconds[$r['userid']] += 0;
+			$totalSeconds_data[$r['userid']] += 0;
 		}
 
-		return $totalSeconds;
+		// If no user is assigned to this task and ONLY single-user class then auto add them into the system as the assigned person
+		if(empty($totalSeconds_data)) {
+			// Check by type of work if there is only 1 user in this class
+			$query = "SELECT u.id as userid, c.name 
+    			FROM service_classes sc, user_classes uc, users u, contacts c 
+    			WHERE LOWER(sc.class_name) = '".res(strtolower($type))."' AND uc.classid = sc.id AND u.id = uc.userid AND c.id = u.contactid;";
+    		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+    		if(mysqli_num_rows($result) == 1) {
+    			$r = mysqli_fetch_assoc($result);
+    			//print_r($r);
+    			$query = "REPLACE INTO service_assignments (service_item_id, userid) VALUES (".fres($item_id).", ".fres($r['userid']).")";
+    			qdb($query) OR die(qe() .' ' . $query);
+
+    			$totalSeconds_data[$r['userid']] += 0;
+    		}
+		}
+
+		// From the data given
+		foreach($totalSeconds_data as $userid => $labor_seconds) {
+			$data = array();
+			$status = '';
+			$hours_worked = ($labor_seconds / 3600);
+			//$totalSeconds += $labor_seconds;
+			$rate = 0;
+
+			$data['laborSeconds'] = $labor_seconds;
+
+			// Get the users hourly rate
+			$query = "SELECT hourly_rate FROM users WHERE id=".res($userid).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
+
+			if (mysqli_num_rows($result)) {
+				$result = mysqli_fetch_assoc($result);
+				$rate = $result['hourly_rate'];
+			}
+
+			// Check if the user is currently allowed on this job or not
+			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($userid).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
+
+			if (mysqli_num_rows($result)) {
+				$status = 'active';
+			}
+
+			$data['status'] = $status;
+
+			$cost = round($rate * $hours_worked, 2);
+			$data['cost'] = $cost;
+
+			$labor_data[$userid] = $data;
+		}
 	}
 
 	function toTime($secs) {
@@ -485,13 +586,16 @@
 <html>
 	<head>
 		<?php 
-			include_once $rootdir.'/inc/scripts.php';
-			include_once $rootdir.'/modal/materials_request.php';
-			include_once $rootdir.'/modal/service_complete.php';
-			include_once $rootdir.'/modal/results.php';
+			include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
+			include_once $_SERVER["ROOT_DIR"].'/modal/materials_request.php';
+			include_once $_SERVER["ROOT_DIR"].'/modal/results.php';
+
+			if(! $quote) {
+				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
+			}
 		?>
 
-		<title><?=ucwords($type);?></title>
+		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.list {
@@ -605,6 +709,10 @@
 			.part_listing .add_button {
 				display: none;
 			}
+
+			.labor_user.inactive {
+				opacity: 0.5;
+			}
 		</style>
 	</head>
 	
@@ -619,39 +727,63 @@
 			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
-					<?php if(!$build && ! $quote) { ?>
-							<?php if(! $task_edit) { ?>
-								<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-							<?php } else { ?>
-								<a href="javascript:void(0)" class="text-success btn btn-default btn-sm toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
-							<?php } ?>
+					<?php if(! $quote && $type == 'repair') { ?>
+						<?php if(! $task_edit) { ?>
+							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<?php } else { ?>
+							<div class="col-md-6" style="padding-top: 10px;">
+								<?php if(! empty($repair_codes)) { ?>
+									<select style="margin-top: 10px;" id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
+										<option selected="" value="null">- Select Status -</option>
+										<?php 
+											foreach($repair_codes as $code):
+												echo "<option value='".$code['id']."' ".($ORDER['repair_code_id'] == $code['id'] ? 'selected' : '').">".$code['description']."\t".$code['code']."</option>";
+											endforeach;
+										?>
+									</select>
+								<?php } ?>
+							</div>
+						<?php } ?>
 
-							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
-								<i class="fa fa-qrcode"></i> Receive
-							</a>
+						<?php if(! $task_edit) { ?>
+						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+							<i class="fa fa-qrcode"></i> Receive
+						</a>
+						<?php } ?>
 
-						<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-terminal"></i></button>
+						<!-- <div class="col-md-5"> -->
+							<form action="tasks_log.php" style="display: inline-block;">
+								<input type="hidden" name="item_id" value="<?=$item_id;?>">
+								<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
+									<i class="fa fa-terminal"></i>
+								</button>
+							</form>
+						<!-- </div> -->
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($task_number ? '' : 'New ') . 'Quote# ' . $order_number_details);?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></h2>
 				</div>
 				<div class="col-sm-4">
-					<div class="col-md-6">
+					<div class="col-md-4">
 					</div>
-					<div class="col-md-6">
+					<div class="col-md-8">
 						<!-- <div class="col-md-8"> -->
 							<?php if(! $quote){ ?>
 								<div class="col-md-9" style="padding-top: 10px;">
-									<select name="task" class="form-control repair-task-selector task_selection pull-right">
+									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
 										<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								</div>
 
 								<div class="col-md-3 remove-pad">
-									<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
-										<i class="fa fa-save"></i> Complete
-									</button>
+									<?php if($task_edit) { ?>
+										<a href="#" class="btn btn-success toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+									<?php } else if(! $ticketStatus) { ?>
+										<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+											<i class="fa fa-save"></i> Complete
+										</button>
+									<?php } ?>
 								</div>
 							<?php } else { ?>
 
@@ -672,7 +804,7 @@
 			</div>
 
 			<form id="save_form" action="/task_edit.php" method="post">
-				<input type="hidden" name="item_id" value="<?=$item_id;?>">
+				<input type="hidden" name="<?=$type;?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
 				<input type="hidden" name="line_number" value="<?=$task_number;?>">
 				<input type="hidden" name="type" value="<?=$type;?>">
@@ -735,7 +867,10 @@
 				        <ul class="nav nav-tabs nav-tabs-ar">
 				        	<?php if($activity) {
 					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><i class="fa fa-folder-open-o"></i> Activity</a></li>';
-				        	}  
+				        	} 
+				        	if($details) { 
+					        	echo '<li class="'.($tab == 'details' ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> Details</a></li>';
+					        } 
 				        	if($documentation) { 
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> Documentation</a></li>';
 					        } 
@@ -743,7 +878,7 @@
 								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-list"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-cog" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
@@ -768,6 +903,15 @@
 											<div class="col-md-6">Activity</div>
 										</div>
 
+										<div class="col-md-12" style="margin: 10px 0;">
+											<div class="input-group">
+												<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
+												<span class="input-group-btn">
+													<button class="btn btn-sm btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
+												</span>
+											</div>
+										</div>
+
 										<?php
 											if($activity_data) {
 											foreach($activity_data as $activity_row):
@@ -781,6 +925,31 @@
 										<?php endforeach; } ?>
 									</section>
 								</div><!-- Activity pane -->
+							<?php } ?>
+
+							<!-- Details pane -->
+							<?php if($details) { ?>
+								<div class="tab-pane <?=($tab == 'details' ? 'active' : '');?>" id="details">
+									<section>
+										<div class="row list table-first">
+											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Company')?></div>
+											<div class="col-md-2"><?=($type == 'repair' ? 'Serial(s)' : 'Site Address')?></div>
+											<div class="col-md-2"><?=($type == 'repair' ? 'RMA#' : '')?></div>
+											<div class="col-md-5">Notes</div>
+										</div>
+										<hr>
+										<?php //print_r($item_details); ?>
+											<div class="row list">
+												<div class="col-md-3"><?=trim(partDescription($item_details['partid'], true));?></div>
+												<div class="col-md-4">
+													<?php foreach(getDetails($item_id) as $serial) {
+														echo $serial;
+													} ?>
+												</div>
+												<div class="col-md-5"><?=$item_details['notes'];?></div>
+											</div>
+									</section>
+								</div><!-- Details pane -->
 							<?php } ?>
 
 							<?php if($documentation) { ?>
@@ -803,7 +972,9 @@
 											<div class="col-md-3">MOP</div>
 											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
 										</div>
+
 										<hr>
+
 										<div class="row list">
 											<div class="col-md-3">7/18/2017</div>
 											<div class="col-md-3">David</div>
@@ -875,41 +1046,32 @@
 				                        </thead>
 				                        <tbody>
 				                        	<?php 
-				                        		$totalSeconds = 0; 
+				                        		$totalSeconds = 0;
 				                        		if(! $quote):
-				                        		foreach(getLaborTime($item_id, $type) as $user => $labor_seconds) { 
-				                        			$hours_worked = ($labor_seconds / 3600);
-				                        			$totalSeconds += $labor_seconds;
-				                        			$rate = 0;
-
-				                        			$query = "SELECT hourly_rate FROM users WHERE id=".res($user).";";
-				                        			$result = qdb($query) OR die(qe() . ' ' . $query);
-
-				                        			if (mysqli_num_rows($result)) {
-														$result = mysqli_fetch_assoc($result);
-														$rate = $result['hourly_rate'];
-													}
-
-													$cost = round($rate * $hours_worked, 2);
+				                        		foreach($labor_data as $user => $data) { 
+													//$cost = round($rate * $hours_worked, 2);
+													$totalSeconds += $data['laborSeconds'];
 				                        	?>
-						                        	<tr class="valign-top">
+						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
 															<?=getUser($user);?>
 						                                </td>
 						                                <td>
-															<?=toTime($labor_seconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($labor_seconds));?></span>
+															<?=toTime($data['laborSeconds']);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($data['laborSeconds']));?></span>
 						                                </td>
 						                                <td class="text-right">
 						                                	<?php if(in_array("4", $USER_ROLES)){ ?>
-																<?=format_price($cost);?>
+																<?=format_price($data['cost']);?>
 															<?php } ?>
 						                                </td>
 						                                <td class="text-center">
-						                                	<?php if(in_array("4", $USER_ROLES)){ ?>
+						                                	<?php if(in_array("4", $USER_ROLES) && $data['status']){ ?>
 							                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
 														        	<i class="fa fa-trash" aria-hidden="true"></i>
 														        </button>
-													        <?php } ?>
+													        <?php } else { ?>
+													        	<i title="In Active" class="fa fa-user-times pull-right" style="color:#d9534f; margin-top: 10px; margin-right: 10px;"></i>
+													       	<?php } ?>
 						                                </td>
 						                            </tr>
 				                            <?php 
@@ -948,8 +1110,6 @@
 					                                <td class="text-right">
 					                                    <strong>$ 0.00</strong>
 					                                </td>
-					                               <!--  <td colspan="2">
-					                                </td> -->
 					                            </tr>
 				                            <?php } ?>
 										</tbody>
@@ -998,7 +1158,7 @@
 											</thead>
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
-												<?php //print '<pre>' . print_r($component_data, true) . '</pre>';?>
+												<?php // print '<pre>' . print_r($component_data, true) . '</pre>';?>
 												<?php $total = 0; foreach($component_data as $row){ ?>
 													<?php if(! $quote) { ?>
 														<tr class="list">

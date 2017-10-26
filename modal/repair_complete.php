@@ -26,7 +26,7 @@
 		</div><!-- row -->
 		<div class="row">
 			<div class="col-md-12">
-				<select class="form-control" name="repair_code">
+				<select class="form-control input-sm select2" name="repair_code">
 					<option selected="" value="null">- Select Status -</option>
 					<?php 
 						foreach($repair_codes as $code):
