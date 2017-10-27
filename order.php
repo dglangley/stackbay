@@ -62,7 +62,7 @@
 		return ($col);
 	}
 
-	function buildDescrCol($P,$memo,$id,$def_type='Part') {
+	function buildDescrCol($P,$id,$def_type='Part') {
 		global $EDIT;
 
 		if ($id) {
@@ -85,12 +85,14 @@
 		}
 
 		if ($EDIT) {
+			$editor = '';
 			if ($def_type=='Site') {
 				$cls = '';
 				$fieldname = 'addressid';
 				$selname = 'address-selector';
 				$dataurl = '/json/addresses.php';
 				$dataplacer = '- Select an Address -';
+				$editor = '<a href="javascript:void(0);" class="address-editor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
 			} else if ($def_type=='Part') {
 				if ($id) { $cls = 'select2'; } else { $cls = 'hidden'; }
 				$fieldname = 'partid';
@@ -99,15 +101,18 @@
 				$dataplacer = '';
 			}
 
+			$sel = '';
+			if ($P['id']) {
+				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
+			}
 			$col .= '
-					<select name="'.$fieldname.'['.$id.']" size="1" class="'.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
-						<option value="'.$P['id'].'" selected>'.$P['name'].'</option>
+					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="'.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
+						'.$sel.'
 					</select>
+					'.$editor.'
 			';
-			if ($memo!==false) { $col .= '<br/><textarea name="memo['.$id.']" rows="2" class="form-control input-sm">'.$memo.'</textarea>'; }
 		} else {
 			$col .= $P['name'];
-			if ($memo!==false) { $col .= '<br/>'.$memo; }
 		}
 
 		$col .= '</div>';
@@ -162,7 +167,7 @@
 	function addItemRow($id,$T) {
 		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT;
 
-		$H = array();
+		$P = array();
 		// used as a guide for the fields in the items table for this order/order type
 		$items = getItems($T['item_label']);
 		if (array_key_exists('partid',$items) OR (array_key_exists('item_label',$items) AND $items['item_label']=='partid')) {
@@ -184,7 +189,8 @@
 			$r['name'] = '';
 			if (array_key_exists('partid',$r) AND $r['partid']) {
 				$H = hecidb($r['partid'],'id');
-				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$H[$r['partid']]['name'].'</option>'.chr(10);
+				$P = $H[$r['partid']];
+				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$P['name'].'</option>'.chr(10);
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
@@ -241,10 +247,14 @@
 
 		$delivery_col = '';
 		$condition_col = '';
+		$warranty_col = '';
 		$memo = false;
 		if (array_key_exists('memo',$r)) { $memo = $r['memo']; }
 
+		$memo_col = '';
 		if ($EDIT) {
+			if ($memo!==false) { $memo_col = '<br/><textarea name="memo['.$id.']" rows="2" class="form-control input-sm">'.$memo.'</textarea>'; }
+
 			if ($T["delivery_date"]) {
 				$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
@@ -262,14 +272,18 @@
 			</select>
 				';
 			}
-			$warranty_col = '
+			if ($T["warranty"]) {
+				$warranty_col = '
 			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
 				<option value="'.$r[$T['warranty']].'" selected>'.getWarranty($r[$T['warranty']],'warranty').'</option>
 			</select>
-			';
+				';
+			}
 			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
+			if ($memo!==false) { $memo_col = '<br/>'.$memo; }
+
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
 			if ($T["condition"]) {
 				$condition_col = getCondition($r['conditionid']);
@@ -283,8 +297,9 @@
 	<tr class="'.$row_cls.'">
 		<td class="col-md-4 part-container">
 			'.buildLineCol($r['line_number'],$id).'
-			'.buildDescrCol($H[$r['partid']],$memo,$id,$def_type).'
+			'.buildDescrCol($P,$id,$def_type).'
 			'.$r['input-search'].'
+			'.$memo_col.'
 		</td>
 		<td class="col-md-1">
 			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1).'
@@ -930,9 +945,14 @@
 			if (str.indexOf('Add')==-1) { return; }
 			str = str.replace('Add ','').replace('...','');
 
+			if (! companyid) {
+				modalAlertShow("Address Error","Please select a company before adding a new address");
+				return;
+			}
+
 			$("#modal-address").populateAddress(0,idname,str);
 		});
-		$("#address-save").on('click', function() {
+		$("#save-address").on('click', function() {
 			var address = $(".modal");
 			var addressid = address.find(".address-modal").data('oldid');
 			var idname = address.find(".address-modal").data('idname');
@@ -942,8 +962,15 @@
 			var city = address.find(".address-city").val().trim();
 			var state = address.find(".address-state").val().trim();
 			var postal_code = address.find(".address-postal_code").val().trim();
+			var nickname = address.find(".address-nickname").val().trim();
+			var alias = address.find(".address-alias").val().trim();
+			var contactid = address.find(".address-contactid").val().trim();
+			var code = address.find(".address-code").val().trim();
 
-			console.log(window.location.origin+"/json/save-address.php?addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code));
+			var params = "addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+
+						"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code)+
+						"&nickname="+escape(nickname)+"&alias="+escape(alias)+"&contactid="+escape(contactid)+"&code="+escape(code);
+			console.log(window.location.origin+"/json/save-address.php?"+params);
 			$.ajax({
 				url: 'json/save-address.php',
 				type: 'get',
@@ -956,6 +983,10 @@
 					'state': state,
 					'postal_code': postal_code,
 					'companyid': companyid,
+					'nickname': nickname,
+					'alias': alias,
+					'contactid': contactid,
+					'code': code,
 				},
 				dataType: 'json',
 				success: function(json, status) {
@@ -1040,12 +1071,14 @@
 
 			if (v=='Site') {
 				$(".input-search").removeClass('hidden').addClass('hidden');
+				$(this).closest(".part-container").find(".address-editor").removeClass('hidden');
 				$(this).closest(".part-container").find(".address-selector").selectize();
 				$(this).closest(".part-container").find(".address-selector").removeClass('hidden').addClass('select2');
 				// remove previously-found parts, if any
 				$(this).closest("tbody").find(".found_parts").remove();
 			} else if (v=='Part') {
 				$(".input-search").removeClass('hidden');
+				$(this).closest(".part-container").find(".address-editor").removeClass('hidden').addClass('hidden');
 				$(this).closest(".part-container").find(".address-selector").select2("destroy");
 				$(this).closest(".part-container").find(".address-selector").removeClass('select2').addClass('hidden');
 			}
@@ -1177,15 +1210,22 @@
 			address.find(".address-city").val('');
 			address.find(".address-state").val('');
 			address.find(".address-postal_code").val('');
+			address.find(".address-nickname").val('');
+			address.find(".address-alias").val('');
+			//reset contacts list
+			address.find(".address-contactid").val('').trigger('change');
+			//rebuild with updated info (i.e., companyid if changed)
+			address.find(".address-contactid").selectize();
+			address.find(".address-code").val('');
 			address.find(".address-modal").data('oldid',addressid);
 			address.find(".address-modal").data('idname',idname);
 
 			if (addressid>0) {
-				console.log(window.location.origin+"/json/address.php?addressid="+addressid);
+				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
 				$.ajax({
 					url: 'json/address.php',
 					type: 'get',
-					data: {'addressid': addressid},
+					data: {'addressid': addressid, 'companyid': companyid},
 					dataType: 'json',
 					success: function(json, status) {
 						if (json.message) { alert(json.message); return; }
@@ -1197,6 +1237,12 @@
 						address.find(".address-city").val(json.city);
 						address.find(".address-state").val(json.state);
 						address.find(".address-postal_code").val(json.postal_code);
+						address.find(".address-nickname").val(json.nickname);
+						address.find(".address-alias").val(json.alias);
+						if (json.contactid>0) {
+							address.find(".address-contactid").populateSelected(json.contactid, json.contact);
+						}
+						address.find(".address-code").val(json.code);
 
 						address.modal('show');
 					},

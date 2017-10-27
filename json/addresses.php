@@ -14,6 +14,7 @@
 	$fieldid = 'bill_to_id';
 	if (isset($_REQUEST['fieldid'])) { $fieldid = $_REQUEST['fieldid']; }
 	if ($order_type=='Purchase' AND $fieldid=='bill_to_id') { $fieldid = 'remit_to_id'; }
+	if ($fieldid<>'ship_to_id' AND $fieldid<>'bill_to_id' AND $fieldid<>'remit_to_id') { $fieldid = ''; }
 
 	$addresses = array();
 
@@ -23,22 +24,24 @@
 
 	$ids = array();
 	$strs = array();
-	$query = "SELECT *, addresses.id addyid FROM ".$T['orders']." o, addresses a WHERE ";
-	if ($companyid) { $query .= "o.companyid = '".res($companyid)."' "; }
-	if ($companyid AND $q) { $query .= "AND "; }
-	if ($q) {
-		$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
-	}
-	$query .= "AND o.".res($fieldid)." = addresses.id ";//AND o.".res($fieldid)." IS NOT NULL ";
-	$query .= "GROUP BY addresses.id ORDER BY ".$T['datetime']." DESC; ";
-	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$ids[$r['addyid']] = true;
-		$str = utf8_encode(format_address($r['addyid'],', ',false));
-		if (isset($strs[$str])) { continue; }
-		$strs[$str] = true;
+	if ($fieldid) {
+		$query = "SELECT *, a.id addyid FROM ".$T['orders']." o, addresses a WHERE ";
+		if ($companyid) { $query .= "o.companyid = '".res($companyid)."' "; }
+		if ($companyid AND $q) { $query .= "AND "; }
+		if ($q) {
+			$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
+		}
+		$query .= "AND o.".res($fieldid)." = a.id ";//AND o.".res($fieldid)." IS NOT NULL ";
+		$query .= "GROUP BY a.id ORDER BY ".$T['datetime']." DESC; ";
+		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$ids[$r['addyid']] = true;
+			$str = utf8_encode(format_address($r['addyid'],', ',false));
+			if (isset($strs[$str])) { continue; }
+			$strs[$str] = true;
 
-		$addresses[] = array('id'=>$r['addyid'],'text'=>$str);
+			$addresses[] = array('id'=>$r['addyid'],'text'=>$str);
+		}
 	}
 
 	$id_str = '';
@@ -52,7 +55,7 @@
 		$query .= "WHERE ca.companyid = '".res($companyid)."' AND ca.addressid = a.id ";
 		if ($q) {
 			$query .= "AND (a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."' ";
-			$query .= "AND ca.name RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
+			$query .= "AND ca.nickname RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
 		}
 		if ($id_str) { $query .= "AND ca.addressid NOT IN (".$id_str.") "; }
 		$query .= "; ";

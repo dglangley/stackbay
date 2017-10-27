@@ -36,13 +36,37 @@
                 <input class="form-control required address-postal_code" name="na" id ="add_zip" placeholder="Zip" type="text">
               </div>
             </div>
-          </div>
 
+			<hr>
+			<h5>Company-Specific Address Details</h5>
+            <div class="row">
+              <div class="col-md-12">
+				<input type="text" name="address_nickname" id="address_nickname" value="" class="form-control address-nickname" placeholder="Site Nickname">
+              </div>
+            </div>
+			<br>
+            <div class="row">
+              <div class="col-md-12">
+				<input type="text" name="address_alias" id="address_alias" value="" class="form-control address-alias" placeholder="Site Alias">
+              </div>
+            </div>
+			<br>
+            <div class="row">
+              <div class="col-md-7">
+				<select name="address_contactid" id="address_contactid" class="form-control contact-selector address-contactid" data-placeholder="- Site Contact -">
+				</select>
+              </div>
+              <div class="col-md-5">
+				<input type="text" name="address_code" id="address_code" value="" class="form-control address-code" placeholder="Site Code">
+              </div>
+            </div>
+
+          </div>
         
       </div>
       <div class="modal-footer text-center">
      		<button type="button" class="btn btn-default btn-sm btn-dismiss" id="address-cancel" data-dismiss="modal">Cancel</button>
-     		<button type="button" class="btn btn-primary btn-sm" id="address-save" data-validation="address-modal">Save</button>
+     		<button type="button" class="btn btn-primary btn-sm" id="save-address" data-validation="address-modal">Save</button>
   	  </div>
 	</div>
   </div>

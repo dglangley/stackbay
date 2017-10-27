@@ -1132,7 +1132,7 @@
 		$(document).on("shown.bs.modal",".modal",function(e) {
 			var first_field = $(this).find("input[type=text]")[0];
 			//first_field.select();
-			first_field.focus();
+			if (first_field) { first_field.focus(); }
 		});
 //		$('.modal').on('shown.bs.modal', function () {
 //			$('input[type=text]:first').focus();
