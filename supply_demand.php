@@ -225,7 +225,6 @@
 
 	
     <div id="pad-wrapper">
-		<div class="row filter-block">
 
             <!-- orders table -->
             <div class="table-wrapper">
@@ -459,7 +458,6 @@
             <!-- end orders table -->
 
 
-	</div>
 	</div>
 	</form>
 <?php include_once 'inc/footer.php'; ?>

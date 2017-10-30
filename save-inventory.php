@@ -105,7 +105,7 @@
 	if ($debug) { exit; }
 
 	if ($status=='in repair' AND $order_number) {
-		header('Location: /order_form.php?ps=repair&on='.$order_number);
+		header('Location: /order.php?order_type=Repair&order_number='.$order_number);
 		exit;
 	}
 

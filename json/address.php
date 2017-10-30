@@ -45,6 +45,7 @@
 			$address['contactid'] = $r['contactid'];
 			if ($r['contactid']) { $address['contact'] = getContact($r['contactid']); }
 			$address['code'] = $r['code'];
+			$address['title'] = format_address($addressid,', ',false,$address['contactid']);
 		}
 	}
 

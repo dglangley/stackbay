@@ -180,6 +180,9 @@
 			include 'inc/navbar.php';
 			include_once $rootdir.'/modal/package.php';
 			include_once $rootdir. '/modal/image.php';
+			include_once $rootdir. '/inc/getOrder.php';
+
+			$ORDER = getOrder($order_number,$order_type);
 		?>
 		
 		<?php if($classification != 'component') { ?>
@@ -189,13 +192,16 @@
 		<?php } ?>
 
 			<div class="row table-header" id = "order_header" style="margin: 0; width: 100%;">
-				<div class="col-sm-4">
+				<div class="col-sm-3">
 					<?php if(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)) { ?>
-					<a href="/order_form.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<a href="/edit_order.php<?php echo ($order_number != '' ? "?on=$order_number&ps=p": '?ps=p'); ?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<button type="submit" class="btn btn-default btn-sm pull-left" id = "rtv_button" data-validation="left-side-main" style="margin-top:10px;display:none;">RTV</button>
 					
-					</div>
+				</div>
+				<div class="col-sm-1">
+					<h4><?=getRep($ORDER['sales_rep_id']);?></h4>
+				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
 					<h2>
 						<?php echo ($order_number != '' ? 'PO #'.$order_number.' Receiving' : 'Inventory Addition'); ?>

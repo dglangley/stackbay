@@ -1,5 +1,5 @@
 <?php
-	function format_address($addressid,$line_sep='<br/>',$include_name=true) {
+	function format_address($addressid,$line_sep='<br/>',$include_name=true,$attn='') {
 		$address = '';
 
 		$query = "SELECT * FROM addresses WHERE id = '".res($addressid)."'; ";
@@ -20,6 +20,10 @@
 			if ($r['state']) { $address .= $r['state']; }
 			if (($r['city'] OR $r['state']) AND $r['postal_code']) { $address .= ' '; }
 			if ($r['postal_code']) { $address .= $r['postal_code']; }
+
+			if ($attn) {
+				$address .= $line_sep.'Attn: '.$attn;
+			}
 
 			return ($address);
 		}

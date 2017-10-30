@@ -4,6 +4,7 @@
 	include_once '../inc/order_type.php';
 	include_once '../inc/jsonDie.php';
 	include_once '../inc/format_address.php';
+	include_once '../inc/getContact.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -62,7 +63,9 @@
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['addressid']] = true;
-			$str = utf8_encode(format_address($r['addressid'],', ',false));
+			$attn = '';
+			if ($r['contactid']) { $attn = getContact($r['contactid']); }
+			$str = utf8_encode(format_address($r['addressid'],', ',false,$attn));
 			if (isset($strs[$str])) { continue; }
 			$strs[$str] = true;
 
