@@ -242,11 +242,11 @@
 
 								$rowHTML .= '
 												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
-													<td>'.getOrderNumber($details['item_id']).' <a target="_blank" href="/repair.php?on='.getOrderNumber($details['item_id']).'"><i class="fa fa-arrow-right"></i></a></td>
+													<td>'.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).' <a target="_blank" href="/repair.php?on='.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
 													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
 													<td>
-														<input type="checkbox" name="purchase_request['.$details['partid'].']['.getOrderNumber($details['item_id']).']['.$details['qty'].']['.$details['id'].']" value="'.($details['item_id']).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
+														<input type="checkbox" name="purchase_request['.$details['partid'].']['.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).']['.$details['qty'].']['.$details['id'].']" value="'.($details['item_id'] ? $details['item_id'] : getRepairItemId($details['ro_number'], $details['partid'])).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
 															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '') .'
 													</td>
 												</tr>';
