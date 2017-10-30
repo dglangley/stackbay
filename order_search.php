@@ -54,10 +54,10 @@
 		return ($arr);
 	}
 
-	//$order = preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
+	//$order = preg_replace('/^([\/])(RMA|INV|[SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
 	$type = trim($_SERVER["REQUEST_URI"]);
 	$order = '';
-	$order_str = explode('|',preg_replace('/^([\/])(RMA|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
+	$order_str = explode('|',preg_replace('/^([\/])(RMA|INV|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
 	if (count($order_str)==2) {
 		$type = $order_str[0];
 		$order = $order_str[1];
@@ -132,6 +132,9 @@
 			$_REQUEST['rma'] = $O['search'];
 			$_REQUEST['on'] = '';
 			include 'rma.php';
+		} else if ($type=='INV') {
+			$_REQUEST['invoice'] = $O['search'];
+			include 'invoice.php';
 		} else {
 			include 'order.php';
 		}

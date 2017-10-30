@@ -53,14 +53,18 @@
 	if (isset($_REQUEST['freight_services_id']) AND is_numeric($_REQUEST['freight_services_id'])) { $freight_services_id = $_REQUEST['freight_services_id']; }
 	$freight_account_id = 0;
 	if (isset($_REQUEST['freight_account_id']) AND is_numeric($_REQUEST['freight_account_id'])) { $freight_account_id = $_REQUEST['freight_account_id']; }
+	$freight = 0;
+	if (isset($_REQUEST['freight']) AND trim($_REQUEST['freight'])>0) { $freight = $_REQUEST['freight']; }
+	$shipmentid = 0;
+	if (isset($_REQUEST['shipmentid']) AND $_REQUEST['shipmentid']) { $shipmentid = $_REQUEST['shipmentid']; }
 	$termsid = 0;
 	if (isset($_REQUEST['termsid']) AND is_numeric($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
 	$cust_ref = '';
 	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
 	$public_notes = '';
-	if (isset($_REQUEST['public_notes'])) { $public_notes = $_REQUEST['public_notes']; }
+	if (isset($_REQUEST['public_notes'])) { $public_notes = trim($_REQUEST['public_notes']); }
 	$private_notes = '';
-	if (isset($_REQUEST['private_notes'])) { $private_notes = $_REQUEST['private_notes']; }
+	if (isset($_REQUEST['private_notes'])) { $private_notes = trim($_REQUEST['private_notes']); }
 	$status = 'Active';
 	if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
 
@@ -93,27 +97,56 @@
 		$created_by = $ORDER['created_by'];
 		$sales_rep_id = $ORDER['sales_rep_id'];//retain existing unless passed in below
 		if (! $file_url) { $file_url = $ORDER['ref_ln']; }
+	} else {
+		$ORDER = getOrder('',$order_type);//fill the array with fields to determine below what we should add and what to skip
 	}
 	if (! $file_url AND $ref_ln) { $file_url = $ref_ln; }
 	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id']) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
 
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
-	$query .= $T['datetime'].", created_by, sales_rep_id, ";
-	$query .= "companyid, contactid, ";
+	$query .= $T['datetime'].", ";
+	if (array_key_exists('created_by',$ORDER)) { $query .= "created_by, "; }
+	if (array_key_exists('sales_rep_id',$ORDER)) { $query .= "sales_rep_id, "; }
+	$query .= "companyid, ";
+	if (array_key_exists('order_number',$ORDER)) {
+		$query .= "order_number, order_type, ";
+	}
+	if (array_key_exists('shipmentid',$ORDER)) { $query .= "shipmentid, "; }
+	if (array_key_exists('freight',$ORDER)) { $query .= "freight, "; }
+	if (array_key_exists('contactid',$ORDER)) { $query .= "contactid, "; }
 	if ($T['cust_ref']) { $query .= $T['cust_ref'].", ref_ln, "; }
-	$query .= $T['addressid'].", ship_to_id, ";
-	$query .= "freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
-	$query .= "public_notes, private_notes, status) ";
+	if (array_key_exists($T['addressid'],$ORDER)) { $query .= $T['addressid'].", "; }
+	// all shipping-related fields
+	if (array_key_exists('ship_to_id',$ORDER)) {
+		$query .= "ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
+	}
+	$query .= "public_notes, ";
+	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
+	$query .= "status) ";
 	$query .= "VALUES (";
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
-	$query .= "'".$datetime."', ".fres($created_by).", ".fres($sales_rep_id).", ";
-	$query .= "'".res($companyid)."', ".fres($contactid).", ";
+	$query .= "'".$datetime."', ";
+	if (array_key_exists('created_by',$ORDER)) { $query .= fres($created_by).", "; }
+	if (array_key_exists('sales_rep_id',$ORDER)) { $query .= fres($sales_rep_id).", "; }
+	$query .= "'".res($companyid)."', ";
+	if (array_key_exists('order_number',$ORDER)) {
+		$query .= fres($ORDER['order_number']).", ".fres($ORDER['order_type']).", ";
+	}
+	if (array_key_exists('shipmentid',$ORDER)) { $query .= fres($shipmentid).", "; }
+	if (array_key_exists('freight',$ORDER)) { $query .= fres($freight).", "; }
+	if (array_key_exists('contactid',$ORDER)) { $query .= fres($contactid).", "; }
 	if ($T['cust_ref']) { $query .= fres($cust_ref).", ".fres($file_url).", "; }
-	$query .= fres($bill_to_id).", ".fres($ship_to_id).", ";
-	$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
-	$query .= fres($termsid).", ".fres($public_notes).", ".fres($private_notes).", ".fres($status);
-	$query .= "); ";
+	if (array_key_exists($T['addressid'],$ORDER)) { $query .= fres($bill_to_id).", "; }
+	// all shipping-related fields
+	if (array_key_exists('ship_to_id',$ORDER)) {
+		$query .= fres($ship_to_id).", ";
+		$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
+	}
+	if (array_key_exists('termsid',$ORDER)) { $query .= fres($termsid).", "; }
+	$query .= fres($public_notes).", ";
+	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
+	$query .= fres($status)."); ";
 	if ($debug) {
 		echo $query.'<BR>';
 		if (! $order_number) { $order_number = 999999; }
@@ -132,6 +165,8 @@
 	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
 	$amount = array();
 	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
+	$memo = array();
+	if (isset($_REQUEST['memo'])) { $memo = $_REQUEST['memo']; }
 	$delivery_date = array();
 	if (isset($_REQUEST['delivery_date'])) { $delivery_date = $_REQUEST['delivery_date']; }
 	$ref_1 = array();
@@ -153,6 +188,7 @@
 
 		$query = "REPLACE ".$T['items']." (partid, ".$T['order'].", line_number, qty, ";
 		if ($T['amount']) { $query .= $T['amount'].", "; }
+		if ($T['memo']) { $query .= "memo, "; }
 		if ($T['delivery_date']) { $query .= $T['delivery_date'].", "; }
 		if ($T['items']<>'return_items') { $query .= "ref_1, ref_1_label, ref_2, ref_2_label, "; }
 		if ($T['warranty']) { $query .= $T['warranty']; }
@@ -160,6 +196,7 @@
 		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES ('".res($partid)."', '".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
 		if ($T['amount']) { $query .= fres($amount[$key]).", "; }
+		if ($T['memo']) { $query .= fres($memo[$key]).", "; }
 		if ($T['delivery_date']) { $query .= fres(format_date($delivery_date[$key],'Y-m-d')).", "; }
 		if ($T['items']<>'return_items') {
 			// clear the label values if no ref numbers

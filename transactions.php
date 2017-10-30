@@ -240,9 +240,13 @@
 	    	$invoices .= '
 	            <tr class = "'.($completed? 'complete' : 'pending' ).'">
 	            	<td>
-						'.$row['invoice_no'].' <a href="docs/INV'.$row['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i>
+						'.$row['invoice_no'].' <a href="/INV'.$row['invoice_no'].'"><i class="fa fa-arrow-right"></i></a>
+						<!-- <a href="docs/INV'.$row['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i> -->
 					</td>
-                    <td>'.getCompany($row['companyid']).'</td>
+                    <td>
+						'.getCompany($row['companyid']).'
+						<a href="/profile.php?companyid='.$row['companyid'].'"><i class="fa fa-book"></i></a>
+					</td>
                     <td>'.$address['street'].'</td>
                     <td>'.format_date($row['date_invoiced']).'</td>
                     <td>'.$T['abbrev'].' '.$row['order_number'].' <a href="/'.$T['abbrev'].$row['order_number'].'"><i class="fa fa-arrow-right"></i></a></td>

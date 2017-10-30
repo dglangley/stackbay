@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUsers.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRefLabels.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
@@ -21,66 +22,183 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 
+	function setRef($label,$ref,$id,$n) {
+		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
+
+		if ($id) {
+			if (strstr($label,'item_id')) {
+				$T2 = order_type($label);
+				$ref_order = getOrderNumber($ref,$T2['items'],$T2['order']);
+
+				$grp['attr'] = '';
+				$grp['btn'] = $T2['abbrev'];
+				$grp['field'] = '<input type="text" name="ref_'.$n.'_aux['.$id.']" class="form-control input-sm" value="'.$ref_order.'" readonly>';
+				$grp['hidden'] = '<input type="hidden" name="ref_'.$n.'['.$id.']" value="'.$ref.'">';
+			} else {
+				// change default ref label, if set
+				if ($label) { $grp['btn'] = $label; }
+
+				$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="'.$ref.'">';
+	
+			}
+		} else if (! $id) {
+			$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="">';
+		}
+
+		return ($grp);
+	}
+
+	function buildLineCol($ln,$id=0) {
+		global $EDIT;
+
+		$col = '<div class="pull-left" style="width:7%">';
+		if ($EDIT) {
+			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
+		} else if ($ln) {
+			$col .= '<span class="info">'.$ln.'.</span>';
+		}
+		$col .= '&nbsp;</div>';
+
+		return ($col);
+	}
+
+	function buildDescrCol($P,$id,$def_type='Part') {
+		global $EDIT;
+
+		if ($id) {
+			$col = '<div class="pull-left" style="width:93%">';
+		} else {
+			$col = '
+			<div class="pull-left dropdown" style="width:8%">
+				<span class="dropdown-toggle" data-toggle="dropdown">
+					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
+					<input type="hidden" name="search_type" id="search-type" value="'.$def_type.'">
+				</span>
+				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
+				<ul class="dropdown-menu dropdown-button dropdown-searchtype">
+					<li><a href="javascript:void(0);">Site</a></li>
+					<li><a href="javascript:void(0);">Part</a></li>
+				</ul>
+			</div>
+			<div class="pull-left" style="width:85%">
+			';
+		}
+
+		if ($EDIT) {
+			$editor = '';
+			if ($def_type=='Site') {
+				$cls = '';
+				$fieldname = 'addressid';
+				$selname = 'address-selector';
+				$dataurl = '/json/addresses.php';
+				$dataplacer = '- Select an Address -';
+				$editor = '<a href="javascript:void(0);" class="address-editor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
+			} else if ($def_type=='Part') {
+				if ($id) { $cls = 'select2'; } else { $cls = 'hidden'; }
+				$fieldname = 'partid';
+				$selname = 'part-selector';
+				$dataurl = '/json/parts-dropdown.php';
+				$dataplacer = '';
+			}
+
+			$sel = '';
+			if ($P['id']) {
+				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
+			}
+			$col .= '
+					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="'.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
+						'.$sel.'
+					</select>
+					'.$editor.'
+			';
+		} else {
+			$col .= $P['name'];
+		}
+
+		$col .= '</div>';
+
+		return ($col);
+	}
+
 	$labels = getRefLabels();
 	$ref_labels = '';
 	foreach ($labels as $label) {
 		$ref_labels .= '<li><a href="javascript:void(0);">'.$label.'</a></li>'.chr(10);
 	}
+	function buildRefCol($grp,$label,$ref,$id,$n) {
+		global $ref_labels,$EDIT;
+
+		$col = '';
+		if ($EDIT) {
+			$col = '
+			<div class="input-group dropdown">
+				<span class="input-group-btn dropdown-toggle"'.$grp['attr'].'>
+					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$grp['btn'].'</button>
+					<input type="hidden" name="ref_'.$n.'_label['.$id.']" value="'.$label.'">
+				</span>
+				'.$grp['field'].'
+				'.$grp['hidden'].'
+				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
+				<ul class="dropdown-menu dropdown-button">
+					'.$ref_labels.'
+				</ul>
+			</div>
+			';
+		} else {
+			if ($ref) {
+				// if an id is used for reference, convert it to the corresponding Order
+				if (strstr($label,'item_id')) {
+					$T2 = order_type($label);
+					$order = getOrderNumber($ref,$T2['items'],$T2['order']);
+
+					$col = $T2['abbrev'].' '.$order;
+				} else {
+					$col = $label.' '.$ref;
+				}
+			}
+		}
+
+		return ($col);
+	}
+
 	$LN = 1;
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
 	$SUBTOTAL = 0;
 	function addItemRow($id,$T) {
-		global $ref_labels,$LN,$WARRANTYID,$SUBTOTAL,$EDIT;
+		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT;
 
-		$dropdown1_attr = ' data-toggle="dropdown"';
-		$dropdown2_attr = ' data-toggle="dropdown"';
-		$H = array();
+		$P = array();
+		// used as a guide for the fields in the items table for this order/order type
+		$items = getItems($T['item_label']);
+		if (array_key_exists('partid',$items) OR (array_key_exists('item_label',$items) AND $items['item_label']=='partid')) {
+			$def_type = 'Part';
+			$search_cls = '';
+		} else {
+			$def_type = 'Site';
+			$search_cls = 'hidden';
+		}
+
 		if ($id) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
+
 			if (mysqli_num_rows($result)==0) { return (''); }
 			$r = mysqli_fetch_assoc($result);
 			$r['qty_attr'] = '';
-			$r['part_cls'] = 'select2';
 			$r['name'] = '';
-			if ($r['partid']) {
+			if (array_key_exists('partid',$r) AND $r['partid']) {
 				$H = hecidb($r['partid'],'id');
-				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$H[$r['partid']]['name'].'</option>'.chr(10);
+				$P = $H[$r['partid']];
+				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$P['name'].'</option>'.chr(10);
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
 			$r['save'] = '';
-			if (strstr($r['ref_1_label'],'item_id')) {
-				$T2 = order_type($r['ref_1_label']);
-				$ref_1_order = getOrderNumber($r['ref_1'],$T2['items'],$T2['order']);
 
-				$r['ref_1_label_btn'] = $T2['abbrev'];
-				$dropdown1_attr = '';
-				$r['ref_1_field'] = '<input type="text" name="ref_1_aux['.$id.']" class="form-control input-sm" value="'.$ref_1_order.'" readonly>';
-				$r['ref_1_hidden'] = '<input type="hidden" name="ref_1['.$id.']" value="'.$r['ref_1'].'">';
-			} else {
-				if (! $r['ref_1_label']) { $r['ref_1_label'] = 'Ref'; }
-				$r['ref_1_label_btn'] = $r['ref_1_label'];
+			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
+			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2);
 
-				$r['ref_1_field'] = '<input type="text" name="ref_1['.$id.']" class="form-control input-sm" value="'.$r['ref_1'].'">';
-				$r['ref_1_hidden'] = '';
-			}
-			if (strstr($r['ref_2_label'],'item_id')) {
-				$T2 = order_type($r['ref_2_label']);
-				$ref_2_order = getOrderNumber($r['ref_2'],$T2['items'],$T2['order']);
-
-				$r['ref_2_label_btn'] = $T2['abbrev'];
-				$dropdown2_attr = '';
-				$r['ref_2_field'] = '<input type="text" name="ref_2_aux['.$id.']" class="form-control input-sm" value="'.$ref_2_order.'" readonly>';
-				$r['ref_2_hidden'] = '<input type="hidden" name="ref_2['.$id.']" value="'.$r['ref_2'].'">';
-			} else {
-				if (! $r['ref_2_label']) { $r['ref_2_label'] = 'Ref'; }
-				$r['ref_2_label_btn'] = $r['ref_2_label'];
-
-				$r['ref_2_field'] = '<input type="text" name="ref_2['.$id.']" class="form-control input-sm" value="'.$r['ref_2'].'">';
-				$r['ref_2_hidden'] = '';
-			}
 			if ($T['warranty']) {
 				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = 0; }
 				$WARRANTYID[$r[$T['warranty']]]++;
@@ -98,26 +216,18 @@
 
 			$row_cls = 'search-row';
 			$ext_amount = '';
+
 			$r = array(
 				'line_number'=>$LN,
-				'part_cls'=>'hidden',
 				'name'=>'',
 				'input-search'=>'
-			<div class="input-group input-shadow input-search">
-				<input type="text" name="" value="" id="partSearch" class="form-control input-sm" placeholder="Search for item..." tabindex="1">
+			<div class="input-group input-shadow input-search '.$search_cls.'">
+				<input type="text" name="" value="" id="item-search" class="form-control input-sm" placeholder="Search..." tabindex="1">
 				<span class="input-group-btn">
-					<button class="btn btn-primary btn-sm" type="button" id="btn-partsearch"><i class="fa fa-search"></i></button>
+					<button class="btn btn-primary btn-sm" type="button" id="btn-search"><i class="fa fa-search"></i></button>
 				</span>
 			</div>
 				',
-				'ref_1_label'=>'Ref',
-				'ref_1_label_btn'=>'Ref',
-				'ref_1_field'=>'<input type="text" name="ref_1['.$id.']" class="form-control input-sm" value="">',
-				'ref_1_hidden'=>'',
-				'ref_2_label'=>'Ref',
-				'ref_2_label_btn'=>'Ref',
-				'ref_2_field'=>'<input type="text" name="ref_2['.$id.']" class="form-control input-sm" value="">',
-				'ref_2_hidden'=>'',
 				'delivery_date'=>format_date($GLOBALS['today'],'m/d/y',array('d'=>7)),
 				'conditionid'=>2,
 				'warranty'=>$warrantyid,
@@ -126,54 +236,35 @@
 				'amount'=>'',
 				'save'=>'<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>',
 			);
+
+			if (array_key_exists('memo',$items)) { $r['memo'] = ''; }
+
+			$ref1 = setRef('','',0,1);
+			$ref2 = setRef('','',0,2);
 		}
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
+		$delivery_col = '';
 		$condition_col = '';
+		$warranty_col = '';
+		$memo = false;
+		if (array_key_exists('memo',$r)) { $memo = $r['memo']; }
+
+		$memo_col = '';
 		if ($EDIT) {
-			$part_col = '
-			<div class="pull-left" style="width:9%">
-				<input type="text" name="ln['.$id.']" value="'.$r['line_number'].'" class="form-control input-sm line-number">
-			</div>
-			<select name="partid['.$id.']" size="1" class="part-selector '.$r['part_cls'].'">
-				'.$r['name'].'
-			</select>
-			';
-			$ref_1_col = '
-			<div class="input-group dropdown">
-				<span class="input-group-btn dropdown-toggle"'.$dropdown1_attr.'>
-					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$r['ref_1_label_btn'].'</button>
-					<input type="hidden" name="ref_1_label['.$id.']" value="'.$r['ref_1_label'].'">
-				</button></span>
-				'.$r['ref_1_field'].'
-				'.$r['ref_1_hidden'].'
-				<ul class="dropdown-menu dropdown-button">
-					'.$ref_labels.'
-				</ul>
-			</div>
-			';
-			$ref_2_col = '
-			<div class="input-group dropdown">
-				<span class="input-group-btn dropdown-toggle"'.$dropdown2_attr.'">
-					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$r['ref_2_label_btn'].'</button>
-					<input type="hidden" name="ref_2_label['.$id.']" value="'.$r['ref_2_label'].'">
-				</span>
-				'.$r['ref_2_field'].'
-				'.$r['ref_2_hidden'].'
-				<ul class="dropdown-menu dropdown-button">
-					'.$ref_labels.'
-				</ul>
-			</div>
-			';
-			$delivery_col = '
+			if ($memo!==false) { $memo_col = '<br/><textarea name="memo['.$id.']" rows="2" class="form-control input-sm">'.$memo.'</textarea>'; }
+
+			if ($T["delivery_date"]) {
+				$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
 				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r[$T['delivery_date']],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
 			</div>
-			';
+				';
+			}
 			if ($T["condition"]) {
 				$condition_col = '
 			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
@@ -181,36 +272,18 @@
 			</select>
 				';
 			}
-			$warranty_col = '
+			if ($T["warranty"]) {
+				$warranty_col = '
 			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
 				<option value="'.$r[$T['warranty']].'" selected>'.getWarranty($r[$T['warranty']],'warranty').'</option>
 			</select>
-			';
+				';
+			}
 			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
-			$part_col = '';
-			if ($r['line_number']) { $part_col = '<div class="pull-left" style="width:9%"><span class="info">'.$r['line_number'].'.</span></div> '.$H[$r['partid']]['name']; }
-			$ref_1_col = '';
-			if ($r['ref_1']) {
-				if (strstr($r['ref_1_label'],'item_id')) {
-					$T2 = order_type($r['ref_1_label']);
-					$ref_1_order = getOrderNumber($r['ref_1'],$T2['items'],$T2['order']);
-					$ref_1_col = $T2['abbrev'].' '.$ref_1_order;
-				} else {
-					$ref_1_col = $r['ref_1'].' '.$r['ref_1_label'];
-				}
-			}
-			$ref_2_col = '';
-			if ($r['ref_2']) {
-				if (strstr($r['ref_2_label'],'item_id')) {
-					$T2 = order_type($r['ref_2_label']);
-					$ref_2_order = getOrderNumber($r['ref_2'],$T2['items'],$T2['order']);
-					$ref_2_col = $T2['abbrev'].' '.$ref_2_order;
-				} else {
-					$ref_2_col = $r['ref_2'].' '.$r['ref_2_label'];
-				}
-			}
+			if ($memo!==false) { $memo_col = '<br/>'.$memo; }
+
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
 			if ($T["condition"]) {
 				$condition_col = getCondition($r['conditionid']);
@@ -223,14 +296,16 @@
 		$row = '
 	<tr class="'.$row_cls.'">
 		<td class="col-md-4 part-container">
-			'.$part_col.'
+			'.buildLineCol($r['line_number'],$id).'
+			'.buildDescrCol($P,$id,$def_type).'
 			'.$r['input-search'].'
+			'.$memo_col.'
 		</td>
 		<td class="col-md-1">
-			'.$ref_1_col.'
+			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1).'
         </td>
 		<td class="col-md-1">
-			'.$ref_2_col.'
+			'.buildRefCol($ref2,$r['ref_2_label'],$r['ref_2'],$id,2).'
 		</td>
 		<td class="col-md-1">
 			'.$delivery_col.'
@@ -336,7 +411,7 @@
 		$TITLE = 'Invoice '.$order_number;
 
 		$ORDER = getOrder($order_number,'Invoice');
-		$T = order_type($ORDER['order_type']);
+		$T = order_type($order_type);//$ORDER['order_type']);
 
 		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
 	} else {
@@ -391,52 +466,58 @@
 	}
 
 	/***** COLLECTIONS: Invoices / Bills *****/
-	$coll_dropdown = '
+	$coll_dropdown = '';
+	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
+	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
+	if ($order_number AND ! $ORDER['order_number']) {
+		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
 				<ul class="dropdown-menu text-left">
-	';
-	$records = array();
-	if ($T['collection']=='invoices') {
-		$records = getInvoices($order_number,$order_type);
-	} else if ($T['collection']=='bills') {
-		$records = getBills($order_number,$order_type);
-	}
-	if (count($records)>0) {
-		$coll_dropdown .= '
+		';
+
+		$records = array();
+		if ($T['collection']=='invoices') {
+			$records = getInvoices($order_number,$order_type);
+		} else if ($T['collection']=='bills') {
+			$records = getBills($order_number,$order_type);
+		}
+		if (count($records)>0) {
+			$coll_dropdown .= '
 					<li class="dropdown-header">
 						<i class="fa fa-file-pdf-o"></i> '.ucfirst($T['collection']).'
 					</li>
-		';
-		foreach ($records as $rec) {
-			if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
-			else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
-			$coll_dropdown .= '
+			';
+			foreach ($records as $rec) {
+				if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
+				else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
+				$coll_dropdown .= '
 					<li>
 						<a href="'.$ln.'">
 							'.$rec[$T['collection_no']].' ('.format_date($rec['datetime'],'n/j/y').')
 						</a>
 					</li>
-			';
+				';
+			}
 		}
-	}
-	if ($T['collection']=='invoices') {
-		$coll_dropdown .= '
+		if ($T['collection']=='invoices') {
+			$coll_dropdown .= '
 					<li>
 						<a target="_blank" href="/invoice.php?on='.$order_number.'"><i class="fa fa-plus"></i> Proforma Invoice</a>
 					</li>
-		';
-	} else if ($T['collection']=='bills') {
-		$coll_dropdown .= '
+			';
+		} else if ($T['collection']=='bills') {
+			$coll_dropdown .= '
 					<li>
 						<a href="/bill.php?on='.$order_number.'&bill="><i class="fa fa-plus"></i> Add New Bill</a>
 					</li>
-		';
-	}
-	$coll_dropdown .= '
+			';
+		}
+		$coll_dropdown .= '
 				</ul>
 			</span>
-	';
+		';
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -473,12 +554,18 @@
 			padding:3px 3px;
 			border-radius:3px;
 		}
+		#subtotal {
+			margin-top:0px;
+		}
+		#total {
+			margin-top:4px;
+		}
 		h2 a.small {
 			font-size:70%;
 		}
 		#footer {
-			position: fixed;
-			bottom: 0;
+			/*position: fixed;*/
+			/*bottom: 0;*/
 			width: 100%;
 			padding-left:321px;
 			min-height:250px;
@@ -486,6 +573,9 @@
 		}
 		#order_status {
 			max-width:120px;
+		}
+		.table tr td {
+			vertical-align:top !important;
 		}
 	</style>
 </head>
@@ -517,23 +607,29 @@
 	<?php } else if ($order_type=='Purchase') { ?>
 			<a href="/inventory_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Sale') { ?>
+			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
+	<?php } else if ($order_type=='Invoice') { ?>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>
 		<div class="col-sm-1">
-<?php if ($EDIT) { ?>
+<?php if (array_key_exists('sales_rep_id',$ORDER)) { ?>
+	<?php if ($EDIT) { ?>
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
-	<?php
-		$users = getUsers(array(4,5));
-		foreach ($users as $uid => $uname) {
-			$s = '';
-			if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
-			echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
-		}
-	?>
+		<?php
+			$users = getUsers(array(4,5));
+			foreach ($users as $uid => $uname) {
+				$s = '';
+				if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR $U['id']==$uid) { $s = ' selected'; }
+				echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
+			}
+		?>
 			</select>
-<?php } else { ?>
+	<?php } else { ?>
 			<h4><?=getRep($ORDER['sales_rep_id']);?></h4>
+	<?php } ?>
 <?php } ?>
 		</div>
 		<div class="col-sm-2">
@@ -572,7 +668,11 @@
 		<th class="col-md-4"><div class="pull-left padding-right20">Ln</div> Description of Charges</th>
 		<th class="col-md-1">Ref 1</th>
 		<th class="col-md-1">Ref 2</th>
-		<th class="col-md-1">Delivery</th>
+		<th class="col-md-1">
+<?php if ($T["delivery_date"]) { ?>
+			Delivery
+<?php } ?>
+		</th>
 		<th class="col-md-1">
 <?php if ($EDIT AND $T["condition"]) { ?>
 			<select name="conditionid_master" size="1" class="form-control input-sm condition-selector" data-placeholder="- Condition -">
@@ -582,10 +682,10 @@
 <?php } ?>
 		</th>
 		<th class="col-md-1">
-<?php if ($EDIT) { ?>
+<?php if ($EDIT AND $T["warranty"]) { ?>
 			<select name="warrantyid_master" size="1" class="form-control input-sm warranty-selector" data-placeholder="- Warranty -">
 			</select>
-<?php } else { ?>
+<?php } else if ($T["warranty"]) { ?>
 			Warranty
 <?php } ?>
 		</th>
@@ -601,7 +701,7 @@
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	if ($EDIT) { echo addItemRow(false,$T); }
+	if ($EDIT AND ! $ORDER['order_number']) { echo addItemRow(false,$T); }
 ?>
 	</tbody>
 </table>
@@ -614,14 +714,19 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$charges .= addChargeRow($r['memo'],$r['qty'],$r['price'],$r['id']);
 		}
+		if ($EDIT) { $charges .= addChargeRow(); }
 	}
-	if ($EDIT) { $charges .= addChargeRow(); }
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
+	$freight_prop = ' readonly';
+	if (array_key_exists('freight',$ORDER)) {// AND $ORDER['freight']>0) {
+		$existing_freight += $ORDER['freight'];
+		if ($EDIT) { $freight_prop = ''; }
+	}
 	$TOTAL = ($SUBTOTAL+$existing_freight);
 ?>
 
-<table class="table table-responsive table-condensed table-striped" style="margin-bottom:300px">
+<table class="table table-responsive table-condensed table-striped" style="margin-bottom:150px">
 	<tbody>
 		<?php echo $charges; ?>
 		<tr>
@@ -637,7 +742,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="freight_total" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm text-right" placeholder="0.00" readonly>
+					<input type="text" name="freight" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm input-freight text-right" placeholder="0.00"<?=$freight_prop;?>>
 				</span>
 			</td>
 		</tr>
@@ -769,7 +874,7 @@
 			$("#order_status").closest("form").submit();
 		});
 
-		$(".item-qty, .item-amount").on('change keyup',function() {
+		$(".item-qty, .item-amount, .input-freight").on('change keyup',function() {
 			updateTotals();
 		});
 		$(".btn-submit").on('click', function() {
@@ -840,9 +945,14 @@
 			if (str.indexOf('Add')==-1) { return; }
 			str = str.replace('Add ','').replace('...','');
 
+			if (! companyid) {
+				modalAlertShow("Address Error","Please select a company before adding a new address");
+				return;
+			}
+
 			$("#modal-address").populateAddress(0,idname,str);
 		});
-		$("#address-save").on('click', function() {
+		$("#save-address").on('click', function() {
 			var address = $(".modal");
 			var addressid = address.find(".address-modal").data('oldid');
 			var idname = address.find(".address-modal").data('idname');
@@ -852,8 +962,15 @@
 			var city = address.find(".address-city").val().trim();
 			var state = address.find(".address-state").val().trim();
 			var postal_code = address.find(".address-postal_code").val().trim();
+			var nickname = address.find(".address-nickname").val().trim();
+			var alias = address.find(".address-alias").val().trim();
+			var contactid = address.find(".address-contactid").val().trim();
+			var code = address.find(".address-code").val().trim();
 
-			console.log(window.location.origin+"/json/save-address.php?addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code));
+			var params = "addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+
+						"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code)+
+						"&nickname="+escape(nickname)+"&alias="+escape(alias)+"&contactid="+escape(contactid)+"&code="+escape(code);
+			console.log(window.location.origin+"/json/save-address.php?"+params);
 			$.ajax({
 				url: 'json/save-address.php',
 				type: 'get',
@@ -866,6 +983,10 @@
 					'state': state,
 					'postal_code': postal_code,
 					'companyid': companyid,
+					'nickname': nickname,
+					'alias': alias,
+					'contactid': contactid,
+					'code': code,
 				},
 				dataType: 'json',
 				success: function(json, status) {
@@ -918,6 +1039,7 @@
 				}
 			}); // end ajax call
 		});
+		$(".item-row .part-selector").selectize();
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
 			$(this).closest("tbody").find(".found_parts").each(function() {
@@ -933,6 +1055,42 @@
 
 			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date").val("");
 		});
+		$("#item-search").on('keyup',function(e) {
+			e.preventDefault();
+			var key = e.which;
+
+			if (key == 13) {
+				$(this).search();
+			}
+		});
+		$("#btn-search").on('click',function() {
+			$("#item-search").search();
+		});
+		$(".dropdown-searchtype li").on('click', function() {
+			var v = $(this).text();
+
+			if (v=='Site') {
+				$(".input-search").removeClass('hidden').addClass('hidden');
+				$(this).closest(".part-container").find(".address-editor").removeClass('hidden');
+				$(this).closest(".part-container").find(".address-selector").selectize();
+				$(this).closest(".part-container").find(".address-selector").removeClass('hidden').addClass('select2');
+				// remove previously-found parts, if any
+				$(this).closest("tbody").find(".found_parts").remove();
+			} else if (v=='Part') {
+				$(".input-search").removeClass('hidden');
+				$(this).closest(".part-container").find(".address-editor").removeClass('hidden').addClass('hidden');
+				$(this).closest(".part-container").find(".address-selector").select2("destroy");
+				$(this).closest(".part-container").find(".address-selector").removeClass('select2').addClass('hidden');
+			}
+		});
+
+		jQuery.fn.search = function(e) {
+			if (! $("#search-type") || $("#search-type").val()=='Part') {
+				partSearch($("#item-search").val());
+			} else {
+				addressSearch($("#item-search").val());
+			}
+		};
 		jQuery.fn.saveItem = function(e) {
 			var qty_field = e.find(".part_qty");
 			var qty = qty_field.val().trim();
@@ -961,7 +1119,8 @@
 			var partid = qty_field.data('partid');
 			var descr = e.find(".part").find(".descr-label").html();
 			part.populateSelected(partid, descr);
-			part.select2();
+			part.selectize();
+			//part.select2();
 			part.show();
 
 			var cloned_cond = cloned_row.find(".condition-selector");
@@ -1051,15 +1210,22 @@
 			address.find(".address-city").val('');
 			address.find(".address-state").val('');
 			address.find(".address-postal_code").val('');
+			address.find(".address-nickname").val('');
+			address.find(".address-alias").val('');
+			//reset contacts list
+			address.find(".address-contactid").val('').trigger('change');
+			//rebuild with updated info (i.e., companyid if changed)
+			address.find(".address-contactid").selectize();
+			address.find(".address-code").val('');
 			address.find(".address-modal").data('oldid',addressid);
 			address.find(".address-modal").data('idname',idname);
 
 			if (addressid>0) {
-				console.log(window.location.origin+"/json/address.php?addressid="+addressid);
+				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
 				$.ajax({
 					url: 'json/address.php',
 					type: 'get',
-					data: {'addressid': addressid},
+					data: {'addressid': addressid, 'companyid': companyid},
 					dataType: 'json',
 					success: function(json, status) {
 						if (json.message) { alert(json.message); return; }
@@ -1071,6 +1237,12 @@
 						address.find(".address-city").val(json.city);
 						address.find(".address-state").val(json.state);
 						address.find(".address-postal_code").val(json.postal_code);
+						address.find(".address-nickname").val(json.nickname);
+						address.find(".address-alias").val(json.alias);
+						if (json.contactid>0) {
+							address.find(".address-contactid").populateSelected(json.contactid, json.contact);
+						}
+						address.find(".address-code").val(json.code);
 
 						address.modal('show');
 					},
@@ -1091,7 +1263,36 @@
 			total += row_total;
 		});
 		$("#subtotal").text('$ '+total.formatMoney());
+
+		// add freight to Total but not Subtotal above
+		$(".input-freight").each(function() {
+			var freight = parseFloat($(this).val().trim());
+			total += freight;
+		});
 		$("#total").text('$ '+total.formatMoney());
+	}
+	function addressSearch(search) {
+		console.log(window.location.origin+"/json/addresses.php?q="+search);
+		$.ajax({
+			url: 'json/addresses.php',
+			type: 'get',
+			data: {'q': search},
+			dataType: 'json',
+			success: function(json, status) {
+				if (json.message && json.message!='Success') { alert(json.message); return; }
+
+				var html = '';
+				$.each(json, function(key, row) {
+					html += '<tr><td colspan="6">'+row.text+'</td></tr>';
+				});
+
+				$('#search_input').append(html);
+			},
+			error: function(xhr, desc, err) {
+//				console.log(xhr);
+				console.log("Details: " + desc + "\nError:" + err);
+			},
+		}); // end ajax call
 	}
 </script>
 

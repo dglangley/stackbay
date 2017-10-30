@@ -19,8 +19,32 @@
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'amount';
 				$T['delivery_date'] = '';
-				$T['charges'] = 'sales_charges';
+				$T['charges'] = '';//sales_charges';
 				$T['cust_ref'] = '';
+				$T['memo'] = 'memo';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
+				break;
+
+			case 'Bill':
+			case 'bill_item_id':
+				$T['orders'] = 'bills';
+				$T['order'] = 'bill_no';
+				$T['items'] = 'bill_items';
+				$T['item_label'] = 'bill_item_id';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'BILL';
+				$T['datetime'] = 'date_created';
+				$T['addressid'] = '';
+				$T['alert'] = 'default';
+				$T['condition'] = '';
+				$T['warranty'] = 'warranty';
+				$T['warrantyid'] = 4;
+				$T['amount'] = 'amount';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';//sales_charges';
+				$T['cust_ref'] = '';
+				$T['memo'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				break;
@@ -44,6 +68,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
+				$T['memo'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				break;
@@ -66,6 +91,7 @@
 				$T['delivery_date'] = 'receive_date';
 				$T['charges'] = 'purchase_charges';
 				$T['cust_ref'] = '';
+				$T['memo'] = '';
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				break;
@@ -88,6 +114,7 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
+				$T['memo'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				break;
@@ -110,7 +137,9 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
+				$T['memo'] = '';
 				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
 				break;
 
 			case 'Sale':
@@ -131,6 +160,7 @@
 				$T['delivery_date'] = 'delivery_date';
 				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = 'cust_ref';
+				$T['memo'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				break;
@@ -153,6 +183,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
+				$T['memo'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				break;

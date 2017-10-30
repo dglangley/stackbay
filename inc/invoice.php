@@ -119,12 +119,12 @@
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
 		$macro_row = mysqli_fetch_assoc($invoice_macro);
 		
-		$status = 'Pending';
+		$status = 'Completed';
 		$freight = prep(shipment_freight($package_order_number, "Sale", $shipment_datetime));
 
 		$invoice_creation = "
-			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `status`) 
-			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , '$status');
+			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `public_notes`, `status`) 
+			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , NULL, '$status');
 		";
 		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
 		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }

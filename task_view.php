@@ -831,6 +831,7 @@
 						<?php if(in_array("4", $USER_ROLES)){ ?>
 							<br>
 							<!-- Cost Dash for Management People Only -->
+<!--
 							<div id="main-stats">
 					            <div class="row stats-row">
 					                <div class="col-md-3 col-sm-3 stat">
@@ -859,6 +860,7 @@
 					                </div>
 					            </div>
 					        </div>
+-->
 				        <?php } ?>
 
 				        <br>

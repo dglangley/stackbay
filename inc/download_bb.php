@@ -66,7 +66,7 @@
 			$res = call_remote($bb_base,'?LogOut=1',$cookiefile,$cookiejarfile,'GET',$BB_CH);
 
 			$query = "DELETE FROM remote_sessions WHERE remoteid = '".$BB_ID."'; ";
-			$dbres = qdb($query);
+//			$dbres = qdb($query);
 
 			curl_close($BB_CH);
 		} else if ($search) {
@@ -78,7 +78,7 @@
 			if (! $logout AND ! $search) {// user was already prompted and this is a login attempt, and results were invalid
 				$BB_ERROR = "Your credentials appear to be invalid, please try logging in again";
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$BB_ID."'; ";
-				$dbres = qdb($query);
+//				$dbres = qdb($query);
 				return false;
 			}
 			$res = call_remote($bb_base,$BB_CREDS,$cookiefile,$cookiejarfile,'POST',$BB_CH);
@@ -89,7 +89,7 @@
 				if (strstr($res,'<h1>Members Access - Sign In</h1>')) {
 					$BB_ERROR = "There was a problem validating your BrokerBin session, please check your credentials or contact Technical Support";
 					$query = "DELETE FROM remote_sessions WHERE remoteid = '".$BB_ID."'; ";
-					$dbres = qdb($query);
+//					$dbres = qdb($query);
 					return false;
 				}
 			}

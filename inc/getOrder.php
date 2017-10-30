@@ -19,6 +19,8 @@
 			return ($results);
 		}
 
+		$items = array();
+/*
 		$alt = array();
 		// accommodate invoice lookup by which we get order number and type below
 		if ($order_type=='Invoice') {
@@ -27,33 +29,48 @@
 			if (mysqli_num_rows($result)==0) {
 				return false;
 			}
-			$alt = mysqli_fetch_assoc($result);
+			$results = mysqli_fetch_assoc($result);
+
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)==0) {
+				return false;
+			}
+			while ($r = mysqli_fetch_assoc($result)) {
+				$items[] = $r;
+			}
 
 			// redeclare to get from orders table
-			$order_number = $alt['order_number'];
-			$order_type = $alt['order_type'];
+			$order_number = $results['order_number'];
+			$order_type = $results['order_type'];
 
 			$T = order_type($order_type);
 		}
+*/
 
 		// get order information
-		$query = "SELECT *, ".$T['addressid']." addressid, ".$T['datetime']." dt FROM ".$T['orders']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+		$query = "SELECT *, ".$T['datetime']." dt, ";
+		if ($T['addressid']) { $query .= $T['addressid']." addressid "; } else { $query .= "'' addressid "; }
+		$query .= "FROM ".$T['orders']." WHERE ".$T['order']." = '".res($order_number)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$results = mysqli_fetch_assoc($result);
-		$results['bill_to_id'] = $results['addressid'];
+//		$results['bill_to_id'] = $results['addressid'];
 
+/*
 		foreach ($alt as $k => $v) {
 			$results[$k] = $v;
 		}
+*/
 
 		// get items and add to subarray inside $results
-		$items = array();
-		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$items[$r['id']] = $r;
-		}
+//		if (count($alt)==0) {
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$items[$r['id']] = $r;
+			}
+//		}
 
 		$results['items'] = $items;
 
