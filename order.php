@@ -1140,7 +1140,9 @@
 			var warr_id = orig_warr.val();
 			var warr_text = orig_warr.text();
 
-			original_row.find("select.form-control").select2("destroy");
+			original_row.find("select.form-control:not(.hidden)").each(function() {
+				$(this).select2("destroy");
+			});
 
 			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
 

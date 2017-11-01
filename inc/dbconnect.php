@@ -335,5 +335,5 @@
 	}
 
 	// version control for css and js includes
-	$V = '20170912';
+	$V = '20170913';
 ?>
