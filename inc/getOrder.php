@@ -2,6 +2,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	function getOrder($order_number,$order_type) {
+		if (! $order_type) { die("Invalid order, or invalid order type"); }
+
 		$T = order_type($order_type);
 
 		$results = array();

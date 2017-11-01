@@ -36,15 +36,17 @@
 	$state = '';
 	if (isset($_REQUEST['state'])) { $state = strtoupper(trim($_REQUEST['state'])); }
 	$postal_code = '';
-	if (isset($_REQUEST['postal_code'])) { $postal_code = trim($_REQUEST['postal_code']); }
+	if (isset($_REQUEST['postal_code'])) { $postal_code = strtoupper(trim($_REQUEST['postal_code'])); }
 	$nickname = '';
 	if (isset($_REQUEST['nickname'])) { $nickname = ucfirst(trim($_REQUEST['nickname'])); }
 	$alias = '';
-	if (isset($_REQUEST['alias'])) { $alias = ucfirst(trim($_REQUEST['alias'])); }
+	if (isset($_REQUEST['alias'])) { $alias = strtoupper(trim($_REQUEST['alias'])); }
 	$contactid = '';
-	if (isset($_REQUEST['contactid'])) { $contactid = ucfirst(trim($_REQUEST['contactid'])); }
+	if (isset($_REQUEST['contactid'])) { $contactid = strtoupper(trim($_REQUEST['contactid'])); }
 	$code = '';
-	if (isset($_REQUEST['code'])) { $code = ucfirst(trim($_REQUEST['code'])); }
+	if (isset($_REQUEST['code'])) { $code = strtoupper((trim($_REQUEST['code']))); }
+	$addr_notes = '';
+	if (isset($_REQUEST['notes'])) { addr_$notes = trim($_REQUEST['notes']); }
 
 	$query = "REPLACE addresses (name, street, addr2, addr3, city, state, postal_code, country, notes";
 	if ($addressid) { $query .= ", id"; }
@@ -58,7 +60,7 @@
 	$query = "REPLACE company_addresses (companyid, addressid, ";
 	$query .= "nickname, alias, contactid, code, notes) ";
 	$query .= "VALUES ('".res($companyid)."', '".res($addressid)."', ";
-	$query .= fres($nickname).", ".fres($alias).", ".fres($contactid).", ".fres($code).", NULL); ";
+	$query .= fres($nickname).", ".fres($alias).", ".fres($contactid).", ".fres($code).", ".fres($addr_notes)."); ";
 	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 
 	$address = format_address($addressid,', ',false);

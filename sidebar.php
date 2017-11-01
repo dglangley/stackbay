@@ -108,7 +108,7 @@
 
 <?php if ($T['addressid'] AND array_key_exists($T['addressid'],$ORDER)) {?>
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-building"></i> Billing Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="'.$T['addressid'].'"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-building"></i> <?=$T['collection_term'];?> Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 	<?php if ($EDIT) { ?>
 		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
@@ -162,7 +162,7 @@
 <?php if (array_key_exists('ship_to_id',$ORDER)) { ?>
 	<div class="sidebar-section">
 	<?php if ($EDIT) { ?>
-		<div class="pull-right"><input type="checkbox" name="sync_addresses" value="1" id="sync_addresses"><label for="sync addresses"> Same as Billing</label></div>
+		<div class="pull-right"><input type="checkbox" name="sync_addresses" value="1" id="sync_addresses"><label for="sync addresses"> Same as <?=$T['collection_term'];?></label></div>
 	<?php } ?>
 		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="ship_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 

@@ -1,19 +1,34 @@
 <?php
 	$QTYS = array();
-	function getQty($partid=0) {
+	function getQty($partid=0,$itemid=false,$itemlabel=false) {
 		global $QTYS;
 
 		$qty = false;
 
-		if (! $partid OR ! is_numeric($partid)) { return ($qty); }
+		// if no partid passed in AND no itemid /label passed in, then return false
+		if ((! $partid OR ! is_numeric($partid)) AND (! $itemid OR ! $itemlabel)) { return ($qty); }
 
-		if (isset($QTYS[$partid])) { return ($QTYS[$partid]); }
+		if ($partid) {
+			if (isset($QTYS[$partid])) { return ($QTYS[$partid]); }
 
-		// initialize global
-		$QTYS[$partid] = $qty;
+			// initialize global
+			$QTYS[$partid] = $qty;
+		}
 
-		$query = "SELECT qty, status, conditionid FROM inventory ";
-		$query .= "WHERE partid = '".$partid."'; ";//AND conditionid >= 0 AND (status = 'received' OR status = 'manifest'); ";
+		$query = "SELECT i.qty, i.status, i.conditionid FROM inventory i ";
+		if ($itemid AND $itemlabel) {
+			$query .= ", inventory_history h ";
+		}
+		$query .= "WHERE ";
+		if ($partid) { $query .= "i.partid = '".$partid."' "; }
+		if ($itemid AND $itemlabel) {
+			if ($partid) { $query .= "AND "; }
+
+			$query .= "h.value = '".$itemid."' AND h.field_changed = '".$itemlabel."' AND h.invid = i.id ";
+			$query .= "GROUP BY h.invid ";
+		}
+		$query .= "; ";
+		//AND conditionid >= 0 AND (status = 'received' OR status = 'manifest'); ";
 		$result = qdb($query) OR die(qe().' '.$query);
 		if (mysqli_num_rows($result)==0) { return ($qty); }
 		$qty = 0;//we now know at least one record exists in inventory, so the lowest-qty scenario is '0' now, indicating zero-but-previous-stock
@@ -23,7 +38,10 @@
 			if ($r['status']<>'received') { continue; }//only stock on the shelf
 			$qty += $r['qty'];
 		}
-		$QTYS[$partid] = $qty;
+
+		if ($partid) {
+			$QTYS[$partid] = $qty;
+		}
 
 		return ($qty);
 	}

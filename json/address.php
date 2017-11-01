@@ -33,6 +33,7 @@
 	$address['contactid'] = NULL;
 	$address['contact'] = NULL;
 	$address['code'] = NULL;
+	$address['notes'] = NULL;
 
 	//check company addresses for addl info
 	if ($companyid) {
@@ -45,7 +46,8 @@
 			$address['contactid'] = $r['contactid'];
 			if ($r['contactid']) { $address['contact'] = getContact($r['contactid']); }
 			$address['code'] = $r['code'];
-			$address['title'] = format_address($addressid,', ',false,$address['contactid']);
+			$address['notes'] = $r['notes'];
+			$address['title'] = format_address($addressid,', ',false,$address['contact']);
 		}
 	}
 

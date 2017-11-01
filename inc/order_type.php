@@ -24,6 +24,7 @@
 				$T['memo'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
+				$T['collection_term'] = '';
 				break;
 
 			case 'Bill':
@@ -47,6 +48,7 @@
 				$T['memo'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
+				$T['collection_term'] = '';
 				break;
 
 			case 'Return':
@@ -94,6 +96,7 @@
 				$T['memo'] = '';
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Remit To';
 				break;
 
 			case 'Repair':
@@ -117,6 +120,7 @@
 				$T['memo'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
 				break;
 
 			case 'Service':
@@ -133,13 +137,14 @@
 				$T['condition'] = '';
 				$T['warranty'] = '';
 				$T['warrantyid'] = 7;
-				$T['amount'] = 'price';
+				$T['amount'] = 'amount';
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
 				$T['memo'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
 				break;
 
 			case 'Sale':
@@ -163,6 +168,7 @@
 				$T['memo'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
 				break;
 
 			case 'IT':
@@ -186,6 +192,7 @@
 				$T['memo'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
+				$T['collection_term'] = '';
 				break;
 		}
 

@@ -60,6 +60,12 @@
 				<input type="text" name="address_code" id="address_code" value="" class="form-control address-code" placeholder="Site Code">
               </div>
             </div>
+			<br/>
+            <div class="row">
+              <div class="col-md-12">
+				<textarea class="form-control input-sm address-notes" id="address_notes" rows="3" placeholder="Site Notes"></textarea>
+              </div>
+            </div>
 
           </div>
         

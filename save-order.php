@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
@@ -157,6 +158,9 @@
 
 	$items = array();
 	if (isset($_REQUEST['partid'])) { $items = $_REQUEST['partid']; }
+	else if (isset($_REQUEST['addressid'])) { $items = $_REQUEST['addressid']; }
+	$search_type = array();
+	if (isset($_REQUEST['search_type'])) { $search_type = $_REQUEST['search_type']; }
 	$item_id = array();
 	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
 	$ln = array();
@@ -183,10 +187,18 @@
 	if (isset($_REQUEST['conditionid'])) { $conditionid = $_REQUEST['conditionid']; }
 
 	$email_rows = array();
-	foreach ($items as $key => $partid) {
+	foreach ($items as $key => $fieldid) {
 		$id = $item_id[$key];
 
-		$query = "REPLACE ".$T['items']." (partid, ".$T['order'].", line_number, qty, ";
+		$type = 'Part';
+		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $type = 'Site'; }
+
+		$F = getItems($order_type);
+
+		$query = "REPLACE ".$T['items']." (";
+		if (isset($F['partid'])) { $query .= "partid, "; }
+		else if (isset($F['item_id'])) { $query .= "item_id, item_label, "; }
+		$query .= $T['order'].", line_number, qty, ";
 		if ($T['amount']) { $query .= $T['amount'].", "; }
 		if ($T['memo']) { $query .= "memo, "; }
 		if ($T['delivery_date']) { $query .= $T['delivery_date'].", "; }
@@ -194,7 +206,9 @@
 		if ($T['warranty']) { $query .= $T['warranty']; }
 		if ($T['condition']) { $query .= ", ".$T['condition']." "; }
 		if ($id) { $query .= ", id"; }
-		$query .= ") VALUES ('".res($partid)."', '".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
+		$query .= ") VALUES ('".res($fieldid)."', ";
+		if (isset($F['item_label'])) { $query .= "'addressid', "; }
+		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
 		if ($T['amount']) { $query .= fres($amount[$key]).", "; }
 		if ($T['memo']) { $query .= fres($memo[$key]).", "; }
 		if ($T['delivery_date']) { $query .= fres(format_date($delivery_date[$key],'Y-m-d')).", "; }
@@ -216,7 +230,7 @@
 		if ($debug) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
-		$query2 = "SELECT part, heci FROM parts WHERE id = '".res($partid)."'; ";
+		$query2 = "SELECT part, heci FROM parts WHERE id = '".res($fieldid)."'; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);

@@ -17,6 +17,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSerial.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDisposition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -72,7 +73,7 @@
 			<div class="pull-left dropdown" style="width:8%">
 				<span class="dropdown-toggle" data-toggle="dropdown">
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
-					<input type="hidden" name="search_type" id="search-type" value="'.$def_type.'">
+					<input type="hidden" name="search_type" class="search-type" value="'.$def_type.'">
 				</span>
 				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
 				<ul class="dropdown-menu dropdown-button dropdown-searchtype">
@@ -106,7 +107,7 @@
 				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
 			}
 			$col .= '
-					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="'.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
+					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
 						'.$sel.'
 					</select>
 					'.$editor.'
@@ -279,7 +280,21 @@
 			</select>
 				';
 			}
-			$qty_col = '<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>';
+
+			$complete_qty = getQty(0,$r['id'],$T['inventory_label']);
+			if (! $complete_qty) { $complete_qty = 0; }
+			$btn_cls = '';
+			if ($complete_qty>0 AND $complete_qty==$r['qty']) { $btn_cls = 'text-success highlight-selected'; }
+			else if ($complete_qty>0 AND $complete_qty>=$r['qty']) { $btn_cls = 'text-warning'; }
+
+			$qty_col = '
+			<span class="input-group">
+				<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>
+				<span class="input-group-btn">
+					<button class="btn btn-sm btn-default '.$btn_cls.'" type="button" title="Completed Qty" data-toggle="tooltip" data-placement="bottom">'.$complete_qty.'</button>
+				</span>
+			</span>
+			';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
 			if ($memo!==false) { $memo_col = '<br/>'.$memo; }
@@ -966,10 +981,12 @@
 			var alias = address.find(".address-alias").val().trim();
 			var contactid = address.find(".address-contactid").val().trim();
 			var code = address.find(".address-code").val().trim();
+			var notes = address.find(".address-notes").val().trim();
 
 			var params = "addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+
 						"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code)+
-						"&nickname="+escape(nickname)+"&alias="+escape(alias)+"&contactid="+escape(contactid)+"&code="+escape(code);
+						"&nickname="+escape(nickname)+"&alias="+escape(alias)+"&contactid="+escape(contactid)+
+						"&code="+escape(code)+"&notes="+escape(notes);
 			console.log(window.location.origin+"/json/save-address.php?"+params);
 			$.ajax({
 				url: 'json/save-address.php',
@@ -987,6 +1004,7 @@
 					'alias': alias,
 					'contactid': contactid,
 					'code': code,
+					'notes': notes,
 				},
 				dataType: 'json',
 				success: function(json, status) {
@@ -1042,9 +1060,13 @@
 		$(".item-row .part-selector").selectize();
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
-			$(this).closest("tbody").find(".found_parts").each(function() {
+			var found_parts = $(this).closest("tbody").find(".found_parts");
+			found_parts.each(function() {
 				row.saveItem($(this));
 			});
+			if (found_parts.length==0 && row.find(".search-type").val()=='Site') {
+				row.saveItem(row);
+			}
 
 			$(this).closest("tbody").find(".found_parts").remove();
 			var ln = row.find(".line-number");
@@ -1068,24 +1090,26 @@
 		});
 		$(".dropdown-searchtype li").on('click', function() {
 			var v = $(this).text();
+			var pc = $(this).closest(".part-container");
 
 			if (v=='Site') {
 				$(".input-search").removeClass('hidden').addClass('hidden');
-				$(this).closest(".part-container").find(".address-editor").removeClass('hidden');
-				$(this).closest(".part-container").find(".address-selector").selectize();
-				$(this).closest(".part-container").find(".address-selector").removeClass('hidden').addClass('select2');
+				pc.find(".address-editor").removeClass('hidden');
+				pc.find(".address-selector").selectize();
+				pc.find(".address-selector").removeClass('hidden').addClass('select2');
 				// remove previously-found parts, if any
 				$(this).closest("tbody").find(".found_parts").remove();
 			} else if (v=='Part') {
 				$(".input-search").removeClass('hidden');
-				$(this).closest(".part-container").find(".address-editor").removeClass('hidden').addClass('hidden');
-				$(this).closest(".part-container").find(".address-selector").select2("destroy");
-				$(this).closest(".part-container").find(".address-selector").removeClass('select2').addClass('hidden');
+				pc.find(".address-editor").removeClass('hidden').addClass('hidden');
+				pc.find(".address-selector").select2("destroy");
+				pc.find(".address-selector").removeClass('select2').addClass('hidden');
 			}
 		});
 
 		jQuery.fn.search = function(e) {
-			if (! $("#search-type") || $("#search-type").val()=='Part') {
+			var type = $(this).find(".search-type");
+			if (! type || type.val()=='Part') {
 				partSearch($("#item-search").val());
 			} else {
 				addressSearch($("#item-search").val());
@@ -1093,8 +1117,11 @@
 		};
 		jQuery.fn.saveItem = function(e) {
 			var qty_field = e.find(".part_qty");
-			var qty = qty_field.val().trim();
-			if (qty == '' || qty == '0') { return; }
+			var qty = 1;
+			if (qty_field.length>0) {
+				qty_field.val().trim();
+				if (qty == '' || qty == '0') { return; }
+			}
 
 			var original_row = $(this);
 
@@ -1110,6 +1137,7 @@
 
 			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
 
+			original_row.find(".address-selector").selectize();
 			original_row.find(".condition-selector").selectize();
 			original_row.find(".warranty-selector").selectize();
 
@@ -1120,8 +1148,10 @@
 			var descr = e.find(".part").find(".descr-label").html();
 			part.populateSelected(partid, descr);
 			part.selectize();
-			//part.select2();
 			part.show();
+
+			var addr = cloned_row.find(".address-selector");
+			addr.selectize();
 
 			var cloned_cond = cloned_row.find(".condition-selector");
 			cloned_cond.selectize();
@@ -1139,6 +1169,8 @@
 			cloned_row.find(".btn-saveitem").remove();
 			// remove readonly status on qty field
 			cloned_row.find(".item-qty").prop('readonly',false);
+
+			cloned_row.find(".dropdown .dropdown-toggle").addClass('hidden');
 
 			cloned_row.insertBefore(original_row);
 
@@ -1217,6 +1249,7 @@
 			//rebuild with updated info (i.e., companyid if changed)
 			address.find(".address-contactid").selectize();
 			address.find(".address-code").val('');
+			address.find(".address-notes").val('');
 			address.find(".address-modal").data('oldid',addressid);
 			address.find(".address-modal").data('idname',idname);
 
@@ -1243,6 +1276,7 @@
 							address.find(".address-contactid").populateSelected(json.contactid, json.contact);
 						}
 						address.find(".address-code").val(json.code);
+						address.find(".address-notes").val(json.notes);
 
 						address.modal('show');
 					},
