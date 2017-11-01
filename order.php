@@ -93,7 +93,9 @@
 				$selname = 'address-selector';
 				$dataurl = '/json/addresses.php';
 				$dataplacer = '- Select an Address -';
-				$editor = '<a href="javascript:void(0);" class="address-editor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
+				if ($id) {
+					$editor = '<a href="javascript:void(0);" class="address-editor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
+				}
 			} else if ($def_type=='Part') {
 				if ($id) { $cls = 'select2'; } else { $cls = 'hidden'; }
 				$fieldname = 'partid';
@@ -685,7 +687,7 @@
 		<th class="col-md-1">Ref 2</th>
 		<th class="col-md-1">
 <?php if ($T["delivery_date"]) { ?>
-			Delivery
+			Date Due
 <?php } ?>
 		</th>
 		<th class="col-md-1">
@@ -951,6 +953,10 @@
 			if (! idname) { return; }
 
 			var addressid = $("#"+idname).val();
+			if (! addressid) {
+				toggleLoader("Select an address to edit");
+				return;
+			}
 
 			$("#modal-address").populateAddress(addressid,idname);
 		});
@@ -980,6 +986,7 @@
 			var nickname = address.find(".address-nickname").val().trim();
 			var alias = address.find(".address-alias").val().trim();
 			var contactid = address.find(".address-contactid").val().trim();
+			if (contactid==null) { contactid = 0; }
 			var code = address.find(".address-code").val().trim();
 			var notes = address.find(".address-notes").val().trim();
 
@@ -1108,7 +1115,7 @@
 		});
 
 		jQuery.fn.search = function(e) {
-			var type = $(this).find(".search-type");
+			var type = $(this).find(".search-type").val();
 			if (! type || type.val()=='Part') {
 				partSearch($("#item-search").val());
 			} else {
@@ -1137,6 +1144,7 @@
 
 			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
 
+			original_row.find(".address-selector").val(0);//reset selection before selectizing
 			original_row.find(".address-selector").selectize();
 			original_row.find(".condition-selector").selectize();
 			original_row.find(".warranty-selector").selectize();

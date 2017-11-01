@@ -46,7 +46,7 @@
 	$code = '';
 	if (isset($_REQUEST['code'])) { $code = strtoupper((trim($_REQUEST['code']))); }
 	$addr_notes = '';
-	if (isset($_REQUEST['notes'])) { addr_$notes = trim($_REQUEST['notes']); }
+	if (isset($_REQUEST['notes'])) { $addr_notes = trim($_REQUEST['notes']); }
 
 	$query = "REPLACE addresses (name, street, addr2, addr3, city, state, postal_code, country, notes";
 	if ($addressid) { $query .= ", id"; }
