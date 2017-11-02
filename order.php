@@ -26,6 +26,7 @@
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
 
+		//if (! strstr($id,'NEW')) {
 		if ($id) {
 			if (strstr($label,'item_id')) {
 				$T2 = order_type($label);
@@ -42,7 +43,7 @@
 				$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="'.$ref.'">';
 	
 			}
-		} else if (! $id) {
+		} else {
 			$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="">';
 		}
 
@@ -63,22 +64,37 @@
 		return ($col);
 	}
 
-	function buildDescrCol($P,$id,$def_type='Part') {
+	function buildDescrCol($P,$id,$def_type='Part',$items) {
 		global $EDIT;
 
-		if ($id) {
+		$new = false;
+		//if (substr($id,0,3)=='NEW') { $new = true; }
+		if (! $id) { $new = true; }
+
+		if (! $new) {
 			$col = '<div class="pull-left" style="width:93%">';
 		} else {
+			// in Add Item mode, determine first if the user should have Site vs Part options...
+			if (array_key_exists('partid',$items)) {
+				$btn_options = '
+					<li><a href="javascript:void(0);">Part</a></li>
+				';
+			} else if (array_key_exists('item_id',$items)) {
+				$btn_options = '
+					<li><a href="javascript:void(0);">Site</a></li>
+					<li><a href="javascript:void(0);">Part</a></li>
+				';
+			}
+
 			$col = '
 			<div class="pull-left dropdown" style="width:8%">
-				<span class="dropdown-toggle" data-toggle="dropdown">
+				<span class="dropdown-toggle dropdown-searchtype" data-toggle="dropdown">
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
 					<input type="hidden" name="search_type" class="search-type" value="'.$def_type.'">
 				</span>
 				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
 				<ul class="dropdown-menu dropdown-button dropdown-searchtype">
-					<li><a href="javascript:void(0);">Site</a></li>
-					<li><a href="javascript:void(0);">Part</a></li>
+					'.$btn_options.'
 				</ul>
 			</div>
 			<div class="pull-left" style="width:85%">
@@ -93,11 +109,9 @@
 				$selname = 'address-selector';
 				$dataurl = '/json/addresses.php';
 				$dataplacer = '- Select an Address -';
-				if ($id) {
-					$editor = '<a href="javascript:void(0);" class="address-editor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
-				}
+				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
 			} else if ($def_type=='Part') {
-				if ($id) { $cls = 'select2'; } else { $cls = 'hidden'; }
+				if (! $new) { $cls = 'select2'; } else { $cls = 'hidden'; }
 				$fieldname = 'partid';
 				$selname = 'part-selector';
 				$dataurl = '/json/parts-dropdown.php';
@@ -170,6 +184,13 @@
 	function addItemRow($id,$T) {
 		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT;
 
+		//randomize id (if no id) so we can repeatedly add new rows in-screen
+		$new = false;
+		if (! $id) {
+			//$id = 'NEW'.rand(0,999999);
+			$new = true;
+		}
+
 		$P = array();
 		// used as a guide for the fields in the items table for this order/order type
 		$items = getItems($T['item_label']);
@@ -181,7 +202,7 @@
 			$search_cls = 'hidden';
 		}
 
-		if ($id) {
+		if (! $new) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -314,7 +335,7 @@
 	<tr class="'.$row_cls.'">
 		<td class="col-md-4 part-container">
 			'.buildLineCol($r['line_number'],$id).'
-			'.buildDescrCol($P,$id,$def_type).'
+			'.buildDescrCol($P,$id,$def_type,$items).'
 			'.$r['input-search'].'
 			'.$memo_col.'
 		</td>
@@ -948,6 +969,15 @@
 
 			$("#modal-contact").populateContact(contactid,str);
 		});
+		// instead of using direct-editing using .address-editor class, this friendly neighbor editor uses its nearby address
+		// select menu as a way of getting the id and name of its task
+		$(".address-neighbor").on('click', function() {
+			var addr = $(this).closest(".part-container").find(".address-selector");
+			var idname = addr.prop('name');
+			var addressid = addr.val();
+
+			$("#modal-address").populateAddress(addressid,idname);
+		});
 		$(".address-editor").on('click', function() {
 			var idname = $(this).data('name');
 			if (! idname) { return; }
@@ -985,7 +1015,7 @@
 			var postal_code = address.find(".address-postal_code").val().trim();
 			var nickname = address.find(".address-nickname").val().trim();
 			var alias = address.find(".address-alias").val().trim();
-			var contactid = address.find(".address-contactid").val().trim();
+			var contactid = address.find(".address-contactid").val();
 			if (contactid==null) { contactid = 0; }
 			var code = address.find(".address-code").val().trim();
 			var notes = address.find(".address-notes").val().trim();
@@ -1101,14 +1131,14 @@
 
 			if (v=='Site') {
 				$(".input-search").removeClass('hidden').addClass('hidden');
-				pc.find(".address-editor").removeClass('hidden');
+				pc.find(".address-neighbor").removeClass('hidden');
 				pc.find(".address-selector").selectize();
 				pc.find(".address-selector").removeClass('hidden').addClass('select2');
 				// remove previously-found parts, if any
 				$(this).closest("tbody").find(".found_parts").remove();
 			} else if (v=='Part') {
 				$(".input-search").removeClass('hidden');
-				pc.find(".address-editor").removeClass('hidden').addClass('hidden');
+				pc.find(".address-neighbor").removeClass('hidden').addClass('hidden');
 				pc.find(".address-selector").select2("destroy");
 				pc.find(".address-selector").removeClass('select2').addClass('hidden');
 			}
@@ -1126,7 +1156,7 @@
 			var qty_field = e.find(".part_qty");
 			var qty = 1;
 			if (qty_field.length>0) {
-				qty_field.val().trim();
+				qty = qty_field.val().trim();
 				if (qty == '' || qty == '0') { return; }
 			}
 
@@ -1150,6 +1180,8 @@
 			original_row.find(".address-selector").selectize();
 			original_row.find(".condition-selector").selectize();
 			original_row.find(".warranty-selector").selectize();
+
+			original_row.find("textarea.form-control").val('');
 
 			// set qty of new row to qty of user-specified qty on revision found
 			cloned_row.find(".item-qty").val(qty);
@@ -1180,7 +1212,7 @@
 			// remove readonly status on qty field
 			cloned_row.find(".item-qty").prop('readonly',false);
 
-			cloned_row.find(".dropdown .dropdown-toggle").addClass('hidden');
+			cloned_row.find(".dropdown .dropdown-toggle.dropdown-searchtype").addClass('hidden');
 
 			cloned_row.insertBefore(original_row);
 

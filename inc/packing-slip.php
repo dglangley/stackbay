@@ -206,7 +206,7 @@ $ps_string .= '
                 <td colspan = '2' style = 'border:none;'><b>
                     Box #".$box[0]."
                 </b></td>
-                <td colspan = '5' style = 'text-align:right; border:none;'><b>
+                <td colspan = '4' style = 'text-align:right; border:none;'><b>
                     ".(($box[1])? "Tracking #: ".$box[1] : '')."
                 </b></td>
             </tr>
@@ -214,19 +214,25 @@ $ps_string .= '
                 <td>Ln#</td>
                 <td>Part</td>
                 <td>HECI</td>
+<!--
                 <td>Description</td>
+-->
                 <td>Ref No</td>
                 <td>Qty</td>
                 <td>Serials</td>
             </tr>";
             
             foreach ($part as $pid => $info) {
+				$parts = explode(' ',$info['info']['part']);
+
                 $ps_string .="
                 <tr>
                     <td>".getLN($order_number,$pid)."</td>
-                    <td>".$info['info']['part']."</td>
+                    <td>".$parts[0]."</td>
                     <td>".$info['info']['heci']."</td>
+<!--
                     <td>".$info['info']['Descr']."</td>
+-->
                     <td>  </td>
                     <td>".$info['qty']."</td>
                     <td>";

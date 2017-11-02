@@ -141,8 +141,10 @@
 	} else {
 		if ($type=='PO') {
 			include 'inventory_add.php';
-		} else {
+		} else if ($type=='SO') {
 			include 'shipping.php';
+		} else {
+			include 'repair.php';
 		}
 	}
 ?>

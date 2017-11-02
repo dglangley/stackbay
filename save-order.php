@@ -120,9 +120,9 @@
 	if (array_key_exists($T['addressid'],$ORDER)) { $query .= $T['addressid'].", "; }
 	// all shipping-related fields
 	if (array_key_exists('ship_to_id',$ORDER)) {
-		$query .= "ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
+		$query .= "ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, ";
 	}
-	$query .= "public_notes, ";
+	$query .= "termsid, public_notes, ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
 	$query .= "status) ";
 	$query .= "VALUES (";
@@ -189,6 +189,7 @@
 	$email_rows = array();
 	foreach ($items as $key => $fieldid) {
 		$id = $item_id[$key];
+		if (! $fieldid OR ! $qty[$key]) { continue; }
 
 		$type = 'Part';
 		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $type = 'Site'; }
@@ -198,20 +199,20 @@
 		$query = "REPLACE ".$T['items']." (";
 		if (isset($F['partid'])) { $query .= "partid, "; }
 		else if (isset($F['item_id'])) { $query .= "item_id, item_label, "; }
-		$query .= $T['order'].", line_number, qty, ";
-		if ($T['amount']) { $query .= $T['amount'].", "; }
-		if ($T['memo']) { $query .= "memo, "; }
-		if ($T['delivery_date']) { $query .= $T['delivery_date'].", "; }
-		if ($T['items']<>'return_items') { $query .= "ref_1, ref_1_label, ref_2, ref_2_label, "; }
-		if ($T['warranty']) { $query .= $T['warranty']; }
-		if ($T['condition']) { $query .= ", ".$T['condition']." "; }
-		if ($id) { $query .= ", id"; }
+		$query .= $T['order'].", line_number, qty";
+		if ($T['amount']) { $query .= ", ".$T['amount']; }
+		if ($T['memo']) { $query .= ", memo"; }
+		if ($T['delivery_date']) { $query .= ", ".$T['delivery_date']; }
+		if ($T['items']<>'return_items') { $query .= ", ref_1, ref_1_label, ref_2, ref_2_label"; }
+		if ($T['warranty']) { $query .= ", ".$T['warranty']; }
+		if ($T['condition']) { $query .= ", ".$T['condition']; }
+		if ($id) { $query .= "id"; }
 		$query .= ") VALUES ('".res($fieldid)."', ";
 		if (isset($F['item_label'])) { $query .= "'addressid', "; }
-		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."', ";
-		if ($T['amount']) { $query .= fres($amount[$key]).", "; }
-		if ($T['memo']) { $query .= fres($memo[$key]).", "; }
-		if ($T['delivery_date']) { $query .= fres(format_date($delivery_date[$key],'Y-m-d')).", "; }
+		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."'";
+		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
+		if ($T['memo']) { $query .= ", ".fres($memo[$key]); }
+		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
 		if ($T['items']<>'return_items') {
 			// clear the label values if no ref numbers
 			$r1 = trim($ref_1[$key]);
@@ -221,9 +222,9 @@
 			$r2l = $ref_2_label[$key];
 			if (! $r2) { $r2l = ''; }
 
-			$query .= fres($r1).", ".fres($r1l).", ".fres($r2).", ".fres($r2l).", ";
+			$query .= ", ".fres($r1).", ".fres($r1l).", ".fres($r2).", ".fres($r2l);
 		}
-		if ($T['warranty']) { $query .= fres($warrantyid[$key]); }
+		if ($T['warranty']) { $query .= ", ".fres($warrantyid[$key]); }
 		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
 		if ($id) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";

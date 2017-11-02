@@ -33,9 +33,9 @@
 		if (mysqli_num_rows($result)==0) { return ($qty); }
 		$qty = 0;//we now know at least one record exists in inventory, so the lowest-qty scenario is '0' now, indicating zero-but-previous-stock
 		while ($r = mysqli_fetch_assoc($result)) {
-			if ($r['conditionid']<0) { continue; }// no bad stock
+			if (! $itemid AND $r['conditionid']<0) { continue; }// no bad stock
 			//if ($r['status']<>'received' AND $r['status']<>'manifest') { continue; }//only stock on the shelf or ready to ship (manifest)
-			if ($r['status']<>'received') { continue; }//only stock on the shelf
+			if (! $itemid AND $r['status']<>'received') { continue; }//only stock on the shelf
 			$qty += $r['qty'];
 		}
 

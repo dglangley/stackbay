@@ -9,6 +9,7 @@
 		if ($q) { $query .= "LEFT JOIN emails ON contacts.id = emails.contactid "; }
 		$query .= "WHERE companyid = '".res($companyid)."' ";
 		if ($q) { $query .= "AND (emails.email RLIKE '".res($q)."' OR contacts.name RLIKE '".res($q)."') GROUP BY contacts.id "; }
+		else { $query .= "AND contacts.status = 'Active' "; }
 		$query .= "ORDER BY name ASC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
