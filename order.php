@@ -22,6 +22,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
@@ -57,7 +58,8 @@
 		if ($EDIT) {
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($ln) {
-			$col .= '<span class="info">'.$ln.'.</span>';
+			//$col .= '<span class="info">'.$ln.'.</span>';
+			$col .= '<a href="/'.strtolower($GLOBALS['order_type']).'.php?order_number='.$GLOBALS['order_number'].'-'.$ln.'&order_type='.$GLOBALS['order_type'].'" class="btn btn-default btn-xs">'.$ln.'.</a>';
 		}
 		$col .= '&nbsp;</div>';
 
@@ -72,7 +74,7 @@
 		if (! $id) { $new = true; }
 
 		if (! $new) {
-			$col = '<div class="pull-left" style="width:93%">';
+			$col = '<div class="pull-left" style="width:93%; margin-bottom:6px;">';
 		} else {
 			// in Add Item mode, determine first if the user should have Site vs Part options...
 			if (array_key_exists('partid',$items)) {
@@ -211,10 +213,12 @@
 			$r = mysqli_fetch_assoc($result);
 			$r['qty_attr'] = '';
 			$r['name'] = '';
-			if (array_key_exists('partid',$r) AND $r['partid']) {
+			if ((array_key_exists('partid',$r) AND $r['partid']) OR (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='partid'))  {
 				$H = hecidb($r['partid'],'id');
 				$P = $H[$r['partid']];
 				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$P['name'].'</option>'.chr(10);
+			} else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='addressid') {
+				$P['name'] = format_address($r['item_id'],', ',true,'',$GLOBALS['ORDER']['companyid'],'<br/>');
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
@@ -261,10 +265,10 @@
 				'save'=>'<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>',
 			);
 
-			if (array_key_exists('memo',$items)) { $r['memo'] = ''; }
+			if (array_key_exists('description',$items)) { $r['description'] = ''; }
 
-			$ref1 = setRef('','',0,1);
-			$ref2 = setRef('','',0,2);
+			$ref1 = setRef('','',$id,1);
+			$ref2 = setRef('','',$id,2);
 		}
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
@@ -272,12 +276,12 @@
 		$delivery_col = '';
 		$condition_col = '';
 		$warranty_col = '';
-		$memo = false;
-		if (array_key_exists('memo',$r)) { $memo = $r['memo']; }
+		$descr = false;
+		if (array_key_exists('description',$r)) { $descr = $r['description']; }
 
-		$memo_col = '';
+		$descr_col = '';
 		if ($EDIT) {
-			if ($memo!==false) { $memo_col = '<br/><textarea name="memo['.$id.']" rows="2" class="form-control input-sm">'.$memo.'</textarea>'; }
+			if ($descr!==false) { $descr_col = '<br/><textarea name="description['.$id.']" rows="2" class="form-control input-sm">'.$descr.'</textarea>'; }
 
 			if ($T["delivery_date"]) {
 				$delivery_col = '
@@ -320,7 +324,7 @@
 			';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
-			if ($memo!==false) { $memo_col = '<br/>'.$memo; }
+			if ($descr!==false) { $descr_col = '<br/><br/>'.$descr; }
 
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
 			if ($T["condition"]) {
@@ -337,7 +341,7 @@
 			'.buildLineCol($r['line_number'],$id).'
 			'.buildDescrCol($P,$id,$def_type,$items).'
 			'.$r['input-search'].'
-			'.$memo_col.'
+			'.$descr_col.'
 		</td>
 		<td class="col-md-1">
 			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1).'

@@ -169,8 +169,8 @@
 	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
 	$amount = array();
 	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
-	$memo = array();
-	if (isset($_REQUEST['memo'])) { $memo = $_REQUEST['memo']; }
+	$descr = array();
+	if (isset($_REQUEST['description'])) { $descr = $_REQUEST['description']; }
 	$delivery_date = array();
 	if (isset($_REQUEST['delivery_date'])) { $delivery_date = $_REQUEST['delivery_date']; }
 	$ref_1 = array();
@@ -201,17 +201,17 @@
 		else if (isset($F['item_id'])) { $query .= "item_id, item_label, "; }
 		$query .= $T['order'].", line_number, qty";
 		if ($T['amount']) { $query .= ", ".$T['amount']; }
-		if ($T['memo']) { $query .= ", memo"; }
+		if ($T['description']) { $query .= ", ".$T['description']; }
 		if ($T['delivery_date']) { $query .= ", ".$T['delivery_date']; }
 		if ($T['items']<>'return_items') { $query .= ", ref_1, ref_1_label, ref_2, ref_2_label"; }
 		if ($T['warranty']) { $query .= ", ".$T['warranty']; }
 		if ($T['condition']) { $query .= ", ".$T['condition']; }
-		if ($id) { $query .= "id"; }
+		if ($id) { $query .= ", id"; }
 		$query .= ") VALUES ('".res($fieldid)."', ";
 		if (isset($F['item_label'])) { $query .= "'addressid', "; }
 		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."'";
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
-		if ($T['memo']) { $query .= ", ".fres($memo[$key]); }
+		if ($T['description']) { $query .= ", ".fres($descr[$key]); }
 		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
 		if ($T['items']<>'return_items') {
 			// clear the label values if no ref numbers

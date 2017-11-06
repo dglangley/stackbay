@@ -21,7 +21,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';//sales_charges';
 				$T['cust_ref'] = '';
-				$T['memo'] = 'memo';
+				$T['description'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
@@ -45,7 +45,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';//sales_charges';
 				$T['cust_ref'] = '';
-				$T['memo'] = 'memo';
+				$T['description'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
@@ -70,7 +70,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
-				$T['memo'] = '';
+				$T['description'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				break;
@@ -93,7 +93,7 @@
 				$T['delivery_date'] = 'receive_date';
 				$T['charges'] = 'purchase_charges';
 				$T['cust_ref'] = '';
-				$T['memo'] = '';
+				$T['description'] = '';
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
@@ -117,7 +117,7 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
-				$T['memo'] = '';
+				$T['description'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
@@ -141,7 +141,7 @@
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
-				$T['memo'] = '';
+				$T['description'] = 'description';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
@@ -165,7 +165,7 @@
 				$T['delivery_date'] = 'delivery_date';
 				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = 'cust_ref';
-				$T['memo'] = '';
+				$T['description'] = '';
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
@@ -189,7 +189,7 @@
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
-				$T['memo'] = '';
+				$T['description'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';

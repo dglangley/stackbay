@@ -18,7 +18,7 @@
 		if (mysqli_num_rows($result)==0) { return (''); }
 		$r = mysqli_fetch_assoc($result);
 
-		return ('PO'.$r['po_number'].' <a href="/order_form.php?on='.$r['po_number'].'&ps=p" target="_new"><i class="fa fa-arrow-right"></i></a>');
+		return ('PO'.$r['po_number'].' <a href="/order.php?order_number='.$r['po_number'].'&order_type=Purchase" target="_new"><i class="fa fa-arrow-right"></i></a>');
 	}
 
 	function getPartInfo($partid) {
@@ -595,7 +595,7 @@
 			<tr class="order-header '.$row_cls.'">
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
-				<td> '.$order_abbrev.$r[$order_type].' <a href="/order_form.php?on='.$r[$order_type].'&ps=s" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> '.$order_abbrev.$r[$order_type].' <a href="/order.php?order_number='.$r[$order_type].'&order_type=Sale" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
 				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a> </td>
 				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>

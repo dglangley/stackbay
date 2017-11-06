@@ -57,6 +57,9 @@
 	// Disable the modules you want on the page here
 	if($type == 'installation') {
 
+	} else if($type == 'Service') {
+		$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+
 	} else if($type == 'build') {
 
 	} else if($type == 'repair') {
