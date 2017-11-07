@@ -81,6 +81,24 @@ To do:
 		if (isset($_COOKIE['inventory-detail'])) { $detail = $_COOKIE['inventory-detail']; }
 	}
 
+	$visible = false;
+	$internal = false;
+	if (isset($_REQUEST['inventory-visibility'])) {
+		$visible = 1;
+		$internal = 0;
+		setcookie('inventory-visibility',$_REQUEST['inventory-visibility'],$expiry);
+		setcookie('inventory-internal',false,$past_time);
+	} else if (isset($_REQUEST['inventory-internal'])) {
+		$internal = 1;
+		$visible = 0;
+		setcookie('inventory-internal',$_REQUEST['inventory-internal'],$expiry);
+		setcookie('inventory-visibility',false,$past_time);
+	} else {
+		if (isset($_COOKIE['inventory-visibility'])) { $visible = $_COOKIE['inventory-visibility']; }
+		if (isset($_COOKIE['inventory-internal'])) { $internal = $_COOKIE['inventory-internal']; }
+	}
+	if ($visible===false AND $internal===false) { $visible = 1; $internal = 0; }
+
 	$order_search = '';
 	if (isset($_REQUEST['order_search']) AND trim($_REQUEST['order_search'])) { $order_search = trim($_REQUEST['order_search']); }
 
@@ -203,7 +221,9 @@ To do:
 			$partids_csv .= $partid;
 		}
 
-		$query = "SELECT * FROM inventory WHERE serial_no = '".res($search)."'; ";
+		$query = "SELECT * FROM inventory WHERE serial_no = '".res($search)."' ";
+		if ($internal) { $query .= "AND status = 'internal use' "; }
+		$query .= "; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)>0) {
 			$goodstock = 1;
@@ -233,6 +253,14 @@ To do:
 		$detail_btn = 'primary active';
 	}
 
+	$visible_btn = 'default';
+	$internal_btn = 'default';
+	if ($visible) {
+		$visible_btn = 'primary active';
+	} else if ($internal) {
+		$internal_btn = 'danger active';
+	}
+
 	// placed separately here for purposes of single-user overrides (such as in $order_search) instead of saving cookies
 	if ($goodstock) {
 		$goodstock_btn = 'warning active';
@@ -248,7 +276,7 @@ To do:
 	}
 
 	$records = array();
-	if ($partids_csv OR $locationid OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
+	if ($partids_csv OR $locationid OR $internal OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
 		$query = "SELECT i.* FROM inventory i ";
 		if ($order_matches>0) {
 			$query .= ", inventory_history h ";
@@ -256,6 +284,7 @@ To do:
 		$query .= "WHERE 1 = 1 ";
 		if ($partids_csv) { $query .= "AND i.partid IN (".$partids_csv.") "; }
 		if ($locationid) { $query .= "AND i.locationid = '".res($locationid)."' "; }
+		if ($internal) { $query .= "AND i.status = 'internal use' "; }
 		if ($order_matches>0) {
 			$query .= "AND h.invid = i.id ";
 			$subquery = "";
@@ -338,9 +367,11 @@ To do:
 		if ($r['status']<>'received') { $outcount += $r['qty']; }
 
 		// exclude results that the user hasn't included
-		if (! $goodstock AND $r['conditionid']>0) { continue; }
-		if (! $badstock AND $r['conditionid']<0) { continue; }
-		if (! $outstock AND $r['status']<>'received') { continue; }
+		if (! $internal) {
+			if (! $goodstock AND $r['conditionid']>0) { continue; }
+			if (! $badstock AND $r['conditionid']<0) { continue; }
+			if (! $outstock AND $r['status']<>'received') { continue; }
+		}
 
 		if (! isset($qtys[$r['partid']])) { $qtys[$r['partid']] = 0; }
 		$qtys[$r['partid']] += $r['qty'];
@@ -543,6 +574,10 @@ To do:
 				<div class="btn-group">
 					<button type="submit" name="inventory-summary" id="inventory-summary" value="1" class="btn btn-<?php echo $summary_btn; ?> btn-xs left" data-toggle="tooltip" data-placement="bottom" title="Summary Results (default)"><i class="fa fa-th-large"></i></button>
 					<button type="submit" name="inventory-detail" id="inventory-detail" value="1" class="btn btn-<?php echo $detail_btn; ?> btn-xs right" data-toggle="tooltip" data-placement="bottom" title="Detail Results"><i class="fa fa-th"></i></button>
+				</div>
+				<div class="btn-group pull-right">
+					<button type="submit" name="inventory-visibility" id="inventory-visibility" value="1" class="btn btn-<?php echo $visible_btn; ?> btn-xs left" data-toggle="tooltip" data-placement="bottom" title="Visible Inventory"><i class="fa fa-eye"></i></button>
+					<button type="submit" name="inventory-internal" id="inventory-internal" value="1" class="btn btn-<?php echo $internal_btn; ?> btn-xs right" data-toggle="tooltip" data-placement="bottom" title="Internal Use"><i class="fa fa-eye-slash"></i></button>
 				</div>
 			</div>
 			<div class="col-sm-1 col-location">

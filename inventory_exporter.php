@@ -122,7 +122,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Manage Inventory</title>
+	<title>Inventory Exporter</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -171,7 +171,7 @@
 			</div>
 		</div>
 		<div class="col-sm-2">
-           	<h2 class="minimal">Inventory Manager</h2>
+           	<h2 class="minimal">Inventory Exporter</h2>
 		</div>
 		<div class="col-sm-2">
 			<div class="input-group">
