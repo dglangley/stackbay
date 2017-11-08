@@ -470,7 +470,13 @@
 				$query3 .= "packages p, package_contents pc, invoice_shipments s, invoice_items ii ";
 				$query3 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND h.invid = pc.serialid ";
 				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND (t.price > 0 OR ii.amount > 0) ";
-				$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
+				// added Repair clause on 11/7/17 because matching Package Order#/Type wasn't working since Repair shipments
+				// get stored with their corresponding SO data (legacy DID keep Repair data, but new model uses SO)
+				if ($type=='Repair') {
+					$query3 .= "AND p.id = pc.packageid ";
+				} else {
+					$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
+				}
 				$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
 				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
 				$query3 .= "GROUP BY h.invid, t.id; ";
@@ -591,53 +597,16 @@
 			$row_cls = 'danger';
 		}
 
-		$comm_rows .= '
-			<tr class="order-header '.$row_cls.'">
-				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
-				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
-				<td> '.$order_abbrev.$r[$order_type].' <a href="/order.php?order_number='.$r[$order_type].'&order_type=Sale" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
-				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a> </td>
-				<td> Inv# '.$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a> </td>
-				<td class="text-right"> '.format_price($inv_amt).' </td>
-				<td class="text-right"> '.format_price($paid_amt).' </td>
-			</tr>
-		';
-
 		$num_comms = count($r['commissions']);
-		if ($num_comms>0) {
-			$comm_rows .= '
-			<tr class="comm-row">
-				<td colspan="7">
-					<table class="table table-condensed">
-			';
-		}
 
+		$comm_table = '';
 		//print "<pre>".print_r($r['commissions'],true)."</pre>";
 		foreach ($r['commissions'] as $invoice_item_id => $invoice_item) {
 			$partid = $invoice_item['partid'];
 			$invoice_amount = $invoice_item['amount'];
 
 			foreach ($invoice_item['comms'] as $comm_repid => $a) {
-				$comm_rows .= '
-						<tr>
-							<td class="col-md-1"> </td>
-							<td class="col-md-2"> <strong>'.getRep($comm_repid).'</strong> </td>
-							<td class="col-md-2"> </td>
-							<td class="col-md-1"> </td>
-							<td class="col-md-1 text-right"> <strong>'.$r['charge_type'].' Price</strong> </td>
-							<td class="col-md-1 text-right"> <strong>COGS (Avg)</strong> </td>
-							<td class="col-md-1 text-right"> <strong>Profit</strong> </td>
-							<td class="col-md-1"> </td>
-							<td class="col-md-1 text-right">
-								<strong>Comm Due</strong>
-							</td>
-							<td class="col-md-1 text-right" style="padding:0px !important;">
-<!--
-								<a class="btn btn-default btn-xs btn-details"><i class="fa fa-caret-down"></i></a>
--->
-							</td>
-						</tr>
-				';
+				$comms = '';
 
 				// this breaks out each individual inventory item that's on this invoice item
 				foreach ($a as $c) {
@@ -763,7 +732,7 @@
 						if (! isset($pending_comms[$comm_repid])) { $pending_comms[$comm_repid] = 0; }
 						$pending_comms[$comm_repid] += $comm_amount;
 
-						$comm_rows .= '
+						$comms .= '
 						<tr class="'.$cls.'">
 							<td class="col-md-1" style="padding:0px !important">
 								<input type="checkbox" name="comm['.$C['id'].']" class="comm-item" data-repid="'.$comm_repid.'" data-amount="'.$comm_amount.'" value="'.$comm_amount.'" '.$chk.'>
@@ -792,11 +761,48 @@
 						</tr>
 						';
 					}/*end foreach ($results as $C) */
+				}/*end $a as $c */
+
+				if ($comms) {
+					$comm_table .= '
+						<tr>
+							<td class="col-md-1"> </td>
+							<td class="col-md-2"> <strong>'.getRep($comm_repid).'</strong> </td>
+							<td class="col-md-2"> </td>
+							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right"> <strong>'.$r['charge_type'].' Price</strong> </td>
+							<td class="col-md-1 text-right"> <strong>COGS (Avg)</strong> </td>
+							<td class="col-md-1 text-right"> <strong>Profit</strong> </td>
+							<td class="col-md-1"> </td>
+							<td class="col-md-1 text-right">
+								<strong>Comm Due</strong>
+							</td>
+							<td class="col-md-1 text-right" style="padding:0px !important;">
+<!--
+								<a class="btn btn-default btn-xs btn-details"><i class="fa fa-caret-down"></i></a>
+-->
+							</td>
+						</tr>
+					'.$comms;
 				}
 			}
 		}
-		if ($num_comms>0) {
+
+		if ($comm_table) {
 			$comm_rows .= '
+			<tr class="order-header '.$row_cls.'">
+				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
+				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
+				<td> '.$order_abbrev.$r[$order_type].' <a href="/order.php?order_number='.$r[$order_type].'&order_type=Sale" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
+				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a> </td>
+				<td> Inv# '.$r['invoice_no'].' <a href="/invoice.php?invoice='.$r['invoice_no'].'" target="_new"><i class="fa fa-file-pdf-o"></i></a> </td>
+				<td class="text-right"> '.format_price($inv_amt).' </td>
+				<td class="text-right"> '.format_price($paid_amt).' </td>
+			</tr>
+			<tr class="comm-row">
+				<td colspan="7">
+					<table class="table table-condensed">
+						'.$comm_table.'
 					</table>
 				</td>
 			</tr>
