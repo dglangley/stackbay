@@ -131,7 +131,9 @@
 			<li class="active"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
 			<li class=""><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
          	<li class=""><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
+<?php if (in_array("4", $USER_ROLES)) { ?>
 			<li class=""><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+<?php } ?>
 			<li class=""><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
 		</ul>
 		
@@ -369,12 +371,16 @@ foreach ($freights as $freight) {
 				<?php
 					$selPP = ' selected';
 					$selC = ' selected';
-				
+
+					$terms = array();
 					$ar_list = '';
 					$ap_list = '';
+/*
 					$query = "SELECT * FROM terms LEFT JOIN company_terms ON company_terms.termsid = terms.id ";
 					$query .= "WHERE (companyid IS NULL OR companyid = '".$companyid."') ";
 					$query .= "ORDER BY days ASC, terms ASC; ";
+*/
+					$query = "SELECT * FROM terms ORDER BY days ASC, terms ASC; ";
 					$result = qdb($query) OR die(qe().' '.$query);
 					$num_terms = mysqli_num_rows($result);
 					// first iterate to find if any company-selections are made; if not, default to select all
@@ -382,16 +388,33 @@ foreach ($freights as $freight) {
 					$ap_selections = false;
 					while ($r = mysqli_fetch_assoc($result)) {
 						$terms[] = $r;
-						if ($r['companyid'] AND $r['category']=='AR') { $ar_selections = true; }
-						if ($r['companyid'] AND $r['category']=='AP') { $ap_selections = true; }
 					}
+					// check for company terms, and if ANY are set, restrict accordingly
+					$company_AR = array();
+					$company_AP = array();
+					$query = "SELECT * FROM company_terms WHERE companyid = '".res($companyid)."'; ";
+					$result = qdb($query) OR die(qe().' '.$query);
+					while ($r = mysqli_fetch_assoc($result)) {
+						if ($r['category']=='AR') {
+							$company_AR[$r['termsid']] = true;
+						}
+						if ($r['category']=='AP') {
+							$company_AP[$r['termsid']] = true;
+						}
+					}
+
+					$nAR = count($company_AR);
+					$nAP = count($company_AP);
 					foreach ($terms as $r) {
+						if (array_key_exists($r['id'],$company_AR)) { $ar_selections = true; }
+						if (array_key_exists($r['id'],$company_AP)) { $ap_selections = true; }
+
 						$sel = '';
-						if (($r['category']=='AR' AND $r['companyid']) OR $ar_selections===false) { $sel = ' selected'; }
+						if ($nAR==0 OR array_key_exists($r['id'],$company_AR)) { $sel = ' selected'; }
 						$ar_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
 				
 						$sel = '';
-						if (($r['category']=='AP' AND $r['companyid']) OR $ap_selections===false) { $sel = ' selected'; }
+						if ($nAP==0 OR array_key_exists($r['id'],$company_AP)) { $sel = ' selected'; }
 						$ap_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
 					}
 				?>
@@ -551,37 +574,6 @@ foreach ($freights as $freight) {
 
     <script type="text/javascript">
         $(document).ready(function() {
-			// $(".active-form").change(function() {
-			// 	var field = $(this);
-			// 	var action = field.closest("form").prop("action").replace('save-','json/save-');
-			// 	if (field.data('field')) { var k = field.data('field'); }
-			// 	else { var k = field.prop("name"); }
-			// 	var fieldid = 0;
-			// 	if (field.data('id')) { fieldid = field.data('id'); }
-			// 	var v = field.val();
-			// 	var contactid = field.closest('tr').data('contactid');
-			// 	console.log(action+'?contactid='+contactid+'&change_field='+k+'&change_value='+encodeURIComponent(v.trim())+'&fieldid='+fieldid);
-
-			// 	$.ajax({
-			// 		url: action,
-			// 		type: 'get',
-			// 		data: {'contactid': contactid, 'change_field': k, 'change_value': encodeURIComponent(v.trim()), id: fieldid},
-			// 		dataType: 'json',
-			// 		success: function(json, status) {
-			// 			if (json.message=='Success') {
-			// 				toggleLoader('Save successful');
-			// 				field.data('id',json.id);
-			// 				if (json.data && json.data!='') { field.val(json.data); }
-			// 			} else {
-			// 				//alert(json.message);
-			// 			}
-			// 		},
-			// 		error: function(xhr, desc, err) {
-			// 			console.log(xhr);
-			// 			console.log("Details: " + desc + "\nError:" + err);
-			// 		}
-			// 	}); // end ajax call
-			// });
 			$(".active-form").on("keypress",function(e) {
 				if (e.keyCode == 13) {
 					e.preventDefault();

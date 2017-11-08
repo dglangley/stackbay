@@ -25,6 +25,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['account'] = 'AR';
 				break;
 
 			case 'Bill':
@@ -49,6 +50,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['account'] = 'AP';
 				break;
 
 			case 'Return':
@@ -73,6 +75,7 @@
 				$T['description'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
+				$T['account'] = '';
 				break;
 
 			case 'Purchase':
@@ -97,6 +100,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
+				$T['account'] = 'AP';
 				break;
 
 			case 'Repair':
@@ -121,6 +125,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
 				break;
 
 			case 'Service':
@@ -145,6 +150,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
 				break;
 
 			case 'Sale':
@@ -169,6 +175,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
 				break;
 
 			case 'IT':
@@ -193,6 +200,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['account'] = 'AR';
 				break;
 		}
 

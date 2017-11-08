@@ -37,6 +37,8 @@
 	$conditionid = 0;
 	$conditions = array();
 
+	$company_terms = getCompanyTerms($companyid,$T['account']);
+
 	// in stages of months (3 months, 6 months, etc), try to get a minimum number of results from which
 	// we can build auto-defaults based on use cases
 	$ranges = array(3,6,12,36);
@@ -59,7 +61,12 @@
 			if ($r['freight_account_id']) { $freight_accounts[$r['freight_account_id']][] = true; }
 			$billings[$r['bill_to_id']][] = true;
 			if ($r['ship_to_id']) { $shippings[$r['ship_to_id']][] = true; }
-			if ($r['termsid']) { $terms[$r['termsid']][] = true; }
+			if ($r['termsid']) {
+				// confirm this termsid is allowed for this company
+				if (array_key_exists($r['termsid'],$company_terms)) {
+					$terms[$r['termsid']][] = true;
+				}
+			}
 
 			if ($T['warranty'] OR $T['condition']) {
 				$query2 = "SELECT ";

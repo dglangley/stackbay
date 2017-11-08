@@ -229,7 +229,7 @@
 
 			<div class="col-md-6">
 			    <div class="btn-group">
-					<select name="repid" id="repid" class="rep-selector form-control input-sm">
+					<select name="repid" id="repid" class="rep-selector form-control input-sm select2">
 						<?php echo $reps_list; ?>
 					</select>
 			    </div>
@@ -309,7 +309,7 @@
 	}
 ?>
 			<div class="input-group">
-				<select name="history_date" size="1" class="form-control input-sm" style="width:140px">
+				<select name="history_date" size="1" class="form-control input-sm select2" style="width:140px">
 					<?php echo $payouts; ?>
 				</select>
 				<span class="input-group-btn">
@@ -688,10 +688,12 @@
 					} else {
 						// subtract paid amount against this commission
 						$paid_amount = $c['paid_amount'];
+/*
 						if (! $history_date) {
 							$c['commission_amount'] -= $paid_amount;
 							if ($c['commission_amount']==0) { continue; }
 						}
+*/
 
 						$cogsid = $c['cogsid'];
 						if ($cogsid) {
@@ -709,6 +711,10 @@
 						// manual negative amount on an order with profit
 						if ($history_date OR $c['item_id_label']=='return_item_id' OR $c['item_id_label']=='credit_item_id' OR $c['commission_amount']>0 OR $profit>0) {
 							$comm_amount = $c['commission_amount'];
+						}
+						if (! $history_date) {
+							$comm_amount -= $paid_amount;
+							if ($comm_amount==0) { continue; }
 						}
 
 						$results[] = array(

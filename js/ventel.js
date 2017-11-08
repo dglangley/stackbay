@@ -1058,30 +1058,7 @@
 				cache: false
 			},
 		});
-		$("#freight_services_id").select2({
-			placeholder: '- Select Freight Service -',
-			ajax: {
-				type: 'POST',
-				url: '/json/freight_services.php',
-				dataType: 'json',
-	            data: function (params) {
-	                return {
-	                    carrierid: $("#carrierid").val(),
-	                };
-	            },
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-		            return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: false
-			},
-		});
+		$("#freight_services_id").selectize('/json/freight_services.php','- Select Freight Service -');
 	}
 
 		$(".accounts-body #companyid, .profile-body #companyid").change(function() {
@@ -1623,6 +1600,7 @@
 						companyid: companyid,
 						order_type: scope,
 						fieldid: $(this).attr('id'),
+	                    carrierid: $("#carrierid").val(),
 					};
 				},
 				processResults: function (data, params) {// parse the results into the format expected by Select2.
