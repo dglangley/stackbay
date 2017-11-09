@@ -32,8 +32,8 @@
 		if($service_item_id) { $query .= ", " . fres($service_item_id); }
 		$query .= ");";
 
-		// qdb($query) OR die(qe().' '.$query);
-		// $id = qid();
+		qdb($query) OR die(qe().' '.$query);
+		$id = qid();
 
 		$LINE_NUMBER = $line_number;
 
@@ -79,11 +79,17 @@
 		// Get the ID of all the currently / existing quoted items
 		$quotedItems = array();
 
+		if($field == 'create') {
+			$item_id = 'service_item_id';
+		} else {
+			$item_id = 'quote_item_id';
+		}
+
 		if(! empty($materials)){
 			foreach($materials as $partid => $data) {
 				foreach($data as $line) {
 
-					$query = "REPLACE INTO $table (quote_item_id, partid, qty, amount, leadtime, leadtime_span, profit_pct, quote";
+					$query = "REPLACE INTO $table ($item_id, partid, qty, amount, leadtime, leadtime_span, profit_pct, quote";
 					if($line['quoteid'] && $field != 'create') { $query .= " ,id"; }
 					$query .= ") VALUES (".fres($quoteid).", ".fres($partid).", ".fres($line['qty']).", ".fres($line['amount']).", ".fres($line['leadtime']).", ".fres(ucwords($line['lead_span'])).", ".fres($line['profit']).", ".fres($line['quote']);
 					if($line['quoteid'] && $field != 'create') { $query .= ", " . fres($line['quoteid']); }
@@ -96,7 +102,7 @@
 			}
 
 			// DELETE all records that did not get pushed back up into the update
-			$query = "DELETE FROM $table WHERE id NOT IN ('".join("','", $quotedItems)."') AND quote_item_id = ".fres($quoteid).";";
+			$query = "DELETE FROM $table WHERE id NOT IN ('".join("','", $quotedItems)."') AND $item_id = ".fres($quoteid).";";
 			qdb($query) OR die(qe().' '.$query);
 		}
 	}
@@ -288,10 +294,10 @@
 	// Convert the Quote Item over to an actual Service Item
 	} else if($create == 'create') {
 		$service_item_id = editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
-		editMaterials($materials, $qid, 'service_materials', $create);
+		editMaterials($materials, $service_item_id, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
-		//header('Location: /service.php?order_type='.$type.'&order_number=' . $order .'-'. $LINE_NUMBER);
+		header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER);
 
 	// Else editing the task
 	} else {

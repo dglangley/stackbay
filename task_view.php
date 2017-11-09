@@ -105,10 +105,10 @@
 
 	// Get the current users access
 	// Big or if the user is management then give them access no matter what assignment they possess
-	if((! accessControl($GLOBALS['U']['id'], $item_id) && ! $quote) && ! in_array("4", $USER_ROLES)){
-		echo "<script type='text/javascript'>alert('You do not have access to this task. Please contact management to get access.');</script>";
-		echo "<script>location.href='/';</script>";
-	}
+	// if((! accessControl($GLOBALS['U']['id'], $item_id) && ! $quote) && ! in_array("4", $USER_ROLES)){
+	// 	echo "<script type='text/javascript'>alert('You do not have access to this task. Please contact management to get access.');</script>";
+	// 	echo "<script>location.href='/';</script>";
+	// }
 
 	function partDescription($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
@@ -555,7 +555,7 @@
 			}
 		?>
 
-		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote ' . $order_number_details);?></title>
+		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote' . ($order_number_details ? '# '.$order_number_details : ''));?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.list {
@@ -689,7 +689,7 @@
 				<div class="col-md-4">
 
 					<?php if($task_number) { ?>
-						<a href="/quote.php?order_number=<?=$order_number?>" class="btn btn-primary btn-sm" data-type="quote"><i class="fa fa-plus" aria-hidden="true"></i> Add Line</a>
+						<!-- <a href="/quote.php?order_number=<?=$order_number?>" class="btn btn-primary btn-sm" data-type="quote"><i class="fa fa-plus" aria-hidden="true"></i> Add Line</a> -->
 					<?php } ?>
 
 					<?php if(! $quote && $type == 'repair') { ?>
@@ -727,7 +727,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote ' . $order_number_details);?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote' . ($order_number_details ? '# '.$order_number_details : ''));?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-4">
@@ -759,9 +759,9 @@
 									<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
 								<?php } ?>
 
-								<button type="button" class="text-primary btn btn-sm btn-default create_order pull-right" data-type="create" data-validation="left-side-main">
+								<!-- <button type="button" class="text-primary btn btn-sm btn-default create_order pull-right" data-type="create" data-validation="left-side-main">
 									<i class="fa fa-save"></i> Create
-								</button>
+								</button> -->
 
 							<?php } ?>
 						<!-- </div> -->
