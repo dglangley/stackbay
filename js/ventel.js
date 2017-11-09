@@ -2234,6 +2234,14 @@
 				$.each(json.builds, function(key, order) {
 					builds.append('<li><a href="/builds_management.php?on='+order.build_number+'">'+order.build_number+' '+order.company+'</a></li>');
 				});
+
+				var services = $("#service-orders-list");
+				services.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.services, function(key, order) {
+					services.append('<li><a href="/order.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
 			},
 			error: function(xhr, desc, err) {
                 console.log("Details: " + desc + "\nError:" + err);

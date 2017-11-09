@@ -48,6 +48,8 @@
 		'et'=>'',
 	);
 
+	if (! isset($record_start)) { $record_start = ''; }
+	if (! isset($record_end)) { $record_end = ''; }
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
 		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$REMOTES;
 

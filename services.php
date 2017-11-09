@@ -61,7 +61,7 @@
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	if (! $startDate) { $startDate = format_date($today,'m/01/Y',array('m'=>-1)); }
+	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-7)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
@@ -226,9 +226,7 @@
 <!---------------------------------- FILTERS OUTPUT ---------------------------------->
 <!------------------------------------------------------------------------------------>
     <div id="pad-wrapper">
-		<div class="row filter-block">
 
-		<br>
             <!-- jobs table -->
             <div class="table-wrapper">
 
@@ -611,8 +609,6 @@
                 </div>
             </div>
             <!-- end orders table -->
-
-
 	</div>
 	</form>
 <?php include_once 'inc/footer.php'; ?>

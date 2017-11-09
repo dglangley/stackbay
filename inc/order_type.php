@@ -153,6 +153,30 @@
 				$T['account'] = 'AR';
 				break;
 
+			case 'service_quotes':
+				$T['orders'] = 'service_quotes';
+				$T['order'] = 'id';
+				$T['items'] = 'service_quote_items';
+				$T['item_label'] = 'service_item_id';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'Quote';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = 'bill_to_id';
+				$T['alert'] = 'info';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['delivery_date'] = 'due_date';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = 'description';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
+				break;
+
 			case 'Sale':
 			case 'sales_item_id':
 				$T['orders'] = 'sales_orders';
