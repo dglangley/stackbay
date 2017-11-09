@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
@@ -88,7 +89,7 @@
 		// Create the option for the user to create a quote or create an order
 		$activity = false;
 		$documentation = false;
-		$details = false;
+		$details = true;
 		$task_edit = true; 
 
 		if(! empty($task_number)) {
@@ -719,7 +720,7 @@
 
 								<div class="col-md-3 remove-pad">
 									<?php if($task_edit) { ?>
-										<a href="#" class="btn btn-success toggle-save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+										<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 									<?php } else if(! $ticketStatus) { ?>
 										<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
 											<i class="fa fa-save"></i> Complete
@@ -731,7 +732,7 @@
 								<?php if(empty($task_number)) { ?>
 									<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
 								<?php } else { ?>
-									<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-pencil" aria-hidden="true"></i> Save</a>
+									<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 								<?php } ?>
 
 								<!-- <button type="button" class="text-primary btn btn-sm btn-default create_order pull-right" data-type="create" data-validation="left-side-main">
@@ -875,13 +876,13 @@
 								<div class="tab-pane <?=($tab == 'details' ? 'active' : '');?>" id="details">
 									<section>
 										<div class="row list table-first">
-											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Company')?></div>
-											<div class="col-md-2"><?=($type == 'repair' ? 'Serial(s)' : 'Site Address')?></div>
+											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Site Address')?></div>
+											<div class="col-md-2"><?=($type == 'repair' ? 'Serial(s)' : '')?></div>
 											<div class="col-md-2"><?=($type == 'repair' ? 'RMA#' : '')?></div>
 											<div class="col-md-5">Notes</div>
 										</div>
 										<hr>
-										<?php //print_r($item_details); ?>
+										<?php if(! $quote && $type == 'repair') { ?>
 											<div class="row list">
 												<div class="col-md-3"><?=trim(partDescription($item_details['partid'], true));?></div>
 												<div class="col-md-4">
@@ -891,6 +892,39 @@
 												</div>
 												<div class="col-md-5"><?=$item_details['notes'];?></div>
 											</div>
+										<?php } ?>
+
+										<?php if($quote) { ?>
+											<div class="row list">
+												<!-- <div class="col-md-3">
+
+												</div> -->
+												<div class="col-md-5 part-container">
+													<?php
+														include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+														include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
+														include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
+														include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+														$EDIT = true;
+
+														$P = array();
+
+														$P['name'] = format_address($item_details['item_id'],', ',true,'');
+														$P['id'] = $item_details['item_id'];
+
+														$id = false;
+														$items = getItems($T['item_label']);
+														$def_type = detectDefaultType($items);
+													?>
+													
+													<?= buildDescrCol($P,$id,$def_type,$items); ?>
+													<?= setInputSearch($def_type); ?>
+												</div>
+												<!-- <div class="col-md-3">
+													
+												</div> -->
+											</div>
+										<?php } ?>
 									</section>
 								</div><!-- Details pane -->
 							<?php } ?>
@@ -1028,7 +1062,7 @@
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
 				                            		</td>
 					                            	<td>
-					                            		<button type="submit" class="btn btn-primary btn-sm add_tech" <?=(($quote && empty($task_number)) ? 'disabled' : '');?>>
+					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote && empty($task_number)) ? 'disabled' : '');?>>
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 												    </td>
@@ -1070,7 +1104,7 @@
 											</div>
 											<div class="col-sm-6">
 												<?php if(! $quote) { ?>
-													<button style="margin-bottom: 10px;" data-toggle="modal" type="button" data-target="#modal-component" class="btn btn-primary btn-sm pull-right modal_request">
+													<button style="margin-bottom: 10px;" data-toggle="modal" type="button" data-target="#modal-component" class="btn btn-success btn-sm pull-right modal_request">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 										        <?php } ?>
@@ -1301,7 +1335,7 @@
 														</div>
 													</td>
 													<td style="cursor: pointer;">
-														<button data-toggle="modal" data-target="#modal-component" class="btn btn-flat btn-sm btn-status pull-right" type="submit">
+														<button data-toggle="modal" data-target="#modal-component" class="btn btn-success btn-sm btn-status pull-right" type="submit">
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 												       <!--  <div class="remove_expense pull-right">
@@ -1418,7 +1452,7 @@
 													</div>
 												</td>
 												<td class="os_action">
-													<button class="btn btn-flat btn-sm pull-right os_expense_add">
+													<button class="btn btn-success btn-sm pull-right os_expense_add">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 												</td>
@@ -1446,5 +1480,8 @@
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>
+
+		<script src="js/addresses.js?id=<?php echo $V; ?>"></script>
+		<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
 	</body>
 </html>
