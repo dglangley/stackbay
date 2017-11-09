@@ -7,7 +7,7 @@
 		if (! $partid_csv) { return ($shelflife); }
 
 		$results = array();
-		$query = "SELECT * FROM inventory WHERE partid IN (".$partid_csv."); ";
+		$query = "SELECT * FROM inventory WHERE partid IN (".$partid_csv.") AND (repair_item_id IS NULL OR purchase_item_id IS NOT NULL); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$in = $r['date_created'];

@@ -222,6 +222,7 @@
 					'aliases'=>array('/order_form.php'),
 					'sub' => '
                 <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                    <li><a href="javascript:void(0);"><i class="fa fa-credit-card-alt"></i> Expenses</a></li>
                     <li><a href="/transactions.php"><i class="fa fa-list-alt"></i> Transactions</a></li>
 					<hr style="margin:0px">
 					<li>

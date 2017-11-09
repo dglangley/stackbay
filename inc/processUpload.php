@@ -129,9 +129,11 @@
 			if (! $qty OR ! is_numeric($qty) OR $qty<0) { $qty = 0; }
 			$heci = '';
 			if ($heci_col!==false) {
-				$heci = strtoupper(trim($row_arr[$heci_col]));
-				// there's no such thing as a legitimate all-numeric heci, but verizon sometimes uses their internal codes here
-				if (is_numeric($heci)) { $heci = ''; }
+				if (array_key_exists($heci_col,$row_arr)) {
+					$heci = strtoupper(trim($row_arr[$heci_col]));
+					// there's no such thing as a legitimate all-numeric heci, but verizon sometimes uses their internal codes here
+					if (is_numeric($heci)) { $heci = ''; }
+				}
 			}
 			if (! $part AND ! $heci) { continue; }
 
