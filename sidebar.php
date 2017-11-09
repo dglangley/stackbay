@@ -19,6 +19,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$cust_ref_placeholder = 'PO# / Ref#';
+/*
 	if (! isset($ORDER)) {
 		$ORDER = array(
 			'order_number' => 0,
@@ -26,12 +27,10 @@
 			'companyid' => 0,
 			'contactid' => 0,
 			$T['addressid'] => 0,
-			'ship_to_id' => 0,
-			'freight_carrier_id' => 0,
-			'cust_ref' => '',
 			'termsid' => 12,
 		);
 	}
+*/
 
 	$carriers_list = '';
 	if (array_key_exists('freight_carrier_id',$ORDER)) {
@@ -263,7 +262,7 @@
 	</div>
 <?php } ?>
 
-<?php if ($EDIT AND array_key_exists('private_notes',$ORDER)) { ?>
+<?php if (array_key_exists('private_notes',$ORDER)) { ?>
 	<div class="sidebar-footer">
 		<p class="section-header">Internal Use Only</p>
 	<?php if ($EDIT) { ?>

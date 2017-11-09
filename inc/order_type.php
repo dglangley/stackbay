@@ -161,7 +161,7 @@
 				$T['inventory_label'] = '';
 				$T['abbrev'] = 'Quote';
 				$T['datetime'] = 'datetime';
-				$T['addressid'] = 'bill_to_id';
+				$T['addressid'] = '';
 				$T['alert'] = 'info';
 				$T['condition'] = '';
 				$T['warranty'] = '';

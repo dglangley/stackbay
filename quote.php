@@ -1,9 +1,10 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getServiceClass.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
 
-	$order_type = 'service_quotes';
+	$order_type = 'service_quotes';//default for quote form
 	// $task_edit = true; 
 	$T = order_type($order_type);
 
@@ -22,29 +23,14 @@
 
 	if(! empty($order_number)) {
 		$EDIT = false;
-		$ORDER = getOrder($order_number, ucwords($order_type));
+		$ORDER = getOrder($order_number, $order_type);
+	} else {
+		$ORDER = getOrder(0, $order_type);
 	}
 
 	if($ORDER['classid']) {
 		$service_class = getServiceClass($ORDER['classid']);
 	}
-
-	function getOrder($order, $type) { 
-	    $results = array(); 
-	 
-	   	if(strtolower($type) == 'service_quotes') { 
-			$query = "SELECT * FROM service_quotes WHERE id = ".res($order).";"; 
-			$result = qdb($query) OR die(qe()); 
-	       
-	        // echo $query; 
-	 
-	        if (mysqli_num_rows($result)>0) { 
-	        	$results = mysqli_fetch_assoc($result); 
-	        } 
-	    } 
-	 
-	    return $results; 
-	} 
 
 	include 'task_view.php';
 	exit;

@@ -195,7 +195,7 @@
 	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
 		$quoteid = 0;
 
-		$query = "INSERT INTO service_quotes (classid, companyid, contactid, datetime, bill_to_id, userid, public_notes, private_notes) VALUES (".fres($classid).",".fres($companyid).",".fres($contactid).",".fres($GLOBALS['now']).",".fres($bill_to_id).",".fres($GLOBALS['U']['id']).",".fres($public).",".fres($private).");";
+		$query = "INSERT INTO service_quotes (classid, companyid, contactid, datetime, userid, public_notes, private_notes) VALUES (".fres($classid).",".fres($companyid).",".fres($contactid).",".fres($GLOBALS['now']).",".fres($GLOBALS['U']['id']).",".fres($public).",".fres($private).");";
 		qdb($query) OR die(qe().' '.$query);
 
 		$quoteid = qid();
