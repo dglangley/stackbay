@@ -8,6 +8,12 @@
 		$userid = $GLOBALS['U']['id'];
 		$user_rate = 0;
 
+		if($task_label == 'repair') {
+			$task_label = 'repair_item_id';
+		} else if($task_label == 'service') {
+			$task_label = 'service_item_id';
+		}
+
 		$query = "SELECT hourly_rate FROM users WHERE id  = ".res($userid).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
@@ -15,6 +21,10 @@
 			$r = mysqli_fetch_assoc($result);
 
 			$user_rate = $r['hourly_rate'];
+		}
+
+		if($type == 'travel') {
+			$user_rate = '12.50';
 		}
 
 		// Grab the last clock in for the user where the clockout time has not been set yet and limit it by 1 (In totality there will always only be 1 record open per userid)
@@ -25,16 +35,16 @@
 		if (mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
 
-			if($type != 'in' && $type != 'init') {
+			if($type != 'in' && $type != 'init' && $type != 'travel') {
 				$query = "UPDATE timesheets SET clockout = '".res($GLOBALS['now'])."' WHERE id = ".res($r['id']).";";
 				qdb($query) OR die(qe() . ' ' . $query);
 			} else if($r['taskid'] != $taskid) {
 				// User is attempting to login to a new job without using the conventional clock out clock in method (The job selection method but using a URL instead)
-				$data = "You are about to log in to another task. Please confirm you want to log out of your previous task or cancel to view the task.";
+				$data = "You are about to log into another task. Please confirm you want to log out of your previous task or cancel to view the task.";
 			}
 
 		// If there is no record and we are requesting a user login then create a clockin line for the user
-		}  else if (! mysqli_num_rows($result) && ($type == 'in' OR $type == 'init')) {
+		}  else if (! mysqli_num_rows($result) && ($type == 'in' OR $type == 'init' OR $type = 'travel')) {
 			// Check if the user is assigned to this task before allowing the user to clock into this job
 			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($taskid)." AND userid = ".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
@@ -48,7 +58,7 @@
 		}
 
 		// Convert the taskid to the respective order number for reloading
-		if($task_label == 'repair') {
+		if($task_label == 'repair_item_id') {
 			$query = "SELECT ro_number FROM repair_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 

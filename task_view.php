@@ -22,12 +22,6 @@
 	$closeout = true;
 	$outside = true;
 
-	// Trigger point for a quote or new order based on if order number is present or not
-	// if(empty($order_number) OR $type == 'quote') {
-	// 	$quote = true;
-	// 	$type = 'quote';
-	// }
-
 	// Dynamic Variables Used
 	$documentation_data = array();
 	$activity_data = array();
@@ -44,14 +38,6 @@
 	$outside_services_total = 0.00;
 	$total_amount = 0.00;
 
-	// if($order_number) {
-	// 	// Get the details of the order for the sidebar
-	// 	$ORDER = getOrder($order_number, ucwords($type));
-	// } else {
-	// 	// Send them back as order number is required for both quote or view or create
-	// 	// header('Location: /order.php');
-	// }
-
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
 	// Disable the modules you want on the page here
@@ -59,7 +45,6 @@
 
 	} else if($type == 'Service') {
 		$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
-
 	} else if($type == 'build') {
 
 	} else if($type == 'repair') {
@@ -109,7 +94,7 @@
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
 			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
-			$component_data = getMaterials($order_number, $item_id, $type, 'quote_item_id');
+			$component_data = getMaterials($order_number, $item_id, $order_type, 'quote_item_id');
 			$outsourced = getOutsourced($item_id, $type);
 		}
 
@@ -274,43 +259,6 @@
 		$purchase_requests = array();
 		
 		if($type == 'repair') {
-			// $query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE ro_number = ". prep($order_number) ." GROUP BY partid, po_number;";
-			// $result = qdb($query) OR die(qe());
-					
-			// while ($row = $result->fetch_assoc()) {
-			// 	$qty = 0;
-
-			// 	$po_number = $row['po_number'];
-
-			// 	//Check to see what has been received and sum it into the total Ordered
-			// 	$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
-			// 	if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-			// 	$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
-			// 	$query .= "AND i.partid = ".prep($row['partid'])." ";
-			// 	if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
-			// 	$query .= "; ";
-			// 	$received = qdb($query) OR die('<BR><BR><BR><BR>'.qe().'<BR>'.$query);
-
-			// 	if (mysqli_num_rows($received)>0) {
-			// 		$receivedr = mysqli_fetch_assoc($received);
-			// 		$qty = $receivedr['totalReceived'];
-			// 	}
-
-
-			// 	$row['totalReceived'] = $qty;
-			// 	$purchase_requests[] = $row;
-			// }
-
-			// $query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
-			// $query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
-			// $query .= "AND serial_no IS NULL GROUP BY i.partid; ";
-   //  		$result = qdb($query) OR die(qe()); 
-
-   //  		while ($row = $result->fetch_assoc()) {
-			// 	if(!in_array_r($row['partid'] , $purchase_requests)) {
-			// 		$purchase_requests[] = $row;
-			// 	}
-			// }
 
 			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
@@ -380,7 +328,9 @@
 			// Also grab elements that were fulfilled by the in stock
 			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 			$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
-			$query .= "AND serial_no IS NULL GROUP BY i.partid; ";
+			$query .= "GROUP BY i.partid; ";
+
+			//echo $query;
 			$result = qdb($query) OR die(qe()); 
 
 			while ($row = $result->fetch_assoc()) {
@@ -388,7 +338,7 @@
 					$purchase_requests[] = $row;
 				}
 			}
-		} else if($type == 'quote') {
+		} else if($type == 'service_quotes') {
 			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
@@ -432,10 +382,10 @@
 	}
 
 	function getOutsourced($item_id, $type) {
-		global $outside_services_total;
+		global $outside_services_total, $quote;
 		$outsourced = array();
 
-		if($type == 'quote') {
+		if($quote) {
 			$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
@@ -462,8 +412,14 @@
 		$totalSeconds = 0; 
 		$totalSeconds_data = array();
 
+		if($type == 'repair') {
+			$task_label = 'repair_item_id';
+		} else {
+			$task_label = 'service_item_id';
+		}
 
-		$query = "SELECT * FROM timesheets WHERE taskid = ".res($item_id)." AND task_label = '".res(strtolower($type))."' AND clockin IS NOT NULL AND clockout IS NOT NULL;";
+
+		$query = "SELECT * FROM timesheets WHERE taskid = ".res($item_id)." AND task_label = '".res(strtolower($task_label))."' AND clockin IS NOT NULL AND clockout IS NOT NULL;";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		while($r = mysqli_fetch_assoc($result)){
@@ -594,11 +550,12 @@
 			include_once $_SERVER["ROOT_DIR"].'/modal/results.php';
 
 			if(! $quote) {
+				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
 				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			}
 		?>
 
-		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></title>
+		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote ' . $order_number_details);?></title>
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 		<style type="text/css">
 			.list {
@@ -719,7 +676,7 @@
 		</style>
 	</head>
 	
-	<body class="sub-nav" data-order-type="<?=$type?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
+	<body class="sub-nav" data-order-type="<?=($quote ? 'quote' : $type)?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 		<div id="loader" class="loader text-muted" style="display: none;">
 			<div>
 				<i class="fa fa-refresh fa-5x fa-spin"></i><br>
@@ -765,7 +722,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote# ' . $order_number_details);?></h2>
+					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : 'New '). $service_class . ' ' : 'New ') . 'Quote ' . $order_number_details);?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-4">
@@ -807,7 +764,7 @@
 			</div>
 
 			<form id="save_form" action="/task_edit.php" method="post">
-				<input type="hidden" name="<?=$type;?>_item_id" value="<?=$item_id;?>">
+				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
 				<input type="hidden" name="line_number" value="<?=$task_number;?>">
 				<input type="hidden" name="type" value="<?=$type;?>">
@@ -883,7 +840,7 @@
 								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-cog" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
@@ -1504,7 +1461,9 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<script type="text/javascript" src="js/lici.js"></script>
+		<?php if(! $quote) { ?>
+			<script type="text/javascript" src="js/lici.js"></script>
+		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>
 	</body>
 </html>

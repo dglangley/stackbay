@@ -47,7 +47,7 @@
 
 		// Set line number automatically
 		// Search for the largest line_number for current quoteid
-		if(empty($line_number)) {
+		if(empty($line_number) && ! $quote_item_id) {
 			$query = "SELECT line_number FROM service_quote_items WHERE quoteid = ".res($quoteid)." ORDER BY line_number DESC LIMIT 1;";
 			$result = qdb($query) OR die(qe().' '.$query);
 
@@ -56,6 +56,8 @@
 				$r = mysqli_fetch_assoc($result);
 
 				$line_number = $r['line_number'] + 1;
+			} else {
+				$line_number = 1;
 			}
 		}
 
@@ -184,7 +186,18 @@
 
 	}
 
-	//print '<pre>' . print_r($_REQUEST, true). '</pre>';
+	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
+		$quoteid = 0;
+
+		$query = "INSERT INTO service_quotes (classid, companyid, contactid, datetime, bill_to_id, userid, public_notes, private_notes) VALUES (".fres($classid).",".fres($companyid).",".fres($contactid).",".fres($GLOBALS['now']).",".fres($bill_to_id).",".fres($GLOBALS['U']['id']).",".fres($public).",".fres($private).");";
+		qdb($query) OR die(qe().' '.$query);
+
+		$quoteid = qid();
+
+		return $quoteid;
+	}
+
+	// print '<pre>' . print_r($_REQUEST, true). '</pre>';
 
 	$order = 0;
 	$line_number = 0; 
@@ -209,6 +222,14 @@
 	$LINE_NUMBER = 1;
 	$service_item_id = 0;
 	$notes = '';
+
+	// Generate a Quote Order with these values
+	$companyid = 0;
+	$classid = 2; // Default this option to Installation
+	$contactid = 0;
+	$bill_to_id = 0;
+	$public = '';
+	$private = '';
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; }
 	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
@@ -235,6 +256,13 @@
 	if (isset($_REQUEST['create'])) { $create = $_REQUEST['create']; }
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	if (isset($_REQUEST['classid'])) { $classid = $_REQUEST['classid']; }
+	if (isset($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
+	if (isset($_REQUEST['bill_to_id'])) { $bill_to_id = $_REQUEST['bill_to_id']; }
+	if (isset($_REQUEST['public_notes'])) { $public = $_REQUEST['public_notes']; }
+	if (isset($_REQUEST['private_notes'])) { $private = $_REQUEST['private_notes']; }
+
 	if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id);
 
@@ -246,7 +274,12 @@
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save') {
+		if(! $order) {
+			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
+		}
+
 		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $service_item_id);
+
 		editMaterials($materials, $qid, 'service_quote_materials');
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');
 
