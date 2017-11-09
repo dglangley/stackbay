@@ -687,6 +687,11 @@
 			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
+
+					<?php if($task_number) { ?>
+						<a href="/quote.php?order_number=<?=$order_number?>" class="btn btn-primary btn-sm" data-type="quote"><i class="fa fa-plus" aria-hidden="true"></i> Add Line</a>
+					<?php } ?>
+
 					<?php if(! $quote && $type == 'repair') { ?>
 						<?php if(! $task_edit) { ?>
 							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
@@ -726,6 +731,7 @@
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-4">
+						
 					</div>
 					<div class="col-md-8">
 						<!-- <div class="col-md-8"> -->
