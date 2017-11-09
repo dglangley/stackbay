@@ -3,12 +3,14 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 
 	// If true then the user is an admin
 	// If not only display what the user has requested
 	$user_admin = false;
 	$deny_permission = false;
 	$userid = $_REQUEST['user'];
+	$taskid = $_REQUEST['task'];
 
 	if(in_array("4", $USER_ROLES)) {
 		$user_admin = true;
@@ -18,18 +20,27 @@
 		exit();
 	}
 
-	function getExpenses($userid, $user_admin = false) {
+	function getExpenses($userid, $user_admin = false, $filter = '') {
 		$expenses = array();
 
 		if($user_admin) {
-			$query = "SELECT * FROM service_expenses ORDER by datetime DESC;";
+			$query = "SELECT * FROM expenses";
+			if($filter) {
+				$query .= " WHERE item_id = " . $filter;	
+			}
+			$query .= " ORDER by datetime DESC;";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			while($r = mysqli_fetch_assoc($result)) {
 				$expenses[] = $r;
 			}
 		} else {
-			$query = "SELECT * FROM service_expenses WHERE userid = ".res($userid)." ORDER by datetime DESC;";
+			$query = "SELECT * FROM expenses WHERE userid = ".res($userid);
+			if($filter) {
+				$query .= " item_id = " . $filter;	
+			}
+			$query .= " ORDER by datetime DESC;";
+
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			while($r = mysqli_fetch_assoc($result)) {
@@ -40,10 +51,19 @@
 		return $expenses;
 	}
 
-	function getTaskNum($service_item_id) {
+	function getTaskNum($item_id, $item_id_label) {
 		$service_number = 0;
+		$table = '';
 
-		$query = "SELECT so_number FROM service_items WHERE id = ".res($service_item_id).";";
+		if($item_id_label == 'repair_item_id') {
+			$table = 'repair_items';
+			$field = 'ro_number';
+		} else {
+			$table = 'service_items';
+			$field = 'so_number';
+		}
+
+		$query = "SELECT $field as so_number FROM $table WHERE id = ".res($item_id).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		if(mysqli_num_rows($result)) {
@@ -57,7 +77,7 @@
 	function getStatus($expense_id) {
 		$status = '';
 
-		$query = "SELECT * FROM service_reimbursement WHERE expense_id = ".res($expense_id).";";
+		$query = "SELECT * FROM reimbursements WHERE expense_id = ".res($expense_id).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		// If something exists on this item then  
@@ -75,7 +95,19 @@
 		return $status;
 	}
 
-	$expense_data = ($userid ? getExpenses($userid) : getExpenses($GLOBALS['U']['id'], $user_admin));
+	function getUniqueTask() {
+		$unique_id = array();
+		$query = "SELECT DISTINCT item_id, item_id_label FROM expenses WHERE item_id IS NOT NULL;";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$unique_id[] = $r;
+		}
+
+		return $unique_id;
+	}
+
+	$expense_data = ($userid ? getExpenses($userid, $user_admin, $taskid) : getExpenses($GLOBALS['U']['id'], $user_admin, $taskid));
 	
 ?>
 
@@ -121,13 +153,25 @@
 					    </div>
 					</div>
 
-					<div class="col-md-9 date_container mobile-hid remove-pad">
-						
+					<div class="col-md-9 mobile-hid remove-pad">
+						<select id="task_select" name="task_id" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;">
+							<option value =''> - Select Task - </option>
+							<?php
+								$users = getUsers(array(1,2,3,4,5,7));
+								foreach (getUniqueTask() as $task) {
+									$s = '';
+									if ($taskid == $task['item_id']) { $s = ' selected'; }
+									//if($user_admin OR ($userid == $uid)) {
+										echo '<option value="'.$task['item_id'].'"'.$s.'>'.getTaskNum($task['item_id'], $task['item_id_label']).'</option>'.chr(10);
+									//}
+								}
+							?>
+						</select>
 					</div>
 				</div>
 
 				<div class="text-center col-md-4 remove-pad">
-					<h2 class="minimal" id="filter-title">Task Expenses</h2>
+					<h2 class="minimal" id="filter-title">Expenses</h2>
 				</div>
 
 				<div class="col-md-4" style="">
@@ -169,20 +213,22 @@
 						<tr>
 							<th class="col-md-1">#</th>
 							<th class="col-md-1">USER</th>
+							<th class="col-md-1">Expense Date</th>
 							<th class="col-md-3">DESCRIPTION</th>
 							<th class="col-md-1">TASK#</th>
 							<th class="col-md-2">AMOUNT</th>
 							<th class="col-md-2">UPLOAD</th>
-							<th class="col-md-2">STATUS</th>
+							<th class="col-md-1">STATUS</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php $counter = 1; foreach($expense_data as $list): ?>
-							<tr>
+							<tr class="<?=(getStatus($list['id']) ? 'complete' : 'active')?> expense_item" style="<?=(getStatus($list['id']) ? 'display:none;' : '')?>">
 								<td><?=$counter;?></td>
 								<td><?=getUser($list['userid']);?></td>
+								<td><?=format_date($list['expense_date']);?></td>
 								<td><?=$list['description'];?></td>
-								<td><?=getTaskNum($list['service_item_id']);?></td>
+								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
 								<td><?=format_price($list['amount']);?></td>
 								<td class="file_container">
 									<span class="file_name" style="<?=$list['file'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$list['file']);?>"><?=substr($list['file'], strrpos($list['file'], '/') + 1);?></a></span>
@@ -203,6 +249,42 @@
 								</td>
 							</tr>
 						<?php $counter++; endforeach; ?>
+						<?php if($userid) { ?>
+							<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
+								<tr>
+									<td></td>
+									<td><?=$GLOBALS['U']['name']?></td>
+									<td>
+										<div class="form-group" style="margin-bottom: 0;">
+							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="11/09/2017" data-hposition="right">
+			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="">
+			   	        		       			 <span class="input-group-addon">
+						       		                 <span class="fa fa-calendar"></span>
+			   	    					         </span>
+											</div>
+										</div>
+									</td>
+									<td><input type="text" class="form-control input-sm" name="description"></td>
+									<td>General Use</td>
+									<td>
+										<div class="input-group">
+						                    <span class="input-group-addon">$</span>
+						                    <input class="form-control input-sm" type="text" name="amount" placeholder="0.00" id="new_item_price" value="">
+						                </div>
+									</td>
+									<td class="file_container">
+										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
+										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+										<a href="#" class="upload_link">
+											<i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+										</a>
+									</td>
+									<td>
+										<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-plus" aria-hidden="true"></i></button>
+									</td>
+								</tr>
+							</form>
+						<?php } ?>
 					</tbody>
 		        </table>
 			</div>
@@ -222,7 +304,48 @@
 
     		$(document).on("change", "#user_select", function() {
     			// alert($(this).val());
-    			window.location.href = "/expenses.php?user=" + $(this).val();
+    			var taskid = 0;
+
+    			if($("#task_select").val()) {
+    				taskid = $("#task_select").val();
+
+    				if($(this).val() != '') {
+    					window.location.href = "/expenses.php?user=" + $(this).val() + '&task=' + taskid;
+    				} else {
+    					window.location.href = "/expenses.php?task=" + taskid;
+    				}
+  
+    			} else {
+    				alert($(this).val());
+    				if($(this).val() != '') {
+    					window.location.href = "/expenses.php?user=" + $(this).val();
+    				} else {
+    					window.location.href = "/expenses.php";
+    				}
+    			}
+    		});
+
+    		$(document).on("change", "#task_select", function() {
+    			var userid = 0;
+
+    			if($("#user_select").val()) {
+    				userid = $("#user_select").val();
+
+    				if($(this).val() != '') {
+    					window.location.href = "/expenses.php?task=" + $(this).val() + '&user=' + userid;
+    				} else {
+    					window.location.href = "/expenses.php?user=" + userid;
+    				}
+
+    				//window.location.href = "/expenses.php?task=" + $(this).val() + '&user=' + userid;
+    			} else {
+    				if($(this).val() != '') {
+    					window.location.href = "/expenses.php?task=" + $(this).val();
+    				} else {
+    					window.location.href = "/expenses.php";
+    				}
+    				// window.location.href = "/expenses.php?task=" + $(this).val();
+    			}
     		});
 
     		$(document).on("click", ".expenses_edit", function(e) {
@@ -241,6 +364,43 @@
 
 				$(this).closest(".file_container").find(".file_name").text(fileName);
     		});
+
+    		$(document).on("click", ".filter_status", function(e){
+    			e.preventDefault();
+
+				var type = $(this).data('value');
+				$('.filter_item').hide();
+				$('.filter_status').removeClass('active');
+				$('.filter_status').removeClass('btn-warning');
+				$('.filter_status').removeClass('btn-success');
+				$('.filter_status').removeClass('btn-info');
+				$('.filter_status').addClass('btn-default');
+
+				var btn,type2;
+
+				if (type=='completed') {
+					btn = 'success';
+					type2 = type;
+					$('.active').hide();
+					$('.complete').show();
+				} else if (type=='active') {
+					btn = 'warning';
+					type2 = type;
+					$('.active').show();
+					$('.complete').hide();
+				} else {
+					type = 'all';
+					type2 = 'filter';
+					btn = 'info';
+					$('.active').show();
+					$('.complete').show();
+				}
+
+				//alert(btn);
+
+				$('.filter_status[data-value="'+type+'"]').addClass('btn-'+btn);
+				$('.filter_status[data-value="'+type+'"]').addClass('active');
+			});
 
     	})(jQuery);
     </script>
