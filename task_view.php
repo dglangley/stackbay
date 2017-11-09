@@ -338,7 +338,7 @@
 					$purchase_requests[] = $row;
 				}
 			}
-		} else if($type == 'service_quotes') {
+		} else if($type == 'service_quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 

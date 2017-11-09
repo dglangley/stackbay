@@ -23,6 +23,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
 
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
@@ -59,82 +62,9 @@
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($ln) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
-			$col .= '<a href="/'.strtolower($GLOBALS['order_type']).'.php?order_number='.$GLOBALS['order_number'].'-'.$ln.'&order_type='.$GLOBALS['order_type'].'" class="btn btn-default btn-xs">'.$ln.'.</a>';
+			$col .= '<a href="/'.strtolower($GLOBALS['order_type']).'.php?order_number='.$GLOBALS['order_number'].'-'.$ln.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
 		}
 		$col .= '&nbsp;</div>';
-
-		return ($col);
-	}
-
-	function buildDescrCol($P,$id,$def_type='Part',$items) {
-		global $EDIT;
-
-		$new = false;
-		//if (substr($id,0,3)=='NEW') { $new = true; }
-		if (! $id) { $new = true; }
-
-		if (! $new) {
-			$col = '<div class="pull-left" style="width:93%; margin-bottom:6px;">';
-		} else {
-			// in Add Item mode, determine first if the user should have Site vs Part options...
-			if (array_key_exists('partid',$items)) {
-				$btn_options = '
-					<li><a href="javascript:void(0);">Part</a></li>
-				';
-			} else if (array_key_exists('item_id',$items)) {
-				$btn_options = '
-					<li><a href="javascript:void(0);">Site</a></li>
-					<li><a href="javascript:void(0);">Part</a></li>
-				';
-			}
-
-			$col = '
-			<div class="pull-left dropdown" style="width:8%">
-				<span class="dropdown-toggle dropdown-searchtype" data-toggle="dropdown">
-					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
-					<input type="hidden" name="search_type" class="search-type" value="'.$def_type.'">
-				</span>
-				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
-				<ul class="dropdown-menu dropdown-button dropdown-searchtype">
-					'.$btn_options.'
-				</ul>
-			</div>
-			<div class="pull-left" style="width:85%">
-			';
-		}
-
-		if ($EDIT) {
-			$editor = '';
-			if ($def_type=='Site') {
-				$cls = '';
-				$fieldname = 'addressid';
-				$selname = 'address-selector';
-				$dataurl = '/json/addresses.php';
-				$dataplacer = '- Select an Address -';
-				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
-			} else if ($def_type=='Part') {
-				if (! $new) { $cls = 'select2'; } else { $cls = 'hidden'; }
-				$fieldname = 'partid';
-				$selname = 'part-selector';
-				$dataurl = '/json/parts-dropdown.php';
-				$dataplacer = '';
-			}
-
-			$sel = '';
-			if ($P['id']) {
-				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
-			}
-			$col .= '
-					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
-						'.$sel.'
-					</select>
-					'.$editor.'
-			';
-		} else {
-			$col .= $P['name'];
-		}
-
-		$col .= '</div>';
 
 		return ($col);
 	}
@@ -196,13 +126,7 @@
 		$P = array();
 		// used as a guide for the fields in the items table for this order/order type
 		$items = getItems($T['item_label']);
-		if (array_key_exists('partid',$items) OR (array_key_exists('item_label',$items) AND $items['item_label']=='partid')) {
-			$def_type = 'Part';
-			$search_cls = '';
-		} else {
-			$def_type = 'Site';
-			$search_cls = 'hidden';
-		}
+		$def_type = detectDefaultType($items);
 
 		if (! $new) {
 			$row_cls = 'item-row';
@@ -223,6 +147,9 @@
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
 			$r['save'] = '';
+			if ($T['record_type']=='quote') {
+				$r['save'] = '<input type="checkbox" name="" value="" checked>';
+			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
 			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2);
@@ -248,14 +175,7 @@
 			$r = array(
 				'line_number'=>$LN,
 				'name'=>'',
-				'input-search'=>'
-			<div class="input-group input-shadow input-search '.$search_cls.'">
-				<input type="text" name="" value="" id="item-search" class="form-control input-sm" placeholder="Search..." tabindex="1">
-				<span class="input-group-btn">
-					<button class="btn btn-primary btn-sm" type="button" id="btn-search"><i class="fa fa-search"></i></button>
-				</span>
-			</div>
-				',
+				'input-search'=>setInputSearch($def_type),
 				'delivery_date'=>format_date($GLOBALS['today'],'m/d/y',array('d'=>7)),
 				'conditionid'=>2,
 				'warranty'=>$warrantyid,
@@ -572,39 +492,6 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
-		#filter_bar .btn {
-			margin-left:3px;
-			margin-right:3px;
-		}
-		.input-shadow input:focus {
-			box-shadow: 2px 2px 3px #888888;
-		}
-		.part-container .select2 {
-			width:90% !important;
-		}
-		.item-amount {
-			text-align:right;
-		}
-		.ext-amount {
-			display:inline-block;
-			text-align:right;
-			font-weight:bold;
-		}
-		#total, #subtotal {
-			border:1px inset gray;
-			background-color:#fff;
-			padding:3px 3px;
-			border-radius:3px;
-		}
-		#subtotal {
-			margin-top:0px;
-		}
-		#total {
-			margin-top:4px;
-		}
-		h2 a.small {
-			font-size:70%;
-		}
 		#footer {
 			/*position: fixed;*/
 			/*bottom: 0;*/
@@ -904,6 +791,10 @@
 
 
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
+<script src="js/addresses.js?id=<?php echo $V; ?>"></script>
+<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
+<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
+
 <script type="text/javascript">
 	$(document).ready(function() {
 		// for some reason, this empty function causes the following two lines to be invoked, which resets the loader and submit elements
@@ -919,9 +810,13 @@
 			$("#order_status").closest("form").submit();
 		});
 
+/* moved to item_search.js
 		$(".item-qty, .item-amount, .input-freight").on('change keyup',function() {
 			updateTotals();
 		});
+*/
+
+		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
 			var errs = false;
 			$(this).closest("form").find(".required").each(function() {
@@ -962,145 +857,8 @@
 			$(this).prop('disabled',true);
 			$(this).closest("form").submit();
 		});
-		$(".contact-editor").on('click', function() {
-			var contactid = $("#contactid").val();
 
-			$("#modal-contact").populateContact(contactid);
-		});
-		$(".contact-selector").on('change', function() {
-			var contactid = $("#contactid").val();
-
-			var str = $(this).find("option:selected").text();
-			if (str.indexOf('Add')==-1) { return; }
-			str = str.replace('Add ','').replace('...','');
-
-			$("#modal-contact").populateContact(contactid,str);
-		});
-		// instead of using direct-editing using .address-editor class, this friendly neighbor editor uses its nearby address
-		// select menu as a way of getting the id and name of its task
-		$(".address-neighbor").on('click', function() {
-			var addr = $(this).closest(".part-container").find(".address-selector");
-			var idname = addr.prop('name');
-			var addressid = addr.val();
-
-			$("#modal-address").populateAddress(addressid,idname);
-		});
-		$(".address-editor").on('click', function() {
-			var idname = $(this).data('name');
-			if (! idname) { return; }
-
-			var addressid = $("#"+idname).val();
-			if (! addressid) {
-				toggleLoader("Select an address to edit");
-				return;
-			}
-
-			$("#modal-address").populateAddress(addressid,idname);
-		});
-		$(".address-selector").on('change', function() {
-			var idname = $(this).prop('id');
-			var str = $(this).find("option:selected").text();
-			if (str.indexOf('Add')==-1) { return; }
-			str = str.replace('Add ','').replace('...','');
-
-			if (! companyid) {
-				modalAlertShow("Address Error","Please select a company before adding a new address");
-				return;
-			}
-
-			$("#modal-address").populateAddress(0,idname,str);
-		});
-		$("#save-address").on('click', function() {
-			var address = $(".modal");
-			var addressid = address.find(".address-modal").data('oldid');
-			var idname = address.find(".address-modal").data('idname');
-			var name = address.find(".address-name").val().trim();
-			var street = address.find(".address-street").val().trim();
-			var addr2 = address.find(".address-addr2").val().trim();
-			var city = address.find(".address-city").val().trim();
-			var state = address.find(".address-state").val().trim();
-			var postal_code = address.find(".address-postal_code").val().trim();
-			var nickname = address.find(".address-nickname").val().trim();
-			var alias = address.find(".address-alias").val().trim();
-			var contactid = address.find(".address-contactid").val();
-			if (contactid==null) { contactid = 0; }
-			var code = address.find(".address-code").val().trim();
-			var notes = address.find(".address-notes").val().trim();
-
-			var params = "addressid="+addressid+"&name="+escape(name)+"&street="+escape(street)+"&addr2="+escape(addr2)+
-						"&city="+escape(city)+"&state="+escape(state)+"&postal_code="+escape(postal_code)+
-						"&nickname="+escape(nickname)+"&alias="+escape(alias)+"&contactid="+escape(contactid)+
-						"&code="+escape(code)+"&notes="+escape(notes);
-			console.log(window.location.origin+"/json/save-address.php?"+params);
-			$.ajax({
-				url: 'json/save-address.php',
-				type: 'get',
-				data: {
-					'addressid': addressid,
-					'name': name,
-					'street': street,
-					'addr2': addr2,
-					'city': city,
-					'state': state,
-					'postal_code': postal_code,
-					'companyid': companyid,
-					'nickname': nickname,
-					'alias': alias,
-					'contactid': contactid,
-					'code': code,
-					'notes': notes,
-				},
-				dataType: 'json',
-				success: function(json, status) {
-					if (json.message) { alert(json.message); return; }
-
-					$("#"+idname).populateSelected(json.id,json.text);
-					address.modal('hide');
-					toggleLoader("Address successfully saved");
-				},
-				error: function(xhr, desc, err) {
-//					console.log(xhr);
-					console.log("Details: " + desc + "\nError:" + err);
-				}
-			}); // end ajax call
-		});
-		$("#save-contact").on('click', function() {
-			var contact = $(".modal");
-//			var contactid = contact.find(".contact-id").val();
-			var contactid = $("#contactid").val();
-			var name = contact.find(".contact-name").val().trim();
-			var title = contact.find(".contact-title").val().trim();
-			var phone = contact.find(".contact-phone").val().trim();
-			var email = contact.find(".contact-email").val().trim();
-			var notes = contact.find(".contact-notes").val().trim();
-
-			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&phone="+escape(phone)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
-			$.ajax({
-				url: 'json/save-contact.php',
-				type: 'get',
-				data: {
-					'contactid': contactid,
-					'name': name,
-					'title': title,
-					'phone': phone,
-					'email': email,
-					'notes': notes,
-					'companyid': companyid,
-				},
-				dataType: 'json',
-				success: function(json, status) {
-					if (json.message && json.message!='Success') { alert(json.message); return; }
-
-					$("#contactid").populateSelected(json.contactid,json.name);
-					contact.modal('hide');
-					toggleLoader("Contact successfully saved");
-				},
-				error: function(xhr, desc, err) {
-//					console.log(xhr);
-					console.log("Details: " + desc + "\nError:" + err);
-				}
-			}); // end ajax call
-		});
+/* moved to item_search.js
 		$(".item-row .part-selector").selectize();
 		$(".btn-saveitem").on('click', function() {
 			var row = $(this).closest("tr");
@@ -1240,143 +998,8 @@
 			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
 			return (ext_amount);
 		};
-		jQuery.fn.populateContact = function(contactid,str) {
-			var contact = $(this);
-			if (! contactid) { var contactid = 0; }
-			if (! str) { var str = ''; }
-
-			/* defaults */
-			contact.find(".contact-name").val(str);
-			contact.find(".contact-title").val('');
-			contact.find(".contact-email").val('');
-			contact.find(".contact-notes").val('');
-//			contact.find(".contact-id").val(contactid);
-
-			if (contactid>0) {
-				console.log(window.location.origin+"/json/contact.php?contactid="+contactid);
-				$.ajax({
-					url: 'json/contact.php',
-					type: 'get',
-					data: {'contactid': contactid},
-					dataType: 'json',
-					success: function(json, status) {
-						if (json.message && json.message!='Success') { alert(json.message); return; }
-
-						contact.find(".contact-name").val(json.name);
-						contact.find(".contact-title").val(json.title);
-						contact.find(".contact-email").val(json.email);
-						contact.find(".contact-notes").val(json.notes);
-
-						contact.modal('show');
-					},
-					error: function(xhr, desc, err) {
-//						console.log(xhr);
-						console.log("Details: " + desc + "\nError:" + err);
-					}
-				}); // end ajax call
-			} else {
-				contact.modal('show');
-			}
-		};
-		jQuery.fn.populateAddress = function(addressid,idname,str) {
-			var address = $(this);
-			if (! addressid) { var addressid = 0; }
-			if (! str) { var str = ''; }
-
-			/* defaults */
-			address.find(".modal-title").text("Add New Address");
-			address.find(".address-name").val('');
-			address.find(".address-street").val(str);
-			address.find(".address-addr2").val('');
-			address.find(".address-city").val('');
-			address.find(".address-state").val('');
-			address.find(".address-postal_code").val('');
-			address.find(".address-nickname").val('');
-			address.find(".address-alias").val('');
-			//reset contacts list
-			address.find(".address-contactid").val('').trigger('change');
-			//rebuild with updated info (i.e., companyid if changed)
-			address.find(".address-contactid").selectize();
-			address.find(".address-code").val('');
-			address.find(".address-notes").val('');
-			address.find(".address-modal").data('oldid',addressid);
-			address.find(".address-modal").data('idname',idname);
-
-			if (addressid>0) {
-				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
-				$.ajax({
-					url: 'json/address.php',
-					type: 'get',
-					data: {'addressid': addressid, 'companyid': companyid},
-					dataType: 'json',
-					success: function(json, status) {
-						if (json.message) { alert(json.message); return; }
-
-						address.find(".modal-title").text(json.title);
-						address.find(".address-name").val(json.name);
-						address.find(".address-street").val(json.street);
-						address.find(".address-addr2").val(json.addr2);
-						address.find(".address-city").val(json.city);
-						address.find(".address-state").val(json.state);
-						address.find(".address-postal_code").val(json.postal_code);
-						address.find(".address-nickname").val(json.nickname);
-						address.find(".address-alias").val(json.alias);
-						if (json.contactid>0) {
-							address.find(".address-contactid").populateSelected(json.contactid, json.contact);
-						}
-						address.find(".address-code").val(json.code);
-						address.find(".address-notes").val(json.notes);
-
-						address.modal('show');
-					},
-					error: function(xhr, desc, err) {
-//						console.log(xhr);
-						console.log("Details: " + desc + "\nError:" + err);
-					}
-				}); // end ajax call
-			} else {
-				address.modal('show');
-			}
-		};
+*/
 	});
-	function updateTotals() {
-		var total = 0;
-		$(".item-row").each(function() {
-			var row_total = $(this).calcRowTotal();
-			total += row_total;
-		});
-		$("#subtotal").text('$ '+total.formatMoney());
-
-		// add freight to Total but not Subtotal above
-		$(".input-freight").each(function() {
-			var freight = parseFloat($(this).val().trim());
-			total += freight;
-		});
-		$("#total").text('$ '+total.formatMoney());
-	}
-	function addressSearch(search) {
-		console.log(window.location.origin+"/json/addresses.php?q="+search);
-		$.ajax({
-			url: 'json/addresses.php',
-			type: 'get',
-			data: {'q': search},
-			dataType: 'json',
-			success: function(json, status) {
-				if (json.message && json.message!='Success') { alert(json.message); return; }
-
-				var html = '';
-				$.each(json, function(key, row) {
-					html += '<tr><td colspan="6">'+row.text+'</td></tr>';
-				});
-
-				$('#search_input').append(html);
-			},
-			error: function(xhr, desc, err) {
-//				console.log(xhr);
-				console.log("Details: " + desc + "\nError:" + err);
-			},
-		}); // end ajax call
-	}
 </script>
 
 </body>

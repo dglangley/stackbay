@@ -4,7 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
 
-	$order_type = 'service_quotes';//default for quote form
+	$order_type = 'service_quote';//default for quote form
 	// $task_edit = true; 
 	$T = order_type($order_type);
 

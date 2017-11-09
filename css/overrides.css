@@ -2248,3 +2248,48 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
     #f1f2f8 20px
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+/***** ORDER VIEW *****/
+		#filter_bar .btn {
+			margin-left:3px;
+			margin-right:3px;
+		}
+		.input-shadow input:focus {
+			box-shadow: 2px 2px 3px #888888;
+		}
+		.part-container .select2 {
+			width:90% !important;
+		}
+		.item-amount {
+			text-align:right;
+		}
+		.ext-amount {
+			display:inline-block;
+			text-align:right;
+			font-weight:bold;
+		}
+		#total, #subtotal {
+			border:1px inset gray;
+			background-color:#fff;
+			padding:3px 3px;
+			border-radius:3px;
+		}
+		#subtotal {
+			margin-top:0px;
+		}
+		#total {
+			margin-top:4px;
+		}
+		h2 a.small {
+			font-size:70%;
+		}

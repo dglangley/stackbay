@@ -51,6 +51,23 @@
 		$services[] = array('number'=>$r['so_number'],'company'=>$r['name']);
 	}
 
-	echo json_encode(array('sales'=>$sales,'purchases'=>$purchases, 'repairs'=>$repairs, 'returns'=>$returns, 'builds'=>$builds, 'services'=>$services, 'message'=>''));
+	$service_quotes = array();
+	$query = "SELECT q.id, c.name FROM service_quotes q, companies c ";
+	$query .= "WHERE q.companyid = c.id ORDER BY q.id DESC LIMIT 0,10; ";
+	$result = qdb($query) OR jsonDie(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$service_quotes[] = array('number'=>$r['id'],'company'=>$r['name']);
+	}
+
+	echo json_encode(array(
+		'sales'=>$sales,
+		'purchases'=>$purchases,
+		'repairs'=>$repairs,
+		'returns'=>$returns,
+		'builds'=>$builds,
+		'services'=>$services,
+		'service_quotes'=>$service_quotes,
+		'message'=>''
+	));
 	exit;
 ?>

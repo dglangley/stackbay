@@ -9,6 +9,7 @@
 				$T['order'] = 'invoice_no';
 				$T['items'] = 'invoice_items';
 				$T['item_label'] = 'invoice_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = '';
 				$T['abbrev'] = 'INV';
 				$T['datetime'] = 'date_invoiced';
@@ -34,6 +35,7 @@
 				$T['order'] = 'bill_no';
 				$T['items'] = 'bill_items';
 				$T['item_label'] = 'bill_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = '';
 				$T['abbrev'] = 'BILL';
 				$T['datetime'] = 'date_created';
@@ -60,6 +62,7 @@
 				$T['order'] = 'rma_number';
 				$T['items'] = 'return_items';
 				$T['item_label'] = 'return_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = 'returns_item_id';
 				$T['abbrev'] = 'RMA';
 				$T['datetime'] = 'created';
@@ -84,6 +87,7 @@
 				$T['order'] = 'po_number';
 				$T['items'] = 'purchase_items';
 				$T['item_label'] = 'purchase_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'PO';
 				$T['datetime'] = 'created';
@@ -109,6 +113,7 @@
 				$T['order'] = 'ro_number';
 				$T['items'] = 'repair_items';
 				$T['item_label'] = 'repair_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'RO';
 				$T['datetime'] = 'created';
@@ -134,6 +139,7 @@
 				$T['order'] = 'so_number';
 				$T['items'] = 'service_items';
 				$T['item_label'] = 'service_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = 'service_item_id';
 				$T['abbrev'] = 'SO';
 				$T['datetime'] = 'datetime';
@@ -153,11 +159,12 @@
 				$T['account'] = 'AR';
 				break;
 
-			case 'service_quotes':
+			case 'service_quote':
 				$T['orders'] = 'service_quotes';
 				$T['order'] = 'id';
 				$T['items'] = 'service_quote_items';
 				$T['item_label'] = 'service_item_id';
+				$T['record_type'] = 'quote';
 				$T['inventory_label'] = '';
 				$T['abbrev'] = 'Quote';
 				$T['datetime'] = 'datetime';
@@ -183,6 +190,7 @@
 				$T['order'] = 'so_number';
 				$T['items'] = 'sales_items';
 				$T['item_label'] = 'sales_item_id';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'SO';
 				$T['datetime'] = 'created';
@@ -208,6 +216,7 @@
 				$T['order'] = '';
 				$T['items'] = '';
 				$T['item_label'] = '';
+				$T['record_type'] = 'order';
 				$T['inventory_label'] = '';
 				$T['abbrev'] = 'IT';
 				$T['datetime'] = '';

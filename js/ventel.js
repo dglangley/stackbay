@@ -2250,6 +2250,14 @@
 				$.each(json.services, function(key, order) {
 					services.append('<li><a href="/order.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
+
+				var service_quotes = $("#service-quotes-list");
+				service_quotes.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.service_quotes, function(key, order) {
+					service_quotes.append('<li><a href="/manage_quote.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
 			},
 			error: function(xhr, desc, err) {
                 console.log("Details: " + desc + "\nError:" + err);
