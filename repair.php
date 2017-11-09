@@ -566,7 +566,7 @@
 					<?php if($build): ?>
 						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php elseif(in_array("1", $USER_ROLES) || in_array("4", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES)): ?>
-						<a href="/order_form.php?on=<?php echo $order_number; ?>&ps=ro" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/edit_order.php?order_number=<?php echo $order_number; ?>&order_type=Repair" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 
 					<?php if(!$build || ($build && $ticketStatus)) { ?>

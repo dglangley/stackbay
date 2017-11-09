@@ -66,6 +66,8 @@
 	if (isset($_REQUEST['public_notes'])) { $public_notes = trim($_REQUEST['public_notes']); }
 	$private_notes = '';
 	if (isset($_REQUEST['private_notes'])) { $private_notes = trim($_REQUEST['private_notes']); }
+	$repair_code_id = 0;
+	if (isset($_REQUEST['repair_code_id'])) { $repair_code_id = $_REQUEST['repair_code_id']; }
 	$status = 'Active';
 	if (isset($_REQUEST['status'])) { $status = $_REQUEST['status']; }
 
@@ -124,6 +126,7 @@
 	}
 	$query .= "termsid, public_notes, ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
+	if (array_key_exists('repair_code_id',$ORDER)) { $query .= "repair_code_id, "; }
 	$query .= "status) ";
 	$query .= "VALUES (";
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
@@ -147,6 +150,7 @@
 	if (array_key_exists('termsid',$ORDER)) { $query .= fres($termsid).", "; }
 	$query .= fres($public_notes).", ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
+	if (array_key_exists('repair_code_id',$ORDER)) { $query .= fres($repair_code_id).", "; }
 	$query .= fres($status)."); ";
 	if ($debug) {
 		echo $query.'<BR>';

@@ -2,7 +2,7 @@
 	/***** this function outputs tabs for use in navbar, $pos is used as 'left' or 'right' of central search field *****/
 
 	$inventory_sub = '
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                <ul class="dropdown-menu text-left">
                     <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Add/Edit Parts DB</a></li>
 	';
 	//if user is sales or management, they have a manage inventory link
@@ -27,11 +27,11 @@
 					'title'=>'Services',
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn dropdown-mega" style="min-width:200px">
+                <ul class="dropdown-menu text-left dropdown-mega">
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-lg-12 col-md-12 col-sm-12 col-megamenu" style="height: 340px; border-right:0px">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/services.php">Services</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -51,6 +51,26 @@
                                     </ul>
                                 </div>
                             </div>
+							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+                                <div class="megamenu-block">
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/quotes.php">Quotes</a></h4>
+                                    <h4 class="megamenu-block-title">
+									  <div class="form-group">
+										<div class="input-group pull-left">
+											<span class="input-group-btn">
+												<a href="/quote.php" class="btn btn-default btn-xs bg-services" title="Start New Service Quote"><i class="fa fa-plus"></i></a>
+											</span>
+											<input type="text" class="form-control input-xs order-search" placeholder="Quotes..." data-type="SQ">
+											<span class="input-group-btn">
+												<button class="btn btn-primary btn-xs order-search-button" type="button"><i class="fa fa-search"></i></button>
+											</span>
+										</div>
+									  </div>
+									</h4>
+                                    <ul id="service-quotes-list">
+                                    </ul>
+                                </div>
+                            </div>
 						</div>
 					  </div>
 					</li>
@@ -63,7 +83,7 @@
 					'title'=>'Operations',
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn dropdown-mega">
+                <ul class="dropdown-menu text-left dropdown-mega">
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
@@ -156,7 +176,7 @@
 					'title'=>'Sales',
 					'aliases'=>array('/order_form.php'),
 					'sub' => '
-                <ul class="dropdown-menu dropdown-menu-left text-left animated-2x animated fadeIn dropdown-mega">
+                <ul class="dropdown-menu dropdown-menu-left text-left dropdown-mega">
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
@@ -221,7 +241,7 @@
 					'title'=>'Accounts',
 					'aliases'=>array('/order_form.php'),
 					'sub' => '
-                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+                <ul class="dropdown-menu text-left">
                     <li><a href="javascript:void(0);"><i class="fa fa-credit-card-alt"></i> Expenses</a></li>
                     <li><a href="/transactions.php"><i class="fa fa-list-alt"></i> Transactions</a></li>
 					<hr style="margin:0px">
@@ -309,11 +329,12 @@
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
 				$clsA = ' dropdown-toggle';
-				$aux = ' data-toggle="dropdown" data-hover="dropdown" aria-expanded="false"';
+				$aux = ' data-toggle="dropdown"';// data-hover="dropdown" aria-expanded="false"';
 				//$aux = ' data-toggle="" data-hover="dropdown" aria-expanded="false"';
 				$flag = '<b class="caret"></b>';
 			}
 
+				//<a href="javascript:void(0);" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
 			$tabs .= '
             <li class="'.(!$mobile ? "hidden-xs hidden-sm" : "hidden-md hidden-lg") .$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
 				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>

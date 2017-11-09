@@ -151,12 +151,12 @@
 			<?php echo displayTabs('right',$SEARCH_MODE); ?>
 			<?php if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) { ?>
 	            <li class="dropdown">
-	                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown" data-hover="dropdown" aria-expanded="false">
+	                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
 	                    <i class="fa fa-tasks"></i>
 	                    <span>Reports</span>
 	                    <b class="caret"></b>
 	                </a>
-	                <ul class="dropdown-menu text-left animated-2x animated fadeIn">
+	                <ul class="dropdown-menu text-left">
 <!--
 	                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Inventory</a></li>
 -->
@@ -251,7 +251,7 @@
 	}
 ?>
 
-	<div id="advanced-search-options" class="animated fadeInDown hidden">
+	<div id="advanced-search-options" class="hidden">
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center lists-manager">
@@ -260,14 +260,14 @@
 						<select name="upload_listid" id="upload-listid" class="lists-selector">
 							<option value="">Upload or Select a List...</option>
 						</select>
-						<div id="upload-details" class="animated fadeIn hidden">
+						<div id="upload-details" class="hidden">
 							<div class="content-box box-default">
 								<div class="content-box-header"></div>
 								<div class="content-box-body"></div>
 								<div class="content-box-footer"></div>
 							</div>
 						</div>
-						<div id="upload-options" class="animated fadeIn hidden">
+						<div id="upload-options" class="hidden">
 							<div class="content-box box-default">
 								<div class="content-box-header">
 									<select name="upload_companyid" id="upload-companyid" class="company-selector">

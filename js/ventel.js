@@ -1153,6 +1153,12 @@
 			// save to cookie for later recall after browser is closed and then re-opened
 			$.cookie("SEARCH_MODE",action);
 
+			// add active class to selected tab, remove all others
+			$(this).closest("header.navbar").find("ul li.dropdown.active").each(function() {
+				$(this).removeClass('active');
+			});
+			$(this).closest("li").removeClass('active').addClass('active');
+
 			// wrap the link into the wrapping form so we can post search data to the switched tab
 			var form = $(this).closest("form");
 			form.prop('action',$(this).prop('href'));
@@ -1162,7 +1168,9 @@
 			} else {
 				form.prop('target','');
 			}
-			form.submit();
+			//post-load because otherwise the focus event gets interrupted by html/class changes above
+			setTimeout("$('#s').focus()",100);
+			//form.submit();
 		});
 
 		$(".btn-favorites").click(function() {

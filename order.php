@@ -628,6 +628,9 @@
 <form class="form-inline" method="POST" action="save-order.php" enctype="multipart/form-data" >
 <input type="hidden" name="order_number" value="<?php echo $order_number; ?>">
 <input type="hidden" name="order_type" value="<?php echo $order_type; ?>">
+<?php if (array_key_exists('repair_code_id',$ORDER)) { ?>
+	<input type="hidden" name="repair_code_id" value="<?php echo $ORDER['repair_code_id']; ?>">
+<?php } ?>
 
 <!-- FILTER BAR -->
 <div class="table-header table-<?=$order_type;?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
