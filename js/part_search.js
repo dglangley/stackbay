@@ -119,7 +119,7 @@ function partSearch(search, filter, cid, order_type) {
 								        </div>\
 									</div></td>';
 
-					rowHTML += '	<td class="add_button"><button class="btn btn-primary btn-sm pull-right quote_add">\
+					rowHTML += '	<td class="add_button"><button class="btn btn-success btn-sm pull-right quote_add">\
 						        		<i class="fa fa-plus"></i>\
 							        </button></td>';
 					rowHTML += '</tr>';
