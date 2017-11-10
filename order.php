@@ -142,13 +142,18 @@
 				$P = $H[$r['partid']];
 				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$P['name'].'</option>'.chr(10);
 			} else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='addressid') {
-				$P['name'] = format_address($r['item_id'],', ',true,'',$GLOBALS['ORDER']['companyid'],'<br/>');
+				$P['id'] = $r['item_id'];
+				if ($EDIT) {
+					$P['name'] = format_address($r['item_id'],', ',true,'');
+				} else {
+					$P['name'] = format_address($r['item_id'],', ',true,'',$GLOBALS['ORDER']['companyid'],'<br/>');
+				}
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
-			$r['save'] = '';
+			$r['save'] = '<input type="hidden" name="item_id['.$id.']" value="'.$id.'">';
 			if ($T['record_type']=='quote') {
-				$r['save'] = '<input type="checkbox" name="" value="" checked>';
+				$r['save'] = '<input type="checkbox" name="item_id['.$id.']" value="" checked>';
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
@@ -172,6 +177,7 @@
 			$row_cls = 'search-row';
 			$ext_amount = '';
 
+
 			$r = array(
 				'line_number'=>$LN,
 				'name'=>'',
@@ -182,7 +188,10 @@
 				'qty'=>'',
 				'qty_attr'=>'readonly',
 				'amount'=>'',
-				'save'=>'<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>',
+				'save'=>'
+					<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>
+					<input type="hidden" name="item_id[]" value="">
+				',
 			);
 
 			if (array_key_exists('description',$items)) { $r['description'] = ''; }
@@ -285,7 +294,6 @@
 			'.$amount_col.'
 		</td>
 		<td class="col-md-1 text-right">
-			<input type="hidden" name="item_id['.$id.']" value="'.$id.'">
 			<div class="ext-amount">'.$ext_amount.'</div>
 			'.$r['save'].'
 		</td>
@@ -377,13 +385,15 @@
 
 		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
 	} else {
-		$T = order_type($order_type);
+		if (! isset($T)) { $T = order_type($order_type); }
 		$TITLE = $T['abbrev'];
 		if ($order_number) { $TITLE .= '# '.$order_number; }
 		else { $TITLE = 'New '.$TITLE; }
 
-		$ORDER = getOrder($order_number,$order_type);
-		if ($ORDER===false) { die("Invalid Order"); }
+		if (! isset($ORDER)) {
+			$ORDER = getOrder($order_number,$order_type);
+			if ($ORDER===false) { die("Invalid Order"); }
+		}
 		$ORDER['bill_to_id'] = $ORDER['addressid'];
 		$ORDER['datetime'] = $ORDER['dt'];
 		if (! $ORDER['status']) { $ORDER['status'] = 'Active'; }
@@ -508,13 +518,14 @@
 		}
 	</style>
 </head>
-<body data-scope="<?php echo $order_type; ?>">
+<body data-scope="<?php echo $T['order_type']; ?>">
 
 <?php include_once 'inc/navbar.php'; ?>
 
 <form class="form-inline" method="POST" action="save-order.php" enctype="multipart/form-data" >
 <input type="hidden" name="order_number" value="<?php echo $order_number; ?>">
 <input type="hidden" name="order_type" value="<?php echo $order_type; ?>">
+
 <?php if (array_key_exists('repair_code_id',$ORDER)) { ?>
 	<input type="hidden" name="repair_code_id" value="<?php echo $ORDER['repair_code_id']; ?>">
 <?php } ?>
@@ -531,7 +542,7 @@
 		if ($ORDER['status'] AND $ORDER['status']<>'Active' AND $ORDER['status']<>'Void') { echo '<option value="'.$ORDER['status'].'" selected>'.$ORDER['status'].'</option>'; }
 	?>
 			</select>
-<?php } else { ?>
+<?php } else if ($T['record_type']<>'quote') { ?>
 			<a href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
 			<a href="/repair_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
@@ -577,9 +588,13 @@
 		</div>
 		<div class="col-sm-2 text-right">
 <?php if ($EDIT) { ?>
+	<?php if ($T['record_type']=='quote') { ?>
+			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Convert to Order</button>
+	<?php } else { ?>
 			<a href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
 			&nbsp; &nbsp;
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
+	<?php } ?>
 <?php } ?>
 		</div>
 	</div>
@@ -797,6 +812,8 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		companyid = '<?= $ORDER['companyid']; ?>';
+
 		// for some reason, this empty function causes the following two lines to be invoked, which resets the loader and submit elements
 		window.onunload = function(){};
 		$('#loader').hide();
