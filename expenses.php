@@ -35,10 +35,16 @@
 				$expenses[] = $r;
 			}
 		} else {
-			$query = "SELECT * FROM expenses WHERE userid = ".res($userid);
-			if($filter) {
-				$query .= " item_id = " . $filter;	
+			$query = "SELECT * FROM expenses ";
+			$subquery = "";
+			if ($userid) {
+				$subquery .= "userid = ".res($userid)." ";
 			}
+			if($filter) {
+				if ($subquery) { $query .= "AND "; }
+				$subquery .= "item_id = ".$filter." ";
+			}
+			$query .= "WHERE ".$subquery;
 			$query .= " ORDER by datetime DESC;";
 
 			$result = qdb($query) OR die(qe() . ' ' . $query);
@@ -316,7 +322,7 @@
     				}
   
     			} else {
-    				alert($(this).val());
+    				//alert($(this).val());
     				if($(this).val() != '') {
     					window.location.href = "/expenses.php?user=" + $(this).val();
     				} else {

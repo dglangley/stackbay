@@ -941,6 +941,9 @@
 			if (! companyid || companyid==0) { return; }
 
 			var params = '?companyid='+companyid;
+			if (scope) {
+				params += '&order_type='+scope;
+			}
 			if ($("#bill_to_id").val()>0) {
 				bill_to_id = $("#bill_to_id").val();
 				params += '&bill_to_id='+bill_to_id;
@@ -2256,7 +2259,7 @@
 					$(this).remove();
 				});
 				$.each(json.service_quotes, function(key, order) {
-					service_quotes.append('<li><a href="/manage_quote.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					service_quotes.append('<li><a href="/manage_quote.php?order_type=service_quote&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

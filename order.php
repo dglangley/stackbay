@@ -518,7 +518,7 @@
 		}
 	</style>
 </head>
-<body data-scope="<?php echo $T['order_type']; ?>">
+<body data-scope="<?php echo $order_type; ?>">
 
 <?php include_once 'inc/navbar.php'; ?>
 

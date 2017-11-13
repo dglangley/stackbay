@@ -32,7 +32,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Manage Parts</title>
+	<title>Parts Database</title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -65,7 +65,7 @@
 			</div>
 
 			<div class="col-md-4 text-center remove-pad">
-            	<h2 class="minimal" id="filter-title">Parts Manager</h2>
+            	<h2 class="minimal" id="filter-title">Parts Database</h2>
 			</div>
 			
 			<div class="col-md-4">

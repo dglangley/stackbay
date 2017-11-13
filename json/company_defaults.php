@@ -9,6 +9,7 @@
 	include_once '../inc/getTerms.php';
 	include_once '../inc/getWarranty.php';
 	include_once '../inc/getCondition.php';
+	include_once '../inc/getOrder.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -26,6 +27,9 @@
 	if (isset($_REQUEST['ship_to_id'])) { $ship_to_id = $_REQUEST['ship_to_id']; }
 
 	$T = order_type($order_type);
+
+	// get blank order table structure so we know what fields to use below
+	$ORDER = getOrder(0,$order_type);
 
 	$freight_carriers = array();
 	$freight_accounts = array();
@@ -46,12 +50,16 @@
 	foreach ($ranges as $n) {
 		$past_date = format_date($today,'Y-m-d 00:00:00',array('m'=>-$n));
 
-		$query = "SELECT ".$T['order']." order_number, ".$T['addressid']." bill_to_id, ship_to_id, freight_carrier_id carrierid, freight_account_id, termsid ";
+		$query = "SELECT ".$T['order']." order_number, ".$T['addressid']." bill_to_id, ";
+		if (array_key_exists('ship_to_id',$ORDER)) { $query .= "ship_to_id, freight_carrier_id carrierid, freight_account_id, "; }
+		$query .= "termsid ";
 		$query .= "FROM ".$T['orders']." WHERE companyid = '".res($companyid)."' AND ".$T['datetime']." >= '".res($past_date)."' ";
 		if ($bill_to_id) { $query .= "AND ".$T['addressid']." = '".res($bill_to_id)."' "; }
-		if ($ship_to_id) { $query .= "AND ship_to_id = '".res($ship_to_id)."' "; }
+		if (array_key_exists('ship_to_id',$ORDER)) {
+			if ($ship_to_id) { $query .= "AND ship_to_id = '".res($ship_to_id)."' "; }
+			if ($carrierid) { $query .= "AND freight_carrier_id = '".res($carrierid)."' "; }
+		}
 		if ($termsid) { $query .= "AND termsid = '".res($termsid)."' "; }
-		if ($carrierid) { $query .= "AND freight_carrier_id = '".res($carrierid)."' "; }
 		$query .= "ORDER BY ".$T['datetime']." DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {

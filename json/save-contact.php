@@ -2,6 +2,7 @@
 	$NO_CACHE = true;
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_phone.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 	header("Content-Type: application/json", true);
 
@@ -50,11 +51,11 @@
 	}
 
 	if ($phone) {
-		$query = "INSERT INTO phones (phone, type, contactid) VALUES (".fres($phone).",'Office','".res($contactid)."'); ";
+		$query = "INSERT INTO phones (phone, type, contactid) VALUES (".fres(format_phone($phone)).",'Office','".res($contactid)."'); ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}
 
-	if ($email) {
+	if ($email AND filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$query = "INSERT INTO emails (email, type, contactid) VALUES (".fres($email).",'Work','".res($contactid)."'); ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}

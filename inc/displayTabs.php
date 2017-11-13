@@ -3,7 +3,8 @@
 
 	$inventory_sub = '
                 <ul class="dropdown-menu text-left">
-                    <li><a href="/parts.php" class="mode-tab"><i class="fa fa-list-alt"></i> Add/Edit Parts DB</a></li>
+                    <li><a href="/inventory.php"><i class="fa fa-folder-open"></i> Browse Inventory</a></li>
+                    <li><a href="/parts.php"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
 	';
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
@@ -87,9 +88,20 @@
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
+							<div class="col-sm-3">
+				  			  <a href="/operations.php" class="btn btn-sm btn-default" title="Operations Dashboard" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-dashboard"></i></a>
+							</div>
+							<div class="col-sm-6 text-center">
+							  <a href="/repairs.php" class="btn btn-sm" title="Repairs Dashboard" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-wrench"></i></a>
+							  <a href="/builds.php" class="btn btn-sm" title="Builds Dashboard" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-industry"></i></a>
+							  <a href="/returns.php" class="btn btn-sm" title="Returns Dashboard" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-question-circle-o"></i></a>
+							</div>
+							<div class="col-sm-3">
+							</div>
+						</div>
+						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/repairs.php">Repairs</a> - <a href="/builds.php">Builds</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">
@@ -110,7 +122,6 @@
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/returns.php">Returns</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">'.

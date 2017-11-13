@@ -1,3 +1,4 @@
+	$(document).ready(function() {
 		/* edits contact in sidebar */
 		$(".contact-editor").on('click', function() {
 			var contactid = $("#contactid").val();
@@ -89,3 +90,4 @@
 				contact.modal('show');
 			}
 		};
+	});

@@ -1,3 +1,4 @@
+	$(document).ready(function() {
 		/* editor for inline address selector for item charges */
 		// instead of using direct-editing using .address-editor class, this friendly neighbor editor uses its nearby address
 		// select menu as a way of getting the id and name of its task
@@ -152,7 +153,7 @@
 				address.modal('show');
 			}
 		};
-
+	});
 
 
 
