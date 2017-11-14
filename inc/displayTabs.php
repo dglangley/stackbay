@@ -1,15 +1,18 @@
 <?php
 	/***** this function outputs tabs for use in navbar, $pos is used as 'left' or 'right' of central search field *****/
 
+	// I added new 'tab-submit' class for sub-links with 'mode-tab' class so users can now select a
+	// sub-menu item which will not only affix the sub-link onto the master tab position of that menu,
+	// but also submit the search string directly to the page
 	$inventory_sub = '
                 <ul class="dropdown-menu text-left">
                     <li><a href="/inventory.php"><i class="fa fa-folder-open"></i> Browse Inventory</a></li>
-                    <li><a href="/parts.php"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
+                    <li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
 	';
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub .= '
-                    <li><a href="/inventory_exporter.php"><i class="fa fa-list-alt"></i> Exporter</a></li>
+                    <li><a href="/inventory_exporter.php" class="mode-tab tab-submit"><i class="fa fa-list-alt"></i> Exporter</a></li>
 		';
 	}
 	$inventory_sub .= '
@@ -20,7 +23,6 @@
 	$TABS = array(
 		'left' =>
 			array(
-				array('action'=>'/profile.php','image'=>'<i class="fa fa-book"></i>','title'=>'Companies','aliases'=>array(),'sub'=>'','privilege'=>array(1,4,5,7)),
 				/*array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','aliases'=>array('/job.php'),'sub'=>'','privilege'=>array(1,4,5,7)),*/
 				array(
 					'action'=>'/services.php',
@@ -175,7 +177,11 @@
 					'action'=>'/inventory.php',
 					'image'=>'<i class="fa fa-qrcode"></i>',
 					'title'=>'Inventory',
-					'aliases'=>array('/manage_inventory.php','/parts.php'),
+					'aliases'=>array(
+						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
+						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
+						'<i class="fa fa-database"></i> Add/Edit Parts DB'=>'/parts.php',
+					),
 					'sub' => $inventory_sub,
 				),
 			),
@@ -334,8 +340,15 @@
 			} else {
 				$privilege = true;
 			}
-			
-			if (($tab['action']==$selected_tab OR array_search($selected_tab,$tab['aliases'])!==false) && !$mobile) { $cls = ' active'; }
+
+			$title = $tab['image'].'<span> '.$tab['title'].'</span>';
+			$tab_search = array_search($selected_tab,$tab['aliases']);
+			if (($tab['action']==$selected_tab OR $tab_search!==false) && !$mobile) {
+				if ($tab_search) {
+					$title = $tab_search;//$tab['aliases'][$tab_search];
+				}
+				$cls = ' active';
+			}
 
 			if ($tab['sub']) {
 				$cls .= ' dropdown';
@@ -348,7 +361,7 @@
 				//<a href="javascript:void(0);" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
 			$tabs .= '
             <li class="'.(!$mobile ? "hidden-xs hidden-sm" : "hidden-md hidden-lg") .$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
-				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>
+				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$title.' '.$flag.'</a>
 				'.$tab['sub'].'
 			</li>
 			';

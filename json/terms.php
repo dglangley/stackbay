@@ -7,13 +7,16 @@
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$order_type = '';
 	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
+	$q = '';
+	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
+
 	if ($order_type=='Sale' OR $order_type=='Repair' OR $order_type=='Invoice') {
 		$accounting_system = 'AR';
 	} else {
 		$accounting_system = 'AP';
 	}
 
-	$company_terms = getCompanyTerms($companyid,$accounting_system);
+	$company_terms = getCompanyTerms($companyid,$accounting_system,$q);
 
 	// build new array with 'id','text' for select2 dropdown
 	$terms = array();

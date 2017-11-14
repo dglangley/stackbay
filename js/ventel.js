@@ -1010,6 +1010,8 @@
 		$("#termsid").on('change', function() {
 			termsid = $(this).val();
 		});
+		$("#termsid").selectize('/json/terms.php','- Select -');
+/*
 		$("#termsid").select2({
 			placeholder: '- Select -',
 			ajax: {
@@ -1035,6 +1037,7 @@
 				cache: false
 			},
 		});
+*/
 		$("#freight_account_id").select2({
 			placeholder: 'PREPAID',
 			ajax: {
@@ -1173,7 +1176,10 @@
 			}
 			//post-load because otherwise the focus event gets interrupted by html/class changes above
 			setTimeout("$('#s').focus()",100);
-			//form.submit();
+
+			if ($(this).hasClass("tab-submit")) {
+				form.submit();
+			}
 		});
 
 		$(".btn-favorites").click(function() {
@@ -1526,6 +1532,11 @@
 			
 		});
 
+		/* took the function below and globalized it */
+		$(document).on("click",".btn-file",function() {
+			var e = $(this).data("id");
+			$("#"+e).click();
+		});
 		/* David, Flame Broiler is at stake */
 		$(document).on("click",".btn-order-upload",function() {
 			$("#order-upload").click();

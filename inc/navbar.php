@@ -140,6 +140,9 @@
         </div>
 		<div class="collapse navbar-collapse text-center">
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
+			<li class="hidden-xs hidden-sm">
+				<a href="/profile.php"><i class="fa fa-book"></i> Companies</a>
+			</li>
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
 
