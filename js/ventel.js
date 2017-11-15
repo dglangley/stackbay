@@ -1537,6 +1537,18 @@
 			var e = $(this).data("id");
 			$("#"+e).click();
 		});
+		var uploadFiles;
+		$(document).on("change","input.file-upload",function(e) {
+			uploadFiles = e.target.files;
+
+			// get new upload file name
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+
+			// change icon on upload button as additional indicator of successful selection
+			$(".btn-file").removeClass('btn-default').addClass('btn-info').html('<i class="fa fa-file-text"></i> '+upload_file);
+		});
+
+
 		/* David, Flame Broiler is at stake */
 		$(document).on("click",".btn-order-upload",function() {
 			$("#order-upload").click();

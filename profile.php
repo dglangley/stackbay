@@ -22,6 +22,7 @@
         return $freights;
 	}
 	
+	if (isset($_REQUEST['update']) AND $_REQUEST['update']) { $update = $_REQUEST['update']; }
 	if (isset($_REQUEST['tab']) AND $_REQUEST['tab']) { $tab = $_REQUEST['tab']; }
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$company = $_REQUEST['s'];
@@ -113,6 +114,10 @@
 
 <?php } else { ?>
 
+	<?php if ($update) { ?>
+		<div class="alert alert-success text-center"><h3>Address(es) succesfully imported!</h3></div>
+	<?php } ?>
+
         <!-- header -->
         <div class="row header">
             <div class="col-md-9">
@@ -128,18 +133,18 @@
         
          <ul class="nav nav-tabs nav-tabs-ar">
 			<li class="<?php if (! $tab OR $tab=='contacts') { echo 'active'; } ?>"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
-			<li class="<?php if (! $tab OR $tab=='addresses') { echo 'active'; } ?>"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
-         	<li class="<?php if (! $tab OR $tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
+			<li class="<?php if ($tab=='addresses') { echo 'active'; } ?>"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
+         	<li class="<?php if ($tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
 <?php if (in_array("4", $USER_ROLES)) { ?>
-			<li class="<?php if (! $tab OR $tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+			<li class="<?php if ($tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
 <?php } ?>
-			<li class="<?php if (! $tab OR $tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
+			<li class="<?php if ($tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
 		</ul>
 		
 		<div class="tab-content">
 
 			<!-- Materials pane -->
-			<div class="tab-pane <?php if (! $tab OR $tab=='addresses') { echo 'active'; } ?> id="addresses_tab">
+			<div class="tab-pane <?php if ($tab=='addresses') { echo 'active'; } ?>" id="addresses_tab">
 				<!-- recent orders table -->
                 <table class="table table-hover table-striped table-condensed">
                     <thead>
@@ -344,7 +349,7 @@
 	            <!--</div>-->
 			</div>
 			
-			<div class="tab-pane <?php if (! $tab OR $tab=='freight') { echo 'active'; } ?> id="freight_tab">
+			<div class="tab-pane <?php if ($tab=='freight') { echo 'active'; } ?>" id="freight_tab">
 				<!-- recent orders table -->
                 <table class="table table-hover table-striped table-condensed">
                     <thead>
@@ -413,7 +418,7 @@ foreach ($freights as $freight) {
 			</div>
 			
 			<!-- Materials pane -->
-			<div class="tab-pane <?php if (! $tab OR $tab=='terms') { echo 'active'; } ?> id="terms_tab">
+			<div class="tab-pane <?php if ($tab=='terms') { echo 'active'; } ?>" id="terms_tab">
 				<?php
 					$selPP = ' selected';
 					$selC = ' selected';
@@ -503,7 +508,7 @@ foreach ($freights as $freight) {
 				</div>
 			</div>
 			
-			<div class="tab-pane <?php if (! $tab OR $tab=='orders') { echo 'active'; } ?> id="orders">
+			<div class="tab-pane <?php if ($tab=='orders') { echo 'active'; } ?>" id="orders">
 				<?php
 					$p_orders = array();
 					$s_orders = array();

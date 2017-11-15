@@ -269,7 +269,7 @@
 		// add contents from file
 		file_put_contents($TEMP_DIR.$tempfile,$file_contents);
 
-		header('Location: address_uploader.php?filename='.$tempfile);
+		header('Location: address_uploader.php?companyid='.$companyid.'&filename='.$tempfile);
 		exit;
 	}
 

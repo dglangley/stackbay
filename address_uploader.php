@@ -14,14 +14,30 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.table-horizontal {
+			max-width:100%;
+			overflow-x:scroll;
+		}
 		.table-spreadsheet tr th,
 		.table-spreadsheet tr td {
-			white-space:nowrap;
-			text-overflow:auto;
+			position:relative;
 			min-width:100px;
 			max-width:300px;
 			vertical-align:top;
 		}
+		.table-spreadsheet tr td div {
+			overflow:hidden;
+			text-overflow:ellipsis;
+			white-space:nowrap;
+		}
+/*
+		.table-spreadsheet tr td:hover div {
+			overflow-y:scroll;
+			background-color:#fcfcfc;
+			border:1px solid #fafafa;
+			padding:3px;
+		}
+*/
 	</style>
 </head>
 <body>
@@ -29,7 +45,6 @@
 <?php include_once 'inc/navbar.php'; ?>
 
 <form class="form-inline" method="POST" action="save-address.php" enctype="multipart/form-data" >
-<input type="hidden" name="filename" value="<?= $filename; ?>">
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -62,33 +77,16 @@
 
 <?php
 	$filename = '';
-	if (isset($_REQUEST['filename'])) { $filename = $TEMP_DIR.$_REQUEST['filename']; }
+	if (isset($_REQUEST['filename'])) { $filename = $_REQUEST['filename']; }
+	$companyid = 0;
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+?>
+	<input type="hidden" name="filename" value="<?= $filename; ?>">
+	<input type="hidden" name="companyid" value="<?= $companyid; ?>">
 
-	$lines = array();
-	if (strstr($filename,'.xlsx')) {
-		include_once $_SERVER["ROOT_DIR"].'/inc/simplexlsx.class.php';//awesome class used for xlsx-only
-
-		$xlsx = new SimpleXLSX($filename);
-		$lines = $xlsx->rows();
-
-	} else if (strstr($filename,'.xls')) {
-		include_once $_SERVER["ROOT_DIR"].'/inc/php-excel-reader/excel_reader2.php';//specifically for parsing xls files
-
-		$xls = new Spreadsheet_Excel_Reader($filename,false);
-		$sheets = $xls->sheets;
-		foreach ($sheets as $sheet) {
-			$lines = $sheet["cells"];
-			break;//end after first worksheet found
-		}
-
-	} else if (strstr($filename,'.csv')) {
-		//$handle = fopen($file['tmp_name'],"r");
-		$handle = fopen($filename,"r");
-
-		while (($data = fgetcsv($handle)) !== false) {
-			$lines[] = $data;
-		}
-	}
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSpreadsheetRows.php';
+	$lines = getSpreadsheetRows($TEMP_DIR.$filename);
 
 	$rows = '';
 	$options = '';
@@ -99,7 +97,7 @@
 				$options .= '<option value="'.$k.'">'.$col.'</option>'.chr(10);
 				$cols .= '<th>'.$col.'</th>'.chr(10);
 			} else {
-				$cols .= '<td>'.$col.'</td>'.chr(10);
+				$cols .= '<td><div>'.$col.'</div></td>'.chr(10);
 			}
 		}
 		$rows .= '
@@ -107,10 +105,13 @@
 			'.$cols.'
 		</tr>
 		';
+
+		if ($i==20) { break; }//we don't need more for purpose of sampling
 	}
 ?>
 
-	<table class="table table-striped table-hover table-condensed table-responsive">
+
+	<table class="table table-striped table-hover table-condensed">
 		<tr>
 			<th class="col-md-1">
 				<select name="company_name" size="1" class="form-control input-sm select2">
@@ -178,12 +179,20 @@
 					<?= $options; ?>
 				</select>
 			</th>
+			<th class="col-md-1">
+				<select name="notes" size="1" class="form-control input-sm select2">
+					<option value="">- Site Notes -</option>
+					<?= $options; ?>
+				</select>
+			</th>
 		</tr>
 	</table>
 
-	<table class="table table-striped table-hover table-condensed table-responsive table-spreadsheet">
+	<div class="table-horizontal">
+	<table class="table table-striped table-hover table-condensed table-spreadsheet">
 		<?= $rows; ?>
 	</table>
+	</div>
 
 </div><!-- pad-wrapper -->
 </form>
