@@ -11,10 +11,10 @@
 	if (qualifyCredit($rma_number)) {
 		$cmid = createCredit($rma_number);
 		if (! $cmid) {
-			die("Failed");
+			die("Failed with no CM id");
 		}
 	} else {
-		die("Failed");
+		die("Failed because Credit did not qualify (maybe already received or credited in full?)");
 	}
 
 	header('Location: /'.strtoupper(substr($order_type,0,1)).'O'.$order_number);

@@ -124,7 +124,10 @@
 				$site_contact = trim($contact_names[1].' '.$contact_names[0]);
 			}
 			$site_contact = trim($site_contact);
+		}
 
+		// if still a contact after formatting above...
+		if ($site_contact) {
 			$site_contactid = 0;
 			$query = "SELECT * FROM contacts WHERE name = '".res($site_contact)."' AND companyid = '".res($companyid)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);

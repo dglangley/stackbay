@@ -41,10 +41,12 @@
 			$r2 = mysqli_fetch_assoc($result2);
 			$po_number = $r2['po_number'];
 			// use this for reference below in case there's an RTV
-			$purchase_cost = $r2['price']/$qty;
+			// removed qty division 11/15/17 for non-serialized qty vs "bulk qty" bug
+			$purchase_cost = $r2['price'];// $r2['price']/$qty;
 
 			// update costs log
-			$cost += $purchase_cost;
+			// added qty multiplier 11/15/17 for non-serialized qty vs "bulk qty" bug
+			$cost += $purchase_cost*$qty;
 			setCostsLog($inventoryid,$pi_id,'purchase_item_id',$purchase_cost);
 
 			// get purchase-related freight costs here
@@ -61,7 +63,7 @@
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				$cost -= $purchase_cost;
+				$cost -= $purchase_cost*$qty;
 				setCostsLog($inventoryid,$r2['so_number'],'rtv',$purchase_cost);
 			}
 		}
@@ -126,7 +128,8 @@
 						$actual = $r['actual'];
 					}
 				}
-				$diff = $cost-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
+				// added qty division 11/15/17 for non-serialized qty vs "bulk qty" bug
+				$diff = ($cost/$qty)-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
 
 				setAverageCost($partid,($diff*$qty));//multiply by qty because our cost per inventory record is not necessarily per UNIT, but per RECORD
 			}

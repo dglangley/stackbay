@@ -2,6 +2,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	function addComponent($partid, $qty, $conditionid = '5', $place, $instance, $bin, $purchase_item_id, $order_num, $repair_item_id, $userid, $now){
@@ -30,8 +32,6 @@
 				$query = "UPDATE purchase_items SET qty_received = ".prep($amount)." WHERE id = ".prep($key).";";
 				qdb($query) OR die(qe());
 
-				$status = "received";
-
 				$query = "SELECT partid FROM purchase_items WHERE id = ".prep($key).";";
 
 				$result = qdb($query);
@@ -39,7 +39,21 @@
 					$result = mysqli_fetch_assoc($result);
 					$newpartid = $result['partid'];
 				}
-				
+
+				$I = array(
+					'qty'=>$amount,
+					'partid'=>$newpartid,
+					'conditionid'=>$conditionid,
+					'locationid'=>$locationid,
+					'bin'=>$bin,
+					'purchase_item_id'=>$key,
+					'status'=>'received',
+				);
+				$inventoryid = setInventory($I);
+
+				setCost($inventoryid);
+
+/* 11-15-17
 				$query = "INSERT INTO inventory (qty, partid, conditionid, status, locationid, bin, purchase_item_id, userid, date_created) VALUES (
 					".prep($amount).",
 					".prep($newpartid).",
@@ -53,6 +67,7 @@
 				);";
 				//echo $query;
 				qdb($query) OR die(qe());
+*/
 
 				$partid = $newpartid;
 			}
