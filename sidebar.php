@@ -92,7 +92,7 @@
 
 <?php if (array_key_exists('contactid',$ORDER)) { ?>
 	<div class="sidebar-section">
-		<h4 class="section-header">Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="contact-editor"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-user"></i> Contact<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="contact-editor"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 	<?php if ($EDIT) { ?>
 		<select name="contactid" id="contactid" class="form-control input-xs contact-selector required">
@@ -107,7 +107,7 @@
 
 <?php if ($T['addressid'] AND array_key_exists($T['addressid'],$ORDER)) {?>
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-map-marker"></i> <?=$T['collection_term'];?> Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-bank"></i> <?=$T['collection_term'];?> Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 	<?php if ($EDIT) { ?>
 		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
@@ -238,7 +238,7 @@
 <?php } ?>
 
 	<div class="sidebar-section">
-		<p class="section-header">Public Notes</p>
+		<h4 class="section-header"><i class="fa fa-sticky-note"></i> Public Notes</h4>
 <?php if ($EDIT) { ?>
 		<textarea id="public_notes" class="form-control" name="public_notes" rows="2" placeholder=""><?=$ORDER['public_notes'];?></textarea>
 <?php } else { ?>
@@ -255,7 +255,7 @@
 	<div class="sidebar-section">
 		<p class="section-header">
 			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>
-			<label for="email_confirmation">Send Order Confirmation</label>
+			<label for="email_confirmation"><i class="fa fa-paper-plane"></i> Send Order Confirmation</label>
 		</p>
 		<select name="email_to" id="email_to" class="form-control input-xs contact-selector"></select>
 		<p style="margin-top:10px"><strong>CC</strong> <i class="fa fa-check-square-o"></i> shipping@ven-tel.com</p>
@@ -264,7 +264,7 @@
 
 <?php if (array_key_exists('private_notes',$ORDER)) { ?>
 	<div class="sidebar-footer">
-		<p class="section-header">Internal Use Only</p>
+		<h4 class="section-header">Internal Use Only</h4>
 	<?php if ($EDIT) { ?>
 		<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" placeholder="Private Notes"><?=$ORDER['private_notes'];?></textarea>
 	<?php } else { ?>
