@@ -773,8 +773,8 @@
 						<?php if(in_array("4", $USER_ROLES)){ ?>
 							<br>
 							<!-- Cost Dash for Management People Only -->
-<!--
-							<div id="main-stats">
+
+							<!-- <div id="main-stats">
 					            <div class="row stats-row">
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
@@ -801,8 +801,8 @@
 					                    </div>
 					                </div>
 					            </div>
-					        </div>
--->
+					        </div> -->
+
 				        <?php } ?>
 
 				        <br>
@@ -1136,7 +1136,32 @@
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
 												<?php // print '<pre>' . print_r($component_data, true) . '</pre>';?>
-												<?php $total = 0; foreach($component_data as $row){ ?>
+												<?php $total = 0; foreach($component_data as $row){ 
+													$price = 0;
+													$ext = 0;
+
+													if($row['po_number'] && $type == 'repair') {
+														$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
+														$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
+														$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
+														$query .= "WHERE po.po_number = ".prep($row['po_number'])." AND pr.partid = ".prep($row['partid'])." ";
+														$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $order_number ";
+														$query .= "AND rc.ro_number = pr.ro_number ";
+														$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
+														$query .= "GROUP BY i.id; ";
+														$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+														if (mysqli_num_rows($result)>0) {
+															$query_row = mysqli_fetch_assoc($result);
+															$status = $query_row['status'];
+															$price = $query_row['price'];
+															if($status == 'Active') {
+																$ordered = $query_row['qty'];
+															}
+														}
+														$ext = ($price * $ordered);
+													}
+												?>
 													<?php if(! $quote) { ?>
 														<tr class="list">
 															<td>
@@ -1167,8 +1192,8 @@
 																	}
 																?>
 															</td>
-															<td>$0.00</td>
-															<td>$0.00</td>
+															<td class="text-right"><?=format_price($price)?></td>
+															<td class="text-right"><?=format_price($ext)?></td>
 														</tr>
 													<?php } else { ?>
 														<tr class="part_listing found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$row['id'];?>">
@@ -1380,9 +1405,6 @@
 				                                <th class="col-md-3">
 				                                    Vendor
 				                                </th>
-				                                <!-- <th class="col-md-2">
-				                                    Date
-				                                </th> -->
 				                                <th class="col-md-6">
 				                                    Description
 				                                </th>
@@ -1403,16 +1425,6 @@
 					                            			<option value="<?=$list['companyid'];?>"><?=getCompany($list['companyid']);?></option>
 					                            		</select>
 				                            		</td>
-													<!-- <td class="datetime">																			
-														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
-															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																<input type="text" name="outsourced[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
-																<span class="input-group-addon">										                
-																	<span class="fa fa-calendar"></span>										            
-																</span>										        
-															</div>											
-														</div>																		
-													</td> -->
 													<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]" value="<?=$list['description'];?>"></td>
 													<td>
 														<div class="input-group">													
@@ -1427,21 +1439,11 @@
 													</td>
 												</tr>
 					                   
-				                        	<?php $line_number ++;} ?>
+				                        	<?php $line_number ++; } ?>
 				                        	<tr class="outsourced_row" data-line="<?=$line_number;?>">
 			                            		<td class="select2_os">
 				                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required"></select>
 			                            		</td>
-												<!-- <td class="datetime">																			
-													<div class="form-group" style="margin-bottom: 0; width: 100%;">												
-														<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-															<input type="text" name="outsourced[<?=$line_number;?>][date]" class="form-control input-sm" value="">	
-															<span class="input-group-addon">										                
-																<span class="fa fa-calendar"></span>										            
-															</span>										        
-														</div>											
-													</div>																		
-												</td> -->
 												<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]"></td>
 												<td>
 													<div class="input-group">													
