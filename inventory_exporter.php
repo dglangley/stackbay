@@ -146,7 +146,7 @@
 <!----------------------------------------------------------------------------->
 <!-------------------------- Header/Filter Bar/Title -------------------------->
 <!---------------------------------------------------------------------------->
-<form class="form-inline form-filter" method="POST" action="/manage_inventory.php">
+<form class="form-inline form-filter" method="POST" action="/inventory_exporter.php">
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<div class="row" style="padding:8px">
 		<div class="col-sm-3">
@@ -205,7 +205,7 @@
 <!---------------------------------- Body Out --------------------------------->
 <!----------------------------------------------------------------------------->
 
-<form class="form-inline form-inventory" method="POST" action="/manage_inventory.php">
+<form class="form-inline form-inventory" method="POST" action="/inventory_exporter.php">
 <input type="hidden" name="s2" value="">
 
     <div id="pad-wrapper">
@@ -241,7 +241,7 @@
     <script type="text/javascript">
 		$(document).ready(function() {
 			$(".btn-submit").on("click",function() {
-				$(".form-inventory").prop('action','/manage_inventory.php');
+				$(".form-inventory").prop('action','/inventory_exporter.php');
 				$(".form-inventory").find("input[name='s2']").val($("#s2").val());
 				$(".form-inventory").submit();
 			});
