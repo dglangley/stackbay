@@ -31,7 +31,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	if (! isset($debug)) { $debug = 0; }
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
-		$result = array(
+		$db = array(
 			"timestamp" => "",
 			"so_number" => "",
 			"invoice" => "",
@@ -66,7 +66,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						if(!$debug){$check = qdb($query) or die(qe()." $query");} 
 						else {echo($query);}
 					} else {
-						$result['error'] = 'no package set';
+						$db['error'] = 'no package set';
 					}
 					// added by david 6-21-17 to set profits and cogs on each unit being shipped
 					if($debug){continue;}
@@ -234,26 +234,26 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 				//Invoice Creation based off shipping
 		}
-		$result['timestamp'] = $date;
-		$result['so_number'] = $so_number;
+		$db['timestamp'] = $date;
+		$db['so_number'] = $so_number;
 		
 		// $type = 'Sale'; //Eventually we will need to allow for us to ship repairs
 		$already_invoiced = rsrq("SELECT count(*) FROM `invoices` where order_number = '$so_number' AND `shipmentid` = ".prep($date).";");
 		if(!$already_invoiced){
 			$return_arr = create_invoice($so_number, $date);
 			if($return_arr['error']){
-				$result['error'] = $return_arr['error'];
+				$db['error'] = $return_arr['error'];
 			} else {
-				$result['invoice'] = $return_arr['invoice_no'];
+				$db['invoice'] = $return_arr['invoice_no'];
 			}
 		} else {
-			$result['error'] = "Attempted To Create Duplicate Invoice";
+			$db['error'] = "Attempted To Create Duplicate Invoice";
 		}
 		
-		return $result;
+		return $db;
 	}
+
+	$db = savetoDatabase($productItems, $so_number, $now);
 	
-	$result = savetoDatabase($productItems, $so_number, $now);
-	
-	echo json_encode($result);
+	echo json_encode($db);
     exit;
