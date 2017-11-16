@@ -245,7 +245,7 @@
 					</td>
                     <td>
 						'.getCompany($row['companyid']).'
-						<a href="/profile.php?companyid='.$row['companyid'].'"><i class="fa fa-book"></i></a>
+						<a href="/profile.php?companyid='.$row['companyid'].'"><i class="fa fa-building"></i></a>
 					</td>
                     <td>'.$address['street'].'</td>
                     <td>'.format_date($row['date_invoiced']).'</td>
@@ -609,7 +609,7 @@
 
 			<!-- Nav tabs -->
 			<ul class="nav nav-tabs nav-tabs-ar">
-				<li<?php if ($tab=='journal-entries') { echo ' class="active"'; } ?>><a href="#journal-entries" class="tab-toggle" data-toggle="tab"><i class="fa fa-square"></i>
+				<li<?php if ($tab=='journal-entries') { echo ' class="active"'; } ?>><a href="#journal-entries" class="tab-toggle" data-toggle="tab"><i class="fa fa-book"></i>
 					Journal Entries<?=($je_open>0 ? ' ('.$je_open.')' : '');?></a></li>
 				<li<?php if ($tab=='invoices') { echo ' class="active"'; } ?>><a href="#invoices" class="tab-toggle" data-toggle="tab"><i class="fa fa-file-text"></i>
 					Invoices<?=($invoices_open>0 ? ' ('.$invoices_open.')' : '');?></a></li>

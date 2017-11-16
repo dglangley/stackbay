@@ -49,6 +49,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				// exit(print_r($product,true));
 				foreach($product[6] as $box) {
 					$check;
+
+					// found a bug 11-16-17 where a subsequent shipment on a previously-shipped order (such as an RMA exchanged unit)
+					// would submit ALL the previous boxes to this code, resulting in ALL previously-shipped inventory items getting
+					// updated. WOW is this code bad or what. This is a stop-gap fix...
+					$query = "SELECT * FROM packages WHERE id = '".res($box)."' AND datetime IS NULL; ";
+					$result = qdb($query) OR die(qe().'<BR>'.$query);
+					// package has previously been shipped, don't do anything beyond this point! this code should be only for unshipped boxes
+					if (mysqli_num_rows($result)==0) { continue; }
+
 					//Check and only ship boxes that have something placed into them
 					$query = "SELECT * FROM package_contents WHERE packageid = '".res($box)."';";
 					$data = qdb($query) or die(qe()." | $data");
@@ -61,7 +70,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					}
 					// added by david 6-21-17 to set profits and cogs on each unit being shipped
 					if($debug){continue;}
-						while ($r = mysqli_fetch_assoc($data)) {
+					while ($r = mysqli_fetch_assoc($data)) {
 						$inventoryid = $r['serialid'];
 
 						$query2 = "SELECT si.* FROM inventory i, sales_items si ";

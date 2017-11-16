@@ -87,8 +87,9 @@
 
 			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
 
-			original_row.find(".address-selector").val(0);//reset selection before selectizing
-			original_row.find(".address-selector").selectize();
+			// identify orig_addr here but don't do anything with it yet (selectizing) because we need
+			// to find its value and update cloned row below first; see notes below on orig_addr / jQuery bug
+			var orig_addr = original_row.find(".address-selector");
 			original_row.find(".condition-selector").selectize();
 			original_row.find(".warranty-selector").selectize();
 
@@ -104,7 +105,19 @@
 			part.show();
 
 			var addr = cloned_row.find(".address-selector");
+			// update cloned addr with a new id so we can update and save addresses uniquely
+			var addr_id = addr.prop('id')+Math.random();
+			addr.prop('id',addr_id);
+			//needs to be 'attr' here because 'data()' and 'prop()' can't update data tags, thanks jquery dom
+			addr.closest("div").find(".address-neighbor").attr('data-name',addr_id);
+			// see comment on orig_addr below, this must be updated here post-clone due to jQuery bug
+			addr.val(orig_addr.val());
 			addr.selectize();
+
+			// position here is CRITICAL! needs to be below the cloned addr above so we can update its selection
+			// from the original due to a jQuery BUG (see https://stackoverflow.com/questions/742810/clone-isnt-cloning-select-values)
+			orig_addr.val(0);//reset selection before selectizing
+			orig_addr.selectize();
 
 			var cloned_cond = cloned_row.find(".condition-selector");
 			cloned_cond.selectize();

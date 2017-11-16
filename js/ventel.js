@@ -1504,6 +1504,8 @@
 				e.preventDefault();
 				if ($(this).data('type') == 'INV') {
 					window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+				} else if ($(this).data('type') == 'Bill') {
+					window.open('/docs/Bill'+$(this).val()+'.pdf','_blank');
 				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
@@ -1520,6 +1522,8 @@
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
 			if (search_field.data('type') == 'INV') {
 				window.open('/docs/INV'+search_field.val()+'.pdf','_blank');
+			} else if (search_field.data('type') == 'Bill') {
+				window.open('/docs/Bill'+search_field.val()+'.pdf','_blank');
 			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
@@ -2283,6 +2287,22 @@
 				});
 				$.each(json.service_quotes, function(key, order) {
 					service_quotes.append('<li><a href="/manage_quote.php?order_type=service_quote&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var invoices = $("#invoices-list");
+				invoices.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.invoices, function(key, order) {
+					invoices.append('<li><a href="/invoice.php?invoice='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var bills = $("#bills-list");
+				bills.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.bills, function(key, order) {
+					bills.append('<li><a href="/bill.php?bill='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

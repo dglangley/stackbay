@@ -24,10 +24,12 @@
 		$company_filter = $_REQUEST['companyid']; 
 	}
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
-	if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
-	else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
-	//This is saved as a cookie in order to cache the results of the button function within the same window
-	setcookie('report_type', $report_type, (time() + (7 * 24 * 60 * 60)));
+	if (! isset($report_type)) {//might be set from a meta script such as receivables.php
+		if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
+		else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
+		//This is saved as a cookie in order to cache the results of the button function within the same window
+		setcookie('report_type', $report_type, (time() + (7 * 24 * 60 * 60)));
+	}
 
 	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
 	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above
@@ -73,7 +75,8 @@
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 
-	$orders_table = 'sales';
+	// this might be set from a meta script such as receivables.php
+	if (! isset($orders_table)) { $orders_table = 'sales'; }
 	if (isset($_REQUEST['orders_table'])) {
 		if ($_REQUEST['orders_table']=='purchases') { $orders_table = 'purchases'; }
 	}
@@ -506,7 +509,7 @@
 		';
 
 		if(!$company_filter){
-			$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'" target="_blank"><i class="fa fa-book" aria-hidden="true"></i></a></td>';
+			$rows .= '<td>'.$info['company'].'  <a href="/profile.php?companyid='.$info['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 		}
 		$rows .='
             		<td>

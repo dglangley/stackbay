@@ -2178,6 +2178,8 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .megamenu-block ul {
   margin: 0;
   padding: 0;
+  max-height: 280px;
+  overflow: auto;
 }
 .megamenu-block ul li {
   list-style: none;

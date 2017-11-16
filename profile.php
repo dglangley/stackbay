@@ -121,7 +121,7 @@
         <!-- header -->
         <div class="row header">
             <div class="col-md-9">
-				<div class="business-icon"><i class="fa fa-book fa-4x"></i></div>
+				<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
                 <h2 class="name"><?= getCompany($companyid); ?></h2>
             </div>
             <div class="col-md-3 text-right">
