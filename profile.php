@@ -22,6 +22,8 @@
         return $freights;
 	}
 	
+	if (isset($_REQUEST['update']) AND $_REQUEST['update']) { $update = $_REQUEST['update']; }
+	if (isset($_REQUEST['tab']) AND $_REQUEST['tab']) { $tab = $_REQUEST['tab']; }
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$company = $_REQUEST['s'];
 
@@ -70,10 +72,8 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
-	<form class="form-inline" method="POST" action="/save-profile.php">
-<!--
-	<input type="hidden" name="companyid" value="<?= $companyid; ?>">
--->
+	<form class="form-inline" method="POST" action="/save-profile.php" enctype="multipart/form-data" name="profile_form">
+	<input type="hidden" name="tab" value="<?= $tab; ?>">
 
     <table class="table table-header">
 		<tr>
@@ -114,10 +114,14 @@
 
 <?php } else { ?>
 
+	<?php if ($update) { ?>
+		<div class="alert alert-success text-center"><h3>Address(es) succesfully imported!</h3></div>
+	<?php } ?>
+
         <!-- header -->
         <div class="row header">
             <div class="col-md-9">
-				<div class="business-icon"><i class="fa fa-book fa-4x"></i></div>
+				<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
                 <h2 class="name"><?= getCompany($companyid); ?></h2>
             </div>
             <div class="col-md-3 text-right">
@@ -128,29 +132,33 @@
         </div>
         
          <ul class="nav nav-tabs nav-tabs-ar">
-			<li class="active"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
-			<li class=""><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
-         	<li class=""><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
+			<li class="<?php if (! $tab OR $tab=='contacts') { echo 'active'; } ?>"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
+			<li class="<?php if ($tab=='addresses') { echo 'active'; } ?>"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
+         	<li class="<?php if ($tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
 <?php if (in_array("4", $USER_ROLES)) { ?>
-			<li class=""><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
+			<li class="<?php if ($tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
 <?php } ?>
-			<li class=""><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
+			<li class="<?php if ($tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
 		</ul>
 		
 		<div class="tab-content">
 
 			<!-- Materials pane -->
-			<div class="tab-pane" id="addresses_tab">
+			<div class="tab-pane <?php if ($tab=='addresses') { echo 'active'; } ?>" id="addresses_tab">
 				<!-- recent orders table -->
                 <table class="table table-hover table-striped table-condensed">
                     <thead>
                         <tr>
-                            <th class="col-md-2">
-                                Address Name
+                            <th class="col-md-1">
+                                Company
                             </th>
-                            <th class="col-md-4">
+                            <th class="col-md-1">
                                 <span class="line"></span>
                                 Street
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Addr2
                             </th>
                             <th class="col-md-1">
                                 <span class="line"></span>
@@ -162,61 +170,104 @@
                             </th>
                             <th class="col-md-1">
                                 <span class="line"></span>
-                                Postal
+                                Postal Code
                             </th>
-                            <th class="col-md-3">
+                            <th class="col-md-1">
                                 <span class="line"></span>
-                                Notes
+                                Country
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Site Nickname
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Site Alias
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Site Contact (Attn)
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Site Code
+                            </th>
+                            <th class="col-md-1">
+                                <span class="line"></span>
+                                Site Notes
                             </th>
                         </tr>
                     </thead>
                     <tbody>
 <?php
-$addresses = array();
+	$addresses = array();
 
-//Get the addressids associated with the companyid
-$query = "SELECT * FROM company_addresses ";
-$query .= "WHERE companyid = $companyid ";
-$query .= "ORDER BY addressid ASC;";
+	//Get the addressids associated with the companyid
+	$query = "SELECT * FROM company_addresses c, addresses a ";
+	$query .= "WHERE companyid = $companyid AND c.addressid = a.id ";
+	$query .= "ORDER BY addressid ASC;";
+	$result = qdb($query) OR die(qe().' '.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$addresses[] = $r;//['addressid'];
+	}
 
-$result = qdb($query) OR die(qe().' '.$query);
-						
-while ($r = mysqli_fetch_assoc($result)) {
-	$addresses[] = $r['addressid'];
-}
-
-foreach ($addresses as $addressid) {
-	$address_info = getAddresses($addressid);
+	foreach ($addresses as $r) {//$addressid) {
+		$addressid = $r['id'];
+		//$address_info = getAddresses($addressid);
 ?>
                         <tr>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_name[<?= $addressid; ?>]" value="<?=$address_info['name']?>" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_street[<?= $addressid; ?>]" value="<?=$address_info['street']?>" placeholder="Street"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_city[<?= $addressid; ?>]" value="<?=$address_info['city']?>" placeholder="State"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_state[<?= $addressid; ?>]" value="<?=$address_info['state']?>" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_postal[<?= $addressid; ?>]" value="<?=$address_info['postal_code']?>" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_notes[<?= $addressid; ?>]" value="<?=$address_info['notes']?>" placeholder="Notes"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_name[<?= $addressid; ?>]" value="<?=$r['name']?>" placeholder="Company"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_street[<?= $addressid; ?>]" value="<?=$r['street']?>" placeholder="Street"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_addr2[<?= $addressid; ?>]" value="<?=$r['addr2']?>" placeholder="Addr2"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_city[<?= $addressid; ?>]" value="<?=$r['city']?>" placeholder="City"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_state[<?= $addressid; ?>]" value="<?=$r['state']?>" placeholder="State"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_postal[<?= $addressid; ?>]" value="<?=$r['postal_code']?>" placeholder="Postal Code"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_country[<?= $addressid; ?>]" value="<?=$r['country']?>" placeholder="Country" readonly></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_nickname[<?= $addressid; ?>]" value="<?=$r['nickname']?>" placeholder="Nickname"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_alias[<?= $addressid; ?>]" value="<?=$r['alias']?>" placeholder="Alias"></td>
+							<td>
+								<select name="address_contactid[<?= $addressid; ?>]" size="1" class="form-control input-sm contact-selector">
+									<option value="<?= $r['contactid']; ?>" selected><?= getContact($r['contactid']); ?></option>
+								</select>
+							</td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_code[<?= $addressid; ?>]" value="<?=$r['code']?>" placeholder="Code"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_notes[<?= $addressid; ?>]" value="<?=$r['notes']?>" placeholder="Notes"></td>
                         </tr>
 <?php
 }
 ?>
 						<tr>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_name[0]" value="" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_street[0]" value="" placeholder="Street"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_city[0]" value="" placeholder="State"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_state[0]" value="" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_postal[0]" value="" placeholder="Address Name"></td>
-							<td><input type="text" class="form-control input-sm inline static-form" name="address_notes[0]" value="" placeholder="Notes"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_name[0]" value="" placeholder="Add Address..."></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_street[0]" value="" placeholder="Street"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_addr2[0]" value="" placeholder="Addr2"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_city[0]" value="" placeholder="City"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_state[0]" value="" placeholder="State"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_postal[0]" value="" placeholder="Postal"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_country[0]" value="US" placeholder="Country" readonly></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_nickname[0]" value="" placeholder="Nickname"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_alias[0]" value="" placeholder="Alias"></td>
+							<td>
+								<select name="address_contactid[0]" size="1" class="form-control input-sm contact-selector">
+								</select>
+							</td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_code[0]" value="" placeholder="Code"></td>
+							<td><input type="text" class="form-control input-xs inline static-form" name="address_notes[0]" value="" placeholder="Notes"></td>
                         </tr>
 						<tr>
-							<td colspan="5">
-								<button type="submit" name="submit" value="address" class="btn btn-default btn-submit btn-sm">Save</button>
+							<td colspan="11">
+								<button class="btn btn-default btn-sm btn-file" type="button" data-id="file-upload"><i class="fa fa-paperclip"></i></button>
+								<input id="file-upload" class="file-upload" name="file_upload" accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" value="" type="file">
+								<button class="btn btn-sm btn-default file-submit" type="button"><i class="fa fa-upload"></i></button>
+							</td>
+							<td class="text-right">
+								<button type="submit" name="submit" value="address" class="btn btn-success btn-submit btn-sm">Save</button>
 							</td>
 						</tr>
                     </tbody>
                 </table>
 			</div>
 			
-			<div class="tab-pane active" id="contacts_tab">
+			<div class="tab-pane <?php if (! $tab OR $tab=='contacts') { echo 'active'; } ?>" id="contacts_tab">
 			    <!--<div class="col-md-12 bio">-->
 	                <div class="profile-box">
 	
@@ -289,7 +340,7 @@ foreach ($addresses as $addressid) {
 	?>
 								<tr>
 									<td colspan="5">
-										<button type="submit" name="submit" value="contact" class="btn btn-default btn-submit btn-sm">Save</button>
+										<button type="submit" name="submit" value="contact" class="btn btn-success btn-submit btn-sm">Save</button>
 									</td>
 								</tr>
 	                        </tbody>
@@ -298,7 +349,7 @@ foreach ($addresses as $addressid) {
 	            <!--</div>-->
 			</div>
 			
-			<div class="tab-pane" id="freight_tab">
+			<div class="tab-pane <?php if ($tab=='freight') { echo 'active'; } ?>" id="freight_tab">
 				<!-- recent orders table -->
                 <table class="table table-hover table-striped table-condensed">
                     <thead>
@@ -367,7 +418,7 @@ foreach ($freights as $freight) {
 			</div>
 			
 			<!-- Materials pane -->
-			<div class="tab-pane" id="terms_tab">
+			<div class="tab-pane <?php if ($tab=='terms') { echo 'active'; } ?>" id="terms_tab">
 				<?php
 					$selPP = ' selected';
 					$selC = ' selected';
@@ -457,7 +508,7 @@ foreach ($freights as $freight) {
 				</div>
 			</div>
 			
-			<div class="tab-pane" id="orders">
+			<div class="tab-pane <?php if ($tab=='orders') { echo 'active'; } ?>" id="orders">
 				<?php
 					$p_orders = array();
 					$s_orders = array();
@@ -570,10 +621,22 @@ foreach ($freights as $freight) {
 	</div>
     <!-- end main container -->
 
+	</form>
+
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
         $(document).ready(function() {
+			companyid = '<?= $companyid; ?>';
+			$(".file-submit").on("click", function(e) {
+				var uploader = $("#file-upload").val();
+				if (uploader=='') {
+					modalAlertShow("Upload Error","Click the paperclip button to upload a file first, then click this Upload button");
+					return;
+				}
+
+				$(this).closest("form").find("button[type=submit]").click();
+			});
 			$(".active-form").on("keypress",function(e) {
 				if (e.keyCode == 13) {
 					e.preventDefault();

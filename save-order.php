@@ -101,8 +101,18 @@
 		$sales_rep_id = $ORDER['sales_rep_id'];//retain existing unless passed in below
 		if (! $file_url) { $file_url = $ORDER['ref_ln']; }
 	} else {
+		// if in quote data, user is converting to order
+		if ($T['record_type']=='quote') {
+//			$quoteid = $order_number;//use this for reference to the quote in the order table
+			$order_number = 0;//new order
+			$order_type = $T['order_type'];
+
+			$T = order_type($order_type);
+		}
+
 		$ORDER = getOrder('',$order_type);//fill the array with fields to determine below what we should add and what to skip
 	}
+
 	if (! $file_url AND $ref_ln) { $file_url = $ref_ln; }
 	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id']) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
 

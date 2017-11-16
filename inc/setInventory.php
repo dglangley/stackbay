@@ -103,7 +103,7 @@
 			// effectively an INSERT statement:
 			$query = "REPLACE inventory (serial_no, qty, partid, conditionid, status, locationid, bin, ";
 			$query .= "purchase_item_id, sales_item_id, returns_item_id, repair_item_id, userid, date_created, notes) ";
-			$query .= "VALUES ('".res($serial)."', $qty, $partid, ";
+			$query .= "VALUES (".fres($serial).", $qty, $partid, ";
 			if ($conditionid) { $query .= "$conditionid, "; } else { $query .= "NULL, "; }
 			if ($status) { $query .= "'".res(strtolower($status))."', "; } else { $query .= "NULL, "; }
 			if ($locationid) { $query .= "$locationid, "; } else { $query .= "NULL, "; }

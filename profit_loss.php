@@ -563,21 +563,8 @@
 	<!-- If the summary button is pressed, inform the page and depress the button -->
 	
 	
-<!------------------------------------------------------------------------------------>
-<!---------------------------------- FILTERS OUTPUT ---------------------------------->
-<!------------------------------------------------------------------------------------>
     <div id="pad-wrapper">
-		<div class="row filter-block">
 
-            <!-- orders table -->
-            <div class="table-wrapper">
-
-			<!-- If the summary button is pressed, inform the page and depress the button -->
-
-
-<!--================================================================================-->
-<!--=============================   PRINT TABLE ROWS   =============================-->
-<!--================================================================================-->
 <?php
 	//Establish a blank array for receiving the results from the table
 	$results = array();
@@ -862,7 +849,7 @@
 									'.$r['ref'].'
                                 </td>
                                 <td class="col-md-1" style="white-space:nowrap">
-									<small>'.$r['company'].' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a></small>
+									<small>'.$r['company'].' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-building"></i></a></small>
                                 </td>
                                 <td class="col-md-1 text-right primary">
                                     '.$cogs_credit.'
@@ -884,7 +871,6 @@
 ?>
 
 
-	<!-- Declare the class/rows dynamically by the type of information requested (could be transitioned to jQuery) -->
                 <div class="row">
                     <table class="table table-hover table-striped table-condensed sticky-header">
                         <thead>
@@ -988,9 +974,8 @@
 							</tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-            <!-- end orders table -->
+                </div><!-- row -->
+            </div><!-- pad-wrapper -->
 
 <?php if ($cost_basis=='qb' AND $sum_pending_cogs>0) { ?>
 <i class="fa fa-asterisk"></i> Pending COGS indicates unsynchronized record(s) between the DB and QB<br/>
@@ -1004,7 +989,6 @@
 <BR><BR><BR><BR><BR>
 <BR><BR><BR><BR><BR>
 
-	</div>
 	</form>
 <?php include_once 'inc/footer.php'; ?>
 

@@ -78,7 +78,7 @@
 	</div>
 
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-book"></i> Company</h4>
+		<h4 class="section-header"><i class="fa fa-building"></i> Company</h4>
 
 <?php if ($EDIT) { ?>
 		<select name="companyid" id="sidebar-companyid" class="form-control input-xs company-selector required" data-noreset="true">
@@ -107,7 +107,7 @@
 
 <?php if ($T['addressid'] AND array_key_exists($T['addressid'],$ORDER)) {?>
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-building"></i> <?=$T['collection_term'];?> Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
+		<h4 class="section-header"><i class="fa fa-map-marker"></i> <?=$T['collection_term'];?> Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="bill_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
 	<?php if ($EDIT) { ?>
 		<select name="bill_to_id" id="bill_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">

@@ -1,9 +1,11 @@
+	$(document).ready(function() {
 		/* editor for inline address selector for item charges */
 		// instead of using direct-editing using .address-editor class, this friendly neighbor editor uses its nearby address
 		// select menu as a way of getting the id and name of its task
 		$(".address-neighbor").on('click', function() {
 			var addr = $(this).closest(".part-container").find(".address-selector");
-			var idname = addr.prop('name');
+			//var idname = addr.prop('name');
+			var idname = addr.prop('id');
 			var addressid = addr.val();
 
 			$("#modal-address").populateAddress(addressid,idname);
@@ -152,7 +154,7 @@
 				address.modal('show');
 			}
 		};
-
+	});
 
 
 

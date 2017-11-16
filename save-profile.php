@@ -3,6 +3,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
+	$debug = 0;
+
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 		$type = '';//for now
 		if(!empty($fieldvalue)) {
@@ -13,48 +15,71 @@
 			$query .= "'".$contactid."'";
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 			if (! $id) { $id = qid(); }
 		//If empty remove the contact email or phone...
 		} else {
 			$query = "DELETE FROM ".$fieldname."s ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 		}
 
 		return ($id);
 	}
 	
-	function updateAddress($name, $street, $add2 = '', $add3 = '', $city, $state, $postal, $country, $notes, $id=0, $companyid) {
+	function updateAddress($name, $street, $addr2 = '', $addr3 = '', $city, $state, $postal, $country, $nickname, $alias, $contactid, $code, $notes, $id=0, $companyid) {
 		$type = '';//for now
 		if(!empty($name)) {
 			$query = "REPLACE addresses (name, street, addr2, addr3, city, state, postal_code, country, notes";
 			if ($id) { $query .= ", id"; }
-			$query .= ") VALUES ('".$name."','".$street."'";
-			if ($add2) { $query .= ",'".$add2."'"; } else { $query .= ", NULL"; }
-			if ($add3) { $query .= ",'".$add3."'"; } else { $query .= ", NULL"; }
-			$query .= ",'".$city."','".$state."','".$postal."','".$country."','".res($notes)."'";
+			$query .= ") VALUES ('".trim($name)."','".trim($street)."',".fres(trim($addr2)).",".fres(trim($addr3));
+			$query .= ",'".trim($city)."','".trim($state)."',".fres(trim($postal)).",".fres(trim($country)).",".fres(trim($notes));
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 			if (! $id) { $id = qid(); }
 			
 			//Add the link from addressid to companyid
-			$query = "REPLACE company_addresses (companyid, addressid) VALUES ($companyid,$id);";
-			$result = qdb($query) OR die(qe().' '.$query);
+			$query = "REPLACE company_addresses (companyid, addressid, nickname, alias, contactid, code, notes) ";
+			$query .= "VALUES ($companyid,$id, ".fres($nickname).", ".fres($alias).", ".fres($contactid).", ".fres($code).", ".fres($notes).");";
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 		//If empty remove the address
-		} else {
+		} else if ($id) {
 			$query = "DELETE FROM addresses ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 			
 			//Delete it from Company Addresses too
 			$query = "DELETE FROM company_addresses ";
 			$query .= "WHERE addressid = '".$id."'";
 			$query .= "; ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 		}
 
 		return ($id);
@@ -68,14 +93,22 @@
 			$query .= ") VALUES ('".$name."','".$carrierid."','".$companyid."'";
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 			if (! $id) { $id = qid(); }
 		//If empty remove the address
 		} else {
 			$query = "DELETE FROM freight_accounts ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			$result = qdb($query) OR die(qe().' '.$query);
+			if ($GLOBALS['debug']) {
+				echo $query.'<BR>';
+			} else {
+				$result = qdb($query) OR die(qe().' '.$query);
+			}
 		}
 		return ($id);
 	}
@@ -174,22 +207,27 @@
 	} else if($submit_type == 'address') {
 		
 		//This section is for Address saving feature
-		if (isset($_REQUEST['address_street']) AND is_array($_REQUEST['address_street'])) { $address_street = $_REQUEST['address_street']; }
-		if (isset($_REQUEST['address_city']) AND is_array($_REQUEST['address_city'])) { $address_city = $_REQUEST['address_city']; }
-		if (isset($_REQUEST['address_state']) AND is_array($_REQUEST['address_state'])) { $address_state = $_REQUEST['address_state']; }
-		if (isset($_REQUEST['address_postal']) AND is_array($_REQUEST['address_postal'])) { $address_postal = $_REQUEST['address_postal']; }
-		if (isset($_REQUEST['address_notes']) AND is_array($_REQUEST['address_notes'])) { $address_notes = $_REQUEST['address_notes']; }
-		
+		if (isset($_REQUEST['address_street']) AND is_array($_REQUEST['address_street'])) { $street = $_REQUEST['address_street']; }
+		if (isset($_REQUEST['address_addr2']) AND is_array($_REQUEST['address_addr2'])) { $addr2 = $_REQUEST['address_addr2']; }
+		if (isset($_REQUEST['address_city']) AND is_array($_REQUEST['address_city'])) { $city = $_REQUEST['address_city']; }
+		if (isset($_REQUEST['address_state']) AND is_array($_REQUEST['address_state'])) { $state = $_REQUEST['address_state']; }
+		if (isset($_REQUEST['address_postal']) AND is_array($_REQUEST['address_postal'])) { $postal = $_REQUEST['address_postal']; }
+		if (isset($_REQUEST['address_country']) AND is_array($_REQUEST['address_country'])) { $country = $_REQUEST['address_country']; }
+		if (isset($_REQUEST['address_nickname']) AND is_array($_REQUEST['address_nickname'])) { $nickname = $_REQUEST['address_nickname']; }
+		if (isset($_REQUEST['address_alias']) AND is_array($_REQUEST['address_alias'])) { $alias = $_REQUEST['address_alias']; }
+		if (isset($_REQUEST['address_contactid']) AND is_array($_REQUEST['address_contactid'])) { $contactid = $_REQUEST['address_contactid']; }
+		if (isset($_REQUEST['address_code']) AND is_array($_REQUEST['address_code'])) { $code = $_REQUEST['address_code']; }
+		if (isset($_REQUEST['address_notes']) AND is_array($_REQUEST['address_notes'])) { $notes = $_REQUEST['address_notes']; }
+
 		//Checks if the company exists
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)==0) {
-			$msg = 'Contact does not exist';
+			$msg = 'Company does not exist';
 		} else {
-			foreach($address_name as $addressid => $address) {
-				//if(!empty($address)) {
-					updateAddress($address, $address_street[$addressid], $add2[$addressid], $add3[$addressid], $address_city[$addressid], $address_state[$addressid], $address_postal[$addressid], 'US', $address_notes[$addressid], $addressid, $companyid);
-				//}
+			foreach($address_name as $id => $company_name) {
+				$addr3 = false;
+				updateAddress($company_name, $street[$id], $addr2[$id], $addr3, $city[$id], $state[$id], $postal[$id], $country[$id], $nickname[$id], $alias[$id], $contactid[$id], $code[$id], $notes[$id], $id, $companyid);
 			}
 		}
 	//We are saving freight here
@@ -207,10 +245,37 @@
 				if(!$accountid == 0) {
 					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);
 				} else if(!empty($name)) {
-					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);				}
+					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);
+				}
 			}
 		}
 	}
 
-	header('Location: /profile.php?companyid='.$companyid);
+	if (isset($_FILES) AND count($_FILES)>0 AND $_SERVER['REQUEST_METHOD'] == 'POST' AND isset($_FILES['file_upload']) && $_FILES['file_upload']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['file_upload']['tmp_name'])) {
+		$file = $_FILES['file_upload'];
+		$file_contents = file_get_contents($file['tmp_name']);
+
+		if ($file['type']=='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {//xlsx
+			$file_ending = 'xlsx';
+		} else if ($file['type']=='application/vnd.ms-excel') {//xls
+			$file_ending = 'xls';
+		} else if ($file['type']=='text/csv') {//csv
+			$file_ending = 'csv';
+		}
+
+		// create temp file name in temp directory
+		$tempfile = 'addrfile'.date("ymdHis").'.'.$file_ending;
+
+		// add contents from file
+		file_put_contents($TEMP_DIR.$tempfile,$file_contents);
+
+		header('Location: address_uploader.php?companyid='.$companyid.'&filename='.$tempfile);
+		exit;
+	}
+
+	if ($debug) { exit; }
+
+	$tab = '';
+	if (isset($_REQUEST['tab'])) { $tab = $_REQUEST['tab']; }
+	header('Location: /profile.php?companyid='.$companyid.'&tab='.$tab);
 	exit;

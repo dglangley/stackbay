@@ -2169,7 +2169,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
   padding: 0;
   color: #222;
   font-size: 16px;
-  padding: 15px 20px 10px 20px;
+  padding: 5px 20px 10px 20px;
   text-transform: uppercase;
 }
 .megamenu-block .megamenu-block-title i {
@@ -2178,6 +2178,8 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .megamenu-block ul {
   margin: 0;
   padding: 0;
+  max-height: 280px;
+  overflow: auto;
 }
 .megamenu-block ul li {
   list-style: none;

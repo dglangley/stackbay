@@ -248,7 +248,7 @@
 
 		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
 		if($o['credit'] && is_numeric($order_number)){
-			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, sci.qty, i.partid ";
+			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, SUM(sci.qty) qty, i.partid ";
 			$items .= "FROM credits sc, credit_items sci, return_items ri, inventory i, inventory_history ih ";
 			$items .= "WHERE sc.id = '".$order_number."' AND sci.cid = sc.id ";
 			$items .= "AND sci.return_item_id = ri.id AND ri.inventoryid = i.id AND i.id = ih.invid ";

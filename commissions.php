@@ -800,7 +800,7 @@
 				<td> '.date("m/d/Y", strtotime($r['date_invoiced'])).' </td>
 				<td> '.getRep($r['sales_rep_id'],'id','first_name').' </td>
 				<td> '.$order_abbrev.$r[$order_type].' <a href="/order.php?order_number='.$r[$order_type].'&order_type=Sale" target="_new"><i class="fa fa-arrow-right"></i></a> </td>
-				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-book"></i></a> </td>
+				<td> '.getCompany($r['companyid']).' <a href="/profile.php?companyid='.$r['companyid'].'" target="_new"><i class="fa fa-building"></i></a> </td>
 				<td> Inv# '.$r['invoice_no'].' <a href="/invoice.php?invoice='.$r['invoice_no'].'" target="_new"><i class="fa fa-file-pdf-o"></i></a> </td>
 				<td class="text-right"> '.format_price($inv_amt).' </td>
 				<td class="text-right"> '.format_price($paid_amt).' </td>

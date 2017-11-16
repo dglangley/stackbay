@@ -941,6 +941,9 @@
 			if (! companyid || companyid==0) { return; }
 
 			var params = '?companyid='+companyid;
+			if (scope) {
+				params += '&order_type='+scope;
+			}
 			if ($("#bill_to_id").val()>0) {
 				bill_to_id = $("#bill_to_id").val();
 				params += '&bill_to_id='+bill_to_id;
@@ -1007,6 +1010,8 @@
 		$("#termsid").on('change', function() {
 			termsid = $(this).val();
 		});
+		$("#termsid").selectize('/json/terms.php','- Select -');
+/*
 		$("#termsid").select2({
 			placeholder: '- Select -',
 			ajax: {
@@ -1032,6 +1037,7 @@
 				cache: false
 			},
 		});
+*/
 		$("#freight_account_id").select2({
 			placeholder: 'PREPAID',
 			ajax: {
@@ -1170,7 +1176,10 @@
 			}
 			//post-load because otherwise the focus event gets interrupted by html/class changes above
 			setTimeout("$('#s').focus()",100);
-			//form.submit();
+
+			if ($(this).hasClass("tab-submit")) {
+				form.submit();
+			}
 		});
 
 		$(".btn-favorites").click(function() {
@@ -1495,6 +1504,8 @@
 				e.preventDefault();
 				if ($(this).data('type') == 'INV') {
 					window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+				} else if ($(this).data('type') == 'Bill') {
+					window.open('/docs/Bill'+$(this).val()+'.pdf','_blank');
 				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {
 					document.location.href = '/'+$(this).data('type')+$(this).val();
 				} else if($(this).data('type') == 'RO'){
@@ -1511,6 +1522,8 @@
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
 			if (search_field.data('type') == 'INV') {
 				window.open('/docs/INV'+search_field.val()+'.pdf','_blank');
+			} else if (search_field.data('type') == 'Bill') {
+				window.open('/docs/Bill'+search_field.val()+'.pdf','_blank');
 			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
 			} else if(search_field.data('type') == 'RO') {
@@ -1522,6 +1535,23 @@
 			}
 			
 		});
+
+		/* took the function below and globalized it */
+		$(document).on("click",".btn-file",function() {
+			var e = $(this).data("id");
+			$("#"+e).click();
+		});
+		var uploadFiles;
+		$(document).on("change","input.file-upload",function(e) {
+			uploadFiles = e.target.files;
+
+			// get new upload file name
+			var upload_file = $(this).val().replace("C:\\fakepath\\","");
+
+			// change icon on upload button as additional indicator of successful selection
+			$(".btn-file").removeClass('btn-default').addClass('btn-info').html('<i class="fa fa-file-text"></i> '+upload_file);
+		});
+
 
 		/* David, Flame Broiler is at stake */
 		$(document).on("click",".btn-order-upload",function() {
@@ -2256,7 +2286,23 @@
 					$(this).remove();
 				});
 				$.each(json.service_quotes, function(key, order) {
-					service_quotes.append('<li><a href="/manage_quote.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					service_quotes.append('<li><a href="/manage_quote.php?order_type=service_quote&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var invoices = $("#invoices-list");
+				invoices.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.invoices, function(key, order) {
+					invoices.append('<li><a href="/invoice.php?invoice='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+				});
+
+				var bills = $("#bills-list");
+				bills.find("li").each(function() {
+					$(this).remove();
+				});
+				$.each(json.bills, function(key, order) {
+					bills.append('<li><a href="/bill.php?bill='+order.number+'">'+order.number+' '+order.company+'</a></li>');
 				});
 			},
 			error: function(xhr, desc, err) {

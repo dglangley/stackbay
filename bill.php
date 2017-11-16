@@ -111,7 +111,7 @@
 			<div class="col-md-2 sidebar" style="width:auto; position:inherit">
 				<div class="sidebar-section company-text">
 					<h4 class="section-header">Information</h4>
-					<?php echo getCompany($companyid); ?> <a href="/profile.php?companyid=<?php echo $companyid; ?>"><i class="fa fa-book"></i></a>
+					<?php echo getCompany($companyid); ?> <a href="/profile.php?companyid=<?php echo $companyid; ?>"><i class="fa fa-building"></i></a>
 					<h3><?php echo $T['abbrev'].' '.$order; ?> <a href="/<?php echo $T['abbrev'].$order; ?>"><i class="fa fa-arrow-right"></i></a></h3>
 				</div>
 				<div class="sidebar-section">
