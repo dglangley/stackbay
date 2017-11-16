@@ -148,6 +148,20 @@
 			$this->setPrivilege($userPrivileges);
 	    }
 
+	    function getUserServiceClasses() {
+	    	$userServiceClasses = array();
+	    	//Get all of the users privileges
+	    	$query = "SELECT classid from user_classes WHERE userid = '" . res($this->getUserID()) . "'";
+	    	$result = qdb($query);
+
+	    	//Check is any rows exists then populate all the results into an array
+			while ($row = $result->fetch_assoc()) {
+			  $userServiceClasses[] = $row['classid'];
+			}
+
+			$this->setServiceClass($userServiceClasses);
+	    }
+
 	    function getPrivilegeTitle($userID) {
 	    	$userPrivileges = array();
 	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($userID) . "'";
@@ -222,6 +236,7 @@
 	    	$this->getContactInfo();
 	    	$this->getUsernameInfo();
 	    	$this->getUserPrivileges();
+	    	$this->getUserServiceClasses();
 	    	$this->getUserPhone();
 	    }
 
@@ -232,6 +247,7 @@
 	    	$new_pin = '';
 	    	$new_status = '';
 	    	$new_privilege = '';
+	    	$new_class = '';
 	    	$new_phone = '';
 	    	$generated_pass = 0;
 
@@ -257,6 +273,9 @@
 		    }
 		    if(isset($_REQUEST["privilege"])) {
 		    	$new_privilege = $this->Sanitize($_REQUEST['privilege']);
+		    }
+		     if(isset($_REQUEST["service_class"])) {
+		    	$new_class = $this->Sanitize($_REQUEST['service_class']);
 		    }
 		    if(isset($_REQUEST["phone"])) {
 		    	$new_phone = $this->Sanitize($_REQUEST['phone']);
@@ -320,6 +339,12 @@
 	    	if(isset($new_privilege) && $new_privilege != '') {
 	    		//Run function set an array of the selected Privilege IDs to user privileges
 	    		$this->setPrivilege($new_privilege);
+	    	}
+
+	    	//Set the user privileges if it is set and not empty
+	    	if(isset($new_class) && $new_class != '') {
+	    		//Run function set an array of the selected Privilege IDs to user privileges
+	    		$this->setServiceClass($new_class);
 	    	}
 
 	    	//If no errors are present

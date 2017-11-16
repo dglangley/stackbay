@@ -1,10 +1,4 @@
 <?php
-	if (! isset($WORKDAY_START)) { $WORKDAY_START = 0; }
-	if (! isset($WORKDAY_END)) { $WORKDAY_END = 23; }
-
-	if ($WORKDAY_START==0) { $WORKDAY_END = 23; }
-	else { $WORKDAY_END = $WORKDAY_START-1; }
-
 	$WEEK_SECS = 60*60*40;
 	$DAY_SECS = 60*60*8;
 	$DT_SECS = 60*60*12;
@@ -58,7 +52,7 @@
 			foreach ($shifts as $r) {
 				$datetime_in = $r['clockin'];
 				$datetime_out = $r['clockout'];
-				if (! isset($OT[$techid][$weekStart]['shifts'][$r['id']])) { $OT[$techid][$weekStart]['shifts'][$r['id']] = 0; }
+				if (! isset($OT[$techid][$weekStart]['shifts'][$r['id']]['ot'])) { $OT[$techid][$weekStart]['shifts'][$r['id']]['ot'] = 0; }
 				if (! isset($cumDaySecs[$r['workdate']])) { $cumDaySecs[$r['workdate']] = 0; }
 //				echo $r['datetime_in'].' to '.$r['datetime_out'].' (workdate: '.$r['workdate'].')<BR>';
 
@@ -99,15 +93,17 @@
 				$cumDT += $dtSecs;
 
 				// capture all OT data into array for easy-lookup and eliminating re-querying later
-				$OT[$techid][$weekStart]['shifts'][$r['id']] += $otSecs;
+				$OT[$techid][$weekStart]['shifts'][$r['id']]['ot'] += $otSecs;
+				$OT[$techid][$weekStart]['shifts'][$r['id']]['dt'] += $dtSecs;
+
 				$OT[$techid][$weekStart]['total'] += $otSecs;
 			}
 		}
 
 		if ($shiftid) {
 //			echo $weekStart.' to '.$weekEnd.': Work Secs '.toTime($regSecs).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]).')<BR>';
-			if (isset($OT[$techid][$weekStart]['shifts'][$shiftid])) {
-				return ($OT[$techid][$weekStart]['shifts'][$shiftid]);
+			if (isset($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'])) {
+				return (array($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'], $OT[$techid][$weekStart]['shifts'][$r['id']]['dt']));
 			} else {
 				return 0;
 			}

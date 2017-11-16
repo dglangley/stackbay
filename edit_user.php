@@ -348,6 +348,9 @@
                                     <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $venEdit->getUsername(); ?>">
                                 </div>
                                 <div class="col-md-7 pb-20">
+                                    <div class="checkbox pull-right">
+                                        <label><input name="status" type="checkbox" value="Active" <?php echo $venEdit->getStatus(); ?>>Active (User Status)</label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -406,8 +409,14 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="checkbox">
-                                        <label><input name="status" type="checkbox" value="Active" <?php echo $venEdit->getStatus(); ?>>Active (User Status)</label>
+                                    <div class="form-group">
+                                        <?php //print_r($venEdit->getServiceClass());  echo 'test';?>
+                                        <select name="service_class[]"  size="6" class="form-control" multiple>
+                                            <?php foreach($venEdit->getServiceClasses() as $type): ?>
+                                                <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
+                                                <option value="<?php echo $type['id']; ?>" <?php echo (in_array($type['id'], $venEdit->getServiceClass()) ? 'selected' : '') ?>><?php echo $type['class_name']; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
                                 </div>
                             </div>

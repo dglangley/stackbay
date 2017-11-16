@@ -28,9 +28,14 @@
 		$query = "SELECT *, DATE_SUB(LEFT(clockin,10), INTERVAL DAYOFWEEK(clockin)-1 DAY) start_day, ";
 		//$query .= "DATE_SUB(LEFT(datetime_in,10), INTERVAL DAYOFWEEK(datetime_in)-7 DAY) end_day ";
 		$query .= "DATE_SUB(LEFT(clockin,10), INTERVAL DAYOFWEEK(clockin)-8 DAY) end_day ";
-		$query .= "FROM timesheets WHERE userid = '".$techid."' ";
+		$query .= "FROM timesheets WHERE userid = '".$techid."'";
 		$query .= "; ";
+
 		$result = qdb($query) OR die(qe().' '.$query);
+
+		// Generate an array to handle each timesheet calculation
+		$timesheetid_data = array();
+
 		while ($r = mysqli_fetch_assoc($result)) {
 			$weekStart = format_date($r['clockin'],'Y-m-d').' '.$WORKDAY_START.':00:00';
 			$weekEnd = format_date($r['clockout'],'Y-m-d').' '.$WORKDAY_END.':59:59';
@@ -39,21 +44,25 @@
 			$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
 
 			// OT seconds of this shift within the scope of a week's work
-			$OTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id']);
+			$OTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id'])[0];
+			$DTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id'])[1];
+
 			$debugSecsReg += $secsDiff-$OTSecs;
 			$debugSecsOT += $OTSecs;
 
 			$cumSecs += $secsDiff;
 
-			$tech_rate = getUserRate($techid);
+			$tech_rate = $r['rate'];
 			$rate_in_secs = $tech_rate/3600;
 
 			$regSecs = ($secsDiff-$OTSecs);
 			$stdPay = ($rate_in_secs*$regSecs);
 			$debugRegPayTotal += $stdPay;
 			$otPay = ($rate_in_secs*$OTSecs)*1.5;
+			$dtPay = ($rate_in_secs*$DTSecs)*2.0;
 			$debugOTPayTotal += $otPay;
 			$cumLabor += ($stdPay+$otPay)*$LABOR_COST;
+
 			if (! $r['no_perdiem']) {
 				$debugSecsPd += $regSecs;
 				// no perdiem for overtime
@@ -61,9 +70,19 @@
 				$debugPdPayTotal += $pdPay;
 				$cumLabor += $pdPay;
 			}
+
+			$timesheetid_data[$r['id']]['secsDiff'] = $secsDiff;
+			$timesheetid_data[$r['id']]['REG_secs'] = $regSecs;
+			$timesheetid_data[$r['id']]['REG_pay'] = $stdPay;
+			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;
+			$timesheetid_data[$r['id']]['OT_pay'] = $otPay;
+			$timesheetid_data[$r['id']]['DT_secs'] = $DTSecs;
+			$timesheetid_data[$r['id']]['DT_secs'] = $dtPay;
+			$timesheetid_data[$r['id']]['totalPay'] = $stdPay + $otPay + $dtPay;
 		}
 
-		return (array($cumLabor,$cumSecs));
+		// return (array($cumLabor,$cumSecs));
+		return ($timesheetid_data);
 	}
 
 	function calcTimeDiff($datetime_start,$datetime_end) {

@@ -18,6 +18,7 @@
 		private $user_type;
 		private $user_status;
 		private $user_privilege;
+		private $user_service_class;
 		private $user_phone;
 
 		//Have All the Ids on hand in case we need them to pull data
@@ -123,6 +124,11 @@
 		function setPrivilege($privileges) {
 			//set user privileges
 			$this->user_privilege = $privileges;
+		}
+
+		function setServiceClass($classes) {
+			//set user privileges
+			$this->user_service_class = $classes;
 		}
 
 		function setPhone($phone) {
@@ -240,6 +246,11 @@
 		function getPrivilege() {
 			//get user specific status
 			return $this->user_privilege;
+		}
+
+		function getServiceClass() {
+			//get user specific status
+			return $this->user_service_class;
 		}
 
 		function getPhone() {
@@ -515,6 +526,23 @@
 					}
 				}
 
+				// Running for loop to get all privileges
+				if(!empty($this->getServiceClass())) {
+					foreach($this->getServiceClass() as $priv) {
+						// Prepare and Bind for Privileges
+						$stmt = $WLI->prepare('
+							INSERT INTO user_classes (userid, classid) 
+								VALUES (?, ?) 
+						');
+						//s = string, i - integer, d = double, b = blob for params of mysqli
+						$stmt->bind_param("ii", $userid, $privid);
+						//Package it all and execute the query
+						$privid = $priv;
+						$stmt->execute();
+						$stmt->close();
+					}
+				}
+
 	    	} else if($op == 'update') {
 	    		//Update function to update users
 	    		//Very Commonly used varaible so declaring it up here
@@ -691,6 +719,26 @@
 						$stmt->close();
 					}
 				}
+
+				// Running for loop to get all privileges
+				if(!empty($this->getServiceClass())) {
+					$query = "DELETE FROM user_classes WHERE userid='". res($userid) ."'";
+					$result = qdb($query);
+
+					foreach($this->getServiceClass() as $priv) {
+						// Prepare and Bind for Privileges
+						$stmt = $WLI->prepare('
+							INSERT INTO user_classes (userid, classid) 
+								VALUES (?, ?) 
+						');
+						//s = string, i - integer, d = double, b = blob for params of mysqli
+						$stmt->bind_param("ii", $userid, $privid);
+						//Package it all and execute the query
+						$privid = $priv;
+						$stmt->execute();
+						$stmt->close();
+					}
+				} 
 				//Test Bench
 				//echo $usernameid . ' ' . $emailid . ' ' . $name . ' ' . $username . ' ' . $contactid;
 
@@ -861,6 +909,17 @@
 		//Function to get all the available privileges
 		function getPrivileges() {
 			$query = "SELECT * FROM user_privileges ORDER BY id ASC";
+			$result = qdb($query);
+
+			while ($row = $result->fetch_assoc()) {
+			  $results_array[] = $row;
+			}
+
+			return $results_array;
+		}
+
+		function getServiceClasses() {
+			$query = "SELECT * FROM service_classes ORDER BY id ASC";
 			$result = qdb($query);
 
 			while ($row = $result->fetch_assoc()) {
