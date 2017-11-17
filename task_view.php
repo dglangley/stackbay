@@ -46,6 +46,8 @@
 
 	} else if($type == 'Service') {
 		$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+
+		$item_details = getItemDetails($item_id, 'service_items', 'id');
 	} else if($type == 'build') {
 
 	} else if($type == 'repair') {
@@ -890,6 +892,11 @@
 														echo $serial;
 													} ?>
 												</div>
+												<div class="col-md-5"><?=$item_details['notes'];?></div>
+											</div>
+										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
+											<div class="row list">
+												<div class="col-md-7"><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></div>
 												<div class="col-md-5"><?=$item_details['notes'];?></div>
 											</div>
 										<?php } ?>
