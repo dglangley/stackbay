@@ -191,7 +191,7 @@
 					'action'=>'/',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
-					'aliases'=>array('/order_form.php'),
+					'aliases'=>array('/order.php'),
 					'sub' => '
                 <ul class="dropdown-menu dropdown-menu-left text-left dropdown-mega">
 					<li>
@@ -199,6 +199,7 @@
 						<div class="row">
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
+									<div class="pull-right" style="margin-right:10px"><a href="/order.php?order_type=Outsourced" title="New Outside Order" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-puzzle-piece"></i></a></div>
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales_order.php">Sales</a></h4>
                                     <h4 class="megamenu-block-title">'
                                     . ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
