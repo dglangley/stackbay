@@ -41,6 +41,6 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 #RewriteRule ^([SPR]O)?([0-9]+)$ order_search.php [L]
 #RewriteRule ^([SPR]O)?(.+)$ order_search.php [L]
-RewriteRule ^(RMA|INV|[SPR]O)?(.+)$ order_search.php [L]
+RewriteRule ^(RMA|INV|OS|[SPR]O)?(.+)$ order_search.php [L]
 
 </IfModule>

@@ -41,6 +41,14 @@
 				$arr['search'] = $r['po_number'];
 				$arr['type'] = 'PO';
 			}
+		} else if ($type=='OS') {
+			$query = "SELECT os_number FROM outsourced_orders WHERE os_number = '".res($search)."' OR order_number = '".res($search)."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$search);
+			if (mysqli_num_rows($result)==1) {
+				$r = mysqli_fetch_assoc($result);
+				$arr['search'] = $r['os_number'];
+				$arr['type'] = 'OS';
+			}
 		} else if ($type=='RMA') {
 			$query = "SELECT rma_number FROM returns WHERE rma_number = '".res($search)."'; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$search);
@@ -54,10 +62,9 @@
 		return ($arr);
 	}
 
-	//$order = preg_replace('/^([\/])(RMA|INV|[SPR]O)?([0-9]{4,6})$/i','$3',trim($_SERVER["REQUEST_URI"]));
 	$type = trim($_SERVER["REQUEST_URI"]);
 	$order = '';
-	$order_str = explode('|',preg_replace('/^([\/])(RMA|INV|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
+	$order_str = explode('|',preg_replace('/^([\/])(RMA|INV|OS|[SPR]O)?([0-9]{4,6})?$/i','$2|$3',$type));
 	if (count($order_str)==2) {
 		$type = $order_str[0];
 		$order = $order_str[1];
@@ -143,6 +150,8 @@
 			include 'inventory_add.php';
 		} else if ($type=='SO') {
 			include 'shipping.php';
+		} else if ($type=='OS') {
+			include 'order.php';
 		} else {
 			include 'repair.php';
 		}

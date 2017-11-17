@@ -14,11 +14,14 @@
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/locations.php';
 	include_once $rootdir.'/inc/getAddresses.php';
+	include_once $rootdir.'/inc/getCarrier.php';
+	include_once $rootdir.'/inc/getFreightService.php';
 	include_once $rootdir.'/inc/getFreight.php';
     include_once $rootdir.'/inc/getWarranty.php';
     include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/order_parameters.php';
+//	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/order_type';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/getRepairCode.php';
@@ -61,7 +64,7 @@
             }
         }
         else{
-            return "None";
+            return "N/A";
         }
     }
     function getCompanyAddress($companyid){
@@ -132,17 +135,18 @@
                 $repair_code = '';
                 $order_number = '';
                 $part = array();
-                // print_r($r);
+                //print_r($r);
 
                 //Get the order level information
-                $o = o_params($r['order_type']);
+//				$o = o_params($r['order_type']);
+				$T = order_type($r['order_type']);
                 $order_number = $r['order_number'];
                 $macro_select = "
-                SELECT *, '".$r['lumpdate']."' as lumpdate FROM
-                ".$o['order']." o ,".$o['item']." i, inventory inv
-                WHERE o.".$o['id']." = ".prep($order_number)." 
-                AND o.".$o['id']." = i.".$o['id']." 
-                AND inv.".$o['inv_item_id']." = i.id;";
+                SELECT *, '".$r['lumpdate']."' lumpdate, '".$r['order_type']."' order_type FROM
+                ".$T['orders']." o ,".$T['items']." i, inventory inv
+                WHERE o.".$T['order']." = ".prep($order_number)." 
+                AND o.".$T['order']." = i.".$T['order']." 
+                AND inv.".$T['inventory_label']." = i.id;";
                 $macro = qdb($macro_select) or die(qe()." | $macro_select");
                 $return['order_info']= mysqli_fetch_assoc($macro);
                 // $part = current(hecidb($r['partid'],'id'));
@@ -152,14 +156,14 @@
                     foreach ($macro as $it => $mac) {
                         //Normally we will only have one record per macro, but eventually RO/SOs will be lumped for multiple items, so foreach should work
                         $item_status = '';
-                        if($o['repair']){
+                        if($r['order_type']=='Repair') {
                             $item_status = getRepairCode($mac['repair_code_id']);
                         } else {
                             $item_status = "Shipped";
                         }
                 		$row = array();
                         $row['line_no'] = ++$line_no;
-                        $row['item'] = strtoupper(substr($o['type'],0,1))."O ".$order_number;
+                        $row['item'] = $T['abbrev']." ".$order_number;
                         $row['description'] = "
                         P/N: ".getPart($r['partid'])."<br>
                         S/N: ".$mac['serial_no']."<br>
@@ -181,11 +185,18 @@
         }
 
 	function renderOrder($order_number,$order_type='Purchase', $email = false) {
-	    $o = array();
 	    $oi = array();
-	    //Switch statement to add in more features for now until we have a solid naming convention
 
-        $o = o_params($order_type);
+//		$o = o_params($order_type);
+		$lump = false;
+		if ($order_type=='Lump') {
+			$order_type = 'Invoice';
+			$lump = true;
+		}
+		$order_type = ucwords(strtolower($order_type));
+		if ($order_type=='Rma') { $order_type = 'RMA'; }
+
+		$T = order_type($order_type);
 	    $prep = prep($order_number);
         
 		$due_date = "";
@@ -193,16 +204,16 @@
 		$freight = 0;
 		$total = 0;
         $serials = array();
-        if ($o['invoice']){
+		if ($order_type=='Invoice') {
             $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
         } 
 
 		$orig_order = $order_number;
-		if(!$o['lump']){
+		if (! $lump) {
     		$query = "SELECT * ";
-			if ($order_type=='CM') { $query .= ", order_number "; }
-			$query .= "FROM `".$o['order']."` ";
-			$query .= "WHERE `".$o['id']."` = $order_number;";
+			if ($order_type=='Credit') { $query .= ", order_number "; }
+			$query .= "FROM `".$T['orders']."` ";
+			$query .= "WHERE `".$T['order']."` = $order_number;";
     		$result = qdb($query) or die(qe()." | $query");
     		if (mysqli_num_rows($result) == 0) {
     			die("Could not pull record");
@@ -215,7 +226,7 @@
 		}
 
 		// is order a sale or repair?
-		if ($o["invoice"] OR $o["credit"]) {
+		if (! $lump AND ($order_type=='Invoice' OR $order_type=='Credit')) {
 			$orig_order = $oi['order_number'];
 			if ($oi["order_type"]=='Sale') {
 				$query2 = "SELECT * FROM sales_orders, terms WHERE so_number = '".$oi["order_number"]."' AND termsid = terms.id; ";
@@ -226,7 +237,7 @@
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			}
 			if (mysqli_num_rows($result2)==0) {
-				die("Could not pull originating record for this invoice");
+				die("Could not pull originating ".$oi["order_type"]." record for this invoice: ".$query2);
 			}
 			$r2 = mysqli_fetch_assoc($result2);
 			foreach ($r2 as $k => $v) {
@@ -234,7 +245,7 @@
 			}
 		}
 
-		if($o['invoice']){ 
+		if ($order_type=='Invoice') {
 		    $freight = $oi["freight"]; 
 		    if ($oi['days'] < 0){
 		        $due_date = format_date($oi['date_invoiced'],'F j, Y');
@@ -243,11 +254,19 @@
 		    }
 		}
 
-		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
+		$freight_services = '';
+		if ($oi['freight_carrier_id']) {
+			$freight_services = getCarrier($oi['freight_carrier_id']);
+		}
+		if ($oi['freight_services_id']) {
+			if ($freight_services) { $freight_services .= ' '; }
+			$freight_services .= getFreightService($oi['freight_services_id']);
+		}
+//		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
 		$freight_terms = ($oi["freight_account_id"])?getFreight('account','',$oi['freight_account_id'],'account_no') : 'Prepaid';
 
-		$items = "SELECT * FROM ".$o['item']." WHERE `".$o['item_id']."` = $order_number ORDER BY IF(".$o['item_order']." IS NOT NULL,0,1), ".$o['item_order']." ASC;";
-		if($o['credit'] && is_numeric($order_number)){
+		$items = "SELECT * FROM ".$T['items']." WHERE `".$T['order']."` = $order_number ORDER BY IF(".$T['order']." IS NOT NULL,0,1), ".$T['order']." ASC;";
+		if (! $lump AND $order_type=='Credit' AND is_numeric($order_number)) {
 			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, SUM(sci.qty) qty, i.partid ";
 			$items .= "FROM credits sc, credit_items sci, return_items ri, inventory i, inventory_history ih ";
 			$items .= "WHERE sc.id = '".$order_number."' AND sci.cid = sc.id ";
@@ -267,9 +286,9 @@
         //Process Item results of the credit to associate the serials into a nested array
 		$item_rows = '';
         $i = 0;
-        if(!$o['lump']){
+		if (! $lump) {
 		    foreach($items_results as $item){
-		    if($o['type'] == "Credit"){
+			if ($order_type=='Credit') {
                 $serials = explode(",",$item['serials']); 
             }
             
@@ -300,13 +319,13 @@
 			//FREIGHT CALCULATION HERE FOR INVOICE (based off the payment type/shipping account)
 			$item_rows .= '
                 <tr>
-                    <td class="text-center">'.(($o['credit'] || $o['rma']) ? ++$i : $item['line_number']).'</td>
+                    <td class="text-center">'.(($order_type=='Credit' OR $order_type=='RMA') ? ++$i : $item['line_number']).'</td>
                     <td>
         	            '.$charge_descr.'
                         <div class="description '.$part_details['manf'].' '.$part_details['system'].' '.$part_details['description'].'</div>
-                        <div class="'.($o['rma'] || $o['invoice'] ? '' : 'remove').'" style = "padding-left:5em;">
+                        <div class="'.($order_type=='RMA' OR $order_type=='Invoice' ? '' : 'remove').'" style = "padding-left:5em;">
 			';
-			if ($serials && !$o['credit']){
+			if ($serials AND $order_type<>'Credit') {
 				//Add Serials label
 				foreach($serials as $serial){
 					if($serial['invoice_item_id'] == $item['id']){
@@ -317,12 +336,12 @@
 			$item_rows .='</ul>
                         </div>
                     </td>
-                    <td class="text-center '.(($o['due_date'])? '' : 'remove' ).'">'.format_date($item[$o['date_field']],'m/d/y').'</td>
+                    <td class="text-center '.(($T['due_date'])? '' : 'remove' ).'">'.format_date($item[$T['datetime']],'m/d/y').'</td>
 					<td class="text-center '.($oi['repair_code_id'] ? '' : 'remove').'">'.getRepairCode($oi['repair_code_id']).'</td>
-                    <td class="text-center '.($o['warranty'] ? '' : 'remove').'">'.getWarranty($item['warranty'],'name').'</td> 
+                    <td class="text-center '.($T['warranty'] ? '' : 'remove').'">'.getWarranty($item[$T['warranty']],'name').'</td> 
 			';
-			$item_rows .= ($o['purchase']? '<td>'.getCondition($item['conditionid']).'</td>' : "");
-			if($o['credit']){
+			$item_rows .= ($order_type=='Purchase' ? '<td>'.getCondition($item['conditionid']).'</td>' : "");
+			if($order_type=='Credit'){
 				$item_rows .= "<td>";
 				foreach($serials as $serial){
 					$item_rows .= "$serial<br>";
@@ -330,12 +349,12 @@
 				$item_rows .= "</td>";
 			}
 			$item_rows .= '
-                    <td class="text-center '.($o['rma'] ? 'remove' : '').'">'.$item['qty'].'</td>
-                    <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($price).'</td>
-                    <td class="text-right '.($o['rma'] ? 'remove' : '').'">'.format_price($lineTotal).'</td>
-                    <td class="'.($o['rma'] ? '' : 'remove').'">'.$item['reason'].'</td>
-                    <td class="'.($o['rma'] ? '' : 'remove').'">'.getDisposition($item['dispositionid']).'</td>
-                    <td class="'.($o['rma'] ? '' : 'remove').' text-center">'.$item['qty'].'</td>
+                    <td class="text-center '.($order_type=='RMA' ? 'remove' : '').'">'.$item['qty'].'</td>
+                    <td class="text-right '.($order_type=='RMA' ? 'remove' : '').'">'.format_price($price).'</td>
+                    <td class="text-right '.($order_type=='RMA' ? 'remove' : '').'">'.format_price($lineTotal).'</td>
+                    <td class="'.($order_type=='RMA' ? '' : 'remove').'">'.$item['reason'].'</td>
+                    <td class="'.($order_type=='RMA' ? '' : 'remove').'">'.getDisposition($item['dispositionid']).'</td>
+                    <td class="'.($order_type=='RMA' ? '' : 'remove').' text-center">'.$item['qty'].'</td>
 				</tr>
 			';
 		}
@@ -452,12 +471,22 @@
     </head>
     <body>';
 
+	$header = '';
+	if ($email) {
+		$header = $T['abbrev'].' '.$order_number.' Complete';
+	} else {
+		if ($oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
+		else if ($order_type) { $header = $order_type.' '; }
+		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA') { $header .= 'Order '; }
+		$header .= $order_number;
+	}
+
 $html_page_str .='
         <div id = "ps_bold">
-            <h3>'.($email ? 'PO# ' . $order_number . ' Received' : $o['header'].' #'.$order_number).'</h3>
-            <table class="table-full" id = "vendor_add" '.($o['credit']? "style='display:none;'": "").'>
+            <h3>'.$header.'</h3>
+            <table class="table-full" id = "vendor_add" '.($order_type=='Credit' ? "style='display:none;'": "").'>
 				<tr>
-					<th class="text-center">'.$o['client'].'</th>
+					<th class="text-center">Company</th>
 				</tr>
 				<tr>
 					<td class="half">
@@ -483,13 +512,13 @@ $html_page_str .='
 //Begin addresses table
 $html_page_str .='
         <!-- Shipping info -->
-        <h2 class="text-center credit_memo '.($o['rma'] ? '' : 'remove').'">THIS IS NOT A CREDIT MEMO</h2>
+        <h2 class="text-center credit_memo '.($order_type=='RMA' ? '' : 'remove').'">THIS IS NOT A CREDIT MEMO</h2>
         <table class="table-full">
             <tr>';
-if(!$o['credit']){
+if($order_type<>'Credit'){
 $html_page_str .='
-                <th class="'.($o['rma'] ? 'hidden' : '').'">Bill To</th>
-                <th class="'.($o['lump'] ? 'remove' : '').'">'.($o['rma'] ? 'Return' : 'Ship').' To</th>';
+                <th class="'.($order_type=='RMA' ? 'hidden' : '').'">Bill To</th>
+                <th class="'.($liump ? 'remove' : '').'">'.($order_type=='RMA' ? 'Return' : 'Ship').' To</th>';
 } else {
     $html_page_str .= '
     <th>Customer</th>
@@ -505,9 +534,9 @@ $html_page_str .='
 $html_page_str .='                
             </tr>
             <tr>
-                <td class="half '.($o['rma'] ? 'hidden' : '').'">';
+                <td class="half '.($order_type=='RMA' ? 'hidden' : '').'">';
 
-if(!$o['invoice'] && !$o['credit'] && !$o['lump']){
+if (! $lump AND $order_type<>'Invoice' AND $order_type<>'Credit') {
 $html_page_str .='
                     Please email invoices to:<br/>
 					<a href="mailto:accounting@ven-tel.com">accounting@ven-tel.com</a>
@@ -519,16 +548,16 @@ $html_page_str .='
 
 $html_page_str.='</td>';
 
-if(!$o['credit'] && !$o['lump']){
+if ($order_type<>'Credit' AND ! $lump) {
 $html_page_str .= '
                 <td class="half">
-                    '.($o['rma'] ? 'Ventura Telephone, LLC <br>
+                    '.($order_type<>'RMA' ? 'Ventura Telephone, LLC <br>
                         3037 Golf Course Drive <br>
                         Unit 2 <br>
                         Ventura, CA 93003' : address_out($oi['ship_to_id'])).'
                 </td>';
 }
-else if (!$o['lump']){
+else if (!$lump){
     $html_page_str .='
     <td class="text-center">'.format_date($oi['date_created'],"M j, Y").'</td>
     <td class="text-center">'.$oi['cust_ref'].'</td>
@@ -552,24 +581,24 @@ $contact_name = getContact($oi['contactid']);
 $contact_phone = getContact($oi['contactid'],'id','phone');
 $contact_email = getContact($oi['contactid'],'id','email');
 
-$order_date = $oi['created'];
-if ($o['invoice']) { $order_date = $oi['date_invoiced']; }
-if($o['lump']){ $order_date = $oi['lumpdate']; }
+$order_date = $oi[$T['datetime']];
+if ($order_type=='Invoice') { $order_date = $oi['date_invoiced']; }
+if($lump){ $order_date = $oi['lumpdate']; }
 
 //Shipping information table
-if(!$o['credit']){
+if($order_type<>'Credit'){
 $html_page_str .='
         <!-- Freight Carrier -->
         <table class="table-full" id="order-info">
             <tr>
-                <th>'.$o['rep_type'].' Rep</th>
-                <th>'.$o['date_label'].' Date</th>
-                '.(($o['invoice'])? "<th>Payment Due</th>" : '').'
-                <th>'.($o['lump'] ? "Contact" : $oi['order_type']).'</th>
-                <th class="'.($o['rma'] ? 'remove' : '').'">Terms</th>
-                <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Shipping</th>
-                <th class="'.($o['rma'] || $o['lump'] ? 'remove' : '').'">Freight Terms</th>
-                '.(($o['invoice']|| $o['rma'])? "<th>PO # </th>" : '').'
+                <th>Rep</th>
+                <th>'.$T['abbrev'].' Date</th>
+                '.(($order_type=='Invoice')? "<th>Payment Due</th>" : '').'
+                <th>'.($lump ? "Contact" : $oi['order_type']).'</th>
+                <th class="'.($order_type=='RMA' ? 'remove' : '').'">Terms</th>
+                <th class="'.($order_type=='RMA' || $lump ? 'remove' : '').'">Shipping</th>
+                <th class="'.($order_type=='RMA' || $lump ? 'remove' : '').'">Freight Terms</th>
+                '.(($order_type=='Invoice'|| $order_type=='RMA')? "<th>PO # </th>" : '').'
             </tr>
             <tr>
                 <td>
@@ -580,7 +609,7 @@ $html_page_str .='
                 <td class="text-center">
                     '.format_date($order_date,'F j, Y').'
                 </td>';
-                if($o['invoice']){
+                if($order_type=='Invoice'){
                     $html_page_str .= '
                     <td class="text-center">
                         '.(($oi['credit'])? format_date($oi['date_invoiced'],'F j, Y',array("d" => $oi['days'])) : $due_date).'
@@ -595,14 +624,14 @@ $html_page_str .='
                         </td>';
                 }
                 
-$html_page_str .= '<td class="text-center '.($o['rma'] ? 'remove' : '').'">
+$html_page_str .= '<td class="text-center '.($order_type=='RMA' ? 'remove' : '').'">
                     '.display_terms($oi['termsid']).'
                 </td>';
+                //<td class="text-center '.(($order_type=='RMA' || $lump) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').' '.$freight_services.'</td>
 $html_page_str .='
-                <td class="text-center '.(($o['rma'] || $o['lump']) ? 'remove' : '').'">'.getFreight('carrier',$oi['freight_carrier_id'],'','name').'
-					'.$freight_services.'</td>
-                <td class="'.(($o['rma'] || $o['lump']) ? 'remove' : '').'">'.$freight_terms.'</td>
-                '.(($o['invoice'])? "<td>".$oi['cust_ref']."</td>" : '').'
+                <td class="text-center '.(($order_type=='RMA' || $lump) ? 'remove' : '').'">'.$freight_services.'</td>
+                <td class="'.(($order_type=='RMA' || $lump) ? 'remove' : '').'">'.$freight_terms.'</td>
+                '.(($order_type=='Invoice')? "<td>".$oi['cust_ref']."</td>" : '').'
             </tr>
         </table>';
         //End of the shipping information table
@@ -610,27 +639,27 @@ $html_page_str .='
 
 	$subtotal = round($subtotal,2);
 	$total = round($subtotal+$freight,2);
-if(!$o['lump']){
+if(!$lump){
 	$html_page_str .= '
 <!-- Items Table -->
         <table class="table-full table-striped table-condensed">
             <tr>
                 <th>Ln#</th>
                 <th>Description</th>
-                <th class="'.(($o['due_date'])? '' : 'remove' ).'">Due Date</th>
+                <th class="'.(($T['due_date'])? '' : 'remove' ).'">Due Date</th>
 				<th class="'.($oi['repair_code_id']? '' : 'remove').'">Repair Status</th>
-                <th class="'.($o['warranty']? '' : 'remove').'">Warranty</th>
-                '.($o['credit']? '<th>Serials</th>' : "").'
-                '.($o['purchase']? '<th>Cond</th>' : "").'
-                <th class="'.($o['rma'] ? 'remove' : '').'">Qty</th>
-                <th>'.$o['price'].'</th>
-                <th>'.($o['rma'] ? 'Disposition' : 'Ext Amount').'</th>
-                <th class="'.($o['rma'] ? '' : 'remove').'">Qty</th>
+                <th class="'.($T['warranty']? '' : 'remove').'">Warranty</th>
+                '.($order_type=='Credit'? '<th>Serials</th>' : "").'
+                '.($T['condition']? '<th>Cond</th>' : "").'
+                <th class="'.($order_type=='RMA' ? 'remove' : '').'">Qty</th>
+                <th>'.$T['amount'].'</th>
+                <th>'.($order_type=='RMA' ? 'Disposition' : 'Ext Amount').'</th>
+                <th class="'.($order_type=='RMA' ? '' : 'remove').'">Qty</th>
             </tr>
             
 			'.$item_rows.'
 		</table>
-        <table class="table-full '.($o['rma'] ? 'remove' : '').'">
+        <table class="table-full '.($order_type=='RMA' ? 'remove' : '').'">
             <!-- Subtotal -->
             <tr>
 				<td rowspan=3>'.$oi['public_notes'].'</td>
@@ -689,7 +718,7 @@ if(!$o['lump']){
     $html_page_str .= $main;
 }
 	$package_list = getPackageTracking($order_number);
-	if($o['invoice']){
+	if($order_type=='Invoice' AND ! $lump){
 		$html_page_str .= '
 				<table class="table-full table-striped table-condensed">
                     <tr>
@@ -702,11 +731,11 @@ if(!$o['lump']){
 	}
     if(!$email) {
         $html_page_str .=' <div id="footer">
-            <p class="'.(!$o['rma'] && !$o['credit'] ? '' : 'remove').'">
+            <p class="'.($order_type<>'RMA' && $order_type<>'Credit' ? '' : 'remove').'">
                 Terms and Conditions:<br><br>
 		';
     }
-        if ($o['invoice']) {
+        if ($order_type=='Invoice') {
 			$html_page_str .= '
 Ventura Telephone LLC ("VenTel") provides a limited warranty ("Warranty") against defects, as related to the functionality of the item, that occur within the established term of the Warranty, as described in the aforementioned Warranty options (Premium, Plus or Economy). The term of the Warranty begins on the date as printed on VenTel\'s invoice(s).
 
@@ -726,7 +755,7 @@ Software licensing or similar compatibility problems (ie, software/firmware vers
                 Please communicate all questions regarding these conditions within 15 days.
 -->
             </p>
-            <p class="'.($o['rma'] && !$o['credit'] ? '' : 'remove').'">
+            <p class="'.($order_type=='RMA' ? '' : 'remove').'">
                 Return Instructions:<br><br>
                 Print and return this form with the product(s) to be returned. Improperly packaged or incomplete product(s) will void this RMA. Returned product(s) must match this RMA exactly, substitutes are not allowed. RMA is valid for 30 calendar days.
                 <br><br>
@@ -734,7 +763,7 @@ Software licensing or similar compatibility problems (ie, software/firmware vers
                 <br><br>
                 Please ship UPS Ground on Account# 360E2A.
             </p>
-            <p class="'.($o['credit'] ? '' : 'remove').' text-center">
+            <p class="'.($order_type=='Credit' ? '' : 'remove').' text-center">
                 If you have any questions please call us at (805)212-4959
             </p>
         </div>

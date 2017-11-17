@@ -184,7 +184,7 @@
 				'input-search'=>setInputSearch($def_type),
 				'delivery_date'=>format_date($GLOBALS['today'],'m/d/y',array('d'=>7)),
 				'conditionid'=>2,
-				'warranty'=>$warrantyid,
+				$T['warranty']=>$warrantyid,
 				'qty'=>'',
 				'qty_attr'=>'readonly',
 				'amount'=>'',
@@ -387,8 +387,15 @@
 	} else {
 		if (! isset($T)) { $T = order_type($order_type); }
 		$TITLE = $T['abbrev'];
-		if ($order_number) { $TITLE .= '# '.$order_number; }
-		else { $TITLE = 'New '.$TITLE; }
+		if ($order_number) {
+			$TITLE .= '# '.$order_number;
+		} else {
+			if ($order_type=='service_quote' AND isset($QUOTE)) {
+				$TITLE = 'New '.$TITLE.' from Quote# '.$QUOTE['id'];
+			} else {
+				$TITLE = 'New '.$TITLE;
+			}
+		}
 
 		if (! isset($ORDER)) {
 			$ORDER = getOrder($order_number,$order_type);
@@ -575,13 +582,13 @@
 	<?php } ?>
 <?php } ?>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2 text-center">
+		<div class="col-sm-4 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?><?=$coll_dropdown;?></h2>
 			<span class="info"><?php echo $title_helper; ?></span>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-1">
 			<?php echo $support; ?>
@@ -591,8 +598,10 @@
 	<?php if ($T['record_type']=='quote') { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
+		<?php if ($order_number) { ?>
 			<a href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
 			&nbsp; &nbsp;
+		<?php } ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
 	<?php } ?>
 <?php } ?>
@@ -648,7 +657,20 @@
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	if ($EDIT AND ! $ORDER['order_number']) { echo addItemRow(false,$T); }
+	if ($EDIT AND ! $ORDER['order_number']) {
+		if (isset($QUOTE)) {
+			echo '
+		<tr>
+			<td colspan="8"> </td>
+			<td class="col-md-1 text-right">
+				<a href="/quote.php?order_number='.$QUOTE['id'].'" class="btn btn-primary btn-sm" title="Add Line to Quote" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
+			</td>
+		</tr>
+			';
+		} else {/*if ($order_type<>'service_quote') {*/
+			echo addItemRow(false,$T);
+		}
+	}
 ?>
 	</tbody>
 </table>
@@ -805,6 +827,12 @@
 <!-- END VOID DISPLAY -->
 
 
+<script type="text/javascript">
+	/* placement above the file inclusions below */
+	$(document).ready(function() {
+		companyid = '<?= $ORDER['companyid']; ?>';
+	});
+</script>
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
 <script src="js/addresses.js?id=<?php echo $V; ?>"></script>
 <script src="js/contacts.js?id=<?php echo $V; ?>"></script>
@@ -812,8 +840,6 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
-		companyid = '<?= $ORDER['companyid']; ?>';
-
 		// for some reason, this empty function causes the following two lines to be invoked, which resets the loader and submit elements
 		window.onunload = function(){};
 		$('#loader').hide();

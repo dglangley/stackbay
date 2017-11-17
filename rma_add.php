@@ -62,7 +62,7 @@
 
 	$partid;
 	$sales_item_id;
-	
+
 	//If this is a form which sumbits upon itself
 	if((grab('rma_serial') || grab('invid')) && !grab('exchange_trigger')) {
 		$rma_serial = strtoupper(grab('rma_serial'));
@@ -298,7 +298,6 @@
 		global $rma_number;
 
 		$err_output;
-		$receive_check;
 		$query;
 		$id;
 		
@@ -309,10 +308,11 @@
 		}
 
 		//Check to see if the item has been received
-		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
-		$receive_check = qdb($query);
+		$query = "SELECT * FROM inventory_history WHERE invid = '".res($id)."' AND field_changed = 'returns_item_id' AND value = '".res($data['rmaid']."'; ";
+//		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		
-		if (mysqli_num_rows($receive_check)>0) {
+		if (mysqli_num_rows($result)==0) {
 			$I = array('returns_item_id'=>$data['rmaid'],'status'=>'received','locationid'=>$locationid,'conditionid'=>'-5','id'=>$id);
 			setInventory($I);
 
@@ -347,6 +347,7 @@
 				}
 			}
 		} else {
+			die("Item has already been received, please go back and check your data");
 			$err_output = "Item has already been received.";
 		}
 

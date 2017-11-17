@@ -218,6 +218,33 @@
 				$T['account'] = 'AR';
 				break;
 
+			case 'Outsourced':
+			case 'outsourced_item_id':
+				$T['orders'] = 'outsourced_orders';
+				$T['order'] = 'os_number';
+				$T['items'] = 'outsourced_items';
+				$T['item_label'] = 'outsourced_item_id';
+				$T['record_type'] = 'order';
+				$T['order_type'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'Order';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = 'bill_to_id';
+				$T['alert'] = 'info';
+				$T['condition'] = '';
+				$T['warranty'] = 'warrantyid';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'price';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = 'notes';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AP';
+				break;
+
 			case 'IT':
 			default:
 				$T['orders'] = '';
