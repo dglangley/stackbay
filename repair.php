@@ -1,4 +1,11 @@
 <?php
+	$order_number = $_REQUEST['on'];
+	$build = $_REQUEST['build'];
+
+	if (! $build AND $order_number) {
+		header('Location: service.php?order_type=repair&order_number='.$order_number);
+		exit;
+	}
 
 //=============================================================================
 //======================== Order Form General Template ========================
@@ -37,13 +44,8 @@
 	include_once $rootdir.'/inc/getRepairCode.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
-	$order_number = $_REQUEST['on'];
-	$build = $_REQUEST['build'];
 	$build_name = '';
 	$order_type = "Tech";
-	
-	$so_updated = $_REQUEST['success'];
-
 	
 	function getSalesUser($userid, $return = 'name'){
 	    $select = "SELECT $return FROM users u, contacts c where u.contactid = c.id AND u.id = ".prep($userid).";";

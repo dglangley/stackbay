@@ -821,10 +821,10 @@
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> Documentation</a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
+								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'--></span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost">'.format_price($materials_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost"><!--'.format_price($materials_total).'--></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
@@ -833,7 +833,7 @@
 								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
-								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
+								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><!--<?=format_price($total_amount);?>--></span></strong></a></li>
 							<?php } ?>
 						</ul>
 
@@ -1167,6 +1167,7 @@
 															}
 														}
 														$ext = ($price * $ordered);
+														$materials_total += $ext;
 													}
 												?>
 													<?php if(! $quote) { ?>
