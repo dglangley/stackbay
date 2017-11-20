@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 /***** DAVID *****/
@@ -29,6 +30,23 @@ To do:
 		}
 		$r = mysqli_fetch_assoc($result);
 		return ($r['order_number']);
+	}
+
+	function getAssignments($inventoryid,&$assigned) {
+		$assignments = '';
+
+		$query = "SELECT * FROM inventory_dni WHERE inventoryid = '".res($inventoryid)."' ORDER BY datetime DESC; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			if ($assignments) { $assignments .= '<BR>'; }
+			// if any record is without an UNassigned field (datetime), trip the flag so we don't show it as available
+			if (! $r['unassigned']) { $assigned = true; }
+
+			$assignments .= '<i class="fa fa-tag"></i> '.format_date($r['datetime'],'n/j/y g:ia').' '.
+				'Assigned to <a href="javascript:void(0);" class="owner_filter" data-ownerid="'.$r['ownerid'].'">'.getUser($r['ownerid']).'</a>';
+		}
+
+		return ($assignments);
 	}
 
 	function getCompanyID($order_number,$order_type='Purchase') {
@@ -58,11 +76,16 @@ To do:
 	else if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search = trim($_REQUEST['search']); }
 	$_REQUEST['s'] = '';
 
+	if (! isset($self_url)) { $self_url = 'inventory.php'; }
+
 	$locationid = 0;
 	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']>0) { $locationid = trim($_REQUEST['locationid']); }
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = trim($_REQUEST['companyid']); }
+
+	$ownerid = 0;
+	if (isset($_REQUEST['ownerid']) AND $_REQUEST['ownerid']>0) { $ownerid = trim($_REQUEST['ownerid']); }
 
 	$expiry = time() + (7 * 24 * 60 * 60);
 	$past_time = time() - 1000;
@@ -95,7 +118,7 @@ To do:
 		setcookie('inventory-visibility',false,$past_time);
 	} else {
 		if (isset($_COOKIE['inventory-visibility'])) { $visible = $_COOKIE['inventory-visibility']; }
-		if (isset($_COOKIE['inventory-internal'])) { $internal = $_COOKIE['inventory-internal']; }
+//		if (isset($_COOKIE['inventory-internal'])) { $internal = $_COOKIE['inventory-internal']; }
 	}
 	if ($visible===false AND $internal===false) { $visible = 1; $internal = 0; }
 
@@ -121,6 +144,8 @@ To do:
 	$goodstock_btn = 'default';
 	$badstock_btn = 'default';
 	$outstock_btn = 'default';
+	$badstock = 0;
+	$outstock = 0;
 	if (isset($_REQUEST['btn-goodstock'])) {
 		if ($_REQUEST['btn-goodstock']==1) {
 			$goodstock = 1;
@@ -276,8 +301,9 @@ To do:
 	}
 
 	$records = array();
-	if ($partids_csv OR $locationid OR $internal OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
+	if ($partids_csv OR $locationid OR $ownerid OR $internal OR $order_matches OR ($dbStartDate AND $dbEndDate)) {
 		$query = "SELECT i.* FROM inventory i ";
+		if ($ownerid) { $query .= ", inventory_dni dni "; }
 		if ($order_matches>0) {
 			$query .= ", inventory_history h ";
 		}
@@ -285,6 +311,7 @@ To do:
 		if ($partids_csv) { $query .= "AND i.partid IN (".$partids_csv.") "; }
 		if ($locationid) { $query .= "AND i.locationid = '".res($locationid)."' "; }
 		if ($internal) { $query .= "AND i.status = 'internal use' "; }
+		if ($ownerid) { $query .= "AND dni.ownerid = '".res($ownerid)."' AND dni.inventoryid = i.id AND unassigned IS NULL "; }
 		if ($order_matches>0) {
 			$query .= "AND h.invid = i.id ";
 			$subquery = "";
@@ -309,11 +336,13 @@ To do:
 		if ($dbStartDate AND $dbEndDate) {
 			$query .= "AND i.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
+		if ($ownerid) { $query .= "GROUP BY i.id "; }
 		$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
 //		echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			if (isset($serial_match[$r['partid']]) AND $serial_match[$r['partid']]<>$r['serial_no']) { continue; }
+			$r['assigned'] = '';
 
 			$key = $r['partid'].'.'.$r['locationid'].'.'.$r['conditionid'].'.'.$r['status'].'.'.$r['purchase_item_id'].'.'.substr($r['date_created'],0,10);
 
@@ -346,7 +375,7 @@ To do:
 					<tr class="inner-result"'.$inner_display.'>
 						<th class="col-sm-3">Serial</th>
 						<th class="col-sm-1">'.$pricing_header2.'</th>
-						<th class="col-sm-2">History</th>
+						<th class="col-sm-2">Assignments</th>
 						<th class="col-sm-4">Notes</th>
 						<th class="col-sm-1">Status</th>
 						<th class="col-sm-1">Action</th>
@@ -362,12 +391,12 @@ To do:
 		$order_number = getSource($r['purchase_item_id'],'Purchase');
 		$order_ln = '';
 
-		if ($r['conditionid']>0 AND $r['status']=='received') { $goodcount += $r['qty']; }
-		if ($r['conditionid']<0 AND $r['status']=='received') { $badcount += $r['qty']; }
-		if ($r['status']<>'received') { $outcount += $r['qty']; }
-
 		// exclude results that the user hasn't included
 		if (! $internal) {
+			if ($r['conditionid']>0 AND $r['status']=='received') { $goodcount += $r['qty']; }
+			if ($r['conditionid']<0 AND $r['status']=='received') { $badcount += $r['qty']; }
+			if ($r['status']<>'received') { $outcount += $r['qty']; }
+
 			if (! $goodstock AND $r['conditionid']>0) { continue; }
 			if (! $badstock AND $r['conditionid']<0) { continue; }
 			if (! $outstock AND $r['status']<>'received') { continue; }
@@ -412,6 +441,7 @@ To do:
 			$scrap_ln = '<li><a href="javascript:void(0);" class="scrap"><i class="fa fa-recycle"></i> Scrap</i></a></li>';
 		}
 
+		$assigned_qty = 0;
 		$sum_actual = 0;
 		$inventoryids = '';
 		$inners = '';
@@ -421,12 +451,12 @@ To do:
 			$inventoryids .= $entry['id'];
 
 			$entry_cls = '';
-			$edit_ln = '<li><a href="javascript:void(0);" class="edit-inventory"><i class="fa fa-pencil"></i> Edit this entry</i></a></li>';
+			$edit_ln = '<li><a href="javascript:void(0);" class="edit-inventory"><i class="fa fa-pencil"></i> Edit this entry</a></li>';
 			if ($status=='scrapped') {
 				$status = '<i class="fa fa-recycle"></i> '.$status;
 
 				$entry_cls = ' text-danger';
-				$edit_ln = '<li><a href="javascript:void(0);"><span class="info"><i class="fa fa-pencil"></i> Edit</i> (disabled)</span></a></li>';
+				$edit_ln = '<li><a href="javascript:void(0);"><span class="info"><i class="fa fa-pencil"></i> Edit (disabled)</span></a></li>';
 			} else if ($status=='in repair') {
 				$status_ln = '';
 
@@ -451,11 +481,26 @@ To do:
 				}
 			}
 
+			$assigned = false;
+			$assignments = getAssignments($entry['id'],$assigned);
+
+			// append a mark at the top of assignments showing that it's available (UNASSIGNED) if $assigned above wasn't set to true
+			if (! $assigned) {
+				$assignments = '<div class="text-success"><i class="fa fa-check"></i> UNASSIGNED</div>'.$assignments;
+			} else {
+				$assigned_qty++;
+			}
+
+			$assign_ln = '';
+			if ($internal) {
+				$assign_ln = '<li><a href="javascript:void(0);" class="assign" data-assigned="'.$assigned.'"><i class="fa fa-tag"></i> Assign</a></li>';
+			}
+
 			$inners .= $inner_header.'
 					<tr class="">
 						<td class="col-sm-3">'.$entry['serial_no'].'</td>
 						<td class="col-sm-1">'.$actual_cost.'</td>
-						<td class="col-sm-2"></td>
+						<td class="col-sm-2">'.$assignments.'</td>
 						<td class="col-sm-4">'.$entry['notes'].'</td>
 						<td class="col-sm-1 upper-case'.$entry_cls.'" style="font-weight:bold">'.$status.'</td>
 						<td class="col-sm-1 text-right">
@@ -466,6 +511,7 @@ To do:
 									<li><a href="javascript:void(0);" data-id="'.$entry['id'].'" class="btn-history"><i class="fa fa-history"></i> History</i></a></li>
 									'.$repair_ln.'
 									'.$scrap_ln.'
+									'.$assign_ln.'
 									'.$edit_ln.'
 								</ul>
 							</div>
@@ -474,6 +520,18 @@ To do:
 			';
 
 			$inner_header = '';
+		}
+
+		// for internal tools, qty is calculated by what's assigned out, not by what is sold
+		if ($internal) {
+			$goodcount += ($r['qty']-$assigned_qty);
+			$outcount += $assigned_qty;
+
+			if ($assigned_qty<>$r['qty']) {
+				$qty = $r['qty'];
+			} else {
+				$qty = ($r['qty']-$assigned_qty).' <span class="info">('.$r['qty'].')</span>';
+			}
 		}
 
 		$fsum_price = '';
@@ -526,11 +584,13 @@ To do:
 	$n = count($partids);
 	$ext = 's';
 	if ($n==1) { $ext = ''; }
+
+	if (! isset($TITLE)) { $TITLE = 'Inventory'; }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Inventory<?php if ($search) { echo ' "'.strtoupper($search).'"'; } ?></title>
+	<title><?= $TITLE; ?><?php if ($search) { echo ' "'.strtoupper($search).'"'; } ?></title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
@@ -564,7 +624,7 @@ To do:
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
-		<form class="form-inline" method="get" action="inventory.php" enctype="multipart/form-data" id="filters-form" >
+		<form class="form-inline" method="get" action="<?=$self_url;?>" enctype="multipart/form-data" id="filters-form" >
 		<input type="hidden" name="inventoryid" value="">
 		<input type="hidden" name="inventory-status" value="">
 		<input type="hidden" name="inventory-partid" value="">
@@ -621,10 +681,19 @@ To do:
 					</span>
 				</div>
 			</div>
-			<div class="col-sm-2 text-center"><h2 class="minimal">Inventory</h2></div>
+			<div class="col-sm-2 text-center"><h2 class="minimal"><?= $TITLE; ?></h2></div>
+<?php if ($internal) { ?>
+			<div class="col-sm-1">
+				<select name="ownerid" size="1" class="form-control user-selector">
+					<?php if ($ownerid) { echo '<option value="'.$ownerid.'" selected>'.getUser($ownerid).'</option>'; } ?>
+				</select>
+			</div>
+			<div class="col-sm-1">
+<?php } else { ?>
 			<div class="col-sm-2">
+<?php } ?>
 				<div class="input-group">
-					<input type="text" name="s2" value="<?php echo $search; ?>" class="form-control input-sm" placeholder="Filter by Part/Serial...">
+					<input type="text" name="s2" value="<?php echo $search; ?>" class="form-control input-sm" placeholder="Part/Serial...">
 					<span class="input-group-btn">
 						<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
 					</span>
@@ -716,6 +785,7 @@ To do:
 </div><!-- pad-wrapper -->
 
 
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/assignments.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/history.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/inventory.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
@@ -807,7 +877,7 @@ To do:
 				modalAlertShow('<i class="fa fa-recycle"></i> Jefe! What is a "plethora"?','You are scrapping a PLETHORA of items, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryids);
 			});
 
-			$("#inventory-save").click(function() {
+			$("#inventory-save, .assignments-save").click(function() {
 				$('#loader-message').html('Please wait while updates are saved...');
 				$('#loader').show();
 
@@ -831,6 +901,49 @@ To do:
 						value: $(this).val(),
 					}).appendTo(f);
 				});
+
+				f.submit();
+			});
+
+			$(".assign").on('click',function() {
+				var inventoryid = $(this).closest("ul").data('inventoryid');
+				if (! inventoryid) { return; }
+				var assigned = $(this).data('assigned');
+
+				console.log(window.location.origin+"/json/assignments.php?inventoryid="+inventoryid);
+				$.ajax({
+					url: 'json/assignments.php',
+					type: 'get',
+					data: {'inventoryid':inventoryid},
+					success: function(json, status) {
+						if (json.message && json.message!='') {
+							// alert the user when there are errors
+							alert(json.message);
+							return;
+						}
+
+						var M = $("#modal-assignments");
+
+						$("#assignments-inventoryid").val(inventoryid);
+						$("#assignments-history").html(json.assignments);
+						$("#assignments-status").html(json.status);
+
+						if (assigned=='') { $("#btn-unassign").hide(); }
+						else { $("#btn-unassign").show(); }
+
+						M.modal("show");
+					},
+					error: function(xhr, desc, err) {
+						console.log("Details: " + desc + "\nError:" + err);
+					}
+				}); // end ajax call
+			});
+
+			$(".owner_filter").on('click',function() {
+				var f = $("#filters-form");
+				var ownerid = $(this).data('ownerid');
+				var owner = $(this).text();
+				f.find("select[name='ownerid']").populateSelected(ownerid,owner);
 
 				f.submit();
 			});

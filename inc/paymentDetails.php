@@ -82,7 +82,11 @@
 
         	// Need a better way to pull the original invoice amount (Invoice total based on Invoice Items) without having to run all these queries per order
         	if($rows['type'] == 'Purchase') {
-                $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($rows['order_number'])."';";
+                $query = "SELECT * FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($rows['order_number'])."' ";
+				if ($rows['ref_number'] AND $rows['ref_type']=='Bill') {
+					$query .= "AND i.bill_no = '".$rows['ref_number']."' ";
+				}
+				$query .= "; ";
 
                 $inv_result = qdb($query) OR die(qe().' '.$query);
                 $inv_total = 0;

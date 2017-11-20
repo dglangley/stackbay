@@ -186,12 +186,11 @@
 
 			$inner_rows .= '
 								<tr>
-									<td> </td>
-									<td><span class="info">'.$serial.'</span></td>
-									<td> </td>
-									<td><span class="info">'.$qty.'</span></td>
-									<td colspan="3"> </td>
-									<td class="text-right">
+									<td class="col-sm-1"> </td>
+									<td class="col-sm-6"><span class="info">'.$serial.'</span></td>
+									<td class="col-sm-1"><span class="info">'.$qty.'</span></td>
+									<td class="col-sm-3"> </td>
+									<td class="col-sm-1" text-right">
 										<input type="checkbox" class="item-check inventory-check" name="inventoryid['.$i.'][]" value="'.$r2['id'].'" data-itemid="'.$r['id'].'" data-qty="'.$qty.'" '.$chk.'/>
 									</td>
 								</tr>
@@ -199,26 +198,30 @@
 
 			// get existing bill ids
 			if ($bill_no) {
+				$query3 = "";
 				if ($r2['bill_item_id']) {
 					$query3 = "SELECT * FROM bill_items WHERE id = '".$r2['bill_item_id']."'; ";
-					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-					if (mysqli_num_rows($result3)>0) {
-						$r3 = mysqli_fetch_assoc($result3);
-						// only declare it the first time through so we don't duplicate qty on every serial
-						if (! $bi_id) { $qty_billed += $r3['qty']; }
-
-						$amount_billed = $r3['amount'];
-						$billed_qty += $r3['qty'];
-					}
-
-					// declare even though it will get set every loop
-					$bi_id = $r2['bill_item_id'];
+				} else if (! $r2['packageid']) {
+					$query3 = "SELECT * FROM bill_items ";
+					$query3 .= "WHERE item_id_label = '".$T['inventory_label']."' AND item_id = '".$r['id']."' AND bill_no = '".$bill_no."'; ";
 				}
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					// only declare it the first time through so we don't duplicate qty on every serial
+					if (! $bi_id) { $qty_billed += $r3['qty']; }
+
+					$amount_billed = $r3['amount'];
+					$billed_qty += $r3['qty'];
+				}
+
+				// declare even though it will get set every loop
+				$bi_id = $r2['bill_item_id'];
 			}
 		}
 
 		$itemid = 0;
-		if ($r['bill_item_id']) { $itemid = $r['bill_item_id']; }
+		if ($bill_item_id) { $itemid = $bill_item_id; }
 
 		$rows .= '
 					<tr class="warning">
