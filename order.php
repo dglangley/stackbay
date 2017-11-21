@@ -262,7 +262,23 @@
 			$warranty_col = getWarranty($r[$T['warranty']],'warranty');
 			$qty_col = $r['qty'];
 			$amount_col = format_price($amount);
+
+			if ($GLOBALS['order_type']=='Service') {
+				$r['save'] .= '
+			<span class="dropdown">
+				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu dropdown-menu-right">
+					<li><a href="javascript:void(0);" class="change-order" data-type="CCO" data-title="Customer" data-billing="BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add CCO (billable)</a></li>
+					<li><a href="javascript:void(0);" class="change-order" data-type="ICO" data-title="Internal" data-billing="NON-BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add ICO (internal)</a></li>
+				</ul>
+			</span>
+				';
+			}
 		}
+
+		/****************************************************************************
+		******************************* ITEM ROW ************************************
+		****************************************************************************/
 
 		$row = '
 	<tr class="'.$row_cls.'">
@@ -732,6 +748,7 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/address.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/modal/contact.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/modal/change_order.php'; ?>
 
 
 
@@ -833,6 +850,7 @@
 	/* placement above the file inclusions below */
 	$(document).ready(function() {
 		companyid = '<?= $ORDER['companyid']; ?>';
+		order_number = '<?= $order_number; ?>';
 	});
 </script>
 <script src="js/part_search.js?id=<?php echo $V; ?>"></script>
@@ -901,6 +919,26 @@
 			$('#loader').show();
 			$(this).prop('disabled',true);
 			$(this).closest("form").submit();
+		});
+
+		$(".change-order").on('click', function() {
+			var M = $("#changeOrderModal");
+			var type = $(this).data('type');
+			M.find("input[name='order_number']").val(order_number);
+			M.find("input[name='order_type']").val(scope);
+			M.find("input[name='change_type']").val(type);
+			M.find("input[name='line_item_id']").val($(this).data('id'));
+
+			var title = $(this).data('title');
+			var billing = $(this).data('billing');
+			var instructions = '<ul>'+
+				'<li> New Line Item will add the Change Order to the existing Service Order. Simpler, more common option.</li>'+
+				'<li> New Service Order will create a completely separate order. Rare for ICO\'s, offers more flexibility, but can become more complicated.</li>'+
+				'</ul>';
+
+			M.find("#modalCOTitle").html("<i class='fa fa-columns'></i> "+title+" Change Order");
+			M.find("#modalCOBody").html(title+" Change Orders ("+type+") are <strong>"+billing+"</strong>.<br/><br/>Please select the type of "+type+" below:"+instructions);
+			M.modal('show');
 		});
 
 /* moved to item_search.js
