@@ -1916,6 +1916,7 @@
 			console.log(items);
 			
 			$("#modal-iso").modal("hide");
+			console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
 			$.ajax({
 				type: 'POST',
 				url: '/json/shipping-update.php',
@@ -1954,12 +1955,10 @@
 					}
 				},
 				error: function(xhr, status, error) {
-									$("#loader").hide();
-					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team!", false);
+					$("#loader").hide();
+					modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> SOMETHING WENT WRONG","Please notify the development team! "+error, false);
 					console.log("JSON shipping-update.php: ERROR " + error);
-					console.log(xhr);
-					console.log(status);
-					console.log(window.location.origin+"/json/shipping-update.php?so_number="+so_number+"&items="+JSON.stringify(items));
+					console.log("xhr: "+xhr+"\n status: "+status);
 				},	
 			});
 		});

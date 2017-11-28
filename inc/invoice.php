@@ -14,6 +14,7 @@
 
 	if (! isset($debug)) { $debug = 0; }
 // $debug = 1;
+
     function create_invoice($order_number, $shipment_datetime){
 		//Variable Declarations
 		$warranty = '';
@@ -25,10 +26,11 @@
 		$type = 'Sale';
 		$return = array(
 			"invoice_no" => 0,
+			"invoice" => 0,
 			"error" => ''
-			);
+		);
 		//Repairs_check
-		$invoice_item_select = "
+		$query = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
 			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
 			FROM sales_items si, packages, repair_items ri 
@@ -39,14 +41,14 @@
 			AND ri.price > 0
 			GROUP BY packages.id, ri.id;
 		";
-		$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
+		$results = qdb($query) or die(qe()." $query");
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
 		} else {
-				//Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
-			$invoice_item_select = "
+			//Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
+			$query = "
 				Select i.partid, datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
 				WHERE package_contents.packageid = packages.id
@@ -58,18 +60,17 @@
 				AND price > 0.00
 				GROUP BY package_contents.packageid, it.id;
 			";
-				//GROUP BY it.id;
-			$results = qdb($invoice_item_select) or die(qe()." $invoice_item_select");
+			//GROUP BY it.id;
+			$results = qdb($query) or die(qe()." $query");
 		}
 
 		$o = o_params($type);
 
-		//Function to be run to create an invoice
-
 		//Eventually Shipment Datetime will be a shipment ID whenever we make that table
 
 		// did we already invoice this shipment?
-		$query2 = "SELECT `invoice_no` FROM `invoices` where order_number = '$order_number' AND order_type = ".prep($o['type'])." AND `shipmentid` = ".prep($shipment_datetime).";";
+		$query2 = "SELECT * FROM invoices ";
+		$query2 .= "WHERE order_number = '".res($order_number)."' AND order_type = '".res($o['type'])."' AND shipmentid = '".res($shipment_datetime)."'; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$return['error'] = 'Shipment has already been invoiced';
@@ -77,14 +78,13 @@
 		}
 		
 		//Check to see there are actually invoice-able items on the order
-		if($GLOBALS['debug']){ echo($invoice_item_select);}
-		//Type field accepts ['Sale','Repair' ]
-		
+		if($GLOBALS['debug']){ echo($query);}
+
+		// shipping a non-invoiceable order, see query above
 		if (mysqli_num_rows($results) == 0){
-//commented 7-21-17 by dl; we don't need to tell the user when they're shipping a non-invoiceable order
-//			$return['error'] = "Nothing found in invoice_item_select: ".$invoice_item_select;
 			return $return;
 		}
+
 		$sales_charge_holder = array();
 		if ($type == 'Sale'){
 			//Add in sales_charges rows into the invoice item
@@ -113,22 +113,23 @@
 			WHERE ".$o['order'].".".$o['id']." = ".prep($order_number)." AND
 			".$o['order'].".termsid = terms.id;
 		";
-		
+
 		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
 		$invoice_macro = qdb($macro) or die(qe()." $macro");
 		$macro_row = mysqli_fetch_assoc($invoice_macro);
 		
 		$status = 'Completed';
-		$freight = prep(shipment_freight($package_order_number, "Sale", $shipment_datetime));
+		$freight = shipment_freight($package_order_number, "Sale", $shipment_datetime);
 
-		$invoice_creation = "
+		$query = "
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `public_notes`, `status`) 
-			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , $freight , NULL, '$status');
+			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , ".fres($freight).", NULL, '$status');
 		";
-		if ($GLOBALS['debug']) { echo $invoice_creation.'<BR>'; }
-		else { $result = qdb($invoice_creation) OR die(qe().": ".$invoice_creation); }
+		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().": ".$query); }
 		$invoice_id =  qid();
 		$return['invoice_no'] = $invoice_id;
+		$return['invoice'] = $invoice_id;
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($results as $row) {
