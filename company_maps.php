@@ -1,19 +1,21 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/pipe.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 
 	$debug = true;
 
-	$query = "SELECT inventory_company.id, TRIM(name) name FROM inventory_company, inventory_outgoing_quote ";
-	$query .= "WHERE company_id = inventory_company.id AND name NOT LIKE 'AAATEST%' ";
-	$query .= "GROUP BY inventory_company.id ORDER BY name ASC; ";
-	$result = qdb($query,'PIPE') OR die(qe('PIPE').' '.$query);
+	$query = "SELECT services_company.id, TRIM(name) name FROM services_company ";
+	$query .= "WHERE name NOT LIKE 'AAATEST%' ";
+	$query .= "GROUP BY services_company.id ORDER BY name ASC; ";
+	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+
+	echo $query;
 	while ($r = mysqli_fetch_assoc($result)) {
 		$companies[$r['id']] = array($r['name']);
-		$query2 = "SELECT TRIM(alias) name FROM inventory_companyalias ";
+		$query2 = "SELECT TRIM(alias) name FROM services_companyalias ";
 		$query2 .= "WHERE company_id = '".$r['id']."' ";
-		$query2 .= "GROUP BY name HAVING name <> '".res($r['name'],'PIPE')."'; ";
-		$result2 = qdb($query2,'PIPE') OR die(qe('PIPE').' '.$query2);
+		$query2 .= "GROUP BY name HAVING name <> '".res($r['name'],'SVCS_PIPE')."'; ";
+		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$companies[$r['id']][] = $r2['name'];
 		}
@@ -44,6 +46,9 @@
 
 		// now depending on if we have this company in our new db or not, either add the alias(es)
 		// or create a new company record and set mapping id's
+
+		print_r($arr);
+
 		foreach ($arr as $name) {
 			// if no companyid from above, add company to db; all ensuing iterations will be aliases
 			if (! $companyid) {
@@ -70,11 +75,11 @@ if ($debug) { echo $query.'<BR>'; }
 			$result = qdb($query) OR die(qe().' '.$query);
 		}
 
-		$query = "SELECT * FROM company_maps WHERE inventory_companyid = '".$id."' AND companyid = '".$companyid."'; ";
+		$query = "SELECT * FROM company_maps WHERE service_companyid = '".$id."' AND companyid = '".$companyid."'; ";
 		$result = qdb($query) OR die(qe().' '.$query);
 		if (mysqli_num_rows($result)>0) { continue; }
 
-		$query = "INSERT INTO company_maps (companyid, inventory_companyid) ";
+		$query = "INSERT INTO company_maps (companyid, service_companyid) ";
 		$query .= "VALUES ('".$companyid."','".$id."'); ";
 if ($debug) { echo $query.'<BR>'; }
 		$result = qdb($query) OR die(qe().' '.$query);
