@@ -22,7 +22,7 @@
       </div>
 
       <div class="modal-footer">
-		<div id="imageDropzone" class="dropzone" data-id="">
+		<div id="imageServiceDropzone" class="dropzone" data-id="">
 			<div class="fallback">
 				<input name="file" type="file" multiple />
 				<input type="submit" value="Upload" />

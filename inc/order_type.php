@@ -191,6 +191,32 @@
 				$T['account'] = 'AR';
 				break;
 
+			case 'purchase_request':
+				$T['orders'] = 'purchase_requests';
+				$T['order'] = 'id';
+				$T['items'] = 'purchase_requests';
+				$T['item_label'] = 'purchase_item_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Purchase';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'PR';
+				$T['datetime'] = 'requested';
+				$T['addressid'] = '';
+				$T['alert'] = 'warning';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = '';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Remit To';
+				$T['account'] = 'AP';
+				break;
+
 			case 'Sale':
 			case 'sales_item_id':
 				$T['orders'] = 'sales_orders';

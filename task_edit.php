@@ -146,17 +146,17 @@
 		qdb($query) OR die(qe().' '.$query);
 	}
 
-	function editTech($techid, $status, $item_id) {
+	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id') {
 		if(! empty($status)) {
 			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND service_item_id = ".res($item_id).";";
 			qdb($query) OR die(qe() . ' ' . $query);
 		} else {
 			// Check first if the user has already been assigned to this job
-			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($techid).";";
+			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND userid = ".res($techid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if(mysqli_num_rows($result) == 0) {
-				$query = "INSERT INTO service_assignments (service_item_id, userid) VALUES (".res($item_id).", ".res($techid).");";
+				$query = "INSERT INTO service_assignments (service_item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
 				qdb($query) OR die(qe() . ' ' . $query);
 			}
 		}

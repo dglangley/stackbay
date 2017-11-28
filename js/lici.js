@@ -1,5 +1,5 @@
 (function($){
-	var refresh = false;
+	// var refresh = false;
 
 	// generalize an object to be clicked or changed
 	// $(document).on("click", ".clock", function() {
@@ -9,27 +9,6 @@
 	// Function to concide with the select2 mechanism to load the next page and clock in/out of the new task and the old task
 	$(document).on("change", ".task_selection", function(){
 		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Please Confirm you want to log out of the current task.", true);
-		// if (confirm("Please Confirm you want to log out of the current task.")) {
-		// 	// Value is predicted to be the taskid
-		// 	var newTask = $(this).val();
-			
-		// 	// Projected within each option is the type of the task
-		// 	// var newLabel = $(this).data("type");
-
-		// 	// Pull from the body the current task the user is on
-		// 	var taskid = $('body').data('taskid');
-		// 	var task_label = $('body').data('order-type').toLowerCase();
-
-		// 	// Make sure the change on the select2 is actually a new task and not the current task
-		// 	if(newTask != taskid) {
-		// 		// alert(newTask + ' ' + task_label);
-		// 		// Clock out from the current task
-		// 		clock(taskid, task_label, 'out');
-
-		// 		// Clock into the new task selected and redirect the user to the respective page
-		// 		clock(newTask, task_label, 'in');
-		// 	}
-		// }
 	});
 
 	function loadTask(task_label, order_number){
@@ -47,6 +26,7 @@
 	}
 
 	if(task_label != 'quote') {
+		// alert(task_label);
 		clock(taskid, task_label, 'init');
 	}
 	// window.onbeforeunload = clockout(taskid, task_label);
@@ -91,7 +71,10 @@
 			$('#alert-clock').attr("data-redirect", "");
 		}
 
-       	$('#modal-alert').modal('toggle');
+       	$('#modal-lici-alert').modal({
+			backdrop: 'static',
+			keyboard: false
+		});
 	}
 
 	$(document).on('click', '#alert-travel', function(e){
@@ -134,12 +117,16 @@
 				clock(taskid, task_label, 'out');
 
 				// Clock into the new task selected and redirect the user to the respective page
-				clock(newTask, task_label, 'init', true);
+				clock(newTask, task_label, 'clockin', true);
 			}
 		} else {
 			clock('', '', 'out');
-			clock(taskid, task_label, 'init', redirect);
+			clock(taskid, task_label, 'clockin', redirect);
 		}
+	});
+
+	$(document).on('click', '#cancel-lici', function(e){
+		window.location.href = "/operations.php";
 	});
 
 })(jQuery);

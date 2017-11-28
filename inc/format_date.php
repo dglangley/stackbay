@@ -104,7 +104,7 @@
 			"NOTHING";
 		}
 		
-		if (isset($DATE_TIMES[$hr.$mn.$sc.$mo.$dy.$yr.$date_format])) {
+		if (! $A AND isset($DATE_TIMES[$hr.$mn.$sc.$mo.$dy.$yr.$date_format])) {
 			return ($DATE_TIMES[$hr.$mn.$sc.$mo.$dy.$yr.$date_format]);
 		}
 

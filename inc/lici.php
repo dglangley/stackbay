@@ -46,13 +46,20 @@
 		// If there is no record and we are requesting a user login then create a clockin line for the user
 		}  else if (! mysqli_num_rows($result) && ($type == 'in' OR $type == 'init' OR $type = 'travel')) {
 			// Check if the user is assigned to this task before allowing the user to clock into this job
-			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($taskid)." AND userid = ".res($userid).";";
+			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($taskid)." AND item_id_label = ".fres($task_label)." AND userid = ".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			// Gate keeper for clocked in jobs
 			if (mysqli_num_rows($result)) {
-				$query = "INSERT INTO timesheets (userid, clockin, taskid, task_label, rate) VALUES (".res($userid).", '".res($GLOBALS['now'])."', ".res($taskid).", '".res($task_label)."', '".res($user_rate)."');";
-				qdb($query) OR die(qe() . ' ' . $query);
+
+				if($type == "init") {
+					$data = "You are about to clock into a job, please select clock in type.";
+				} else {
+					$data = 0;
+
+					$query = "INSERT INTO timesheets (userid, clockin, taskid, task_label, rate) VALUES (".res($userid).", '".res($GLOBALS['now'])."', ".res($taskid).", '".res($task_label)."', '".res($user_rate)."');";
+					qdb($query) OR die(qe() . ' ' . $query);
+				}
 			}
 
 		}

@@ -1,4 +1,15 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+
+	$userid = $GLOBALS['U']['id'];
+
+	function clockout($userid){
+		$query = "UPDATE timesheets SET clockout = ".fres($GLOBALS['now'])." WHERE userid = ".res($userid)." AND clockout IS NULL;";
+		qdb($query) OR die(qe() . ' ' . $query);
+	}
+
+	clockout($userid);
+
 	session_start();
 	
     // Unset all of the session variables.

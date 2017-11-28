@@ -26,6 +26,10 @@
 		global $now;
 		global $DEV_ENV;
 
+		if(! $field) {
+			$field = 'repair_item_id';
+		}
+
 		$link = '';
 		$message = '';
 
@@ -40,8 +44,11 @@
 			}
 
 			//$item_id = getItemId($order_number, $partid);
-
-			$message = 'requested for Repair# ' . $order_number;
+			if($field == 'repair_item_id') {
+				$message = 'requested for Repair# ' . $order_number;
+			} else if($field == 'service_item_id') {
+				$message = 'requested for Service# ' . $order_number;
+			}
 
 			// $link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$item_id;
 			$link = '/purchase_requests.php';
@@ -51,7 +58,7 @@
 
 			//13 = Sam Sabedra
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			$query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($order_number).", 'ro_number');";
+			$query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($order_number).", '".($field == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
 
 			qdb($query) or die(qe() . ' ' . $query);
 			$messageid = qid();
@@ -102,8 +109,6 @@
 					$inv_qty = $result['qty'];
 				}	
 
-				//echo $query;	
-
 				// Get the total in stock for the particular partid
 				$query = "SELECT SUM(qty) as instock FROM inventory i WHERE partid = ".res($partid)." AND (status = 'received' OR status = 'shelved');";
 				$result = qdb($query) OR die(qe() . ' ' .$query);
@@ -120,15 +125,16 @@
 				$new_total = $total - $removal_cost;
 				$new_average = $new_total / ($stock - $pulled);
 
-				// echo $average . '<br>';
-				// echo $stock . '<br>';
-				// echo $inv_qty . '<br>';
-				// echo $total . '<br>';
-				// echo $removal_cost . '<br>';
-
-				$query = "INSERT INTO repair_components (invid, ro_number, item_id, item_id_label, datetime, qty) 
-							VALUES ('".res($invid)."',  ".fres($order_number).", '".res($item_id)."' , '".res($label)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
-				qdb($query) OR die(qe() . ' ' .$query);
+				// Pulled materials for repair goes to repair_components table while service materials goes to service_materials
+				if($label == 'repair_item_id') {
+					$query = "INSERT INTO repair_components (invid, ro_number, item_id, item_id_label, datetime, qty) 
+								VALUES ('".res($invid)."',  ".fres($order_number).", '".res($item_id)."' , '".res($label)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
+					qdb($query) OR die(qe() . ' ' .$query);
+				} else {
+					$query = "INSERT INTO service_materials (inventoryid, service_item_id, datetime, qty) 
+								VALUES ('".res($invid)."',  '".res($item_id)."', '".res($GLOBALS['now'])."', '".res($pulled)."');";
+					qdb($query) OR die(qe() . ' ' .$query);
+				}
 
 				$query = "INSERT INTO average_costs (partid, amount, datetime) 
 							VALUES ('".res($partid)."', '".res($new_average)."', '".res($GLOBALS['now'])."');";
@@ -153,6 +159,8 @@
 	$action = '';
 	$pulled = '';
 	$task = '';
+	$type = '';
+	$field = '';
 
 	if (isset($_REQUEST['order_number'])) { $order_number = $_REQUEST['order_number']; }
 	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
@@ -162,12 +170,19 @@
 	if (isset($_REQUEST['action'])) { $action = $_REQUEST['action']; }
 	if (isset($_REQUEST['pulled'])) { $pulled = $_REQUEST['pulled']; }
 	if (isset($_REQUEST['task'])) { $task = $_REQUEST['task']; }
+	if (isset($_REQUEST['type'])) { $type = strtolower($_REQUEST['type']); }
+
+	if($type == 'service') {
+		$field = 'service_item_id';
+	} else {
+		$field = 'repair_item_id';
+	}
 
 	// Identifer type determines what type of component option is being ran (Component Request or Component Pull, etc.)
 	if($action == 'request'){
-		purchaseRequest($techid, $order_number, $item_id, $requested, $notes);
+		purchaseRequest($techid, $order_number, $item_id, $requested, $notes, $field);
 	} else if($action == 'pull'){
-		pullComponent($pulled, $item_id, '', $order_number);
+		pullComponent($pulled, $item_id, $field, $order_number);
 	} else if($type == 'quote' OR $type == 'create'){
 		$order_number = quoteMaterials($techid, $requested);
 		$type = $task;

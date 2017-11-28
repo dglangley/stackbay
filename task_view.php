@@ -23,6 +23,8 @@
 	$closeout = true;
 	$outside = true;
 
+	$new = false;
+
 	// Dynamic Variables Used
 	$documentation_data = array();
 	$activity_data = array();
@@ -33,25 +35,78 @@
 	$repair_codes = array();
 	$ticketStatus = '';
 
+	$class = 'service';
+
 	$materials_total = 0.00;
 	$labor_total = 0.00;
 	$expenses_total = 0.00;
 	$outside_services_total = 0.00;
 	$total_amount = 0.00;
 
+	$item_id = 0;
+	$item_details = array();
+	$component_data = array();
+	$outsourced = array();
+
+
+	// These variables are soley used for ICO & CCO
+	$OG_item_id = 0;
+	$OG_component_data = array();
+	$OG_outsourced = array();
+
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
 	// Disable the modules you want on the page here
-	if($type == 'installation') {
+	// if($type == 'installation') {
 
-	} else if($type == 'Service') {
-		$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+	// } else 
+	if(strtolower($type) == 'service') {
+		$activity = false;
 
-		$item_details = getItemDetails($item_id, 'service_items', 'id');
-	} else if($type == 'build') {
+		if(! empty($task_number)) {
+			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+			$item_details = getItemDetails($item_id, 'service_items', 'id');
+			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
+			$outsourced = getOutsourced($item_id, $type);
+
+			if($item_details['ref_1_label'] == 'ICO') {
+				$OG_item_id = $item_details['ref_1'];
+				$ico = true;
+			}
+
+			if($item_details['ref_2_label'] == "ICO") {
+				$OG_item_id = $item_details['ref_2'];
+				$ico = true;
+			}
+
+			if($item_details['ref_1_label'] == 'CCO') {
+				$OG_item_id = $item_details['ref_1'];
+				$cco = true;
+			}
+
+			if($item_details['ref_2_label'] == 'CCO') {
+				$OG_item_id = $item_details['ref_2'];
+				$cco = true;
+			}
+
+			// Get Merge Data 
+			if(($ico OR $cco) AND $OG_item_id) {
+				$OG_component_data = getMaterials($order_number, $OG_item_id, $type, 'service_item_id');
+				$OG_outsourced = getOutsourced($OG_item_id, $type);
+			}
+
+			getLaborTime($item_id, $type);
+
+			foreach ($labor_data as $cost) {
+				$labor_total += $cost['cost'];
+			}
+		} else {
+			$new = true;
+		}
+
+		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 
 	} else if($type == 'repair') {
-
 		if($ORDER['repair_code_id']) {
 			$ticketStatus = getRepairCode($ORDER['repair_code_id']);
 		}
@@ -81,8 +136,6 @@
 		foreach ($labor_data as $cost) {
 			$labor_total += $cost['cost'];
 		}
-		// $labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
-		// print_r($labor_data);
 
 		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 
@@ -93,12 +146,17 @@
 		$documentation = false;
 		$details = true;
 		$task_edit = true; 
+		$expenses = false;
 
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
 			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
-			$component_data = getMaterials($order_number, $item_id, $order_type, 'quote_item_id');
+			$component_data = getMaterials($order_number, $item_id, 'service_quote', 'quote_item_id');
 			$outsourced = getOutsourced($item_id, $type);
+
+			print_r($component_data);
+
+			$new = false;
 		}
 
 		$labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
@@ -187,15 +245,17 @@
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
 				UNION
-				SELECT created_by as techid, created as datetime, CONCAT('$type Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
+				SELECT created_by as techid, created as datetime, CONCAT('".ucwords($type)." Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
 				UNION
-				SELECT userid as techid, date_created as datetime, CONCAT('Received $type Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
+				SELECT userid as techid, date_created as datetime, CONCAT('Received ".ucwords($type)." Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
 				UNION
 				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				UNION
 				SELECT '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE ro_number = ".prep($ro_number)." AND inventory.id = repair_components.invid AND parts.id = inventory.partid
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.ro_number = ".prep($ro_number)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+				UNION
+				SELECT '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.ro_number = ".prep($ro_number)."  AND pr.partid = p.id
 				ORDER BY datetime DESC;";
 
 		$result = qdb($query) OR die(qe());
@@ -261,7 +321,7 @@
 
 		$purchase_requests = array();
 		
-		if($type == 'repair') {
+		if($type == 'repair' OR strtolower($type) == 'service') {
 
 			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
@@ -303,28 +363,41 @@
 
 			//print_r($purchase_requests);
 
-			// Also grab elements that were fulfilled by the in stock
-			$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
-			$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
-			$query .= "GROUP BY i.partid; ";
+			if($type == 'repair') {
+				// Also grab elements that were fulfilled by the in stock
+				$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+				$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
+				$query .= "GROUP BY i.partid; ";
 
-			//echo $query;
-			$result = qdb($query) OR die(qe()); 
+				//echo $query;
+				$result = qdb($query) OR die(qe()); 
 
-			while ($row = $result->fetch_assoc()) {
-				if(!in_array_r($row['partid'] , $purchase_requests)) {
-					$purchase_requests[] = $row;
+				while ($row = $result->fetch_assoc()) {
+					if(!in_array_r($row['partid'] , $purchase_requests)) {
+						$purchase_requests[] = $row;
+					}
 				}
 			}
 		} else if($type == 'service_quote') {
-			$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($item_id).";";
+			$query = "SELECT * FROM service_quote_materials WHERE $field = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
+
+			//echo $query;
 
 			while($row = mysqli_fetch_assoc($result)) {
 				$purchase_requests[] = $row;
 				$materials_total += $row['quote'];
 			}
-		}
+		} 
+		//else if(strtolower($type) == 'service') {
+			// $query = "SELECT * FROM service_materials WHERE $field = ".res($item_id).";";
+			// $result = qdb($query) OR die(qe().' '.$query);
+
+			// while($row = mysqli_fetch_assoc($result)) {
+			// 	$purchase_requests[] = $row;
+			// 	$materials_total += $row['quote'];
+			// }
+		//}
 
 		return $purchase_requests;
 	}
@@ -372,7 +445,7 @@
 				$outside_services_total += $r['amount'];
 			}
 		} else {
-			$query = "SELECT * FROM outsourced_orders WHERE item_id = ".res($item_id).";";
+			$query = "SELECT * FROM outsourced_orders WHERE ss_number = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			while($r = mysqli_fetch_assoc($result)){
@@ -405,7 +478,7 @@
 		}
 
 		// Also pull assigned users and set them to 0 hours worked
-		$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id).";";
+		$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($task_label).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		while($r = mysqli_fetch_assoc($result)){
@@ -423,7 +496,7 @@
     		if(mysqli_num_rows($result) == 1) {
     			$r = mysqli_fetch_assoc($result);
     			//print_r($r);
-    			$query = "REPLACE INTO service_assignments (service_item_id, userid) VALUES (".fres($item_id).", ".fres($r['userid']).")";
+    			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".fres($item_id).", ".fres(($type == 'repair' ? 'repair_item_id' : 'service_item_id')).",".fres($r['userid']).")";
     			qdb($query) OR die(qe() .' ' . $query);
 
     			$totalSeconds_data[$r['userid']] += 0;
@@ -450,7 +523,7 @@
 			}
 
 			// Check if the user is currently allowed on this job or not
-			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($userid).";";
+			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($task_label)." AND userid = ".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)) {
@@ -517,6 +590,41 @@
 
 		return $access;
 	}
+
+	$pageTitle = '';
+
+	if($new) {
+		$pageTitle = 'New ';
+	}
+
+	$special = '';
+
+	if($ico) {
+		$special = " (ICO)";
+	}
+
+	if($cco) {
+		$special = " (CCO)";
+	}
+
+	if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
+		if($quote) {
+			$pageTitle .= "Service Quote for Order# ".$order_number.($task_number ? '-'.$task_number : '').$special;
+		} else if($new) {
+			$pageTitle = "New Service for Order# ".$order_number.$special;
+		} else {
+			$pageTitle = "Service# ".$order_number."-".$task_number.$special;
+		}
+	} else if(strtolower($type) == "repair" OR $class == "repair") {
+		if($quote) {
+			$pageTitle .= "Repair Quote for Order# ".$order_number.($task_number ? '-'.$task_number : '').$special;
+		} else {
+			if(! $task_number) {
+				$task_number = 1;
+			}
+			$pageTitle = "Repair# ".$order_number."-".$task_number.$special;
+		}
+	}
 ?>
 
 <!DOCTYPE html>
@@ -526,15 +634,20 @@
 			include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/materials_request.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/results.php';
+			include_once $_SERVER['ROOT_DIR']. '/modal/service_image.php';
 
-			if(! $quote) {
+			if(! $quote AND ! $new) {
 				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
 				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			}
 		?>
 
-		<title><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : ($order_number_details ? 'Add ' : 'New ')). $service_class . ' ' : 'New ') . 'Quote' . ($order_number_details ? '# '.$order_number_details : ''));?></title>
+		<title>
+			<?=$pageTitle;?>
+		</title>
+
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
+
 		<style type="text/css">
 			.list {
 				padding: 5px;
@@ -651,6 +764,35 @@
 			.labor_user.inactive {
 				opacity: 0.5;
 			}
+
+			.bx-wrapper .bx-viewport {
+				box-shadow: none;
+				border: 0;
+				left: 0;
+			}
+
+			.dropImage > i {
+			    text-align: center;
+			    display: block;
+			    font-size: 40px;
+			    vertical-align: middle;
+			    height: 200px;
+			    line-height: 200px;
+			    color: #C9C9C9;
+			}
+
+			.imageDrop:hover {
+			    text-decoration: none;
+			}
+
+			.imageDrop:hover i {
+			    color: #999;
+			}
+
+			.bx-wrapper {
+				width: 100%;
+				max-width: 100% !important;
+			}
 		</style>
 	</head>
 	
@@ -665,12 +807,8 @@
 			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
-
-					<?php if($task_number) { ?>
-						<!-- <a href="/quote.php?order_number=<?=$order_number?>" class="btn btn-primary btn-sm" data-type="quote"><i class="fa fa-plus" aria-hidden="true"></i> Add Line</a> -->
-					<?php } ?>
-
-					<?php if(! $quote && $type == 'repair') { ?>
+					<!-- Configure Repair Table Header Options -->
+					<?php if(! $quote AND ! $new AND $type == 'repair') { ?>
 						<?php if(! $task_edit) { ?>
 							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php } else { ?>
@@ -689,60 +827,58 @@
 						<?php } ?>
 
 						<?php if(! $task_edit) { ?>
-						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
-							<i class="fa fa-qrcode"></i> Receive
-						</a>
+							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+								<i class="fa fa-qrcode"></i> Receive
+							</a>
 						<?php } ?>
-
-						<!-- <div class="col-md-5"> -->
 							<form action="tasks_log.php" style="display: inline-block;">
 								<input type="hidden" name="item_id" value="<?=$item_id;?>">
 								<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
 									<i class="fa fa-terminal"></i>
 								</button>
 							</form>
-						<!-- </div> -->
+					<!-- Configure Service Header Options -->
+					<?php } else { ?>
+						<?php if(! $task_edit) { ?>
+							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<?php } else { ?>
+						<?php } ?>
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=($type == 'service' ? 'Job' : '') . ((! $quote) ? ucwords($type) . '# ' . $order_number . '-' . $task_number : ($service_class ? ($task_number ? '' : ($order_number_details ? 'Add ' : 'New ')). $service_class . ' ' : 'New ') . 'Quote' . ($order_number_details ? '# '.$order_number_details : ''));?></h2>
+					<h2>
+						<?=$pageTitle;?>
+					</h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-4">
 						
 					</div>
 					<div class="col-md-8">
-						<!-- <div class="col-md-8"> -->
-							<?php if(! $quote){ ?>
-								<div class="col-md-9" style="padding-top: 10px;">
-									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-										<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
-									</select>
-								</div>
+						<?php if(! $quote){ ?>
+							<div class="col-md-9" style="padding-top: 10px;">
+								<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
+									<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
+								</select>
+							</div>
 
-								<div class="col-md-3 remove-pad">
-									<?php if($task_edit) { ?>
-										<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-									<?php } else if(! $ticketStatus) { ?>
-										<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
-											<i class="fa fa-save"></i> Complete
-										</button>
-									<?php } ?>
-								</div>
-							<?php } else { ?>
-
-								<?php if(empty($task_number)) { ?>
-									<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
-								<?php } else { ?>
-									<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+							<div class="col-md-3 remove-pad">
+								<?php if($task_edit) { ?>
+									<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+								<?php } else if(! $ticketStatus) { ?>
+									<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+										<i class="fa fa-save"></i> Complete
+									</button>
 								<?php } ?>
+							</div>
+						<?php } else { ?>
 
-								<!-- <button type="button" class="text-primary btn btn-sm btn-default create_order pull-right" data-type="create" data-validation="left-side-main">
-									<i class="fa fa-save"></i> Create
-								</button> -->
-
+							<?php if(empty($task_number)) { ?>
+								<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
+							<?php } else { ?>
+								<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 							<?php } ?>
-						<!-- </div> -->
+						<?php } ?>
 					</div>
 				</div>
 			</div>
@@ -776,7 +912,7 @@
 							<br>
 							<!-- Cost Dash for Management People Only -->
 
-							<!-- <div id="main-stats">
+							<div id="main-stats">
 					            <div class="row stats-row">
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
@@ -803,7 +939,7 @@
 					                    </div>
 					                </div>
 					            </div>
-					        </div> -->
+					        </div>
 
 				        <?php } ?>
 
@@ -815,13 +951,13 @@
 					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><i class="fa fa-folder-open-o"></i> Activity</a></li>';
 				        	} 
 				        	if($details) { 
-					        	echo '<li class="'.($tab == 'details' ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> Details</a></li>';
+					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> Details</a></li>';
 					        } 
 				        	if($documentation) { 
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> Documentation</a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'--></span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
 								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost"><!--'.format_price($materials_total).'--></span></a></li>';
@@ -833,7 +969,7 @@
 								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
-								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><!--<?=format_price($total_amount);?>--></span></strong></a></li>
+								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
 							<?php } ?>
 						</ul>
 
@@ -875,7 +1011,7 @@
 
 							<!-- Details pane -->
 							<?php if($details) { ?>
-								<div class="tab-pane <?=($tab == 'details' ? 'active' : '');?>" id="details">
+								<div class="tab-pane <?=(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '');?>" id="details">
 									<section>
 										<div class="row list table-first">
 											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Site Address')?></div>
@@ -901,11 +1037,8 @@
 											</div>
 										<?php } ?>
 
-										<?php if($quote) { ?>
+										<?php if($quote OR $new) { ?>
 											<div class="row list">
-												<!-- <div class="col-md-3">
-
-												</div> -->
 												<div class="col-md-5 part-container">
 													<?php
 														include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
@@ -940,7 +1073,45 @@
 								<!-- Documentation pane -->
 								<div class="tab-pane <?=($tab == 'documentation' ? 'active' : '');?>" id="documentation">
 									<section>
+										<table class="table table-striped">
+											<thead class="table-first">
+												<th class="col-md-3">Date/Time</th>
+												<th class="col-md-3">User</th>
+												<th class="col-md-3">Notes</th>
+												<th class="col-md-3 text-right">Action</th>
+											</thead>
 
+											<tbody>
+												<tr>
+													<td class="datetime">																			
+														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
+																<span class="input-group-addon">										                
+																	<span class="fa fa-calendar"></span>										            
+																</span>										        
+															</div>											
+														</div>																		
+													</td>
+													<td>
+					                            		<select name="techid" class="form-control input-xs contact-selector required"></select>
+				                            		</td>
+													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
+													<td style="cursor: pointer;">
+														<button class="btn btn-success btn-sm pull-right">
+												        	<i class="fa fa-plus"></i>	
+												        </button>
+
+												        <a href="#" class="pull-right" style="margin-right: 15px; margin-top: 7px;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
+												       <!--  <div class="remove_expense pull-right">
+															<i class="fa fa-trash fa-4" aria-hidden="true"></i>
+														</div> -->
+													</td>
+												</tr>
+											</tbody>
+										</table>
+
+<!-- 
 										<div class="row list table-first">
 											<div class="col-md-3">Date/Time</div>
 											<div class="col-md-3">User</div>
@@ -951,45 +1122,41 @@
 										<hr>
 
 										<div class="row list">
-											<div class="col-md-3">7/12/2017</div>
+											<div class="col-md-3">
+												<td class="datetime">																			
+													<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+														<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+															<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
+															<span class="input-group-addon">										                
+																<span class="fa fa-calendar"></span>										            
+															</span>										        
+														</div>											
+													</div>																		
+												</td>
+											</div>
 											<div class="col-md-3">Scott</div>
 											<div class="col-md-3">MOP</div>
 											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
-										</div>
+										</div> -->
 
-										<hr>
-
-										<div class="row list">
-											<div class="col-md-3">7/18/2017</div>
-											<div class="col-md-3">David</div>
-											<div class="col-md-3">MOP</div>
-											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
-										</div>
-										<hr>
-										<div class="row list">
-											<div class="col-md-3">8/22/2017</div>
-											<div class="col-md-3">Chris</div>
-											<div class="col-md-3">MOP</div>
-											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
-										</div>
 									</section>
 
 									<?php if($closeout) { ?>
-										<br>
+										<!-- <br>
 										<section>
 											<div class="row">
 												<div class="col-sm-12">
 													<h4>Closeout</h4>
 												</div>
 											</div>
-										</section>
+										</section> -->
 									<?php } ?>
 								</div><!-- Documentation pane -->
 							<?php } ?>
 							
 							<?php if($labor) { ?>
 								<!-- Labor pane -->
-								<div class="tab-pane <?=(($tab == 'labor' OR (! $activity && empty($tab))) ? 'active' : '');?>" id="labor">
+								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
 									<?php if($task_edit){ ?>
 										<div class="row labor_edit">
 
@@ -1031,7 +1198,7 @@
 				                        <tbody>
 				                        	<?php 
 				                        		$totalSeconds = 0;
-				                        		if(! $quote):
+				                        		if(! $quote && ! $new):
 				                        		foreach($labor_data as $user => $data) { 
 													//$cost = round($rate * $hours_worked, 2);
 													$totalSeconds += $data['laborSeconds'];
@@ -1092,7 +1259,7 @@
 														<strong><?=toTime($totalSeconds);?> &nbsp; </strong>
 					                                </td>
 					                                <td class="text-right">
-					                                    <strong>$ 0.00</strong>
+					                                    <strong><?=format_price($labor_total)?></strong>
 					                                </td>
 					                            </tr>
 				                            <?php } ?>
@@ -1110,7 +1277,7 @@
 									
 											</div>
 											<div class="col-sm-6">
-												<?php if(! $quote) { ?>
+												<?php if(! $quote AND ! $new) { ?>
 													<button style="margin-bottom: 10px;" data-toggle="modal" type="button" data-target="#modal-component" class="btn btn-success btn-sm pull-right modal_request">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
@@ -1121,7 +1288,7 @@
 										<table class="table table-striped">
 											<thead class="table-first">
 												<tr>
-													<?php if($quote){ ?>
+													<?php if($quote OR $new){ ?>
 														<th class="col-md-3">Material</th>
 														<th class="col-md-2">Amount</th>
 														<th class="col-md-1">Supply</th>
@@ -1142,8 +1309,10 @@
 											</thead>
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
-												<?php // print '<pre>' . print_r($component_data, true) . '</pre>';?>
-												<?php $total = 0; foreach($component_data as $row){ 
+												<?php 
+													$total = 0; 
+
+													foreach($component_data as $row){ 
 													$price = 0;
 													$ext = 0;
 
@@ -1170,7 +1339,7 @@
 														$materials_total += $ext;
 													}
 												?>
-													<?php if(! $quote) { ?>
+													<?php if(! $quote AND ! $new) { ?>
 														<tr class="list">
 															<td>
 																<span class="descr-label part_description" data-request="<?=$row['totalOrdered'];?>"><?=trim(partDescription($row['partid'], true));?></span>
@@ -1292,7 +1461,7 @@
 												<?php } ?>
 
 												<tr id='quote_input'>
-													<?php if($quote) { ?>
+													<?php if($quote OR $new) { ?>
 														<td colspan="5">
 															<div class='input-group' style="width: 100%;">
 			                                                    <input type='text' class='form-control input-sm' id='partSearch' autocomplete="off" placeholder='SEARCH FOR MATERIAL...'>
@@ -1326,7 +1495,7 @@
 														<input class="form-control input-sm" class="mileage_rate" name="expenses" type="text" placeholder="Price" value="<?=number_format((float)$item_details['expenses'], 2, '.', '');?>">
 													</div>
 												<?php } else { ?>
-													<b>Mileage Rate</b>: <span class="mileage_rate">$1.25</span>
+													<b>Mileage Rate</b>: <span class="mileage_rate"><?=format_price($item_details['mileage_rate']);?></span>
 												<?php } ?>
 											</div>
 											<div class="col-sm-6">
@@ -1378,28 +1547,6 @@
 												</tr>
 											</tbody>
 										</table>
-
-										<!-- <div class="row list table-first">
-											<div class="col-md-2">Date/Time</div>
-											<div class="col-md-2">User</div>
-											<div class="col-md-4">Notes</div>
-											<div class="col-md-2 text-right">Amount</div>
-											<div class="col-md-2">Action</div>
-										</div>
-
-										<hr>
-
-										<div class="row list">
-											
-										</div> -->
-
-										<!-- <div class="row list">
-											<div class="col-md-2">8/12/2017</div>
-											<div class="col-md-2">Scott</div>
-											<div class="col-md-4">Wishes he could eat a delicious pastrami sandwich from Stackz</div>
-											<div class="col-md-2 text-right">$12.00</div>
-											<div class="col-md-2"><a href="#"><i class="fa fa-download" aria-hidden="true"></i></a></div>
-										</div> -->
 									</section>
 								</div><!-- Expenses pane -->
 							<?php } ?>
@@ -1479,6 +1626,30 @@
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 						</div>
+						<br>
+						<ul id="bxslider-pager">
+							<li data-slideIndex="0">
+								<a data-toggle="modal" href="#image-modal" class="imageDrop">
+									<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
+										<i class="fa fa-plus-circle" aria-hidden="true"></i>
+									</div>
+								</a>
+							</li>
+							<li data-slideIndex="1"><a href=""><img src="http://dummyimage.com/200x200/000/ff0099.png"></a></li>
+							<li data-slideIndex="2"><a href=""><img src="http://dummyimage.com/200x200/000/ff0000.png"></a></li>
+							<li data-slideIndex="3"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="4"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="5"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="6"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="7"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="8"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="9"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="10"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="11"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="12"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="13"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+							<li data-slideIndex="14"><a href=""><img src="http://dummyimage.com/200x200/000/fff000.png"></a></li>
+						</ul>
 					</div>
 				</div>
 			</div> 
@@ -1486,10 +1657,12 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<?php if(! $quote) { ?>
+		<?php if(! $quote AND ! $new) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>
+		<script type="text/javascript" src="js/imageCarousel.js"></script>
+		<script src="js/imageSlider_services.js"></script>
 
 		<script src="js/addresses.js?id=<?php echo $V; ?>"></script>
 		<script src="js/item_search.js?id=<?php echo $V; ?>"></script>

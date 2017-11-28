@@ -406,6 +406,8 @@ function partSearch(search, filter, cid, order_type) {
 		var data = [];
 		var hasElements = false;
 
+		createListings();
+
 		$(".part_listing").each(function(){
 			var description = $(this).find(".part").clone();
 			var requested = {partid :$(this).find("input").data("partid"), stock: $(this).find("input").data("stock"), requested: $(this).find("input").val(), part_info: description};

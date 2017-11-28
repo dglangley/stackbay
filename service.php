@@ -5,6 +5,12 @@
 
 	$quote = false;
 
+	$ico = false;
+	$cco = false;
+
+	// $ico = isset($_REQUEST['ico']) ? true : false;
+	// $cco = isset($_REQUEST['cco']) ? true : false;
+
 	$type = isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Service';
 	$order_number_details = (isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '');
 	$task_edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
@@ -17,9 +23,9 @@
 	$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
 	$task_number = ($order_number_split[1] ? $order_number_split[1] : '');
 
-	if(empty($task_number)) {
-		$task_number = 1;
-	}
+	// if(empty($task_number)) {
+	// 	$task_number = 1;
+	// }
 
 	$ORDER = getOrder($order_number, ucwords($type));
 	

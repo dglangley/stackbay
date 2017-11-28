@@ -14,8 +14,9 @@
 	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
 	$fieldid = 'bill_to_id';
 	if (isset($_REQUEST['fieldid'])) { $fieldid = $_REQUEST['fieldid']; }
+	if ($order_type=='service_quote') { $order_type = 'Service'; }
+	else if ($order_type=='purchase_request') { $order_type = 'Purchase'; }
 	if ($order_type=='Purchase' AND $fieldid=='bill_to_id') { $fieldid = 'remit_to_id'; }
-	else if ($order_type=='service_quote') { $order_type = 'Service'; }
 	if ($fieldid<>'ship_to_id' AND $fieldid<>'bill_to_id' AND $fieldid<>'remit_to_id') { $fieldid = ''; }
 
 	$addresses = array();

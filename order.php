@@ -131,12 +131,18 @@
 		if (! $new) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
+
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 			if (mysqli_num_rows($result)==0) { return (''); }
 			$r = mysqli_fetch_assoc($result);
 			$r['qty_attr'] = '';
 			$r['name'] = '';
+
+			// If this is a purchase request these variables need to be converted
+			$r['ref_1_label'] = ($r['ref_1_label'] ?: $r['item_id_label']);
+			$r['ref_1'] = ($r['ref_1'] ?: $r['item_id']);
+
 			if ((array_key_exists('partid',$r) AND $r['partid']) OR (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='partid'))  {
 				$H = hecidb($r['partid'],'id');
 				$P = $H[$r['partid']];
@@ -497,6 +503,8 @@
 			</span>
 		';
 	}
+
+	//print_r($ORDER);
 ?>
 <!DOCTYPE html>
 <html>
@@ -597,7 +605,7 @@
 		</div>
 		<div class="col-sm-2 text-right">
 <?php if ($EDIT) { ?>
-	<?php if ($T['record_type']=='quote') { ?>
+	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
 		<?php if ($order_number) { ?>

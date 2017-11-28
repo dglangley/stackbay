@@ -128,7 +128,7 @@
 	
 	<?php include 'inc/navbar.php'; ?>
 
-	<form action="/order_form.php?ps=Purchase" method="POST">
+	<form action="/manage_request.php?order_type=purchase_request" method="POST">
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
@@ -224,7 +224,7 @@
 														<tbody>
 								
 															<tr>
-																<th class="col-md-3">RO#</th>
+																<th class="col-md-3">Details</th>
 																<th class="col-md-3">Qty</th>
 																<th class="col-md-3">Status</th>
 																<th class="col-md-3 text-right"></th>
@@ -240,13 +240,32 @@
 									$statusColor = 'red';
 								}
 
+								$table = 'repair_items';
+								$field = 'ro_number';
+								$title = 'Repair';
+								$link = "/service.php?order_type=repair&order_number=";
+
+								if($details['item_id_label'] == 'service_item_id') {
+									$table = 'service_items';
+									$field = 'so_number';
+									$title = 'Service';
+									$link = "/service.php?order_type=Service&order_number=";
+								}
+
+								$order_number = ($details['item_id'] ? getOrderNumber($details['item_id'], $table, $field) : $details['ro_number']);
+								$itemid = ($details['item_id'] ? $details['item_id'] : getRepairItemId($details['ro_number'], $details['partid']));
+
+								$item_label = ($details['item_id_label']?:'repair_item_id');
+
+								$link .= $order_number;
+
 								$rowHTML .= '
 												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
-													<td>'.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).' <a target="_blank" href="/repair.php?on='.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).'"><i class="fa fa-arrow-right"></i></a></td>
+													<td>'.$title.'# '.$order_number.' <a target="_blank" href="'.$link.'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
 													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
 													<td>
-														<input type="checkbox" name="purchase_request['.$details['partid'].']['.($details['item_id'] ? getOrderNumber($details['item_id']) : $details['ro_number']).']['.$details['qty'].']['.$details['id'].']" value="'.($details['item_id'] ? $details['item_id'] : getRepairItemId($details['ro_number'], $details['partid'])).'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
+														<input type="checkbox" name="purchase_request[]" value="'.$details['id'].'" data-qty="'.$details['qty'].'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
 															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '') .'
 													</td>
 												</tr>';

@@ -262,6 +262,12 @@
 			if (! isset($email_rows[$partkey])) { $email_rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$ln[$key]); }
 			$email_rows[$partkey]['qty'] += $qty[$key];
 		}
+
+		if (in_array("service_item_id", $ref_1_label)  OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label)  OR in_array("repair_item_id", $ref_2_label)) {
+			//print_r($key);
+			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key";
+			qdb($query) OR die(qe() . ' ' . $query);
+		}
 	}
 
 	$charges = array();

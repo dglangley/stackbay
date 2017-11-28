@@ -50,7 +50,7 @@
                                                 <div class='input-group' style="width: 100%;">
                                                     <input type='text' class='form-control input-sm' id='partSearch' placeholder='SEARCH FOR MATERIAL...' autocomplete="off">
                                                     <span class='input-group-btn'>
-                                                        <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+                                                        <button class='btn btn-sm btn-primary li_search_button' id='btn-partsearch'><i class='fa fa-search'></i></button>              
                                                     </span>
                                                 </div>
                                             </td>
