@@ -309,12 +309,6 @@
 <?php
 	//Establish a blank array for receiving the results from the table
 	$results = array();
-	$oldid = 0;
-//	echo getCompany($company_filter,'id','oldid');
-//	echo('Value Passed in: '.$company_filter);
-	//If there is a company id, translate it to the old identifier
-	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
-//	echo '<br>The value of this company in the old database is: '.$oldid;
 
 	$rows = '';
 	$total_pcs = 0;

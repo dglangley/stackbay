@@ -5,7 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function triggerNewSO($ro_number, $now){
+	function triggerNewSO($ro_number) {
 		$repair_info = array();
 		$query = "SELECT * FROM repair_orders r, repair_items i WHERE r.ro_number = ".prep($ro_number)." AND r.ro_number = i.ro_number;";
 		$result = qdb($query) or die(qe());
@@ -19,8 +19,8 @@
 		if($repair_info) {
 			foreach ($repair_info as $item) {			
 				$query = "INSERT INTO sales_orders (created, created_by, sales_rep_id, companyid, contactid, cust_ref, ref_ln, bill_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, status) VALUES (
-				".prep($now).",
-				".prep($item['created_by']).",
+				'".$GLOBALS['now']."',
+				'".$GLOBALS['U']['id']."',
 				".prep($item['sales_rep_id']).",
 				".prep($item['companyid']).",
 				".prep($item['contactid']).",
@@ -110,7 +110,7 @@
 	if (isset($_REQUEST['ro_number'])) { 
 		$ro_number = $_REQUEST['ro_number']; 
 		updatetoStock($place, $instance, $condition, $inventoryids);
-		$order_number = triggerNewSO($ro_number, $now);
+		$order_number = triggerNewSO($ro_number);//, $now);
 	}
 	
 	header('Location: /shipping.php?on=' . $order_number);

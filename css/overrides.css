@@ -84,6 +84,10 @@ body {
 .dropdown-mega {
 	min-width: 400px;
 }
+.dropdown-menu-right {
+	left:auto;
+	right:0;
+}
 
 .table-filter {
 	padding-right:12px;

@@ -16,6 +16,7 @@
 		';
 	}
 	$inventory_sub .= '
+                    <li><a href="/tools.php" class="mode-tab tab-submit"><i class="fa fa-eye-slash"></i> Tools (DNI)</a></li>
 				</ul>
 	';
 
@@ -181,6 +182,7 @@
 						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
 						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
 						'<i class="fa fa-database"></i> Add/Edit Parts DB'=>'/parts.php',
+						'<i class="fa fa-eye-slash"></i> Tools (DNI)'=>'/tools.php',
 					),
 					'sub' => $inventory_sub,
 				),

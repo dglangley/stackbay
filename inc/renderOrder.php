@@ -21,7 +21,7 @@
     include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/form_handle.php';
 //	include_once $rootdir.'/inc/order_parameters.php';
-	include_once $rootdir.'/inc/order_type';
+	include_once $rootdir.'/inc/order_type.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/getRepairCode.php';

@@ -7,6 +7,34 @@
 
 	$debug = 0;
 
+	function setAssignment($inventoryid,$assignmentid,$notes) {
+		if (! $inventoryid) { return false; }
+
+		// find if currently assigned out to someone else, and if so then UNassign it; note that this is the default behavior
+		// if (! $assignmentid), which is indicative of the user putting something back into stock that was previously assigned out
+		$query = "SELECT id FROM inventory_dni ";
+		$query .= "WHERE inventoryid = '".res($inventoryid)."' AND unassigned IS NULL; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$query2 = "UPDATE inventory_dni SET unassigned = '".$GLOBALS['now']."' WHERE id = '".res($r['id'])."'; ";
+			if ($GLOBALS['debug']) { echo $query2.'<BR>'; }
+			else { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+		}
+
+		// nothing to do past here if no assignmentid
+		if (! $assignmentid) { return false; }
+
+		$query = "INSERT INTO inventory_dni (inventoryid, ownerid, userid, datetime, notes) ";
+		$query .= "VALUES ('".res($inventoryid)."', '".res($assignmentid)."', '".res($GLOBALS['U']['id'])."', '".$GLOBALS['now']."', ".fres($notes)."); ";
+		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+
+		// update status in inventory to be sure it's 'internal use'
+		$query = "UPDATE inventory SET status = 'internal use' WHERE id = '".res($inventoryid)."'; ";
+		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+	}
+
 	$inventoryid = 0;
 	if (isset($_REQUEST['inventoryid'])) { $inventoryid = $_REQUEST['inventoryid']; }
 	$partid = 0;
@@ -19,8 +47,17 @@
 	if (isset($_REQUEST['inventory-serial']) AND trim($_REQUEST['inventory-serial'])) { $serial = trim($_REQUEST['inventory-serial']); }
 	$notes = '';
 	if (isset($_REQUEST['inventory-notes']) AND trim($_REQUEST['inventory-notes'])) { $notes = trim($_REQUEST['inventory-notes']); }
+	$assignments_notes = '';
+	if (isset($_REQUEST['assignments-notes']) AND trim($_REQUEST['assignments-notes'])) { $assignments_notes = trim($_REQUEST['assignments-notes']); }
 	$status = '';
 	if (isset($_REQUEST['inventory-status']) AND trim($_REQUEST['inventory-status'])) { $status = trim($_REQUEST['inventory-status']); }
+	$ownerid = 0;
+	if (isset($_REQUEST['ownerid']) AND trim($_REQUEST['ownerid'])) { $ownerid = trim($_REQUEST['ownerid']); }
+	$assignmentid = 0;
+	if (isset($_REQUEST['assignmentid']) AND trim($_REQUEST['assignmentid'])) { $assignmentid = trim($_REQUEST['assignmentid']); }
+	$assignments = 0;
+	if (isset($_REQUEST['assignments']) AND trim($_REQUEST['assignments'])) { $assignments = trim($_REQUEST['assignments']); }
+	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	$serial = strtoupper($serial);
 
@@ -62,6 +99,8 @@
 				// add new repair item id to inventory array for updating below
 				$I['repair_item_id'] = $repair_item_id;
 			}
+		} else if ($assignments) {
+			setAssignment($inventoryid,$assignmentid,$assignments_notes);
 		} else {
 			// this is not the place where we would be resetting a serial, so only update it if passed in
 			if ($serial) { $I['serial_no'] = $serial; }
@@ -137,6 +176,10 @@
 
 	if ($params) { $params = '?'.$params; }
 
-	header('Location: /inventory.php'.$params);
+	if ($assignments) {
+		header('Location: /tools.php'.$params);
+	} else {
+		header('Location: /inventory.php'.$params);
+	}
 	exit;
 ?>

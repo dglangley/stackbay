@@ -7,10 +7,9 @@
     include_once $rootdir.'/inc/order_parameters.php';
     include_once $rootdir.'/inc/packages.php';
     include_once $rootdir.'/inc/setCommission.php';
-	include_once $rootdir.'/inc/send_gmail.php';
 	include_once $rootdir.'/inc/renderOrder.php';
 	include_once $rootdir.'/inc/setInvoiceCOGS.php';
-	include_once $rootdir.'/inc/attachInvoice.php';
+	include_once $rootdir.'/inc/sendInvoice.php';
     include_once $rootdir.'/dompdf/autoload.inc.php';
 
 	if (! isset($debug)) { $debug = 0; }
@@ -171,21 +170,11 @@
 			}/* end foreach */
 		}
 		if($invoice_id){
-			// set google session to amea for sending email below
-			setGoogleAccessToken(5);
-
 			setInvoiceCOGS($invoice_id,$type);
 
-			// render invoice and attach to a temp file, we get attachment as a temp file pointer
-			$attachment = attachInvoice($invoice_id);
-
-			if (! $GLOBALS['DEV_ENV']) {
-				// bcc david for now, so I can see what Joe is seeing
-				$send_success = send_gmail('See attached Invoice '.$invoice_id,'Invoice '.$invoice_id,'accounting@ven-tel.com','david@ven-tel.com','',$attachment);
-
-				if(!$send_success){
-					$return['error'] = "Email not sent ".$GLOBALS['SEND_ERR'];
-				}
+			$send_err = sendInvoice($invoice_id);
+			if ($send_err) {
+				$return['error'] = $send_err;
 			}
 		}
 

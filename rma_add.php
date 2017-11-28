@@ -308,7 +308,7 @@
 		}
 
 		//Check to see if the item has been received
-		$query = "SELECT * FROM inventory_history WHERE invid = '".res($id)."' AND field_changed = 'returns_item_id' AND value = '".res($data['rmaid']."'; ";
+		$query = "SELECT * FROM inventory_history WHERE invid = '".res($id)."' AND field_changed = 'returns_item_id' AND value = '".res($data['rmaid'])."'; ";
 //		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		

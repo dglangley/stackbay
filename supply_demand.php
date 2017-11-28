@@ -252,12 +252,7 @@
 <?php
 	//Establish a blank array for receiving the results from the table
 	$results = array();
-	$oldid = 0;
 	$rows = '';
-
-
-	//If there is a company id, translate it to the old identifier
-	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
 
 	//Write the query for the gathering of Pipe data
     $result = getRecords($part,$part_string,'csv',$market_table);
