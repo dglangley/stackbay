@@ -576,7 +576,8 @@
 	<?php } else if ($order_type=='Sale') { ?>
 			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } else if ($order_type=='Invoice') { ?>
-			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+			<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Outsourced') { ?>
 			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>

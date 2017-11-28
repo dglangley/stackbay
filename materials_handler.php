@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 
 	function getItemId($ro_number, $partid) {
 		$item_id;
