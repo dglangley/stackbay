@@ -445,7 +445,7 @@
 				$outside_services_total += $r['amount'];
 			}
 		} else {
-			$query = "SELECT * FROM outsourced_orders WHERE ss_number = ".res($item_id).";";
+			$query = "SELECT * FROM outsourced_orders WHERE os_number = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			while($r = mysqli_fetch_assoc($result)){
@@ -792,6 +792,18 @@
 			.bx-wrapper {
 				width: 100%;
 				max-width: 100% !important;
+			}
+
+			#pad-wrapper {
+				padding-bottom: 230px; /*just larger than footer height*/
+			}
+			#sticky-footer {
+				position: fixed;
+				bottom: 0;
+				margin-left:-19px;
+				margin-bottom:-19px;
+				height: 220px;
+				border-bottom:1px solid white;
 			}
 		</style>
 	</head>
@@ -1626,34 +1638,36 @@
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 						</div>
-						<br>
-						<ul id="bxslider-pager">
-							<li data-slideIndex="0">
-								<a data-toggle="modal" href="#image-modal" class="imageDrop">
-									<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
-										<i class="fa fa-plus-circle" aria-hidden="true"></i>
-									</div>
-								</a>
-							</li>
-							<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
-							<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
-							<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-						</ul>
-					</div>
-				</div>
+						<div id="sticky-footer">
+							<ul id="bxslider-pager">
+								<li data-slideIndex="0">
+									<a data-toggle="modal" href="#image-modal" class="imageDrop">
+										<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
+											<i class="fa fa-plus-circle" aria-hidden="true"></i>
+										</div>
+									</a>
+								</li>
+								<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
+								<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
+								<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+								<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+							</ul>
+						</div>
+					</div><!-- pad-wrapper -->
+				</div><!-- row -->
 			</div> 
 		</form>
+
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>

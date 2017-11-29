@@ -30,7 +30,7 @@
         $tracking = array();
         $html = '';
 
-        $packages = "SELECT * from invoice_items ii, invoice_shipments s, packages p
+        $packages = "SELECT * FROM invoice_items ii, invoice_shipments s, packages p
                 WHERE ii.invoice_no = ".prep($invoice_number)."
                 and ii.id = s.invoice_item_id
                 AND s.packageid = p.id
@@ -195,6 +195,7 @@
 		}
 		$order_type = ucwords(strtolower($order_type));
 		if ($order_type=='Rma') { $order_type = 'RMA'; }
+		else if ($order_type=='Inv') { $order_type = 'Invoice'; }
 
 		$T = order_type($order_type);
 	    $prep = prep($order_number);
@@ -475,7 +476,7 @@
 	if ($email) {
 		$header = $T['abbrev'].' '.$order_number.' Complete';
 	} else {
-		if ($oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
+		if (($order_type=='Outsourced' OR $order_type=='outsourced_item_id') AND $oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
 		else if ($order_type) { $header = $order_type.' '; }
 		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA') { $header .= 'Order '; }
 		$header .= $order_number;

@@ -47,7 +47,6 @@
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
 		} else {
-			//Select i.partid, datetime, count(DISTINCT(serialid)) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 			$query = "
 				Select i.partid, datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
@@ -78,7 +77,7 @@
 		}
 		
 		//Check to see there are actually invoice-able items on the order
-		if($GLOBALS['debug']){ echo($query);}
+		if($GLOBALS['debug']) { echo "Debug ON: ".$query."<BR>"; }
 
 		// shipping a non-invoiceable order, see query above
 		if (mysqli_num_rows($results) == 0){
