@@ -107,7 +107,7 @@
 
 		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 
-	} else if($type == 'repair') {
+	} else if(strtolower($type) == 'repair') {
 		if($ORDER['repair_code_id']) {
 			$ticketStatus = getRepairCode($ORDER['repair_code_id']);
 		}
@@ -232,6 +232,8 @@
 				$r = mysqli_fetch_assoc($result);
 				$item_id = $r['id'];
 			}
+		} else {
+			die("Missing item!");
 		}
 
 		return $item_id;

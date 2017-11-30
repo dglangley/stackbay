@@ -250,10 +250,12 @@
 	$label = '';
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
-	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; $label = 'repair_item_id'; }
+	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
 
 	if (isset($_REQUEST['quote_item_id'])) { $service_item_id = $_REQUEST['quote_item_id']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+	//dl 11-30-17 for adding notes
+	if (isset($_REQUEST['repair_item_id']) OR $type=='Repair') { $label = 'repair_item_id'; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; } 
 	if (isset($_REQUEST['line_number'])) { $line_number = $_REQUEST['line_number']; }
 	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
@@ -334,7 +336,7 @@
 			// Editing a Repair Item
 		}
 
-		if(tolower($type) == 'service') {
+		if(strtolower($type) == 'service') {
 			// Editing a service task
 			editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
 		}
