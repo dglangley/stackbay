@@ -288,6 +288,7 @@
 		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
 	// Add permission to a certain user ipon the create or quote screen
 	} else if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
+
 		editTech($techid, $tech_status, $service_item_id);
 		if(! $line_number) {
 			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
@@ -300,7 +301,6 @@
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
-
 		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
 
 		editMaterials($materials, $qid, 'service_quote_materials');
@@ -318,11 +318,23 @@
 
 	// Else editing the task
 	} else {
+		// If completing a Repair Item
 		if (isset($_REQUEST['repair_item_id'])) {
 			completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
+		} else {
+			// Editing a Repair Item
 		}
 
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+		if(tolower($type) == 'service') {
+			// Editing a service task
+			editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
+		}
+
+		if(! $line_number) {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+		} else {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
+		}
 	}
 
 	exit;

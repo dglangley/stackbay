@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getUser.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 
 	// List of subcategories
 	$documentation = true;
@@ -61,7 +62,7 @@
 
 	// } else 
 	if(strtolower($type) == 'service') {
-		$activity = false;
+		//$activity = false;
 
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
@@ -1106,11 +1107,11 @@
 														</div>																		
 													</td>
 													<td>
-					                            		<select name="techid" class="form-control input-xs contact-selector required"></select>
+					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
 				                            		</td>
 													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
 													<td style="cursor: pointer;">
-														<button class="btn btn-success btn-sm pull-right">
+														<button class="btn btn-success btn-sm pull-right" name="documentation" value="true">
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 
@@ -1122,35 +1123,6 @@
 												</tr>
 											</tbody>
 										</table>
-
-<!-- 
-										<div class="row list table-first">
-											<div class="col-md-3">Date/Time</div>
-											<div class="col-md-3">User</div>
-											<div class="col-md-3">Notes</div>
-											<div class="col-md-3">Action</div>
-										</div>
-
-										<hr>
-
-										<div class="row list">
-											<div class="col-md-3">
-												<td class="datetime">																			
-													<div class="form-group" style="margin-bottom: 0; width: 100%;">												
-														<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-															<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
-															<span class="input-group-addon">										                
-																<span class="fa fa-calendar"></span>										            
-															</span>										        
-														</div>											
-													</div>																		
-												</td>
-											</div>
-											<div class="col-md-3">Scott</div>
-											<div class="col-md-3">MOP</div>
-											<div class="col-md-3"><a href="#"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
-										</div> -->
-
 									</section>
 
 									<?php if($closeout) { ?>
@@ -1549,12 +1521,9 @@
 														</div>
 													</td>
 													<td style="cursor: pointer;">
-														<button data-toggle="modal" data-target="#modal-component" class="btn btn-success btn-sm btn-status pull-right" type="submit">
+														<button class="btn btn-success btn-sm btn-status pull-right" type="submit">
 												        	<i class="fa fa-plus"></i>	
 												        </button>
-												       <!--  <div class="remove_expense pull-right">
-															<i class="fa fa-trash fa-4" aria-hidden="true"></i>
-														</div> -->
 													</td>
 												</tr>
 											</tbody>

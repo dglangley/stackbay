@@ -17,20 +17,27 @@
 		$file = tempnam("tmp", "zip");
 		$zip = new ZipArchive();
 
-		// This creates and then gives the option to save the zip file
-
 		if ($zip->open($file, ZipArchive::OVERWRITE) !== TRUE) {
 		    die ("Could not open archive");
 		}
 
 		// adds files to the file list
-		foreach ($filelist as $key => $value) {
+		foreach ($filelist as $key) {
 
 		    //fix archive paths
 		    $path = str_replace($BUCKET, "", $key); //remove the source path from the $key to return only the file-folder structure from the root of the source folder
-		    if (! file_exists($key)) { die($key.' does not exist. Please contact your administrator or try again later.'); }
-		      if (! is_readable($key)) { die($key.' not readable. Please contact your administrator or try again later.'); }     
-		          if ($zip->numFiles == $filelimit) {$zip->close(); $zip->open($file) or die ("Error: Could not reopen Zip");}
+		    
+		    if (! file_exists($key)) { 
+		    	die($key.' does not exist. Please contact your administrator or try again later.'); 
+		    }
+		    
+		    if (! is_readable($key)) { 
+		    	die($key.' not readable. Please contact your administrator or try again later.'); 
+		    }     
+		    
+		    if ($zip->numFiles == $filelimit) {
+		    	$zip->close(); $zip->open($file) or die ("Error: Could not reopen Zip");
+		    }
 
 		    $zip->addFromString($path, $key) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
 		    $zip->addFile(realpath($key), $path) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
