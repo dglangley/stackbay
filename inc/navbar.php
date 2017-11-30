@@ -169,6 +169,7 @@
 	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
 	                    <?php if(in_array("4", $USER_ROLES)) { ?>
 	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
+	                    	<li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
 	                    <?php } ?>
 	<!--
 	                    <li style="padding-left:22px; font-size:13px; color:gray"><i class="fa fa-minus-circle"></i> Profits &amp; Loss (tbd)</li>

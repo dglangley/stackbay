@@ -99,7 +99,9 @@
 			return is_string($a) ? "'".res($a)."'" : $a;
 		}, $ids);
 
-		$ids = join("','",$ids); 
+		// DL 11-29-17 creating too many quote marks
+		//$ids = join("','",$ids); 
+		$ids = join(",",$ids); 
 
 		$query = "SELECT * FROM timesheet_approvals WHERE timesheetid IN ($ids);";
 		$result = qdb($query) OR die(qe() . ' ' . $query);

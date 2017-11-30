@@ -288,7 +288,7 @@
 	                                </th>
 	                                <th class="col-md-1">
 	                                    <span class="line"></span>
-	                                    IM
+	                                    eBay
 	                                </th>
 	                                <th class="col-md-2">
 	                                    <span class="line"></span>
