@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
 		global $LINE_NUMBER;
@@ -170,6 +171,33 @@
 		qdb($query) OR die(qe() . ' ' . $query);
 	}
 
+	function addDocs($documents, $item_id, $item_label) {
+		//foreach($documents as $doc) {
+			$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
+
+			// echo $query;
+
+			qdb($query) OR die(qe() .'<BR>'. $query);
+			$docid = qid();
+
+			if(! empty($_FILES)) {
+				if(! $_FILES['files']['error']) {
+					$BUCKET = '';
+
+					$name = $_FILES['files']['name'];
+					$temp_name = $_FILES['files']['tmp_name'];
+
+					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
+					$file_url = saveFile($file);
+
+					$query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
+
+					qdb($query) OR die(qe() . ' ' . $query);
+				}
+			}
+		//}
+	}
+
 	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'activity_log', $field = 'item_id', $type = 'repair') {
 
 		$notes = '';
@@ -230,6 +258,7 @@
 	$outsourced = array();
 	$expenses = array();
 	$search = array();
+	$documentation = array();
 
 	$search_type = '';
 
@@ -268,6 +297,7 @@
 	if (isset($_REQUEST['labor_rate'])) { $labor_rate = $_REQUEST['labor_rate']; }
 
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
+	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
 	if (isset($_REQUEST['addressid'])) { $search = $_REQUEST['addressid']; }
@@ -327,22 +357,28 @@
 
 	// Else editing the task
 	} else {
+		$tab = 'labor';
 		// If completing a Repair Item
 		if (isset($_REQUEST['repair_item_id'])) {
 			completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
-		} else {
+		} else if(strtolower($type) != 'service') {
 			// Editing a Repair Item
 		}
 
-		if(tolower($type) == 'service') {
+		if(strtolower($type) == 'service') {
+			// If Documentation
+			if($documentation) {
+				addDocs($documentation, $service_item_id, $label);
+				$tab = 'documentation';
+			}
 			// Editing a service task
-			editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
+			// editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
 		}
 
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=' . $tab);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=' . $tab);
 		}
 	}
 

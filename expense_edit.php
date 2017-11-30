@@ -19,8 +19,7 @@
 			// print '<pre>' . print_r($_FILES, true) . '</pre>';
 			foreach($_FILES['files']['error'] as $expense_id => $error) {
 				if(! $error) {
-
-					$BUCKET = '';
+					$BUCKET = 'ventel.stackbay.com-receipts';
 
 					$name = $_FILES['files']['name'][$expense_id];
 					$temp_name = $_FILES['files']['tmp_name'][$expense_id];

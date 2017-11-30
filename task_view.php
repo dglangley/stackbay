@@ -67,6 +67,9 @@
 			$item_details = getItemDetails($item_id, 'service_items', 'id');
 			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
 			$outsourced = getOutsourced($item_id, $type);
+			$documentation_data = getDocumentation($item_id, 'service_item_id');
+
+			print_r($documentation_data);
 
 			$activity_data = grabActivities($order_number, $item_id, $type);
 
@@ -404,6 +407,19 @@
 		//}
 
 		return $purchase_requests;
+	}
+
+	function getDocumentation($item_id, $item_label) {
+		$documents = array();
+
+		$query = "SELECT * FROM service_docs WHERE item_id = ".res($item_id)." AND item_label = ".fres($item_label)." ORDER BY datetime DESC;";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$documents[] = $r;
+		}
+
+		return $documents;
 	}
 
 	function getAvailable($partid,$itemid=0) {
@@ -809,6 +825,9 @@
 				height: 220px;
 				border-bottom:1px solid white;
 			}
+			.upload{
+			    display: none !important;
+			}
 		</style>
 	</head>
 	
@@ -899,7 +918,7 @@
 				</div>
 			</div>
 
-			<form id="save_form" action="/task_edit.php" method="post">
+			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
 				<input type="hidden" name="line_number" value="<?=$task_number;?>">
@@ -1091,37 +1110,58 @@
 									<section>
 										<table class="table table-striped">
 											<thead class="table-first">
-												<th class="col-md-3">Date/Time</th>
-												<th class="col-md-3">User</th>
-												<th class="col-md-3">Notes</th>
-												<th class="col-md-3 text-right">Action</th>
+												<th>Date/Time</th>
+												<th>Notes</th>
+												<th>Type</th>
+												<th>File</th>
+												<th class="text-right">Action</th>
 											</thead>
 
 											<tbody>
+												<?php foreach($documentation_data as $document) { ?>
+													<tr>
+														<td><?=format_date($document['datetime']);?></td>
+														<td><?=$document['notes'];?></td>
+														<td><?=$document['type'];?></td>
+														<td>
+															<span class="file_name" style="<?=$document['filename'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$document['filename']);?>"><?=substr($document['filename'], strrpos($document['filename'], '/') + 1);?></a></span>
+														</td>
+														<td></td>
+													</tr>
+												<?php } ?>
 												<tr>
-													<td class="datetime">																			
+													<td></td>
+													<!-- <td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
 															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
+																<input type="text" name="documentation[date]" class="form-control input-sm" value="">										            
 																<span class="input-group-addon">										                
 																	<span class="fa fa-calendar"></span>										            
 																</span>										        
 															</div>											
 														</div>																		
-													</td>
+													</td> -->
+													<td><input class="form-control input-sm" type="text" name="documentation[notes]"></td>
 													<td>
-					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
-				                            		</td>
-													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
+														<select class="form-control input-sm" name="documentation[type]">
+															<option value="">- Select Type -</option>
+															<option value="MOP">MOP</option>
+															<option value="SOW">SOW</option>
+															<option value="COP">COP</option>
+														</select>
+													</td>
+													<td class="file_container">
+														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+														<a href="#" class="upload_link">
+															<i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+														</a>
+													</td>
 													<td style="cursor: pointer;">
-														<button class="btn btn-success btn-sm pull-right" name="documentation" value="true">
+														<button class="btn btn-success btn-sm pull-right" type="submit">
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 
-												        <a href="#" class="pull-right" style="margin-right: 15px; margin-top: 7px;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>
-												       <!--  <div class="remove_expense pull-right">
-															<i class="fa fa-trash fa-4" aria-hidden="true"></i>
-														</div> -->
+												      <!--   <a href="#" class="pull-right" style="margin-right: 15px; margin-top: 7px;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a> -->
 													</td>
 												</tr>
 											</tbody>
@@ -1129,14 +1169,7 @@
 									</section>
 
 									<?php if($closeout) { ?>
-										<!-- <br>
-										<section>
-											<div class="row">
-												<div class="col-sm-12">
-													<h4>Closeout</h4>
-												</div>
-											</div>
-										</section> -->
+
 									<?php } ?>
 								</div><!-- Documentation pane -->
 							<?php } ?>
