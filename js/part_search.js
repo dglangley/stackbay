@@ -309,9 +309,9 @@ function partSearch(search, filter, cid, order_type) {
 
 		e.preventDefault();
 
-		var partid = $(this).data("partid");
-		var itemid = $(this).data("itemid");
-		var type = $(this).data("type");
+		var partid = $(this).attr("data-partid");
+		var itemid = $(this).attr("data-itemid");
+		var type = $(this).attr("data-type");
 
 		var partObject = $(this).closest(".list").find(".part_description").clone();
 		var request = $(this).closest(".list").find(".part_description").data("request");
