@@ -62,11 +62,6 @@
 
 	// } else 
 	if(strtolower($type) == 'service') {
-<<<<<<< Updated upstream
-		//$activity = false;
-=======
->>>>>>> Stashed changes
-
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
 			$item_details = getItemDetails($item_id, 'service_items', 'id');

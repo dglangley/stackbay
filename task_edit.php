@@ -289,7 +289,12 @@
 	if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+//		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+		if(! $line_number) {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+		} else {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number);
+		}
 	// Add permission to a certain user ipon the create or quote screen
 	} else if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
 

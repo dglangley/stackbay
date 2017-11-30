@@ -268,7 +268,7 @@
 
 		addtoStock($place, $instance, $condition, $inventoryids);
 
-		header('Location: /order_form.php?ps=repair&on=' . $ro_number);
+		header('Location: /order.php?order_type=Repair&order_number=' . $ro_number);
 	}
 
 	exit;
