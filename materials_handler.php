@@ -71,11 +71,11 @@
 			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
-			if($result) {
+			if($result && ! $DEV_ENV) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
-				$recipients = 'andrew@ven-tel.com';
-				//$recipients = 'ssabedra@ven-tel.com';
+				//$recipients = 'andrew@ven-tel.com';
+				$recipients = 'ssabedra@ven-tel.com';
 				// $bcc = 'dev@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
