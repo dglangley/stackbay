@@ -23,9 +23,9 @@
 	$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
 	$task_number = ($order_number_split[1] ? $order_number_split[1] : '');
 
-	// if(empty($task_number)) {
-	// 	$task_number = 1;
-	// }
+	if(empty($task_number)) {
+	 	$task_number = 1;
+	}
 
 	$ORDER = getOrder($order_number, ucwords($type));
 	

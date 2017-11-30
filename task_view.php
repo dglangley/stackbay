@@ -330,7 +330,7 @@
 
 		$purchase_requests = array();
 		
-		if($type == 'repair' OR strtolower($type) == 'service') {
+		if(strtolower($type) == 'repair' OR strtolower($type) == 'service') {
 
 			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
 			$result = qdb($query) OR die(qe());
@@ -372,7 +372,7 @@
 
 			//print_r($purchase_requests);
 
-			if($type == 'repair') {
+			if(strtolower($type) == 'repair') {
 				// Also grab elements that were fulfilled by the in stock
 				$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 				$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
@@ -485,7 +485,7 @@
 		$totalSeconds = 0; 
 		$totalSeconds_data = array();
 
-		if($type == 'repair') {
+		if(strtolower($type) == 'repair') {
 			$task_label = 'repair_item_id';
 		} else {
 			$task_label = 'service_item_id';
@@ -518,7 +518,7 @@
     		if(mysqli_num_rows($result) == 1) {
     			$r = mysqli_fetch_assoc($result);
     			//print_r($r);
-    			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".fres($item_id).", ".fres(($type == 'repair' ? 'repair_item_id' : 'service_item_id')).",".fres($r['userid']).")";
+    			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".fres($item_id).", ".fres((strtolower($type) == 'repair' ? 'repair_item_id' : 'service_item_id')).",".fres($r['userid']).")";
     			qdb($query) OR die(qe() .' ' . $query);
 
     			$totalSeconds_data[$r['userid']] += 0;
@@ -628,6 +628,7 @@
 	if($cco) {
 		$special = " (CCO)";
 	}
+	if ($item_details['task_name']) { $special .= ' '.$item_details['task_name']; }
 
 	if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
 		if($quote) {
@@ -845,7 +846,7 @@
 			<div class="row table-header full-screen" id = "order_header">
 				<div class="col-md-4">
 					<!-- Configure Repair Table Header Options -->
-					<?php if(! $quote AND ! $new AND $type == 'repair') { ?>
+					<?php if(! $quote AND ! $new AND strtolower($type) == 'repair') { ?>
 						<?php if(! $task_edit) { ?>
 							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php } else { ?>
@@ -1051,13 +1052,14 @@
 								<div class="tab-pane <?=(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '');?>" id="details">
 									<section>
 										<div class="row list table-first">
-											<div class="col-md-3"><?=($type == 'repair' ? 'Description' : 'Site Address')?></div>
-											<div class="col-md-2"><?=($type == 'repair' ? 'Serial(s)' : '')?></div>
-											<div class="col-md-2"><?=($type == 'repair' ? 'RMA#' : '')?></div>
-											<div class="col-md-5">Notes</div>
+											<div class="col-md-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site Address')?></div>
+											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'Serial(s)' : '')?></div>
+											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'RMA#' : '')?></div>
+											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'Refs' : '')?></div>
+											<div class="col-md-3">Notes</div>
 										</div>
 										<hr>
-										<?php if(! $quote && $type == 'repair') { ?>
+										<?php if(! $quote && strtolower($type) == 'repair') { ?>
 											<div class="row list">
 												<div class="col-md-3"><?=trim(partDescription($item_details['partid'], true));?></div>
 												<div class="col-md-4">
@@ -1065,7 +1067,11 @@
 														echo $serial;
 													} ?>
 												</div>
-												<div class="col-md-5"><?=$item_details['notes'];?></div>
+												<div class="col-md-2">
+													<?=$item_details['ref_1_label'].' '.$item_details['ref_1'].'<BR>';?>
+													<?=$item_details['ref_2_label'].' '.$item_details['ref_2'].'<BR>';?>
+												</div>
+												<div class="col-md-3"><?=$item_details['notes'];?></div>
 											</div>
 										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
 											<div class="row list">
@@ -1338,7 +1344,7 @@
 													$price = 0;
 													$ext = 0;
 
-													if($row['po_number'] && $type == 'repair') {
+													if($row['po_number'] && strtolower($type) == 'repair') {
 														$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
 														$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
 														$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";

@@ -3,13 +3,13 @@ function partSearch(search, filter, cid, order_type) {
 	if (! cid) { var cid = ''; }
 	if (! order_type) { var order_type = ''; }
 
-	// Show a load image if you have one
-	$('#loader-message').html('Please wait while your request is being processed...');
-	$("#loader").show();
-
 	var type = $('body').data("order-type");
 
 	if(search) {
+		// Show a load image if you have one
+		$('#loader-message').html('Please wait while your request is being processed...');
+		$("#loader").show();
+
 		console.log(window.location.origin+"/json/part_search.php?search="+escape(search));
 
 		$.ajax({

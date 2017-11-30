@@ -62,7 +62,7 @@
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($ln) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
-			$col .= '<a href="/'.strtolower($GLOBALS['order_type']).'.php?order_number='.$GLOBALS['order_number'].'-'.$ln.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
+			$col .= '<a href="/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
 		}
 		$col .= '&nbsp;</div>';
 
@@ -394,6 +394,15 @@
 
 		// user is creating a new order
 		if ($order_type AND ! $EDIT AND ! $order_number) { $EDIT = true; }
+	}
+
+	if(!in_array("1", $USER_ROLES) && !in_array("5", $USER_ROLES) && !in_array("7", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
+		if(in_array("3", $USER_ROLES)){
+			header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
+			exit;
+		}
+		header('Location: /');
+		exit;
 	}
 
 	$title_helper = '';
