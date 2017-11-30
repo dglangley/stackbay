@@ -18,12 +18,24 @@
 		$arr['search'] = $search;
 
 		if ($type=='SO') {
-			$query = "SELECT so_number FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+			// is this a Service, or a Sale?
+			if ($search>=100000 AND $search<200000) {
+				$order_type = 'Sale';
+				$query = "SELECT so_number, 'Sale' type FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+			} else if ($search>=400000 AND $search<500000) {
+				$order_type = 'Service';
+				$query = "SELECT so_number, 'Service' type FROM service_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+			} else {
+				$query = "SELECT so_number, 'Sale' type FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+				if (mysqli_num_rows($result)==0) {
+					$query = "SELECT so_number, 'Service' type FROM service_items WHERE task_name = '".res($search)."' OR so_number = '".res($search)."'; ";
+				}
+			}
 			$result = qdb($query) OR die(qe().'<BR>'.$search);
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['so_number'];
-				$arr['type'] = 'SO';
+				$arr['type'] = $r['type'];//'SO';
 			}
 		} else if ($type=='RO') {
 			$query = "SELECT ro_number FROM repair_orders WHERE cust_ref = '".res($search)."' OR ro_number = '".res($search)."'; ";
@@ -31,7 +43,7 @@
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['ro_number'];
-				$arr['type'] = 'RO';
+				$arr['type'] = 'Repair';//'RO';
 			}
 		} else if ($type=='PO') {
 			$query = "SELECT po_number FROM purchase_orders WHERE assoc_order = '".res($search)."' OR po_number = '".res($search)."'; ";
@@ -39,7 +51,7 @@
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['po_number'];
-				$arr['type'] = 'PO';
+				$arr['type'] = 'Purchase';//'PO';
 			}
 		} else if ($type=='OS') {
 			$query = "SELECT os_number FROM outsourced_orders WHERE os_number = '".res($search)."' OR order_number = '".res($search)."'; ";
@@ -47,7 +59,7 @@
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['os_number'];
-				$arr['type'] = 'OS';
+				$arr['type'] = 'Outsourced';//'OS';
 			}
 		} else if ($type=='RMA') {
 			$query = "SELECT rma_number FROM returns WHERE rma_number = '".res($search)."'; ";
@@ -55,7 +67,7 @@
 			if (mysqli_num_rows($result)==1) {
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['rma_number'];
-				$arr['type'] = 'RMA';
+				$arr['type'] = 'Return';//'RMA';
 			}
 		}
 
@@ -90,7 +102,7 @@
 		$O = getOrderData($_SERVER["REQUEST_URI"]);
 
 		if ($O['search']) {
-			header('Location: /order.php?order_number='.$O['search'].'&order_type='.strtolower(substr($O['type'],0,1)));
+			header('Location: /order.php?order_number='.$O['search'].'&order_type='.$O['type']);//strtolower(substr($O['type'],0,1)));
 			exit;
 		} else {
 			header('Location: /operations.php?s='.$O['search']);
@@ -113,11 +125,11 @@
 		$ro_matches = mysqli_num_rows($result);
 
 		if ($po_matches>0 AND $so_matches==0 AND $ro_matches==0) {
-			$type = 'PO';
+			$type = 'Purchase';//'PO';
 		} else if ($po_matches==0 AND $so_matches>0 AND $ro_matches==0) {
-			$type = 'SO';
+			$type = 'Sale';//'SO';
 		} else if ($po_matches==0 AND $so_matches==0 AND $ro_matches>0) {
-			$type = 'RO';
+			$type = 'Repair';//'RO';
 		}
 /*
 		$query = "SELECT * FROM repair_orders WHERE ro_number = '".$order."'; ";
@@ -133,6 +145,7 @@
 	if ($type=='SO') { $_REQUEST['ps'] = 'Sale'; }
 	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
 	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
+	else if ($type) { $_REQUEST['ps'] = $type; }
 
 	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
 		if ($type=='RMA') {
@@ -146,12 +159,14 @@
 			include 'order.php';
 		}
 	} else {
-		if ($type=='PO') {
+		if ($type=='PO' OR $type=='Purchase') {
 			include 'inventory_add.php';
-		} else if ($type=='SO') {
+		} else if ($type=='SO' OR $type=='Sale') {
 			include 'shipping.php';
-		} else if ($type=='OS') {
+		} else if ($type=='OS' OR $type=='Outsourced') {
 			include 'order.php';
+		} else if ($type=='Service') {
+			include 'service.php';
 		} else {
 			include 'repair.php';
 		}

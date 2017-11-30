@@ -5,11 +5,11 @@
 	function mapJob($jobid) {
 		$taskid = 0;
 
-		$query = "SELECT * FROM maps_job WHERE job = '".res($jobid)."'; ";
+		$query = "SELECT * FROM maps_job WHERE BDB_jid = '".res($jobid)."'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
-			$taskid = $r['id'];
+			$taskid = $r['service_item_id'];
 		}
 
 		return ($taskid);
@@ -17,13 +17,19 @@
 	function mapUser($userid) {
 		return (0);
 	}
-	function setTimesheet($userid,$in,$out,$taskid,$task_label,$notes,$modifier,$modified) {
+	function setTimesheet($userid,$in,$out,$taskid,$task_label,$rate,$notes,$modifier,$modified) {
 		$notes = trim($notes);
 
 		$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate, notes) ";
 		$query .= "VALUES (".fres($userid).", ".fres($in).", ".fres($out).", ".fres($taskid).", ";
-		$query .= fres($task_label).", ".fres($notes).", ".fres($modifier).", ".fres($modified)."); ";
+		$query .= fres($task_label).", ".fres($rate).", ".fres($notes)."); ";
 echo $query.'<BR>';
+//		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$timesheetid = qid();
+
+		// do the timesheet approval here with modifier data?
+		$query = " ".fres($modifier).", ".fres($modified)."); ";
+//echo $query.'<BR>';
 //		$result = qdb($query) OR die(qe().'<BR>'.$query);
 	}
 	function setMileage($item_id,$item_id_label,$userid,$datetime,$mileage,$mileage_rate) {
@@ -41,10 +47,12 @@ echo $query.'<BR>';
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$taskid = mapJob($r['job_id']);
+		if (! $taskid) { continue; }
+
 		$userid = mapUser($r['user_id']);
 		$modifier = mapUser($r['modified_by_id']);
 
-		$timesheetid = setTimesheet($userid,$r['datetime_in'],$r['datetime_out'],$r['notes'],$modifier,$r['modified']);
+		$timesheetid = setTimesheet($userid,$r['datetime_in'],$r['datetime_out'],$taskid,'service_item_id',$r['tech_rate'],$r['notes'],$modifier,$r['modified']);
 
 //		setTimesheetMap($r['id'],$timesheetid);
 
