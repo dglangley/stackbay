@@ -148,7 +148,7 @@
 
 	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id') {
 		if(! empty($status)) {
-			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND service_item_id = ".res($item_id).";";
+			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id).";";
 			qdb($query) OR die(qe() . ' ' . $query);
 		} else {
 			// Check first if the user has already been assigned to this job
@@ -156,7 +156,7 @@
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if(mysqli_num_rows($result) == 0) {
-				$query = "INSERT INTO service_assignments (service_item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
+				$query = "INSERT INTO service_assignments (item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
 				qdb($query) OR die(qe() . ' ' . $query);
 			}
 		}
@@ -289,7 +289,11 @@
 	// Add permission to a certain user ipon the create or quote screen
 	} else if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
 		editTech($techid, $tech_status, $service_item_id);
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+		if(! $line_number) {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+		} else {
+			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
+		}
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save') {

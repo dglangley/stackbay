@@ -167,7 +167,9 @@
 		$timesheet_ids[] = $list['id'];
 	}
 
-	$checkPayroll = checkPayrollStatus($timesheet_ids);
+	if($timesheet_ids) {
+		$checkPayroll = checkPayrollStatus($timesheet_ids);
+	}
 	// echo $checkPayroll;
 	// print_r($timesheet_ids);
 

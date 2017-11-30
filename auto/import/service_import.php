@@ -18,43 +18,20 @@
 
     // From getCompany and this says Aaron code so use with caution
 
-    // function companydbTranslate($companyid){
-    //     $query = "SELECT name FROM services_company WHERE id = '".$companyid."'; ";
-    //     $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-    //     if (mysqli_num_rows($result)==0) { return 0; }
-    //     $r = mysqli_fetch_assoc($result);
+    function companyMap($service_companyid) {
+        $companyid = 0;
 
-    //     $query = "SELECT c.id `c` FROM companies c LEFT JOIN company_aliases a ON c.id = a.companyid ";
-    //     $query .= "WHERE c.name = '".trim($r['name'])."' OR a.name = '".trim($r['name'])."' ";
-    //     $query .= "GROUP BY c.id ORDER BY c.id ASC LIMIT 1; ";
+        $query = "SELECT companyid FROM company_maps WHERE service_companyid = ".res($service_companyid).";";
+        $result = qdb($query) OR die(qe().'<BR>'.$query);
 
-    //     $result = qdb($query) OR die(qe().'<BR>'.$query);
-    //     if(mysqli_num_rows($result)){
-    //         foreach($result as $row){
-    //             $COMPANY_MAPS[$companyid][$oldToNew] = $row['c'];
+        //echo $query . '<BR><BR>';
 
-    //             return $row['c'];
-    //         }
-    //     } else{
-    //         $COMPANY_MAPS[$companyid][$oldToNew] = $companyid;
-    //         echo "<br><b>Company does not exist!</b>";
+        if(mysqli_num_rows($result)) {
+            $r = mysqli_fetch_assoc($result);
+            $companyid = $r['companyid'];
+        }
 
-    //         return false;
-    //     }
-    // }
-
-    // Import code for Companies
-    $DATA = array();
-    
-    $query = "SELECT * FROM service_companies;";
-    $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-
-    while($r = mysqli_fetch_assoc($result)) {
-        $DATA[] = $r;
-    }
-
-    foreach($DATA as $company) {
-
+        return $companyid;
     }
     
     // Reset data and import code for jobs within the set range
@@ -77,7 +54,7 @@
         // We will get the quoteid updated later as BDB uses the jobid from quotes to link instead of our new way
         $quoteid;
 
-        $companyid = companydbTranslate($service['company_id']);
+        $companyid = companyMap($service['company_id']);
         $contactid;
         $cust_ref = $service['customer_job_no'];
         $ref_ln;
@@ -85,7 +62,7 @@
         $datetime = $service['date_entered'];
         $bill_to_id;
         $termsid;
-        $public_notes = $service['description'];;
+        $public_notes = $service['site_access_info_address'];;
         $private_notes;
         $status = 'Active';
 
@@ -116,6 +93,7 @@
         $qty = 1;
         $amount = $service['quote_labor'] + $service['quote_engineering'];
         $mileage_rate = $service['mileage_rate'];
+        $description = $service['description'];
 
         // Variables needed from both analysis
         // If the job name has FFR in it then I figure the classid must be for FFR
@@ -126,14 +104,19 @@
         }
 
         // Insert into Service Orders
-        $query = ";";
-
-        // Insert into Map
-        $query = ";";
+        $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($public_notes).",".fres($private_notes).",".fres($status).");";
+        qdb($query) OR die(qe().'<BR>'.$query);
+        $so_number = qid();
 
         // Insert into Service Items
-        $query = "INSERT INTO service_items (line_number, so_number, task_name, qty, ) VALUES (".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().",".fres().");";
+        $query = "INSERT INTO service_items (line_number, so_number, task_name, qty, amount, item_id, item_label, quote_item_id, description, due_date, mileage_rate, ref_1, ref_1_label, ref_2, ref_2_label, closeout_ln) VALUES (".fres($line_number).",".fres($so_number).",".fres($task_name).",".fres($qty).",".fres($amount).",NULL,".fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,NULL,NULL);";
+
+        qdb($query) OR die(qe().'<BR>'.$query);
+        $service_item_id = qid();
 
         // Insert into Map
-        $query = ";";
+        $query = "INSERT INTO maps_job (BDB_jid, service_item_id) VALUES (".res($service['id']).", ".res($service_item_id).");";
+        qdb($query) OR die(qe().'<BR>'.$query);
     }
+
+    echo "IMPORT COMPLETE!";
