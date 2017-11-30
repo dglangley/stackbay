@@ -69,7 +69,7 @@
 			$outsourced = getOutsourced($item_id, $type);
 			$documentation_data = getDocumentation($item_id, 'service_item_id');
 
-			print_r($documentation_data);
+			// print_r($documentation_data);
 
 			$activity_data = grabActivities($order_number, $item_id, $type);
 
@@ -1128,7 +1128,7 @@
 														<td>
 															<span class="file_name" style="<?=$document['filename'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$document['filename']);?>"><?=substr($document['filename'], strrpos($document['filename'], '/') + 1);?></a></span>
 														</td>
-														<td></td>
+														<td><input type="checkbox" name="copZip[<?=$document['id'];?>]" class="pull-right"></td>
 													</tr>
 												<?php } ?>
 												<tr>
