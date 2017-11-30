@@ -6,6 +6,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+
+	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function getItemId($ro_number, $partid) {
 		$item_id;
@@ -67,11 +71,11 @@
 			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
 			$result = qdb($query) or die(qe() . ' ' . $query);
 
-			if($result && !$DEV_ENV) {
+			if($result) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
-				//$recipients = 'andrew@ven-tel.com';
-				$recipients = 'ssabedra@ven-tel.com';
+				$recipients = 'andrew@ven-tel.com';
+				//$recipients = 'ssabedra@ven-tel.com';
 				// $bcc = 'dev@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
