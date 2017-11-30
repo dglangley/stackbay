@@ -279,10 +279,12 @@
 	$label = '';
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
-	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; $label = 'repair_item_id'; }
+	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
 
 	if (isset($_REQUEST['quote_item_id'])) { $service_item_id = $_REQUEST['quote_item_id']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+	//dl 11-30-17 for adding notes
+	if (isset($_REQUEST['repair_item_id']) OR $type=='Repair') { $label = 'repair_item_id'; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; } 
 	if (isset($_REQUEST['line_number'])) { $line_number = $_REQUEST['line_number']; }
 	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
