@@ -16,7 +16,7 @@
 		return $order_number;
 	}
 
-	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'repair_activities', $field = 'repair_item_id', $type = 'repair') {
+	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'activity_log', $field = 'item_id', $type = 'repair') {
 
 		$notes = '';
 
@@ -32,7 +32,8 @@
 
 		//$order_number = getOrderNumber($item_id);
 
-		$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
+		//$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
+		$query = "INSERT INTO $table ($field, item_id_label, datetime, userid, notes) VALUES (".res($item_id).", '".$type."_item_id', '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
 		//echo $query;
 		qdb($query) OR die(qe().' '.$query);
 

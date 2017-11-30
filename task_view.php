@@ -62,13 +62,18 @@
 
 	// } else 
 	if(strtolower($type) == 'service') {
+<<<<<<< Updated upstream
 		//$activity = false;
+=======
+>>>>>>> Stashed changes
 
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
 			$item_details = getItemDetails($item_id, 'service_items', 'id');
 			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
 			$outsourced = getOutsourced($item_id, $type);
+
+			$activity_data = grabActivities($order_number, $item_id, $type);
 
 			if($item_details['ref_1_label'] == 'ICO') {
 				$OG_item_id = $item_details['ref_1'];
@@ -237,12 +242,15 @@
 		return $item_id;
 	}
 
-	function grabActivities($ro_number, $repair_item_id, $type = 'Repair'){
-		$repair_activities = array();
+	function grabActivities($ro_number, $item_id, $type = 'Repair'){
+		$activities = array();
 		$invid = '';
-		
+		$label = '';
+		if ($type=='Repair') { $label = 'repair_item_id'; }
+		else if ($type=='Service') { $label = 'service_item_id'; }
+
 		$query = "
-				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
+				SELECT userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
 				UNION
@@ -261,7 +269,7 @@
 
 		$result = qdb($query) OR die(qe());
 		foreach($result as $row){
-			$repair_activities[] = $row;
+			$activities[] = $row;
 		}
 
 		// Aaron's way to check if an item is marked for tested or not
@@ -284,11 +292,11 @@
 		if($invid){
 			$invhis = "
 			SELECT DISTINCT * 
-			FROM inventory_history ih, repair_activities ra 
-			where field_changed = 'status' 
-			and ra.datetime = ih.date_changed 
-			and ra.notes is null
-			and invid = ".prep($invid)."
+			FROM inventory_history ih, activity_log l 
+			WHERE field_changed = 'status' 
+			AND l.datetime = ih.date_changed 
+			AND l.notes is null
+			AND invid = ".prep($invid)."
 			order by date_changed asc;
 			";
 			$history = qdb($invhis) or die(qe()." | $invhis");
@@ -303,14 +311,14 @@
 				} else if($h['value'] == "testing" && ($h['changed_from'] == "shelved" || $h['changed_from'] == "manifest")){				
 					$status = 'In Test Lab';	
 				}
-				foreach($repair_activities as $count => $row){
+				foreach($activities as $count => $row){
 					if(!$row['notes']){
-						$repair_activities[$count]['notes'] = $status;
+						$activities[$count]['notes'] = $status;
 					}
 				}
 			}
 		}
-		return $repair_activities;
+		return $activities;
 	}
 
 	function in_array_r($item , $array){

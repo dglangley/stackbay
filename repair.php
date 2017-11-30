@@ -128,7 +128,7 @@
 			$type = 'Repair';
 		}
 
-		$repair_activities = array();
+		$activities = array();
 		$query;
 		$invid = '';
 		
@@ -142,7 +142,7 @@
 		$query = "
 				/*SELECT techid, requested as datetime, CONCAT('Component Requested Part# <b>', parts.part, '</b> Qty: ', qty) as notes FROM purchase_requests, parts WHERE ro_number = ".prep($ro_number)." AND partid = parts.id 
 				UNION*/
-				SELECT techid, datetime as datetime, notes FROM repair_activities WHERE ro_number = ".prep($ro_number)." 
+				SELECT userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($repair_item_id)."' AND item_id_label = 'repair_item_id' /*ro_number = ".prep($ro_number)." */
 				UNION
 				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
 				UNION
@@ -157,18 +157,18 @@
 
 		$result = qdb($query) OR die(qe());
 		foreach($result as $row){
-			$repair_activities[] = $row;
+			$activities[] = $row;
 		}
 		
 		if($invid){
 			$invhis = "
 			SELECT DISTINCT * 
-			FROM inventory_history ih, repair_activities ra 
-			where field_changed = 'status' 
-			and ra.datetime = ih.date_changed 
-			and ra.notes is null
-			and invid = ".prep($invid)."
-			order by date_changed asc;
+			FROM inventory_history ih, activity_log alog 
+			WHERE field_changed = 'status' 
+			AND alog.datetime = ih.date_changed 
+			AND alog.notes IS NULL
+			AND invid = ".prep($invid)."
+			ORDER BY date_changed ASC;
 			";
 			$history = qdb($invhis) or die(qe()." | $invhis");
 			foreach($history as $h){
@@ -182,14 +182,14 @@
 				} else if($h['value'] == "testing" && ($h['changed_from'] == "shelved" || $h['changed_from'] == "manifest")){				
 					$status = 'In Test Lab';	
 				}
-				foreach($repair_activities as $count => $row){
+				foreach($activities as $count => $row){
 					if(!$row['notes']){
-						$repair_activities[$count]['notes'] = $status;
+						$activities[$count]['notes'] = $status;
 					}
 				}
 			}
 		}
-		return $repair_activities;
+		return $activities;
 	}
 
 	function in_array_r($item , $array){
@@ -559,7 +559,7 @@
 			include_once $rootdir.'/modal/component_available.php';
 			// include_once $rootdir.'/modal/repair_complete.php';
 		?>
-		<form action="repair_activities.php" method="post">
+		<form action="save-activity.php" method="post">
 			<?php
 				include_once $rootdir.'/modal/repair_complete.php';
 			?>
@@ -682,7 +682,7 @@
 						<div class="row">
 							<div class="col-md-6">
 								<div class="table-responsive">
-									<form action="repair_activities.php" method="post">
+									<form action="save-activity.php" method="post">
 										<input type="text" name="ro_number" value="<?=$order_number;?>" class="hidden">
 										<input type="text" name="techid" value="<?=$U['id'];?>" class="hidden">
 										<?php if($build) { ?>
@@ -748,7 +748,7 @@
 										<tr>
 											<td colspan="12">
 												<!-- <div class="row"> -->
-												<form action="repair_activities.php" method="POST">
+												<form action="save-activity.php" method="POST">
 													<?php if($build) { ?>
 														<input type="text" name="build" value="<?=$build?>" class="hidden">
 													<?php } ?>

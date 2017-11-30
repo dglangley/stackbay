@@ -33,10 +33,12 @@
 		}
 
 		if($trigger == "complete" && $check_in == 'check_out') {
-			$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", 'Checked Out');";
+			//$query = "INSERT INTO activity_log (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep($now).", ".prep($techid).", 'Checked Out');";
+			$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) VALUES (".prep($repair_item_id).", 'repair_item_id', ".prep($now).", ".prep($techid).", 'Checked Out');";
 			$result = qdb($query) OR die(qe());
 		}
-		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
+		//$query = "INSERT INTO activity_log (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
+		$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) VALUES (".prep($repair_item_id).", 'repair_item_id', ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
 		$result = qdb($query) OR die(qe());
 		
 		if($trigger == "complete"){
@@ -91,7 +93,8 @@
 		$I = array('id'=>$invid,'status'=>$status);
 		setInventory($I);
 
-		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
+		//$query = "INSERT INTO activity_log (ro_number, repair_item_id, datetime, techid, notes) VALUES (".prep($ro_number).", ".prep($repair_item_id).", ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
+		$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) VALUES (".prep($repair_item_id).", 'repair_item_id', ".prep(date('Y-m-d H:i:s',strtotime($now) + 1)).", ".prep($techid).", ".prep($notes).");";
 		$result = qdb($query) OR die(qe());
 	}
 

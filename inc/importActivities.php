@@ -57,7 +57,7 @@
 				$techid = $r['techid'];
 
 				$activityid = 0;
-				$query = "SELECT id FROM repair_activities WHERE ro_number = '".$ro_number."' ";
+				$query = "SELECT id FROM activity_log WHERE ro_number = '".$ro_number."' ";
 				if ($repair_item_id) { $query .= "AND repair_item_id = '".$repair_item_id."' "; }
 				else { $query .= "AND repair_item_id IS NULL "; }
 				$query .= "AND datetime = '".$datetime."' ";
@@ -69,7 +69,7 @@
 					$activityid = $r['id'];
 				}
 
-				$query = "REPLACE repair_activities (ro_number, repair_item_id, datetime, techid, notes ";
+				$query = "REPLACE activity_log (ro_number, repair_item_id, datetime, techid, notes ";
 				if ($activityid) { $query .= ", id"; }
 				$query .= ") VALUES ('".$ro_number."',";
 				if ($repair_item_id) { $query .= "'".$repair_item_id."',"; } else { $query .= "NULL,"; }

@@ -163,13 +163,14 @@
 
 	}
 
-	function addNotes($notes, $order_number, $repair_item_id) {
-		$query = "INSERT INTO repair_activities (ro_number, repair_item_id, datetime, techid, notes) VALUES (".fres($order_number).", ".fres($repair_item_id).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
+	function addNotes($notes, $order_number, $item_id, $label) {
+		//$query = "INSERT INTO activity_log (ro_number, repair_item_id, datetime, techid, notes) VALUES (".fres($order_number).", ".fres($repair_item_id).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
+		$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) VALUES (".fres($item_id).", ".fres($label).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
 		//echo $query;
 		qdb($query) OR die(qe() . ' ' . $query);
 	}
 
-	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'repair_activities', $field = 'repair_item_id', $type = 'repair') {
+	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'activity_log', $field = 'item_id', $type = 'repair') {
 
 		$notes = '';
 
@@ -185,7 +186,8 @@
 
 		//$order_number = getOrderNumber($item_id);
 
-		$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
+		//$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
+		$query = "INSERT INTO $table ($field, item_id_label, datetime, userid, notes) VALUES (".res($item_id).", '".$type."_item_id', '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
 		//echo $query;
 		qdb($query) OR die(qe().' '.$query);
 //echo $query;
@@ -245,8 +247,10 @@
 	$public = '';
 	$private = '';
 
-	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; }
-	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
+	$label = '';
+
+	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
+	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; $label = 'repair_item_id'; }
 
 	if (isset($_REQUEST['quote_item_id'])) { $service_item_id = $_REQUEST['quote_item_id']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
@@ -283,7 +287,7 @@
 	if (isset($_REQUEST['private_notes'])) { $private = $_REQUEST['private_notes']; }
 
 	if(! empty($notes) && ! empty($service_item_id)) {
-		addNotes($notes, $order, $service_item_id);
+		addNotes($notes, $order, $service_item_id, $label);
 
 		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
 	// Add permission to a certain user ipon the create or quote screen

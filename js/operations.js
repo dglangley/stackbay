@@ -2185,7 +2185,7 @@
         				$('.modal_message').html('Repair Shipping Order will be generated for this item upon confirmation.');
 	        			$('#modal-repair-receive').modal('show');
 		        	} else {
-		        		$("#receive_form").attr("action", "repair_activities.php");
+		        		$("#receive_form").attr("action", "save-activity.php");
 		        		$('#modal-repair-receive .alert-receive').show();
 		        		$('#modal-repair-receive .locations_selector').show();
 	        			$('#modal-repair-receive .ship_option').show();

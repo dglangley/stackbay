@@ -452,10 +452,11 @@
 						// statuses of "Checked Out" and "In Test" can be subclasses of Active repairs, where there is no repair_code_id set
 						if (! $r['repair_code_id']) {
 							$first_status = false;
-							$query2 = "SELECT notes, techid FROM repair_activities WHERE ro_number = '".res($order_num)."' ";
-							$query2 .= "AND (notes LIKE 'Checked%' OR notes LIKE 'Claimed%' OR notes LIKE 'Marked as%') ";
-							//$query2 .= "AND techid = '".$U['id']."' ";
-							$query2 .= "ORDER BY datetime DESC; ";// LIMIT 0,1; ";
+							$query2 = "SELECT l.notes, l.userid FROM activity_log l, repair_items i ";
+							$query2 .= "WHERE i.ro_number = '".res($order_num)."' AND i.id = l.item_id AND l.item_id_label = 'repair_item_id' ";
+							$query2 .= "AND (l.notes LIKE 'Checked%' OR l.notes LIKE 'Claimed%' OR l.notes LIKE 'Marked as%') ";
+							//$query2 .= "AND l.userid = '".$U['id']."' ";
+							$query2 .= "ORDER BY l.datetime DESC; ";// LIMIT 0,1; ";
 							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 							while ($r2 = mysqli_fetch_assoc($result2)) {
 								if ($r2['notes']=='Checked Out' AND ! $first_status) {
@@ -472,17 +473,6 @@
 									break;
 								}
 							}
-/*
-							$query2 = "SELECT notes FROM repair_activities WHERE ro_number = '".res($order_num)."' AND notes LIKE 'Marked as%' ";
-							$query2 .= "ORDER BY datetime DESC LIMIT 0,1; ";
-							$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-							if (mysqli_num_rows($result2)>0) {
-								$r2 = mysqli_fetch_assoc($result2);
-								if ($r2['notes']=='Marked as `In Testing`') {
-									$status .= ' testing_item';
-								}
-							}
-*/
 						}
 
 						//If repair code exists then check if the order has already been shipped out or not

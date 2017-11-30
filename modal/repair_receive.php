@@ -6,7 +6,7 @@
 
 <div class="modal modal-alert fade" id="modal-repair-receive" tabindex="-1" role="dialog" aria-labelledby="modalcomponentTitle">
     <div class="modal-dialog" role="document">
-        <form id="receive_form" action="repair_activities.php" method="post">
+        <form id="receive_form" action="save-activity.php" method="post">
         <input class="hidden" name="ro_number" value="<?=$order_number?>">
         <div class="modal-content">
             <div class="modal-header">
