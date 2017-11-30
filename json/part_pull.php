@@ -19,7 +19,9 @@
         // Then with the union grab the rest
         $query = ($itemid != 0 ? "SELECT i.*, 'true' as requested FROM purchase_items pi, inventory i WHERE pi.ref_1_label = 'repair_item_id' AND pi.ref_1='".res($itemid)."' AND pi.id = i.purchase_item_id AND i.partid = '".res($partid)."' AND i.qty > 0 AND (status = 'shelved' OR status = 'received')
                 UNION" : "") . "
-            SELECT i.*, '' as requested FROM purchase_items pi, inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id = pi.id AND (pi.ref_1_label <> 'repair_item_id' OR pi.ref_1_label IS NULL) AND i.qty > 0 AND (status = 'shelved' OR status = 'received');";
+            SELECT i.*, '' as requested FROM purchase_items pi, inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id = pi.id AND (pi.ref_1_label <> 'repair_item_id' OR pi.ref_1_label IS NULL) AND i.qty > 0 AND (status = 'shelved' OR status = 'received')
+            UNION 
+            SELECT i.*, '' as requested FROM inventory i WHERE i.partid = '".res($partid)."' AND i.purchase_item_id IS NULL AND i.qty > 0 AND (status = 'shelved' OR status = 'received');";
         $result = qdb($query) OR die(qe() . '' . $query);
 
         //echo $query;
