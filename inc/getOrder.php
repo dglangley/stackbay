@@ -67,7 +67,7 @@
 
 		// get items and add to subarray inside $results
 //		if (count($alt)==0) {
-			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."' ORDER BY line_number ASC, id ASC; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$items[$r['id']] = $r;

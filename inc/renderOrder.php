@@ -266,7 +266,7 @@
 //		$freight_services = ($oi['freight_services_id'])? ' '.strtoupper(getFreight('services','',$oi['freight_services_id'],'method')): '';
 		$freight_terms = ($oi["freight_account_id"])?getFreight('account','',$oi['freight_account_id'],'account_no') : 'Prepaid';
 
-		$items = "SELECT * FROM ".$T['items']." WHERE `".$T['order']."` = $order_number ORDER BY IF(".$T['order']." IS NOT NULL,0,1), ".$T['order']." ASC;";
+		$items = "SELECT * FROM ".$T['items']." WHERE `".$T['order']."` = $order_number ORDER BY IF(".$T['order']." IS NOT NULL,0,1), ".$T['order']." ASC, line_number ASC, id ASC;";
 		if (! $lump AND $order_type=='Credit' AND is_numeric($order_number)) {
 			$items = "SELECT sci.*, sci.id AS scid, sci.amount AS price, GROUP_CONCAT(i.serial_no) AS serials, SUM(sci.qty) qty, i.partid ";
 			$items .= "FROM credits sc, credit_items sci, return_items ri, inventory i, inventory_history ih ";
