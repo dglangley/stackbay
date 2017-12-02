@@ -280,7 +280,7 @@
 			}
 
 			//Generate a ridiculously stupid hard salt using php mcrypt (make hackers extra salty)
-			if (!$salt) { $salt = "$2y$10$". bin2hex(mcrypt_create_iv(22, MCRYPT_DEV_URANDOM)); }
+			if (!$salt AND ! $GLOBALS['DEV_ENV']) { $salt = "$2y$10$". bin2hex(mcrypt_create_iv(22, MCRYPT_DEV_URANDOM)); }
 
 			//If try catch error handling
 			if (isset($salt)) {

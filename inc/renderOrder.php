@@ -211,19 +211,28 @@
 
 		$orig_order = $order_number;
 		if (! $lump) {
-    		$query = "SELECT * ";
+			$query = "SELECT * ";
 			if ($order_type=='Credit') { $query .= ", order_number "; }
 			$query .= "FROM `".$T['orders']."` ";
 			$query .= "WHERE `".$T['order']."` = $order_number;";
-    		$result = qdb($query) or die(qe()." | $query");
-    		if (mysqli_num_rows($result) == 0) {
-    			die("Could not pull record");
-    		}
-    		$oi = mysqli_fetch_assoc($result);
+			$result = qdb($query) or die(qe()." | $query");
+			if (mysqli_num_rows($result) == 0) {
+				die("Could not pull record");
+			}
+			$oi = mysqli_fetch_assoc($result);
+			// if this record extends off another record (i.e., Credit Memo for Repair)
+			if (isset($oi['order_type'])) {
+				$T2 = order_type($oi['order_type']);
+				// query corresponding record for address details
+				$query2 = "SELECT * FROM ".$T2['orders']." WHERE ".$T2['order']." = '".$oi['order_number']."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				while ($r2 = mysqli_fetch_assoc($result2)) {
+					$oi[$T2['addressid']] = $r2[$T2['addressid']];
+				}
+			}
 		} else { 
-		    $lumps = printLumpedInvoices($order_number);
-		    $oi = $lumps['order_info'];
-
+			$lumps = printLumpedInvoices($order_number);
+			$oi = $lumps['order_info'];
 		}
 
 		// is order a sale or repair?
@@ -477,6 +486,7 @@
 		$header = $T['abbrev'].' '.$order_number.' Complete';
 	} else {
 		if (($order_type=='Outsourced' OR $order_type=='outsourced_item_id') AND $oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
+		else if ($order_type=='Credit') { $header = $order_type.' Memo '; }
 		else if ($order_type) { $header = $order_type.' '; }
 		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA') { $header .= 'Order '; }
 		$header .= $order_number;

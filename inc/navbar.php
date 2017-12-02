@@ -140,9 +140,11 @@
         </div>
 		<div class="collapse navbar-collapse text-center">
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
+			<?php if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) { ?>
 			<li class="hidden-xs hidden-sm">
 				<a href="/profile.php"><i class="fa fa-building"></i> Companies</a>
 			</li>
+			<?php } ?>
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
           </ul>
 
@@ -221,6 +223,7 @@
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
 	                <?php } ?>
 	                <hr>
+	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
 	                <li><a href="signout.php">Logout</a></li>
 

@@ -14,16 +14,18 @@
 
 	if(in_array("4", $USER_ROLES)) {
 		$user_admin = true;
-	} else if($userid != $GLOBALS['U']['id']) {
+	} else if($userid AND $userid != $GLOBALS['U']['id']) {
 		$deny_permission = true;
 		header('Location: /tasks.php?user=' . $GLOBALS['U']['id']);
 		exit();
+	} else {
+		$userid = $U['id'];
 	}
 
 	function getExpenses($userid, $user_admin = false, $filter = '') {
 		$expenses = array();
 
-		if($user_admin) {
+		if($user_admin AND ! $userid) {
 			$query = "SELECT * FROM expenses";
 			if($filter) {
 				$query .= " WHERE item_id = " . $filter;	
@@ -41,7 +43,7 @@
 				$subquery .= "userid = ".res($userid)." ";
 			}
 			if($filter) {
-				if ($subquery) { $query .= "AND "; }
+				if ($subquery) { $subquery .= "AND "; }
 				$subquery .= "item_id = ".$filter." ";
 			}
 			$query .= "WHERE ".$subquery;
@@ -163,7 +165,7 @@
 						<select id="task_select" name="task_id" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;">
 							<option value =''> - Select Task - </option>
 							<?php
-								$users = getUsers(array(1,2,3,4,5,7));
+								$users = getUsers(array(1,2,3,4,5,7,8));
 								foreach (getUniqueTask() as $task) {
 									$s = '';
 									if ($taskid == $task['item_id']) { $s = ' selected'; }
@@ -189,11 +191,11 @@
 						<select id="user_select" name="user_id" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;">
 							<option value =''> - Select User - </option>
 							<?php
-								$users = getUsers(array(1,2,3,4,5,7));
+								$users = getUsers(array(1,2,3,4,5,7,8));
 								foreach ($users as $uid => $uname) {
 									$s = '';
 									if ($userid == $uid) { $s = ' selected'; }
-									if($user_admin OR ($userid == $uid)) {
+									if ($user_admin OR ($userid == $uid)) {
 										echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
 									}
 								}
@@ -223,7 +225,7 @@
 							<th class="col-md-3">DESCRIPTION</th>
 							<th class="col-md-1">TASK#</th>
 							<th class="col-md-2">AMOUNT</th>
-							<th class="col-md-2">UPLOAD</th>
+							<th class="col-md-2">RECEIPT</th>
 							<th class="col-md-1">STATUS</th>
 						</tr>
 					</thead>
@@ -235,13 +237,15 @@
 								<td><?=format_date($list['expense_date']);?></td>
 								<td><?=$list['description'];?></td>
 								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
-								<td><?=format_price($list['amount']);?></td>
+								<td><?=format_price($list['units']*$list['amount']);?></td>
 								<td class="file_container">
-									<span class="file_name" style="<?=$list['file'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$list['file']);?>"><?=substr($list['file'], strrpos($list['file'], '/') + 1);?></a></span>
-									<input type="file" class="upload" name="files[<?=$list['id'];?>]" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
-									<a href="#" class="upload_link">
-										<i class="fa fa-file-pdf-o" aria-hidden="true"></i>
-									</a>
+									<?php
+										if ($list['file']) {
+											// replace temp dir location (if exists) to uploads reader script
+											$list['file'] = str_replace($TEMP_DIR,'uploads/',$list['file']);
+											echo '<a href="'.$list['file'].'" target="_new"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>';
+										}
+									?>
 								</td>
 								<td>
 									<?php if(getStatus($list['id'])) { ?>
@@ -281,8 +285,8 @@
 									<td class="file_container">
 										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
 										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
-										<a href="#" class="upload_link">
-											<i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+										<a href="#" class="upload_link btn btn-default btn-sm">
+											<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 										</a>
 									</td>
 									<td>

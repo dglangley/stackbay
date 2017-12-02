@@ -1,7 +1,5 @@
 <?php
-	$rootdir = $_SERVER['ROOT_DIR'];
-	include_once $rootdir.'/inc/dbconnect.php';
-	include_once $rootdir.'/inc/svcs_pipe.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	$keyword = '';
 	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['keyword']) AND $_REQUEST['keyword'])) {
@@ -9,6 +7,36 @@
 		else if (isset($_REQUEST['keyword']) AND $_REQUEST['keyword']) { $keyword = $_REQUEST['keyword']; }
 		$keyword = trim($keyword);
 
+		$matches = array();
+		$matches_csv = '';
+		$query = "SELECT i.so_number, i.id, i.line_number FROM service_orders o ";
+		$query .= "LEFT JOIN service_items i ON o.so_number = i.so_number ";
+		$query .= "WHERE (cust_ref = '".res($keyword)."' OR o.so_number = '".res($keyword)."' ";
+		$query .= "OR CONCAT(i.so_number,'-',i.line_number) = '".res($keyword)."' OR task_name RLIKE '".res($keyword)."'); ";
+		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
+		while ($r = mysqli_fetch_assoc($result)) {
+			if ($matches_csv) { $matches_csv .= ','; }
+			$matches_csv .= $r['id'];
+			$matches[] = $r['so_number'].'-'.$r['line_number'];
+		}
+
+		$query = "SELECT so_number, i.id, i.line_number FROM addresses a, service_items i ";
+		$query .= "WHERE a.id = item_id AND item_label = 'addressid' AND street RLIKE '".res($keyword)."' ";
+		if ($matches_csv) {
+			$query .= "AND i.id NOT IN (".$matches_csv.") ";
+		}
+		$query .= "; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$matches[] = $r['so_number'].'-'.$r['line_number'];
+		}
+
+		if (count($matches)==1) {
+			header('Location: service.php?order_number='.$matches[0]);
+			exit;
+		}
+
+/*dl 12-1-17
 		$query = "SELECT id FROM services_job WHERE job_no = '".res($keyword)."'; ";
 		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
 		if (mysqli_num_rows($result)==1) {
@@ -23,25 +51,28 @@
 			header('Location: job.php?id='.$r['id']);
 			exit;
 		}
+*/
 		// in order for user to be able to 'reset' view to default services home, we want to reset search string
 		// so that if they at first were switching between modes (say, sales to services) with a sales-related
 		// search string, the subsequent click would show all services instead of the bogus search string
 		$_REQUEST['s'] = '';
 	}
 
-	include_once $rootdir.'/inc/format_date.php';
-	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/getCompany.php';
-	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/getPipeIds.php';
-	include_once $rootdir.'/inc/calcQuarters.php';
-	include_once $rootdir.'/inc/strip_space.php';
-	include_once $rootdir.'/inc/getProfile.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getAddresses.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPipeIds.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+//	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getProfile.php';
 	$WORKDAY_START = 19;//workday end is set automatically in getTimesheet.php based on this
-	include_once $rootdir.'/inc/getTimesheet.php';
-	include_once $rootdir.'/inc/getExpenses.php';
-	include_once $rootdir.'/inc/getMaterials.php';
-	include_once $rootdir.'/inc/getOutsideServices.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -61,7 +92,7 @@
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-7)); }
+	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-30)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
@@ -74,11 +105,17 @@
 	$financials = false;
 	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
 
-	$manager = '';
-	if (isset($_REQUEST['manager']) AND $_REQUEST['manager'] AND $_REQUEST['manager']<>'All') {
-		$manager = $_REQUEST['manager'];
-	} else if ($U['name']=='David Oden' OR $U['name']=='Robert Cumer' OR $U['name']=='Scott Johnston') {
-		$manager = $U['name'];
+	$managerid = 0;
+	if (isset($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
+		$managerid = $_REQUEST['managerid'];
+	} else if (in_array("4", $USER_ROLES)) {
+		$managerid = $U['id'];
+	}
+
+
+	/****** FUNCTIONS ******/
+	function calcServiceQuote($order_number) {
+		return (0);
 	}
 ?>
 
@@ -92,7 +129,7 @@
 	<title>Services Home</title>
 	<?php
 		//Standard headers included in the function
-		include_once $rootdir.'/inc/scripts.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 	?>
 	<style type="text/css">
 		.table td {
@@ -107,7 +144,7 @@
 	</style>
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav accounts-body" data-scope="Service">
 	
 	<?php include 'inc/navbar.php'; ?>
 
@@ -196,25 +233,20 @@
 			</div>
 		</td>
 		<td class="col-md-1">
-			<select name="manager" size="1" class="form-control input-xs">
-				<option value="All"<?php if (! $manager) { echo ' selected'; } ?>>- All -</option>
-				<option value="Robert Cumer"<?php if ($manager=='Robert Cumer') { echo ' selected'; } ?>>Robert Cumer</option>
-				<option value="David Oden"<?php if ($manager=='David Oden') { echo ' selected'; } ?>>David Oden</option>
-				<option value="Scott Johnston"<?php if ($manager=='Scott Johnston') { echo ' selected'; } ?>>Scott Johnston</option>
+			<select name="managerid" size="1" class="form-control input-xs select2">
+				<option value=""<?php if (! $managerid) { echo ' selected'; } ?>>- All -</option>
+				<option value="8"<?php if ($managerid==8) { echo ' selected'; } ?>>Scott Johnston</option>
+				<option value="27"<?php if ($managerid==27) { echo ' selected'; } ?>>Michael Camarillo</option>
 			</select>
 		</td>
 		<td class="col-md-2">
 			<div class="pull-right form-group">
-			<select name="companyid" id="companyid" class="company-selector" disabled >
-					<option value="">- Select a Company -</option>
-				<?php 
-				if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-				else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-				?>
+				<select name="companyid" id="companyid" class="company-selector">
+					<?php if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.getCompany($company_filter).'</option>'.chr(10);} ?>
 				</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
+				<button class="btn btn-primary btn-sm" type="submit" >
+					<i class="fa fa-filter" aria-hidden="true"></i>
+				</button>
 			</div>
 			</td>
 		</tr>
@@ -237,17 +269,17 @@
 <!--=============================   PRINT TABLE ROWS   =============================-->
 <!--================================================================================-->
 <?php
+//DAVID: change when going live
+$U['id'] = 26;
+
 	//Establish a blank array for receiving the results from the table
 	$results = array();
-	$oldid = 0;
-	//If there is a company id, translate it to the old identifier
-	if($company_filter != 0){$oldid = dbTranslate($company_filter, false);}
 
 	$rows = '';
 	$total_pcs = 0;
 	$total_amt = 0;
-	
-	//Write the query for the gathering of Pipe data
+
+/*dl 12-1-17
 	$query = "SELECT s.*, u.fullname ";
 	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
    	if ($keyword) {
@@ -260,16 +292,32 @@
    		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
 	}
 	$query .= "ORDER BY date_entered DESC, job_no DESC; ";
-	
-##### UNCOMMENT IF THE DATA IS BEING PULLED FROM THE NEW DATABASE INSTEAD OF THE PIPE
-	//$query = "SELECT * FROM sales_orders ";
-	//if ($company_filter) { $query .= "WHERE companyid = '".$company_filter."' "; }
-	//$query .= "ORDER BY datetime DESC, id DESC; ";
-#####
-
-//Search for the results. Leave the second parameter null if the pipe is not being used
-
 	$result = qdb($query,'SVCS_PIPE');
+*/
+
+	// is the user permitted for any management roles?
+	$permissions = array_intersect($USER_ROLES, array(1,7));
+
+	$query = "SELECT o.*, i.* FROM ";
+	// if no permissions, join the table with assignments to be sure this user is assigned in order to view
+	if (! $permissions) { $query .= "service_assignments sa, "; }
+	$query .= "service_orders o, service_items i ";
+	$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
+	$query .= "WHERE o.so_number = i.so_number ";
+	if (! $permissions) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+   	if ($keyword) {
+		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
+	} else if ($startDate) {
+   		$dbStartDate = format_date($startDate, 'Y-m-d');
+   		$dbEndDate = format_date($endDate, 'Y-m-d');
+   		$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+	}
+	if ($companyid) {
+		$query .= "AND companyid = '".res($companyid)."' ";
+	}
+	$query .= "GROUP BY i.id ";
+	$query .= "ORDER BY datetime DESC, o.so_number DESC, i.line_number ASC, task_name ASC; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
@@ -280,45 +328,61 @@
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
-		if ($manager AND $job['fullname']<>$manager) { continue; }
+		if ($managerid>0 AND $job['sales_rep_id']<>$managerid) { continue; }
 
 		$po = '';
+/*dl 12-1-17
 		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$job['id']."'; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$po .= $r2['po_number'].'<BR>';
 		}
+*/
 
 		$assigns = array();
+/*dl 12-1-17
 		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
 		$query2 .= "WHERE job_id = '".$job['id']."' AND assigned_to_id = up.id; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$assigns[$r2['assigned_to_id']] = array('name'=>$r2['fullname'],'status'=>'');
 		}
+*/
+		$query2 = "SELECT name, userid FROM service_assignments a, users u, contacts c ";
+		$query2 .= "WHERE item_id = '".$job['id']."' AND item_id_label = 'service_item_id' ";
+		$query2 .= "AND u.id = a.userid AND u.contactid = c.id; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$assigns[$r2['userid']] = array('name'=>$r2['name'],'status'=>'');
+		}
 
 		/*** STATUS ***/
 		// do this before assignments since we check the timesheet here
 		$row_status = '';
-		if ($job['cancelled']==1) {
+		//if ($job['cancelled']==1) {
+		if ($job['status']=='Void') {
 			if ($status<>'all') { continue; }
 
 			$row_status = '<span class="label label-danger">Canceled</span>';
-//		} else if ($job['customer_po_complete']==1 AND $job['timesheets_complete']==1 AND $job['materials_complete']
-//		AND $job['outside_services_complete']==1 AND $job['expenses_complete']==1 AND $job['admin_complete']==1) {
-		} else if ($job['admin_complete']==1) {
+		//} else if ($job['admin_complete']==1) {
+		} else if ($job['status_code']==2) {
 			if ($status<>'all' AND $status<>'closed') { continue; }
 
 			$row_status = '<span class="label label-success">Closed</span>';
 		} else {
+/*dl 12-1-17
 			$query2 = "SELECT * FROM services_techtimesheet WHERE job_id = '".$job['id']."'; ";
 			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
+*/
+			$query2 = "SELECT * FROM timesheets WHERE taskid = '".$job['id']."' AND task_label = 'service_item_id'; ";
+			$result2 = qdb($query2) OR die(qe().' '.$query2);
 			if (mysqli_num_rows($result2)>0) {
 				if ($status<>'all' AND $status<>'open') { continue; }
 
 				$row_status = '<span class="label label-warning">In Progress</span>';
 			}
-			if ($job['on_hold']==1) {
+			//if ($job['on_hold']==1) {
+			if ($job['status_code']==3) {
 				if ($status<>'all' AND $status<>'open') { continue; }
 
 				$row_status = '<span class="label label-danger">On Hold</span>';
@@ -333,8 +397,8 @@
 			}
 */
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				if ($r2['datetime_in'] AND ! $r2['datetime_out']) {
-					$assigns[$r2['tech_id']]['status'] = format_date($r2['datetime_in'],'g:ia');
+				if ($r2['clockin'] AND ! $r2['clockout']) {
+					$assigns[$r2['userid']]['status'] = format_date($r2['clockin'],'g:ia');
 				}
 			}
 
@@ -344,18 +408,17 @@
 			}
 		}
 
+		$expenses = array();
 		if ($financials) {
 			// get expenses prior to checking tech timesheets so expenses can be added to it
-			$expenses = getExpenses($job['id']);
+			$expenses = getExpenses($job['id'],'service_item_id');
 		}
 
 		/*** ASSIGNMENTS AND LABOR COST / PROFITS ***/
 		$assignments = '';
 		$laborTotal = 0;
 		$laborTotalSecs = 0;
-//$keep = false;
 		foreach ($assigns as $techid => $a) {
-//if ($techid==5) { $keep = true; }
 			$timeLogged = '';
 
 			if ($financials) {
@@ -378,7 +441,6 @@
 			}
 			$assignments .= '<BR/>';
 		}
-//if ($keep===false) { continue; }
 
 		/***** CALCULATE JOB FINANCIALS TOTALS *****/
 		$financial_col = '';
@@ -388,16 +450,17 @@
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }
 
 			$materialsTotal = 0;
-			$materials = getMaterials($job['id']);
+			$materials = getMaterials($job['id'],'service_item_id');
 			foreach ($materials as $m) { $materialsTotal += $m['cost']; }
 
 			$outsideTotal = 0;
-			$outsideServices = getOutsideServices($job['id']);
+			$outsideServices = getOutsideServices($job['so_number'],'Service');
 			foreach ($outsideServices as $o) { $outsideTotal += $o['cost']; }
 
+			$jobQuote = $job['qty']*$job['amount'];
 			$jobTotal = $laborTotal + $materialsTotal + $expensesTotal + $outsideTotal;
-			$jobProfit = $job['price_quote']-$jobTotal;
-			$jobProfitPct = ($jobProfit/$job['price_quote']);
+			$jobProfit = $jobQuote-$jobTotal;
+			$jobProfitPct = ($jobProfit/$jobQuote);
 			$totalProfit += $jobProfit;
 			$totalProfitPct += $jobProfitPct;
 			$numJobs++;
@@ -405,10 +468,10 @@
 			// go back and add profits to each tech on the job
 			foreach ($assigns as $techid => $a) {
 				if (! isset($techProfits[$techid])) { $techProfits[$techid] = array(); }
-				$techProfits[$techid][] = $jobProfitPct;//$jobProfit/$job['price_quote'];
+				$techProfits[$techid][] = $jobProfitPct;//$jobProfit/$jobQuote;
 			}
 
-			$finances = format_price(round($job['price_quote'],2),true,' ').' quote';
+			$finances = format_price(round($jobQuote,2),true,' ').' charge';
 			if ($jobTotal>0) {
 				$finances .= '<br/>- '.format_price(round($jobTotal,2),true,' ').' cost<br/>'.
 					'<hr class="no-margin"> <strong>';
@@ -427,33 +490,41 @@
 			';
 		}
 
+		if ($job['item_id']) {
+			$address = address_out($job['item_id']);
+		} else { // for legacy data
+			$address = $job['public_notes'];
+		}
+
 		$rows .= '
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($job['date_entered'],'M j, Y').'
+                                    '.format_date($job['datetime'],'M j, Y').'
                                 </td>
                                 <td class="word-wrap160">
-                                    <a href="job.php?id='.$job['id'].'">'.$job['job_no'].'</a><br/>
-									'.preg_replace('/^N[\/]?A$/i','',str_replace(chr(10),'<BR>',$job['site_access_info_contact'])).'
+                                    <a href="service.php?order_number='.$job['so_number'].'-'.$job['line_number'].'">'.$job['task_name'].'</a><br/>
+									'.getContact($job['contactid']).'
                                 </td>
                                 <td>
-	                                <a href="#">'.$job['customer'].'</a><br/>
-									<span class="info">'.strip_space($job['site_access_info_address']).'</span>
+	                                <a href="profile.php?companyid='.$job['companyid'].'">'.getCompany($job['companyid']).'</a><br/>
+									<span class="info">'.$address.'</span>
                                 </td>
                                 <td>
-                                    '.$job['customer_job_no'].'
+                                    '.$job['cust_ref'].'
                                 </td>
                                 <td>
 									'.$po.'
                                 </td>
                                 <td>
+<!--
                                     '.format_date($job['scheduled_date_of_work'],'D, M j, Y').'<br/>
 									to<br/>
-                                    '.format_date($job['scheduled_completion_date'],'D, M j, Y').'
+-->
+                                    '.format_date($job['due_date'],'D, M j, Y').'
                                 </td>
                                 <td>
-                                    '.$job['fullname'].'
+                                    '.getUser($job['sales_rep_id']).'
                                 </td>
                                 <td>
                                     '.$assignments.'
@@ -561,7 +632,7 @@
                                 </th>
                                 <th class="col-md-<?php echo $date_span; ?>">
                                     <span class="line"></span>
-                                    Start / End
+                                    <!--Start / End-->Due Date
                                 </th>
                                 <th class="col-md-1">
                                     <span class="line"></span>

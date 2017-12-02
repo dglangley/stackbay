@@ -156,6 +156,26 @@
 			}
 		}
 
+		if ($order_type=='orders' OR $order_type=='Service') {
+			$query = "SELECT companyid id, name, COUNT(so_number) n FROM service_orders, companies ";
+			$query .= "WHERE datetime >= '".$past_date."' AND service_orders.companyid = companies.id ";
+//commenting out user filter for now as of services launch 12-1-17
+//			if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
+			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
+
+				// sum results if already present
+				if (isset($firsts[$key])) {
+					$firsts[$key]['n'] += $r['n'];
+				} else {
+					$firsts[$key] = $arr;
+				}
+			}
+		}
+
 		if ($order_type=='orders' OR $order_type=='Repair') {
 			$query = "SELECT companyid id, name, COUNT(ro_number) n FROM repair_orders, companies ";
 			$query .= "WHERE created >= '".$past_date."' AND repair_orders.companyid = companies.id ";

@@ -1151,7 +1151,7 @@
 													</td> -->
 													<td><input class="form-control input-sm" type="text" name="documentation[notes]"></td>
 													<td>
-														<select class="form-control input-sm" name="documentation[type]">
+														<select class="form-control input-sm select2" name="documentation[type]">
 															<option value="">- Select Type -</option>
 															<option value="MOP">MOP</option>
 															<option value="SOW">SOW</option>
@@ -1160,13 +1160,13 @@
 													</td>
 													<td class="file_container">
 														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
-														<a href="#" class="upload_link">
-															<i class="fa fa-file-pdf-o" aria-hidden="true"></i>
+														<a href="#" class="upload_link btn btn-default btn-sm">
+															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 														</a>
 													</td>
 													<td style="cursor: pointer;">
-														<button class="btn btn-success btn-sm pull-right" type="submit">
-												        	<i class="fa fa-plus"></i>	
+														<button class="btn btn-primary btn-sm pull-right" type="submit">
+												        	<i class="fa fa-upload"></i>	
 												        </button>
 
 												      <!--   <a href="#" class="pull-right" style="margin-right: 15px; margin-top: 7px;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a> -->
@@ -1553,7 +1553,7 @@
 														</div>																		
 													</td>
 													<td>
-					                            		<select name="techid" class="form-control input-xs contact-selector required"></select>
+					                            		<select name="techid" class="form-control input-xs user-selector required"></select>
 				                            		</td>
 													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
 													<td>

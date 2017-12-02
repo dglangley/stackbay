@@ -7,8 +7,12 @@
 	$inventory_sub = '
                 <ul class="dropdown-menu text-left">
                     <li><a href="/inventory.php"><i class="fa fa-folder-open"></i> Browse Inventory</a></li>
-                    <li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
 	';
+	if (in_array("1",$USER_ROLES) OR in_array("3",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("5",$USER_ROLES)) {
+		$inventory_sub .= '
+                    <li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
+		';
+	}
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub .= '
@@ -29,13 +33,14 @@
 					'action'=>'/services.php',
 					'image'=>'<i class="fa fa-cogs"></i>',
 					'title'=>'Services',
+					'privilege'=>array(1,3,4,7,8),
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left dropdown-mega">
+                <ul class="dropdown-menu text-left dropdown-mega"'.((! in_array("1",$USER_ROLES) AND ! in_array("4",$USER_ROLES)) ? ' style="min-width:200px"' : '').'>
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
+							<div class="col-megamenu '.((in_array("1",$USER_ROLES) OR in_array("4",$USER_ROLES)) ? 'col-lg-6 col-md-6 col-sm-6' : 'col-lg-12 col-md-12 col-sm-12').'" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/services.php">Services</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -55,6 +60,7 @@
                                     </ul>
                                 </div>
                             </div>
+						'.((in_array("1",$USER_ROLES) OR in_array("4",$USER_ROLES)) ? '
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/quotes.php">Quotes</a></h4>
@@ -75,6 +81,7 @@
                                     </ul>
                                 </div>
                             </div>
+						':'').'
 						</div>
 					  </div>
 					</li>
@@ -85,6 +92,7 @@
 					'action'=>'/operations.php',
 					'image'=>'<i class="fa fa-truck"></i>',
 					'title'=>'Operations',
+					'privilege'=>array(1,3,4,5,7),
 					'aliases'=>array(),
 					'sub'=>'
                 <ul class="dropdown-menu text-left dropdown-mega">
@@ -193,6 +201,7 @@
 					'action'=>'/',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
+					'privilege'=>array(1,4,5),
 					'aliases'=>array('/order.php'),
 					'sub' => '
                 <ul class="dropdown-menu dropdown-menu-left text-left dropdown-mega">

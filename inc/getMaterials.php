@@ -1,21 +1,28 @@
 <?php
 	$MATERIALS = array();
-	function getMaterials($jobid) {
+	function getMaterials($item_id,$item_label='service_item_id') {
 		global $MATERIALS;
 
-		if (! $jobid) { return false; }
-		if (isset($MATERIALS[$jobid])) { return ($MATERIALS[$jobid]); }
+		if (! $item_id) { return false; }
+		if (isset($MATERIALS[$item_id])) { return ($MATERIALS[$item_id]); }
 
 		$materials = array();
+/*
 		$query = "SELECT * FROM services_component c, services_jobbulkinventory jbi ";
 		$query .= "LEFT JOIN services_jobmaterialpo jpo ON jbi.po_id = jpo.id ";
-		$query .= "WHERE job_id = '".$jobid."' AND component_id = c.id; ";
+		$query .= "WHERE job_id = '".$item_id."' AND component_id = c.id; ";
 		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
+*/
+		$query = "SELECT i.id inventoryid, actual cost FROM purchase_items pi, inventory i ";
+		$query .= "LEFT JOIN inventory_costs c ON c.inventoryid = i.id ";
+		$query .= "WHERE pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($item_label)."' ";
+		$query .= "AND i.purchase_item_id = pi.id; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$materials[] = $r;
+			$materials[] = array('cost'=>$r['cost']);
 		}
 
-		$MATERIALS[$jobid] = $materials;
+		$MATERIALS[$item_id] = $materials;
 		return ($materials);
 	}
 ?>

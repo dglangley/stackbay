@@ -1,4 +1,5 @@
 <?php
+	if (! isset($debug)) { $debug = 0; }
 	function setContact($name,$companyid=0,$title='',$notes='',$ebayid='',$aim='',$status='Active', $contactid = 0) {
 		$name = (string)$name;
 		$name = trim($name);
@@ -21,7 +22,8 @@
 		if ($status=='Inactive') { $query .= "'Inactive'"; } else { $query .= "'Active'"; }
 		if ($contactid) { $query .= ",'".res($contactid)."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
+		else { $result = qdb($query) OR die(qe().' '.$query); }
 		if(!$contactid) {$contactid = qid();}
 
 		return ($contactid);

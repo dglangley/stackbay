@@ -81,7 +81,34 @@
 				$T['description'] = '';
 				$T['collection'] = '';
 				$T['collection_no'] = '';
+				$T['collection_term'] = '';
 				$T['account'] = '';
+				break;
+
+			case 'Credit':
+				$T['orders'] = 'credits';
+				$T['order'] = 'id';
+				$T['items'] = 'credit_items';
+				$T['item_label'] = 'credit_item_id';
+				$T['record_type'] = 'order';
+				$T['order_type'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'CM';
+				$T['datetime'] = 'date_created';
+				$T['addressid'] = '';
+				$T['alert'] = 'default';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 14;
+				$T['amount'] = 'amount';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = 'rma_number';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Bill To';
+				$T['account'] = 'AR';
 				break;
 
 			case 'Purchase':
