@@ -396,11 +396,14 @@
 		if ($order_type AND ! $EDIT AND ! $order_number) { $EDIT = true; }
 	}
 
-	if(!in_array("1", $USER_ROLES) && !in_array("5", $USER_ROLES) && !in_array("7", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
-		if(in_array("3", $USER_ROLES)){
+	$approved = array_intersect($USER_ROLES, array(1,4,5,7));
+	if (! $approved) {
+		$tasker = array_intersect($USER_ROLES, array(3,8));
+		if ($tasker) {
 			header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
 			exit;
 		}
+		// shouldn't be here at all
 		header('Location: /');
 		exit;
 	}
