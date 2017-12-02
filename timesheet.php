@@ -223,7 +223,16 @@
 							<option value =''> - Select User - </option>
 							<?php
 								$users = getUsers(array(1,2,3,4,5,7));
-								foreach ($users as $uid => $uname) {
+								$users = array();
+								$query = "SELECT u.id, c.name FROM users u, contacts c ";
+								$query .= "WHERE u.contactid = c.id AND u.hourly_rate > 0 AND c.status = 'Active' ";
+								$query .= "GROUP BY u.id ORDER BY c.name ASC; ";
+								$result = qdb($query) OR die(qe().'<BR>'.$query);
+								while ($r = mysqli_fetch_assoc($result)) {
+								//foreach ($users as $uid => $uname) {
+									$uid = $r['id'];
+									$uname = $r['name'];
+
 									$s = '';
 									if ($userid == $uid) { $s = ' selected'; }
 									if($user_admin OR ($userid == $uid)) {

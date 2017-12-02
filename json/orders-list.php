@@ -48,7 +48,11 @@
 	$query .= "WHERE service_orders.companyid = companies.id ORDER BY so_number DESC LIMIT 0,50; ";
 	$result = qdb($query) OR jsonDie(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$services[] = array('number'=>$r['so_number'],'company'=>$r['name']);
+		$query2 = "SELECT line_number, task_name FROM service_items WHERE so_number = '".$r['so_number']."'; ";
+		$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$services[] = array('number'=>$r['so_number'].'-'.$r2['line_number'],'company'=>$r2['task_name'].' '.$r['name']);
+		}
 	}
 
 	$service_quotes = array();

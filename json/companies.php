@@ -9,7 +9,7 @@
 	$order_type = '';
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 	if ($order_type=='S' OR $order_type=='Sales' OR $order_type=='sales') { $order_type = 'Sale'; }
-	else if ($order_type=='P' OR $order_type=='Purchases' OR $order_type=='purchases') { $order_type = 'Purchase'; }
+	else if ($order_type=='P' OR $order_type=='Purchases' OR $order_type=='purchases' OR $order_type=='purchase_request') { $order_type = 'Purchase'; }
 	else if ($order_type=='R' OR $order_type=='Repairs' OR $order_type=='repairs') { $order_type = 'Repair'; }
 	$add_custom = false;
 	if (isset($_REQUEST['add_custom'])) { $add_custom = $_REQUEST['add_custom']; }
