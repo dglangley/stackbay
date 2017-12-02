@@ -134,13 +134,16 @@
 			return $rate;
 		}
 
-		function getTimesheets($userid, $user_admin, $start = '', $end = '') {
+		function getTimesheets($userid, $user_admin, $start = '', $end = '', $taskid=0, $task_label='') {
 			$timesheets = array();
 
 			if($user_admin) {
 				$query = "SELECT * FROM timesheets";
 				if($start && $end) {
 					$query .= " WHERE clockin >= " . fres($start) . " AND clockout <= " . fres($end);
+				}
+				if ($taskid AND $task_label) {
+					$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
 				}
 				$query .= " ORDER by clockin DESC;";
 
@@ -153,6 +156,9 @@
 				$query = "SELECT * FROM timesheets WHERE userid = ".res($userid);
 				if($start && $end) {
 					$query .= " AND clockin >= " . fres($start) . " AND clockout <= " . fres($end);
+				}
+				if ($taskid AND $task_label) {
+					$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
 				}
 				$query .= " ORDER by clockin DESC;";
 

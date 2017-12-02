@@ -1262,7 +1262,7 @@
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
-															<?=getUser($user);?>
+															<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
 						                                </td>
 						                                <td>
 															<?=toTime($data['laborSeconds']);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($data['laborSeconds']));?></span>
