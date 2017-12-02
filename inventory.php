@@ -623,7 +623,7 @@ To do:
 
 	<?php include_once 'inc/navbar.php'; ?>
 
-	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+	<div class="table-header hidden-xs hidden-sm" id="filter_bar" style="width: 100%; min-height: 48px;">
 		<form class="form-inline" method="get" action="<?=$self_url;?>" enctype="multipart/form-data" id="filters-form" >
 		<input type="hidden" name="inventoryid" value="">
 		<input type="hidden" name="inventory-status" value="">
@@ -724,7 +724,7 @@ To do:
 <div id="pad-wrapper">
 <form class="form-inline" id="inventory-form" method="get" action="save-inventory.php" enctype="multipart/form-data" >
 
-	<div class="row">
+	<div class="row hidden-xs hidden-sm">
 		<div class="col-sm-3">
 <?php if ($n>0) { ?>
 			<select name="revs[]" class="form-control rev-select" data-placeholder="" data-allow-clear="false" multiple="multiple">

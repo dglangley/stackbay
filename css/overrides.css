@@ -1471,6 +1471,11 @@ span.text-info,
 	.bid-input {
 		width: 100%;
 	}
+
+	#pad-wrapper {
+		margin-top: 70px;
+		padding: 0px 3px;
+	}
 }
 
 @media only screen and (max-width: 520px) {

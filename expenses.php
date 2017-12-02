@@ -142,7 +142,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
-		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+		<div class="table-header hidden-xs hidden-sm" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
 					<div class="col-md-3">

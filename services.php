@@ -126,7 +126,7 @@
 <html>
 <!-- Declaration of the standard head with Services home set as title -->
 <head>
-	<title>Services Home</title>
+	<title>Services</title>
 	<?php
 		//Standard headers included in the function
 		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
@@ -151,7 +151,7 @@
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/services.php">
 
-    <table class="table table-header table-filter">
+    <table class="table table-header table-filter hidden-xs hidden-sm hidden-md">
 		<tr>
 		<td class = "col-md-2">
 			<div class="btn-group medium">
@@ -214,7 +214,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-            <h2 class="minimal">Services Jobs</h2>
+            <h2 class="minimal">Services</h2>
 		</td>
 		
 		<td class="col-md-2 text-center">
@@ -328,7 +328,7 @@ $U['id'] = 26;
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
-		if ($managerid>0 AND $job['sales_rep_id']<>$managerid) { continue; }
+		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! in_array("1",$USER_ROLES)) { continue; }
 
 		$po = '';
 /*dl 12-1-17
@@ -500,7 +500,8 @@ $U['id'] = 26;
                             <!-- row -->
                             <tr>
                                 <td>
-                                    '.format_date($job['datetime'],'M j, Y').'
+                                    <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
+                                    <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
                                 </td>
                                 <td class="word-wrap160">
                                     <a href="service.php?order_number='.$job['so_number'].'-'.$job['line_number'].'">'.$job['task_name'].'</a><br/>
@@ -510,10 +511,10 @@ $U['id'] = 26;
 	                                <a href="profile.php?companyid='.$job['companyid'].'">'.getCompany($job['companyid']).'</a><br/>
 									<span class="info">'.$address.'</span>
                                 </td>
-                                <td>
+                                <td class="hidden-xs hidden-sm">
                                     '.$job['cust_ref'].'
                                 </td>
-                                <td>
+                                <td class="hidden-xs hidden-sm">
 									'.$po.'
                                 </td>
                                 <td>
@@ -530,7 +531,7 @@ $U['id'] = 26;
                                     '.$assignments.'
                                 </td>
 								'.$financial_col.'
-                                <td class="text-center">
+                                <td class="text-center hidden-xs hidden-sm">
 									'.$row_status.'
                                 </td>
 
@@ -538,10 +539,7 @@ $U['id'] = 26;
 		';
 	}
 
-	$date_span = 2;
 	if ($financials) {
-		$date_span = 1;
-
 		$numTechs = count($techTimes);
 		$rem = $numTechs%4;
 		for ($i=0; $i<(4-$rem); $i++) {
@@ -608,47 +606,52 @@ $U['id'] = 26;
 
 	<!-- Declare the class/rows dynamically by the type of information requested (could be transitioned to jQuery) -->
                 <div class="row">
-                    <table class="table table-hover table-striped table-condensed">
+                    <table class="table table-hover table-striped table-condensed table-responsive">
                         <thead>
                             <tr>
-                                <th class="col-md-1">
-                                    Date 
+                                <th class="col-sm-1">
+                                    Date
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-sm-1">
                                     <span class="line"></span>
-                                    Job# / Contact
+                                    <span class="hidden-xs hidden-sm">Task# / Contact</span>
+                                    <span class="hidden-md hidden-lg">Task#</span>
                                 </th>
-                                <th class="col-md-2">
+                                <th class="col-sm-2">
                                     <span class="line"></span>
-                                    Company
+                                    <span class="hidden-xs hidden-sm">Description</span>
+                                    <span class="hidden-md hidden-lg">Descr</span>
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
-                                    Project ID#
+									Project#
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
                                     PO#
                                 </th>
-                                <th class="col-md-<?php echo $date_span; ?>">
+                                <th class="col-sm-1">
                                     <span class="line"></span>
-                                    <!--Start / End-->Due Date
+                                    <span class="hidden-xs hidden-sm">Due Date</span>
+                                    <span class="hidden-md hidden-lg">Due</span>
                                 </th>
-                                <th class="col-md-1">
+                                <th class="col-sm-1">
                                     <span class="line"></span>
-									Manager
+                                    <span class="hidden-xs hidden-sm">Manager</span>
+                                    <span class="hidden-md hidden-lg">Mgr</span>
                                 </th>
-                                <th class="col-md-2">
+                                <th class="col-sm-1">
                                     <span class="line"></span>
-                                    Assignments
+                                    <span class="hidden-xs hidden-sm">Assignments</span>
+                                    <span class="hidden-md hidden-lg">Techs</span>
                                 </th>
 <?php if ($financials) { ?>
-                                <th class="col-md-1 text-center">
+                                <th class="col-sm-1 text-center">
                                     <span class="line"></span>
 									Financials
                                 </th>
 <?php } ?>
-                                <th class="col-md-1 text-center">
+                                <th class="col-sm-1 text-center hidden-xs hidden-sm">
                                     <span class="line"></span>
                                     Status
                                 </th>

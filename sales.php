@@ -11,9 +11,19 @@
 	include_once 'inc/calcQuarters.php';
 	include_once 'inc/format_market.php';
 
-	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST) {
+	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php') {
 		header('Location: '.$SEARCH_MODE);
 		exit;
+	} else {
+		$approval = array_intersect($USER_ROLES,array(1,4,5,7));
+		if (! $approval) {
+			if (array_intersect($USER_ROLES,array(8))) {
+				header("Location: /services.php");
+			} else {
+				header("Location: /operations.php");
+			}
+			exit;
+		}
 	}
 
 	$listid = 0;
@@ -990,7 +1000,7 @@ if (! $r['partid']) { return ($results); }
 					</div> -->
 	        	</div>
 
-	        	<div class="col-sm-8 action-hover slider-box">
+	        	<div class="col-sm-8 action-hover slider-box hidden-xs hidden-sm">
 					<div class="row">
 						<div class="col-sm-2 text-center">
 							<div id="marketpricing-<?php echo $ln; ?>" class="header-text">&nbsp;</div>

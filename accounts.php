@@ -131,7 +131,7 @@
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
 
-    <table class="table table-header table-filter">
+    <table class="table table-header table-filter hidden-xs hidden-sm">
 		<tr>
 		<td class = "col-md-2">
 			<div class="col-md-6">

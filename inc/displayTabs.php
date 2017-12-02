@@ -339,14 +339,16 @@
 		'mobile' =>
 			array(
 				array('action'=>'/profile.php','aliases'=>array(),'image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
-				array('action'=>'/services.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7)),
-				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations',),
+				array('action'=>'/services.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7,8)),
+				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations','privilege'=>array(1,3,4,5,7)),
 				array('action'=>'/inventory.php','aliases'=>array(),'image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
+				array('action'=>'/tools.php','aliases'=>array(),'image'=>'<i class="fa fa-eye-slash"></i>','title'=>'Tools',),
 				array(
 					'action'=>'/',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'aliases'=>array(),
+					'privilege'=>array(1,4,5),
 					'sub'=>'',
 					),
 				array(
@@ -357,6 +359,9 @@
 					'sub'=>'',
 					'privilege'=>array(1,4,7),
 				),
+				array('action'=>'/expenses.php','aliases'=>array(),'image'=>'<i class="fa fa-credit-card"></i>','title'=>'My Expenses',),
+				array('action'=>'#','aliases'=>array(),'image'=>'<i class="fa fa-cutlery"></i>','title'=>'Break Mode',),
+				array('action'=>'/signout.php','aliases'=>array(),'image'=>'<i class="fa fa-sign-out"></i>','title'=>'Logout',),
 			),
 	);
 
@@ -403,6 +408,8 @@
 				$aux = ' data-toggle="dropdown"';// data-hover="dropdown" aria-expanded="false"';
 				//$aux = ' data-toggle="" data-hover="dropdown" aria-expanded="false"';
 				$flag = '<b class="caret"></b>';
+			} else if ($mobile) {
+				$clsA = ' tab-submit';
 			}
 
 				//<a href="javascript:void(0);" class="mode-tab'.$clsA.'"'.$aux.'>'.$tab['image'].'<span> '.$tab['title'].'</span> '.$flag.'</a>

@@ -703,7 +703,7 @@
 <!----------------- Output the navigation bar ---------------------->
 
 	<?php include 'inc/navbar.php'; ?>
-		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
+		<div class="table-header hidden-xs hidden-sm" id = 'filter_bar' style="width: 100%; min-height: 48px;">
 <!-- 			<div class="row" style="padding: 8px;">
 				<div class="col-md-12 text-center">
 	            	<h2 class="minimal" id="filter-title">Operations Dashboard</h2>
