@@ -297,4 +297,16 @@ function calculateTax(object){
 		$(this).closest(".file_container").find(".file_name").text(fileName);
 	});
 	
+	$(document).on("click", ".forward_activity", function() {
+		var activityid = $(this).data('activityid');
+
+		if(activityid) {
+			var input = $("<input>").attr("type", "hidden").attr("name", "activity_notification").val(activityid);
+			//console.log(input);
+			$('#save_form').append($(input));
+		}
+
+		$('#save_form').submit();
+	});
+
 })(jQuery);

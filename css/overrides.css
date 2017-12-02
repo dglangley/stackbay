@@ -1063,7 +1063,7 @@ tr.info:hover td, td.info:hover {
 }
 .notifications .note {
 	display:inline-block;
-	max-width:240px;
+	max-width:200px;
 	overflow:hidden;
 	text-overflow:ellipsis;
 	white-space:nowrap;
@@ -2255,7 +2255,9 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
   );
 }
 
-
+/*.notification-dropdown .notifications .notes {
+	max-width: 200px;
+}*/
 
 
 

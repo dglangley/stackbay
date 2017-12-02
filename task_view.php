@@ -250,21 +250,21 @@
 		else if ($type=='Service') { $label = 'service_item_id'; }
 
 		$query = "
-				SELECT userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
+				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
 				UNION
-				SELECT '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
+				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
 				UNION
-				SELECT created_by as techid, created as datetime, CONCAT('".ucwords($type)." Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
+				SELECT '' as id, created_by as techid, created as datetime, CONCAT('".ucwords($type)." Order Created') as notes FROM repair_orders WHERE ro_number = ".prep($ro_number)."
 				UNION
-				SELECT userid as techid, date_created as datetime, CONCAT('Received ".ucwords($type)." Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
+				SELECT '' as id, userid as techid, date_created as datetime, CONCAT('Received ".ucwords($type)." Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".prep($repair_item_id).") AND serial_no IS NOT NULL
 				UNION
-				SELECT '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
+				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".prep($ro_number)." AND order_type = 'Repair'
 				UNION
-				SELECT '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE ro_number = ".prep($ro_number)." AND inventory.id = repair_components.invid AND parts.id = inventory.partid
+				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE ro_number = ".prep($ro_number)." AND inventory.id = repair_components.invid AND parts.id = inventory.partid
 				UNION
-				SELECT '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.ro_number = ".prep($ro_number)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.ro_number = ".prep($ro_number)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
 				UNION
-				SELECT '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.ro_number = ".prep($ro_number)."  AND pr.partid = p.id
+				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.ro_number = ".prep($ro_number)."  AND pr.partid = p.id
 				ORDER BY datetime DESC;";
 
 		$result = qdb($query) OR die(qe());
@@ -559,6 +559,19 @@
 
 			$labor_data[$userid] = $data;
 		}
+	}
+
+	function checkNotification($activityid) {
+		$available = true;
+
+		$query = "SELECT * FROM messages WHERE ref_1_label = 'activityid' AND ref_1 = ".res($activityid).";";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		if (mysqli_num_rows($result)) {
+			$available = false;
+		}
+
+		return $available;
 	}
 
 	function toTime($secs) {
@@ -1040,7 +1053,17 @@
 											<div class="row list">
 												<div class="col-md-2"><?=format_date($activity_row['datetime'], 'n/j/y, h:i a');?></div>
 												<div class="col-md-4"><?=getContact($activity_row['techid'], 'userid');?></div>
-												<div class="col-md-6"><?=$activity_row['notes'];?></div>
+												<div class="col-md-6">
+													<?=$activity_row['notes'];?>
+													<?php if($activity_row['id']) { 
+														if(checkNotification($activity_row['id'])) {
+													?>
+														<a href="javascript:void(0);" class="pull-right forward_activity" data-activityid="<?=$activity_row['id'];?>"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>
+													<?php 
+															}
+														} 
+													?>
+												</div>
 											</div>
 										<?php endforeach; } ?>
 									</section>
@@ -1076,7 +1099,9 @@
 										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
 											<div class="row list">
 												<div class="col-md-7"><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></div>
-												<div class="col-md-5"><?=$item_details['notes'];?></div>
+												<div class="col-md-5">
+													<?=$item_details['notes'];?>		
+												</div>
 											</div>
 										<?php } ?>
 
@@ -1174,6 +1199,10 @@
 												</tr>
 											</tbody>
 										</table>
+										<button class="btn btn-success btn-sm pull-right" type="submit">
+								        	Generate Closeout
+								        </button>
+								        <br>
 									</section>
 
 									<?php if($closeout) { ?>

@@ -2,7 +2,7 @@
 	// Files is an array of files
 	// $files = array('readme.txt', 'test.html', 'image.gif');
 
-	function zipFiles($filelist) {
+	function zipFiles($filelist, $item_id, $item_label) {
 		// Location of said files
 		$BUCKET = 'arn:aws:s3:::ventel.stackbay.com-docs';
 
@@ -48,9 +48,8 @@
 		$zip->close();
 
 		// Makes the user download the zipped files
-		header('Content-Type: application/zip');
-		header('Content-disposition: attachment; filename='.$zipname);
-		header('Content-Length: ' . filesize($zipname));
-		readfile($zipname);
-
+		// header('Content-Type: application/zip');
+		// header('Content-disposition: attachment; filename='.$zipname);
+		// header('Content-Length: ' . filesize($zipname));
+		// readfile($zipname);
 	}
