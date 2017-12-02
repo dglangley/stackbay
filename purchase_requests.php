@@ -23,7 +23,7 @@
 
 	if(isset($_REQUEST['delete'])) {
 		$deletion = voidRequest($_REQUEST['delete']);
-
+//print_r($_REQUEST['delete']);
 		//if(! $deletion) {
 			header('Location: /purchase_requests.php');
 		//}
@@ -73,7 +73,7 @@
 		$results = false;
 
 		// First check if the item has been voided yet or not
-		$query = "SELECT * FROM purchase_requests WHERE id = ".res($pr_id)." AND status <> 'Void';";
+		$query = "SELECT * FROM purchase_requests WHERE id = ".res($pr_id)." AND (status <> 'Void' OR status IS NULL);";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		if (mysqli_num_rows($result)) {
