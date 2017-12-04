@@ -131,37 +131,32 @@
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/accounts.php">
 
-    <table class="table table-header table-filter hidden-xs hidden-sm">
+    <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
-			<div class="col-md-6">
-			    <div class="btn-group">
-			        <button class="glow left large btn-radio<?php if ($master_report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
-			        <i class="fa fa-ticket"></i>	
-			        </button>
-					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($master_report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-radio<?php if ($master_report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
-			        	<i class="fa fa-list"></i>	
-		        	</button>
-					<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($master_report_type=='detail') { echo ' checked'; } ?>>
-			    </div>
+		    <div class="btn-group pull-left">
+		        <button class="glow left large btn-radio<?php if ($master_report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="summary">
+		        <i class="fa fa-ticket"></i>	
+		        </button>
+				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($master_report_type=='summary') { echo ' checked'; } ?>>
+		        <button class="glow right large btn-radio<?php if ($master_report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="details">
+		        	<i class="fa fa-list"></i>	
+	        	</button>
+				<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($master_report_type=='detail') { echo ' checked'; } ?>>
 		    </div>
 
-		    <div class="col-md-6">
-			    <div class="btn-group medium">
-			        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="bottom" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : '');?>">
-			        	<i class="fa fa-sort-numeric-desc"></i>	
-			        </button>
+		    <div class="btn-group medium pull-right">
+		        <button data-toggle="tooltip" name="filter" type="submit" value="active" data-placement="bottom" title="" data-filter="active_radio" data-original-title="Active" class="btn btn-default btn-sm left filter_status <?=($filter == 'active' ? 'active btn-warning' : '');?>">
+		        	<i class="fa fa-sort-numeric-desc"></i>	
+		        </button>
 
-			        <button data-toggle="tooltip" name="filter" type="submit" value="complete" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-default btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : '');?>">
-			        	<i class="fa fa-history"></i>	
-			        </button>
+		        <button data-toggle="tooltip" name="filter" type="submit" value="complete" data-placement="bottom" title="" data-filter="complete_radio" data-original-title="Completed" class="btn btn-default btn-sm middle filter_status <?=($filter == 'complete' ? 'active btn-success' : '');?>">
+		        	<i class="fa fa-history"></i>	
+		        </button>
 
-					<button data-toggle="tooltip" name="filter" type="submit" value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-default btn-sm right filter_status <?=(($filter == 'all') ? 'active btn-info' : '');?>">
-			        	All
-			        </button>
-			    </div>
-
+				<button data-toggle="tooltip" name="filter" type="submit" value="all" data-placement="bottom" title="" data-filter="all_radio" data-original-title="All" class="btn btn-default btn-sm right filter_status <?=(($filter == 'all') ? 'active btn-info' : '');?>">
+		        	All
+		        </button>
 			</div>
 		</td>
 
@@ -183,7 +178,7 @@
 			    </div>
 			</div>
 			<div class="form-group">
-					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+					<button class="btn btn-primary btn-sm btn-filter" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					<div class="btn-group" id="dateRanges">
 						<div id="btn-range-options">
 							<button class="btn btn-default btn-sm">&gt;</button>
@@ -246,7 +241,7 @@
 							else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
 						?>
 					</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
+					<button class="btn btn-primary btn-sm btn-filter" type="submit">
 						<i class="fa fa-filter" aria-hidden="true"></i>
 					</button>
 				</div>

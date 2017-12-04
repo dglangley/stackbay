@@ -1021,25 +1021,25 @@
 				        <!-- Begin all the tabs in the page -->
 				        <ul class="nav nav-tabs nav-tabs-ar">
 				        	<?php if($activity) {
-					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><i class="fa fa-folder-open-o"></i> <span class="hidden-xs hidden-sm">Activity</span></a></li>';
+					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-folder-open-o"></i> Activity</span><span class="hidden-md hidden-lg"><i class="fa fa-folder-open-o fa-2x"></i></span></a></li>';
 				        	} 
 				        	if($details) { 
-					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> <span class="hidden-xs hidden-sm">Details</span></a></li>';
+					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-list"></i> Details</span><span class="hidden-md hidden-lg"><i class="fa fa-list fa-2x"></i></span></a></li>';
 					        } 
 				        	if($documentation) { 
-					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> <span class="hidden-xs hidden-sm">Documentation</span></a></li>';
+					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> <span class="hidden-xs hidden-sm">Labor</span> <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users"></i> Labor</span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span> <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Materials</span> &nbsp; <span class="materials_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'--></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip" aria-hidden="true"></i> Materials</span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span> &nbsp; <span class="materials_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'--></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> <span class="hidden-xs hidden-sm">Expenses</span> &nbsp; <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card"></i> Expenses</span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span> &nbsp; <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> <span class="hidden-xs hidden-sm">Outside Services</span> &nbsp; <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase"></i> Outside Services</span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span> &nbsp; <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>

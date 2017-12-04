@@ -98,6 +98,11 @@ body {
 div.table-filter div {
 	margin-top:8px;
 }
+@media (max-width: 1490px) {
+  .navbar-nav .table-filter, #dateRanges, .btn-filter {
+	display:none;
+  }
+}
 
 .input-xs {
   height: 24px;

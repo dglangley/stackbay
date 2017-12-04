@@ -27,6 +27,7 @@
 				$query = "SELECT so_number, 'Service' type FROM service_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
 			} else {
 				$query = "SELECT so_number, 'Sale' type FROM sales_orders WHERE cust_ref = '".res($search)."' OR so_number = '".res($search)."'; ";
+				$result = qdb($query) OR die(qe().'<BR>'.$search);
 				if (mysqli_num_rows($result)==0) {
 					$query = "SELECT so_number, 'Service' type FROM service_items WHERE task_name = '".res($search)."' OR so_number = '".res($search)."'; ";
 				}
