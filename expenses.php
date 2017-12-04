@@ -21,6 +21,7 @@
 	} else {
 		$userid = $U['id'];
 	}
+	$userid = $U['id'];
 
 	function getExpenses($userid, $user_admin = false, $filter = '') {
 		$expenses = array();

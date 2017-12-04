@@ -111,6 +111,7 @@
 	} else if (in_array("4", $USER_ROLES)) {
 		$managerid = $U['id'];
 	}
+	$managerid = 0;
 
 
 	/****** FUNCTIONS ******/
