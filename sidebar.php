@@ -1,13 +1,15 @@
 <style type="text/css">
+@media (min-width: 992px) {
 	#pad-wrapper {
 		margin-left: 320px;
 	}
+}
 	.sidebar label {
 		margin:0px;
 	}
 </style>
 
-<div class="sidebar">
+<div class="sidebar hidden-xs hidden-sm">
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';

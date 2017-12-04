@@ -649,7 +649,7 @@
 		} else if($new) {
 			$pageTitle = "New Service for Order# ".$order_number.$special;
 		} else {
-			$pageTitle = "Service# ".$order_number."-".$task_number.$special;
+			$pageTitle = $order_number."-".$task_number.$special;
 		}
 	} else if(strtolower($type) == "repair" OR $class == "repair") {
 		if($quote) {
@@ -658,7 +658,7 @@
 			if(! $task_number) {
 				$task_number = 1;
 			}
-			$pageTitle = "Repair# ".$order_number."-".$task_number.$special;
+			$pageTitle = $order_number."-".$task_number.$special;
 		}
 	}
 ?>
@@ -846,6 +846,10 @@
 			}
 		</style>
 	</head>
+
+	<?php
+		$manager_access = array_intersect($USER_ROLES,array(1,4));
+	?>
 	
 	<body class="sub-nav" data-order-type="<?=($quote ? 'quote' : $type)?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 		<div id="loader" class="loader text-muted" style="display: none;">
@@ -856,7 +860,7 @@
 		</div>
 		<div class="container-fluid data-load full-height">
 			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
-			<div class="row table-header full-screen" id = "order_header">
+			<div class="row table-header full-screen hidden-xs hidden-sm" id = "order_header">
 				<div class="col-md-4">
 					<!-- Configure Repair Table Header Options -->
 					<?php if(! $quote AND ! $new AND strtolower($type) == 'repair') { ?>
@@ -890,16 +894,14 @@
 							</form>
 					<!-- Configure Service Header Options -->
 					<?php } else { ?>
-						<?php if(! $task_edit) { ?>
+						<?php if(! $task_edit AND $manager_access) { ?>
 							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php } else { ?>
 						<?php } ?>
 					<?php } ?>
 				</div>
 				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2>
-						<?=$pageTitle;?>
-					</h2>
+					<h2><?=$pageTitle;?></h2>
 				</div>
 				<div class="col-sm-4">
 					<div class="col-md-4">
@@ -999,25 +1001,25 @@
 				        <!-- Begin all the tabs in the page -->
 				        <ul class="nav nav-tabs nav-tabs-ar">
 				        	<?php if($activity) {
-					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><i class="fa fa-folder-open-o"></i> Activity</a></li>';
+					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><i class="fa fa-folder-open-o"></i> <span class="hidden-xs hidden-sm">Activity</span></a></li>';
 				        	} 
 				        	if($details) { 
-					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> Details</a></li>';
+					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><i class="fa fa-list"></i> <span class="hidden-xs hidden-sm">Details</span></a></li>';
 					        } 
 				        	if($documentation) { 
-					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> Documentation</a></li>';
+					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><i class="fa fa-file-pdf-o"></i> <span class="hidden-xs hidden-sm">Documentation</span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> <span class="hidden-xs hidden-sm">Labor</span> <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> Materials &nbsp; <span class="materials_cost"><!--'.format_price($materials_total).'--></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Materials</span> &nbsp; <span class="materials_cost"><!--'.format_price($materials_total).'--></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> Expenses &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> <span class="hidden-xs hidden-sm">Expenses</span> &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> Outside Services &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> <span class="hidden-xs hidden-sm">Outside Services</span> &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
