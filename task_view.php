@@ -386,6 +386,20 @@
 						$purchase_requests[] = $row;
 					}
 				}
+			} else {
+				// Also grab elements that were fulfilled by the in stock
+				$query = "SELECT *, SUM(i.qty) as totalReceived FROM service_materials c, inventory i ";
+				$query .= "WHERE c.service_item_id = '".res($item_id)."' AND c.inventoryid = i.id ";
+				$query .= "GROUP BY i.partid; ";
+
+				//echo $query;
+				$result = qdb($query) OR die(qe()); 
+
+				while ($row = $result->fetch_assoc()) {
+					if(!in_array_r($row['partid'] , $purchase_requests)) {
+						$purchase_requests[] = $row;
+					}
+				}
 			}
 		} else if($type == 'service_quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE $field = ".res($item_id).";";
