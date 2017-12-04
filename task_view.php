@@ -908,9 +908,15 @@
 					<div class="col-md-8">
 						<?php if(! $quote){ ?>
 							<div class="col-md-9" style="padding-top: 10px;">
-								<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-									<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
-								</select>
+								<?php if(strtolower($type) == 'repair'){ ?>
+									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
+										<option><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+									</select>
+								<?php } else { ?>
+									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
+										<option><?=$order_number_details;?> <?=$item_details['task_name'];?></option>
+									</select>
+								<?php  } ?>
 							</div>
 
 							<div class="col-md-3 remove-pad">
@@ -1100,7 +1106,7 @@
 											<div class="row list">
 												<div class="col-md-7"><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></div>
 												<div class="col-md-5">
-													<?=$item_details['notes'];?>		
+													<?=$item_details['description'];?>		
 												</div>
 											</div>
 										<?php } ?>
