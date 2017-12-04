@@ -66,13 +66,23 @@
 
 		// Convert the taskid to the respective order number for reloading
 		if($task_label == 'repair_item_id') {
-			$query = "SELECT ro_number FROM repair_items WHERE id = ".res($taskid).";";
+			$query = "SELECT ro_number, line_number FROM repair_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)){
 				$r = mysqli_fetch_assoc($result);
 				if(empty($data)) {
-					$data = $r['ro_number'];
+					$data = $r['ro_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
+				}
+			}
+		} else {
+			$query = "SELECT so_number, line_number FROM service_items WHERE id = ".res($taskid).";";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
+
+			if (mysqli_num_rows($result)){
+				$r = mysqli_fetch_assoc($result);
+				if(empty($data)) {
+					$data = $r['so_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
 				}
 			}
 		}

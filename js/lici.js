@@ -12,14 +12,18 @@
 	});
 
 	function loadTask(task_label, order_number){
+		task_label = task_label.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+		    return letter.toUpperCase();
+		});
 		window.location.href = "/service.php?order_type="+task_label+"&order_number="+order_number;
+		console.log("/service.php?order_type="+task_label+"&order_number="+order_number);
 	}
 
 	// Initiates the initial login if the user is assigned to the task
 	var taskid = $('body').data('taskid');
 	var task_label = '';
 
-	if($('body').data('order-type') == 'repair') {
+	if($('body').data('order-type') == 'repair' || $('body').data('order-type') == 'Repair') {
 		task_label = 'repair_item_id';
 	} else {
 		task_label = 'service_item_id';
@@ -48,10 +52,10 @@
 	        		loadTask(task_label, data);
 	        	}
 
-	        	if(! $.isNumeric(data)) {
-	        		// Consider the data as an error, otherwise it should be the order number to invoke the redirect
-	        		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", data, false);
-	        	}
+	        	// if(! $.isNumeric(data)) {
+	        	// 	// Consider the data as an error, otherwise it should be the order number to invoke the redirect
+	        	// 	modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", data, false);
+	        	// }
 
 	        	 console.log(data);
 	        	//return order_number;

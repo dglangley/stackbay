@@ -386,6 +386,20 @@
 						$purchase_requests[] = $row;
 					}
 				}
+			} else {
+				// Also grab elements that were fulfilled by the in stock
+				$query = "SELECT *, SUM(i.qty) as totalReceived FROM service_materials c, inventory i ";
+				$query .= "WHERE c.service_item_id = '".res($item_id)."' AND c.inventoryid = i.id ";
+				$query .= "GROUP BY i.partid; ";
+
+				//echo $query;
+				$result = qdb($query) OR die(qe()); 
+
+				while ($row = $result->fetch_assoc()) {
+					if(!in_array_r($row['partid'] , $purchase_requests)) {
+						$purchase_requests[] = $row;
+					}
+				}
 			}
 		} else if($type == 'service_quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE $field = ".res($item_id).";";
@@ -910,9 +924,15 @@
 					<div class="col-md-8">
 						<?php if(! $quote){ ?>
 							<div class="col-md-9" style="padding-top: 10px;">
-								<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-									<option><?=ucwords($type) . '# '.$order_number_details;?> - <?=getCompany($ORDER['companyid']);?></option>
-								</select>
+								<?php if(strtolower($type) == 'repair'){ ?>
+									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
+										<option><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+									</select>
+								<?php } else { ?>
+									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
+										<option><?=$order_number_details;?> <?=$item_details['task_name'];?></option>
+									</select>
+								<?php  } ?>
 							</div>
 
 							<div class="col-md-3 remove-pad">
@@ -1013,13 +1033,13 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><i class="fa fa-users"></i> <span class="hidden-xs hidden-sm">Labor</span> <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Materials</span> &nbsp; <span class="materials_cost"><!--'.format_price($materials_total).'--></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><i class="fa fa-microchip" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Materials</span> &nbsp; <span class="materials_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'--></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> <span class="hidden-xs hidden-sm">Expenses</span> &nbsp; <span class="expenses_cost">'.format_price($expenses_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><i class="fa fa-credit-card"></i> <span class="hidden-xs hidden-sm">Expenses</span> &nbsp; <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> <span class="hidden-xs hidden-sm">Outside Services</span> &nbsp; <span class="outside_cost">'.format_price($outside_services_total).'</span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><i class="fa fa-suitcase"></i> <span class="hidden-xs hidden-sm">Outside Services</span> &nbsp; <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
@@ -1102,7 +1122,7 @@
 											<div class="row list">
 												<div class="col-md-7"><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></div>
 												<div class="col-md-5">
-													<?=$item_details['notes'];?>		
+													<?=$item_details['description'];?>		
 												</div>
 											</div>
 										<?php } ?>

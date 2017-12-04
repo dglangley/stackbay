@@ -907,6 +907,39 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 			minimumInputLength: 0
 	    });
+
+	    $(".service-task-selector").select2({
+	        width: '100%',
+			placeholder: '- Select a Task -',
+			ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+				url: "/json/tasks.php",
+				dataType: 'json',
+				data: function (params) {
+					return {
+						noreset: $(this).data('noreset'),
+						q: params.term,//search term
+						page: params.page,
+						order_type: 'service',
+						userid: $('body').data('techid'),
+					};
+				},
+				allowClear: true,
+				processResults: function (data, params) { // parse the results into the format expected by Select2.
+					// since we are using custom formatting functions we do not need to alter remote JSON data
+					// except to indicate that infinite scrolling can be used
+					params.page = params.page || 1;
+					return {
+						results: $.map(data, function(obj) {
+							return { id: obj.id, text: obj.text };
+						})
+					};
+				},
+				cache: true
+			},
+			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
+			minimumInputLength: 0
+	    });
+
 	    $(".terms-select2").select2({
 		});
 		$("select.select2").select2({
