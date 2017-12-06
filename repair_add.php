@@ -44,7 +44,6 @@
 	$invid = '';
 	$itemLocation = '';
 	$errorHandler = '';
-	$errorHandler = '';
 	$place = '';
 	$instance = '';
 	$rmaArray = array();
@@ -92,7 +91,8 @@
 
 	//Check to see if a sales_item record has been created for this item
 	//if($status != 'Active') {
-		$query = "SELECT so_number FROM sales_items WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id).";";
+		//$query = "SELECT so_number FROM sales_items WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id).";";
+		$query = "SELECT si.so_number FROM sales_items si, sales_orders so WHERE ref_1_label = 'repair_item_id' AND ref_1 = ".prep($repair_item_id)." AND si.so_number = so.so_number AND so.status = 'Active';";
 		$result = qdb($query) or die(qe());
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);

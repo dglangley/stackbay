@@ -872,18 +872,34 @@
 				<h1 id="loader-message">Please wait while your search result is populating...</h1>
 			</div>
 		</div>
-		<div class="container-fluid data-load full-height">
-			<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
-			<div class="row table-header full-screen hidden-xs hidden-sm" id = "order_header">
-				<div class="col-md-4">
-					<!-- Configure Repair Table Header Options -->
-					<?php if(! $quote AND ! $new AND strtolower($type) == 'repair') { ?>
+		<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
+
+
+
+			<div class="table table-header table-filter">
+				<div class="col-md-2">
+					<?php if (strtolower($type)=='repair' AND ! $task_edit) { ?>
+						<span class="pull-right">
+							<form action="tasks_log.php" style="display: inline-block;">
+								<input type="hidden" name="item_id" value="<?=$item_id;?>">
+								<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
+									<i class="fa fa-terminal"></i>
+								</button>
+							</form>
+						</span>
+					<?php } ?>
+					<?php if ($manager_access AND ((! $quote AND ! $new AND strtolower($type)=='repair') OR ! $task_edit)) { ?>
+						<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php if(! $task_edit) { ?>
-							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-						<?php } else { ?>
-							<div class="col-md-6" style="padding-top: 10px;">
-								<?php if(! empty($repair_codes)) { ?>
-									<select style="margin-top: 10px;" id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
+							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+								<i class="fa fa-qrcode"></i> Receive
+							</a>
+						<?php } ?>
+					<?php } ?>
+				</div>
+				<div class="col-md-2">
+					<?php if (! $quote AND ! $new AND strtolower($type) == 'repair' AND ! empty($repair_codes)) { ?>
+									<select id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
 										<option selected="" value="null">- Select Status -</option>
 										<?php 
 											foreach($repair_codes as $code):
@@ -891,39 +907,13 @@
 											endforeach;
 										?>
 									</select>
-								<?php } ?>
-							</div>
-						<?php } ?>
-
-						<?php if(! $task_edit) { ?>
-							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
-								<i class="fa fa-qrcode"></i> Receive
-							</a>
-						<?php } ?>
-							<form action="tasks_log.php" style="display: inline-block;">
-								<input type="hidden" name="item_id" value="<?=$item_id;?>">
-								<button class="btn btn-sm btn-default btn-flat info" type="submit" name="type" value="test_out" title="Mark as Tested" data-toggle="tooltip" data-placement="bottom">
-									<i class="fa fa-terminal"></i>
-								</button>
-							</form>
-					<!-- Configure Service Header Options -->
-					<?php } else { ?>
-						<?php if(! $task_edit AND $manager_access) { ?>
-							<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-						<?php } else { ?>
-						<?php } ?>
 					<?php } ?>
 				</div>
-				<div class="col-sm-4 text-center" style="padding-top: 5px;">
-					<h2><?=$pageTitle;?></h2>
+				<div class="col-md-4 text-center">
+					<h2 class="minimal"><?=$pageTitle;?></h2>
 				</div>
-				<div class="col-sm-4">
-					<div class="col-md-4">
-						
-					</div>
-					<div class="col-md-8">
+				<div class="col-md-3">
 						<?php if(! $quote){ ?>
-							<div class="col-md-9" style="padding-top: 10px;">
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
 										<option><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
@@ -933,9 +923,7 @@
 										<option><?=$order_number_details;?> <?=$item_details['task_name'];?></option>
 									</select>
 								<?php  } ?>
-							</div>
 
-							<div class="col-md-3 remove-pad">
 								<?php if($task_edit) { ?>
 									<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 								<?php } else if(! $ticketStatus) { ?>
@@ -943,19 +931,20 @@
 										<i class="fa fa-save"></i> Complete
 									</button>
 								<?php } ?>
-							</div>
-						<?php } else { ?>
-
+						<?php } ?>
+				</div>
+				<div class="col-md-1">
+					<?php if ($quote) { ?>
 							<?php if(empty($task_number)) { ?>
-								<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-pencil" aria-hidden="true"></i> Quote</a>
+								<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 							<?php } else { ?>
 								<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 							<?php } ?>
-						<?php } ?>
-					</div>
+					<?php } ?>
 				</div>
 			</div>
 
+		<div class="container-fluid data-load full-height">
 			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
@@ -966,6 +955,7 @@
 					<?php include 'sidebar.php'; ?>
 
 					<div id="pad-wrapper" >
+						<h2 class="hidden-md hidden-lg text-center"><?=$pageTitle;?></h2>
 
 						<?php
 							if ($ticketStatus) {

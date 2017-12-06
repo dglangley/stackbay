@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
 
 	if (! isset($debug)) { $debug = 0; }
+	$DEBUG_COST = 0;
 
 	function setCost($inventoryid=0,$force_avg=false,$force_datetime='') {
 		global $cost_datetimes;//see getCost()
@@ -28,10 +29,17 @@
 		$status = $r['status'];
 
 		// get all purchase records in case we've purchased it multiple times
+		$records = array();//to avoid duplicates from inventory history errancies
 		$query = "SELECT * FROM inventory_history h WHERE invid = '".res($inventoryid)."' ";
 		$query .= "AND field_changed = 'purchase_item_id' AND value IS NOT NULL; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			// no errant duplicates
+			if (isset($records[$record_key])) { continue; }
+
+			$record_key = $r['value'].'.'.$r['field_changed'];
+			$records[$record_key] = true;
+
 			$pi_id = $r['value'];
 			if (! $pi_id) { continue; }
 
@@ -158,6 +166,8 @@
 		$query .= "); ";
 		if ($debug==1) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+
+		$DEBUG_COST += $cost;
 
 		return true;
 

@@ -4,12 +4,20 @@
 		margin-left: 320px;
 	}
 }
+@media (max-width: 991px) {
+	.sidebar {
+		height:100px;
+		left:auto;
+		top:unset;
+		width:100%;
+	}
+}
 	.sidebar label {
 		margin:0px;
 	}
 </style>
 
-<div class="sidebar hidden-xs hidden-sm">
+<div class="sidebar">
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';

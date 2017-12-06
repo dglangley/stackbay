@@ -99,7 +99,12 @@ div.table-filter div {
 	margin-top:8px;
 }
 @media (max-width: 1490px) {
-  .navbar-nav .table-filter, #dateRanges, .btn-filter {
+  #dateRanges, .btn-filter {
+	display:none;
+  }
+}
+@media (max-width: 992px) {
+  .table-filter {
 	display:none;
   }
 }
