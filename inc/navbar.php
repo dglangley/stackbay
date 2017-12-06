@@ -221,6 +221,7 @@
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
+		                <li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
 	                <?php } ?>
 	                <hr>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>

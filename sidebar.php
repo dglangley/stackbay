@@ -22,6 +22,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCarrier.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAccount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightService.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
@@ -111,6 +112,20 @@
 	<?php } else { ?>
 		<?php echo getContact($ORDER['contactid']); ?>
 		<?php if (getContact($ORDER['contactid'],'id','email')) { echo '<a href="mailto:'.getContact($ORDER['contactid'],'id','email').'"><i class="fa fa-envelope"></i></a>'; } ?>
+	<?php } ?>
+	</div>
+<?php } ?>
+
+<?php if (array_key_exists('classid',$ORDER)) { ?>
+	<div class="sidebar-section">
+		<h4 class="section-header"><i class="fa fa-industry"></i> Class</h4>
+
+	<?php if ($EDIT) { ?>
+		<select name="classid" id="classid" class="form-control input-xs class-selector required">
+			<?php if ($ORDER['classid']) { echo '<option value="'.$ORDER['classid'].'" selected>'.getClass($ORDER['classid']).'</option>'; } ?>
+		</select>
+	<?php } else { ?>
+		<?php echo getClass($ORDER['classid']); ?>
 	<?php } ?>
 	</div>
 <?php } ?>

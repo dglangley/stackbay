@@ -847,6 +847,7 @@
 		$(".warranty-selector").selectize('/json/warranties.php');
 		$(".condition-selector").selectize('/json/conditions.php');
 		$(".contact-selector").selectize('/json/contacts.php','- Select a Contact -');
+		$(".class-selector").selectize('/json/classes.php','- All Classes -');
 		$(".user-selector").selectize('/json/users.php','- User -');
 
 		$('.parts-selector').select2({

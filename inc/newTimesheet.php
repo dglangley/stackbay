@@ -9,7 +9,7 @@
 
 	$LABOR_COST = 1.13;//change this to include certain amount of payroll taxes or other associated labor costs
 
-	function getTimesheet($techid) {
+	function getTimesheet($techid,$taskid=0,$task_label='',$return_type='array') {
 		global $WORKDAY_START,$WORKDAY_END,$LABOR_COST,$expenses,
 			$debugSecsReg,$debugSecsOT,$debugSecsPd,$debugRegPayTotal,$debugOTPayTotal,$debugPdPayTotal;
 
@@ -26,9 +26,9 @@
 		$OTSecs = 0;
 
 		$query = "SELECT *, DATE_SUB(LEFT(clockin,10), INTERVAL DAYOFWEEK(clockin)-1 DAY) start_day, ";
-		//$query .= "DATE_SUB(LEFT(datetime_in,10), INTERVAL DAYOFWEEK(datetime_in)-7 DAY) end_day ";
 		$query .= "DATE_SUB(LEFT(clockin,10), INTERVAL DAYOFWEEK(clockin)-8 DAY) end_day ";
-		$query .= "FROM timesheets WHERE userid = '".$techid."'";
+		$query .= "FROM timesheets WHERE userid = '".$techid."' ";
+		if ($taskid) { $query .= "AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' "; }
 		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -81,8 +81,11 @@
 			$timesheetid_data[$r['id']]['totalPay'] = $stdPay + $otPay + $dtPay;
 		}
 
-		// return (array($cumLabor,$cumSecs));
-		return ($timesheetid_data);
+		if ($return_type=='array') {
+			return ($timesheetid_data);
+		} else {
+			return (array($cumLabor,$cumSecs));
+		}
 	}
 
 	function calcTimeDiff($datetime_start,$datetime_end) {
@@ -110,5 +113,43 @@
 		}
 
 		return $rate;
+	}
+
+	function toTime($secs,$include_secs=true) {
+		// given $secs seconds, what is the time g:i:s format?
+		$hours = floor($secs/3600);
+
+		// what are the remainder of seconds after taking out hours above?
+		$secs -= ($hours*3600);
+
+		$mins = floor($secs/60);
+
+		$secs -= ($mins*60);
+
+		if ($include_secs) {
+			return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
+		} else {
+			return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT));
+		}
+	}
+
+	function timeToStr($time) {
+		$t = explode(':',$time);
+		$hours = $t[0];
+		$mins = $t[1];
+		if (! $mins) { $mins = 0; }
+		$secs = $t[2];
+		if (! $secs) { $secs = 0; }
+
+		$days = floor($hours/24);
+		$hours -= ($days*24);
+
+		$str = '';
+		if ($days>0) { $str .= $days.'d, '; }
+		if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
+		if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
+		if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
+
+		return ($str);
 	}
 ?>

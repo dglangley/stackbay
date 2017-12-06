@@ -37,13 +37,12 @@
 	$repair_codes = array();
 	$ticketStatus = '';
 
-	$class = 'service';
-
-	$materials_total = 0.00;
-	$labor_total = 0.00;
-	$expenses_total = 0.00;
-	$outside_services_total = 0.00;
-	$total_amount = 0.00;
+	$materials_total = 0;
+	$labor_total = 0;
+	$labor_cost = 0;
+	$expenses_total = 0;
+	$outside_services_total = 0;
+	$total_amount = 0;
 
 	$item_id = 0;
 	$item_details = array();
@@ -58,11 +57,33 @@
 
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
-	// Disable the modules you want on the page here
-	// if($type == 'installation') {
+	if($quote){
 
-	// } else 
-	if(strtolower($type) == 'service') {
+		// Create the option for the user to create a quote or create an order
+		$activity = false;
+		$documentation = false;
+		$details = true;
+		$task_edit = true; 
+		$expenses = false;
+
+		if(! empty($task_number)) {
+			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
+			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
+			$component_data = getMaterials($order_number, $item_id, 'service_quote', 'quote_item_id');
+			$outsourced = getOutsourced($item_id, $type);
+
+			//print_r($component_data);
+
+			$new = false;
+		} else {
+			$new = true;
+		}
+
+		$labor_cost = $item_details['labor_hours'] * $item_details['labor_rate'];
+		//$labor_total = $labor_cost;
+		$expenses_total = $item_details['expenses'];
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
+	} else if(strtolower($type) == 'service') {
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
 			$item_details = getItemDetails($item_id, 'service_items', 'id');
@@ -103,13 +124,21 @@
 			getLaborTime($item_id, $type);
 
 			foreach ($labor_data as $cost) {
-				$labor_total += $cost['cost'];
+				$labor_cost += $cost['cost'];
 			}
 		} else {
 			$new = true;
 		}
 
-		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
+		if ($item_details['quote_item_id']) {
+			$query = "SELECT * FROM service_quote_items WHERE id = '".res($item_details['quote_item_id'])."'; ";
+			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			if (mysqli_num_rows($result)>0) {
+				$quote_r = mysqli_fetch_assoc($result);
+				$labor_total = $quote_r['labor_hours'] * $quote_r['labor_rate'];
+			}
+		}
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 
 	} else if(strtolower($type) == 'repair') {
 		if($ORDER['repair_code_id']) {
@@ -139,42 +168,12 @@
 		getLaborTime($item_id, $type);
 
 		foreach ($labor_data as $cost) {
-			$labor_total += $cost['cost'];
+			$labor_cost += $cost['cost'];
 		}
 
-		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 
-	} else if($quote){
-
-		// Create the option for the user to create a quote or create an order
-		$activity = false;
-		$documentation = false;
-		$details = true;
-		$task_edit = true; 
-		$expenses = false;
-
-		if(! empty($task_number)) {
-			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
-			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
-			$component_data = getMaterials($order_number, $item_id, 'service_quote', 'quote_item_id');
-			$outsourced = getOutsourced($item_id, $type);
-
-			print_r($component_data);
-
-			$new = false;
-		}
-
-		$labor_total = $item_details['labor_hours'] * $item_details['labor_rate'];
-		$expenses_total = $item_details['expenses'];
-		$total_amount = $materials_total + $labor_total + $expenses_total + $outside_services_total;
 	}
-
-	// Get the current users access
-	// Big or if the user is management then give them access no matter what assignment they possess
-	// if((! accessControl($GLOBALS['U']['id'], $item_id) && ! $quote) && ! in_array("4", $USER_ROLES)){
-	// 	echo "<script type='text/javascript'>alert('You do not have access to this task. Please contact management to get access.');</script>";
-	// 	echo "<script>location.href='/';</script>";
-	// }
 
 	function partDescription($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
@@ -641,6 +640,10 @@
 		return $access;
 	}
 
+	$class = '';
+	if ($item_details['task_name']) { $class = $item_details['task_name']; }
+	else { $class = getClass($ORDER['classid']); }
+
 	$pageTitle = '';
 
 	if($new) {
@@ -658,11 +661,16 @@
 	}
 //	if ($item_details['task_name']) { $special .= ' '.$item_details['task_name']; }
 
-	if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
+	//if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
+	if(strtolower($type) == "service" OR $quote) {
 		if($quote) {
-			$pageTitle .= "Service Quote for Order# ".$order_number.($task_number ? '-'.$task_number : '').$special;
+			if ($order_number) {
+				$pageTitle .= $class." Quote ".$order_number.($task_number ? '-'.$task_number : '').$special;
+			} else {
+				$pageTitle .= " Quote";
+			}
 		} else if($new) {
-			$pageTitle .= "Service for Order# ".$order_number.$special;
+			$pageTitle .= "for Order# ".$order_number.$special;
 		} else {
 			if ($item_details['task_name']) {
 				$pageTitle = $item_details['task_name'].' '.$order_number."-".$task_number.$special;
@@ -893,7 +901,7 @@
 							</form>
 						</span>
 					<?php } ?>
-					<?php if ($manager_access AND ((! $quote AND ! $new AND strtolower($type)=='repair') OR ! $task_edit)) { ?>
+					<?php if ($manager_access AND ((! $quote AND ! $new AND strtolower($type)=='repair'))) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php if(! $task_edit) { ?>
 							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
@@ -930,23 +938,21 @@
 										<option><?=$order_number_details;?> <?=$item_details['task_name'];?></option>
 									</select>
 								<?php  } ?>
-
-								<?php if($task_edit) { ?>
-									<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-								<?php } else if(! $ticketStatus) { ?>
-									<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
-										<i class="fa fa-save"></i> Complete
-									</button>
-								<?php } ?>
 						<?php } ?>
 				</div>
-				<div class="col-md-1">
+				<div class="col-md-1 text-right">
 					<?php if ($quote) { ?>
-							<?php if(empty($task_number)) { ?>
-								<a href="#" class="btn btn-success btn-sm quote_order pull-right" data-type="quote"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-							<?php } else { ?>
-								<a href="#" class="btn btn-success btn-sm save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-							<?php } ?>
+						<?php if(empty($task_number)) { ?>
+							<a href="#" class="btn btn-success btn-md quote_order pull-right" data-type="quote"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+						<?php } else { ?>
+							<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+						<?php } ?>
+					<?php } else if($task_edit) { ?>
+						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+					<?php } else if(! $ticketStatus) { ?>
+						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+							<i class="fa fa-save"></i> Complete
+						</button>
 					<?php } ?>
 				</div>
 			</div>
@@ -978,33 +984,43 @@
 							}
 						?>
 
+						<?php
+							$profit = false;
+							$charge = false;
+						?>
 						<?php if(in_array("4", $USER_ROLES)){ ?>
 							<br>
 							<!-- Cost Dash for Management People Only -->
+							<?php
+								$charge = $item_details['qty']*$item_details['amount'];
+								$profit = $charge-$total_amount;
+							?>
 
 							<div id="main-stats">
 					            <div class="row stats-row">
-					                <div class="col-md-3 col-sm-3 stat">
+					                <div class="col-md-4 col-sm-4 stat">
 					                    <div class="data">
-					                        <span class="number text-brown"><?=format_price($total_amount);?></span>
-											<span class="info">Quote</span>
+					                        <span class="number text-brown"><?=format_price($charge);?></span>
+											<span class="info">Charge</span>
 					                    </div>
 					                </div>
-					                <div class="col-md-3 col-sm-3 stat">
+					                <div class="col-md-4 col-sm-4 stat">
 					                    <div class="data">
-					                        <span class="number text-black">$0.00</span>
+					                        <span class="number text-black"><?=format_price($total_amount);?></span>
 											<span class="info">Cost</span>
 					                    </div>
 					                </div>
+<!--
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
 					                        <span class="number text-black">$0.00</span>
 											<span class="info">Commission</span>
 					                    </div>
 					                </div>
-					                <div class="col-md-3 col-sm-3 stat last">
+-->
+					                <div class="col-md-4 col-sm-4 stat last">
 					                    <div class="data">
-					                        <span class="number text-success">$0.00</span>
+					                        <span class="number text-success"><?=format_price($profit);?></span>
 											<span class="info">Profit</span>
 					                    </div>
 					                </div>
@@ -1027,7 +1043,7 @@
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o fa-lg"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials) { 
 								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
@@ -1105,31 +1121,35 @@
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
 										<tr>
-											<th class="col-sm-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site Address')?></th>
-											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'Serial(s)' : '')?></th>
-											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'RMA#' : '')?></th>
-											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'Refs' : '')?></th>
+											<th class="col-sm-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site')?> &nbsp;</th>
+											<?php if (strtolower($type)=='repair') { ?>
+											<th class="col-sm-2"><span class="line"></span> Serial(s)</th>
+											<th class="col-sm-2"><span class="line"></span> RMA#</th>
+											<th class="col-sm-2"><span class="line"></span> Refs</th>
+											<?php } ?>
 											<th class="col-sm-3"><span class="line"></span> Notes</th>
 										</tr>
 										</thead>
 										<?php if(! $quote && strtolower($type) == 'repair') { ?>
 											<tr>
 												<td><?=trim(partDescription($item_details['partid'], true));?></td>
-												<td colspan=2>
+												<td>
 													<?php foreach(getDetails($item_id) as $serial) {
 														echo $serial;
 													} ?>
 												</td>
 												<td>
+												</td>
+												<td>
 													<?=$item_details['ref_1_label'].' '.$item_details['ref_1'].'<BR>';?>
 													<?=$item_details['ref_2_label'].' '.$item_details['ref_2'].'<BR>';?>
 												</td>
-												<td><?=$item_details['notes'];?></td>
+												<td><?=str_replace(chr(10),'<BR>',$item_details['notes']);?></td>
 											</tr>
 										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
 											<tr>
-												<td colspan=3><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
-												<td colspan=2>
+												<td><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
+												<td>
 													<?=$item_details['description'];?>		
 												</td>
 											</tr>
@@ -1336,19 +1356,30 @@
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
-				                            <?php if(in_array("4", $USER_ROLES)){ ?>
+				                            <?php if(in_array("4", $USER_ROLES) AND $labor_total>0){ ?>
+											<?php
+												$labor_profit = ($labor_total-$labor_cost);
+												$labor_progress = 100*round(($labor_cost/$labor_total),2);
+
+												$progress_bg = '';
+												if ($labor_progress>=100) { $progress_bg = 'bg-danger'; }
+												else if ($labor_progress<50) { $progress_bg = 'bg-success'; }
+											?>
 					                            <tr class="first">
 					                                <td>
 														<div class="progress progress-lg">
-															<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
+															<div class="progress-bar <?=$progress_bg;?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: <?=$labor_progress;?>%"><?=$labor_progress;?>%</div>
 														</div>
-														$0.00 profit of <span class="labor_cost"><?=format_price($labor_total);?></span> quoted Labor
+<!--
+														<?=format_price($profit);?> profit of <span class="labor_cost"><?=format_price($labor_total);?></span> quoted Labor
+-->
+														<?=format_price($labor_cost);?> labor used from <span class="labor_cost"><?=format_price($labor_total);?></span> quoted labor
 					                                </td>
 					                                <td>
 														<strong><?=toTime($totalSeconds);?> &nbsp; </strong>
 					                                </td>
 					                                <td class="text-right">
-					                                    <strong><?=format_price($labor_total)?></strong>
+					                                    <strong><?=format_price($labor_cost)?></strong>
 					                                </td>
 					                            </tr>
 				                            <?php } ?>

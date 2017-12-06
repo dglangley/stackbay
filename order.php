@@ -18,6 +18,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDisposition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -134,7 +135,6 @@
 		if (! $new) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
-
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 			if (mysqli_num_rows($result)==0) { return (''); }
@@ -424,6 +424,7 @@
 	} else {
 		if (! isset($T)) { $T = order_type($order_type); }
 		$TITLE = $T['abbrev'];
+
 		if ($order_number) {
 			$TITLE .= '# '.$order_number;
 		} else {
@@ -438,6 +439,8 @@
 			$ORDER = getOrder($order_number,$order_type);
 			if ($ORDER===false) { die("Invalid Order"); }
 		}
+		if (array_key_exists('classid',$ORDER) AND $order_number) { $TITLE = getClass($ORDER['classid']).' '.$order_number; }
+
 		$ORDER['bill_to_id'] = $ORDER['addressid'];
 		$ORDER['datetime'] = $ORDER['dt'];
 		if (! $ORDER['status']) { $ORDER['status'] = 'Active'; }

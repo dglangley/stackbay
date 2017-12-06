@@ -12,7 +12,9 @@
 		$query = "SELECT i.so_number, i.id, i.line_number FROM service_orders o ";
 		$query .= "LEFT JOIN service_items i ON o.so_number = i.so_number ";
 		$query .= "WHERE (cust_ref = '".res($keyword)."' OR o.so_number = '".res($keyword)."' ";
-		$query .= "OR CONCAT(i.so_number,'-',i.line_number) = '".res($keyword)."' OR task_name RLIKE '".res($keyword)."'); ";
+		$query .= "OR CONCAT(i.so_number,'-',i.line_number) = '".res($keyword)."' OR task_name RLIKE '".res($keyword)."' ";
+		$query .= "OR public_notes RLIKE '".res($keyword)."' ";
+		$query .= "); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
 		while ($r = mysqli_fetch_assoc($result)) {
 			if ($matches_csv) { $matches_csv .= ','; }
@@ -20,8 +22,11 @@
 			$matches[] = $r['so_number'].'-'.$r['line_number'];
 		}
 
-		$query = "SELECT so_number, i.id, i.line_number FROM addresses a, service_items i ";
-		$query .= "WHERE a.id = item_id AND item_label = 'addressid' AND street RLIKE '".res($keyword)."' ";
+		$query = "SELECT so_number, i.id, i.line_number FROM service_items i, addresses a ";
+		$query .= "LEFT JOIN company_addresses ca ON ca.addressid = a.id ";
+		$query .= "WHERE a.id = item_id AND item_label = 'addressid' ";
+		$query .= "AND (a.street RLIKE '".res($keyword)."' OR a.city RLIKE '".res($keyword)."' ";
+		$query .= "OR ca.nickname RLIKE '".res($keyword)."' OR ca.alias RLIKE '".res($keyword)."' OR ca.notes RLIKE '".res($keyword)."') ";
 		if ($matches_csv) {
 			$query .= "AND i.id NOT IN (".$matches_csv.") ";
 		}
@@ -36,22 +41,6 @@
 			exit;
 		}
 
-/*dl 12-1-17
-		$query = "SELECT id FROM services_job WHERE job_no = '".res($keyword)."'; ";
-		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-		if (mysqli_num_rows($result)==1) {
-			header('Location: job.php?s='.$keyword);
-			exit;
-		}
-		$query = "SELECT id FROM services_job WHERE (job_no RLIKE '".res($keyword)."' OR site_access_info_address RLIKE '".res($keyword)."'); ";
-		$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query);
-		if (mysqli_num_rows($result)==1) {
-			$r = mysqli_fetch_assoc($result);
-
-			header('Location: job.php?id='.$r['id']);
-			exit;
-		}
-*/
 		// in order for user to be able to 'reset' view to default services home, we want to reset search string
 		// so that if they at first were switching between modes (say, sales to services) with a sales-related
 		// search string, the subsequent click would show all services instead of the bogus search string
@@ -61,6 +50,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getAddresses.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
@@ -68,8 +58,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 //	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getProfile.php';
-	$WORKDAY_START = 19;//workday end is set automatically in getTimesheet.php based on this
-	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
+	$WORKDAY_START = 19;//workday end is set automatically in newTimesheet.php based on this
+	include_once $_SERVER["ROOT_DIR"].'/inc/newTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
@@ -103,7 +93,11 @@
 	else { $status = $_REQUEST['status']; }
 
 	$financials = false;
-	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
+//	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
+	if (in_array("4", $USER_ROLES)) { $financials = true; }
+
+	$classid = 0;
+	if (isset($_REQUEST['classid']) AND $_REQUEST['classid']) { $classid = $_REQUEST['classid']; }
 
 	$managerid = 0;
 	if (isset($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
@@ -152,7 +146,7 @@
 	<!-- Wraps the entire page into a form for the sake of php trickery -->
 	<form class="form-inline" method="get" action="/services.php">
 
-    <table class="table table-header table-filter hidden-xs hidden-sm hidden-md">
+    <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
 			<div class="btn-group medium">
@@ -217,25 +211,25 @@
 		<td class="col-md-2 text-center">
             <h2 class="minimal">Services</h2>
 		</td>
-		
-		<td class="col-md-2 text-center">
-			<div class="row">
-				<div class="col-sm-7">
-					<div class="input-group">
-						<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value ='<?php echo $keyword?>' placeholder = "Search..." autofocus />
-						<span class="input-group-btn">
-							<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
-						</span>
-					</div>
-				</div>
-				<div class="col-sm-5">
-					<input type="checkbox" name="financials" id="financials" value="1"<?php if ($financials) { echo ' checked'; } ?>><label for="financials"> Financials</label>
-				</div>
+		<td class="col-md-1 text-center">
+			<div class="input-group">
+				<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value ='<?php echo $keyword?>' placeholder = "Search..." autofocus />
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
 			</div>
 		</td>
 		<td class="col-md-1">
-			<select name="managerid" size="1" class="form-control input-xs select2">
-				<option value=""<?php if (! $managerid) { echo ' selected'; } ?>>- All -</option>
+			<select name="classid" class="class-selector form-control">
+				<?php if ($classid) { echo '<option value="'.$classid.'" selected>'.getClass($classid).'</option>'.chr(10); } ?>
+			</select>
+<!--
+			<input type="checkbox" name="financials" id="financials" value="1"<?php if ($financials) { echo ' checked'; } ?>><label for="financials"> Financials</label>
+-->
+		</td>
+		<td class="col-md-1">
+			<select name="managerid" size="1" class="form-control input-xs select2" data-placeholder="- All Managers -">
+				<option value="">- All Managers -</option>
 				<option value="8"<?php if ($managerid==8) { echo ' selected'; } ?>>Scott Johnston</option>
 				<option value="27"<?php if ($managerid==27) { echo ' selected'; } ?>>Michael Camarillo</option>
 			</select>
@@ -280,22 +274,6 @@ $U['id'] = 29;
 	$total_pcs = 0;
 	$total_amt = 0;
 
-/*dl 12-1-17
-	$query = "SELECT s.*, u.fullname ";
-	$query .= "FROM services_job s, services_userprofile u WHERE entered_by_id = u.id ";
-   	if ($keyword) {
-		$query .= "AND (s.job_no RLIKE '".$keyword."' OR site_access_info_address RLIKE '".$keyword."') ";
-	} else if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
-   		//$dbStartDate = date("Y-j-m", strtotime($startDate));
-   		//$dbEndDate = date("Y-j-m", strtotime($endDate));
-   		$query .= "AND date_entered between CAST('".$dbStartDate."' AS DATE) and CAST('".$dbEndDate."' AS DATE) ";
-	}
-	$query .= "ORDER BY date_entered DESC, job_no DESC; ";
-	$result = qdb($query,'SVCS_PIPE');
-*/
-
 	// is the user permitted for any management roles?
 	$permissions = array_intersect($USER_ROLES, array(1,7));
 
@@ -316,6 +294,9 @@ $U['id'] = 29;
 	if ($companyid) {
 		$query .= "AND companyid = '".res($companyid)."' ";
 	}
+	if ($classid) {
+		$query .= "AND classid = '".res($classid)."' ";
+	}
 	$query .= "GROUP BY i.id ";
 	$query .= "ORDER BY datetime DESC, o.so_number DESC, i.line_number ASC, task_name ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
@@ -332,29 +313,26 @@ $U['id'] = 29;
 		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! in_array("1",$USER_ROLES)) { continue; }
 
 		$po = '';
-/*dl 12-1-17
-		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$job['id']."'; ";
-		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$po .= $r2['po_number'].'<BR>';
-		}
-*/
 
 		$assigns = array();
-/*dl 12-1-17
-		$query2 = "SELECT fullname, assigned_to_id FROM services_jobtasks jt, services_userprofile up ";
-		$query2 .= "WHERE job_id = '".$job['id']."' AND assigned_to_id = up.id; ";
-		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
-		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$assigns[$r2['assigned_to_id']] = array('name'=>$r2['fullname'],'status'=>'');
-		}
-*/
 		$query2 = "SELECT name, userid FROM service_assignments a, users u, contacts c ";
 		$query2 .= "WHERE item_id = '".$job['id']."' AND item_id_label = 'service_item_id' ";
 		$query2 .= "AND u.id = a.userid AND u.contactid = c.id; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$assigns[$r2['userid']] = array('name'=>$r2['name'],'status'=>'');
+		}
+		// assignments may come in the form of actual time worked before they were removed from the job
+		$timesheets = array();
+		$query2 = "SELECT * FROM timesheets WHERE taskid = '".$job['id']."' AND task_label = 'service_item_id'; ";
+		$result2 = qdb($query2) OR die(qe().' '.$query2);
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			$timesheets[] = $r2;//for use below
+
+			if (! isset($assigns[$r2['userid']])) { $assigns[$r2['userid']] = array('name'=>getUser($r2['userid']),'status'=>''); }
+			if ($r2['clockin'] AND ! $r2['clockout']) {
+				$assigns[$r2['userid']]['status'] = format_date($r2['clockin'],'g:ia');
+			}
 		}
 
 		/*** STATUS ***/
@@ -371,13 +349,7 @@ $U['id'] = 29;
 
 			$row_status = '<span class="label label-success">Closed</span>';
 		} else {
-/*dl 12-1-17
-			$query2 = "SELECT * FROM services_techtimesheet WHERE job_id = '".$job['id']."'; ";
-			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
-*/
-			$query2 = "SELECT * FROM timesheets WHERE taskid = '".$job['id']."' AND task_label = 'service_item_id'; ";
-			$result2 = qdb($query2) OR die(qe().' '.$query2);
-			if (mysqli_num_rows($result2)>0) {
+			if (count($timesheets)>0) {
 				if ($status<>'all' AND $status<>'open') { continue; }
 
 				$row_status = '<span class="label label-warning">In Progress</span>';
@@ -397,11 +369,6 @@ $U['id'] = 29;
 				$row_status = '<span class="label label-info">Complete</span>';
 			}
 */
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				if ($r2['clockin'] AND ! $r2['clockout']) {
-					$assigns[$r2['userid']]['status'] = format_date($r2['clockin'],'g:ia');
-				}
-			}
 
 			if (! $row_status) {
 				if ($status<>'all' AND $status<>'open') { continue; }
@@ -424,7 +391,8 @@ $U['id'] = 29;
 
 			if ($financials) {
 				// calculate labor costs
-				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job);
+				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job['id'],'service_item_id','list');
+
 				$laborTotal += $techLaborCost;
 				$laborTotalSecs += $techSecsWorked;
 				if (! isset($techTimes[$techid])) { $techTimes[$techid] = array(); }
@@ -432,13 +400,14 @@ $U['id'] = 29;
 					$techTimes[$techid][] = $techSecsWorked;
 				}
 
-				$timeLogged = toTime($techSecsWorked);
+				$timeLogged = toTime($techSecsWorked,false);
 			}
 
 			if ($a['status']) {
 				$assignments .= '<span class="label label-warning">'.$a['name'].' &nbsp; '.$a['status'].'</span>';
 			} else {
-				$assignments .= $a['name'].' '.$timeLogged;
+				$names = explode(' ',$a['name']);
+				$assignments .= substr($names[0],0,1).'&nbsp;'.$names[1].'&nbsp;'.$timeLogged;
 			}
 			$assignments .= '<BR/>';
 		}
@@ -497,6 +466,10 @@ $U['id'] = 29;
 			$address = $job['public_notes'];
 		}
 
+		$class = '';
+		if ($job['task_name']) { $class = $job['task_name']; }
+		else { $class = getClass($job['classid']); }
+
 		$rows .= '
                             <!-- row -->
                             <tr>
@@ -504,12 +477,17 @@ $U['id'] = 29;
                                     <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
                                     <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
                                 </td>
+                                <td>
+									'.$class.'
+                                </td>
                                 <td class="word-wrap160">
-                                    <a href="service.php?order_number='.$job['so_number'].'-'.$job['line_number'].'">'.$job['task_name'].'</a><br/>
+                                    '.$job['so_number'].'-'.$job['line_number'].'
+                                    <a href="service.php?order_number='.$job['so_number'].'-'.$job['line_number'].'"><i class="fa fa-arrow-right"></i></a><br/>
 									'.getContact($job['contactid']).'
                                 </td>
                                 <td>
-	                                <a href="profile.php?companyid='.$job['companyid'].'">'.getCompany($job['companyid']).'</a><br/>
+	                                '.getCompany($job['companyid']).'
+	                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
 									<span class="info">'.$address.'</span>
                                 </td>
                                 <td class="hidden-xs hidden-sm">
@@ -551,9 +529,6 @@ $U['id'] = 29;
 		$i = 0;
 		foreach ($techTimes as $techid => $r) {
 			$tech = '';
-			if (is_numeric($techid)) {
-				$tech = getProfile($techid);
-			}
 			if ($i%4==0) {
 				$stats_rows .= '
 			</div>
@@ -582,7 +557,7 @@ $U['id'] = 29;
                 <div class="col-md-3 col-sm-3 stat">
                     <div class="data">
                         <span class="number text-brown">'.$avgSecs.'</span>
-						<span class="info">'.$tech.'</span>
+						<span class="info">'.getUser($techid).'</span>
                     </div>
 					'.$jobs.'
                 </div>
@@ -612,6 +587,9 @@ $U['id'] = 29;
                             <tr>
                                 <th class="col-sm-1">
                                     Date
+                                </th>
+                                <th class="col-sm-1">
+                                    Class
                                 </th>
                                 <th class="col-sm-1">
                                     <span class="line"></span>

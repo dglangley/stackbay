@@ -340,7 +340,7 @@
 
 	// Generate a Quote Order with these values
 	$companyid = 0;
-	$classid = 2; // Default this option to Installation
+	$classid = 0; // Default this option to Installation
 	$contactid = 0;
 	$bill_to_id = 0;
 	$public = '';

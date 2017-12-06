@@ -44,6 +44,8 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
+	$classid = 0;
+	if (isset($_REQUEST['classid']) AND $_REQUEST['classid']) { $classid = $_REQUEST['classid']; }
 	$bill_to_id = 0;
 	if (isset($_REQUEST['bill_to_id']) AND is_numeric($_REQUEST['bill_to_id'])) { $bill_to_id = $_REQUEST['bill_to_id']; }
 	$ship_to_id = 0;
@@ -118,6 +120,7 @@
 
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
+	if (array_key_exists('classid',$ORDER)) { $query .= "classid, "; }
 	$query .= $T['datetime'].", ";
 	if (array_key_exists('created_by',$ORDER)) { $query .= "created_by, "; }
 	if (array_key_exists('sales_rep_id',$ORDER)) { $query .= "sales_rep_id, "; }
@@ -140,6 +143,7 @@
 	$query .= "status) ";
 	$query .= "VALUES (";
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
+	if ($classid) { $query .= "'".res($classid)."', "; }
 	$query .= "'".$datetime."', ";
 	if (array_key_exists('created_by',$ORDER)) { $query .= fres($created_by).", "; }
 	if (array_key_exists('sales_rep_id',$ORDER)) { $query .= fres($sales_rep_id).", "; }

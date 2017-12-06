@@ -10,6 +10,7 @@
 
 	$quote = true;
 	$EDIT = true;
+	$type = 'Service';
 
 	$order_number_details = (isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '');
 	$tab = (isset($_REQUEST['tab']) ? $_REQUEST['tab'] : '');
