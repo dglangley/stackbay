@@ -57,12 +57,15 @@
 	function buildLineCol($ln,$id=0) {
 		global $EDIT;
 
+		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
+		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
+
 		$col = '<div class="pull-left" style="width:7%">';
 		if ($EDIT) {
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($ln) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
-			$col .= '<a href="/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
+			$col .= '<a href="'.$goto.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
 		}
 		$col .= '&nbsp;</div>';
 

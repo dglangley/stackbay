@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getUser.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 
 	// List of subcategories
@@ -655,15 +656,19 @@
 	if($cco) {
 		$special = " (CCO)";
 	}
-	if ($item_details['task_name']) { $special .= ' '.$item_details['task_name']; }
+//	if ($item_details['task_name']) { $special .= ' '.$item_details['task_name']; }
 
 	if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
 		if($quote) {
 			$pageTitle .= "Service Quote for Order# ".$order_number.($task_number ? '-'.$task_number : '').$special;
 		} else if($new) {
-			$pageTitle = "New Service for Order# ".$order_number.$special;
+			$pageTitle .= "Service for Order# ".$order_number.$special;
 		} else {
-			$pageTitle = $order_number."-".$task_number.$special;
+			if ($item_details['task_name']) {
+				$pageTitle = $item_details['task_name'].' '.$order_number."-".$task_number.$special;
+			} else {
+				$pageTitle = getClass($ORDER['classid']).' '.$order_number."-".$task_number.$special;
+			}
 		}
 	} else if(strtolower($type) == "repair" OR $class == "repair") {
 		if($quote) {
@@ -672,7 +677,7 @@
 			if(! $task_number) {
 				$task_number = 1;
 			}
-			$pageTitle = $order_number."-".$task_number.$special;
+			$pageTitle = 'Repair '.$order_number."-".$task_number.$special;
 		}
 	}
 ?>
@@ -912,7 +917,9 @@
 				<div class="col-md-4 text-center">
 					<h2 class="minimal"><?=$pageTitle;?></h2>
 				</div>
-				<div class="col-md-3">
+				<div class="col-md-1">
+				</div>
+				<div class="col-md-2">
 						<?php if(! $quote){ ?>
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
@@ -1011,25 +1018,25 @@
 				        <!-- Begin all the tabs in the page -->
 				        <ul class="nav nav-tabs nav-tabs-ar">
 				        	<?php if($activity) {
-					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-folder-open-o"></i> Activity</span><span class="hidden-md hidden-lg"><i class="fa fa-folder-open-o fa-2x"></i></span></a></li>';
+					        	echo '<li class="'.(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '').'"><a href="#activity" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-folder-open-o fa-lg"></i> Activity</span><span class="hidden-md hidden-lg"><i class="fa fa-folder-open-o fa-2x"></i></span></a></li>';
 				        	} 
 				        	if($details) { 
-					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-list"></i> Details</span><span class="hidden-md hidden-lg"><i class="fa fa-list fa-2x"></i></span></a></li>';
+					        	echo '<li class="'.(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '').'"><a href="#details" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-list fa-lg"></i> Details</span><span class="hidden-md hidden-lg"><i class="fa fa-list fa-2x"></i></span></a></li>';
 					        } 
 				        	if($documentation) { 
-					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
+					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o fa-lg"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users"></i> Labor</span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span> <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip" aria-hidden="true"></i> Materials</span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span> &nbsp; <span class="materials_cost"><!--'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'--></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card"></i> Expenses</span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span> &nbsp; <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase"></i> Outside Services</span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span> &nbsp; <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
@@ -1041,85 +1048,96 @@
 							<!-- Activity pane -->
 							<?php if($activity) { ?>
 								<div class="tab-pane <?=(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '');?>" id="activity">
-									<section>
-										<div class="row list table-first">
-											<div class="col-md-2">Date/Time</div>
-											<div class="col-md-4">Tech</div>
-											<div class="col-md-6">Activity</div>
-										</div>
+									<div class="table-responsive"><table class="table table-condensed ">
+										<tr>
+											<td class="col-sm-12">
+												<div class="input-group">
+													<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
+													<span class="input-group-btn">
+														<button class="btn btn-sm btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
+													</span>
+												</div>
+											</td>
+										</tr>
+									</table></div>
 
-										<div class="col-md-12" style="margin: 10px 0;">
-											<div class="input-group">
-												<input type="text" name="notes" class="form-control input-sm" placeholder="Notes...">
-												<span class="input-group-btn">
-													<button class="btn btn-sm btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
-												</span>
-											</div>
-										</div>
+									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+										<thead>
+										<tr>
+											<th class="col-sm-2">Date/Time</th>
+											<th class="col-sm-4"><span class="line"></span> Tech</th>
+											<th class="col-sm-5"><span class="line"></span> Activity</th>
+											<th class="col-sm-1"><span class="line"></span> Notify</th>
+										</tr>
+										</thead>
 
 										<?php
-											if($activity_data) {
 											foreach($activity_data as $activity_row):
 										?>
-											<hr>
-											<div class="row list">
-												<div class="col-md-2"><?=format_date($activity_row['datetime'], 'n/j/y, h:i a');?></div>
-												<div class="col-md-4"><?=getContact($activity_row['techid'], 'userid');?></div>
-												<div class="col-md-6">
-													<?=$activity_row['notes'];?>
-													<?php if($activity_row['id']) { 
-														if(checkNotification($activity_row['id'])) {
-													?>
-														<a href="javascript:void(0);" class="pull-right forward_activity" data-activityid="<?=$activity_row['id'];?>"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>
-													<?php 
-															}
-														} 
-													?>
-												</div>
-											</div>
-										<?php endforeach; } ?>
-									</section>
+										<tr>
+											<td class="col-sm-2"><?=format_date($activity_row['datetime'], 'n/j/y g:ia');?></td>
+											<td class="col-sm-4">
+												<?php
+													$contact = getContact($activity_row['techid'], 'userid');
+													$names = explode(' ',$contact);
+													echo '<span class="hidden-md hidden-lg">'.ucfirst(substr($names[0],0,1)).' '.$names[1].'</span><span class="hidden-sm hidden-xs">'.$contact.'</span>';
+												?>
+											</td>
+											<td class="col-sm-5">
+												<?=$activity_row['notes'];?>
+											</td>
+											<td class="col-sm-1">
+												<?php if($activity_row['id']) { 
+													if(checkNotification($activity_row['id'])) {
+													 echo '<a href="javascript:void(0);" class="pull-right forward_activity" data-activityid="'.$activity_row['id'].'"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>';
+													}
+												} ?>
+											</td>
+										</tr>
+										<?php endforeach; ?>
+									</table></div>
 								</div><!-- Activity pane -->
 							<?php } ?>
 
 							<!-- Details pane -->
 							<?php if($details) { ?>
 								<div class="tab-pane <?=(($tab == 'details' OR (! $activity && empty($tab))) ? 'active' : '');?>" id="details">
-									<section>
-										<div class="row list table-first">
-											<div class="col-md-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site Address')?></div>
-											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'Serial(s)' : '')?></div>
-											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'RMA#' : '')?></div>
-											<div class="col-md-2"><?=(strtolower($type) == 'repair' ? 'Refs' : '')?></div>
-											<div class="col-md-3">Notes</div>
-										</div>
-										<hr>
+									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+										<thead>
+										<tr>
+											<th class="col-sm-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site Address')?></th>
+											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'Serial(s)' : '')?></th>
+											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'RMA#' : '')?></th>
+											<th class="col-sm-2"><span class="line"></span> <?=(strtolower($type) == 'repair' ? 'Refs' : '')?></th>
+											<th class="col-sm-3"><span class="line"></span> Notes</th>
+										</tr>
+										</thead>
 										<?php if(! $quote && strtolower($type) == 'repair') { ?>
-											<div class="row list">
-												<div class="col-md-3"><?=trim(partDescription($item_details['partid'], true));?></div>
-												<div class="col-md-4">
+											<tr>
+												<td><?=trim(partDescription($item_details['partid'], true));?></td>
+												<td colspan=2>
 													<?php foreach(getDetails($item_id) as $serial) {
 														echo $serial;
 													} ?>
-												</div>
-												<div class="col-md-2">
+												</td>
+												<td>
 													<?=$item_details['ref_1_label'].' '.$item_details['ref_1'].'<BR>';?>
 													<?=$item_details['ref_2_label'].' '.$item_details['ref_2'].'<BR>';?>
-												</div>
-												<div class="col-md-3"><?=$item_details['notes'];?></div>
-											</div>
+												</td>
+												<td><?=$item_details['notes'];?></td>
+											</tr>
 										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
-											<div class="row list">
-												<div class="col-md-7"><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></div>
-												<div class="col-md-5">
+											<tr>
+												<td colspan=3><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
+												<td colspan=2>
 													<?=$item_details['description'];?>		
-												</div>
-											</div>
+												</td>
+											</tr>
 										<?php } ?>
 
 										<?php if($quote OR $new) { ?>
-											<div class="row list">
-												<div class="col-md-5 part-container">
+											<tr>
+												<td colspan=2 class="part-container">
 													<?php
 														include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
 														include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
@@ -1139,28 +1157,27 @@
 													
 													<?= buildDescrCol($P,$id,$def_type,$items); ?>
 													<?= setInputSearch($def_type); ?>
-												</div>
-												<!-- <div class="col-md-3">
-													
-												</div> -->
-											</div>
+												</td>
+												<td colspan=3> </td>
+											</tr>
 										<?php } ?>
-									</section>
+									</table></div>
 								</div><!-- Details pane -->
 							<?php } ?>
 
 							<?php if($documentation) { ?>
 								<!-- Documentation pane -->
 								<div class="tab-pane <?=($tab == 'documentation' ? 'active' : '');?>" id="documentation">
-									<section>
-										<table class="table table-striped">
-											<thead class="table-first">
+									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+										<thead>
+											<tr>
 												<th>Date/Time</th>
-												<th>Notes</th>
-												<th>Type</th>
-												<th>File</th>
-												<th class="text-right">Action</th>
-											</thead>
+												<th><span class="line"></span> Notes</th>
+												<th><span class="line"></span> Type</th>
+												<th><span class="line"></span> File</th>
+												<th><span class="line"></span> Action</th>
+											</tr>
+										</thead>
 
 											<tbody>
 												<?php foreach($documentation_data as $document) { ?>
@@ -1210,7 +1227,7 @@
 													</td>
 												</tr>
 											</tbody>
-										</table>
+										</table></div>
 										<button class="btn btn-success btn-sm pull-right" type="submit">
 								        	Generate Closeout
 								        </button>
@@ -1227,9 +1244,9 @@
 								<!-- Labor pane -->
 								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
 									<?php if($task_edit){ ?>
-										<div class="row labor_edit">
-
-											<div class="col-md-12">
+										<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+											<tr>
+											<td class="col-md-12">
 												<div class="input-group pull-left" style="margin-bottom: 10px; margin-right: 15px; max-width: 200px">
 						  							<!-- <span class="input-group-addon">$</span> -->
 													<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=$item_details['labor_hours'];?>">
@@ -1238,28 +1255,29 @@
 						  							<span class="input-group-addon">$</span>
 													<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)$item_details['labor_rate'], 2, '.', '');?>">
 												</div>
-											</div>
-										</div>
+											</td>
+											</tr>
+										</table></div>
 									<?php } ?>
 
-				                    <table class="table table-hover table-condensed">
+									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-md-4">
-				                                    Employee
+				                                <th class="col-sm-4">
+				                                    Tech
 				                                </th>
-				                                <th class="col-md-4">
-				                                    Total Hours Logged
+				                                <th class="col-sm-4">
+				                                    <span class="line"></span> Total Time
 				                                </th>
-				                                <?php if(in_array("4", $USER_ROLES)){ ?>
-					                                <th class="col-md-2 text-right">
-					                                    Cost
-					                                </th>
-				                                <?php } ?>
-				                                <th class="col-md-2 text-center">
+				                                <th class="col-sm-4 text-right">
+				                                	<?php if(in_array("4", $USER_ROLES)){ ?>
+					                                    <span class="line"></span> Cost
+				                                	<?php } ?>
+					                            </th>
+				                                <!-- <th class="col-sm-2 text-center">
 													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Tech Complete?"><i class="fa fa-id-badge"></i></div>
 				                                </th>
-				                               <!--  <th class="col-md-1 text-center">
+				                                <th class="col-sm-1 text-center">
 													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Admin Complete?"><i class="fa fa-briefcase"></i></div>
 				                                </th> -->
 				                            </tr>
@@ -1284,6 +1302,7 @@
 																<?=format_price($data['cost']);?>
 															<?php } ?>
 						                                </td>
+<!--
 						                                <td class="text-center">
 						                                	<?php if(in_array("4", $USER_ROLES) && $data['status']){ ?>
 							                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
@@ -1293,6 +1312,7 @@
 													        	<i title="In Active" class="fa fa-user-times pull-right" style="color:#d9534f; margin-top: 10px; margin-right: 10px;"></i>
 													       	<?php } ?>
 						                                </td>
+-->
 						                            </tr>
 				                            <?php 
 				                        		} 
@@ -1310,18 +1330,18 @@
 												        </button>
 												    </td>
 					                            	<td></td>
+<!--
 					                            	<td></td>
+-->
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
 				                            <?php if(in_array("4", $USER_ROLES)){ ?>
 					                            <tr class="first">
-					                                <td colspan="1">
+					                                <td>
 														<div class="progress progress-lg">
 															<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
 														</div>
-					                                </td>
-					                                <td>
 														$0.00 profit of <span class="labor_cost"><?=format_price($labor_total);?></span> quoted Labor
 					                                </td>
 					                                <td>
@@ -1333,7 +1353,7 @@
 					                            </tr>
 				                            <?php } ?>
 										</tbody>
-									</table>
+									</table></div>
 								</div><!-- Labor pane -->
 							<?php } ?>
 
@@ -1354,8 +1374,8 @@
 									        </div>
 										</div>
 
-										<table class="table table-striped">
-											<thead class="table-first">
+										<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+											<thead>
 												<tr>
 													<?php if($quote OR $new){ ?>
 														<th class="col-md-3">Material</th>
@@ -1367,12 +1387,12 @@
 														<th></th>
 													<?php } else { ?>
 														<th class="col-md-3">Material</th>
-														<th class="col-md-1">Requested</th>
-														<th class="col-md-2">SOURCE</th>
-														<th class="col-md-1">Available</th>
+														<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
+														<th class="col-md-2">Source</th>
+														<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
 														<th class="col-md-1">Pulled</th>
-														<th class="col-md-2 text-right">Price Per Unit</th>
-														<th class="col-md-2 text-right">EXT Price</th>
+														<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Price</span></th>
+														<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Price</span></th>
 													<?php } ?>
 												</tr>
 											</thead>
@@ -1543,10 +1563,13 @@
 		                                            <?php } else { ?>
 		                                            	<td colspan="6"></td>
 		                                            <?php } ?>
-													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>><strong><?=($quote ? 'Quote' : '');?> Total:</strong> <span class="materials_cost"><?=format_price($materials_total);?></span></td>
+													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
+														<strong><?=($quote ? 'Quote' : '');?>
+														<?=(in_array("4", $USER_ROLES) ? 'Total:</strong> <span class="materials_cost">'.format_price($materials_total).'</span>' : '</strong>');?>
+													</td>
 												</tr>
 											</tbody>
-										</table>
+										</table></div>
 
 									</section>
 								</div><!-- Materials pane -->
@@ -1572,7 +1595,7 @@
 									        </div>
 										</div>
 
-										<table class="table table-striped">
+										<div class="table-responsive"><table class="table table-striped">
 											<thead class="table-first">
 												<th class="col-md-2">Date/Time</th>
 												<th class="col-md-2">User</th>
@@ -1612,7 +1635,7 @@
 													</td>
 												</tr>
 											</tbody>
-										</table>
+										</table></div>
 									</section>
 								</div><!-- Expenses pane -->
 							<?php } ?>
@@ -1620,7 +1643,7 @@
 							<?php if($outside) { ?>
 								<!-- Outside Services pane -->
 								<div class="tab-pane <?=($tab == 'outside' ? 'active' : '');?>" id="outside">
-				                    <table class="table table-hover table-condensed">
+				                    <div class="table-responsive"><table class="table table-hover table-condensed">
 				                        <thead class="no-border">
 				                            <tr>
 				                                <th class="col-md-3">
@@ -1688,7 +1711,7 @@
 				                                </td>
 				                            </tr>
 										</tbody>
-									</table>
+									</table></div>
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 						</div>

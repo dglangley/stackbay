@@ -135,7 +135,7 @@
 
 	<div class="sidebar-section">
 		<div class="row">
-			<div class="col-sm-7">
+			<div class="col-xs-7">
 <?php if (array_key_exists('cust_ref',$ORDER)) { ?>
 				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
 	<?php if ($EDIT) { ?>
@@ -152,7 +152,7 @@
 	<?php } ?>
 <?php } ?>
 			</div>
-			<div class="col-sm-5 nopadding-left">
+			<div class="col-xs-5 nopadding-left">
 <?php if (array_key_exists('termsid',$ORDER)) { ?>
 				<h4 class="section-header">Terms</h4>
 
