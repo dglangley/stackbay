@@ -16,37 +16,6 @@
         }
     }
 
-    // From getCompany and this says Aaron code so use with caution
-
-    function companyMap($service_companyid,$customer='') {
-        $companyid = 0;
-		$customer = trim($customer);
-
-        $query = "SELECT companyid FROM company_maps WHERE service_companyid = ".res($service_companyid).";";
-        $result = qdb($query) OR die(qe().'<BR>'.$query);
-
-        if(mysqli_num_rows($result)) {
-            $r = mysqli_fetch_assoc($result);
-            $companyid = $r['companyid'];
-        } else if ($customer) {
-			$query = "SELECT * FROM companies WHERE name = '".res($customer)."'; ";
-        	$result = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$companyid = $r['id'];
-			} else {
-				$query = "INSERT INTO companies (name) VALUES ('".res($customer)."'); ";
-   		     	$result = qdb($query) OR die(qe().'<BR>'.$query);
-				$companyid = qid();
-			}
-
-			$query = "INSERT INTO company_maps (companyid, service_companyid) VALUES ('".res($companyid)."','".res($service_companyid)."'); ";
-        	$result = qdb($query) OR die(qe().'<BR>'.$query);
-		}
-
-        return $companyid;
-    }
-
     function mapJob($BDB_jid) {
         $service_item_id = 0;
 
@@ -93,6 +62,39 @@
                     $r = mysqli_fetch_assoc($result);
 
                     $part = trim($r['part_number']);
+                    $manf = '';
+                    $partid = 0;
+                    $manfid = 0;
+                    $sysid = 0;
+                    
+                    if($r['manufacturer_id']) {
+                        $query = "SELECT * FROM services_manufacturer WHERE id = ".res($r['manufacturer_id']).";";
+                        $result = qdb($query,'PIPE') OR die(qe('PIPE') . '<BR>' . $query);
+
+                        if(mysqli_num_rows($result)) {
+                            $r3 = mysqli_fetch_assoc($result);
+                            $manf = trim($r3['name']);
+                        }
+                    }
+
+                    // Check if the manf exists in the current DB
+                    $query = "SELECT * FROM manfs WHERE name = ".fres($manf).";";
+                    $result = qdb($query) OR die(qe() . '<BR>' . $query);
+
+                    if(mysqli_num_rows($result)) {
+                        $r2 = mysqli_fetch_assoc($result);
+
+                        $partid = $r2['id'];
+                        echo $partid . '<BR><BR>';
+                    } else {
+                        echo $part . '<BR><BR>';
+
+                        // Insert the part into the parts table
+                        $query = "INSERT INTO parts (part, manfid, systemid, description, classification) VALUES (".fres($part).", ".fres().", ".fres().", ".fres($r['description']).", 'component');";
+                        qdb($query) OR die(qe() . '<BR>' . $query);
+
+                        $partid = qid();
+                    }
 
                     // Check if the part exists in the current DB
                     $query = "SELECT * FROM parts WHERE part = ".fres($part).";";
@@ -106,15 +108,18 @@
                     } else {
                         echo $part . '<BR><BR>';
 
+                        // We now need the manufacturer imported
+
+
                         // Insert the part into the parts table
-                        $query = "INSERT INTO parts (part, manfid, systemid, description, classification) VALUES (".fres($part)", ".fres()", ".fres()", ".fres()", 'component');";
+                        $query = "INSERT INTO parts (part, manfid, systemid, description, classification) VALUES (".fres($part).", ".fres().", ".fres().", ".fres($r['description']).", 'component');";
                         qdb($query) OR die(qe() . '<BR>' . $query);
 
                         $partid = qid();
                     }
 
                     // Map in the maps_component table
-                    $query = "INSERT INTO maps_component () VALUES (".fres($part)", ".fres()", ".fres()", ".fres()", 'component');";
+                    $query = "INSERT INTO maps_component () VALUES (".fres($part).", ".fres().", ".fres().", ".fres().", 'component');";
                     qdb($query) OR die(qe() . '<BR>' . $query);
                 }
 

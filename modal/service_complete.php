@@ -1,11 +1,21 @@
 <?php
-	$repair_codes = array();
-	$query = "SELECT * FROM repair_codes;";
+	$service_codes = array();
+	$query = '';
+
+	if(strtolower($type) == 'service') {
+		if(in_array("4", $USER_ROLES)){ 
+			$query = "SELECT * FROM status_codes;";
+		} else {
+			$query = "SELECT * FROM status_codes WHERE admin <> 1;";
+		}
+	} else {
+		$query = "SELECT * FROM repair_codes;";
+	}
 
 	$result = qdb($query) or die(qe() . ' ' . $query);
 
 	while ($row = $result->fetch_assoc()) {
-		$repair_codes[] = $row;
+		$service_codes[] = $row;
 	}
 ?>
 <div class="modal modal-alert fade" id="modal-complete" tabindex="-1" role="dialog" aria-labelledby="modalAlertTitle">
@@ -13,7 +23,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
-				<h4 class="modal-title">Complete Order</h4>
+				<h4 class="modal-title"><?=($ticketStatus ? 'Update Status of ' : 'Complete'); ?> Order</h4>
 			</div>
 
 			<form action="tasks_log.php" method="post">
@@ -31,12 +41,13 @@
 
 						<input type="text" name="item_id" value="<?=$item_id;?>" class="hidden">
 						<input type="text" name="order_number" value="<?=$order_number;?>" class="hidden">
+						<input type="text" name="item_id_label" value="<?=$item_id_label;?>" class="hidden">
 
 						<div class="col-md-12">
-							<select class="form-control input-sm select2" name="repair_code_id">
+							<select class="form-control input-sm select2" name="service_code_id">
 							<option selected="" value="null">- Select Status -</option>
 								<?php 
-									foreach($repair_codes as $code):
+									foreach($service_codes as $code):
 									echo "<option value='".$code['id']."'>".$code['description']."\t".$code['code']."</option>";
 									endforeach;
 								?>
@@ -45,6 +56,9 @@
 					</div><!-- row -->
 					<div class="row">
 						<div class="col-md-12">
+							<?php if($ticketStatus) {
+									echo '<textarea class="form-control" name="notes" rows="3" placeholder="Notes... (Reason to change status)"></textarea>';
+							} ?>
 						</div>
 					</div><!-- row -->
 				</div>

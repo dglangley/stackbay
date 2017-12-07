@@ -9,6 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
@@ -49,8 +50,10 @@
 	function quoteTask($quoteid, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $quote_item_id){
 		global $LINE_NUMBER;
 
+		// print_r($search);
+
 		// Currently only 1 id associated per item
-		$search = reset($search)[0];
+		$search = $search[0];
 
 		$id = 0;
 
@@ -152,7 +155,7 @@
 		qdb($query) OR die(qe().'<BR>'.$query);
 	}
 
-	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id') {
+	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id', $order_number) {
 		if(! empty($status)) {
 			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id).";";
 			qdb($query) OR die(qe() . ' ' . $query);
@@ -162,8 +165,31 @@
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if(mysqli_num_rows($result) == 0) {
-				$query = "INSERT INTO service_assignments (item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
+				$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
 				qdb($query) OR die(qe() . ' ' . $query);
+
+				$message = $item_id_label;
+
+				if($item_id_label == 'repair_item_id') {
+					$title = 'RO# ' . $order_number;
+					//$issue = 'Issue: ' . $activity;
+					$message = $title . ' Assigned';
+					$link = '/service.php?order_type=repair&order_number=' . $order_number;
+				} else if($item_id_label == 'service_item_id') {
+					$title = 'SO# ' . $order_number;
+					//$issue = 'Issue: ' . $activity;
+					$message = $title . ' Assigned';
+					$link = '/service.php?order_type=Service&order_number=' . $order_number;
+				}
+
+				$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+					$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($item_id_label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+				qdb($query) OR die(qe() . '<BR>' . $query);
+
+				$messageid = qid();
+
+				$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', ".res($techid).");";
+				$result = qdb($query) or die(qe() . '<BR>' . $query);
 			}
 		}
 
@@ -203,33 +229,12 @@
 		//}
 	}
 
-	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'activity_log', $field = 'item_id', $type = 'repair') {
-
-		$notes = '';
-
-		$query = "SELECT description FROM repair_codes WHERE id = ".res($repair_code_id).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
-		//echo $query;
-
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-			$notes = ucwords($type) . ' completed. Final Status: <b>' . $r['description'].'</b>';
-		}
-
-		//$order_number = getOrderNumber($item_id);
-
-		//$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
-		$query = "INSERT INTO $table ($field, item_id_label, datetime, userid, notes) VALUES (".res($item_id).", '".$type."_item_id', '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
-		//echo $query;
-		qdb($query) OR die(qe().'<BR>'.$query);
-//echo $query;
-		// Update the repair_code_id to the order
-		if($type == 'repair') {
-			$query = "UPDATE repair_orders SET repair_code_id = ".res($repair_code_id)." WHERE ro_number = ".res($order_number).";";
+	function addExpenses($expenses, $label = 'repair_item_id') {
+		foreach($expenses as $expense){
+			$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, amount, file, userid, datetime) VALUES (".res($item_id).", ".fres($label).", ".fres($expense['date']).", ".res($expense['techid']).", ".fres($expense['description']).", ".fres($expense['amount']).", '','".res($GLOBALS['now'])."');";
+			//echo $query;
 			qdb($query) OR die(qe().'<BR>'.$query);
 		}
-
 	}
 
 	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
@@ -394,16 +399,12 @@
 
 	if(! empty($activity_notification)) {
 		if($line_number) {
-			createNotification($activity_notification, $order . '-' . $line_number, $label, true);
-		} else {
-			createNotification($activity_notification, $order, $label, true);
+			$order = $order . '-' . $line_number;
 		}
 
-		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
-		} else {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number);
-		}
+		createNotification($activity_notification, $order, $label, true);
+
+		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
@@ -413,15 +414,18 @@
 		} else {
 			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number);
 		}
-	// Add permission to a certain user ipon the create or quote screen
-	} else if(! empty($service_item_id) && ($techid || ! empty($tech_status))) {
-
-		editTech($techid, $tech_status, $service_item_id);
-		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
-		} else {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
+	// Add permission to a certain user upon the create or quote screen
+	} else if(! empty($service_item_id) AND ($techid OR ! empty($tech_status))) {
+		if($line_number) {
+			$order = $order . '-' . $line_number;
 		}
+
+		editTech($techid, $tech_status, $service_item_id, $label,$order);
+		// if(! $line_number) {
+		header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+		// } else {
+		// 	header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
+		// }
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save') {
@@ -445,13 +449,18 @@
 
 	// Else editing the task
 	} else {
-		$tab = 'labor';
-		// If completing a Repair Item
-		if (isset($_REQUEST['repair_item_id'])) {
-			completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
+		$tab = 'labor' . $_REQUEST['repair_item_id'];
+
+		// print_r($_REQUEST);
+		// If completing
+		if (isset($_REQUEST['repair_code_id'])) {
+			completeTask($service_item_id, $_REQUEST['repair_code_id'], 'activity_log', 'item_id', $label);
+			//completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
 		} else if(strtolower($type) != 'service') {
 			// Editing a Repair Item
 		}
+
+		//print_r($expenses);
 
 		if(strtolower($type) == 'service') {
 			// If Documentation
@@ -466,6 +475,10 @@
 				$fileList = array();
 				
 				zipFiles($filelist, $item_id, $item_label);
+			}
+
+			if($expenses) {
+				addExpenses($expenses, $label);
 			}
 
 			// Editing a service task

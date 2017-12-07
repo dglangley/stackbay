@@ -19,15 +19,16 @@
 
 	if($order_type == 'repair') {
 		$query = "SELECT ro.*,  ri.id as item_id, ri.line_number FROM repair_orders ro, repair_items ri, service_assignments si ";
-		if ($q) {
-			$query .= "WHERE ro_number RLIKE '".res($q)."' AND repair_code_id IS NULL AND ri.ro_number = ro.ro_number AND ri.ro_number = ro.ro_number ";
+		if (strlen($q)>1) {
+			$query .= "WHERE ri.ro_number RLIKE '".res($q)."' AND repair_code_id IS NULL AND si.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
 		} else {
 			if (! $noreset) {
 				$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
 			}
 			$query .= "WHERE repair_code_id IS NULL AND si.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
-			$query .= "ORDER BY ro.created DESC LIMIT 0,10; ";
 		}
+		$query .= "ORDER BY ro.created DESC LIMIT 0,10; ";
+		
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
 			$tasks[] = array('id'=>'','text'=>'- Select Task -');
@@ -40,10 +41,15 @@
 		}
 	} else {
 		$query = "SELECT so.*,  si.id as item_id, si.line_number, task_name FROM service_orders so, service_items si, service_assignments sa ";
-		if (! $noreset) {
-			$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
+		if (strlen($q)>1) {
+			$query .= "WHERE si.so_number RLIKE '".res($q)."' AND sa.item_id = si.id  AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
+		} else {
+			if (! $noreset) {
+				$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
+			}
+			$query .= "WHERE sa.item_id = si.id  AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
 		}
-		$query .= "WHERE sa.item_id = si.id  AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
+
 		$query .= "ORDER BY so.datetime DESC LIMIT 0,10; ";
 
 		$result = qdb($query) OR die(qe().'<BR>'.$query);

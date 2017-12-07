@@ -1,48 +1,20 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 
 	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
 		$order_number = 0;
 
-		$query = "SELECT $field as order_number FROM $table WHERE id = ".res($item_id).";";
+		$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
 		$result = qdb($query) OR die(qe().' '.$query);
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
-			$order_number = $r['order_number'];
+			$order_number = $r['order_number'] . ($r['line_number'] ? '-' . $r['line_number'] : '');
 		}
 
 		return $order_number;
-	}
-
-	function completeTask($item_id, $order_number, $repair_code_id, $techid, $table = 'activity_log', $field = 'item_id', $type = 'repair') {
-
-		$notes = '';
-
-		$query = "SELECT description FROM repair_codes WHERE id = ".res($repair_code_id).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
-		//echo $query;
-
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-			$notes = ucwords($type) . ' completed. Final Status: <b>' . $r['description'] . '</b>';
-		}
-
-		//$order_number = getOrderNumber($item_id);
-
-		//$query = "INSERT INTO $table (ro_number, $field, datetime, techid, notes) VALUES (".res($order_number).",".res($item_id).", '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
-		$query = "INSERT INTO $table ($field, item_id_label, datetime, userid, notes) VALUES (".res($item_id).", '".$type."_item_id', '".res($GLOBALS['now'])."', ".res($techid).", '".res($notes)."');";
-		//echo $query;
-		qdb($query) OR die(qe().' '.$query);
-
-		// Update the repair_code_id to the order
-		if($type == 'repair') {
-			$query = "UPDATE repair_orders SET repair_code_id = ".res($repair_code_id)." WHERE ro_number = ".res($order_number).";";
-			qdb($query) OR die(qe().' '.$query);
-		}
-
 	}
 
 	function testTask($item_id, $field = "repair_item_id") {
@@ -79,24 +51,28 @@
 	$techid = $GLOBALS['U']['id'];
 	$order_number = 0;
 	$item_id = 0;
-	$repair_code_id = 0;
+	$label = '';
+	$service_code_id = 0;
+	$notes = '';
 
 	$type = '';
 
 	if (isset($_REQUEST['order_number'])) { $order_number = $_REQUEST['order_number']; }
 	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
-	if (isset($_REQUEST['repair_code_id'])) { $repair_code_id = $_REQUEST['repair_code_id']; }
+	if (isset($_REQUEST['item_id_label'])) { $label = $_REQUEST['item_id_label']; }
+	if (isset($_REQUEST['service_code_id'])) { $service_code_id = $_REQUEST['service_code_id']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
-	$order_number = getOrderNumber($item_id);
+	$order_number = getOrderNumber($item_id, ($label == 'service_item_id' ? 'service_items' : 'repair_items'), ($label == 'service_item_id' ? 'so_number' : 'ro_number'));
 
 	if($type == 'complete'){
-		// completeTask($item_id, $repair_code_id, $techid, $table = 'repair_activites', $field = 'repair_item_id', $type = 'repair')
-		completeTask($item_id, $order_number, $repair_code_id, $techid);
+		// completeTask($item_id, $service_code_id, $techid, $table = 'repair_activites', $field = 'repair_item_id', $type)
+		completeTask($item_id, $service_code_id, 'activity_log', 'item_id', $label, $notes);
 	} else if($type == 'test') {
 		testTask($item_id);
 	}
 
-	header('Location: /service.php?order_type=repair&order_number='.$order_number);
+	header('Location: /service.php?order_type='.($label == 'service_item_id' ? 'Service' : 'Repair').'&order_number='.$order_number);
 
 	exit;

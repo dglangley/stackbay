@@ -44,6 +44,24 @@ function addMonths(after = 1, now = new Date()) {
     return (after == 1) ? current : addMonths(after - 1, new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()))
 }
 
+// Collision detection between 2 DIVs
+function collision($div1, $div2) {
+	var x1 = $div1.offset().left;
+	var y1 = $div1.offset().top;
+	var h1 = $div1.outerHeight(true);
+	var w1 = $div1.outerWidth(true);
+	var b1 = y1 + h1;
+	var r1 = x1 + w1;
+	var x2 = $div2.offset().left;
+	var y2 = $div2.offset().top + 100;
+	var h2 = $div2.outerHeight(true);
+	var w2 = $div2.outerWidth(true);
+	var b2 = y2 + h2;
+	var r2 = x2 + w2;
+
+	if (b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2) return false;
+	return true;
+}
 
 function calculateTax(object){
 	var container = object.closest(".part_listing");
@@ -180,6 +198,29 @@ function calculateTax(object){
 	// 	$("#save_form").submit();
 	// });
 
+	// Calculate the cost and profit on the OS
+	$(document).on("change", ".os_amount, .os_amount_profit", function(){
+		var container = $(this).closest('.outsourced_row');
+		
+		var amount = 0;
+		var tax = 0;
+
+		var total = 0;
+
+		if(container.find(".os_amount").val()) {
+			amount = parseFloat(container.find(".os_amount").val());	
+		}
+
+		if(parseFloat(container.find(".os_amount_profit").val())) {
+			tax = parseFloat(parseFloat(container.find(".os_amount_profit").val()));	
+		}
+
+		total = (amount) + (amount * (tax / 100));
+
+		container.find(".os_amount_total").val(priceFormat(parseFloat(total).toFixed(2)));
+	});
+
+	// Calcuate the cost and the profit / qty on the materials view for quotes
 	$(document).on("change", ".part_amount, .part_qty, .part_perc", function(){
 		calculateCost($(this));
 
@@ -308,5 +349,9 @@ function calculateTax(object){
 
 		$('#save_form').submit();
 	});
+
+	// window.setInterval(function() {
+	//     $('#result').text(collision($('#pad-wrapper'), $('#sticky-footer')));
+	// }, 500);
 
 })(jQuery);

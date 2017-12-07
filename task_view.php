@@ -24,6 +24,7 @@
 	$expenses = true;
 	$closeout = true;
 	$outside = true;
+	$images = true;
 
 	$new = false;
 
@@ -34,7 +35,7 @@
 	$expenses_data = array();
 	$closeout_data = array();
 	$labor_data = array();
-	$repair_codes = array();
+	$service_codes = array();
 	$ticketStatus = '';
 
 	$materials_total = 0;
@@ -45,6 +46,7 @@
 	$total_amount = 0;
 
 	$item_id = 0;
+	$item_id_label = '';
 	$item_details = array();
 	$component_data = array();
 	$outsourced = array();
@@ -84,9 +86,16 @@
 		$expenses_total = $item_details['expenses'];
 		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 	} else if(strtolower($type) == 'service') {
+		$item_id_label = 'service_item_id';
+
 		if(! empty($task_number)) {
 			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
 			$item_details = getItemDetails($item_id, 'service_items', 'id');
+
+			if($item_details['status_code']) {
+				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
+			}
+
 			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
 			$outsourced = getOutsourced($item_id, $type);
 			$documentation_data = getDocumentation($item_id, 'service_item_id');
@@ -141,17 +150,7 @@
 		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 
 	} else if(strtolower($type) == 'repair') {
-		if($ORDER['repair_code_id']) {
-			$ticketStatus = getRepairCode($ORDER['repair_code_id']);
-		}
-
-		$query = "SELECT * FROM repair_codes;";
-
-		$result = qdb($query) or die(qe() . ' ' . $query);
-
-		while ($row = $result->fetch_assoc()) {
-			$repair_codes[] = $row;
-		}
+		$item_id_label = 'repair_item_id';
 
 		// Diable Modules for Repair
 		$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
@@ -162,6 +161,18 @@
 		$outside = false;
 
 		$item_details = getItemDetails($item_id, 'repair_items', 'id');
+
+		if($item_details['repair_code_id']) {
+			$ticketStatus = getRepairCode($item_details['repair_code_id'], 'repair');
+		}
+
+		$query = "SELECT * FROM repair_codes;";
+
+		$result = qdb($query) or die(qe() . ' ' . $query);
+
+		while ($row = $result->fetch_assoc()) {
+			$service_codes[] = $row;
+		}
 
 		$activity_data = grabActivities($order_number, $item_id, $type);
 		$component_data = getMaterials($order_number, $item_id, $type);
@@ -622,13 +633,13 @@
 		return ($str);
 	}
 
-	function accessControl($userid, $item_id){
+	function accessControl($userid, $item_id, $label){
 		global $quote;
 		// Guilty until proven innocent
 		$access = false;
 
 		if(! $quote) {
-			$query = "SELECT * FROM service_assignments WHERE service_item_id = ".res($item_id)." AND userid = ".res($userid).";";
+			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($label)." AND userid = ".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 
@@ -712,6 +723,7 @@
 		<link rel="stylesheet" href="../css/operations-overrides.css?id=<?php if (isset($V)) { echo $V; } ?>" type="text/css" />
 
 		<style type="text/css">
+
 			.list {
 				padding: 5px;
 			}
@@ -855,22 +867,35 @@
 			.bx-wrapper {
 				width: 100%;
 				max-width: 100% !important;
+				min-height: 200px;
 			}
 
-			#pad-wrapper {
-				padding-bottom: 230px; /*just larger than footer height*/
+			.bx-wrapper .bx-viewport {
+				height: 200px !important;
+				background: transparent;
 			}
-			#sticky-footer {
-				position: fixed;
-				bottom: 0;
-				margin-left:-19px;
-				margin-bottom:-19px;
-				height: 220px;
-				border-bottom:1px solid white;
+
+			#bxslider-pager li {
+				width: 200px !important;
 			}
+
 			.upload{
 			    display: none !important;
 			}
+
+			<?php 
+				if($view_mode){
+					echo '
+						#pad-wrapper input, #pad-wrapper .select2, #pad-wrapper button, #pad-wrapper .upload_link, #pad-wrapper .input-group {
+							display: none !important;
+						}
+
+						.table-header .toggle-edit, .table-header .btn-update {
+							display: none !important;
+						}
+					';
+				}
+			?>
 		</style>
 	</head>
 
@@ -952,6 +977,10 @@
 					<?php } else if(! $ticketStatus) { ?>
 						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
+						</button>
+					<?php } else if($manager_access AND strtolower($type) == 'service') { ?>
+						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+							<i class="fa fa-save"></i> Change Status
 						</button>
 					<?php } ?>
 				</div>
@@ -1053,6 +1082,9 @@
 							} 
 							if($outside) {
 								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
+							}
+							if($images) {
+								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><i class="fa fa-file-image-o" aria-hidden="true"></i> Images</a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
@@ -1648,9 +1680,9 @@
 														</div>																		
 													</td>
 													<td>
-					                            		<select name="techid" class="form-control input-xs user-selector required"></select>
+					                            		<select name="expense[techid]" class="form-control input-xs user-selector required"></select>
 				                            		</td>
-													<td><input class="form-control input-sm" type="text" name="expense[notes]"></td>
+													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
 													<td>
 														<div class="input-group">													
 															<span class="input-group-addon">										                
@@ -1677,14 +1709,20 @@
 				                    <div class="table-responsive"><table class="table table-hover table-condensed">
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-md-3">
+				                                <th class="col-md-2">
 				                                    Vendor
 				                                </th>
-				                                <th class="col-md-6">
+				                                <th class="col-md-3">
 				                                    Description
 				                                </th>
 				                                <th class="col-md-2">
 				                                    Amount
+				                                </th>
+				                                <th class="col-md-2">
+				                                    Profit %
+				                                </th>
+				                                <th class="col-md-2">
+				                                    Total
 				                                </th>
 				                                 <th class="col-md-1 text-right">
 				                                    Action
@@ -1700,13 +1738,31 @@
 					                            			<option value="<?=$list['companyid'];?>"><?=getCompany($list['companyid']);?></option>
 					                            		</select>
 				                            		</td>
-													<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]" value="<?=$list['description'];?>"></td>
+													<td>
+														<input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]" value="<?=$list['description'];?>">
+													</td>
 													<td>
 														<div class="input-group">													
 															<span class="input-group-addon">										                
 																<i class="fa fa-usd" aria-hidden="true"></i>										            
 															</span>										            
-															<input class="form-control input-sm part_amount" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="<?=$list['amount'];?>">
+															<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="<?=$list['amount'];?>">
+														</div>
+													</td>
+													<td>
+														<div class="input-group">											  
+															<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="">
+															<span class="input-group-addon">										                
+																<i class="fa fa-percent" aria-hidden="true"></i>										            
+															</span>	
+														</div>
+													</td>
+													<td>
+														<div class="input-group">													
+															<span class="input-group-addon">										                
+																<i class="fa fa-usd" aria-hidden="true"></i>										            
+															</span>										            
+															<input class="form-control input-sm os_amount_total" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="<?=$list['amount'];?>">
 														</div>
 													</td>
 													<td class="os_action">
@@ -1725,7 +1781,23 @@
 														<span class="input-group-addon">										                
 															<i class="fa fa-usd" aria-hidden="true"></i>										            
 														</span>										            
-														<input class="form-control input-sm part_amount" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="">
+														<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="">
+													</div>
+												</td>
+												<td>
+													<div class="input-group">																		
+														<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="">
+														<span class="input-group-addon">										                
+															<i class="fa fa-percent" aria-hidden="true"></i>										            
+														</span>		
+													</div>
+												</td>
+												<td>
+													<div class="input-group">													
+														<span class="input-group-addon">										                
+															<i class="fa fa-usd" aria-hidden="true"></i>										            
+														</span>										            
+														<input class="form-control input-sm os_amount_total" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="">
 													</div>
 												</td>
 												<td class="os_action">
@@ -1735,7 +1807,7 @@
 												</td>
 											</tr>
 				                            <tr class="">
-				                                <td colspan="3">
+				                                <td colspan="5">
 				                                </td>
 				                                <td class="text-right">
 				                                    <strong><span class="outside_cost"><?=format_price($outside_services_total);?></span></strong>
@@ -1745,31 +1817,38 @@
 									</table></div>
 								</div><!-- Outside Services pane -->
 							<?php } ?>
-						</div>
-						<div id="sticky-footer">
-							<ul id="bxslider-pager">
-								<li data-slideIndex="0">
-									<a data-toggle="modal" href="#image-modal" class="imageDrop">
-										<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
-											<i class="fa fa-plus-circle" aria-hidden="true"></i>
+
+							<?php if($images) { ?>
+								<div class="tab-pane <?=(($tab == 'images') ? 'active' : '');?>" id="images">
+									<section>
+										<div id="sticky-footer">
+											<ul id="bxslider-pager">
+												<li data-slideIndex="0">
+													<a data-toggle="modal" href="#image-modal" class="imageDrop">
+														<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
+															<i class="fa fa-plus-circle" aria-hidden="true"></i>
+														</div>
+													</a>
+												</li>
+												<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
+												<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
+												<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+												<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+											</ul>
 										</div>
-									</a>
-								</li>
-								<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
-								<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
-								<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-								<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-							</ul>
+									</section>
+								</div><!-- Images pane -->
+							<?php } ?>
 						</div>
 					</div><!-- pad-wrapper -->
 				</div><!-- row -->
@@ -1779,7 +1858,7 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<?php if(! $quote AND ! $new) { ?>
+		<?php if(! $quote AND ! $new AND ! $view_mode) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>

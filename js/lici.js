@@ -52,10 +52,12 @@
 	        		loadTask(task_label, data);
 	        	}
 
-	        	// if(! $.isNumeric(data)) {
-	        	// 	// Consider the data as an error, otherwise it should be the order number to invoke the redirect
-	        	// 	modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", data, false);
-	        	// }
+	        	var pattern = /you/;
+
+	        	if(pattern.test(data)) {
+	        		// Consider the data as an error, otherwise it should be the order number to invoke the redirect
+	        		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", data, false);
+	        	}
 
 	        	 console.log(data);
 	        	//return order_number;

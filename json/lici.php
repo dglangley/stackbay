@@ -10,5 +10,5 @@
     if (isset($_REQUEST['task_label'])) { $task_label = $_REQUEST['task_label'];}
     if (isset($_REQUEST['type'])) { $type = $_REQUEST['type'];}
 
-    echo json_encode(lici($taskid, $task_label, $type));
+    echo json_encode(lici($taskid, $task_label, $type, $q));
     exit;

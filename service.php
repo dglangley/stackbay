@@ -15,6 +15,9 @@
 	$order_number_details = (isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '');
 	$task_edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
 	$tab = (isset($_REQUEST['tab']) ? $_REQUEST['tab'] : ''); 
+	$view_mode = (isset($_REQUEST['view']) ? true : false); 
+
+	// echo $view_mode . ' test';
 
 	preg_match_all("/\d+/", $order_number_details, $order_number_split);
 
@@ -34,4 +37,5 @@
 	}
 
 	include 'task_view.php';
+	
 	exit;
