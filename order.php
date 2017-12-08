@@ -428,8 +428,10 @@
 		if ($order_number) {
 			$TITLE .= '# '.$order_number;
 		} else {
+			$class = $TITLE;
+			if (array_key_exists('classid',$QUOTE) AND $QUOTE['classid']) { $class = getClass($QUOTE['classid']); }
 			if ($order_type=='service_quote' AND isset($QUOTE)) {
-				$TITLE = 'New '.$TITLE.' from Quote# '.$QUOTE['id'];
+				$TITLE = 'New '.$class.' from Quote# '.$QUOTE['id'];
 			} else {
 				$TITLE = 'New '.$TITLE;
 			}
@@ -508,7 +510,7 @@
 					</li>
 			';
 			foreach ($records as $rec) {
-				if ($T['collection']=='invoices') { $ln = '/invoice.php?invoice='.$rec[$T['collection_no']].'" target="_new'; }
+				if ($T['collection']=='invoices') { $ln = '/invoice.php?invoice='.$rec[$T['collection_no']]; }
 				else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
 				$coll_dropdown .= '
 					<li>
