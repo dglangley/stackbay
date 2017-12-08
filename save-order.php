@@ -137,7 +137,8 @@
 	if (array_key_exists('ship_to_id',$ORDER)) {
 		$query .= "ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, ";
 	}
-	$query .= "termsid, public_notes, ";
+	if (array_key_exists('termsid',$ORDER)) { $query .= "termsid, "; }
+	$query .= "public_notes, ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= "repair_code_id, "; }
 	$query .= "status) ";

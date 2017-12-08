@@ -508,7 +508,7 @@
 					</li>
 			';
 			foreach ($records as $rec) {
-				if ($T['collection']=='invoices') { $ln = '/docs/INV'.$rec[$T['collection_no']].'.pdf" target="_new'; }
+				if ($T['collection']=='invoices') { $ln = '/invoice.php?invoice='.$rec[$T['collection_no']].'" target="_new'; }
 				else if ($T['collection']=='bills') { $ln = '/bill.php?bill='.$rec[$T['collection_no']]; }
 				$coll_dropdown .= '
 					<li>
