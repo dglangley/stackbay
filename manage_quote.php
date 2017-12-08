@@ -8,7 +8,7 @@
 	$order_type = '';
 	if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 
-	$EDIT = true;
+	if (! isset($EDIT)) { $EDIT = false; }
 	$QUOTE = getOrder($order_number,$order_type);
 
 	// prepare parameters for a new order form, basically
@@ -23,11 +23,13 @@
 	$T['items'] = $items_table;
 	$T['record_type'] = 'quote';
 	$ORDER = getOrder(0,$order_type);
+
 	// now go back through $QUOTE and populate values into $ORDER so we can leverage the fields
 	// from $ORDER for the order form, but retaining the values from $QUOTE for conversion
 	foreach ($QUOTE as $k => $v) {
 		$ORDER[$k] = $v;
 	}
+
 
 	include 'order.php';
 	exit;

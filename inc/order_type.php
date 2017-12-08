@@ -208,7 +208,7 @@
 
 			case 'service_quote':
 				$T['orders'] = 'service_quotes';
-				$T['order'] = 'id';
+				$T['order'] = 'quoteid';
 				$T['items'] = 'service_quote_items';
 				$T['item_label'] = 'service_item_id';
 				$T['record_type'] = 'quote';

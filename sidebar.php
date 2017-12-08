@@ -78,9 +78,15 @@
 		$class = $T2['abbrev'];
 		if (array_key_exists('classid',$ORDER) AND $ORDER['classid']) { $class = getClass($ORDER['classid']).' '; }
 
+		$order_url = 'order.php';
+		if (isset($QUOTE) OR (isset($quote) AND $quote===true)) {
+			$order_url = 'manage_quote.php';
+			$class .= 'Quote ';
+		}
+
 		echo '
 		<div class="alert alert-'.$T2['alert'].'">
-			<h4>'.$class.$ORDER['order_number'].' <a href="order.php?order_type='.$ORDER['order_type'].'&order_number='.$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
+			<h4>'.$class.$ORDER['order_number'].' <a href="'.$order_url.'?order_type='.$ORDER['order_type'].'&order_number='.$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
 			'.$addl_info.'
 		</div>
 		';

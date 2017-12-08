@@ -57,6 +57,8 @@
 	$OG_component_data = array();
 	$OG_outsourced = array();
 
+	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
+
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
 	if($quote){

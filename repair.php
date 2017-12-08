@@ -3,7 +3,7 @@
 	$build = $_REQUEST['build'];
 
 	if (! $build AND $order_number) {
-		header('Location: service.php?order_type=repair&order_number='.$order_number);
+		header('Location: service.php?order_type=Repair&order_number='.$order_number);
 		exit;
 	}
 

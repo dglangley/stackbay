@@ -32,6 +32,8 @@
 	if($ORDER['classid']) {
 		$service_class = getServiceClass($ORDER['classid']);
 	}
+	$ORDER['order_number'] = $order_number;
+	$ORDER['order_type'] = $order_type;
 
 	include 'task_view.php';
 	exit;

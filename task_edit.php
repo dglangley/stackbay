@@ -174,7 +174,7 @@
 					$title = 'RO# ' . $order_number;
 					//$issue = 'Issue: ' . $activity;
 					$message = $title . ' Assigned';
-					$link = '/service.php?order_type=repair&order_number=' . $order_number;
+					$link = '/service.php?order_type=Repair&order_number=' . $order_number;
 				} else if($item_id_label == 'service_item_id') {
 					$title = 'SO# ' . $order_number;
 					//$issue = 'Issue: ' . $activity;
@@ -277,7 +277,7 @@
 			$title = 'RO# ' . $order_number;
 			$issue = 'Issue: ' . $activity;
 			$message = $title . ' ' . $issue;
-			$link = '/service.php?order_type=repair&order_number=' . $order_number;
+			$link = '/service.php?order_type=Repair&order_number=' . $order_number;
 		} else if($label == 'service_item_id') {
 			$title = 'SO# ' . $order_number;
 			$issue = 'Issue: ' . $activity;

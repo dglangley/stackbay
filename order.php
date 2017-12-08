@@ -60,6 +60,7 @@
 
 		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
 		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
+		else if (isset($GLOBALS['QUOTE'])) { $goto = 'quote.php?order_number='.$GLOBALS['QUOTE']['quoteid'].'-'.$ln; }
 
 		$col = '<div class="pull-left" style="width:7%">';
 		if ($EDIT) {
@@ -142,9 +143,19 @@
 			$r['qty_attr'] = '';
 			$r['name'] = '';
 
-			// If this is a purchase request these variables need to be converted
-			$r['ref_1_label'] = ($r['ref_1_label'] ?: $r['item_id_label']);
-			$r['ref_1'] = ($r['ref_1'] ?: $r['item_id']);
+			// if converting a quote, prep the item qty and amount
+//			if (isset($r['labor_hours']) AND isset($r['labor_rate']) AND ! $r['amount']) {
+//				$r['amount'] = ($item['labor_hours']*$item['labor_rate'])+$item['expenses']+$sum_materials;
+//			}
+
+			// If this is a purchase request, item_id variables need to be converted
+			if (isset($r['ref_1']) AND isset($r['ref_1_label'])) {
+				$r['ref_1'] = $r['ref_1'];
+				$r['ref_1_label'] = $r['ref_1_label'];
+			} else if (isset($r['item_id']) AND isset($r['item_id_label'])) {
+				$r['ref_1'] = $r['item_id'];
+				$r['ref_1_label'] = $r['item_id_label'];
+			}
 
 			if ((array_key_exists('partid',$r) AND $r['partid']) OR (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='partid'))  {
 				$H = hecidb($r['partid'],'id');
@@ -396,7 +407,7 @@
 		else if ($order_type=='r' OR $order_type=='repair' OR $order_type=='RO' OR $order_type=='ro' OR $order_type=='R') { $order_type = 'Repair'; }
 
 		// user is creating a new order
-		if ($order_type AND ! $EDIT AND ! $order_number) { $EDIT = true; }
+		if ($order_type AND ! $EDIT AND ! $order_number AND ! isset($QUOTE)) { $EDIT = true; }
 	}
 
 	$approved = array_intersect($USER_ROLES, array(1,4,5,7));
@@ -431,8 +442,12 @@
 			$class = $TITLE;
 			if (array_key_exists('classid',$QUOTE) AND $QUOTE['classid']) { $class = getClass($QUOTE['classid']); }
 			if ($order_type=='service_quote' AND isset($QUOTE)) {
-				$TITLE = 'New '.$class.' from Quote# '.$QUOTE['id'];
-			} else {
+				if ($EDIT) {
+					$TITLE = 'New '.$class.' from Quote# '.$QUOTE['quoteid'];
+				} else {
+					$TITLE = $class.' Quote# '.$QUOTE['quoteid'];
+				}
+			} else if ($EDIT) {
 				$TITLE = 'New '.$TITLE;
 			}
 		}
@@ -593,8 +608,10 @@
 		if ($ORDER['status'] AND $ORDER['status']<>'Active' AND $ORDER['status']<>'Void') { echo '<option value="'.$ORDER['status'].'" selected>'.$ORDER['status'].'</option>'; }
 	?>
 			</select>
-<?php } else if ($T['record_type']<>'quote') { ?>
-			<a href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
+<?php } else if ($T['record_type']=='quote') { ?>
+			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit to Convert</a>
+<?php } else { ?>
+			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
 			<a href="/repair_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 <!--
@@ -645,13 +662,16 @@
 		</div>
 		<div class="col-sm-2 text-right">
 <?php if ($EDIT) { ?>
+	<?php if ($order_number) { ?>
+			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
+	<?php } else if (isset($QUOTE) AND $QUOTE['quoteid']) { ?>
+			<a href="/manage_quote.php?order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
+	<?php } ?>
+			&nbsp; &nbsp;
+
 	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
-		<?php if ($order_number) { ?>
-			<a href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Cancel</a>
-			&nbsp; &nbsp;
-		<?php } ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
 	<?php } ?>
 <?php } ?>

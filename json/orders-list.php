@@ -56,11 +56,11 @@
 	}
 
 	$service_quotes = array();
-	$query = "SELECT q.id, c.name FROM service_quotes q, companies c ";
-	$query .= "WHERE q.companyid = c.id ORDER BY q.id DESC LIMIT 0,50; ";
+	$query = "SELECT q.quoteid, c.name FROM service_quotes q, companies c ";
+	$query .= "WHERE q.companyid = c.id ORDER BY q.quoteid DESC LIMIT 0,50; ";
 	$result = qdb($query) OR jsonDie(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
-		$service_quotes[] = array('number'=>$r['id'],'company'=>$r['name']);
+		$service_quotes[] = array('number'=>$r['quoteid'],'company'=>$r['name']);
 	}
 
 	$invoices = array();
