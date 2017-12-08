@@ -75,9 +75,12 @@
 			';
 		}
 
+		$class = $T2['abbrev'];
+		if (array_key_exists('classid',$ORDER) AND $ORDER['classid']) { $class = getClass($ORDER['classid']).' '; }
+
 		echo '
 		<div class="alert alert-'.$T2['alert'].'">
-			<h4>'.$T2['abbrev'].$ORDER['order_number'].' <a href="'.$T2['abbrev'].$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
+			<h4>'.$class.$ORDER['order_number'].' <a href="order.php?order_type='.$ORDER['order_type'].'&order_number='.$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
 			'.$addl_info.'
 		</div>
 		';
@@ -273,7 +276,7 @@
 
 <?php
 	$email_chk = '';
-	if (! $order_number) { $email_chk = 'checked'; }
+	if (! $order_number AND $T['confirmation']===true) { $email_chk = 'checked'; }
 ?>
 
 <?php if ($EDIT AND array_key_exists('cust_ref',$ORDER)) { ?>

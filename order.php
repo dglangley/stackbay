@@ -452,7 +452,7 @@
 
 		/***** Handle RMA Support options *****/
 		$support = '';
-		if (! $EDIT AND getTerms($ORDER['termsid'],'id','type')) {//billable type as opposed to null type
+		if (! $EDIT AND getTerms($ORDER['termsid'],'id','type') AND $T['support']) {//billable type as opposed to null type
 			$support = '
 				<div class ="btn-group">
 					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">

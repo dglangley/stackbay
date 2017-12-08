@@ -595,7 +595,7 @@
 			'.$fourth_col.'
 		</div>
 
-		<div class="col-sm-2 bg-repair">
+		<div class="col-sm-2 bg-repairs">
 			'.$summar_col.'
 		</div>
 		<div class="col-sm-2 slider-box" style="height: 100%;">

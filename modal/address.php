@@ -9,13 +9,13 @@
           <div class="row-fluid">
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required address-name" name="na_name" id ="add_name" placeholder="Address Name" type="text" autofocus>
+                <input class="form-control required address-name" name="na_name" id ="add_name" placeholder="Address Name" type="text">
               </div>
             </div>
             <br>
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required address-street" name="na_line_1" id ="add_line_1" placeholder="Line 1" type="text">
+                <input class="form-control required address-street" name="na_line_1" id ="add_line_1" placeholder="Line 1" type="text" autofocus>
               </div>
             </div>
             <br>

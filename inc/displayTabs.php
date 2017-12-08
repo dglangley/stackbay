@@ -68,7 +68,7 @@
 									  <div class="form-group">
 										<div class="input-group pull-left">
 											<span class="input-group-btn">
-												<a href="/quote.php" class="btn btn-default btn-xs bg-services" title="Start New Service Quote"><i class="fa fa-plus"></i></a>
+												<a href="/quote.php" class="btn btn-default btn-xs bg-quotes" title="Start New Service Quote"><i class="fa fa-plus"></i></a>
 											</span>
 											<input type="text" class="form-control input-xs order-search" placeholder="Quotes..." data-type="SQ">
 											<span class="input-group-btn">

@@ -100,6 +100,7 @@
 			if (! str) { var str = ''; }
 
 			/* defaults */
+/*
 			address.find(".modal-title").text("Add New Address");
 			address.find(".address-name").val('');
 			address.find(".address-street").val(str);
@@ -109,21 +110,24 @@
 			address.find(".address-postal_code").val('');
 			address.find(".address-nickname").val('');
 			address.find(".address-alias").val('');
-			//reset contacts list
-			address.find(".address-contactid").val('').trigger('change');
-			//rebuild with updated info (i.e., companyid if changed)
-			address.find(".address-contactid").selectize();
 			address.find(".address-code").val('');
 			address.find(".address-notes").val('');
+*/
+			//reset contacts list
+			address.find(".address-contactid").val('').trigger('change');
+/*
+			//rebuild with updated info (i.e., companyid if changed)
+			address.find(".address-contactid").selectize();
+*/
 			address.find(".address-modal").data('oldid',addressid);
 			address.find(".address-modal").data('idname',idname);
 
-			if (addressid>0) {
+//			if (addressid>0) {
 				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
 				$.ajax({
 					url: 'json/address.php',
 					type: 'get',
-					data: {'addressid': addressid, 'companyid': companyid},
+					data: {'q': str, 'addressid': addressid, 'companyid': companyid},
 					dataType: 'json',
 					success: function(json, status) {
 						if (json.message) { alert(json.message); return; }
@@ -150,10 +154,14 @@
 						console.log("Details: " + desc + "\nError:" + err);
 					}
 				}); // end ajax call
-			} else {
-				address.modal('show');
-			}
+//			} else {
+//				address.modal('show');
+//			}
 		};
+//		$("#modal-address").on('shown.bs.modal', function () {
+//alert('hi');
+//			$(this).find("[autofocus]").focus();
+//		});
 	});
 
 

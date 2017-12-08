@@ -8,6 +8,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 /***** DAVID *****/
@@ -541,6 +542,7 @@ To do:
 
 		$inv_rows .= '
 		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
+			<td class="part-name">'.getPart($r['partid']).'</td>
 			<td>'.getLocation($r['locationid']).'</td>
 			<td>
 				<div class="qty results-toggler">'.$qty.'</div>
@@ -574,11 +576,13 @@ To do:
 	}
 
 	foreach ($partids as $partid => $P) {
-		$part_str = trim($P['part'].' '.$P['heci']);
+		$parts = explode(' ',$P['part']);
+		$part_str = $parts[0];
+		if ($P['heci']) { $part_str .= ' '.$P['heci']; }
 
 		$qty = 0;
 		if (isset($qtys[$partid]) AND $qtys[$partid]>0) { $qty = $qtys[$partid]; }
-		$part_options .= '<option value="'.$partid.'">Qty '.$qty.'- '.$P['part'].' '.$P['heci'].'</option>'.chr(10);
+		$part_options .= '<option value="'.$partid.'" data-descr="'.$part_str.'">Qty '.$qty.'- '.$P['part'].' '.$P['heci'].'</option>'.chr(10);
 	}
 
 	$n = count($partids);
@@ -734,7 +738,8 @@ To do:
 <?php } ?>
 		</div>
 		<div class="col-sm-6">
-			<?php if ($n==1) { echo '<h3 class="text-center">'.$part_str.'</h3>'; } ?>
+			<h3 class="text-center" id="page-title"><?php if ($n==1) { echo $part_str; } ?></h3>
+			<span id="original-title" class="hidden"></span>
 		</div>
 		<div class="col-sm-3">
 		</div>
@@ -746,6 +751,9 @@ To do:
 
 	<table class="table table-striped table-condensed table-inventory">
 		<thead><tr data-row="">
+			<th class="col-sm-2 part-name">
+				Part
+			</th>
 			<th class="col-sm-2">
 				Location
 			</th>
@@ -755,10 +763,10 @@ To do:
 			<th class="col-sm-1">
 				<?php echo $pricing_header1; ?>
 			</th>
-			<th class="col-sm-2">
+			<th class="col-sm-1">
 				Condition
 			</th>
-			<th class="col-sm-2">
+			<th class="col-sm-1">
 				Source
 			</th>
 			<th class="col-sm-2">
@@ -806,11 +814,19 @@ To do:
 			$(".rev-select").click(function() {
 				var partid = $(this).find("option:selected").val();
 
+				var title = $("#original-title").text();//default
+				if (partid>0) {
+					title = $(this).find("option:selected").data('descr');
+					$(".part-name").css('display','none');
+				} else {
+					$(".part-name").css('display','table-cell');
+				}
+
 				$(".table-inventory").find("tr").each(function() {
 					row_id = $(this).data('partid');
 					if (! row_id) { return; }
 
-					if (partid==0 || row_id==partid) {
+					if (partid=='' || partid==0 || row_id==partid) {
 						if ($(this).data('role')!='inner' || ($(this).data('role')=='inner' && ! $("#inventory-detail").hasClass('btn-default'))) {
 							$(this).show();
 						}
@@ -818,6 +834,8 @@ To do:
 						$(this).hide();
 					}
 				});
+
+				$("#page-title").text(title);
 			});
 			$(".edit-inventory").click(function() {
 				var inventoryid = $(this).closest("div").data('inventoryid');

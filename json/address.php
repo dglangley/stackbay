@@ -3,8 +3,11 @@
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_address.php';
 	include_once '../inc/getContact.php';
+	include_once '../inc/getCompany.php';
 	include_once '../inc/jsonDie.php';
 
+	$q = '';
+	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
 	$addressid = 0;
 	if (isset($_REQUEST['addressid'])) { $addressid = trim($_REQUEST['addressid']); }
 	$companyid = 0;
@@ -21,7 +24,12 @@
 		$address[$r['Field']] = '';
 	}
 	$address['title'] = 'Add New Address';
-	if (! $addressid) { echo json_encode($address); exit; }
+	if (! $addressid) {
+		$address['name'] = getCompany($companyid);
+		$address['street'] = $q;
+		echo json_encode($address);
+		exit;
+	}
 
 	$query = "SELECT * FROM addresses WHERE id = ".fres($addressid)."; ";
 	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);

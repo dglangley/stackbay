@@ -204,7 +204,7 @@ if (! $r['partid']) { return ($results); }
 			visibility: visible;
 		}
 
-		.part_info .bg-availability, .part_info .bg-purchases, .part_info .bg-sales, .part_info .bg-demand, .part_info .bg-repair {
+		.part_info .bg-availability, .part_info .bg-purchases, .part_info .bg-sales, .part_info .bg-demand, .part_info .bg-repairs {
 			padding: 5px;
 			min-height: 140px;
 			height: 100%;
@@ -918,7 +918,7 @@ if (! $r['partid']) { return ($results); }
 										<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Demand Results" data-type="demand">Demand <i class="fa fa-window-restore"></i></a> <a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="force re-download"><i class="fa fa-download"></i></a>
 										<div class="market-results" id="'.$ln.'-'.$partid.'" data-ln="'.$ln.'" data-type="demand"></div>
 									</div>
-									<div class="col-sm-2 bg-repair">
+									<div class="col-sm-2 bg-repairs">
 										'.$repair_col.'
 									</div>
 									<div class="col-sm-2 slider-box">

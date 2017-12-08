@@ -28,6 +28,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AR';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Bill':
@@ -55,6 +57,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AP';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Return':
@@ -83,6 +87,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Credit':
@@ -109,6 +115,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
 				$T['account'] = 'AR';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Purchase':
@@ -136,6 +144,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
 				$T['account'] = 'AP';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Repair':
@@ -163,6 +173,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['confirmation'] = true;
+				$T['support'] = true;
 				break;
 
 			case 'Service':
@@ -177,7 +189,7 @@
 				$T['abbrev'] = 'SO';
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = 'bill_to_id';
-				$T['alert'] = 'info';
+				$T['alert'] = 'purple';
 				$T['condition'] = '';
 				$T['warranty'] = '';
 				$T['warrantyid'] = 7;
@@ -190,6 +202,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'service_quote':
@@ -203,7 +217,7 @@
 				$T['abbrev'] = 'Quote';
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = '';
-				$T['alert'] = 'info';
+				$T['alert'] = 'purple';
 				$T['condition'] = '';
 				$T['warranty'] = '';
 				$T['warrantyid'] = 0;
@@ -216,6 +230,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'purchase_request':
@@ -242,6 +258,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
 				$T['account'] = 'AP';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'Sale':
@@ -269,6 +287,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['confirmation'] = true;
+				$T['support'] = true;
 				break;
 
 			case 'Outsourced':
@@ -296,6 +316,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AP';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 
 			case 'IT':
@@ -323,6 +345,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AR';
+				$T['confirmation'] = false;
+				$T['support'] = false;
 				break;
 		}
 

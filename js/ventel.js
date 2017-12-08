@@ -1148,8 +1148,10 @@
 		});
 
 		$(document).on("shown.bs.modal",".modal",function(e) {
-			var first_field = $(this).find("input[type=text]")[0];
-			//first_field.select();
+			var first_field = $(this).find("[autofocus]")[0];
+			if (! first_field) {
+				first_field = $(this).find("input[type=text]")[0];
+			}
 			if (first_field) { first_field.focus(); }
 		});
 //		$('.modal').on('shown.bs.modal', function () {
