@@ -39,7 +39,7 @@
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['addyid']] = true;
-			$str = utf8_encode(format_address($r['addyid'],', ',false));
+			$str = utf8_encode(format_address($r['addyid'],', ',true));
 			if (isset($strs[$str])) { continue; }
 			$strs[$str] = true;
 
@@ -65,9 +65,15 @@
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['addressid']] = true;
+
 			$attn = '';
 			if ($r['contactid']) { $attn = getContact($r['contactid']); }
-			$str = utf8_encode(format_address($r['addressid'],', ',false,$attn));
+			if ($r['nickname']) {
+				$str = utf8_encode($r['nickname'].', '.format_address($r['addressid'],', ',false,$attn));
+			} else {
+				$str = utf8_encode(format_address($r['addressid'],', ',true,$attn));
+			}
+
 			if (isset($strs[$str])) { continue; }
 			$strs[$str] = true;
 
@@ -82,14 +88,23 @@
 	}
 
 	if ($q) {
-		$query = "SELECT * FROM addresses WHERE ";
-		$query .= "(name RLIKE '".res($q)."' OR street RLIKE '".res($q)."' OR addr2 RLIKE '".res($q)."' OR city RLIKE '".res($q)."' OR notes RLIKE '".res($q)."') ";
-		if ($id_str) { $query .= "AND id NOT IN (".$id_str.") "; }
+		$query = "SELECT a.*, ca.nickname FROM addresses a ";
+		$query .= "LEFT JOIN company_addresses ca ON a.id = ca.addressid ";
+		$query .= "WHERE ";
+		$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
+		if ($id_str) { $query .= "AND a.id NOT IN (".$id_str.") "; }
 		$query .= "; ";
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$ids[$r['id']] = true;
-			$addresses[] = array('id'=>$r['id'],'text'=>utf8_encode(format_address($r['id'],', ',false)));
+
+			if ($r['nickname']) {
+				$str = utf8_encode($r['nickname'].', '.format_address($r['id'],', ',false,$attn));
+			} else {
+				$str = utf8_encode(format_address($r['id'],', ',true,$attn));
+			}
+
+			$addresses[] = array('id'=>$r['id'],'text'=>$str);
 		}
 	}
 
