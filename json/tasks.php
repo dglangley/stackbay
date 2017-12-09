@@ -2,6 +2,7 @@
 	include '../inc/dbconnect.php';
 	include '../inc/format_date.php';
 	include '../inc/getCompany.php';
+	include '../inc/getClass.php';
 
 	$q = '';
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
@@ -18,16 +19,16 @@
 	$query = '';
 
 	if($order_type == 'repair') {
-		$query = "SELECT ro.*,  ri.id as item_id, ri.line_number FROM repair_orders ro, repair_items ri, service_assignments si ";
-		if (strlen($q)>1) {
-			$query .= "WHERE ri.ro_number RLIKE '".res($q)."' AND repair_code_id IS NULL AND si.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
-		} else {
-			if (! $noreset) {
-				$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
-			}
-			$query .= "WHERE repair_code_id IS NULL AND si.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
+		if (! $noreset) {
+			$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
 		}
-		$query .= "ORDER BY ro.created DESC LIMIT 0,10; ";
+		$query = "SELECT ro.*,  ri.id as item_id, ri.line_number FROM repair_orders ro, repair_items ri, service_assignments sa ";
+		$query .= "WHERE repair_code_id IS NULL AND sa.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
+		$query .= "AND sa.userid = '".$U['id']."' ";
+		if (strlen($q)>1) {
+			$query .= "AND ri.ro_number RLIKE '".res($q)."' ";
+		}
+		$query .= "ORDER BY ro.created DESC LIMIT 0,30; ";
 		
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
@@ -35,22 +36,22 @@
 		}
 
 		while ($r = mysqli_fetch_assoc($result)) {
-			//$task_label = ucwords($order_type);
-			if ($r['ro_number']) { $task_label = $r['ro_number']. ($r['line_number'] ? '-' . $r['line_number'] : '-1') . ' '.getCompany($r['companyid']); }
-			$tasks[] = array('id'=>$r['item_id'],'text'=>$task_label);
+			$id = $r['ro_number']. ($r['line_number'] ? '-' . $r['line_number'] : '-1');
+			$task_label = $id . ' '.getCompany($r['companyid']);
+
+			$tasks[] = array('id'=>$id,'text'=>$task_label);
 		}
 	} else {
-		$query = "SELECT so.*,  si.id as item_id, si.line_number, task_name FROM service_orders so, service_items si, service_assignments sa ";
-		if (strlen($q)>1) {
-			$query .= "WHERE si.so_number RLIKE '".res($q)."' AND sa.item_id = si.id  AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
-		} else {
-			if (! $noreset) {
-				$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
-			}
-			$query .= "WHERE sa.item_id = si.id  AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
+		if (! $noreset) {
+			$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
 		}
-
-		$query .= "ORDER BY so.datetime DESC LIMIT 0,10; ";
+		$query = "SELECT so.*,  si.id as item_id, si.line_number, task_name, classid FROM service_orders so, service_items si, service_assignments sa ";
+		$query .= "WHERE sa.item_id = si.id AND item_id_label = 'service_item_id' AND si.so_number = so.so_number ";
+		$query .= "AND sa.userid = '".$U['id']."' ";
+		if (strlen($q)>1) {
+			$query .= "AND si.so_number RLIKE '".res($q)."' ";
+		}
+		$query .= "ORDER BY so.datetime DESC LIMIT 0,30; ";
 
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) {
@@ -58,9 +59,14 @@
 		}
 
 		while ($r = mysqli_fetch_assoc($result)) {
-			//$task_label = ucwords($order_type);
-			if ($r['so_number']) { $task_label = $r['so_number']. ($r['line_number'] ? '-' . $r['line_number'] : '-1') . ' '. $r['task_name']; }
-			$tasks[] = array('id'=>$r['item_id'],'text'=>$task_label);
+			$id = $r['so_number']. ($r['line_number'] ? '-' . $r['line_number'] : '-1');
+
+			$class = '';
+			if ($r['task_name']) { $class = $r['task_name'].' '; }
+			else if ($r['classid']) { $class = getClass($r['classid']).' '; }
+			$task_label = $class.$id;
+
+			$tasks[] = array('id'=>$id,'text'=>$task_label);
 		}
 	}
 

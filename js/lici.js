@@ -1,27 +1,8 @@
+var taskid,task_label;
 (function($){
-	// var refresh = false;
-
-	// generalize an object to be clicked or changed
-	// $(document).on("click", ".clock", function() {
-
-	// });
-
-	// Function to concide with the select2 mechanism to load the next page and clock in/out of the new task and the old task
-	$(document).on("change", ".task_selection", function(){
-		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Please Confirm you want to log out of the current task.", true);
-	});
-
-	function loadTask(task_label, order_number){
-		task_label = task_label.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-		    return letter.toUpperCase();
-		});
-		window.location.href = "/service.php?order_type="+task_label+"&order_number="+order_number;
-		console.log("/service.php?order_type="+task_label+"&order_number="+order_number);
-	}
-
 	// Initiates the initial login if the user is assigned to the task
-	var taskid = $('body').data('taskid');
-	var task_label = '';
+	taskid = $('body').data('taskid');
+	task_label = '';
 
 	if($('body').data('order-type') == 'repair' || $('body').data('order-type') == 'Repair') {
 		task_label = 'repair_item_id';
@@ -33,10 +14,33 @@
 		// alert(task_label);
 		clock(taskid, task_label, 'init');
 	}
-	// window.onbeforeunload = clockout(taskid, task_label);
 
-	//function clockout(taskid, task_label, type) {
-	function clock(taskid, task_label, type, redirect) {	
+	// Function to concide with the select2 mechanism to load the next page and clock in/out of the new task and the old task
+	$(document).on("change", ".task_selection", function(){
+		loadTask($(this).val());
+	});
+
+	$(document).on('click', '.btn-clock', function(e) {
+		var clock_type = $(this).data('type');
+
+		// Clock into the new task selected and redirect the user to the respective page
+		var clockid = clock(taskid, task_label, clock_type);
+		loadTask(clockid);
+	});
+
+})(jQuery);
+
+	function loadTask(order_number){
+		var order_type = $('body').data('order-type').toLowerCase().replace(/\b[a-z]/g, function(letter) {
+		    return letter.toUpperCase();
+		});
+		console.log("/service.php?order_type="+order_type+"&order_number="+order_number);
+		window.location.href = "/service.php?order_type="+order_type+"&order_number="+order_number;
+	}
+
+	function clock(taskid, task_label, type) {	
+		var clockid = false;
+
 		console.log(window.location.origin+"/json/lici.php?taskid="+escape(taskid)+"&task_label="+escape(task_label)+"&type="+escape(type));
 		$.ajax({
 	        url: 'json/lici.php',
@@ -44,25 +48,24 @@
 	        dataType: "json",
 	        async: false,
 	        data: {'taskid': taskid, 'task_label': task_label, 'type' : type},
-	        success: function(data) {
-	        	var taskid = $('body').data('taskid');
-				var task_label = $('body').data('order-type').toLowerCase();
-						
-	        	if(redirect) {
-	        		loadTask(task_label, data);
-	        	}
+	        success: function(arr) {
+				if (arr.message && ! arr.id) {
+	        		modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", arr.message);
+					return;
+				}
 
-	        	var pattern = /you/;
-
-	        	if(pattern.test(data)) {
-	        		// Consider the data as an error, otherwise it should be the order number to invoke the redirect
-	        		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", data, false);
-	        	}
-
-	        	 console.log(data);
-	        	//return order_number;
-			}
+	        	if (arr.message && arr.message!='') {
+	        		// Consider the message as an error, otherwise it should be the order number to invoke the redirect
+	        		modalLiciAlert("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", arr.message, false);
+	        	} else if (arr.id && arr.id!='') {
+					clockid = arr.id;
+				}
+			},
+			error: function(xhr, desc, err) {
+				console.log("Details: " + desc + "\nError:" + err);
+			},
 		});
+		return clockid;
 	}
 
 	function modalLiciAlert(header,body, redirect){
@@ -82,57 +85,3 @@
 			keyboard: false
 		});
 	}
-
-	$(document).on('click', '#alert-travel', function(e){
-		var redirect = '';
-
-		if($(this).attr("data-redirect")) {
-			redirect = true;
-
-			// Value is predicted to be the taskid
-			var newTask = $('.task_selection').val();
-
-			// Make sure the change on the select2 is actually a new task and not the current task
-			if(newTask != taskid) {
-				// alert(newTask + ' ' + task_label);
-				// Clock out from the current task
-				clock(taskid, task_label, 'out');
-
-				// Clock into the new task selected and redirect the user to the respective page
-				clock(newTask, task_label, 'travel', true);
-			}
-		} else {
-			clock('', '', 'out');
-			clock(taskid, task_label, 'travel', redirect);
-		}
-	});
-
-	$(document).on('click', '#alert-clock', function(e){
-		var redirect = '';
-
-		if($(this).attr("data-redirect")) {
-			redirect = true;
-
-			// Value is predicted to be the taskid
-			var newTask = $('.task_selection').val();
-
-			// Make sure the change on the select2 is actually a new task and not the current task
-			if(newTask != taskid) {
-				// alert(newTask + ' ' + task_label);
-				// Clock out from the current task
-				clock(taskid, task_label, 'out');
-
-				// Clock into the new task selected and redirect the user to the respective page
-				clock(newTask, task_label, 'clockin', true);
-			}
-		} else {
-			clock('', '', 'out');
-			clock(taskid, task_label, 'clockin', redirect);
-		}
-	});
-
-	$(document).on('click', '#cancel-lici', function(e){
-		window.location.href = "/operations.php";
-	});
-
-})(jQuery);

@@ -265,7 +265,7 @@
 <!--================================================================================-->
 <?php
 //DAVID: change when going live
-$U['id'] = 29;
+//$U['id'] = 29;
 
 	//Establish a blank array for receiving the results from the table
 	$results = array();
@@ -664,17 +664,6 @@ $U['id'] = 29;
 <?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
-
-/*
-        $(document).ready(function() {
-			$('.btn-report').click(function() {
-				var btnValue = $(this).data('value');
-				$(this).closest("div").find("input[type=radio]").each(function() {
-					if ($(this).val()==btnValue) { $(this).attr('checked',true); }
-				});
-			});
-        });
-*/
     </script>
 
 </body>

@@ -13,7 +13,9 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 
 	// List of subcategories
 	$documentation = true;
@@ -561,14 +563,16 @@
 			$rate = 0;
 
 			$data['laborSeconds'] = $labor_seconds;
+			$data['start_datetime'] = '';
+			$data['end_datetime'] = '';
 
 			// Get the users hourly rate
 			$query = "SELECT hourly_rate FROM users WHERE id=".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)) {
-				$result = mysqli_fetch_assoc($result);
-				$rate = $result['hourly_rate'];
+				$r = mysqli_fetch_assoc($result);
+				$rate = $r['hourly_rate'];
 			}
 
 			// Check if the user is currently allowed on this job or not
@@ -576,7 +580,11 @@
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)) {
+				$r = mysqli_fetch_assoc($result);
+
 				$status = 'active';
+				$data['start_datetime'] = $r['start_datetime'];
+				$data['end_datetime'] = $r['end_datetime'];
 			}
 
 			$data['status'] = $status;
@@ -699,6 +707,18 @@
 				$task_number = 1;
 			}
 			$pageTitle = 'Repair '.$order_number."-".$task_number.$special;
+		}
+	}
+
+	$start_datetime = '';
+	$end_datetime = '';
+
+	$clock = false;
+	if ($U['hourly_rate']) {
+		$clock = is_clockedin($U['id'], $item_id, $item_id_label);
+		if ($clock===false) {
+			$clock = is_clockedin($U['id']);
+			$view_mode = true;
 		}
 	}
 ?>
@@ -918,7 +938,7 @@
 
 			<div class="table table-header table-filter">
 				<div class="col-md-2">
-					<?php if (strtolower($type)=='repair' AND ! $task_edit) { ?>
+					<?php if ($type=='Repair' AND ! $task_edit) { ?>
 						<span class="pull-right">
 							<form action="tasks_log.php" style="display: inline-block;">
 								<input type="hidden" name="item_id" value="<?=$item_id;?>">
@@ -935,6 +955,9 @@
 								<i class="fa fa-qrcode"></i> Receive
 							</a>
 						<?php } ?>
+					<?php } ?>
+					<?php if ($quote) { ?>
+						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
 				</div>
 				<div class="col-md-2">
@@ -958,11 +981,11 @@
 						<?php if(! $quote){ ?>
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-										<option><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+										<option selected><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								<?php } else { ?>
 									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
-										<option><?=$order_number_details;?> <?=$item_details['task_name'];?></option>
+										<option selected><?= $item_details['task_name'].' '.$order_number_details; ?></option>
 									</select>
 								<?php  } ?>
 						<?php } ?>
@@ -988,7 +1011,7 @@
 				</div>
 			</div>
 
-		<div class="container-fluid data-load full-height">
+		<div class="container-fluid data-load full-height" style="margin-top:48px">
 			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
@@ -998,8 +1021,50 @@
 					
 					<?php include 'sidebar.php'; ?>
 
+						<div class="hidden-md hidden-lg table-responsive">
+							<table class="table table-condensed">
+								<tr>
+									<td class="col-xs-4">
+<?php
+	if ($clock['taskid']==$item_id) {
+		$rp_cls = 'default btn-clock';
+		$rp_title = 'Switch to Regular Pay';
+		$tt_cls = 'default btn-clock';
+		$tt_title = 'Switch to Travel Time';
+		if ($clock['rate']==11) {
+			$tt_cls = 'warning';
+			$tt_title = 'Clocked In';
+		} else {
+			$rp_cls = 'primary';
+			$rp_title = 'Clocked In';
+		}
+		echo '
+			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
+			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
+		';
+	} else if ($clock['taskid']) {
+		echo '
+			<a class="btn btn-default" href="service.php?order_type=Service&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
+		';
+	} else {
+		echo '
+			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
+		';
+	}
+?>
+									</td>
+									<td class="col-xs-4 text-center">
+										<h3><?=$pageTitle;?></h3>
+									</td>
+									<td class="col-xs-8">
+										<select name="task2" class="form-control service-task-selector task_selection" data-noreset="true">
+											<option selected><?= $item_details['task_name'].' '.$order_number_details; ?></option>
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
 					<div id="pad-wrapper" >
-						<h2 class="hidden-md hidden-lg text-center"><?=$pageTitle;?></h2>
 
 						<?php
 							if ($ticketStatus) {
@@ -1086,7 +1151,7 @@
 								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							}
 							if($images) {
-								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><i class="fa fa-file-image-o" aria-hidden="true"></i> Images</a></li>';
+								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-image-o fa-lg" aria-hidden="true"></i> Images</span><span class="hidden-md hidden-lg"><i class="fa fa-file-image-o fa-2x"></i></span></a></li>';
 							} ?>
 							<?php if(in_array("4", $USER_ROLES)){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
@@ -1317,13 +1382,11 @@
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-sm-4">
-				                                    Tech
-				                                </th>
-				                                <th class="col-sm-4">
-				                                    <span class="line"></span> Total Time
-				                                </th>
-				                                <th class="col-sm-4 text-right">
+				                                <th class="col-sm-4">Tech</th>
+				                                <th class="col-sm-2"><span class="line"></span> Start</th>
+				                                <th class="col-sm-2"><span class="line"></span> End</th>
+				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
+				                                <th class="col-sm-2 text-right">
 				                                	<?php if(in_array("4", $USER_ROLES)){ ?>
 					                                    <span class="line"></span> Cost
 				                                	<?php } ?>
@@ -1347,6 +1410,12 @@
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
 															<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+						                                </td>
+						                                <td>
+															<?= format_date($data['start_datetime'],'D, M j, Y g:ia'); ?>
+						                                </td>
+						                                <td>
+															<?= format_date($data['end_datetime'],'D, M j, Y g:ia'); ?>
 						                                </td>
 						                                <td>
 															<?=toTime($data['laborSeconds']);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($data['laborSeconds']));?></span>
@@ -1379,14 +1448,28 @@
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
 				                            		</td>
 					                            	<td>
+								                <div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+					   		    			         <input type="text" name="start_datetime" id="start-date" class="form-control input-sm" value="<?php echo $start_datetime; ?>" />
+					           		       			 <span class="input-group-addon">
+							       		                 <span class="fa fa-calendar"></span>
+					       					         </span>
+												</div>
+													</td>
+					                            	<td>
+								                <div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+					   		    			         <input type="text" name="end_datetime" id="end-date" class="form-control input-sm" value="<?php echo $end_datetime; ?>" />
+					           		       			 <span class="input-group-addon">
+							       		                 <span class="fa fa-calendar"></span>
+					       					         </span>
+												</div>
+													</td>
+					                            	<td>
+												    </td>
+					                            	<td class="text-right">
 					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote && empty($task_number)) ? 'disabled' : '');?>>
 												        	<i class="fa fa-plus"></i>	
 												        </button>
-												    </td>
-					                            	<td></td>
-<!--
-					                            	<td></td>
--->
+													</td>
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
@@ -1860,7 +1943,7 @@
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<?php if(! $quote AND ! $new AND ! $view_mode) { ?>
+		<?php if(! $quote AND ! $new) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>
