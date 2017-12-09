@@ -28,6 +28,11 @@
 
 			$user_rate = $r['hourly_rate'];
 		}
+
+		$USER_ROLES = $GLOBALS['USER_ROLES'];
+		$manager_access = array_intersect($USER_ROLES,array(1,4));
+		if ($manager_access) { return false; }
+
 		if (! $user_rate) {
 			$ERR = 'Your employee profile has not been completely setup, please check with your manager!';
 			return false;
