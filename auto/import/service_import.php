@@ -16,7 +16,7 @@
             echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
         }
     }
-    
+
     // Reset data and import code for jobs within the set range
     $DATA = array();
     

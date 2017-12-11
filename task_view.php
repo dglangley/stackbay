@@ -721,6 +721,8 @@
 			$view_mode = true;
 		}
 	}
+
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
 ?>
 
 <!DOCTYPE html>
@@ -906,7 +908,7 @@
 			}
 
 			<?php 
-				if($view_mode){
+				if($view_mode AND ! $manager_access){
 					echo '
 						#pad-wrapper input, #pad-wrapper .select2, #pad-wrapper button, #pad-wrapper .upload_link, #pad-wrapper .input-group {
 							display: none !important;
@@ -920,10 +922,6 @@
 			?>
 		</style>
 	</head>
-
-	<?php
-		$manager_access = array_intersect($USER_ROLES,array(1,4));
-	?>
 	
 	<body class="sub-nav" data-order-type="<?=($quote ? 'quote' : $type)?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 		<div id="loader" class="loader text-muted" style="display: none;">
@@ -950,11 +948,11 @@
 					<?php } ?>
 					<?php if ($manager_access AND ((! $quote AND ! $new AND strtolower($type)=='repair'))) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-						<?php if(! $task_edit) { ?>
-							<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
-								<i class="fa fa-qrcode"></i> Receive
-							</a>
-						<?php } ?>
+					<?php } ?>
+					<?php if(! $task_edit) { ?>
+						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+							<i class="fa fa-qrcode"></i> Receive
+						</a>
 					<?php } ?>
 					<?php if ($quote) { ?>
 						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
@@ -1095,9 +1093,21 @@
 							<div id="main-stats">
 					            <div class="row stats-row">
 					                <div class="col-md-4 col-sm-4 stat">
-					                    <div class="data">
-					                        <span class="number text-brown"><?=format_price($charge);?></span>
-											<span class="info">Charge</span>
+					                    <div class="data" style="min-height: 35px;">
+					                    	<?php if(! $quote) { ?>
+					                        	<span class="number text-brown"><?=format_price($charge);?></span>
+					                        	<span class="info">Charge</span>
+					                        <?php } else { ?>
+					                        		<div class="input-group pull-left" style="margin-left: 25px; max-width: 200px;">													
+														<span class="input-group-addon">										                
+															<i class="fa fa-usd" aria-hidden="true"></i>										            
+														</span>										            
+														<input class="form-control input-sm" type="text" name="amount" placeholder="0.00" value="<?=$charge?>">
+													</div>
+													<!-- <input class="form-control input-sm pull-left" type="text" style="margin-left: 25px; max-width: 150px;" name="amount" placeholder="0.00" value="<?=$charge;?>"> -->
+											
+					                        	<!-- <span class="info" style="margin-top: 15px; float: right;">Charge</span> -->
+					                        <?php } ?>
 					                    </div>
 					                </div>
 					                <div class="col-md-4 col-sm-4 stat">
@@ -1256,7 +1266,7 @@
 
 										<?php if($quote OR $new) { ?>
 											<tr>
-												<td colspan=2 class="part-container">
+												<td class="part-container">
 													<?php
 														include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
 														include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
@@ -1277,7 +1287,7 @@
 													<?= buildDescrCol($P,$id,$def_type,$items); ?>
 													<?= setInputSearch($def_type); ?>
 												</td>
-												<td colspan=3> </td>
+												<td><textarea class="form-control" name="description" rows="3" placeholder="Scope"><?=$item_details['description']?></textarea></td>
 											</tr>
 										<?php } ?>
 									</table></div>

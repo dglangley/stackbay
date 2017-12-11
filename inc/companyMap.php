@@ -1,6 +1,4 @@
 <?php
-    // From getCompany and this says Aaron code so use with caution
-
     function companyMap($service_companyid,$customer='') {
         $companyid = 0;
 		$customer = trim($customer);
