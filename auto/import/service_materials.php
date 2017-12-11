@@ -192,7 +192,7 @@
                     // BDB has a lot of 0 qty items so avoid that too
                     if($material['received_quantity'] != 0) {
                         // Insert into Inventory
-                        $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".res($purchase_item_id).");";
+                        $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".res(($purchase_item_id) ?: NULL).");";
                         qdb($query) OR die(qe() . '<BR>' . $query);
 
                         $inventory_id = qid();
