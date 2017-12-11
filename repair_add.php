@@ -79,14 +79,14 @@
 		$o = o_params("bo");
 	}
 
-	$query = "SELECT status, id as repair_item_id, repair_code_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
+	$query = "SELECT status, id as repair_item_id, i.repair_code_id FROM repair_orders r, repair_items i WHERE r.ro_number =".prep($order_number)." AND r.ro_number = i.ro_number;";
 	//echo $query;
 	$result = qdb($query) or die(qe());
 	if (mysqli_num_rows($result)) {
 		$result = mysqli_fetch_assoc($result);
 		$status = $result['status'];
 		$repair_item_id = $result['repair_item_id'];
-		$ticketStatus = getRepairCode($result['repair_code_id']);
+		$ticketStatus = getRepairCode($result['repair_code_id'], 'repair');
 	}
 
 	//Check to see if a sales_item record has been created for this item
