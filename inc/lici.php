@@ -68,7 +68,7 @@
 
 		// Gate keeper for clocked in jobs
 		if (! $assigned) {
-			$ERR = "You are not assigned to this task. Please see a manager.";
+//			$ERR = "You are not assigned to this task. Please see a manager.";
 			return false;
 		}
 

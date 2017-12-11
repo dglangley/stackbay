@@ -233,7 +233,7 @@
 	$partsListing = getRepairParts($order_number);
 
 	$outstanding = 0;
-	$status = getOrderStatus($o['type'],$order_number);
+//	$status = getOrderStatus($o['type'],$order_number);
 
 	if(!empty($partsListing)) {
 		$results = count($partsListing);

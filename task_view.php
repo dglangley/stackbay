@@ -723,6 +723,13 @@
 	}
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$assigned = false;
+	if ($item_id AND $item_id_label) {
+		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($userid)."';";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+		if (mysqli_num_rows($result)) { $assigned = true; }
+	}
+
 ?>
 
 <!DOCTYPE html>
@@ -906,6 +913,9 @@
 			.upload{
 			    display: none !important;
 			}
+			#pad-wrapper {
+				margin-top:64px;
+			}
 
 			<?php 
 				if($view_mode AND ! $manager_access){
@@ -936,7 +946,7 @@
 
 			<div class="table table-header table-filter">
 				<div class="col-md-2">
-					<?php if ($type=='Repair' AND ! $task_edit) { ?>
+					<?php if ($type=='Repair' AND ! $task_edit AND ! $view_mode) { ?>
 						<span class="pull-right">
 							<form action="tasks_log.php" style="display: inline-block;">
 								<input type="hidden" name="item_id" value="<?=$item_id;?>">
@@ -1063,6 +1073,12 @@
 							</table>
 						</div>
 					<div id="pad-wrapper" >
+
+					<?php if (! $assigned) { ?>
+						<div class="alert alert-default" style="padding:5px; margin:0px">
+							<h3 class="text-center text-warning">You are not assigned to this task</h3>
+						</div>
+					<?php } ?>
 
 						<?php
 							if ($ticketStatus) {
