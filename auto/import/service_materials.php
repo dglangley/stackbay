@@ -189,15 +189,18 @@
                         }
                     }
 
-                    // Insert into Inventory
-                    $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".res($purchase_item_id).");";
-                    qdb($query) OR die(qe() . '<BR>' . $query);
+                    // BDB has a lot of 0 qty items so avoid that too
+                    if($material['received_quantity'] != 0) {
+                        // Insert into Inventory
+                        $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".res($purchase_item_id).");";
+                        qdb($query) OR die(qe() . '<BR>' . $query);
 
-                    $inventory_id = qid();
+                        $inventory_id = qid();
 
-                    // Insert into the materials table
-                    $query = "INSERT INTO service_materials (service_item_id, datetime, qty, amount, inventoryid) VALUES (".fres($service_item_id).", NULL, ".fres($material['required_qty']).", ".fres($material['cost']).",".fres($inventory_id).");";
-                    qdb($query) OR die(qe() . '<BR>' . $query);
+                        // Insert into the materials table
+                        $query = "INSERT INTO service_materials (service_item_id, datetime, qty, amount, inventoryid) VALUES (".fres($service_item_id).", NULL, ".fres($material['required_qty']).", ".fres($material['cost']).",".fres($inventory_id).");";
+                        qdb($query) OR die(qe() . '<BR>' . $query);
+                    }
                 }
             }
         }
