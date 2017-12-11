@@ -47,7 +47,7 @@
 		return $id;
 	}
 
-	function quoteTask($quoteid, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $quote_item_id){
+	function quoteTask($quoteid, $line_number, $qty, $amount, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $quote_item_id){
 		global $LINE_NUMBER;
 
 		// print_r($search);
@@ -75,7 +75,7 @@
 
 		$query = "REPLACE INTO service_quote_items (quoteid, line_number, qty, amount, item_id, item_label, description, ref_1, ref_1_label, ref_2, ref_2_label, labor_hours, labor_rate, expenses";
 		if($quote_item_id) { $query .= " ,id"; }
-		$query .= ") VALUES (".fres($quoteid).", ".fres($line_number).", ".fres($qty).", ".fres($amount).", ".fres($search).", ".fres(($search_type == 'Site' ? 'addressid' : 'partid')).", ".fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label).", ".fres($labor_hours).", ".fres($labor_rate).", ".fres($expenses);
+		$query .= ") VALUES (".fres($quoteid).", ".fres($line_number).", ".fres(($qty?:1)).", ".fres($amount).", ".fres($search).", ".fres(($search_type == 'Site' ? 'addressid' : 'partid')).", ".fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label).", ".fres($labor_hours).", ".fres($labor_rate).", ".fres($expenses);
 		if($quote_item_id) { $query .= ", " . fres($quote_item_id); }
 		$query .= ");";
 
@@ -350,6 +350,7 @@
 	$bill_to_id = 0;
 	$public = '';
 	$private = '';
+	$description = '';
 
 	$label = '';
 
@@ -389,6 +390,7 @@
 	if (isset($_REQUEST['tech_status'])) { $tech_status = $_REQUEST['tech_status']; }
 	if (isset($_REQUEST['create'])) { $create = $_REQUEST['create']; }
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
+	if (isset($_REQUEST['description'])) { $description = $_REQUEST['description']; }
 
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['classid'])) { $classid = $_REQUEST['classid']; }
@@ -432,7 +434,7 @@
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
-		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
+		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
 
 		editMaterials($materials, $qid, 'service_quote_materials');
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');

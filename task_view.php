@@ -1030,9 +1030,21 @@
 							<div id="main-stats">
 					            <div class="row stats-row">
 					                <div class="col-md-4 col-sm-4 stat">
-					                    <div class="data">
-					                        <span class="number text-brown"><?=format_price($charge);?></span>
-											<span class="info">Charge</span>
+					                    <div class="data" style="min-height: 35px;">
+					                    	<?php if(! $quote) { ?>
+					                        	<span class="number text-brown"><?=format_price($charge);?></span>
+					                        	<span class="info">Charge</span>
+					                        <?php } else { ?>
+					                        		<div class="input-group pull-left" style="margin-left: 25px; max-width: 200px;">													
+														<span class="input-group-addon">										                
+															<i class="fa fa-usd" aria-hidden="true"></i>										            
+														</span>										            
+														<input class="form-control input-sm" type="text" name="amount" placeholder="0.00" value="<?=$charge?>">
+													</div>
+													<!-- <input class="form-control input-sm pull-left" type="text" style="margin-left: 25px; max-width: 150px;" name="amount" placeholder="0.00" value="<?=$charge;?>"> -->
+											
+					                        	<!-- <span class="info" style="margin-top: 15px; float: right;">Charge</span> -->
+					                        <?php } ?>
 					                    </div>
 					                </div>
 					                <div class="col-md-4 col-sm-4 stat">
@@ -1191,7 +1203,7 @@
 
 										<?php if($quote OR $new) { ?>
 											<tr>
-												<td colspan=2 class="part-container">
+												<td class="part-container">
 													<?php
 														include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
 														include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
@@ -1212,7 +1224,7 @@
 													<?= buildDescrCol($P,$id,$def_type,$items); ?>
 													<?= setInputSearch($def_type); ?>
 												</td>
-												<td colspan=3> </td>
+												<td><textarea class="form-control" name="description" rows="3" placeholder="Scope"><?=$item_details['description']?></textarea></td>
 											</tr>
 										<?php } ?>
 									</table></div>
