@@ -155,44 +155,51 @@
 		qdb($query) OR die(qe().'<BR>'.$query);
 	}
 
-	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id', $order_number) {
+	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id', $order_number, $start_datetime='', $end_datetime='') {
 		if(! empty($status)) {
-			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id).";";
+			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
 			qdb($query) OR die(qe() . ' ' . $query);
 		} else {
 			// Check first if the user has already been assigned to this job
 			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND userid = ".res($techid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
-			if(mysqli_num_rows($result) == 0) {
-				$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).");";
+			if(mysqli_num_rows($result) > 0) {
+				$query = "DELETE FROM service_assignments WHERE userid = ".res($techid)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
 				qdb($query) OR die(qe() . ' ' . $query);
-
-				$message = $item_id_label;
-
-				if($item_id_label == 'repair_item_id') {
-					$title = 'RO# ' . $order_number;
-					//$issue = 'Issue: ' . $activity;
-					$message = $title . ' Assigned';
-					$link = '/service.php?order_type=Repair&order_number=' . $order_number;
-				} else if($item_id_label == 'service_item_id') {
-					$title = 'SO# ' . $order_number;
-					//$issue = 'Issue: ' . $activity;
-					$message = $title . ' Assigned';
-					$link = '/service.php?order_type=Service&order_number=' . $order_number;
-				}
-
-				$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-					$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($item_id_label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-				qdb($query) OR die(qe() . '<BR>' . $query);
-
-				$messageid = qid();
-
-				$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', ".res($techid).");";
-				$result = qdb($query) or die(qe() . '<BR>' . $query);
 			}
-		}
 
+			if ($start_datetime) { $start_datetime = date("Y-m-d H:i:s", strtotime($start_datetime)); }
+			if ($end_datetime) { $end_datetime = date("Y-m-d H:i:s", strtotime($end_datetime)); }
+
+			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid, start_datetime, end_datetime) ";
+			$query .= "VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).", ".fres($start_datetime).", ".fres($end_datetime).");";
+			qdb($query) OR die(qe() . ' ' . $query);
+
+			$message = $item_id_label;
+
+			if($item_id_label == 'repair_item_id') {
+				$title = 'RO# ' . $order_number;
+				//$issue = 'Issue: ' . $activity;
+				$link = '/service.php?order_type=Repair&order_number=' . $order_number;
+			} else if($item_id_label == 'service_item_id') {
+				$title = 'SO# ' . $order_number;
+				//$issue = 'Issue: ' . $activity;
+				$link = '/service.php?order_type=Service&order_number=' . $order_number;
+			}
+			$message = $title . ' Assigned';
+			if ($start_datetime) { $message .= ' for '.format_date($start_datetime,'D M j, y'); }
+			if ($end_datetime) { $message .= ' up to '.format_date($end_datetime,'D M j, y'); }
+
+			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+				$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($item_id_label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+			qdb($query) OR die(qe() . '<BR>' . $query);
+
+			$messageid = qid();
+
+			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', ".res($techid).");";
+			$result = qdb($query) or die(qe() . '<BR>' . $query);
+		}
 	}
 
 	function addNotes($notes, $order_number, $item_id, $label) {
@@ -352,6 +359,9 @@
 	$private = '';
 	$description = '';
 
+	$start_datetime = '';
+	$end_datetime = '';
+
 	$label = '';
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
@@ -363,16 +373,16 @@
 	if (isset($_REQUEST['repair_item_id']) OR $type=='Repair') { $label = 'repair_item_id'; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; } 
 	if (isset($_REQUEST['line_number'])) { $line_number = $_REQUEST['line_number']; }
-	if (isset($_REQUEST['qty'])) { $qty = $_REQUEST['qty']; }
-	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
+	if (isset($_REQUEST['qty'])) { $qty = trim($_REQUEST['qty']); }
+	if (isset($_REQUEST['amount'])) { $amount = trim($_REQUEST['amount']); }
 	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
 	if (isset($_REQUEST['item_label'])) { $item_label = $_REQUEST['item_label']; }
 	if (isset($_REQUEST['ref_1'])) { $ref_1 = $_REQUEST['ref_1']; }
 	if (isset($_REQUEST['ref_1_label'])) { $ref_1_label = $_REQUEST['ref_1_label']; }
 	if (isset($_REQUEST['ref_2'])) { $ref_2 = $_REQUEST['ref_2']; }
 	if (isset($_REQUEST['ref_2_label'])) { $ref_2_label = $_REQUEST['ref_2_label']; }
-	if (isset($_REQUEST['labor_hours'])) { $labor_hours = $_REQUEST['labor_hours']; }
-	if (isset($_REQUEST['labor_rate'])) { $labor_rate = $_REQUEST['labor_rate']; }
+	if (isset($_REQUEST['labor_hours'])) { $labor_hours = trim($_REQUEST['labor_hours']); }
+	if (isset($_REQUEST['labor_rate'])) { $labor_rate = trim($_REQUEST['labor_rate']); }
 
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
 
@@ -396,8 +406,11 @@
 	if (isset($_REQUEST['classid'])) { $classid = $_REQUEST['classid']; }
 	if (isset($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
 	if (isset($_REQUEST['bill_to_id'])) { $bill_to_id = $_REQUEST['bill_to_id']; }
-	if (isset($_REQUEST['public_notes'])) { $public = $_REQUEST['public_notes']; }
-	if (isset($_REQUEST['private_notes'])) { $private = $_REQUEST['private_notes']; }
+	if (isset($_REQUEST['public_notes'])) { $public = trim($_REQUEST['public_notes']); }
+	if (isset($_REQUEST['private_notes'])) { $private = trim($_REQUEST['private_notes']); }
+
+	if (isset($_REQUEST['start_datetime'])) { $start_datetime = trim($_REQUEST['start_datetime']); }
+	if (isset($_REQUEST['end_datetime'])) { $end_datetime = trim($_REQUEST['end_datetime']); }
 
 	if(! empty($activity_notification)) {
 		if($line_number) {
@@ -422,12 +435,8 @@
 			$order = $order . '-' . $line_number;
 		}
 
-		editTech($techid, $tech_status, $service_item_id, $label,$order);
-		// if(! $line_number) {
+		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
 		header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
-		// } else {
-		// 	header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=labor');
-		// }
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save') {

@@ -62,7 +62,7 @@
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'');
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'', 'hourly_rate'=>'');
 	$USER_ROLES = array();
 		$PAGE_ROLES = array();
 	$ROLES = array();
@@ -121,7 +121,8 @@
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
 */
-		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status FROM users, contacts ";
+		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status, users.hourly_rate ";
+		$query .= "FROM users, contacts ";
 		$query .= "WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qdb($query);
 
@@ -335,5 +336,5 @@
 	}
 
 	// version control for css and js includes
-	$V = '20171112';
+	$V = '20171113';
 ?>

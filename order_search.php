@@ -140,18 +140,18 @@
 		$_REQUEST['on'] = $order;
 	} else {
 		//$type = substr($order,0,2);
-		$_REQUEST['on'] = $O['search'];//substr($order,2);
+		$_REQUEST['order_number'] = $O['search'];//substr($order,2);
 	}
 
-	if ($type=='SO') { $_REQUEST['ps'] = 'Sale'; }
-	else if ($type=='PO') { $_REQUEST['ps'] = 'Purchase'; }
-	else if ($type=='RO') { $_REQUEST['ps'] = 'Repair'; }
-	else if ($type) { $_REQUEST['ps'] = $type; }
+	if ($type=='SO') { $_REQUEST['order_type'] = 'Sale'; }
+	else if ($type=='PO') { $_REQUEST['order_type'] = 'Purchase'; }
+	else if ($type=='RO') { $_REQUEST['order_type'] = 'Repair'; }
+	else if ($type) { $_REQUEST['order_type'] = $type; }
 
 	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
 		if ($type=='RMA') {
 			$_REQUEST['rma'] = $O['search'];
-			$_REQUEST['on'] = '';
+			$_REQUEST['order_number'] = '';
 			include 'rma.php';
 		} else if ($type=='INV') {
 			$_REQUEST['invoice'] = $O['search'];

@@ -6,7 +6,7 @@
 	include_once $rootdir.'/inc/renderOrder.php';
     include_once $rootdir.'/inc/packing-slip.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP)([0-9]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP|SQ)([0-9]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];
@@ -19,9 +19,14 @@
 	else if ($order_type=='Bill') { $order_type = 'Bill'; }
 	else if ($order_type=='CM') { $order_type = 'Credit'; }
 	else if ($order_type=='LUMP') { $order_type = 'Lump'; }
+	else if ($order_type=='SQ') { $order_type = 'SQ'; }
 	$order_number = $file_split[1];
 
-    if($order_type != "PS"){
+	if ($order_type=='SQ') {
+		include_once $rootdir.'/inc/renderQuote.php';
+
+		$html = renderQuote($order_number);
+    } else if ($order_type != "PS"){
 	    $html = renderOrder($order_number,$order_type);
     } else {
         $file_parts = preg_replace('/^(PS)([0-9]+)([D](.*))/','$1,$2,$4',$filename);
