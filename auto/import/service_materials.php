@@ -2,20 +2,24 @@
 
     include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
-    include_once $_SERVER["ROOT_DIR"].'/inc/mapJob.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 
-    $PIPE = mysqli_init();
-    $PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
-    $PIPE->real_connect('db.ven-tel.com', 'andrew', 'venpass01', 'service', '13306');
-    if (mysqli_connect_errno($PIPE)) {
+/*
+    $SVCS_PIPE = mysqli_init();
+    $SVCS_PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
+    $SVCS_PIPE->real_connect('db.ven-tel.com', 'andrew', 'venpass01', 'service', '13306');
+    if (mysqli_connect_errno($SVCS_PIPE)) {
         //add error to global array that is outputted to alert modal
         if (isset($ALERTS)) {
-            $ALERTS[] = "Failed to connect to the PIPE!";
+            $ALERTS[] = "Failed to connect to the SVCS_PIPE!";
         } else {
             //die( "Failed to connect to MySQL: " . mysqli_connect_error() );
             echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
         }
     }
+*/
 
     function mapTerms($termid) {
         // Just straight map it manually because there isn't a lot of records
@@ -54,37 +58,54 @@
 
         return $companyid;
     }
-    
-    // Reset data and import code for job materials within the set range
-    $DATA = array();
-    
+
+	$query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'component'; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM inventory WHERE notes = 'Services Import ".$today."'; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM service_materials; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "SELECT po_number FROM maps_PO, purchase_items WHERE purchase_item_id = purchase_items.id GROUP BY po_number; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$query2 = "DELETE FROM purchase_items WHERE po_number = '".$r['po_number']."'; ";
+    	$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+
+		$query2 = "DELETE FROM purchase_orders WHERE po_number = '".$r['po_number']."'; ";
+    	$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+	}
+
+
+
     $query = "SELECT * FROM services_jobbulkinventory WHERE job_id IS NOT NULL;";
-    $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+    $result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
 
-    while($r = mysqli_fetch_assoc($result)) {
-        $DATA[] = $r;
-    }
+    while($material = mysqli_fetch_assoc($result)) {
+        if(! $material['job_id']) { continue; }
 
-    // print "<pre>" . print_r($DATA, true) . "</pre>";
+		// Check if the service_item_id exists else it is not an imported job
+		$service_item_id = mapJob($material['job_id']);
+		$part = '';
+		$partid = 0;
+		$purchase_item_id = 0;
 
-    // Import Job Data
-    foreach($DATA as $material) {
-        if($material['job_id']) {
-            // Check if the service_item_id exists else it is not an imported job
-            $service_item_id = mapJob($material['job_id']);
-            $part = '';
-            $partid = 0;
-            $purchase_item_id = 0;
+		if (! $service_item_id) { continue; }
 
-            if ($service_item_id) {
                 echo $service_item_id . '<BR>';
 
                 // Within each item get the component info from BDB and check with the current
                 $query = "SELECT * FROM services_component WHERE id = ".res($material['component_id']).";";
-                $result = qdb($query,'PIPE') OR die(qe('PIPE') . '<BR>' . $query);
+echo $query.'<BR>';
+                $result2 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
 
-                if(mysqli_num_rows($result)) {
-                    $r = mysqli_fetch_assoc($result);
+                if(mysqli_num_rows($result2)==0) { continue; }
+
+
+
+                    $r = mysqli_fetch_assoc($result2);
 
                     $part = utf8_encode(trim($r['part_number']));
                     $manf = '';
@@ -93,50 +114,52 @@
 
                     $BDB_partid = trim($r['id']);
                     $BDB_manfid = trim($r['manufacturer_id']);
-                    
-                    // Get the manf name from BDB
-                    if($BDB_manfid) {
-                        $query = "SELECT * FROM services_manufacturer WHERE id = ".res($r['manufacturer_id']).";";
-                        $result = qdb($query,'PIPE') OR die(qe('PIPE') . '<BR>' . $query);
 
-                        if(mysqli_num_rows($result)) {
-                            $r3 = mysqli_fetch_assoc($result);
-                            $manf = trim($r3['name']);
-                        }
-                    }
+					$partid = getPartId($part);
 
-                    // Check if the part exists in the current DB
-                    $query = "SELECT * FROM parts WHERE part RLIKE ".fres($part).";";
-                    $result = qdb($query) OR die(qe() . '<BR>' . $query);
-
-                    if(mysqli_num_rows($result)) {
-                        $r2 = mysqli_fetch_assoc($result);
-                        $partid = $r2['id'];
+					if ($partid) {
                         echo $partid . '<BR><BR>';
                     } else {
                         echo $part . '<BR><BR>';
                         echo $r['description'] . '<BR><BR>';
+                    
+                        // Get the manf name from BDB
+                        if($BDB_manfid) {
+							$query3 = "SELECT manfid FROM maps_manf WHERE BDB_manfid = '".res($r['manufacturer_id'])."'; ";
+                            $result3 = qdb($query3) OR die(qe() . '<BR>' . $query3);
+							if (mysqli_num_rows($result3)>0) {
+								$r3 = mysqli_fetch_assoc($result3);
+								$manfid = $r3['manfid'];
+							} else {
+	                        	$query = "SELECT * FROM services_manufacturer WHERE id = ".res($r['manufacturer_id']).";";
+                            	$result3 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
 
-                        // We now need the manufacturer imported
-                        // Check to see if the manufacturer already exists
-                        // No need to import MANF if the part already exists to save time
-                        $query = "SELECT * FROM manfs WHERE name RLIKE ".fres($manf).";";
-                        $result = qdb($query) OR die(qe() .'<BR>'.$query);
+                                if(mysqli_num_rows($result3)) {
+                                    $r3 = mysqli_fetch_assoc($result3);
+                                    $manf = trim($r3['name']);
+                                }
 
-                        if(mysqli_num_rows($result)) {
-                            $r4 = mysqli_fetch_assoc($result);
-                            $manfid = $r4['id'];
+                        		// We now need the manufacturer imported
+                        		// Check to see if the manufacturer already exists
+                        		// No need to import MANF if the part already exists to save time
+								if ($manf) {
+	                        		$query = "SELECT * FROM manfs WHERE name = '".res($manf)."';";
+   	                     			$result4 = qdb($query) OR die(qe() .'<BR>'.$query);
+	                        		if(mysqli_num_rows($result4)) {
+                            			$r4 = mysqli_fetch_assoc($result4);
+                            			$manfid = $r4['id'];
+									} else {
+                            			// Manf does not exist so add it
+                            			$query = "INSERT INTO manfs (name) VALUES ('".res($manf)."');";
+                            			qdb($query) OR die(qe() .'<BR>'.$query);
+                            			$manfid = qid();
 
-                        } else if($manf) {
-                            // Manf does not exist so add it
-                            $query = "INSERT INTO manfs (name) VALUES (".fres($manf).");";
-                            qdb($query) OR die(qe() .'<BR>'.$query);
-
-                            $manfid = qid();
-
-                            // Map into maps_manf
-                            $query = "INSERT INTO maps_manf (BDB_manfid, manfid) VALUES (".res($BDB_manfid).", ".res($manfid).");";
-                            qdb($query) OR die(qe() . '<BR>' . $query);
+                            			// Map into maps_manf
+                            			$query = "INSERT INTO maps_manf (BDB_manfid, manfid) VALUES (".res($BDB_manfid).", ".res($manfid).");";
+                            			qdb($query) OR die(qe() . '<BR>' . $query);
+									}
+								}
+							}
                         }
 
                         // Insert the part into the parts table
@@ -144,49 +167,52 @@
                         qdb($query) OR die(qe() . '<BR>' . $query);
 
                         $partid = qid();
-                    }
 
-                    // Map in the maps_component table
-                    $query = "INSERT INTO maps_component (BDB_cid, partid) VALUES (".fres($BDB_partid).", ".fres($partid).");";
-                    qdb($query) OR die(qe() . '<BR>' . $query);
+                    	// Map in the maps_component table
+                    	$query = "INSERT INTO maps_component (BDB_cid, partid) VALUES (".fres($BDB_partid).", ".fres($partid).");";
+echo $query.'<BR>';
+                    	qdb($query) OR die(qe() . '<BR>' . $query);
+                    }
 
                     // Generate the purchase order
                     if($material['po_id']) {
                         // Get the purchase order information
                         $query = "SELECT * FROM services_jobmaterialpo WHERE id = ".res($material['po_id']).";";
-                        $result = qdb($query,'PIPE') OR die(qe('PIPE') . '<BR>' . $query);
+                        $result5 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
 
-                        if(mysqli_num_rows($result)) {
-                            $r5 = mysqli_fetch_assoc($result);
+                        if(mysqli_num_rows($result5)) {
+                            $r5 = mysqli_fetch_assoc($result5);
 
                             // All PO seemed to be created by Sam Sabedra
                             $query = "INSERT INTO purchase_orders (created, created_by, sales_rep_id, companyid, contactid, assoc_order, remit_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, status) VALUES ('".res($r5['po_date'])."', '13', '13', ".res(companyMap($r5['vendor_id'])).", NULL, NULL, NULL, NULL, '1', '1', NULL, ".mapTerms($r5['po_terms_id']).", NULL, NULL, 'Active');";
+echo $query.'<BR>';
                             qdb($query) OR die(qe() . '<BR>' . $query);
 
                             $purchase_order = qid();
 
                             $query = "INSERT INTO purchase_items (partid, po_number, line_number, qty, qty_received, receive_date, ref_1, ref_1_label) VALUES (".res($partid).", ".res($purchase_order).", NULL,".res($material['received_quantity']).", ".res($material['received_quantity']).", '".$GLOBALS['now']."', ".fres($service_item_id).", 'service_item_id');";
+echo $query.'<BR>';
                             qdb($query) OR die(qe() . '<BR>' . $query);
 
                             $purchase_item_id = qid();
 
                             $query = "INSERT INTO maps_PO (BDB_poid, purchase_item_id) VALUES (".res($material['po_id']).", ".res($purchase_item_id).");";
+echo $query.'<BR>';
                             qdb($query) OR die(qe() . '<BR>' . $query);
                         }
                     }
 
                     // Insert into Inventory
-                    $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".res($purchase_item_id).");";
+                    $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id, notes) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".fres($purchase_item_id).", 'Services Import ".$GLOBALS['today']."');";
+echo $query.'<BR>';
                     qdb($query) OR die(qe() . '<BR>' . $query);
 
                     $inventory_id = qid();
 
                     // Insert into the materials table
                     $query = "INSERT INTO service_materials (service_item_id, datetime, qty, amount, inventoryid) VALUES (".fres($service_item_id).", NULL, ".fres($material['required_qty']).", ".fres($material['cost']).",".fres($inventory_id).");";
+echo $query.'<BR>';
                     qdb($query) OR die(qe() . '<BR>' . $query);
-                }
-            }
-        }
     }
 
     echo "IMPORT COMPLETE!";

@@ -41,12 +41,12 @@
 			// don't count voided/canceled repair orders
 			$query2 = "SELECT ri.ro_number, ri.invid, ri.id FROM repair_items ri, repair_orders ro ";
 			$query2 .= "WHERE ri.ref_1 = '".$r['id']."' AND ri.ref_1_label = 'return_item_id' AND ri.ro_number = ro.ro_number ";
-			$query2 .= "AND (repair_code_id <> 8 AND repair_code_id <> 9 AND repair_code_id <> 18); ";
+			$query2 .= "AND (ri.repair_code_id <> 8 AND ri.repair_code_id <> 9 AND ri.repair_code_id <> 18); ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) {
 				$r['ref'] = '';
 				if ($r['dispositionid']==3) {//3==Repair so if no results, we gotta ask why
-					if ($r['status']<>'Void') { echo $query2.'<BR>'; }
+					if ($r['status']<>'Void' AND $U['id']==1) { echo $query2.'<BR>'; }
 				} else if ($r['dispositionid']==1) {//Credit
 					continue;
 				} else {//if ($r['dispositionid']==2) {//Replace/Exchange

@@ -16,6 +16,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
 
 	// List of subcategories
 	$documentation = true;
@@ -60,6 +61,7 @@
 	$OG_outsourced = array();
 
 	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
+	if (! isset($T)) { $T = order_type($type); }
 
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
@@ -170,7 +172,7 @@
 			$ticketStatus = getRepairCode($item_details['repair_code_id'], 'repair');
 		}
 
-		$query = "SELECT * FROM service_codes;";
+		$query = "SELECT * FROM repair_codes;";
 
 		$result = qdb($query) or die(qe() . ' ' . $query);
 
@@ -537,15 +539,14 @@
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
 		while($r = mysqli_fetch_assoc($result)){
-			$totalSeconds_data[$r['userid']] += strtotime($r['clockout']) - strtotime($r['clockin']);
+			$totalSeconds_data[$r['userid']][$r['rate']] += strtotime($r['clockout']) - strtotime($r['clockin']);
 		}
 
 		// Also pull assigned users and set them to 0 hours worked
 		$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($task_label).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
-
 		while($r = mysqli_fetch_assoc($result)){
-			$totalSeconds_data[$r['userid']] += 0;
+			$totalSeconds_data[$r['userid']][0] += 0;
 		}
 
 		// If no user is assigned to this task and ONLY single-user class then auto add them into the system as the assigned person
@@ -562,22 +563,23 @@
     			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid) VALUES (".fres($item_id).", ".fres((strtolower($type) == 'repair' ? 'repair_item_id' : 'service_item_id')).",".fres($r['userid']).")";
     			qdb($query) OR die(qe() .' ' . $query);
 
-    			$totalSeconds_data[$r['userid']] += 0;
+    			$totalSeconds_data[$r['userid']][0] += 0;
     		}
 		}
 
 		// From the data given
-		foreach($totalSeconds_data as $userid => $labor_seconds) {
-			$data = array();
-			$status = '';
-			$hours_worked = ($labor_seconds / 3600);
-			//$totalSeconds += $labor_seconds;
-			$rate = 0;
+		foreach($totalSeconds_data as $userid => $labor_row) {
+			foreach ($labor_row as $rate => $labor_seconds) {
+				$data = array();
+				$status = '';
+				$hours_worked = ($labor_seconds / 3600);
+				//$totalSeconds += $labor_seconds;
 
-			$data['laborSeconds'] = $labor_seconds;
-			$data['start_datetime'] = '';
-			$data['end_datetime'] = '';
+				$data['laborSeconds'] = $labor_seconds;
+				$data['start_datetime'] = '';
+				$data['end_datetime'] = '';
 
+/*
 			// Get the users hourly rate
 			$query = "SELECT hourly_rate FROM users WHERE id=".res($userid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
@@ -586,25 +588,33 @@
 				$r = mysqli_fetch_assoc($result);
 				$rate = $r['hourly_rate'];
 			}
+*/
 
-			// Check if the user is currently allowed on this job or not
-			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($task_label)." AND userid = ".res($userid).";";
-			$result = qdb($query) OR die(qe() . ' ' . $query);
+				// Check if the user is currently allowed on this job or not
+				$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($task_label)." AND userid = ".res($userid).";";
+				$result = qdb($query) OR die(qe() . ' ' . $query);
 
-			if (mysqli_num_rows($result)) {
-				$r = mysqli_fetch_assoc($result);
+				if (mysqli_num_rows($result)) {
+					$r = mysqli_fetch_assoc($result);
 
-				$status = 'active';
-				$data['start_datetime'] = $r['start_datetime'];
-				$data['end_datetime'] = $r['end_datetime'];
+					$status = 'active';
+					$data['start_datetime'] = $r['start_datetime'];
+					$data['end_datetime'] = $r['end_datetime'];
+				}
+
+				$data['status'] = $status;
+
+				$cost = round($rate * $hours_worked, 2);
+				$data['cost'] = $cost;
+
+				if (isset($labor_data[$userid])) {
+					$labor_data[$userid]['laborSeconds'] += $data['laborSeconds'];
+					$labor_data[$userid]['cost'] += $data['cost'];
+					$labor_data[$userid]['status'] = $data['status'];
+				} else {
+					$labor_data[$userid] = $data;
+				}
 			}
-
-			$data['status'] = $status;
-
-			$cost = round($rate * $hours_worked, 2);
-			$data['cost'] = $cost;
-
-			$labor_data[$userid] = $data;
 		}
 	}
 
@@ -968,10 +978,10 @@
 							</form>
 						</span>
 					<?php } ?>
-					<?php if ($manager_access AND ((! $quote AND ! $new AND strtolower($type)=='repair'))) { ?>
+					<?php if ($manager_access AND ((! $quote AND ! $new AND $type=='Repair'))) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&order_number=<?=$order_number_details;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
-					<?php if(! $task_edit) { ?>
+					<?php if(! $task_edit AND $type=='Repair') { ?>
 						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
 							<i class="fa fa-qrcode"></i> Receive
 						</a>
@@ -981,7 +991,7 @@
 					<?php } ?>
 				</div>
 				<div class="col-md-2">
-					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes)) { ?>
+					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $edit) { ?>
 									<select id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
 										<option selected="" value="null">- Select Status -</option>
 										<?php 
@@ -1114,7 +1124,7 @@
 							<br>
 							<!-- Cost Dash for Management People Only -->
 							<?php
-								$charge = $item_details['qty']*$item_details['amount'];
+								$charge = $item_details['qty']*$item_details[$T['amount']];
 								$profit = $charge-$total_amount;
 							?>
 

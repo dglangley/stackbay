@@ -2315,7 +2315,7 @@
 					$(this).remove();
 				});
 				$.each(json.services, function(key, order) {
-					services.append('<li><a href="/order.php?order_type=Service&order_number='+order.number+'">'+order.number+' '+order.company+'</a></li>');
+					services.append('<li><a href="/service.php?order_type=Service&order_number='+order.number+'">'+order.class+' '+order.number+' '+order.company+'</a></li>');
 				});
 
 				var service_quotes = $("#service-quotes-list");

@@ -16,7 +16,6 @@
 		$timesheetid = qid();
 
 		// do the timesheet approval here with modifier data?
-		$query = " ".fres($modifier).", ".fres($modified)."); ";
 //		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
 //		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
@@ -38,6 +37,15 @@
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 	}
 
+	$query = "DELETE FROM timesheets WHERE id IN (SELECT timesheets_id FROM maps_timesheet); ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM maps_timesheet; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM expenses; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
 	$mileage_rate = 0.54;
 	$query = "SELECT * FROM services_techtimesheet WHERE datetime_in >= '2017-01-01 00:00:00' ";
 //	$query .= "LIMIT 0,10 ";
@@ -52,10 +60,11 @@
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 		if (mysqli_num_rows($result2)>0) { continue; }
 
-		$userid = mapUser($r['user_id']);
+		$userid = mapUser($r['tech_id']);
 		$modifier = mapUser($r['modified_by_id']);
 		if (! $userid AND $modifier) { $userid = $modifier; }
 
+//		echo $r['job_id'].':'.$taskid.' = '.$userid.' / '.$modifier.' ('.$r['datetime_in'].')<BR>';
 		if (! $userid) { continue; }
 
 		$timesheetid = setTimesheet($userid,$r['datetime_in'],$r['datetime_out'],$taskid,'service_item_id',$r['tech_rate'],$r['notes'],$modifier,$r['modified']);

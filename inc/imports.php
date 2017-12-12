@@ -11,21 +11,9 @@
 
 		return ($taskid);
 	}
-	if ($DEV_ENV) {
+
 		$USER_MAP = array(
-			5 => 21,/*rharmon*/
-			6 => 22,/*sthiroux*/
-			17 => 23,/*cnesby*/
-			29 => 24,/*carlos*/
-			48 => 25,/*alexb*/
-			51 => 26,/*matth*/
-			52 => 27,/*michael*/
-			53 => 28,/*mursprung*/
-			55 => 29,/*peter*/
-			56 => 30,/*damon*/
-		);
-	} else {
-		$USER_MAP = array(
+			2 => 8,/*scott*/
 			5 => 26,/*rharmon*/
 			6 => 0,/*sthiroux*/
 			17 => 0,/*cnesby*/
@@ -37,7 +25,6 @@
 			55 => 28,/*peter*/
 			56 => 23,/*damon*/
 		);
-	}
 	function mapUser($userid) {
 		global $USER_MAP;
 

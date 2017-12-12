@@ -120,6 +120,7 @@
 		return false;
 	}
 
+/*
 	function toTime($secs) {
 		// given $secs seconds, what is the time g:i:s format?
 		$hours = floor($secs/3600);
@@ -131,6 +132,7 @@
 
 		return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
 	}
+*/
 
 	// Create a new object for payroll dates
 	$payroll = new Payroll;

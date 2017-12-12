@@ -44,14 +44,17 @@
 	}
 
 	$services = array();
-	$query = "SELECT so_number, name FROM service_orders, companies ";
+	$query = "SELECT so_number, name, classid FROM service_orders, companies ";
 	$query .= "WHERE service_orders.companyid = companies.id ORDER BY so_number DESC LIMIT 0,50; ";
 	$result = qdb($query) OR jsonDie(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$query2 = "SELECT line_number, task_name FROM service_items WHERE so_number = '".$r['so_number']."'; ";
 		$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$services[] = array('number'=>$r['so_number'].'-'.$r2['line_number'],'company'=>$r2['task_name'].' '.$r['name']);
+			if ($r2['task_name']) { $class = $r2['task_name']; }
+			else { $class = getClass($r['classid']); }
+
+			$services[] = array('class'=>$class,'number'=>$r['so_number'].'-'.$r2['line_number'],'company'=>$r['name']);
 		}
 	}
 

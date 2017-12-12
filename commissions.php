@@ -9,6 +9,7 @@
 	include_once $rootdir.'/inc/getTerms.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
+	include_once $rootdir.'/inc/order_type.php';
 
 	function getSource($pi_id) {
 		if (! $pi_id) { return (''); }
@@ -200,6 +201,9 @@
 		tr.order-header td {
 			text-transform:uppercase;
 		}
+		#pad-wrapper {
+			margin-top:48px;
+		}
 	</style>
 </head>
 
@@ -297,7 +301,7 @@
 				</span>
 			</div>
 		</td>
-		<td class="col-md-1 text-center">
+		<td class="col-md-1">
 <?php
 	$payouts = '<option value="">- Comm History -</option>'.chr(10);
 	$query = "SELECT LEFT(paid_date,10) date FROM commission_payouts GROUP BY date ORDER BY paid_date DESC LIMIT 0,30; ";
@@ -345,54 +349,45 @@
 	$INVOICE_ITEMS = array();//store for re-looking up same data
 	//Establish a blank array for receiving the results from the table
 	$orders = array();
-	$charge_types = array('Sale','Repair');
-	foreach ($charge_types as $type) {
-		$order_type = '';
-		$order_table = '';
-		if ($type=='Sale') {
-			$order_abbrev = 'SO';
-			$order_type = 'so_number';
-			$order_table = 'sales_orders';
-			$item_type = 'sales_items';
-			$item_field = 'sales_item_id';
-			$order_type = 'so_number';
-		} else if ($type=='Repair') {
-			$order_type = 'ro_number';
-			$order_table = 'repair_orders';
-			$order_abbrev = 'RO';
-			$item_type = 'repair_items';
-			$item_field = 'repair_item_id';
-			$order_type = 'ro_number';
-		}
+	$charge_types = array('Sale','Repair','Service');
+	foreach ($charge_types as $order_type) {
+		$T = order_type($order_type);
 
 		// get all invoices which are commissioned against
-		$query = "SELECT o.".$order_type.", o.created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
+		$query = "SELECT o.".$T['order'].", o.".$T['datetime']." created, o.sales_rep_id, o.companyid, i.invoice_no, i.date_invoiced, o.termsid, i.status, i.order_number, i.order_type ";
 		if ($history_date) {
 			$query .= ", c.invoice_item_id, c.inventoryid, c.item_id, c.item_id_label, c.datetime, c.cogsid, c.rep_id, ";
 			$query .= "c.commission_rate, p.amount commission_amount, c.id commissionid, p.amount paid_amount ";
 		}
-		$query .= "FROM ".$order_table." o, invoices i ";
-		if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
-		$query .= "WHERE o.".$order_type." = i.order_number AND i.order_type = '".$type."' AND i.status <> 'Void' ";
+
+		if ($order_type=='Service') {
+			$query .= "FROM invoices i, invoice_items ii, ".$T['items']." items, ".$T['orders']." o ";
+			$query .= "WHERE i.invoice_no = ii.invoice_no AND ii.ref_1 = items.id AND ii.ref_1_label = '".$T['item_label']."' ";
+			$query .= "AND items.".$T['order']." = o.".$T['order']." ";
+			if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
+		} else {
+			$query .= "FROM ".$T['orders']." o, invoices i ";
+			if ($history_date) { $query .= ", commissions c, commission_payouts p "; }
+			$query .= "WHERE o.".$T['order']." = i.order_number AND i.order_type = '".$order_type."' AND i.status <> 'Void' ";
+		}
 		if ($history_date) {
 			$query .= "AND i.invoice_no = c.invoice_no AND c.id = p.commissionid AND LEFT(p.paid_date,10) = '".res($history_date)."' ";
 		} else {
 	   		if ($startDate) {
    				$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
    				$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
-   				$query .= "AND o.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+   				$query .= "AND o.".$T['datetime']." BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
 		}
-		if ($order) { $query .= "AND (o.".$order_type." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
-		if (! $history_date) { $query .= "GROUP BY o.".$order_type.", i.invoice_no "; }
-		$query .= "ORDER BY o.".$order_type." ASC; ";
+		if ($order) { $query .= "AND (o.".$T['order']." = '".res($order)."' OR i.invoice_no = '".res($order)."') "; }
+		if (! $history_date) { $query .= "GROUP BY o.".$T['order'].", i.invoice_no "; }
+		$query .= "ORDER BY o.".$T['order']." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
-//		echo '<BR><BR><BR>';
+		echo '<BR><BR><BR>';
 //		echo $query.'<BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
-			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
-			//$r['amount'] = $r['commission_amount'];
-			$r['charge_type'] = $type;
+//			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
+			$r['charge_type'] = $order_type;
 
 			// get amount already paid out
 			$r['commissions'] = array();
@@ -418,7 +413,7 @@
 					}
 				}
 				if (count($I)==0) {
-					$query2 = "SELECT price amount, partid FROM ".$item_type." WHERE id = '".$r['item_id']."'; ";
+					$query2 = "SELECT price amount, partid FROM ".$T['items']." WHERE id = '".$r['item_id']."'; ";
 //					echo $query2.'<BR>';
 					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 					if (mysqli_num_rows($result2)>0) {
@@ -458,37 +453,55 @@
 					$orders[$order_key]['commissions'][$invoice_item_id]['comms'][$r['rep_id']][] = $comm;
 				}
 				continue;
-			}
+			}/* end $history_date */
 
-			$query2 = "SELECT amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+
+			if ($order_type=='Service') {
+				// re-query invoice items because we grouped the results in the above query
+				$query2 = "SELECT ii.invoice_no, ii.memo, SUM(ii.qty) qty, SUM(ii.amount) amount, ii.ref_1, ii.ref_1_label ";
+				$query2 .= "FROM invoice_items ii, ".$T['items']." items WHERE invoice_no = '".$r['invoice_no']."' ";
+				$query2 .= "AND ii.ref_1 = items.id AND ii.ref_1_label = '".$T['item_label']."' AND items.".$T['order']." = '".$r[$T['order']]."' ";
+				$query2 .= "GROUP BY ii.ref_1, ii.ref_1_label; ";
+			} else {
+				$query2 = "SELECT amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+			}
 //			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$r['commissions'][$r2['id']] = array('amount'=>$r2['amount'],'partid'=>$r2['partid'],'comms'=>array());
 
-				$query3 = "SELECT h.invid, t.id, i.serial_no FROM inventory i, inventory_history h, ".$item_type." t, ";
-				$query3 .= "packages p, package_contents pc, invoice_shipments s, invoice_items ii ";
-				$query3 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND h.invid = pc.serialid ";
-				$query3 .= "AND h.field_changed = '".$item_field."' AND h.value = t.id AND (t.price > 0 OR ii.amount > 0) ";
-				// added Repair clause on 11/7/17 because matching Package Order#/Type wasn't working since Repair shipments
-				// get stored with their corresponding SO data (legacy DID keep Repair data, but new model uses SO)
-				if ($type=='Repair') {
-					$query3 .= "AND p.id = pc.packageid ";
+				if ($order_type=='Service') {
+					// re-query items table again because we had to group invoice items query above
+					$query3 = "SELECT '".$r2['inventoryid']."' invid, ".$T['items'].".id FROM ".$T['items']." ";
+					$query3 .= "WHERE id = '".$r2['ref_1']."'; ";
+//					echo $query3.'<BR>';
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				} else {
-					$query3 .= "AND p.order_number = t.".$order_type." AND p.order_type = '".$type."' ";
+					$query3 = "SELECT h.invid, t.id, i.serial_no FROM inventory i, inventory_history h, ".$T['items']." t, ";
+					$query3 .= "packages p, package_contents pc, invoice_shipments s, invoice_items ii ";
+					$query3 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND h.invid = pc.serialid ";
+					$query3 .= "AND h.field_changed = '".$T['item_label']."' AND h.value = t.id AND (t.".$T['amount']." > 0 OR ii.amount > 0) ";
+					// added Repair clause on 11/7/17 because matching Package Order#/Type wasn't working since Repair shipments
+					// get stored with their corresponding SO data (legacy DID keep Repair data, but new model uses SO)
+					if ($order_type=='Repair') {
+						$query3 .= "AND p.id = pc.packageid ";
+					} else {
+						$query3 .= "AND p.order_number = t.".$T['order']." AND p.order_type = '".$order_type."' ";
+					}
+					$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
+					$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
+					$query3 .= "GROUP BY h.invid, t.id; ";
+					$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']."<BR>".$query3);
+//					echo $query3.'<BR>';
 				}
-				$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
-				$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
-				$query3 .= "GROUP BY h.invid, t.id; ";
-//				echo $query3.'<BR>';
-				$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']);
+
 				while ($r3 = mysqli_fetch_assoc($result3)) {
 					$comm = array(
 						'invoice_no'=>$r['invoice_no'],
 						'invoice_item_id'=>$r2['id'],
 						'inventoryid'=>$r3['invid'],
 						'item_id'=>$r3['id'],
-						'item_id_label'=>$item_field,
+						'item_id_label'=>$T['item_label'],
 						'datetime'=>'',
 						'cogsid'=>0,
 						'rep_id'=>0,
@@ -498,14 +511,16 @@
 						'id'=>0,
 					);
 
-					$query4 = "SELECT *, '0' paid_amount FROM commissions c WHERE invoice_no = '".$r['invoice_no']."' AND inventoryid = '".$r3['invid']."' ";
+					$query4 = "SELECT *, '0' paid_amount FROM commissions c WHERE invoice_no = '".$r['invoice_no']."' ";
+					if ($order_type=='Service') { $query4 .= "AND invoice_item_id = '".$r2['id']."' "; }
+					else if ($r3['invid']) { $query4 .= "AND inventoryid = '".$r3['invid']."' "; }
 					if ($rep_filter) { $query4 .= "AND rep_id = '".res($rep_filter)."' "; }
 					$query4 .= "ORDER BY rep_id ASC; ";
 //					echo $query4.'<BR>';
 					$result4 = qdb($query4) OR die("Could not pull commissions for invoice ".$r['invoice_no']." AND inventoryid ".$r3['invid']);
 					// if no results from commissions table, supplement them with reps based on $RATES
 					$num_results = mysqli_num_rows($result4);
-					if ($num_results==0 AND ! $history_date) {
+					if ($num_results==0 AND ! $history_date AND $r3['invid']) {
 						// check now that the items weren't invoiced on another invoice for the same billable order
 						$query4 = "SELECT * FROM commissions c, invoices i ";
 						$query4 .= "WHERE c.inventoryid = '".$r3['invid']."' AND c.invoice_no <> '".$r['invoice_no']."' ";
@@ -855,12 +870,20 @@
 ?>
 
         <!-- upper main stats -->
+<?php if ($comm_stats) { ?>
+		<style type="text/css">
+			#pad-wrapper {
+				margin-top:110px;
+			}
+		</style>
         <div id="main-stats" style="position:fixed; width:auto; left:0px; right:0px; top:93px; z-index:1001; box-shadow: 2px 1px 2px #888888; opacity:.9">
-            <div class="row stats-row">
+			<button type="button" class="btn btn-default show-comms form-control">Show Commissions</button>
+            <div class="row stats-row hidden">
 				<?php echo $comm_stats; ?>
             </div>
         </div>
 		<hr/>
+<?php } ?>
         <!-- end upper main stats -->
 		<form class="form-inline" method="post" action="/<?php echo $form_action; ?>" id="comm-form">
 		<table class="table table-hover table-striped table-condensed" style="margin-top:60px">
@@ -904,6 +927,10 @@
 
     <script type="text/javascript">
 		$(document).ready(function() {
+			$(".show-comms").on("click", function() {
+				$(this).hide();
+				$("#main-stats").find(".stats-row").removeClass('hidden');
+			});
 			$(".btn-details").on("click",function() {
 				alert('hi');
 			});

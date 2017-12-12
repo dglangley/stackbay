@@ -23,6 +23,33 @@
 		return ($bill_item_id);
 	}
 
+	$query = "SELECT bill_item_id FROM maps_bill; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$query2 = "SELECT bill_no FROM bill_items WHERE id = '".$r['bill_item_id']."'; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+
+			$query3 = "DELETE FROM bills WHERE bill_no = '".$r2['bill_no']."'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+
+			$query3 = "SELECT paymentid FROM payment_details WHERE ref_number = '".$r2['bill_no']."' AND ref_type = 'bill'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			while ($r3 = mysqli_fetch_assoc($result3)) {
+				$query4 = "DELETE FROM payments WHERE id = '".$r3['paymentid']."'; ";
+				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+			}
+			$query3 = "DELETE FROM payment_details WHERE ref_number = '".$r2['bill_no']."' AND ref_type = 'bill'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+		}
+		$query2 = "DELETE FROM bill_items WHERE id = '".$r['bill_item_id']."'; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+	}
+
+	$query = "DELETE FROM maps_bill; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
 	$query = "SELECT b.*, c.name company_name FROM services_bill b ";
 	$query .= "LEFT JOIN services_company c ON c.id = b.vendor_id ";
 	$query .= "WHERE b.date >= '2016-01-01' ";//AND 1 = 2; ";// AND b.voided = '0'; ";
@@ -96,6 +123,33 @@
 
 		return true;
 	}
+
+	$query = "SELECT invoice_item_id FROM maps_invoice; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$query2 = "SELECT invoice_no FROM invoice_items WHERE id = '".$r['invoice_item_id']."'; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		if (mysqli_num_rows($result2)>0) {
+			$r2 = mysqli_fetch_assoc($result2);
+
+			$query3 = "DELETE FROM invoices WHERE invoice_no = '".$r2['invoice_no']."'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+
+			$query3 = "SELECT paymentid FROM payment_details WHERE ref_number = '".$r2['invoice_no']."' AND ref_type = 'invoice'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+			while ($r3 = mysqli_fetch_assoc($result3)) {
+				$query4 = "DELETE FROM payments WHERE id = '".$r3['paymentid']."'; ";
+				$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+			}
+			$query3 = "DELETE FROM payment_details WHERE ref_number = '".$r2['invoice_no']."' AND ref_type = 'invoice'; ";
+			$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+		}
+		$query2 = "DELETE FROM invoice_items WHERE id = '".$r['invoice_item_id']."'; ";
+		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+	}
+
+	$query = "DELETE FROM maps_invoice; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	function setInvoiceItem($invoice_no, $partid, $memo, $qty, $amount, $line_number, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $warranty) {
 		$debug = $GLOBALS['debug'];

@@ -5,6 +5,9 @@
 
 	$debug = 0;
 
+	$query = "DELETE FROM service_assignments WHERE item_id_label = 'service_item_id'; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
 	$query = "SELECT * FROM services_jobtasks WHERE date_assigned >= '2017-01-01 00:00:00' ";
 	$query .= "; ";
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
