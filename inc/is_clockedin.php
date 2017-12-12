@@ -19,4 +19,28 @@
 
 		return ($clock);
 	}
-?>
+
+	// This checks if a user that is hourly has been clocked on any job for more than 5 hours at a time
+	function is_idle($userid) {
+		$idle = false;
+
+		$query = "SELECT * FROM timesheets WHERE userid  = ".res($userid)." ";
+		$query .= "AND clockout IS NULL ";
+		$query .= "ORDER BY id DESC; ";// LIMIT 1;";
+		$result = qdb($query) OR die(qe() . ' ' . $query);
+
+		if (mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+
+			$ts1 = strtotime($r['clockin']);
+			$ts2 = strtotime($GLOBALS['now']);
+			$hours = abs($ts1 - $ts2) / 3600; // 3600 = seconds to minutes to hours
+
+			if($hours > 5) {
+				$ALERTS[] = "Warning: You have exceeded 5 hours of clock in time.";
+				$idle = true;
+			}
+		}
+
+		return $idle;
+	}
