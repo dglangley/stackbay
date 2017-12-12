@@ -3,12 +3,30 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setPayment.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/companyMap.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/mapJob.php';
 
-	$debug = 1;
+	$debug = 2;
+
+	function setBillItem($bill_no, $partid, $memo, $qty, $amount, $item_id, $item_id_label, $warranty, $line_number) {
+		$debug = $GLOBALS['debug'];
+
+		$memo = utf8_encode(trim($memo));
+
+		$query2 = "REPLACE bill_items (bill_no, partid, memo, qty, amount, item_id, item_id_label, warranty, line_number) ";
+		$query2 .= "VALUES ('".res($bill_no)."',".fres($partid).",".fres($memo).",";
+		$query2 .= fres(round($qty)).",'".res($amount)."',".fres($item_id).",".fres($item_id_label).",";
+		$query2 .= fres($warranty).",".fres($line_number)."); ";
+		if ($debug) { echo $query2.'<BR>'; }
+		if ($debug<>1) { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+		$bill_item_id = qid();
+
+		return ($bill_item_id);
+	}
 
 	$query = "SELECT b.*, c.name company_name FROM services_bill b ";
 	$query .= "LEFT JOIN services_company c ON c.id = b.vendor_id ";
-	$query .= "WHERE b.date >= '2016-01-01'; ";// AND b.voided = '0'; ";
+	$query .= "WHERE b.date >= '2016-01-01' ";//AND 1 = 2; ";// AND b.voided = '0'; ";
+	$query .= "ORDER BY b.id ASC; ";// LIMIT 0,50; ";
 	echo $query.'<BR>';
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -23,27 +41,41 @@
 
 		$query2 = "REPLACE bills (bill_no, invoice_no, date_created, due_date, po_number, companyid, notes, status) ";
 		$query2 .= "VALUES ('".res($bill_no)."',".fres($invoice_no).",".fres($date_created).",".fres($due_date).",";
-		$query2 .= fres($order_number).",'".res($companyid)."',".fres($notes).",'".res($status)."'); ";
+		$query2 .= "NULL,'".res($companyid)."',".fres($notes).",'".res($status)."'); ";
 		if ($debug) { echo $query2.'<BR>'; }
-		else { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+		if ($debug<>1) { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
 
-		$items = array();
+		$rows = array();
 		$query2 = "SELECT * FROM services_billli WHERE bill_id = '".res($bill_no)."'; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$order_number = $r2['jmpo_id'];
+			$order_number = 0;
 			$order_type = 'Purchase';
-			if (! $order_number) {//services_purchaseorder
+			if ($r2['jmpo_id']) {
+				$order_number = $r2['jmpo_id'];
+			} else if (! $order_number AND $r2['po_id']) {//services_purchaseorder
 				$order_number = $r2['po_id']+1000;
-				$order_type = 'Purchase';
 			}
 
+			$amount = $r2['qty']*$r2['amount'];
+
+			$bill_item_id = setBillItem($bill_no, false, $r2['memo'], $r2['qty'], $r2['amount'], false, false, false, false);
+
+			$query3 = "REPLACE maps_bill (BDB_billli_id, bill_item_id) VALUES ('".$r2['id']."', '".$bill_item_id."'); ";
+			if ($debug) { echo $query3.'<BR>'; }
+			if ($debug<>1) { $result3 = qdb($query3) OR die(qe().'<BR>'.$query3); }
+
+			if (! isset($rows[$order_number])) { $rows[$order_number] = 0; }
+			$rows[$order_number] += $amount;
+		}
+		$items = array();
+		foreach ($rows as $order_number => $amount) {
 			$items[] = array(
 				'order_number' => $order_number,
 				'order_type' => $order_type,
-				'ref_number' => '',
-				'ref_type' => '',
-				'amount' => $r2['amount'],
+				'ref_number' => $bill_no,
+				'ref_type' => 'bill',
+				'amount' => $amount,
 			);
 		}
 
@@ -51,10 +83,42 @@
 			setPayment($companyid, $date_created, 'Other', 'Bill'.$bill_no, $r['amount'], 'Imported', false, false, $items);
 		}
 	}
+	echo '<BR><BR>';
+
+	function setInvoice($invoice_no,$companyid,$date_invoiced,$order_number,$order_type,$shipmentid,$freight,$notes,$status) {
+		$debug = $GLOBALS['debug'];
+
+		$query2 = "REPLACE invoices (invoice_no, companyid, date_invoiced, order_number, order_type, shipmentid, freight, public_notes, status) ";
+		$query2 .= "VALUES ('".res($invoice_no)."',".fres($companyid).",".fres($date_invoiced).",";
+		$query2 .= fres($order_number).",'".res($order_type)."',".fres($shipmentid).",".fres($freight).",".fres($notes).",".fres($status)."); ";
+		if ($debug) { echo $query2.'<BR>'; }
+		if ($debug<>1) { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+
+		return true;
+	}
+
+	function setInvoiceItem($invoice_no, $partid, $memo, $qty, $amount, $line_number, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $warranty) {
+		$debug = $GLOBALS['debug'];
+
+		$memo = utf8_encode(trim($memo));
+
+		$query2 = "REPLACE invoice_items (invoice_no, partid, memo, qty, amount, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty) ";
+		$query2 .= "VALUES ('".res($invoice_no)."',".fres($partid).",".fres($memo).",";
+		$query2 .= "'".res(round($qty))."','".res($amount)."',".fres($line_number).",";
+		$query2 .= fres($ref_1).",".fres($ref_1_label).",";
+		$query2 .= fres($ref_2).",".fres($ref_2_label).",";
+		$query2 .= fres($warranty)."); ";
+		if ($debug) { echo $query2.'<BR>'; }
+		if ($debug<>1) { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+		$invoice_item_id = qid();
+
+		return ($invoice_item_id);
+	}
 
 	$query = "SELECT i.*, c.name company_name FROM services_invoice i ";
 	$query .= "LEFT JOIN services_company c ON c.id = i.customer_id ";
-	$query .= "WHERE i.date >= '2016-01-01'; ";// AND i.voided = '0'; ";
+	$query .= "WHERE i.date >= '2016-01-01' ";// AND i.voided = '0'; ";
+	$query .= "ORDER BY i.id ASC; ";// LIMIT 0,50; ";
 	echo $query.'<BR>';
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -68,32 +132,41 @@
 		$status = 'Completed';
 		if ($r['voided']) { $status = 'Void'; }
 
-		$query2 = "REPLACE invoices (invoice_no, companyid, date_invoiced, order_number, order_type, shipmentid, freight, public_notes, status) ";
-		$query2 .= "VALUES ('".res($invoice_no)."',".fres($companyid).",".fres($date_invoiced).",";
-		$query2 .= fres($order_number).",'".res($order_type)."',NULL,NULL,".fres($notes).",'Completed'); ";
-		if ($debug) { echo $query2.'<BR>'; }
-		else { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+		setInvoice($invoice_no,$companyid,$date_invoiced,$order_number,$order_type,false,false,$notes,$status);
 
-		$items = array();
-		$query2 = "SELECT * FROM services_invoiceli WHERE invoice_id = '".res($invoice_no)."'; ";
+		$sum_amount = 0;
+		$query2 = "SELECT * FROM services_invoiceli WHERE invoice_id = '".res($r['id'])."'; ";
 		$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
-			$order_number = $r2['jobpo_id'];
-			$order_type = 'Purchase';
-			if (! $order_number) {//services_purchaseorder
-				$order_number = $r2['po_id']+1000;
-				$order_type = 'Purchase';
+
+			$service_item_id = 0;
+			$ref_1_label = '';
+			$query3 = "SELECT * FROM services_jobpoli li, services_jobpo po ";
+			$query3 .= "WHERE invoiceli_id = '".$r2['id']."' AND li.po_id = po.id; ";
+			$result3 = qdb($query3,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query3);
+			if (mysqli_num_rows($result3)>0) {
+				$r3 = mysqli_fetch_assoc($result3);
+				$service_item_id = mapJob($r3['job_id']);
+				$ref_1_label = 'service_item_id';
 			}
 
-			$items[] = array(
-				'order_number' => $order_number,
-				'order_type' => $order_type,
-				'ref_number' => '',
-				'memo' => $r2['memo'],
-				'amount' => $r2['amount'],
-				'qty' => $r2['quantity'],
-			);
+			$invoice_item_id = setInvoiceItem($invoice_no, false, $r2['memo'], $r2['quantity'], $r2['amount'], false, $service_item_id, $ref_1_label, false, false, false);
+
+			$query3 = "REPLACE maps_invoice (BDB_invoiceli_id, invoice_item_id) VALUES ('".$r2['id']."', '".$invoice_item_id."'); ";
+			if ($debug) { echo $query3.'<BR>'; }
+			if ($debug<>1) { $result3 = qdb($query3) OR die(qe().'<BR>'.$query3); }
+
+			$sum_amount += $r2['quantity']*$r2['amount'];
 		}
+		$items = array(
+			0 => array(
+				'order_number' => false,
+				'order_type' => false,
+				'ref_number' => $invoice_no,
+				'ref_type' => 'invoice',
+				'amount' => $sum_amount,
+			)
+		);
 
 		if ($r['paid']) {
 			setPayment($companyid, $date_created, 'Other', 'Invoice'.$invoice_no, $r['amount'], 'Imported', false, false, $items);

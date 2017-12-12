@@ -170,7 +170,7 @@
 			$ticketStatus = getRepairCode($item_details['repair_code_id'], 'repair');
 		}
 
-		$query = "SELECT * FROM repair_codes;";
+		$query = "SELECT * FROM service_codes;";
 
 		$result = qdb($query) or die(qe() . ' ' . $query);
 
@@ -355,9 +355,10 @@
 				// print_r($row);
 				$qty = 0;
 				$po_number = $row['po_number'];
+				$inventoryid = 0;
 
 				// Check to see what has been received and sum it into the total Ordered
-				$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+				$query = "SELECT *, i.id inventoryid, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 				if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
 				$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
 				$query .= "AND i.partid = ".prep($row['partid'])." ";
@@ -368,6 +369,7 @@
 
 				if (mysqli_num_rows($result2)>0) {
 					$row2 = mysqli_fetch_assoc($result2);
+					$inventoryid = $row2['inventoryid'];
 					$qty = ($row2['totalReceived'] ? $row2['totalReceived'] : 0);
 				}
 
@@ -379,6 +381,16 @@
 				// Grab actual available quantity for the requested component
 				$row['available'] = getAvailable($row['partid'], $item_id);
 				$row['pulled'] = getPulled($row['partid'], $item_id);
+
+				// calculate inventory cost
+				$cost = 0;
+				$query3 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
+				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+				if (mysqli_num_rows($result3)>0) {
+					$r3 = mysqli_fetch_assoc($result3);
+					$cost = $r3['actual']*$row['pulled'];
+					$materials_total += $cost;
+				}
 
 				$row['total'] = $total;
 
@@ -969,12 +981,12 @@
 					<?php } ?>
 				</div>
 				<div class="col-md-2">
-					<?php if (! $quote AND ! $new AND strtolower($type) == 'repair' AND ! empty($repair_codes)) { ?>
+					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes)) { ?>
 									<select id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
 										<option selected="" value="null">- Select Status -</option>
 										<?php 
-											foreach($repair_codes as $code):
-												echo "<option value='".$code['id']."' ".($ORDER['repair_code_id'] == $code['id'] ? 'selected' : '').">".$code['description']."\t".$code['code']."</option>";
+											foreach($service_codes as $code):
+												echo "<option value='".$code['id']."' ".($item_details['repair_code_id'] == $code['id'] ? 'selected' : '').">".$code['description']."\t".$code['code']."</option>";
 											endforeach;
 										?>
 									</select>
@@ -1074,7 +1086,7 @@
 						</div>
 					<div id="pad-wrapper" >
 
-					<?php if (! $assigned) { ?>
+					<?php if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES)) { ?>
 						<div class="alert alert-default" style="padding:5px; margin:0px">
 							<h3 class="text-center text-warning">You are not assigned to this task</h3>
 						</div>
@@ -1599,7 +1611,8 @@
 															}
 														}
 														$ext = ($price * $ordered);
-														$materials_total += $ext;
+														// dl 12-11-17 because of addition in getMaterials()
+														//$materials_total += $ext;
 													}
 												?>
 													<?php if(! $quote AND ! $new) { ?>

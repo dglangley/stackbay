@@ -2,6 +2,7 @@
 
     include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/mapJob.php';
 
     $PIPE = mysqli_init();
     $PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
@@ -14,21 +15,6 @@
             //die( "Failed to connect to MySQL: " . mysqli_connect_error() );
             echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
         }
-    }
-
-    function mapJob($BDB_jid) {
-        $service_item_id = 0;
-
-        $query = "SELECT service_item_id FROM maps_job WHERE BDB_jid = ".res($BDB_jid).";";
-        $result = qdb($query) OR die(qe() . '<BR>' . $query);
-
-        if(mysqli_num_rows($result)) {
-            $r = mysqli_fetch_assoc($result);
-
-            $service_item_id = $r['service_item_id'];
-        }
-
-        return $service_item_id;
     }
 
     function mapTerms($termid) {
