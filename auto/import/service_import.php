@@ -17,20 +17,24 @@
         }
     }
 
-    // Reset data and import code for jobs within the set range
-    $DATA = array();
+	$query = "DELETE FROM maps_job; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "TRUNCATE service_items; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "TRUNCATE service_orders; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "ALTER TABLE service_orders auto_increment = 400101; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
     
-    $query = "SELECT * FROM services_job WHERE completed_date IS NULL OR date_entered >= '2017-01-01';";
+    $query = "SELECT job.*, terms.invoice_days FROM services_job job ";
+	$query .= "LEFT JOIN services_terms terms ON terms.id = job.terms_id ";
+	$query .= "WHERE (job.completed_date IS NULL OR job.date_entered >= '2016-01-01');";
     $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
 
-    while($r = mysqli_fetch_assoc($result)) {
-        $DATA[] = $r;
-    }
-
-    //print "<pre>" . print_r($DATA, true) . "</pre>";
-
-    // Import Job Data
-    foreach($DATA as $service) {
+    while($service = mysqli_fetch_assoc($result)) {
         // Set variables being used for service orders
         $classid;
 
@@ -44,29 +48,20 @@
         $userid;
         $datetime = $service['date_entered'];
         $bill_to_id;
-        $termsid;
+        $termsid = 15; // Also Known as N/A
         $public_notes = $service['site_access_info_address'];;
         $private_notes;
         $status = 'Active';
 
         // Convert the BDB terms to our terms
-        $query = "SELECT invoice_days FROM services_terms WHERE id = ".res($service['terms_id']).";";
-        $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
-
-        if(mysqli_num_rows($result)) {
-            $r = mysqli_fetch_assoc($result);
-
+		if ($service['invoice_days']) {
             // Find the exact matching days in our database
-            $query = "SELECT id FROM terms WHERE days = ".fres(trim($r['invoice_days'])).";";
-            $result = qdb($query) OR die(qe().'<BR>'.$query);
-
-            if(mysqli_num_rows($result)) {
-                $r = mysqli_fetch_assoc($result);
-                $termsid = $r['id'];
-            } else {
-                $termsid = 15; // Also Known as N/A
+            $query2 = "SELECT id FROM terms WHERE days = ".fres(trim($r['invoice_days'])).";";
+            $result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+            if(mysqli_num_rows($result2)) {
+                $r2 = mysqli_fetch_assoc($result2);
+                $termsid = $r2['id'];
             }
-
         }
 
         // Set variables being used for service items
@@ -83,7 +78,7 @@
         if(strpos($task_name, 'FFR') !== false) {
             $classid = 3; // 3 = FFR , 2 = Installation , 1 = Repair 
         } else {
-            $classid = 2; // Repair is never used here
+            $classid = 2; // Repair (1) is never used here
         }
 
         // Insert into Service Orders

@@ -93,6 +93,7 @@
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=repair&order_number=' . $order_number;
+				$recipients = 'ssabedra@ven-tel.com';
 			} else if($label == 'service_item_id') {
 				//$status_desc = getStatus($service_code_id, 'status_codes');
 
@@ -100,6 +101,7 @@
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=Service&order_number=' . $order_number;
+				$recipients = 'scott@ven-tel.com';
 			}
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
@@ -112,10 +114,8 @@
 			$result = qdb($query) or die(qe() . '<BR>' . $query);
 
 			if($result && ! $DEV_ENV) {
-				$email_body_html = getRep($userid)." has completed a job for <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a> " . $issue;
+				$email_body_html = getRep($GLOBALS['U']['id'])." has completed <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a> " . $issue;
 				$email_subject = 'Status Submit for '.$title;
-				$recipients = 'scott@ven-tel.com';
-				//$recipients = 'ssabedra@ven-tel.com';
 				// $bcc = 'dev@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);

@@ -59,10 +59,16 @@
         return $companyid;
     }
 
-	$query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'component'; ";
+	$query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
-	$query = "DELETE FROM inventory WHERE notes = 'Services Import ".$today."'; ";
+	$query = "DELETE FROM maps_component; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM inventory WHERE notes = 'Services Import'; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "DELETE FROM inventory_costs WHERE notes = 'Services Import'; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$query = "DELETE FROM service_materials; ";
@@ -82,7 +88,6 @@
 
     $query = "SELECT * FROM services_jobbulkinventory WHERE job_id IS NOT NULL;";
     $result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
-
     while($material = mysqli_fetch_assoc($result)) {
         if(! $material['job_id']) { continue; }
 
@@ -94,11 +99,11 @@
 
 		if (! $service_item_id) { continue; }
 
-                echo $service_item_id . '<BR>';
+//              echo $service_item_id . '<BR>';
 
                 // Within each item get the component info from BDB and check with the current
                 $query = "SELECT * FROM services_component WHERE id = ".res($material['component_id']).";";
-echo $query.'<BR>';
+//				echo $query.'<BR>';
                 $result2 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
 
                 if(mysqli_num_rows($result2)==0) { continue; }
@@ -118,10 +123,10 @@ echo $query.'<BR>';
 					$partid = getPartId($part);
 
 					if ($partid) {
-                        echo $partid . '<BR><BR>';
+//                        echo $partid . '<BR><BR>';
                     } else {
-                        echo $part . '<BR><BR>';
-                        echo $r['description'] . '<BR><BR>';
+//                        echo $part . '<BR><BR>';
+//                        echo $r['description'] . '<BR><BR>';
                     
                         // Get the manf name from BDB
                         if($BDB_manfid) {
@@ -163,7 +168,7 @@ echo $query.'<BR>';
                         }
 
                         // Insert the part into the parts table
-                        $query = "INSERT INTO parts (part, manfid, systemid, description, classification) VALUES ('".res($part)."', ".fres($manfid).", NULL, ".fres(utf8_encode($r['description'])).", 'component');";
+                        $query = "INSERT INTO parts (part, manfid, systemid, description, classification) VALUES ('".res($part)."', ".fres($manfid).", NULL, ".fres(utf8_encode($r['description'])).", 'material');";
                         qdb($query) OR die(qe() . '<BR>' . $query);
 
                         $partid = qid();
@@ -204,14 +209,23 @@ echo $query.'<BR>';
                     // BDB has a lot of 0 qty items so avoid that too
                     if($material['received_quantity'] != 0) {
 	                    // Insert into Inventory
-                        $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id, notes) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".fres($purchase_item_id).", 'Services Import ".$GLOBALS['today']."');";
+                        $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id, notes) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".fres($purchase_item_id).", 'Services Import');";
 echo $query.'<BR>';
                         qdb($query) OR die(qe() . '<BR>' . $query);
                         $inventory_id = qid();
 
                         // Insert into the materials table
-                        $query = "INSERT INTO service_materials (service_item_id, datetime, qty, amount, inventoryid) VALUES (".fres($service_item_id).", NULL, ".fres($material['required_qty']).", ".fres($material['sale_price']).",".fres($inventory_id).");";
+                        $query = "INSERT INTO service_materials (service_item_id, datetime, qty, inventoryid) ";
+						$query .= "VALUES (".fres($service_item_id).", NULL, ".fres($material['required_quantity']).", ".fres($inventory_id).");";
+echo $query.'<BR>';
                         qdb($query) OR die(qe() . '<BR>' . $query);
+
+						if ($material['cost']>0) {
+							$query = "INSERT INTO inventory_costs (inventoryid, actual, notes) ";
+							$query .= "VALUES ('".$inventory_id."', '".res($material['cost'])."', 'Services Import'); ";
+echo $query.'<BR>';
+                        	qdb($query) OR die(qe() . '<BR>' . $query);
+						}
                     }
     }
 
