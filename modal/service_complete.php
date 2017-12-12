@@ -1,6 +1,7 @@
 <?php
 	$service_codes = array();
 	$query = '';
+	$open_materials = false;
 
 	if(strtolower($type) == 'service') {
 		if(in_array("4", $USER_ROLES)){ 
@@ -16,6 +17,13 @@
 
 	while ($row = $result->fetch_assoc()) {
 		$service_codes[] = $row;
+	}
+
+	foreach($component_data as $material) {
+		if($material['totalOrdered'] > $material['pulled']) {
+			$open_materials = true;
+			break;
+		}
 	}
 ?>
 <div class="modal modal-alert fade" id="modal-complete" tabindex="-1" role="dialog" aria-labelledby="modalAlertTitle">
@@ -33,6 +41,13 @@
 							<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
 								<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 								<strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
+							</div>
+						<?php } ?>
+
+						<?php if($open_materials) { ?>
+							<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
+								<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+								<strong id="alert_title">Error</strong>: Material(s) have not been fulfilled for this order! 
 							</div>
 						<?php } ?>
 					</div><!-- row -->
@@ -64,7 +79,10 @@
 				</div>
 				<div class="modal-footer text-center">
 					<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
-					<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Complete Ticket</button>
+					<!-- Make it so you can't complete a repair ticket without scanning something in, but if it is a Service ticket disregard -->
+					<?php if((! empty(getDetails($item_id)) OR strtolower($type) == 'service') AND ! $open_materials) { ?>
+						<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Complete Ticket</button>
+					<?php } ?>
 				</div>
 			</form>
 		</div>
