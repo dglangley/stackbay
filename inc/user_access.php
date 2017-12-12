@@ -27,6 +27,8 @@
 		private $contact_ID;
 		private $email_ID;
 
+		private $hourly_rate;
+
 		//Plaintext password
 		private $temp_pass;
 
@@ -166,6 +168,11 @@
 			$this->generated_pass_exp = $gen_pass_exp;
 		}
 
+		function setHourly($hourly_rate) {
+			//set if the initial to have a expiration time for the user to reset his/her password
+			$this->hourly_rate = $hourly_rate;
+		}
+
 		function setError($error) {
 			//set any errors that come up during this process of running venPriv
 			$this->error = $error;
@@ -256,6 +263,10 @@
 		function getPhone() {
 			//get user specific status
 			return $this->user_phone;
+		}
+
+		function getHourly() {
+			return $this->hourly_rate;
 		}
 
 		function getError() {
@@ -425,11 +436,11 @@
 
 				//Prepare and Bind for Users
 				$stmt = $WLI->prepare('
-					INSERT INTO users (contactid, login_emailid, encrypted_pass, init, expiry) 
-						VALUES (?, ?, ?, ?, ?) 
+					INSERT INTO users (contactid, login_emailid, encrypted_pass, init, expiry, hourly_rate) 
+						VALUES (?, ?, ?, ?, ?, ?) 
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("iisii", $contactid, $emailid, $encrypted_pass, $init, $expiry);
+				$stmt->bind_param("iisiid", $contactid, $emailid, $encrypted_pass, $init, $expiry, $hourly_rate);
 				//Package it all and execute the query
 				$encrypted_pass = $this->getPassword();
 				$init = 0;
@@ -439,6 +450,7 @@
 					//24 hour expiration
 					$expiry = $this->generated_pass_exp;
 				}
+				$hourly_rate = $this->getHourly();
 				$stmt->execute();
 				//Get the emailid to be used in User table
 				$userid = $stmt->insert_id;
@@ -618,20 +630,22 @@
 
 				//If the password is null lets not update it
 				$encrypted_pass = $this->getPassword();
-				if(!empty($encrypted_pass)) {
+				$hourly_rate = $this->getHourly();
+				if(! empty($encrypted_pass)) {
 					//Prepare and Bind for Users
 					$stmt = $WLI->prepare('
-						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init, expiry) 
-							VALUES (?, ?, ?, ?, ?, ?) 
+						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init, expiry, hourly_rate) 
+							VALUES (?, ?, ?, ?, ?, ?, ?) 
 							ON DUPLICATE KEY UPDATE
 					        contactid = VALUES(contactid),
 					        login_emailid = VALUES(login_emailid),
 					        encrypted_pass = VALUES(encrypted_pass),
 					        init = VALUES(init),
-					        expiry = VALUES(expiry)
+					        expiry = VALUES(expiry),
+					        hourly_rate = VALUES(hourly_rate)
 					');
 					//s = string, i - integer, d = double, b = blob for params of mysqli
-					$stmt->bind_param("iiisii", $userid, $contactid, $emailid, $encrypted_pass, $init, $expiry);
+					$stmt->bind_param("iiisiid", $userid, $contactid, $emailid, $encrypted_pass, $init, $expiry, $hourly_rate);
 					//Package it all and execute the query
 					$init = 0;
 					$expiry = null;
@@ -642,6 +656,24 @@
 					}
 					$stmt->execute();
 					$stmt->close();
+				} 
+
+				if(! empty($hourly_rate)) {
+					$stmt = $WLI->prepare('
+						UPDATE users SET hourly_rate = ? WHERE id = ?
+					');
+					//s = string, i - integer, d = double, b = blob for params of mysqli
+					$stmt->bind_param("di", $hourly_rate, $userid);
+					//Package it all and execute the query
+					$init = 0;
+					$expiry = null;
+					if($this->generated_pass == '1') {
+						$init = 1;
+						//24 hour expiration
+						$expiry = $this->generated_pass_exp;
+					}
+					$stmt->execute();
+					$stmt->close();	
 				}
 
                 //Prepare and Bind for Salt

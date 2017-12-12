@@ -351,6 +351,12 @@
                                     <div class="checkbox pull-right">
                                         <label><input name="status" type="checkbox" value="Active" <?php echo $venEdit->getStatus(); ?>>Active (User Status)</label>
                                     </div>
+                                    <div class="input-group pull-right" style="max-width: 200px; margin-right: 25px;">                                                   
+                                        <span class="input-group-addon">                                                        
+                                            <i class="fa fa-usd" aria-hidden="true"></i>                                                    
+                                        </span>                                                 
+                                        <input class="form-control input-sm part_amount" type="text" name="hourly_rate" placeholder="0.00" value="<?php echo $venEdit->hourlyRate($_GET['user']); ?>">
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">

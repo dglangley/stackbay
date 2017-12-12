@@ -190,7 +190,7 @@
 	    function getUserStatus($userid) {
 	    	$status = '';
 			
-	    	$query = "SELECT status from contacts WHERE id= (SELECT contactid FROM users WHERE id='" . res($userid) . "')";
+	    	$query = "SELECT status FROM contacts WHERE id= (SELECT contactid FROM users WHERE id='" . res($userid) . "');";
 	    	$result = qdb($query);
 
 	    	//if the user edit policy exsts then allow user to edit their own password
@@ -200,6 +200,21 @@
 			}
 			
 	    	return $status;
+	    }
+
+	    function hourlyRate($userid) {
+	    	$hourly_rate = '';
+			
+	    	$query = "SELECT hourly_rate FROM users WHERE id = '" . res($userid) . "';";
+	    	$result = qdb($query);
+
+	    	//if the user edit policy exsts then allow user to edit their own password
+	    	if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$hourly_rate = $r['hourly_rate'];
+			}
+			
+	    	return $hourly_rate;
 	    }
 
 	    //Check the password policy and see if the user has access to change the password
@@ -256,6 +271,9 @@
 	    	if(isset($_REQUEST["username"])) {
 		    	$new_username = $this->Sanitize($_REQUEST['username']);
 		    }
+		    if(isset($_REQUEST["hourly_rate"])) {
+		    	$hourly_rate = $this->Sanitize($_REQUEST['hourly_rate']);
+		    }
 	    	if(isset($_REQUEST["email"])) {
 		    	$new_email = $this->Sanitize($_REQUEST['email']);
 		    }
@@ -287,6 +305,7 @@
 
 	    	$this->setGenerated((!empty($generated_pass) ? 1 : 0));
 	    	$this->setPhone($new_phone);
+	    	$this->setHourly($hourly_rate);
 
 	    	//Check for first name and the last name
 	    	if(isset($_REQUEST['firstName']) && $_REQUEST['firstName'] != '') {
@@ -425,6 +444,10 @@
 				$phone = $this->Sanitize($_REQUEST['phone']);
 			}
 
+			if(isset($_REQUEST["hourly_rate"])) {
+		    	$hourly_rate = $this->Sanitize($_REQUEST['hourly_rate']);
+		    }
+
 			//Test Bench Email
 			// $register_email = trim("andrew@ven-tel.com");
 
@@ -439,6 +462,7 @@
 			//Run function set an array of the selected Privilege IDs to user privileges
     		$this->setPrivilege($privilege);
     		$this->setPhone($phone);
+    		$this->setHourly($hourly_rate);
 
 			//Check if the user Email already exists Sanitize for sql add in mysql escape
 			$query = "SELECT * FROM emails WHERE email = '". res($register_email) ."'; ";

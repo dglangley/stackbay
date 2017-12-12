@@ -387,7 +387,7 @@
 					$query .= "AND o.status <> 'Processed'";
 					//if ($order=='ro') { $query .= ", b.id bid "; }
 				} else {
-					$query = "SELECT DISTINCT o.*, i.* FROM repair_orders o, repair_items i, builds WHERE o.ro_number = i.ro_number AND o.status <> 'Void'AND o.status <> 'Processed' AND o.ro_number <> builds.ro_number";
+					$query = "SELECT DISTINCT o.*, i.*, i.repair_code_id as status_code FROM repair_orders o, repair_items i, builds WHERE o.ro_number = i.ro_number AND o.status <> 'Void'AND o.status <> 'Processed' AND o.ro_number <> builds.ro_number";
 				}
 				$query .= sFilter("o.companyid",$f['coid'])."
 				".dFilter("created",$f['start'],$f['end'])."
@@ -446,11 +446,11 @@
 						$status = ($r['returns_item_id'] ? 'complete_item' : 'active_item');
 						$pending = false;
 					} else if($order == 'ro' || $order == 'bo') {
-						$status = ($r['repair_code_id'] ? 'complete_item' : 'active_item');
-						$status_name = ($r['repair_code_id'] ? getRepairCode($r['repair_code_id']) : 'Active');
+						$status = ($r['status_code'] ? 'complete_item' : 'active_item');
+						$status_name = ($r['status_code'] ? getRepairCode($r['status_code']) : 'Active');
 
-						// statuses of "Checked Out" and "In Test" can be subclasses of Active repairs, where there is no repair_code_id set
-						if (! $r['repair_code_id']) {
+						// statuses of "Checked Out" and "In Test" can be subclasses of Active repairs, where there is no status_code set
+						if (! $r['status_code']) {
 							$first_status = false;
 							$query2 = "SELECT l.notes, l.userid FROM activity_log l, repair_items i ";
 							$query2 .= "WHERE i.ro_number = '".res($order_num)."' AND i.id = l.item_id AND l.item_id_label = 'repair_item_id' ";
@@ -476,7 +476,7 @@
 						}
 
 						//If repair code exists then check if the order has already been shipped out or not
-						if($r['repair_code_id'] && $status != 'active_item') {
+						if($r['status_code'] && $status != 'active_item') {
 							$query = "SELECT * FROM packages WHERE order_type = 'Repair' AND order_number = ".prep($order_num).";";
 							$result = qdb($query);
 		
