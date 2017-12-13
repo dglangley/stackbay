@@ -18,6 +18,20 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
 
+	function getInventoryCost($inventoryid) {
+
+		// calculate inventory cost
+		$cost = 0;
+		$query3 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
+		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+		if (mysqli_num_rows($result3)>0) {
+			$r3 = mysqli_fetch_assoc($result3);
+			$cost = $r3['actual'];//*$row['pulled'];
+		}
+		return ($cost);
+
+	}
+
 	// List of subcategories
 	$documentation = true;
 	$details = true;
@@ -349,87 +363,106 @@
 		
 		if(strtolower($type) == 'repair' OR strtolower($type) == 'service') {
 
-			$query = "SELECT *, SUM(qty) as totalOrdered FROM purchase_requests WHERE item_id = ". prep($item_id) ." AND item_id_label = '".res($field)."' GROUP BY partid, po_number ORDER BY requested DESC;";
+			$query = "SELECT r.partid, r.po_number, i.id purchase_item_id, SUM(r.qty) as totalOrdered FROM purchase_requests r ";
+			$query .= "LEFT JOIN purchase_items i ON r.po_number = i.po_number ";
+			$query .= "WHERE r.item_id = ". prep($item_id) ." AND r.item_id_label = '".res($field)."' ";//GROUP BY partid, po_number ORDER BY requested DESC;";
+			$query .= "GROUP BY partid, po_number ";
+			$query .= "ORDER BY requested DESC; ";
 			$result = qdb($query) OR die(qe());
-					
+
 			while ($row = mysqli_fetch_assoc($result)) {
 
-				// print_r($row);
-				$qty = 0;
-				$po_number = $row['po_number'];
-				$inventoryid = 0;
+				$query2 = "SELECT * FROM inventory WHERE purchase_item_id = '".$row['purchase_item_id']."'; ";
+				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				if (mysqli_num_rows($result2)>0) { continue; }
 
-				// Check to see what has been received and sum it into the total Ordered
-				$query = "SELECT *, i.id inventoryid, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
-				if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
-				$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
-				$query .= "AND i.partid = ".prep($row['partid'])." ";
-				if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
-				$query .= "; ";
-
-				$result2 = qdb($query) OR die(qe().' '.$query);
-
-				if (mysqli_num_rows($result2)>0) {
-					$row2 = mysqli_fetch_assoc($result2);
-					$inventoryid = $row2['inventoryid'];
-					$qty = ($row2['totalReceived'] ? $row2['totalReceived'] : 0);
-				}
-
-				$row['totalReceived'] = $qty;
-
-				// This piece grabs more information on the component requested such as status, price and how many ordered if PO is active (AKA created)
-				$total = 0;
-				
-				// Grab actual available quantity for the requested component
-				$row['available'] = getAvailable($row['partid'], $item_id);
-				$row['pulled'] = getPulled($row['partid'], $item_id);
-
-				// calculate inventory cost
-				$cost = 0;
-				$query3 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
-				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-				if (mysqli_num_rows($result3)>0) {
-					$r3 = mysqli_fetch_assoc($result3);
-					$cost = $r3['actual']*$row['pulled'];
-					$materials_total += $cost;
-				}
-
-				$row['total'] = $total;
+				$row['po_number'] = '';
+				$row['totalReceived'] = 0;
+				$row['available'] = 0;
+				$row['pulled'] = 0;
 
 				$purchase_requests[] = $row;
 			}
 
+				// Check to see what has been received and sum it into the total Ordered
+				if ($type=='Repair') {
+//					$query = "SELECT *, i.id inventoryid, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
+					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM repair_components c, inventory i ";
+//					if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+					$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
+//					$query .= "AND i.partid = ".prep($row['partid'])." ";
+//					if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+					$query .= "; ";
+				} else if ($type=='Service') {
+//					$query = "SELECT *, i.id inventoryid, SUM(i.qty) as totalReceived FROM service_materials m, inventory i ";
+					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM service_materials m, inventory i ";
+					if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
+					$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
+//					$query .= "AND i.partid = ".prep($row['partid'])." ";
+//					if ($po_number) { $query .= "AND pi.po_number = '".res($po_number)."' "; }
+					$query .= "; ";
+				}
+				$result2 = qdb($query) OR die(qe().' '.$query);
+				while ($row2 = mysqli_fetch_assoc($result2)) {
+					$row = array('partid'=>$row2['partid']);
+
+					$inventoryid = $row2['inventoryid'];
+					$qty = ($row2['totalReceived'] ? $row2['totalReceived'] : 0);
+
+					$row['po_number'] = '';
+					$row['totalOrdered'] = 0;
+					$query3 = "SELECT SUM(r.qty) qty, r.po_number FROM purchase_requests r, purchase_items i ";
+					$query3 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($field)."' ";
+					$query3 .= "AND r.partid = '".$row2['partid']."' AND r.po_number = i.po_number AND i.id = '".$row2['purchase_item_id']."'; ";
+					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+					if (mysqli_num_rows($result3)>0) {
+						$r3 = mysqli_fetch_assoc($result3);
+						if ($r3['qty']>0) {
+							$row['totalOrdered'] = $r3['qty'];
+							$row['po_number'] = $r3['po_number'];
+						}
+					}
+
+					$row['totalReceived'] = $qty;
+				
+					// Grab actual available quantity for the requested component
+					$row['available'] = getAvailable($row['partid'], $item_id);
+					$row['pulled'] = getPulled($row['partid'], $item_id);
+
+					$cost = getInventoryCost($inventoryid);
+					$materials_total += $cost;
+
+//					$row['total'] = $total;
+
+					$purchase_requests[] = $row;
+				}
+//			}
+
 			//print_r($purchase_requests);
 
+/*
 			if(strtolower($type) == 'repair') {
 				// Also grab elements that were fulfilled by the in stock
 				$query = "SELECT *, SUM(i.qty) as totalReceived FROM repair_components c, inventory i ";
 				$query .= "WHERE c.ro_number = '".res($order_number)."' AND c.invid = i.id ";
 				$query .= "GROUP BY i.partid; ";
-
-				//echo $query;
-				$result = qdb($query) OR die(qe()); 
-
-				while ($row = $result->fetch_assoc()) {
-					if(!in_array_r($row['partid'] , $purchase_requests)) {
-						$purchase_requests[] = $row;
-					}
-				}
 			} else {
 				// Also grab elements that were fulfilled by the in stock
 				$query = "SELECT *, SUM(i.qty) as totalReceived FROM service_materials c, inventory i ";
 				$query .= "WHERE c.service_item_id = '".res($item_id)."' AND c.inventoryid = i.id ";
 				$query .= "GROUP BY i.partid; ";
+			}
+			$result = qdb($query) OR die(qe()); 
 
-				//echo $query;
-				$result = qdb($query) OR die(qe()); 
+			while ($row = $result->fetch_assoc()) {
+				if(!in_array_r($row['partid'] , $purchase_requests)) {
+					$cost = getInventoryCost($row['inventoryid']);
+					$materials_total += $cost;
 
-				while ($row = $result->fetch_assoc()) {
-					if(!in_array_r($row['partid'] , $purchase_requests)) {
-						$purchase_requests[] = $row;
-					}
+					$purchase_requests[] = $row;
 				}
 			}
+*/
 		} else if($type == 'service_quote') {
 			$query = "SELECT * FROM service_quote_materials WHERE $field = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
@@ -441,15 +474,6 @@
 				$materials_total += $row['quote'];
 			}
 		} 
-		//else if(strtolower($type) == 'service') {
-			// $query = "SELECT * FROM service_materials WHERE $field = ".res($item_id).";";
-			// $result = qdb($query) OR die(qe().' '.$query);
-
-			// while($row = mysqli_fetch_assoc($result)) {
-			// 	$purchase_requests[] = $row;
-			// 	$materials_total += $row['quote'];
-			// }
-		//}
 
 		return $purchase_requests;
 	}

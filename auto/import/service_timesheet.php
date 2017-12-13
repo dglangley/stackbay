@@ -47,7 +47,7 @@
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$mileage_rate = 0.54;
-	$query = "SELECT * FROM services_techtimesheet WHERE datetime_in >= '2017-01-01 00:00:00' ";
+	$query = "SELECT * FROM services_techtimesheet WHERE datetime_in >= '2016-01-01 00:00:00' ";
 //	$query .= "LIMIT 0,10 ";
 	$query .= "; ";
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
