@@ -220,7 +220,7 @@
 
 			if(! empty($_FILES)) {
 				if(! $_FILES['files']['error']) {
-					$BUCKET = 'arn:aws:s3:::ventel.stackbay.com-docs';
+					$BUCKET = 'ventel.stackbay.com-docs';
 
 					$name = $_FILES['files']['name'];
 					$temp_name = $_FILES['files']['tmp_name'];
@@ -236,12 +236,40 @@
 		//}
 	}
 
-	function addExpenses($expenses, $label = 'repair_item_id') {
-		foreach($expenses as $expense){
-			$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, amount, file, userid, datetime) VALUES (".res($item_id).", ".fres($label).", ".fres($expense['date']).", ".res($expense['techid']).", ".fres($expense['description']).", ".fres($expense['amount']).", '','".res($GLOBALS['now'])."');";
+	function addExpenses($expense, $label = 'service_item_id', $item_id) {
+		// echo $item_id . '<BR>';
+		// print_r($expense);
+		// foreach($expenses as $expense){
+			$query = '';
+			$mileage_rate = 0;
+
+			$date = date('Y-m-d', strtotime($expense['date']));
+
+			if($expense['type'] == 'Expense') {
+				$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, amount, file, userid, datetime, units) VALUES (".res($item_id).", ".fres($label).", ".fres($date).", ".fres($expense['description']).", ".fres($expense['amount']).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', 1);";
+			} else {
+				// Grab the mileage rate for the current service
+				$table = 'service_items';
+
+				if($label == 'repair_item_id') {
+					$table = 'repair_items';
+				}
+
+				$query = "SELECT mileage_rate FROM $table WHERE id = ".res($item_id).";";
+				$result = qdb($query) OR die(qe() . "<BR>" . $query);
+
+				if(mysqli_num_rows($result)) {
+					$r = mysqli_fetch_assoc($result);
+
+					$mileage_rate = $r['mileage_rate'];
+				}
+
+				// Miles instead
+				$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, units, file, userid, datetime, amount) VALUES (".res($item_id).", ".fres($label).", ".fres($date).", ".fres($expense['description']).", ".fres($expense['amount']).", '', ".res($expense['techid']).",'".res($GLOBALS['now'])."', ".fres($mileage_rate).");";
+			}
 			//echo $query;
 			qdb($query) OR die(qe().'<BR>'.$query);
-		}
+		// }
 	}
 
 	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
@@ -485,11 +513,12 @@
 				// Generate the $fileList array here using query
 				$fileList = array();
 				
-				zipFiles($filelist, $item_id, $item_label);
+				zipFiles($filelist, $service_item_id, $item_label);
 			}
 
 			if($expenses) {
-				addExpenses($expenses, $label);
+				addExpenses($expenses, $label, $service_item_id);
+				$tab = 'expenses';
 			}
 
 			// Editing a service task
