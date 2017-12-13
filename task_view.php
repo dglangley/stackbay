@@ -17,9 +17,10 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/newTimesheet.php';
-	include_once $_SERVER['ROOT_DIR']. '/inc/payroll.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getUsers.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';
 
 	function getInventoryCost($inventoryid) {
 
@@ -131,6 +132,7 @@
 			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
 			$outsourced = getOutsourced($item_id, $type);
 			$documentation_data = getDocumentation($item_id, 'service_item_id');
+			$expenses_data = getExpenses($item_id, 'service_item_id');
 
 			// print_r($documentation_data);
 
@@ -175,6 +177,11 @@
 					$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
 				}
 			}
+
+			foreach($expenses_data as $data) { 
+				$expenses_total += ($data['units'] * $data['amount']);
+			}
+
 		} else {
 			$new = true;
 		}
@@ -572,6 +579,19 @@
 		}
 
 		return $outsourced;
+	}
+
+	function getExpenses($item_id, $label) {
+		$expenses = array();
+
+		$query = "SELECT * FROM expenses WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($label).";";
+		$result = qdb($query) OR die(qe().' '.$query);
+
+		while($r = mysqli_fetch_assoc($result)){
+			$expenses[] = $r;
+		}
+
+		return $expenses;
 	}
 
 	// Creating an array for the current task based on total time spent per unique userid on the task
@@ -1514,6 +1534,8 @@ $assigned = true;
 													foreach($timesheet_data as $item) {
 														$userTimesheet = getTimesheet($item['userid']);
 
+														$totalSeconds += $userTimesheet[$item['id']]['REG_secs'] + $userTimesheet[$item['id']]['OT_secs'] + $userTimesheet[$item['id']]['DT_secs'];
+
 														$totalPay += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
 													}
 				                        	?>
@@ -1528,7 +1550,7 @@ $assigned = true;
 															<?= format_date($data['end_datetime'],'D, M j, Y g:ia'); ?>
 						                                </td>
 						                                <td>
-															<?=toTime($data['laborSeconds']);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($data['laborSeconds']));?></span>
+															<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
 						                                </td>
 						                                <td class="text-right">
 						                                	<?php if($manager_access){ ?>
@@ -1867,6 +1889,17 @@ $assigned = true;
 											</thead>
 
 											<tbody>
+												<?php foreach($expenses_data as $data) { ?>
+													<tr>
+														<td><?=format_date($data['expense_date']);?></td>
+														<td><?=getUser($data['userid']);?></td>
+														<td><?=getCategory($data['categoryid']);?></td>
+														<td class="col-units hidden"></td>
+														<td><?=format_price($data['units'] * $data['amount']);?></td>
+														<td><?=$data['description'];?></td>
+														<td><?=($data['reimbursement'] ? 'Yes' : '')?></td>
+													</tr>
+												<?php } ?>
 												<tr>
 													<td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
@@ -1900,7 +1933,7 @@ $assigned = true;
 															<span class="input-group-addon">										                
 																<i class="fa fa-usd" aria-hidden="true"></i>										            
 															</span>										            
-															<input class="form-control input-sm part_amount" type="text" name="expense[amount]" placeholder="0.00" value="">
+															<input class="form-control input-sm part_amount" type="text" name="expenses[amount]" placeholder="0.00" value="">
 														</div>
 													</td>
 													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
