@@ -32,7 +32,7 @@
 		$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, ";
 		$query .= "categoryid, units, amount, file, userid, datetime) ";
 		$query .= "VALUES (".fres($item_id).", ".fres($item_id_label).", NULL, ".fres($expense_date).", ";
-		$query .= "'Mileage Reimbursement', 1, ".fres($mileage).", ".fres($mileage_rate).", NULL, ".fres($userid).", ".fres($datetime)."); ";
+		$query .= "'Mileage Reimbursement', 91, ".fres($mileage).", ".fres($mileage_rate).", NULL, ".fres($userid).", ".fres($datetime)."); ";
 		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 	}

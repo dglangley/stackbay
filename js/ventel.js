@@ -849,6 +849,7 @@
 		$(".contact-selector").selectize('/json/contacts.php','- Select a Contact -');
 		$(".class-selector").selectize('/json/classes.php','- All Classes -');
 		$(".user-selector").selectize('/json/users.php','- User -');
+		$(".category-selector").selectize('/json/categories.php','- Category -');
 
 		$('.parts-selector').select2({
 			width: '100%',

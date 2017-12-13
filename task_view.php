@@ -770,6 +770,7 @@
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	$assigned = false;
+$assigned = true;
 	if ($item_id AND $item_id_label) {
 		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($userid)."';";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
@@ -1808,7 +1809,7 @@
 														<input class="form-control input-sm" class="mileage_rate" name="expenses" type="text" placeholder="Price" value="<?=number_format((float)$item_details['expenses'], 2, '.', '');?>">
 													</div>
 												<?php } else { ?>
-													<b>Mileage Rate</b>: <span class="mileage_rate"><?=format_price($item_details['mileage_rate']);?></span>
+													<b>Mileage Rate</b>: <span class="mileage_rate" data-rate="<?=$item_details['mileage_rate'];?>"><?=format_price($item_details['mileage_rate']);?></span>
 												<?php } ?>
 											</div>
 											<div class="col-sm-6">
@@ -1816,12 +1817,15 @@
 									        </div>
 										</div>
 
-										<div class="table-responsive"><table class="table table-striped">
+										<div class="table-responsive"><table class="table table-striped table-condensed">
 											<thead class="table-first">
-												<th class="col-md-2">Date/Time</th>
+												<th class="col-md-2">Expense Date</th>
 												<th class="col-md-2">User</th>
-												<th class="col-md-5">Notes</th>
-												<th class="col-md-2">Amount</th>
+												<th class="col-md-2">Category</th>
+												<th class="col-md-1 th-units hidden">Miles</th>
+												<th class="col-md-1 th-amount">Amount</th>
+												<th class="col-md-2">Notes</th>
+												<th class="col-md-1">Reimbursement?</th>
 												<th class="col-md-1">Action</th>
 											</thead>
 
@@ -1830,7 +1834,7 @@
 													<td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
 															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																<input type="text" name="expense[date]" class="form-control input-sm" value="">										            
+																<input type="text" name="expense[date]" class="form-control input-sm" value="<?= format_date($today,'n/j/Y'); ?>">
 																<span class="input-group-addon">										                
 																	<span class="fa fa-calendar"></span>										            
 																</span>										        
@@ -1838,10 +1842,23 @@
 														</div>																		
 													</td>
 													<td>
-					                            		<select name="expense[techid]" class="form-control input-xs user-selector required"></select>
+					                            		<select name="expense[techid]" class="form-control input-xs user-selector required">
+															<?php if ($assigned) { echo '<option value="'.$U['id'].'" selected>'.$U['name'].'</option>'; } ?>
+														</select>
 				                            		</td>
-													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
 													<td>
+														<select name="expense[categoryid]" class="form-control input-xs category-selector required">
+														</select>
+				                            		</td>
+													<td class="col-units hidden">
+														<div class="input-group">
+															<span class="input-group-addon">
+																<i class="fa fa-car" aria-hidden="true"></i>
+															</span>
+															<input class="form-control input-sm units_amount" type="text" name="expense[units]" placeholder="0" value="">
+														</div>
+													</td>
+													<td class="col-amount">
 														<div class="input-group">													
 															<span class="input-group-addon">										                
 																<i class="fa fa-usd" aria-hidden="true"></i>										            
@@ -1849,6 +1866,10 @@
 															<input class="form-control input-sm part_amount" type="text" name="expense[amount]" placeholder="0.00" value="">
 														</div>
 													</td>
+													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
+													<td class="text-center col-reimbursement">
+														<input type="checkbox" class="" class="expense[reimbursement]" value="1" data-userset="">
+				                            		</td>
 													<td style="cursor: pointer;">
 														<button class="btn btn-success btn-sm btn-status pull-right" type="submit">
 												        	<i class="fa fa-plus"></i>	
@@ -2025,5 +2046,48 @@
 
 		<script src="js/addresses.js?id=<?php echo $V; ?>"></script>
 		<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$(".category-selector").on('change',function() {
+			var cid = $(this).val();
+
+			if (cid==91) {//mileage
+				$(".th-units, .col-units").removeClass('hidden');
+				// set mileage units to 0
+				$(".col-units").find(".units_amount").each(function() {
+					$(this).val(0);
+				});
+				// set amount to mileage rate on this task, and set it to read-only since this is not a user option
+				$(".col-amount").find(".part_amount").each(function() {
+					$(this).val($(".mileage_rate").data('rate'));
+					$(this).attr('readonly',true);
+				});
+				$(".col-reimbursement").find("input[type=checkbox]").each(function() {
+					$(this).prop('checked',true);
+				});
+			} else {
+				$(".th-units, .col-units").removeClass('hidden').addClass('hidden');
+				// default units to 1 for all normal expenses
+				$(".col-units").find(".units_amount").each(function() {
+					$(this).val(1);
+				});
+				// reset amount to user-editable and zero'd out
+				$(".col-amount").find(".part_amount").each(function() {
+					$(this).val('');
+					$(this).attr('readonly',false);
+				});
+				$(".col-reimbursement").find("input[type=checkbox]").each(function() {
+					if ($(this).data('userset')!='1') { $(this).prop('checked',false); }
+				});
+			}
+		});
+		$(".col-reimbursement").find("input[type=checkbox]").click(function(e) {
+			// true click and not programmatic event; this is to store record of the fact that the user
+			// clicked the checkbox so we don't want to programmatically change it above
+			if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
+		});
+	});
+</script>
 	</body>
 </html>

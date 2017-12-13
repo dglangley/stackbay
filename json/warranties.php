@@ -15,6 +15,9 @@
 		$query .= "LEFT JOIN purchase_items pi ON w.id = pi.warranty ";
 		$query .= "LEFT JOIN purchase_orders po ON pi.po_number = po.po_number ";
 	}
+	$query .= "WHERE 1 = 1 ";
+	if ($q) { $query .= "AND warranty RLIKE '".res($q)."' "; }
+	if ($companyid) { $query .= "AND po.companyid = '".res($companyid)."' "; }
 	$query .= "GROUP BY w.id ORDER BY ";
 	if ($companyid) { $query .= "n DESC, "; }
 	$query .= "IF(days>0,0,1), days ASC; ";
