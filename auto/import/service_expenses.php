@@ -50,11 +50,20 @@
         $datetime = $expense['timestamp'];
 
         // Insert into Service Orders
-        $query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, units, amount, userid, datetime) ";
-        $query .= "VALUES (".fres($item_id).",".fres($item_id_label).",".fres($companyid).",".fres($expense_date).",".fres($description).",".fres($catergoryid).", 1,".fres($amount).",".fres($userid).",".fres($datetime);
+        $query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, units, amount, userid, datetime, reimbursement) ";
+        $query .= "VALUES (".fres($item_id).",".fres($item_id_label).",".fres($companyid).",".fres($expense_date).",".fres($description).",".fres($catergoryid).", 1,".fres($amount).",".fres($userid).",".fres($datetime).",".res($expense['reimburse']);
         $query .= "); ";
+
         qdb($query) OR die(qe().'<BR>'.$query);
         $expense_id = qid();
+
+        if($expense['reimbursed']) {
+            $query = "INSERT INTO reimbursements (expense_id, datetime, amount) ";
+            $query .= "VALUES (".fres($expense_id).",".fres($expense['reimbursed_date']).",".fres($amount);
+            $query .= "); ";
+
+            qdb($query) OR die(qe().'<BR>'.$query);
+        }
 
 echo $query.'<BR>';
 
