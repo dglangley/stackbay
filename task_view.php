@@ -18,6 +18,19 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
 
+	include_once $_SERVER['ROOT_DIR'].'/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR']. '/inc/payroll.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
+
+	// Object created for payroll to calculate OT and DT
+	// These are needed to operate Payroll correctly
+	$payroll = new Payroll;
+
+	$payroll->setHours(336);
+
+	$currentPayroll = $payroll->getCurrentPeriodStart();
+	$currentPayrollEnd = $payroll->getCurrentPeriodEnd();
+
 	// List of subcategories
 	$documentation = true;
 	$details = true;
@@ -138,8 +151,16 @@
 
 			getLaborTime($item_id, $type);
 
-			foreach ($labor_data as $cost) {
-				$labor_cost += $cost['cost'];
+			foreach ($labor_data as $user => $cost) {
+				//$labor_cost += $cost['cost'];
+
+				$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
+
+				foreach($timesheet_data as $item) {
+					$userTimesheet = getTimesheet($item['userid']);
+
+					$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+				}
 			}
 		} else {
 			$new = true;
@@ -184,9 +205,17 @@
 		$component_data = getMaterials($order_number, $item_id, $type);
 		getLaborTime($item_id, $type);
 
-		foreach ($labor_data as $cost) {
-			$labor_cost += $cost['cost'];
-		}
+		foreach ($labor_data as $user => $cost) {
+				//$labor_cost += $cost['cost'];
+
+				$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
+
+				foreach($timesheet_data as $item) {
+					$userTimesheet = getTimesheet($item['userid']);
+
+					$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+				}
+			}
 
 		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 
@@ -631,39 +660,39 @@
 		return $available;
 	}
 
-	function toTime($secs) {
-		// given $secs seconds, what is the time g:i:s format?
-		$hours = floor($secs/3600);
+	// function toTime($secs) {
+	// 	// given $secs seconds, what is the time g:i:s format?
+	// 	$hours = floor($secs/3600);
 
-		// what are the remainder of seconds after taking out hours above?
-		$secs -= ($hours*3600);
+	// 	// what are the remainder of seconds after taking out hours above?
+	// 	$secs -= ($hours*3600);
 
-		$mins = floor($secs/60);
+	// 	$mins = floor($secs/60);
 
-		$secs -= ($mins*60);
+	// 	$secs -= ($mins*60);
 
-		return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
-	}
+	// 	return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
+	// }
 
-	function timeToStr($time) {
-		$t = explode(':',$time);
-		$hours = $t[0];
-		$mins = $t[1];
-		if (! $mins) { $mins = 0; }
-		$secs = $t[2];
-		if (! $secs) { $secs = 0; }
+	// function timeToStr($time) {
+	// 	$t = explode(':',$time);
+	// 	$hours = $t[0];
+	// 	$mins = $t[1];
+	// 	if (! $mins) { $mins = 0; }
+	// 	$secs = $t[2];
+	// 	if (! $secs) { $secs = 0; }
 
-		//$days = floor($hours/24);
-		//$hours -= ($days*24);
+	// 	//$days = floor($hours/24);
+	// 	//$hours -= ($days*24);
 
-		$str = '';
-		//if ($days>0) { $str .= $days.'d, '; }
-		if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
-		if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
-		if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
+	// 	$str = '';
+	// 	//if ($days>0) { $str .= $days.'d, '; }
+	// 	if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
+	// 	if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
+	// 	if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
 
-		return ($str);
-	}
+	// 	return ($str);
+	// }
 
 	function accessControl($userid, $item_id, $label){
 		global $quote;
@@ -1120,7 +1149,7 @@
 							$profit = false;
 							$charge = false;
 						?>
-						<?php if(in_array("4", $USER_ROLES)){ ?>
+						<?php if($manager_access){ ?>
 							<br>
 							<!-- Cost Dash for Management People Only -->
 							<?php
@@ -1187,21 +1216,21 @@
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o fa-lg"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.((in_array("4", $USER_ROLES)) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							}
 							if($images) {
 								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-image-o fa-lg" aria-hidden="true"></i> Images</span><span class="hidden-md hidden-lg"><i class="fa fa-file-image-o fa-2x"></i></span></a></li>';
 							} ?>
-							<?php if(in_array("4", $USER_ROLES)){ ?>
+							<?php if($manager_access){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
 							<?php } ?>
 						</ul>
@@ -1435,7 +1464,7 @@
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
 				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
 				                                <th class="col-sm-2 text-right">
-				                                	<?php if(in_array("4", $USER_ROLES)){ ?>
+				                                	<?php if($manager_access){ ?>
 					                                    <span class="line"></span> Cost
 				                                	<?php } ?>
 					                            </th>
@@ -1450,10 +1479,19 @@
 				                        <tbody>
 				                        	<?php 
 				                        		$totalSeconds = 0;
-				                        		if(! $quote && ! $new):
+				                        		if(! $quote AND ! $new):
 				                        		foreach($labor_data as $user => $data) { 
 													//$cost = round($rate * $hours_worked, 2);
 													$totalSeconds += $data['laborSeconds'];
+													$totalPay = 0;
+
+													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
+
+													foreach($timesheet_data as $item) {
+														$userTimesheet = getTimesheet($item['userid']);
+
+														$totalPay += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+													}
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
@@ -1469,13 +1507,13 @@
 															<?=toTime($data['laborSeconds']);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($data['laborSeconds']));?></span>
 						                                </td>
 						                                <td class="text-right">
-						                                	<?php if(in_array("4", $USER_ROLES)){ ?>
-																<?=format_price($data['cost']);?>
+						                                	<?php if($manager_access){ ?>
+																<?=format_price($totalPay);?>
 															<?php } ?>
 						                                </td>
 <!--
 						                                <td class="text-center">
-						                                	<?php if(in_array("4", $USER_ROLES) && $data['status']){ ?>
+						                                	<?php if($manager_access && $data['status']){ ?>
 							                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
 														        	<i class="fa fa-trash" aria-hidden="true"></i>
 														        </button>
@@ -1490,7 +1528,7 @@
 				                        		endif;
 				                        	?>
 
-				                            <?php if(in_array("4", $USER_ROLES)){ ?>
+				                            <?php if($manager_access){ ?>
 					                            <tr>
 					                            	<td>
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
@@ -1514,14 +1552,14 @@
 					                            	<td>
 												    </td>
 					                            	<td class="text-right">
-					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote && empty($task_number)) ? 'disabled' : '');?>>
+					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote AND empty($task_number)) ? 'disabled' : '');?>>
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 													</td>
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
-				                            <?php if(in_array("4", $USER_ROLES) AND $labor_total>0){ ?>
+				                            <?php if($manager_access AND $labor_total>0){ ?>
 											<?php
 												$labor_profit = ($labor_total-$labor_cost);
 												$labor_progress = 100*round(($labor_cost/$labor_total),2);
@@ -1762,7 +1800,7 @@
 		                                            <?php } ?>
 													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 														<strong><?=($quote ? 'Quote' : '');?>
-														<?=(in_array("4", $USER_ROLES) ? 'Total:</strong> <span class="materials_cost">'.format_price($materials_total).'</span>' : '</strong>');?>
+														<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($materials_total).'</span>' : '</strong>');?>
 													</td>
 												</tr>
 											</tbody>

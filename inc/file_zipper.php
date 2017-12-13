@@ -1,10 +1,12 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 	// Files is an array of files
 	// $files = array('readme.txt', 'test.html', 'image.gif');
 
 	function zipFiles($filelist, $item_id, $item_label) {
 		// Location of said files
-		$BUCKET = 'arn:aws:s3:::ventel.stackbay.com-docs';
+		$BUCKET = 'ventel.stackbay.com-docs';
 
 		$dirlist = new RecursiveDirectoryIterator($BUCKET);
 
@@ -46,6 +48,14 @@
 
 		// closes the archive
 		$zip->close();
+
+		// Save the zip file into the preset $BUCKET above
+		$zip_url = saveFile($file);
+
+		// $query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
+
+		$query = "INSERT INTO service_docs (item_label, filename, datetime, userid, type) VALUES (".fres($item_label).", ".fres($file).", ".fres($GLOBALS['now']).", 'COP');";
+		qdb($query) OR die(qe() . "<BR>" . $query);
 
 		// Makes the user download the zipped files
 		// header('Content-Type: application/zip');
