@@ -220,7 +220,7 @@
 
 			if(! empty($_FILES)) {
 				if(! $_FILES['files']['error']) {
-					$BUCKET = 'arn:aws:s3:::ventel.stackbay.com-docs';
+					$BUCKET = 'ventel.stackbay.com-docs';
 
 					$name = $_FILES['files']['name'];
 					$temp_name = $_FILES['files']['tmp_name'];
@@ -236,12 +236,38 @@
 		//}
 	}
 
-	function addExpenses($expenses, $label = 'repair_item_id') {
-		foreach($expenses as $expense){
-			$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, amount, file, userid, datetime) VALUES (".res($item_id).", ".fres($label).", ".fres($expense['date']).", ".res($expense['techid']).", ".fres($expense['description']).", ".fres($expense['amount']).", '','".res($GLOBALS['now'])."');";
-			//echo $query;
+	function addExpenses($expense, $label = 'service_item_id', $item_id) {
+			$units = 1;
+			if ($expense['units']>0) { $units = $expense['units']; }
+			$amount = $expense['amount'];
+
+			$reimburse = 0;
+			if ($expense['reimbursement']>0) { $reimburse = $expense['reimbursement']; }
+
+			$date = date('Y-m-d', strtotime($expense['date']));
+
+			$categoryid = $expense['categoryid'];
+			if ($categoryid==91) {
+				$table = 'service_items';
+
+				if($label == 'repair_item_id') { $table = 'repair_items'; }
+
+				$query = "SELECT mileage_rate FROM $table WHERE id = ".res($item_id).";";
+				$result = qdb($query) OR die(qe() . "<BR>" . $query);
+
+				if(mysqli_num_rows($result)) {
+					$r = mysqli_fetch_assoc($result);
+
+					$amount = $r['mileage_rate'];
+				}
+			}
+
+			$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, categoryid, ";
+			$query .= "units, amount, file, userid, datetime, reimbursement) ";
+			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
+			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."');";
+
 			qdb($query) OR die(qe().'<BR>'.$query);
-		}
 	}
 
 	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
@@ -337,7 +363,7 @@
 
 	$materials = array();
 	$outsourced = array();
-	$expenses = array();
+	$add_expense = array();
 	$search = array();
 	$documentation = array();
 	$copZip = array();
@@ -385,6 +411,7 @@
 	if (isset($_REQUEST['labor_rate'])) { $labor_rate = trim($_REQUEST['labor_rate']); }
 
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
+	if (isset($_REQUEST['expense'])) { $add_expense = $_REQUEST['expense']; }
 
 	if (isset($_REQUEST['activity_notification'])) { $activity_notification = $_REQUEST['activity_notification']; }
 
@@ -485,11 +512,12 @@
 				// Generate the $fileList array here using query
 				$fileList = array();
 				
-				zipFiles($filelist, $item_id, $item_label);
+				zipFiles($filelist, $service_item_id, $item_label);
 			}
 
-			if($expenses) {
-				addExpenses($expenses, $label);
+			if($add_expense) {
+				addExpenses($add_expense, $label, $service_item_id);
+				$tab = 'expenses';
 			}
 
 			// Editing a service task
