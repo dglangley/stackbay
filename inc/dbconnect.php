@@ -19,6 +19,13 @@
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
 //	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
+	// debugging:
+	// 0 = all queries executed
+	// 1 = echo INSERT/REPLACE/UPDATE/DELETE, but NO EXECUTION
+	// 2 = echo INSERT/REPLACE/UPDATE/DELETE, AND execute
+	// 3 = echo ALL queries, but NO EXECUTION
+	if (! isset($DEBUG)) { $DEBUG = 0; }
+
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db'], $WLI_GLOBALS['RDS_PORT']);
 	if (mysqli_connect_errno($WLI)) {
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
@@ -27,7 +34,19 @@
 	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
 	function qar($db_connection='WLI') { return (mysqli_affected_rows($GLOBALS[$db_connection])); }
 	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
-	function qedb($query){return(qdb($query) or die(qe()." | ".$query." | ")); }
+	function qedb($query,$db_connection='WLI') {
+		$DEBUG = $GLOBALS['DEBUG'];
+
+		$executor = preg_match('/INSERT|REPLACE|UPDATE|DELETE/',$query);
+
+		if (($executor AND $DEBUG) OR $DEBUG==3) { echo $query.'<BR>'; }
+
+		if ($DEBUG==0 OR $DEBUG==2 OR ! $executor) {
+			return(qdb($query,$db_connection) OR die(qe($db_connection)."<BR>".$query));
+		} else {
+			return false;
+		}
+	}
 	function res($str,$db_connection='WLI') { return (mysqli_real_escape_string($GLOBALS[$db_connection],$str)); }
 	function fres($str,$repl_str = "NULL",$db_connection='WLI') {
 		$str = trim($str);
@@ -336,5 +355,5 @@
 	}
 
 	// version control for css and js includes
-	$V = '20171114';
+	$V = '20171115';
 ?>

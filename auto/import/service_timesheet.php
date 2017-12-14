@@ -30,9 +30,9 @@
 		$expense_date = substr($datetime,0,10);
 
 		$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, ";
-		$query .= "categoryid, units, amount, file, userid, datetime) ";
+		$query .= "categoryid, units, amount, file, userid, datetime, reimbursement) ";
 		$query .= "VALUES (".fres($item_id).", ".fres($item_id_label).", NULL, ".fres($expense_date).", ";
-		$query .= "'Mileage Reimbursement', 91, ".fres($mileage).", ".fres($mileage_rate).", NULL, ".fres($userid).", ".fres($datetime)."); ";
+		$query .= "'Mileage Reimbursement', 91, ".fres($mileage).", ".fres($mileage_rate).", NULL, ".fres($userid).", ".fres($datetime).", 1); ";
 		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 	}
@@ -43,7 +43,10 @@
 	$query = "DELETE FROM maps_timesheet; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-	$query = "DELETE FROM expenses; ";
+	$query = "TRUNCATE expenses; ";
+	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
+	$query = "TRUNCATE reimbursements; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$mileage_rate = 0.54;
