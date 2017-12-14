@@ -1525,8 +1525,8 @@ $assigned = true;
 				                        		$totalSeconds = 0;
 				                        		if(! $quote AND ! $new):
 				                        		foreach($labor_data as $user => $data) { 
-													//$cost = round($rate * $hours_worked, 2);
-													$totalSeconds += $data['laborSeconds'];
+													// $cost = round($rate * $hours_worked, 2);
+													// $totalSeconds += $data['laborSeconds'];
 													$totalPay = 0;
 
 													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
