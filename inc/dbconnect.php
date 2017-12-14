@@ -42,7 +42,8 @@
 		if (($executor AND $DEBUG) OR $DEBUG==3) { echo $query.'<BR>'; }
 
 		if ($DEBUG==0 OR $DEBUG==2 OR ! $executor) {
-			return(qdb($query,$db_connection) OR die(qe($db_connection)."<BR>".$query));
+			$result = qdb($query,$db_connection) OR die(qe($db_connection)."<BR>".$query);
+			return ($result);
 		} else {
 			return false;
 		}

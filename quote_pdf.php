@@ -44,6 +44,7 @@
             }
         }
 
+		$total = 0;
      //print "<pre>".print_r($row,true)."</pre>";
         $list_qty = 1;
         if (isset($_REQUEST['search_qtys'][$ln]) AND is_numeric($_REQUEST['search_qtys'][$ln]) AND $_REQUEST['search_qtys'][$ln]>0) { $list_qty = trim($_REQUEST['search_qtys'][$ln]); }
@@ -75,6 +76,8 @@
             if ($submit_type=='availability' && isset($bid_qty[$ln])) { $response_qty = $bid_qty[$ln]; }
             if ($submit_type=='availability' && isset($bid_price[$ln])) { $response_price = $bid_price[$ln]; }
 
+			$total += ($response_qty*$response_price);
+
             if ($response_qty>0) {
                 $quote_str .= ' qty '.$response_qty.'- '.getPart($partid).' '.format_price($response_price);
                 if ($response_qty>1) { $quote_str .= ' ea'; }
@@ -89,6 +92,10 @@
             $display_html .= $quote_html;
         }
     }
+
+	$display_html .= '<tr style=""><td class="text-left"></td><td class="text-left"></td>'.
+		'<td></td><td class="text-right" style="padding-top:40px">TOTAL</td>'.
+		'<td class="text-right" style="padding-top:40px">'.format_price($total,2).'</td></tr>';
 
     if ($display_str) {
         if ($submit_type=='demand') { $display_str = 'We have the following available:'.chr(10).chr(10).$display_str; }
@@ -210,7 +217,7 @@
             }
         </style>
     </head>
-    <body>
+    <body style="width:1024px; margin-left:auto; margin-right:auto">
         <div id="ps_bold">
             <h3>Sales Quote <?=$_REQUEST['metaid'];?></h3>
             <table class="table-full" id="vendor_add">
@@ -239,6 +246,15 @@
     <?=$display_html;?>
         
     <div id="footer">
+
+<h4 style="margin-top:200px">Terms & Conditions</h4>
+<p>By entering into a business transaction with Ventura Telephone LLC, you are agreeing to the following terms:</p>
+
+<p>Ventura Telephone LLC ("VenTel") provides a limited warranty ("Warranty") against defects, as related to the functionality of the item, that occur within the established term of the Warranty, as described in the aforementioned Warranty options (Premium, Plus or Economy). The term of the Warranty begins on the date as printed on VenTel's invoice(s).</p>
+
+<p>The Warranty also covers physical damage, only if discovered and reported to VenTel within five (5) business days from the delivery date, and so long as such claims can be established as pre-existing conditions prior to shipment. VenTel offers no insurance on damage to products during shipping transit, and VenTel is released from all liability of such damage to products after they leave VenTel's possession. Freight charges are not eligible for a credit or refund, or any other form of reimbursement, in the case a product is covered under this Warranty.</p>
+
+<p>Software licensing or similar compatibility problems (ie, software/firmware version mismatch) are not covered under this Warranty. Products covered under the Warranty can be replaced, credited or refunded at VenTel's sole discretion. RMA or order cancellation requests not covered under the Warranty can, and will be, declined at VenTel's sole discretion, and such items remain billable in full (or subject to a Restocking Fee at VenTel's sole discretion). VenTel reserves the right to require documentation of equipment defect to determine Warranty eligibility.</p>
 
     </div>
     
