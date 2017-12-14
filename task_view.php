@@ -1468,7 +1468,7 @@ $assigned = true;
 												</tr>
 											</tbody>
 										</table></div>
-										<button class="btn btn-success btn-sm pull-right" type="submit">
+										<button class="btn btn-success btn-sm pull-right" name="closeout" value="true" type="submit">
 								        	Generate Closeout
 								        </button>
 								        <br>
