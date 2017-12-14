@@ -4,6 +4,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
 
 	// If true then the user is an admin
 	// If not only display what the user has requested
@@ -21,7 +22,8 @@
 	} else {
 		$userid = $U['id'];
 	}
-	$userid = $U['id'];
+
+	//$userid = $U['id'];
 
 	function getExpenses($userid, $user_admin = false, $filter = '') {
 		$expenses = array();
@@ -56,7 +58,7 @@
 				$expenses[] = $r;
 			}
 		}
-
+//echo $query;
 		return $expenses;
 	}
 
@@ -116,7 +118,7 @@
 		return $unique_id;
 	}
 
-	$expense_data = ($userid ? getExpenses($userid, $user_admin, $taskid) : getExpenses($GLOBALS['U']['id'], $user_admin, $taskid));
+	$expense_data = getExpenses($userid, $user_admin, $taskid);
 	
 ?>
 
@@ -221,24 +223,66 @@
 					<thead>
 						<tr>
 							<th class="col-md-1">#</th>
-							<th class="col-md-1">USER</th>
 							<th class="col-md-1">Expense Date</th>
-							<th class="col-md-3">DESCRIPTION</th>
+							<th class="col-md-1">USER</th>
 							<th class="col-md-1">TASK#</th>
-							<th class="col-md-2">AMOUNT</th>
-							<th class="col-md-2">RECEIPT</th>
+							<th class="col-md-3">Category</th>
+							<th class="col-md-1">AMOUNT</th>
+							<th class="col-md-2">NOTES</th>
+							<th class="col-md-1">RECEIPT</th>
 							<th class="col-md-1">STATUS</th>
 						</tr>
 					</thead>
 					<tbody>
+						<?php if($userid) { ?>
+							<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
+								<tr>
+									<td><input type="hidden" name="userid" value="<?=$userid;?>"></td>
+									<td>
+										<div class="form-group" style="margin-bottom: 0;">
+							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="" data-hposition="right">
+			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="">
+			   	        		       			 <span class="input-group-addon">
+						       		                 <span class="fa fa-calendar"></span>
+			   	    					         </span>
+											</div>
+										</div>
+									</td>
+									<td><?=getUser($userid);?></td>
+									<td>General Use</td>
+									<td>
+										<select name="categoryid" class="form-control input-xs category-selector required">
+										</select>
+									</td>
+									<td>
+										<div class="input-group">
+						                    <span class="input-group-addon">$</span>
+						                    <input class="form-control input-sm" type="text" name="amount" placeholder="0.00" id="new_item_price" value="">
+						                </div>
+									</td>
+									<td><input type="text" class="form-control input-sm" name="description"></td>
+									<td class="file_container">
+										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
+										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+										<a href="#" class="upload_link btn btn-default btn-sm">
+											<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
+										</a>
+									</td>
+									<td>
+										<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-plus" aria-hidden="true"></i></button>
+									</td>
+								</tr>
+							</form>
+						<?php } ?>
 						<?php $counter = 1; foreach($expense_data as $list): ?>
 							<tr class="<?=(getStatus($list['id']) ? 'complete' : 'active')?> expense_item" style="<?=(getStatus($list['id']) ? 'display:none;' : '')?>">
 								<td><?=$counter;?></td>
-								<td><?=getUser($list['userid']);?></td>
 								<td><?=format_date($list['expense_date']);?></td>
-								<td><?=$list['description'];?></td>
+								<td><?=getUser($list['userid']);?></td>
 								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
+								<td><?=getCategory($list['categoryid']);?></td>
 								<td><?=format_price($list['units']*$list['amount']);?></td>
+								<td><?=$list['description'];?></td>
 								<td class="file_container">
 									<?php
 										if ($list['file']) {
@@ -260,42 +304,6 @@
 								</td>
 							</tr>
 						<?php $counter++; endforeach; ?>
-						<?php if($userid) { ?>
-							<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
-								<tr>
-									<td></td>
-									<td><?=$GLOBALS['U']['name']?></td>
-									<td>
-										<div class="form-group" style="margin-bottom: 0;">
-							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="11/09/2017" data-hposition="right">
-			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="">
-			   	        		       			 <span class="input-group-addon">
-						       		                 <span class="fa fa-calendar"></span>
-			   	    					         </span>
-											</div>
-										</div>
-									</td>
-									<td><input type="text" class="form-control input-sm" name="description"></td>
-									<td>General Use</td>
-									<td>
-										<div class="input-group">
-						                    <span class="input-group-addon">$</span>
-						                    <input class="form-control input-sm" type="text" name="amount" placeholder="0.00" id="new_item_price" value="">
-						                </div>
-									</td>
-									<td class="file_container">
-										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
-										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
-										<a href="#" class="upload_link btn btn-default btn-sm">
-											<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
-										</a>
-									</td>
-									<td>
-										<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-plus" aria-hidden="true"></i></button>
-									</td>
-								</tr>
-							</form>
-						<?php } ?>
 					</tbody>
 		        </table>
 			</div>

@@ -502,7 +502,7 @@
 
 		if(strtolower($type) == 'service') {
 			// If Documentation
-			if($documentation) {
+			if($documentation AND $documentation['notes']) {
 				addDocs($documentation, $service_item_id, $label);
 				$tab = 'documentation';
 			}

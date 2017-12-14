@@ -1933,7 +1933,7 @@ $assigned = true;
 															<span class="input-group-addon">										                
 																<i class="fa fa-usd" aria-hidden="true"></i>										            
 															</span>										            
-															<input class="form-control input-sm part_amount" type="text" name="expenses[amount]" placeholder="0.00" value="">
+															<input class="form-control input-sm part_amount" type="text" name="expense[amount]" placeholder="0.00" value="">
 														</div>
 													</td>
 													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>

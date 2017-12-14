@@ -34,10 +34,12 @@
 		}
 	}
 
-	function addExpense($expenseDate, $description, $amount) {
-		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime) ";
-		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",".fres($file).",".fres($GLOBALS['U']['id']).",".fres($GLOBALS['now']).");";
+	function addExpense($expenseDate, $description, $amount, $userid, $categoryid) {
+		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, units) ";
+		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",".fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", 1);";
 		qdb($query) OR die(qe() . ' ' . $query);
+
+		// echo $query;
 
 		$expense_id = qid();
 
@@ -67,19 +69,24 @@
 	// These values are for the expenses add feature on the expenses page
 	$expenseDate = '';
 	$description = '';
+	$categoryid = 0;
 	$amount = 0;
+	$userid = 0;
 
 	if (isset($_REQUEST['expenses'])) { $expenses_list = $_REQUEST['expenses']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+
+	if (isset($_REQUEST['categoryid'])) { $categoryid = $_REQUEST['categoryid']; }
+	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }
 
 	if (isset($_REQUEST['expenseDate'])) { $expenseDate = $_REQUEST['expenseDate']; }
 	if (isset($_REQUEST['description'])) { $description = $_REQUEST['description']; }
 	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
 
 	if($type == 'add_expense') {
-		addExpense($expenseDate, $description, $amount);
+		addExpense($expenseDate, $description, $amount, $userid, $categoryid);
 
-		header('Location: /expenses.php?user='.$GLOBALS['U']['id']);
+		header('Location: /expenses.php?user='.$userid);
 		exit;
 	} else {
 		editExpense($expenses_list, $type);
