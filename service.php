@@ -12,6 +12,7 @@
 	// $cco = isset($_REQUEST['cco']) ? true : false;
 
 	$type = isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Service';
+	$type = ucwords($type);
 	$order_number_details = (isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '');
 	$task_edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
 	$tab = (isset($_REQUEST['tab']) ? $_REQUEST['tab'] : ''); 
@@ -27,7 +28,7 @@
 	 	$task_number = 1;
 	}
 
-	$ORDER = getOrder($order_number, ucwords($type));
+	$ORDER = getOrder($order_number, $type);
 	
 	if($ORDER['classid']) {
 		$service_class = getServiceClass($ORDER['classid']);

@@ -379,7 +379,7 @@
 							</li>
 						</ul>
 					</div>
-				<?php } else if($o['type'] == 'Repair' && $order_number!='New') { ?>
+				<?php } else if($o['type'] == 'Repair' && $order_number!='New' && $ticketStatus) { ?>
 					<form id="repair_ship" action="repair_shipping.php" method="POST" style="display:inline">
 						<div class ="btn-group">
 							<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">

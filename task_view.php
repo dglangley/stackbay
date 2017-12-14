@@ -1103,7 +1103,7 @@ $assigned = true;
 					<?php } else if($task_edit) { ?>
 						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 					<?php } else if(! $ticketStatus) { ?>
-						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
+						<button class="btn btn-success btn-md btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
 						</button>
 					<?php } else if($manager_access AND strtolower($type) == 'service') { ?>
