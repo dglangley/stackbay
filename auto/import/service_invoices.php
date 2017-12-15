@@ -151,14 +151,16 @@
 	$query = "DELETE FROM maps_invoice; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-	function setInvoiceItem($invoice_no, $partid, $memo, $qty, $amount, $line_number, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $warranty) {
+	function setInvoiceItem($invoice_no, $item_id, $memo, $qty, $amount, $line_number, $task_id, $task_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $warranty) {
 		$debug = $GLOBALS['debug'];
 
 		$memo = utf8_encode(trim($memo));
 
-		$query2 = "REPLACE invoice_items (invoice_no, partid, memo, qty, amount, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty) ";
-		$query2 .= "VALUES ('".res($invoice_no)."',".fres($partid).",".fres($memo).",";
+		$query2 = "REPLACE invoice_items (invoice_no, item_id, item_label, memo, qty, amount, line_number, ";
+		$query2 .= "taskid, task_label, ref_1, ref_1_label, ref_2, ref_2_label, warranty) ";
+		$query2 .= "VALUES ('".res($invoice_no)."',".fres($item_id).",NULL,".fres($memo).",";
 		$query2 .= "'".res(round($qty))."','".res($amount)."',".fres($line_number).",";
+		$query2 .= fres($task_id).",".fres($task_label).",";
 		$query2 .= fres($ref_1).",".fres($ref_1_label).",";
 		$query2 .= fres($ref_2).",".fres($ref_2_label).",";
 		$query2 .= fres($warranty)."); ";
@@ -204,7 +206,7 @@
 				$ref_1_label = 'service_item_id';
 			}
 
-			$invoice_item_id = setInvoiceItem($invoice_no, false, $r2['memo'], $r2['quantity'], $r2['amount'], false, $service_item_id, $ref_1_label, false, false, false);
+			$invoice_item_id = setInvoiceItem($invoice_no, false, $r2['memo'], $r2['quantity'], $r2['amount'], false, $service_item_id, $ref_1_label, false, false, false, false, false);
 
 			$query3 = "REPLACE maps_invoice (BDB_invoiceli_id, invoice_item_id) VALUES ('".$r2['id']."', '".$invoice_item_id."'); ";
 			if ($debug) { echo $query3.'<BR>'; }

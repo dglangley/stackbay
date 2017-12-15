@@ -3,9 +3,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 
+	$filename = str_replace('/downloads/','',$_SERVER['REQUEST_URI']);
+	if (! $filename OR $filename=='exporter.php') { $filename = 'inventory-export-'.$today.'.csv'; }
+
 	header("Content-type: text/csv; charset=utf-8");
 	header("Cache-Control: no-store, no-cache");
-	header('Content-Disposition: attachment; filename="inventory-export-'.$today.'.csv"');
+	header('Content-Disposition: attachment; filename="'.$filename.'"');
 
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }

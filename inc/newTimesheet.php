@@ -64,7 +64,8 @@
 			$otPay = ($rate_in_secs*$OTSecs)*1.5;
 			$dtPay = ($rate_in_secs*$DTSecs)*2.0;
 			$debugOTPayTotal += $otPay;
-			$cumLabor += ($stdPay+$otPay)*$LABOR_COST;
+			$laborCost = ($stdPay+$otPay+$dtPay)*$LABOR_COST;
+			$cumLabor += $laborCost;
 
 			if (! $r['no_perdiem']) {
 				$debugSecsPd += $regSecs;
@@ -82,6 +83,7 @@
 			$timesheetid_data[$r['id']]['DT_secs'] = $DTSecs;
 			$timesheetid_data[$r['id']]['DT_secs'] = $dtPay;
 			$timesheetid_data[$r['id']]['totalPay'] = $stdPay + $otPay + $dtPay;
+			$timesheetid_data[$r['id']]['laborCost'] = $laborCost;
 		}
 
 		if ($return_type=='array') {

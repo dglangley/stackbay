@@ -10,9 +10,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 
-//	$DEBUG = 3;
-	$debug = 0;
+	$DEBUG = 3;
+	$debug = 1;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
@@ -289,12 +291,22 @@
 		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
 		if ($id AND ! $create_invoice) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
-		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
+		$saved_id = qid();
 
 		if ($create_invoice AND $id) {
+			// calculate cost of task in order to determine profit, then calculate commission based on profit
 			$cost = calcTaskCost($id,$T2['item_label']);
-			if ($debug) { echo 'cost: '.$cost.'<BR>'; }
+
+			// $MATERIALS_COST is a global variable summed in calcTaskCost() so we can use it for setting into sales cogs
+			$cogsid = setCogs(0, $id, $T2['item_label'], $MATERIALS_COST);
+
+			$profit = $amount[$key]-$cost;
+
+			$rate = 10;
+			$rep_id = 27;
+			$comm_due = ($profit*($rate/100));
+			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$rep_id,$comm_due);
 		}
 
 		if ($fieldid[$key]) {

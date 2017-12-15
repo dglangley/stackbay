@@ -27,7 +27,7 @@
 		$id = 0;
 		$query = "SELECT id, amount FROM journal_entries WHERE datetime = $date AND debit_account = $debit_account AND credit_account = $credit_account ";
 		$query .= "AND memo = $memo AND trans_number = $trans_num AND trans_type = $trans_type AND confirmed_datetime IS NULL AND confirmed_by IS NULL; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$id = $r['id'];
@@ -45,7 +45,7 @@
 			echo $query.'<BR>';
 			if (! $id) { $id = 999999; }
 		} else {
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$result = qedb($query);
 			if (! $id) { $id = qid(); }
 		}
 
@@ -55,7 +55,7 @@
 			if ($debug) {
 				echo $query.'<BR>';
 			} else {
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				$result = qedb($query);
 			}
 		}
 

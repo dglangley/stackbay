@@ -3,6 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/newTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
 
+	$MATERIALS_COST = 0;
 	function calcTaskCost($item_id,$item_label,$include_freight=true) {
 		$cost = 0;
 
@@ -24,12 +25,17 @@
 			$query = "SELECT userid FROM timesheets WHERE taskid = '".res($item_id)."' AND task_label = '".res($item_label)."' GROUP BY userid; ";
 			$result = qedb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				$timesheet = getTimesheet($r['userid'],$item_id,$item_label);
-print "<pre>".print_r($timesheet,true)."</pre>";
+				$timesheets = getTimesheet($r['userid'],$item_id,$item_label);
+
+				foreach ($timesheets as $timesheetid => $timesheet) {
+					//print "<pre>".print_r($timesheet,true)."</pre>";
+					$cost += $timesheet['laborCost'];
+				}
 			}
 		}
 
 		/***** MATERIALS COST *****/
+		$MATERIALS_COST = 0;
 		if ($item_label=='service_item_id') {
 			$query = "SELECT m.qty, m.inventoryid ";
 			$query .= "FROM service_materials m, inventory i ";
@@ -55,8 +61,9 @@ print "<pre>".print_r($timesheet,true)."</pre>";
 				// no results from inventory costs results in no cost
 			}
 
-			$cost += $price;
+			$MATERIALS_COST += $price;
 		}
+		$cost += $MATERIALS_COST;
 
 		/***** GET ALL 3RD PARTY ORDERS/SERVICES AND REPLACEMENT-FREIGHT COSTS *****/
 		$query = "SELECT os_number FROM outsourced_orders os ";

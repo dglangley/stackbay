@@ -28,6 +28,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Invoice';
@@ -59,6 +61,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Bill';
@@ -91,6 +95,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = '';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Return';
@@ -121,6 +127,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
 				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Credit';
@@ -152,6 +160,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
 				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Purchase';
@@ -183,6 +193,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['je_debit'] = 'Repair COGS';
+				$T['je_credit'] = 'Component Inventory Asset';
 				$T['confirmation'] = true;
 				$T['support'] = true;
 				$T['type'] = 'Repair';
@@ -214,6 +226,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['je_debit'] = 'EFI Service Inventory Sale COGS';
+				$T['je_credit'] = 'EFI Service Inventory Asset';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Service';
@@ -244,6 +258,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = '';
@@ -274,6 +290,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
 				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = '';
@@ -305,6 +323,8 @@
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AR';
+				$T['je_debit'] = 'Inventory Sale COGS';
+				$T['je_credit'] = 'Inventory Asset';
 				$T['confirmation'] = true;
 				$T['support'] = true;
 				$T['type'] = 'Sale';
@@ -336,6 +356,8 @@
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Billing';
 				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Outsourced';
@@ -367,6 +389,8 @@
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
 				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'IT';
