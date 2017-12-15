@@ -220,7 +220,7 @@
 				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
 					<div class="col-md-8">
 						<?php if($user_admin && ! $edit): ?>
-							<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+							<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 						<?php endif; ?>
 						<select id="user_select" name="user" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
 							<option value =''> - Select User - </option>
@@ -287,7 +287,7 @@
 					<div class="col-md-6 col-sm-6 remove-pad">
 						
 						<?php if($edit): ?>
-							<button class="btn btn-success btn-sm pull-right" type="submit" name="type" value="edit">
+							<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
 								<i class="fa fa-check-circle" aria-hidden="true"></i>					
 							</button>
 						<?php elseif($payroll_num): ?>
@@ -301,6 +301,7 @@
 
 	<?php if($user_admin): ?>
 		<form id="timesheet_form" action="/timesheet_edit.php" method="POST" enctype="multipart/form-data">
+			<input type="hidden" name="taskid" class="form-control input-sm" value="<?=$taskid;?>">
 			<input type="hidden" name="userid" class="form-control input-sm" value="<?=$userid;?>">
 			<input type="hidden" name="payroll_num" class="form-control input-sm" value="<?=$payroll_num;?>">
 	<?php endif; ?>
@@ -378,6 +379,55 @@
 						</tr>
 					</thead>
 					<tbody>
+						<?php if($edit AND $userid){ //If the edit feature is on then allow the user to add new records for the timesheet ?>
+							<tr>
+								<!-- If edit is on and the user has permission then show input boxes for datetime of clockin and clockout -->
+								<td>
+									<input type="hidden" name="addTime[userid]" class="form-control input-sm" value="<?=$userid?>">
+								</td>
+								<td>
+									<select id="task_select" name="addTime[taskid]" size="1" class="form-control input-sm select2 pull-right task-selection">
+										<option value =''> - Select Task - </option>
+										<?php
+											//$users = getUsers(array(1,2,3,4,5,7));
+											foreach (getUniqueTask($userid) as $task) {
+												$s = '';
+												$task_num = getTaskNum($task['taskid'], $task['task_label']);
+												if (! $task_num) { continue; }
+
+												if ($taskid == $task['taskid']) { $s = ' selected'; }
+												//if($user_admin OR ($userid == $uid)) {
+												echo '<option value="'.$task['taskid'].'"'.$s.' data-label="'.$task['task_label'].'">'.$task_num.'</option>'.chr(10);
+												//}
+											}
+										?>
+									</select>
+									<input type="hidden" name="addTime[task_label]" class="form-control input-sm task_label_input" value="service_item_id">
+								</td>
+								<td>
+									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+		   		    			         <input type="text" name="addTime[clockin]" class="form-control input-sm" value="">
+		           		       			 <span class="input-group-addon">
+				       		                 <span class="fa fa-calendar"></span>
+		       					         </span>
+									</div>
+								</td>
+								<td>
+									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+		   		    			         <input type="text" name="addTime[clockout]" class="form-control input-sm" value="">
+		           		       			 <span class="input-group-addon">
+				       		                 <span class="fa fa-calendar"></span>
+		       					         </span>
+									</div>
+								</td>
+								
+								<!-- Resume the data -->
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+						<?php } ?>
 						<?php 
 							foreach($timesheet_data as $item) { 
 								$userTimesheet = getTimesheet($item['userid']);
@@ -546,6 +596,12 @@
     		$('.sum_total_dt').text(total_dt_pay);
     		$('.sum_total_pay').text(total_pay);
 
+    		$(document).on("change", ".task-selection", function(e) {
+    			e.preventDefault();
+
+    			$(".task_label_input").val($(this).find(':selected').data("label"));
+    		});
+
     		$(document).on('click', '.delete_time', function(e){
     			e.preventDefault();
 
@@ -574,9 +630,9 @@
 
     			var type = $(this).val();
     			input = $("<input>").attr("type", "hidden").attr("name", "type").val(type);
-				$('#expenses_form').append($(input));
+				$('#timesheet_form').append($(input));
 
-    			$('#expenses_form').submit();
+    			$('#timesheet_form').submit();
     		});
 
     		$(document).on("change", ".upload", function(){
