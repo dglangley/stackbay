@@ -1202,49 +1202,77 @@ $assigned = true;
 							?>
 
 							<div id="main-stats">
-					            <div class="row stats-row">
-					                <div class="col-md-4 col-sm-4 stat">
+								<?php if(! $quote){ ?>
+						            <div class="row stats-row">
+						                <div class="col-md-4 col-sm-4 stat">
+						                    <div class="data" style="min-height: 35px;">
+						                    	<?php if(! $quote) { ?>
+						                        	<span class="number text-brown"><?=format_price($charge);?></span>
+						                        	<span class="info">Charge</span>
+						                        <?php } else { ?>
+						                        		<div class="input-group pull-left" style="margin-left: 25px; max-width: 200px;">													
+															<span class="input-group-addon">										                
+																<i class="fa fa-usd" aria-hidden="true"></i>										            
+															</span>										            
+															<input class="form-control input-sm" type="text" name="charge" placeholder="0.00" value="<?=$charge?>">
+														</div>
+														<!-- <input class="form-control input-sm pull-left" type="text" style="margin-left: 25px; max-width: 150px;" name="amount" placeholder="0.00" value="<?=$charge;?>"> -->
+												
+						                        	<!-- <span class="info" style="margin-top: 15px; float: right;">Charge</span> -->
+						                        <?php } ?>
+						                    </div>
+						                </div>
+						                <div class="col-md-4 col-sm-4 stat">
+						                    <div class="data">
+						                        <span class="number text-black"><?=format_price($total_amount);?></span>
+												<span class="info">Cost</span>
+						                    </div>
+						                </div>
+	<!--
+						                <div class="col-md-3 col-sm-3 stat">
+						                    <div class="data">
+						                        <span class="number text-black">$0.00</span>
+												<span class="info">Commission</span>
+						                    </div>
+						                </div>
+	-->
+						                <div class="col-md-4 col-sm-4 stat last">
+						                    <div class="data">
+						                        <span class="number text-success"><?=format_price($profit);?></span>
+												<span class="info">Profit</span>
+						                    </div>
+						                </div>
+						            </div>
+						        </div>
+						    <?php } else { ?>
+						    	<div class="row stats-row">
+						    		<div class="col-md-3 col-sm-3 stat">
 					                    <div class="data" style="min-height: 35px;">
-					                    	<?php if(! $quote) { ?>
-					                        	<span class="number text-brown"><?=format_price($charge);?></span>
-					                        	<span class="info">Charge</span>
-					                        <?php } else { ?>
-					                        		<div class="input-group pull-left" style="margin-left: 25px; max-width: 200px;">													
-														<span class="input-group-addon">										                
-															<i class="fa fa-usd" aria-hidden="true"></i>										            
-														</span>										            
-														<input class="form-control input-sm" type="text" name="amount" placeholder="0.00" value="<?=$charge?>">
-													</div>
-													<!-- <input class="form-control input-sm pull-left" type="text" style="margin-left: 25px; max-width: 150px;" name="amount" placeholder="0.00" value="<?=$charge;?>"> -->
-											
-					                        	<!-- <span class="info" style="margin-top: 15px; float: right;">Charge</span> -->
-					                        <?php } ?>
+				                        	<span class="number text-black"><?=format_price($labor_cost);?></span>
+				                        	<span class="info">Labor</span>
 					                    </div>
 					                </div>
-					                <div class="col-md-4 col-sm-4 stat">
-					                    <div class="data">
-					                        <span class="number text-black"><?=format_price($total_amount);?></span>
-											<span class="info">Cost</span>
+					                <div class="col-md-3 col-sm-3 stat">
+					                    <div class="data" style="min-height: 35px;">
+				                        	<span class="number text-brown"><?=format_price($materials_total);?></span>
+				                        	<span class="info">Materials</span>
 					                    </div>
 					                </div>
-<!--
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
-					                        <span class="number text-black">$0.00</span>
-											<span class="info">Commission</span>
+					                        <span class="number text-black"><?=format_price($outside_services_total);?></span>
+											<span class="info">Outside Services</span>
 					                    </div>
 					                </div>
--->
-					                <div class="col-md-4 col-sm-4 stat last">
+					                <div class="col-md-3 col-sm-3 stat last">
 					                    <div class="data">
-					                        <span class="number text-success"><?=format_price($profit);?></span>
-											<span class="info">Profit</span>
+					                        <span class="number text-success"><?=format_price($total_amount);?></span>
+											<span class="info">Quote Total</span>
 					                    </div>
 					                </div>
 					            </div>
 					        </div>
-
-				        <?php } ?>
+				        <?php } } ?>
 
 				        <br>
 
@@ -1453,6 +1481,7 @@ $assigned = true;
 														</select>
 													</td>
 													<td class="file_container">
+														<span class="file_name" style="margin-right: 5px;"></span>
 														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 														<a href="#" class="upload_link btn btn-default btn-sm">
 															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
@@ -1484,22 +1513,46 @@ $assigned = true;
 								<!-- Labor pane -->
 								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
 									<?php if($task_edit){ ?>
-										<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
-											<tr>
-											<td class="col-md-12">
-												<div class="input-group pull-left" style="margin-bottom: 10px; margin-right: 15px; max-width: 200px">
-						  							<!-- <span class="input-group-addon">$</span> -->
-													<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=$item_details['labor_hours'];?>">
-												</div>
-												<div class="input-group" style="margin-bottom: 10px; max-width: 200px">
-						  							<span class="input-group-addon">$</span>
-													<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)$item_details['labor_rate'], 2, '.', '');?>">
-												</div>
-											</td>
-											</tr>
-										</table></div>
+										<div class="row">
+											<div class="col-md-6">
+												<table class="table table-condensed table-striped table-hover">
+													<thead>
+														<tr>
+															<th>EST. Hours</th>
+															<th>Bill Rate</th>
+															<th>Quoted Price</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>
+																<div class="input-group pull-left" style="margin-bottom: 10px; margin-right: 15px; max-width: 200px">
+										  							<!-- <span class="input-group-addon">$</span> -->
+																	<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=$item_details['labor_hours'];?>">
+																	<span class="input-group-addon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+																</div>
+															</td>
+															<td>
+																<div class="input-group" style="margin-bottom: 10px; max-width: 200px">
+										  							<span class="input-group-addon">$</span>
+																	<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)$item_details['labor_rate'], 2, '.', '');?>">
+																</div>
+															</td>
+															<td>
+																<span style="border: 1px solid #468847; display: block; padding: 3px 10px;">
+																	<?=format_price(number_format((float)$item_details['labor_rate'] * (float)$item_details['labor_hours'], 2, '.', ''));?>
+																</span>
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+
+										
 									<?php } ?>
 
+									<?php if(! $quote) { ?>
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 				                        <thead class="no-border">
 				                            <tr>
@@ -1634,6 +1687,7 @@ $assigned = true;
 				                            <?php } ?>
 										</tbody>
 									</table></div>
+									<?php } ?>
 								</div><!-- Labor pane -->
 							<?php } ?>
 
@@ -1659,11 +1713,11 @@ $assigned = true;
 												<tr>
 													<?php if($quote OR $new){ ?>
 														<th class="col-md-3">Material</th>
-														<th class="col-md-2">Amount</th>
-														<th class="col-md-1">Supply</th>
-														<th class="col-md-3">Leadtime</th>
-														<th>Profit %</th>
-														<th>Quote</th>
+														<th class="col-md-2">QTY & COST</th>
+														<th class="col-md-1">Sourcing</th>
+														<th class="col-md-3">Leadtime & Due Date</th>
+														<th>Markup</th>
+														<th>Quoted Price</th>
 														<th></th>
 													<?php } else { ?>
 														<th class="col-md-3">Material</th>
@@ -1825,7 +1879,10 @@ $assigned = true;
 																	</div>									
 																</div>
 															</td>
-															<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>
+															<td class="remove_part" style="cursor: pointer;">
+																<i class="fa fa-truck" aria-hidden="true"></i>
+																<i class="fa fa-trash fa-4" aria-hidden="true"></i>
+															</td>
 														</tr>
 													<?php } ?>
 												<?php } ?>
@@ -1965,13 +2022,13 @@ $assigned = true;
 				                                    Description
 				                                </th>
 				                                <th class="col-md-2">
-				                                    Amount
+				                                    Cost
 				                                </th>
 				                                <th class="col-md-2">
-				                                    Profit %
+				                                    Markup
 				                                </th>
 				                                <th class="col-md-2">
-				                                    Total
+				                                    Quoted Price
 				                                </th>
 				                                 <th class="col-md-1 text-right">
 				                                    Action
@@ -1995,12 +2052,12 @@ $assigned = true;
 															<span class="input-group-addon">										                
 																<i class="fa fa-usd" aria-hidden="true"></i>										            
 															</span>										            
-															<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="<?=$list['amount'];?>">
+															<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="<?=$list['amount'];?>" readonly>
 														</div>
 													</td>
 													<td>
 														<div class="input-group">											  
-															<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="">
+															<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="" readonly>
 															<span class="input-group-addon">										                
 																<i class="fa fa-percent" aria-hidden="true"></i>										            
 															</span>	

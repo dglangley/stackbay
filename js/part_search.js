@@ -45,7 +45,7 @@ function partSearch(search, filter, cid, order_type) {
 					} 
 
 					if(type == 'quote') {
-						rowHTML += '<tr class="found_parts found_parts_quote" style="overflow:hidden;">';
+						rowHTML += '<tr class="part_listing found_parts found_parts_quote" style="overflow:hidden;">';
 						rowHTML += '	<td class="part">\
 											<div class="remove-pad col-md-1">\
 												<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\

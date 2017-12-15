@@ -29,6 +29,7 @@
 		$query .= "DATE_SUB(LEFT(clockin,10), INTERVAL DAYOFWEEK(clockin)-8 DAY) end_day ";
 		$query .= "FROM timesheets WHERE userid = '".$techid."' ";
 		if ($taskid) { $query .= "AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' "; }
+		else { $query .="AND clockin >= '2016-01-01 00:00:00' "; }
 		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -37,15 +38,17 @@
 		$timesheetid_data = array();
 
 		while ($r = mysqli_fetch_assoc($result)) {
-			$weekStart = format_date($r['clockin'],'Y-m-d').' '.$WORKDAY_START.':00:00';
-			$weekEnd = format_date($r['clockout'],'Y-m-d').' '.$WORKDAY_END.':59:59';
+			$weekStart = format_date($r['start_day'],'Y-m-d').' '.$WORKDAY_START.':00:00';
+			$weekEnd = format_date($r['end_day'],'Y-m-d').' '.$WORKDAY_END.':59:59';
 			$shiftid = $r['id'];
 
 			$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
 
 			// OT seconds of this shift within the scope of a week's work
-			$OTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id'])[0];
-			$DTSecs = calcOT($techid,$weekStart,$weekEnd,$r['id'])[1];
+			$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
+
+			$OTSecs = $calc[0];
+			$DTSecs = $calc[1];
 
 			$debugSecsReg += $secsDiff-$OTSecs;
 			$debugSecsOT += $OTSecs;

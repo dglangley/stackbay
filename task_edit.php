@@ -358,6 +358,7 @@
 	$labor_hours = 0;
 	$labor_rate = 0;
 	$expenses = 0;
+	$charge = 0.00;
 
 	$activity_notification = 0;
 
@@ -412,6 +413,8 @@
 
 	if (isset($_REQUEST['expenses'])) { $expenses = $_REQUEST['expenses']; }
 	if (isset($_REQUEST['expense'])) { $add_expense = $_REQUEST['expense']; }
+
+	if (isset($_REQUEST['charge'])) { $charge = $_REQUEST['charge']; }
 
 	if (isset($_REQUEST['activity_notification'])) { $activity_notification = $_REQUEST['activity_notification']; }
 
@@ -470,7 +473,7 @@
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
-		$qid = quoteTask($order, $line_number, $qty, $amount, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
+		$qid = quoteTask($order, $line_number, 1, $charge, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
 
 		editMaterials($materials, $qid, 'service_quote_materials');
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');
