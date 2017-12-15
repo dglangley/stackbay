@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	function getOrder($order_number,$order_type) {
-		if (! $order_type) { die("Invalid order, or invalid order type"); }
+		if (! $order_type) { die("getOrder(): Invalid order, or invalid order type"); }
 
 		$T = order_type($order_type);
 
@@ -41,6 +41,17 @@
 		}
 
 		$results['items'] = $items;
+
+		$charges = array();
+		if ($T['charges']) {
+			$query = "SELECT * FROM ".$T['charges']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$result = qedb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$charges[$r['id']] = $r;
+			}
+		}
+
+		$results['charges'] = $charges;
 
 		return ($results);
 	}

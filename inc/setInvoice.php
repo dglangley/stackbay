@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAmount.php';
 
 	$DEBUG = 3;
 
@@ -21,7 +22,15 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 		}
 */
-		print "<pre>".print_r($ORDER,true)."</pre>";
+//		print "<pre>".print_r($ORDER,true)."</pre>";
+
+		$amount = 0;
+		foreach ($ORDER['items'] as $item) {
+			$amount += $item['qty']*$item[$T['amount']];
+		}
+
+		// do this but only per line item not order total; is that possible?
+		$amount += getFreightAmount($order_number,$order_type);
 
 
 		// calculate cost, and subsequent profits

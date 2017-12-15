@@ -41,14 +41,14 @@
 			$editor = '';
 			if ($def_type=='Site') {
 				$cls = '';
-				$fieldname = 'addressid';
+				$fieldname = 'fieldid';
 				$selname = 'address-selector';
 				$dataurl = '/json/addresses.php';
 				$dataplacer = '- Select an Address -';
-				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="addressid_'.$id.'"><i class="fa fa-pencil"></i></a>';
+				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="fieldid_'.$id.'"><i class="fa fa-pencil"></i></a>';
 			} else if ($def_type=='Part') {
 				if (! $new) { $cls = 'select2'; } else { $cls = 'hidden'; }
-				$fieldname = 'partid';
+				$fieldname = 'fieldid';
 				$selname = 'part-selector';
 				$dataurl = '/json/parts-dropdown.php';
 				$dataplacer = '';

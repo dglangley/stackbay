@@ -9,7 +9,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 
+//	$DEBUG = 3;
 	$debug = 0;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
@@ -40,6 +42,8 @@
 	if (isset($_REQUEST['order_number']) AND $_REQUEST['order_number']) { $order_number = $_REQUEST['order_number']; }
 	$order_type = '';
 	if (isset($_REQUEST['order_type']) AND $_REQUEST['order_type']) { $order_type = $_REQUEST['order_type']; }
+	$create_invoice = false;
+	if (isset($_REQUEST['create_invoice']) AND $_REQUEST['create_invoice']) { $create_invoice = $_REQUEST['create_invoice']; }
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
@@ -96,23 +100,35 @@
 	$datetime = $now;
 	$created_by = $U['id'];
 	$sales_rep_id = $U['id'];//default unless passed in
-	if ($order_number) {
+	if ($order_number AND ! $create_invoice) {
 		$ORDER = getOrder($order_number, $order_type);
 		$datetime = $ORDER['dt'];
 		$created_by = $ORDER['created_by'];
 		$sales_rep_id = $ORDER['sales_rep_id'];//retain existing unless passed in below
 		if (! $file_url) { $file_url = $ORDER['ref_ln']; }
 	} else {
-		// if in quote data, user is converting to order
-		if ($T['record_type']=='quote') {
-//			$quoteid = $order_number;//use this for reference to the quote in the order table
-			$order_number = 0;//new order
-			$order_type = $T['order_type'];
-
+		if ($create_invoice) {
+			$classid = 0;
+			$datetime = $now;
+			$ORDER = getOrder(0,'Invoice');
+			$ORDER['order_number'] = $order_number;
+			$ORDER['order_type'] = $order_type;
+			$T2 = order_type($order_type);
+			$order_number = 0;
+			$order_type = 'Invoice';
 			$T = order_type($order_type);
-		}
+		} else {
+			// if in quote data, user is converting to order
+			if ($T['record_type']=='quote') {
+//				$quoteid = $order_number;//use this for reference to the quote in the order table
+				$order_number = 0;//new order
+				$order_type = $T['order_type'];
 
-		$ORDER = getOrder('',$order_type);//fill the array with fields to determine below what we should add and what to skip
+				$T = order_type($order_type);
+			}
+
+			$ORDER = getOrder('',$order_type);//fill the array with fields to determine below what we should add and what to skip
+		}
 	}
 
 	if (! $file_url AND $ref_ln) { $file_url = $ref_ln; }
@@ -142,7 +158,9 @@
 	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= "repair_code_id, "; }
 	$query .= "status) ";
+
 	$query .= "VALUES (";
+
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
 	if ($classid) { $query .= "'".res($classid)."', "; }
 	$query .= "'".$datetime."', ";
@@ -176,12 +194,20 @@
 	}
 
 	$items = array();
-	if (isset($_REQUEST['partid'])) { $items = $_REQUEST['partid']; }
-	else if (isset($_REQUEST['addressid'])) { $items = $_REQUEST['addressid']; }
+//	if (isset($_REQUEST['partid'])) { $items = $_REQUEST['partid']; }
+//	else if (isset($_REQUEST['addressid'])) { $items = $_REQUEST['addressid']; }
+//	else if (isset($_REQUEST['item_id'])) { $items = $_REQUEST['item_id']; }
+	if (isset($_REQUEST['items'])) { $items = $_REQUEST['items']; }
+
+	$fieldid = array();
+	if (isset($_REQUEST['fieldid'])) { $fieldid = $_REQUEST['fieldid']; }
+
 	$search_type = array();
 	if (isset($_REQUEST['search_type'])) { $search_type = $_REQUEST['search_type']; }
 	$item_id = array();
 	if (isset($_REQUEST['item_id'])) { $item_id = $_REQUEST['item_id']; }
+	$item_label = array();
+	if (isset($_REQUEST['item_label'])) { $item_label = $_REQUEST['item_label']; }
 	$ln = array();
 	if (isset($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 	$qty = array();
@@ -206,30 +232,46 @@
 	if (isset($_REQUEST['conditionid'])) { $conditionid = $_REQUEST['conditionid']; }
 
 	$email_rows = array();
-	foreach ($items as $key => $fieldid) {
-		$id = $item_id[$key];
-		if (! $fieldid OR ! $qty[$key]) { continue; }
+	foreach ($items as $key => $id) {//fieldid) {
+//		$id = $item_id[$key];
+//		if (! $fieldid OR ! $qty[$key]) { continue; }
+		if (! $qty[$key]) { continue; }
 
 		$type = 'Part';
 		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $type = 'Site'; }
 
 		$F = getItems($order_type);
+		// if saving an item by item id rather than partid/addressid, $fieldid is actually empty and shouldn't carry a value
+//		if (! isset($search_type[$key])) { $fieldid = 0; }
 
 		$query = "REPLACE ".$T['items']." (";
 		if (isset($F['partid'])) { $query .= "partid, "; }
-		else if (isset($F['item_id'])) { $query .= "item_id, item_label, "; }
+		else if (isset($F['addressid'])) { $query .= "addressid, "; }
+		else if (isset($F['item_id']) AND isset($F['item_label'])) { $query .= "item_id, item_label, "; }
 		$query .= $T['order'].", line_number, qty";
+		if (array_key_exists('qty_shipped',$F)) { $query .= ", qty_shipped"; }
+		else if (array_key_exists('qty_received',$F)) { $query .= ", qty_received"; }
 		if ($T['amount']) { $query .= ", ".$T['amount']; }
+		if (($create_invoice AND $id) OR isset($F['task_label'])) { $query .= ", taskid, task_label"; }
 		if ($T['description']) { $query .= ", ".$T['description']; }
 		if ($T['delivery_date']) { $query .= ", ".$T['delivery_date']; }
 		if ($T['items']<>'return_items') { $query .= ", ref_1, ref_1_label, ref_2, ref_2_label"; }
 		if ($T['warranty']) { $query .= ", ".$T['warranty']; }
 		if ($T['condition']) { $query .= ", ".$T['condition']; }
-		if ($id) { $query .= ", id"; }
-		$query .= ") VALUES ('".res($fieldid)."', ";
-		if (isset($F['item_label'])) { $query .= "'addressid', "; }
+		if ($id AND ! $create_invoice) { $query .= ", id"; }
+
+		$query .= ") VALUES (".fres($fieldid[$key]).", ";
+
+		if (isset($F['item_label'])) {
+			if ($fieldid[$key]) { $query .= "'addressid', "; }
+			else { $query .= "NULL, "; }
+		}
 		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."'";
+		if (array_key_exists('qty_shipped',$F)) { $query .= ", '".res($ORDER['items'][$id]['qty_shipped'])."'"; }
+		else if (array_key_exists('qty_received',$F)) { $query .= ", '".res($ORDER['items'][$id]['qty_received'])."'"; }
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
+		if ($create_invoice AND $id) { $query .= ", '".res($id)."', '".res($T2['item_label'])."'"; }
+		else if (isset($F['task_label'])) { $query .= ", '".res($ORDER['items'][$id]['taskid'])."', '".res($ORDER['items'][$id]['task_label'])."'"; }
 		if ($T['description']) { $query .= ", ".fres($descr[$key]); }
 		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
 		if ($T['items']<>'return_items') {
@@ -245,27 +287,34 @@
 		}
 		if ($T['warranty']) { $query .= ", ".fres($warrantyid[$key]); }
 		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
-		if ($id) { $query .= ", '".res($id)."'"; }
+		if ($id AND ! $create_invoice) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
 		if ($debug) { echo $query.'<BR>'; }
 		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
 
-		$query2 = "SELECT part, heci FROM parts WHERE id = '".res($fieldid)."'; ";
-		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-		if (mysqli_num_rows($result2)>0) {
-			$r2 = mysqli_fetch_assoc($result2);
-			$part_strs = explode(' ',$r2['part']);
-			$partkey = '';
-			if ($ln[$id]) { $partkey = $ln[$id]; }
-			$heci = '';
-			if ($r2['heci']) {
-				$heci = substr($r2['heci'],0,7);
-				$partkey .= '.'.$heci;
-			} else {
-				$partkey .= '.'.$part_strs[0];
+		if ($create_invoice AND $id) {
+			$cost = calcTaskCost($id,$T2['item_label']);
+			if ($debug) { echo 'cost: '.$cost.'<BR>'; }
+		}
+
+		if ($fieldid[$key]) {
+			$query2 = "SELECT part, heci FROM parts WHERE id = '".res($fieldid[$key])."'; ";
+			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			if (mysqli_num_rows($result2)>0) {
+				$r2 = mysqli_fetch_assoc($result2);
+				$part_strs = explode(' ',$r2['part']);
+				$partkey = '';
+				if ($ln[$id]) { $partkey = $ln[$id]; }
+				$heci = '';
+				if ($r2['heci']) {
+					$heci = substr($r2['heci'],0,7);
+					$partkey .= '.'.$heci;
+				} else {
+					$partkey .= '.'.$part_strs[0];
+				}
+				if (! isset($email_rows[$partkey])) { $email_rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$ln[$key]); }
+				$email_rows[$partkey]['qty'] += $qty[$key];
 			}
-			if (! isset($email_rows[$partkey])) { $email_rows[$partkey] = array('qty'=>0,'part'=>$part_strs[0],'heci'=>$heci,'ln'=>$ln[$key]); }
-			$email_rows[$partkey]['qty'] += $qty[$key];
 		}
 
 		if (in_array("service_item_id", $ref_1_label)  OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label)  OR in_array("repair_item_id", $ref_2_label)) {
@@ -274,6 +323,8 @@
 			qdb($query) OR die(qe() . ' ' . $query);
 		}
 	}
+
+//	if ($create_invoice) { $order_type = 'Invoice'; }
 
 	$charges = array();
 	if (isset($_REQUEST['charge_description'])) { $charges = $_REQUEST['charge_description']; }

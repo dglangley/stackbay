@@ -149,12 +149,18 @@
 //			}
 
 			// If this is a purchase request, item_id variables need to be converted
-			if (isset($r['ref_1']) AND isset($r['ref_1_label'])) {
+//			if (isset($r['ref_1']) AND isset($r['ref_1_label'])) {
+			if (array_key_exists('ref_1',$r) AND array_key_exists('ref_1_label',$r)) {
 				$r['ref_1'] = $r['ref_1'];
 				$r['ref_1_label'] = $r['ref_1_label'];
-			} else if (isset($r['item_id']) AND isset($r['item_id_label'])) {
+//			} else if (isset($r['item_id']) AND isset($r['item_id_label'])) {
+			} else if (array_key_exists('item_id',$r) AND (array_key_exists('item_label',$r) OR array_key_exists('item_id_label',$r))) {
 				$r['ref_1'] = $r['item_id'];
-				$r['ref_1_label'] = $r['item_id_label'];
+				if (array_key_exists('item_label',$r)) {
+					$r['ref_1_label'] = $r['item_label'];
+				} else {
+					$r['ref_1_label'] = $r['item_id_label'];
+				}
 			}
 
 			if ((array_key_exists('partid',$r) AND $r['partid']) OR (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='partid'))  {
@@ -171,9 +177,9 @@
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
-			$r['save'] = '<input type="hidden" name="item_id['.$id.']" value="'.$id.'">';
-			if ($T['record_type']=='quote') {
-				$r['save'] = '<input type="checkbox" name="item_id['.$id.']" value="" checked>';
+			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$id.'">';
+			if ($T['record_type']=='quote' OR $GLOBALS['create_invoice']) {
+				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$id.'" checked>';
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
@@ -188,6 +194,8 @@
 
 			$ext_amount = '$ '.number_format(($r['qty']*$r['amount']),2);
 			$SUBTOTAL += ($r['qty']*$r['amount']);
+
+//			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }//$items[$T['description']]; }
 		} else {
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
@@ -210,11 +218,11 @@
 				'amount'=>'',
 				'save'=>'
 					<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>
-					<input type="hidden" name="item_id[]" value="">
+					<input type="hidden" name="items['.$id.']" value="">
 				',
 			);
 
-			if (array_key_exists('description',$items)) { $r['description'] = ''; }
+			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }
 
 			$ref1 = setRef('','',$id,1);
 			$ref2 = setRef('','',$id,2);
@@ -227,6 +235,7 @@
 		$warranty_col = '';
 		$descr = false;
 		if (array_key_exists('description',$r)) { $descr = $r['description']; }
+		else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
 
 		$descr_col = '';
 		if ($EDIT) {
@@ -388,11 +397,14 @@
 	$order_number = 0;
 	$order_type = '';
 	if (! isset($EDIT)) { $EDIT = false; }
+ 
+	if (! isset($create_invoice)) {
+		$invoice = '';
+		if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
+		$create_invoice = false;//flag to set parameters for creating a manual invoice against an order
+	}
 
-	$invoice = '';
-	if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
-
-	if ($invoice) {
+	if ($invoice AND ! $create_invoice) {
 		$order_number = $invoice;
 		$order_type = 'Invoice';
 	} else {
@@ -405,6 +417,9 @@
 		if ($order_type=='s' OR $order_type=='sale' OR $order_type=='SO') { $order_type = 'Sale'; }
 		else if ($order_type=='p' OR $order_type=='purchase' OR $order_type=='PO') { $order_type = 'Purchase'; }
 		else if ($order_type=='r' OR $order_type=='repair' OR $order_type=='RO' OR $order_type=='ro' OR $order_type=='R') { $order_type = 'Repair'; }
+		// strip out ln# in case it's passed in
+		$splits = explode('-',$order_number);
+		$order_number = $splits[0];
 
 		// user is creating a new order
 		if ($order_type AND ! $EDIT AND ! $order_number AND ! isset($QUOTE)) { $EDIT = true; }
@@ -424,14 +439,24 @@
 
 	$title_helper = '';
 	$returns = array();
-	if ($order_type=='Invoice') {
-		$invoice = $order_number;
-		$TITLE = 'Invoice '.$order_number;
+	if ($order_type=='Invoice' OR $create_invoice) {
+		if ($create_invoice) {
+			$ORDER = getOrder($order_number,$order_type);
+			$T = order_type($order_type);//$ORDER['order_type']);
 
-		$ORDER = getOrder($order_number,'Invoice');
-		$T = order_type($order_type);//$ORDER['order_type']);
+			$class = '';
+			if (array_key_exists('classid',$QUOTE) AND $QUOTE['classid']) { $class = getClass($QUOTE['classid']).' '; }
 
-		$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
+			$TITLE = $class.'New Invoice for '.$order_number;
+			$EDIT = true;
+		} else {
+			$ORDER = getOrder($order_number,$order_type);
+			$T = order_type($order_type);//$ORDER['order_type']);
+
+			$invoice = $order_number;
+			$TITLE = 'Invoice '.$order_number;
+			$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
+		}
 	} else {
 		if (! isset($T)) { $T = order_type($order_type); }
 		$TITLE = $T['abbrev'];
@@ -505,7 +530,7 @@
 	$coll_dropdown = '';
 	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
 	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
-	if ($order_number AND ! $ORDER['order_number']) {
+	if ($order_number AND ! $ORDER['order_number'] AND ! $EDIT) {
 		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
@@ -539,7 +564,7 @@
 		if ($T['collection']=='invoices') {
 			$coll_dropdown .= '
 					<li>
-						<a target="_blank" href="/invoice.php?on='.$order_number.'"><i class="fa fa-plus"></i> Proforma Invoice</a>
+						<a target="_blank" href="/invoice.php?order_type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-plus"></i> Manual Invoice</a>
 					</li>
 			';
 		} else if ($T['collection']=='bills') {
@@ -591,10 +616,17 @@
 <form class="form-inline" method="POST" action="save-order.php" enctype="multipart/form-data" >
 <input type="hidden" name="order_number" value="<?php echo $order_number; ?>">
 <input type="hidden" name="order_type" value="<?php echo $order_type; ?>">
+<input type="hidden" name="create_invoice" value="<?php echo $create_invoice; ?>">
 
 <?php if (array_key_exists('repair_code_id',$ORDER)) { ?>
 	<input type="hidden" name="repair_code_id" value="<?php echo $ORDER['repair_code_id']; ?>">
 <?php } ?>
+
+<?php
+	if ($create_invoice) {
+		$order_type = 'Invoice';
+	}
+?>
 
 <!-- FILTER BAR -->
 <div class="table-header table-<?=$order_type;?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">

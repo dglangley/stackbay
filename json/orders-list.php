@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 
 	$sales = array();
 	$query = "SELECT so_number, name FROM sales_orders, companies ";

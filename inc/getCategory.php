@@ -2,6 +2,7 @@
 	
 	function getCategory($catid, $table = 'expense_categories') {
 		$category = '';
+		if (!$catid) { return ($category); }
 
 		if($catid) {
 			$query = "SELECT * FROM $table WHERE id = ".res($catid).";";

@@ -92,6 +92,13 @@
 	if (! isset($_REQUEST['status']) OR ! $_REQUEST['status']) { $status = 'open'; }
 	else { $status = $_REQUEST['status']; }
 
+	// keyword trumps other filters
+	if ($keyword) {
+		$startDate = '';
+		$endDate = '';
+		$status = 'all';
+	}
+
 	$financials = false;
 //	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
 	if (in_array("4", $USER_ROLES)) { $financials = true; }
@@ -275,7 +282,7 @@
 	$total_amt = 0;
 
 	// is the user permitted for any management roles?
-	$permissions = array_intersect($USER_ROLES, array(1,7));
+	$permissions = array_intersect($USER_ROLES, array(1,4,7));
 
 	$query = "SELECT o.*, i.* FROM ";
 	// if no permissions, join the table with assignments to be sure this user is assigned in order to view

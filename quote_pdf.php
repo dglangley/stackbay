@@ -10,16 +10,35 @@
     $submit_type = 'demand';
 
     if (isset($_REQUEST['submit_type']) AND ($_REQUEST['submit_type']=='availability' OR $_REQUEST['submit_type']=='demand')) { $submit_type = $_REQUEST['submit_type']; }
-//  if (isset($_REQUEST['save-availability'])) { $submit_type = 'availability'; }
 
-    $companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
-    $searchlistid = 0;
-    if (isset($_REQUEST['searchlistid']) AND is_numeric($_REQUEST['searchlistid'])) { $searchlistid = trim($_REQUEST['searchlistid']); }
+//    $companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
+    $metaid = 0;
+    if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = trim($_REQUEST['metaid']); }
+
+	$companyid = 0;
+	$query = "SELECT companyid FROM search_meta WHERE id = '".res($metaid)."'; ";
+	$result = qedb($query);
+	if (mysqli_num_rows($result)>0) {
+		$r = mysqli_fetch_assoc($result);
+		$companyid = $r['companyid'];
+	}
+/*
     $contactid = 0;
     if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = trim($_REQUEST['contactid']); }
 
     $items = array();
     if (isset($_REQUEST['items']) AND is_array($_REQUEST['items'])) { $items = $_REQUEST['items']; }
+*/
+
+	$items = array();
+	$query = "SELECT partid, ";
+	if ($submit_type=='demand') { $query .= "quote_qty response_qty, quote_price response_price "; }
+	else if ($submit_type=='availability') { $query .= "offer_qty response_qty, offer_price response_price "; }
+	$query .= "FROM ".$submit_type." WHERE metaid = '".res($metaid)."'; ";
+	$result = qedb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$items[$r['line_number']][] = $r;
+	}
 
     $userid = 1;
     if ($U['id']) { $userid = $U['id']; }
@@ -27,12 +46,14 @@
     $display_str = '';
     $display_html = '';
 
-    foreach ($items as $ln => $row) {
-        if (! is_numeric($ln)) { $ln = 0; }//default in case of corrupt data
+	$total = 0;
+	$ln = 1;
+    foreach ($items as $i => $row) {
+        if (! is_numeric($i)) { $i = 0; }//default in case of corrupt data
 
         $searchid = 0;
         $search_str = '';
-        if (isset($_REQUEST['searches'][$ln])) { $search_str = strtoupper(trim($_REQUEST['searches'][$ln])); }
+        if (isset($_REQUEST['searches'][$i])) { $search_str = strtoupper(trim($_REQUEST['searches'][$i])); }
 
         if ($search_str AND $companyid) {
             $query = "SELECT id FROM searches WHERE search = '".$search_str."' AND userid = '".$userid."' ";
@@ -44,37 +65,43 @@
             }
         }
 
-		$total = 0;
+/*
      //print "<pre>".print_r($row,true)."</pre>";
         $list_qty = 1;
-        if (isset($_REQUEST['search_qtys'][$ln]) AND is_numeric($_REQUEST['search_qtys'][$ln]) AND $_REQUEST['search_qtys'][$ln]>0) { $list_qty = trim($_REQUEST['search_qtys'][$ln]); }
+        if (isset($_REQUEST['search_qtys'][$i]) AND is_numeric($_REQUEST['search_qtys'][$i]) AND $_REQUEST['search_qtys'][$i]>0) { $list_qty = trim($_REQUEST['search_qtys'][$i]); }
         $list_price = false;
-        if (isset($_REQUEST['list_price'][$ln])) { $list_price = trim($_REQUEST['list_price'][$ln]); }
+        if (isset($_REQUEST['list_price'][$i])) { $list_price = trim($_REQUEST['list_price'][$i]); }
 
-        $sellqty[$ln] = array();
-        if (isset($_REQUEST['sellqty'][$ln]) AND is_array($_REQUEST['sellqty'][$ln])) { $sellqty[$ln] = $_REQUEST['sellqty'][$ln]; }
-        $sellprice[$ln] = array();
-        if (isset($_REQUEST['sellprice'][$ln]) AND is_array($_REQUEST['sellprice'][$ln])) { $sellprice[$ln] = $_REQUEST['sellprice'][$ln]; }
+        $sellqty[$i] = array();
+        if (isset($_REQUEST['sellqty'][$i]) AND is_array($_REQUEST['sellqty'][$i])) { $sellqty[$i] = $_REQUEST['sellqty'][$i]; }
+        $sellprice[$i] = array();
+        if (isset($_REQUEST['sellprice'][$i]) AND is_array($_REQUEST['sellprice'][$i])) { $sellprice[$i] = $_REQUEST['sellprice'][$i]; }
 
-        $bid_qty[$ln] = array();
+        $bid_qty[$i] = array();
         if (isset($_REQUEST['bid_qty']) AND is_array($_REQUEST['bid_qty'])) { $bid_qty = $_REQUEST['bid_qty']; }
-        $bid_price[$ln] = array();
+        $bid_price[$i] = array();
         if (isset($_REQUEST['bid_price']) AND is_array($_REQUEST['bid_price'])) { $bid_price = $_REQUEST['bid_price']; }
+*/
 
         $quote_str = '';
         $quote_html = '';
 
-        foreach ($row as $n => $partid) {
+        foreach ($row as $n => $r) {
+			$partid = $r['partid'];
             //defaults
+/*
             $response_qty = 0;
             if ($submit_type=='availability') { $response_qty = $list_qty; }
-            else if (isset($sellqty[$ln][$n]) AND is_numeric($sellqty[$ln][$n]) AND $sellqty[$ln][$n]>0) { $response_qty = $sellqty[$ln][$n]; }
+            else if (isset($sellqty[$i][$n]) AND is_numeric($sellqty[$i][$n]) AND $sellqty[$i][$n]>0) { $response_qty = $sellqty[$i][$n]; }
             $response_price = false;
-            // if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
-            if (isset($sellprice[$ln][$n])) { $response_price = $sellprice[$ln][$n]; }
+            // if (isset($sellprice[$i][$n])) { $response_price = $sellprice[$i][$n]; }
+            if (isset($sellprice[$i][$n])) { $response_price = $sellprice[$i][$n]; }
 
-            if ($submit_type=='availability' && isset($bid_qty[$ln])) { $response_qty = $bid_qty[$ln]; }
-            if ($submit_type=='availability' && isset($bid_price[$ln])) { $response_price = $bid_price[$ln]; }
+            if ($submit_type=='availability' && isset($bid_qty[$i])) { $response_qty = $bid_qty[$i]; }
+            if ($submit_type=='availability' && isset($bid_price[$i])) { $response_price = $bid_price[$i]; }
+*/
+			$response_qty = $r['response_qty'];
+			$response_price = $r['response_price'];
 
 			$total += ($response_qty*$response_price);
 
@@ -82,11 +109,12 @@
                 $quote_str .= ' qty '.$response_qty.'- '.getPart($partid).' '.format_price($response_price);
                 if ($response_qty>1) { $quote_str .= ' ea'; }
                 $quote_str .= chr(10);
-                $quote_html .= '<tr><td class="text-left">'.($ln+1).'</td><td class="text-left">'.getPart($partid,'part').' '.getPart($partid,'heci').'</td>'.
+                $quote_html .= '<tr><td class="text-left">'.($ln).'</td><td class="text-left">'.getPart($partid,'part').' '.getPart($partid,'heci').'</td>'.
                     '<td>'.$response_qty.'</td><td class="text-right">'.format_price($response_price).'</td>'.
                     '<td class="text-right">'.format_price($response_qty*$response_price).'</td></tr>';
             }
         }
+		$ln++;
         if ($quote_str) {
             $display_str .= $search_str.chr(10).$quote_str;
             $display_html .= $quote_html;
@@ -111,7 +139,7 @@
 <html>
     <head>
         <style id="stndz-style"></style>
-        <title>Sales Quote <?=$_REQUEST['metaid'];?></title>
+        <title>Sales Quote <?=$metaid;?></title>
         <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet"> 
         <style type="text/css">
             body{
@@ -219,7 +247,7 @@
     </head>
     <body style="width:1024px; margin-left:auto; margin-right:auto">
         <div id="ps_bold">
-            <h3>Sales Quote <?=$_REQUEST['metaid'];?></h3>
+            <h3>Sales Quote <?=$metaid;?></h3>
             <table class="table-full" id="vendor_add">
                 <tbody><tr>
                     <th class="text-center">Company</th>

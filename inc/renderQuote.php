@@ -26,7 +26,7 @@
     function getItemDetails($item_id, $table, $field) {
         $data = array();
 
-        $query = "SELECT * FROM $table t, service_quotes sq WHERE t.$field = ".res($item_id)." AND sq.id = t.quoteid;";
+        $query = "SELECT * FROM $table t, service_quotes sq WHERE t.$field = ".res($item_id)." AND sq.quoteid = t.quoteid;";
         $result = qdb($query) OR die(qe().' '.$query);
 
         if(mysqli_num_rows($result)) {

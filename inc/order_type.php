@@ -30,6 +30,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Invoice';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Bill':
@@ -59,6 +61,8 @@
 				$T['account'] = 'AP';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Bill';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Return':
@@ -89,6 +93,8 @@
 				$T['account'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Return';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Credit':
@@ -117,6 +123,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Credit';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Purchase':
@@ -146,6 +154,8 @@
 				$T['account'] = 'AP';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Purchase';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Repair':
@@ -175,6 +185,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = true;
 				$T['support'] = true;
+				$T['type'] = 'Repair';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Service':
@@ -204,6 +216,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Service';
+				$T['labor_cost'] = true;
 				break;
 
 			case 'service_quote':
@@ -232,6 +246,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = '';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'purchase_request':
@@ -260,6 +276,8 @@
 				$T['account'] = 'AP';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = '';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Sale':
@@ -289,6 +307,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = true;
 				$T['support'] = true;
+				$T['type'] = 'Sale';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'Outsourced':
@@ -318,6 +338,8 @@
 				$T['account'] = 'AP';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'Outsourced';
+				$T['labor_cost'] = false;
 				break;
 
 			case 'IT':
@@ -347,6 +369,8 @@
 				$T['account'] = 'AR';
 				$T['confirmation'] = false;
 				$T['support'] = false;
+				$T['type'] = 'IT';
+				$T['labor_cost'] = false;
 				break;
 		}
 
