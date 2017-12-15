@@ -13,32 +13,79 @@
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 
+	$purchase_request = array();
+	if (isset($_REQUEST['purchase_request'])) { $purchase_request = $_REQUEST['purchase_request']; }
+
 	$outstream = fopen("php://output",'w');
 
-	$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
-	fputcsv($outstream, $header, ',', '"');
+	if(! empty($purchase_request) AND empty($partids)) {
+		// Using the sourcing page to populate
+		$header = array('Manufacturer','Part Number','Description','Quantity','UOM','Quantity Available','Price Per Unit', 'Lead Time (in # of days, 0 for stock)', 'Notes', 'Alternative Part Number');
+		fputcsv($outstream, $header, ',', '"');
 
-	foreach ($partids as $partid) {
-		$H = hecidb($partid,'id');
-		$part_strs = explode(' ',$H[$partid]['part']);
-		$aliases = '';
-		foreach ($part_strs as $i => $str) {
-			if ($i==0) { continue; }
+		// Get the data
+		foreach($purchase_request as $id) {
+			$query = "SELECT * FROM purchase_requests WHERE id=".res($id).";";
+			$result = qedb($query);
 
-			if ($aliases) { $aliases .= ' '; }
-			$aliases .= $str;
+			if(mysqli_num_rows($result)) {
+				$r = mysqli_fetch_assoc($result);
+
+				$partids[$r['partid']] += $r['qty'];
+			}
 		}
 
-		$row = array(
-			getQty($partid),
-			$part_strs[0],
-			$H[$partid]['heci'],
-			$aliases,
-			$H[$partid]['manf'],
-			$H[$partid]['system'],
-			$H[$partid]['description'],
-		);
-		fputcsv($outstream, $row, ',', '"');
+		foreach($partids as $partid => $qty) {
+			$H = hecidb($partid,'id');
+			$part_strs = explode(' ',$H[$partid]['part']);
+			$aliases = '';
+			foreach ($part_strs as $i => $str) {
+				if ($i==0) { continue; }
+
+				if ($aliases) { $aliases .= ' '; }
+				$aliases .= $str;
+			}
+
+			$row = array(
+				$H[$partid]['manf'],
+				$part_strs[0],
+				$H[$partid]['description'],
+				$qty,
+				'EA',
+				'',
+				'',
+				'',
+				'',
+				$aliases,
+			);
+			fputcsv($outstream, $row, ',', '"');
+		}
+	} else {
+		$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
+		fputcsv($outstream, $header, ',', '"');
+
+		foreach ($partids as $partid) {
+			$H = hecidb($partid,'id');
+			$part_strs = explode(' ',$H[$partid]['part']);
+			$aliases = '';
+			foreach ($part_strs as $i => $str) {
+				if ($i==0) { continue; }
+
+				if ($aliases) { $aliases .= ' '; }
+				$aliases .= $str;
+			}
+
+			$row = array(
+				getQty($partid),
+				$part_strs[0],
+				$H[$partid]['heci'],
+				$aliases,
+				$H[$partid]['manf'],
+				$H[$partid]['system'],
+				$H[$partid]['description'],
+			);
+			fputcsv($outstream, $row, ',', '"');
+		}
 	}
 
 	fclose($outstream);
