@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 	$order_number = 0;
@@ -11,12 +11,16 @@
 	$line_item_id = 0;
 	$new_item = false;
 	$new_order = false;
+	$charge = '';
+	$description = '';
 	if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 	if (isset($_REQUEST['change_type'])) { $change_type = trim($_REQUEST['change_type']); }
 	if (isset($_REQUEST['line_item_id'])) { $line_item_id = trim($_REQUEST['line_item_id']); }
 	if (isset($_REQUEST['new_item'])) { $new_item = trim($_REQUEST['new_item']); }
 	if (isset($_REQUEST['new_order'])) { $new_order = trim($_REQUEST['new_order']); }
+	if (isset($_REQUEST['charge'])) { $charge = trim($_REQUEST['charge']); }
+	if (isset($_REQUEST['description'])) { $description = trim($_REQUEST['description']); }
 
 	$T = order_type($order_type);
 
@@ -45,9 +49,13 @@
 
 			if ($val_query) { $val_query .= ", "; }
 			// these are fields we want to override and not reproduce from the items table from the query above
-			if ($item=='qty' OR $item==$T['amount'] OR $item==$T['description'] OR $item=='id' OR $item=='line_number') { $val = ''; }
+			if ($item=='id' OR $item=='line_number') { $val = ''; }
+			else if ($item==$T['amount'] AND $change_type=='Internal') { $val = '0.00'; }
+			else if ($item==$T['amount']) { $val = $charge; }
 			else if ($item=='ref_2') { $val = $line_item_id; }
 			else if ($item=='ref_2_label') { $val = $T['item_label']; }
+			else if ($item=='qty') { $val = 1; }
+			else if ($item==$T['description']) { $val = $description; }
 			$val_query .= fres($val);
 		}
 		$query .= $item_query.") VALUES (".$val_query."); ";
@@ -58,6 +66,7 @@
 
 	if ($DEBUG) { exit; }
 
-	header('Location: edit_order.php?order_type='.$order_type.'&order_number='.$order_number);
+	//header('Location: edit_order.php?order_type='.$order_type.'&order_number='.$order_number);
+	header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number.'-'.$items['line_number']);
 	exit;
 ?>

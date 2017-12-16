@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
 
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
@@ -454,6 +455,18 @@
 	}
 
 	if ($DEBUG) { exit; }
+
+	if ($create_invoice) {
+		if ($order_number) {
+			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
+			setInvoiceCOGS($order_number,$ORDER['order_type']);
+
+			$send_err = sendInvoice($order_number);
+			if ($send_err) {
+				$return['error'] = $send_err;
+			}
+		}
+	}
 
 	header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);
 	exit;

@@ -34,7 +34,7 @@
 		$ln = $r2['line_number'];
 
 		if ($r2['taskid'] AND $r2['task_label']) {
-			$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs WHERE item_id = '".$r2['taskid']."' AND item_id_label = '".$r2['task_label']."'; ";
+			$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs sc WHERE item_id = '".$r2['taskid']."' AND item_id_label = '".$r2['task_label']."'; ";
 		} else {//legacy support
 			$query2 = "SELECT SUM(sc.cogs_avg) cogs ";
 			$query2 .= "FROM invoice_shipments s, package_contents pc, inventory_history h, ".$T['items']." items, sales_cogs sc ";
@@ -58,7 +58,7 @@
 
 		$je_amount = false;
 		$query3 = "SELECT SUM(amount) amount FROM journal_entries ";
-		$query3 .= "WHERE trans_number = '".$r2['invoice_no']."' AND trans_type = 'invoice' AND amount IS NOT NULL; ";
+		$query3 .= "WHERE trans_number = '".$invoice_no."' AND trans_type = 'invoice' AND amount IS NOT NULL; ";
 		$result3 = qedb($query3);
 		if (mysqli_num_rows($result3)>0) {
 			$r3 = mysqli_fetch_assoc($result3);
@@ -67,7 +67,7 @@
 
 		$amount = number_format($r2['cogs'],2,'.','');
 		if ($je_amount!==false AND $amount==$je_amount) { return ($jeid); }
-//		echo $r2['invoice_no'].': '.$amount.' COGS, '.$je_amount.' existing JE amount<BR>';
+//		echo $invoice_no.': '.$amount.' COGS, '.$je_amount.' existing JE amount<BR>';
 
 		// if there's a saved JE amount, determine if it makes $amount go negative (i.e., COGS was $500 but now $100, so result should be -$400 on COGS account)
 		if ($je_amount>0) {
@@ -87,7 +87,7 @@
 //			print "<pre>".print_r($r2,true)."</pre>"; return false;
 		}
 
-		$jeid = setJournalEntry(false,$GLOBALS['now'],$debit,$credit,'COGS for Invoice #'.$r2['invoice_no'],$amount,$r2['invoice_no'],'invoice');
+		$jeid = setJournalEntry(false,$GLOBALS['now'],$debit,$credit,'COGS for Invoice #'.$invoice_no,$amount,$invoice_no,'invoice');
 //		echo '<BR>';
 
 		return ($jeid);

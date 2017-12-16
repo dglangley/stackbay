@@ -168,7 +168,7 @@
 
     //Invoices population
 
-    $select = "SELECT * FROM `invoices` WHERE (order_type = 'Sale' OR order_type = 'Repair') ";
+    $select = "SELECT * FROM `invoices` WHERE (order_type = 'Sale' OR order_type = 'Repair' OR order_type = 'Service') ";
 	if ($companyid) { $select .= "AND companyid = '".res($companyid)."' "; }
 	if ($startDate) {
 		$select .= "AND date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
@@ -181,28 +181,13 @@
 	$invoices = '';
 	if(mysqli_num_rows($invoices_results) > 0){
 	    foreach($invoices_results as $row){
-	    	//Grab Order Information
-	    	if($row['order_type'] == 'Sale') {
-				$query = "SELECT * FROM sales_orders WHERE so_number = ".prep($row['order_number'])."; ";
-				$result = qdb($query) OR die(qe().' '.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$invoice_info = $r;
-				}
-	    	} else if($row['order_type'] == 'Repair') {
-				$query = "SELECT * FROM repair_orders WHERE ro_number = ".prep($row['order_number'])."; ";
-				$result = qdb($query) OR die(qe().' '.$query);
-				if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$invoice_info = $r;
-				}
-			} else {
-				// $query = "SELECT * FROM returns WHERE so_number = ".prep($row['order_number'])."; ";
-				// $result = qdb($query) OR die(qe().' '.$query);
-				// if (mysqli_num_rows($result)>0) {
-				// 	$r = mysqli_fetch_assoc($result);
-				// 	$invoice_info = $r;
-				// }
+			$T = order_type($row['order_type']);
+
+			$query = "SELECT * FROM ".$T['orders']." WHERE ".$T['order']." = '".$row['order_number']."'; ";
+			$result = qedb($query);
+			if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$invoice_info = $r;
 			}
 
 			$address = getAddresses($invoice_info['bill_to_id']);

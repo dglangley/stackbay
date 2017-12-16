@@ -105,7 +105,7 @@
 					$T2 = order_type($label);
 					$order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
-					$col = $T2['abbrev'].' '.$order;
+					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&order_number='.$order.'"><i class="fa fa-arrow-right"></i></a>';
 				} else {
 					$col = $label.' '.$ref;
 				}
@@ -301,8 +301,8 @@
 			<span class="dropdown">
 				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
 				<ul class="dropdown-menu dropdown-menu-right">
-					<li><a href="javascript:void(0);" class="change-order" data-type="CCO" data-title="Customer" data-billing="BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add CCO (billable)</a></li>
 					<li><a href="javascript:void(0);" class="change-order" data-type="ICO" data-title="Internal" data-billing="NON-BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add ICO (internal)</a></li>
+					<li><a href="javascript:void(0);" class="change-order" data-type="CCO" data-title="Customer" data-billing="BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add CCO (billable)</a></li>
 				</ul>
 			</span>
 				';
@@ -1018,14 +1018,21 @@
 			M.find("input[name='line_item_id']").val($(this).data('id'));
 
 			var title = $(this).data('title');
+			if (title=='Customer') {
+				M.find("#co_charge").attr('readonly',false);
+			} else {
+				M.find("#co_charge").attr('readonly',true);
+			}
+/*
 			var billing = $(this).data('billing');
 			var instructions = '<ul>'+
 				'<li> New Line Item will add the Change Order to the existing Service Order. Simpler, more common option.</li>'+
 				'<li> New Service Order will create a completely separate order. Rare for ICO\'s, offers more flexibility, but can become more complicated.</li>'+
 				'</ul>';
+			M.find("#modalCOBody").html(title+" Change Orders ("+type+") are <strong>"+billing+"</strong>.<br/><br/>Please select the type of "+type+" below:"+instructions);
+*/
 
 			M.find("#modalCOTitle").html("<i class='fa fa-columns'></i> "+title+" Change Order");
-			M.find("#modalCOBody").html(title+" Change Orders ("+type+") are <strong>"+billing+"</strong>.<br/><br/>Please select the type of "+type+" below:"+instructions);
 			M.modal('show');
 		});
 
