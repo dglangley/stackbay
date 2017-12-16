@@ -14,8 +14,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 
 	$DEBUG = 0;
-	$debug = 0;
-	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
+	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
 	// do this check for user email first, before creating order, in case there are errors/warnings
@@ -26,7 +25,7 @@
 
 	$addl_recp_email = "";
 	$addl_recp_name = "";
-	if ($email_confirmation AND ! $debug) {
+	if ($email_confirmation AND ! $DEBUG) {
 		if ($email_to) {
 			$addl_recp_email = getContact($email_to,'id','email');
 			if ($addl_recp_email) {
@@ -187,13 +186,9 @@
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= fres($repair_code_id).", "; }
 	$query .= fres($status)."); ";
-	if ($debug) {
-		echo $query.'<BR>';
-		if (! $order_number) { $order_number = 999999; }
-	} else {
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		$order_number = qid();
-	}
+	$result = qedb($query);
+	$order_number = qid();
+	if ($DEBUG AND ! $order_number) { $order_number = 999999; }
 
 	$items = array();
 //	if (isset($_REQUEST['partid'])) { $items = $_REQUEST['partid']; }
@@ -318,7 +313,7 @@
 
 		if ($fieldid[$key]) {
 			$query2 = "SELECT part, heci FROM parts WHERE id = '".res($fieldid[$key])."'; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$part_strs = explode(' ',$r2['part']);
@@ -339,7 +334,7 @@
 		if (in_array("service_item_id", $ref_1_label)  OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label)  OR in_array("repair_item_id", $ref_2_label)) {
 			//print_r($key);
 			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key";
-			qdb($query) OR die(qe() . ' ' . $query);
+			qedb($query);
 		}
 	}
 
@@ -359,8 +354,7 @@
 		// deleting charge by zeroing out amount
 		if ($id AND (! $charge_amount[$id] OR trim($charge_amount[$id]=='0.00'))) {
 			$query = "DELETE FROM ".$T['charges']." WHERE id = '".res($id)."'; ";
-			if ($debug) { echo $query.'<BR>'; }
-			else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+			$result = qedb($query);
 			continue;
 		}
 
@@ -369,8 +363,7 @@
 		$query .= ") VALUES ('".$order_number."', '".res($descr)."', '".res($charge_qty[$id])."', '".res(trim($charge_amount[$id]))."'";
 		if ($id) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
-		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
 	}
 
 	// build freight service and terms descriptors for email confirmation
@@ -379,14 +372,14 @@
 	if ($email_confirmation) {
 		$query = "SELECT method, name FROM freight_services fs, freight_carriers fc, companies c ";
 		$query .= "WHERE fs.id = '".res($freight_services_id)."' AND fs.carrierid = fc.id AND fc.companyid = c.id; ";
-		$result = qdb($query) OR jsonDie(qe().' '.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$freight_service = $r['name'].' '.$r['method'];
 		}
 		if ($freight_account_id) {
 			$query = "SELECT account_no FROM freight_accounts WHERE id = '".res($freight_account_id)."'; ";
-			$result = qdb($query) OR jsonDie(qe().' '.$query);
+			$result = qedb($query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
 				$freight_terms = $r['account_no'];
@@ -448,7 +441,7 @@
 		if ($public_notes) {
 			$msg .= '<br/>'.str_replace(chr(10),'<BR/>',$public_notes).'<br/>';
 		}
-		if ($debug) {
+		if ($DEBUG) {
 			echo $msg.'<BR><BR>';
 		} else {
 			$send_success = send_gmail($msg,$sbj,$recps,$bcc);
@@ -460,8 +453,8 @@
 		}
 	}
 
-	if ($debug) { exit; }
+	if ($DEBUG) { exit; }
 
-	header('Location: /order.php?order_number='.$order_number.'&order_type='.$order_type);
+	header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);
 	exit;
 ?>
