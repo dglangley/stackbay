@@ -5,6 +5,8 @@
 
 	$MATERIALS_COST = 0;
 	function calcTaskCost($item_id,$item_label,$include_freight=true) {
+		global $MATERIALS_COST;
+
 		$cost = 0;
 
 		if (! $item_id OR ! $item_label) { return ($cost); }

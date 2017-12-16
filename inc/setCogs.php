@@ -33,7 +33,6 @@
 		$query = "INSERT INTO sales_cogs (inventoryid, item_id, item_id_label, cogs_avg, cogs_actual) ";
 		$query .= "VALUES (".fres($inventoryid).",".fres($item_id).",".fres($item_id_label).",";
 		$query .= fres($cogs_avg).",".fres($cogs_actual)."); ";
-		$query .= "); ";
 		if ($debug) {
 			echo $query.'<BR>';
 			$cogsid = 999999;

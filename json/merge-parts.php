@@ -170,7 +170,7 @@
 	$query = "UPDATE inventory_history SET value = '".res($masterid)."' WHERE field_changed = 'partid' AND value = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
-	$query = "UPDATE invoice_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$query = "UPDATE invoice_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($slaveid)."' AND (item_label = 'partid' OR item_label IS NULL); ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	$query = "UPDATE messages SET ref_1 = '".res($masterid)."' WHERE ref_1_label = 'partid' AND ref_1 = '".res($slaveid)."'; ";

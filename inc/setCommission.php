@@ -10,8 +10,6 @@
 		$COMM_REPS[$r['id']] = $r['commission_rate'];
 	}
 
-	if (! isset($debug)) { $debug = 0; }
-
 	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0,$comm_repid=0) {
 		global $COMM_REPS,$debug;
 
@@ -29,7 +27,7 @@
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.partid, i.partid inventory_partid ";
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.item_id partid, i.partid inventory_partid ";
 		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
 		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
 		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
@@ -144,13 +142,11 @@
 							$query4 .= "VALUES ('".res($invoice_no)."', '".res($invoice_item_id)."', ".fres($inventoryid).", ";
 							$query4 .= "'".res($item_id)."', '".$item_label."', '".$GLOBALS['now']."', ".fres($cogsid).", ";
 							$query4 .= "'".res($rep_id)."', '".$rate."', '".$comm_due."'); ";
-							if ($debug) {
+							$result4 = qedb($query4);
+							$commissionid = qid();
+							if ($GLOBALS['DEBUG']) {
 								$commissionid = 999999;
 								$comm_output .= '$'.$comm_due.', '.$commissionid.': '.$query4.'<BR>';
-								echo $query4.'<BR>';
-							} else {
-								$result4 = qedb($query4);
-								$commissionid = qid();
 							}
 						}
 	}

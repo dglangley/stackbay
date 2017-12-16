@@ -13,8 +13,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 
-	$DEBUG = 3;
-	$debug = 1;
+	$DEBUG = 0;
+	$debug = 0;
 	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
@@ -269,8 +269,15 @@
 			else { $query .= "NULL, "; }
 		}
 		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."'";
-		if (array_key_exists('qty_shipped',$F)) { $query .= ", '".res($ORDER['items'][$id]['qty_shipped'])."'"; }
-		else if (array_key_exists('qty_received',$F)) { $query .= ", '".res($ORDER['items'][$id]['qty_received'])."'"; }
+		if (array_key_exists('qty_shipped',$F)) {
+			$qty_shipped = 0;
+			if (isset($ORDER['items'][$id]['qty_shipped'])) { $qty_shipped = $ORDER['items'][$id]['qty_shipped']; }
+			$query .= ", '".res($qty_shipped)."'";
+		} else if (array_key_exists('qty_received',$F)) {
+			$qty_received = 0;
+			if (isset($ORDER['items'][$id]['qty_received'])) { $qty_received = $ORDER['items'][$id]['qty_received']; }
+			$query .= ", '".res($qty_received)."'";
+		}
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
 		if ($create_invoice AND $id) { $query .= ", '".res($id)."', '".res($T2['item_label'])."'"; }
 		else if (isset($F['task_label'])) { $query .= ", '".res($ORDER['items'][$id]['taskid'])."', '".res($ORDER['items'][$id]['task_label'])."'"; }
@@ -294,7 +301,7 @@
 		$result = qedb($query);
 		$saved_id = qid();
 
-		if ($create_invoice AND $id) {
+		if ($create_invoice AND $id AND $ORDER['order_type']=='Service') {
 			// calculate cost of task in order to determine profit, then calculate commission based on profit
 			$cost = calcTaskCost($id,$T2['item_label']);
 
@@ -306,7 +313,7 @@
 			$rate = 10;
 			$rep_id = 27;
 			$comm_due = ($profit*($rate/100));
-			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$rep_id,$comm_due);
+			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$rep_id,$comm_due,$rate);
 		}
 
 		if ($fieldid[$key]) {

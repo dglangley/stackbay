@@ -28,7 +28,7 @@
 			// dynamically get columns from inventory table so we can check $I array for updated values
 			$fields = array();
 			$query = "SHOW COLUMNS FROM inventory; ";
-			$fields = qdb($query) OR die(qe().'<BR>'.$query);
+			$fields = qedb($query);
 
 			$updates = '';
 			while ($r = mysqli_fetch_assoc($fields)) {
@@ -45,7 +45,7 @@
 				$query = "UPDATE inventory SET ".$updates;
 				$query .= "WHERE id = '".res($inventoryid)."'; ";
 				if ($debug) { echo $query.'<BR>'; }
-				else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+				else { $result = qedb($query); }
 			}
 
 			$status = '';
@@ -120,7 +120,7 @@
 				echo $query.'<BR>';
 				$inventoryid = 999999;
 			} else {
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				$result = qedb($query);
 				$inventoryid = qid();
 			}
 		}
@@ -135,26 +135,26 @@
 		$avg_cost = getCost($partid);
 
 		$query = "SELECT id FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$costid = $r['id'];
 
 			$query = "UPDATE inventory_costs SET average = '".res($avg_cost)."' WHERE inventoryid = '".res($inventoryid)."'; ";
 			if ($debug) { echo $query.'<BR>'; }
-			else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+			else { $result = qedb($query); }
 		} else {
 			$query = "INSERT INTO inventory_costs (inventoryid, datetime, actual, average) ";
 			$query .= "VALUES ('".res($inventoryid)."', '".$GLOBALS['now']."', NULL, '".res($avg_cost)."'); ";
 			if ($debug) { echo $query.'<BR>'; }
-			else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+			else { $result = qedb($query); }
 		}
 	}
 
 	function applyInventoryAvg($inventoryid,$partid,$inventory_qty) {
 		$inventory_avg = 0;
 		$query = "SELECT average FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$inventory_avg = $r['average'];
@@ -174,7 +174,7 @@
 		// reset inventory average value on inventory_costs now that it's served its purpose and is back in stock
 		$query = "UPDATE inventory_costs SET average = NULL WHERE inventoryid = '".res($inventoryid)."'; ";
 		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		else { $result = qedb($query); }
 
 		return ($avg_cost);
 	}

@@ -401,7 +401,7 @@
 				$I = array();
 				if ($invoice_item_id) {
 					if (! isset($INVOICE_ITEMS[$invoice_item_id])) {
-						$query2 = "SELECT amount, partid FROM invoice_items WHERE id = '".$invoice_item_id."'; ";
+						$query2 = "SELECT amount, item_id partid FROM invoice_items WHERE id = '".$invoice_item_id."'; ";
 //						echo $query2.'<BR>';
 						$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 						if (mysqli_num_rows($result2)>0) {
@@ -413,6 +413,7 @@
 					}
 				}
 				if (count($I)==0) {
+					// source data from corresponding items table
 					$query2 = "SELECT price amount, partid FROM ".$T['items']." WHERE id = '".$r['item_id']."'; ";
 //					echo $query2.'<BR>';
 					$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -463,7 +464,7 @@
 				$query2 .= "AND ii.ref_1 = items.id AND ii.ref_1_label = '".$T['item_label']."' AND items.".$T['order']." = '".$r[$T['order']]."' ";
 				$query2 .= "GROUP BY ii.ref_1, ii.ref_1_label; ";
 			} else {
-				$query2 = "SELECT amount, partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+				$query2 = "SELECT amount, item_id partid, id FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
 			}
 //			echo $query2.'<BR>';
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
@@ -488,7 +489,7 @@
 					} else {
 						$query3 .= "AND p.order_number = t.".$T['order']." AND p.order_type = '".$order_type."' ";
 					}
-					$query3 .= "AND ii.partid = '".$r2['partid']."' AND t.partid = ii.partid AND s.invoice_item_id = ii.id ";
+					$query3 .= "AND ii.item_id = '".$r2['partid']."' AND t.partid = ii.item_id AND s.invoice_item_id = ii.id ";
 					$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
 					$query3 .= "GROUP BY h.invid, t.id; ";
 					$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']."<BR>".$query3);

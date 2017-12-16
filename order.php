@@ -163,10 +163,14 @@
 				}
 			}
 
-			if ((array_key_exists('partid',$r) AND $r['partid']) OR (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='partid'))  {
-				$H = hecidb($r['partid'],'id');
-				$P = $H[$r['partid']];
-				$r['name'] = '<option value="'.$r['partid'].'" selected>'.$P['name'].'</option>'.chr(10);
+			$partid = 0;
+			if (array_key_exists('partid',$r) AND $r['partid']) { $partid = $r['partid']; }
+			else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']<>'addressid') { $partid = $r['item_id']; }
+
+			if ($partid) {
+				$H = hecidb($partid,'id');
+				$P = $H[$partid];
+				$r['name'] = '<option value="'.$partid.'" selected>'.$P['name'].'</option>'.chr(10);
 			} else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='addressid') {
 				$P['id'] = $r['item_id'];
 				if ($EDIT) {

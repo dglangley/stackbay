@@ -12,9 +12,6 @@
 	include_once $rootdir.'/inc/sendInvoice.php';
     include_once $rootdir.'/dompdf/autoload.inc.php';
 
-	if (! isset($debug)) { $debug = 0; }
-// $debug = 1;
-
     function create_invoice($order_number, $shipment_datetime){
 		//Variable Declarations
 		$warranty = '';
@@ -41,14 +38,14 @@
 			AND ri.price > 0
 			GROUP BY packages.id, ri.id;
 		";
-		$results = qdb($query) or die(qe()." $query");
+		$results = qedb($query);
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
 		} else {
 			$query = "
-				Select i.partid, datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
+				Select i.partid, packages.datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
 				WHERE package_contents.packageid = packages.id
 				AND package_contents.serialid = i.id
@@ -60,7 +57,7 @@
 				GROUP BY package_contents.packageid, it.id;
 			";
 			//GROUP BY it.id;
-			$results = qdb($query) or die(qe()." $query");
+			$results = qedb($query);
 		}
 
 		$o = o_params($type);
@@ -70,14 +67,11 @@
 		// did we already invoice this shipment?
 		$query2 = "SELECT * FROM invoices ";
 		$query2 .= "WHERE order_number = '".res($order_number)."' AND order_type = '".res($o['type'])."' AND shipmentid = '".res($shipment_datetime)."'; ";
-		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+		$result2 = qedb($query2);
 		if (mysqli_num_rows($result2)>0) {
 			$return['error'] = 'Shipment has already been invoiced';
 			return $return;
 		}
-		
-		//Check to see there are actually invoice-able items on the order
-		if($GLOBALS['debug']) { echo "Debug ON: ".$query."<BR>"; }
 
 		// shipping a non-invoiceable order, see query above
 		if (mysqli_num_rows($results) == 0){
@@ -88,7 +82,7 @@
 		if ($type == 'Sale'){
 			//Add in sales_charges rows into the invoice item
 			$sales_charges = "SELECT * FROM sales_charges WHERE so_number = ".prep($order_number).";";
-			$sales_result = qdb($sales_charges) OR die(qe());
+			$sales_result = qedb($sales_charges);
 
 			while ($row = mysqli_fetch_assoc($sales_result)) {
 				$sales_charge_holder[] = $row;
@@ -101,8 +95,8 @@
 				$one = true;
 			}
 		}
-		if(!$one){
-			$return['error'] = "No Shipments on this date";
+		if(!$one AND ! $GLOBALS['DEBUG']){
+			$return['error'] = "No shipments on this date";
 			return $return;
 		}
 		//Create an array for all the sales credit data
@@ -113,8 +107,7 @@
 			".$o['order'].".termsid = terms.id;
 		";
 
-		if ($GLOBALS['debug']) { echo $macro.'<BR>'; }
-		$invoice_macro = qdb($macro) or die(qe()." $macro");
+		$invoice_macro = qedb($macro);
 		$macro_row = mysqli_fetch_assoc($invoice_macro);
 		
 		$status = 'Completed';
@@ -124,29 +117,28 @@
 			INSERT INTO `invoices`( `companyid`, `order_number`, `order_type`, `date_invoiced`, `shipmentid`, `freight`, `public_notes`, `status`) 
 			VALUES ( ".prep($macro_row['companyid']).", ".prep($order_number).", ".prep($o['type']).", ".prep($GLOBALS['now']).", ".prep($shipment_datetime)." , ".fres($freight).", NULL, '$status');
 		";
-		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().": ".$query); }
+		$result = qedb($query);
 		$invoice_id =  qid();
+		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) { $invoice_id = 999999; }
 		$return['invoice_no'] = $invoice_id;
 		$return['invoice'] = $invoice_id;
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($results as $row) {
-			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s")){
+			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s") AND ! $GLOBALS['DEBUG']){
 				continue;	
 			}
 			$insert = "
-				INSERT INTO `invoice_items`(`invoice_no`, `partid`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
-				VALUES (".$invoice_id.", ".prep($row['partid']).", ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
+				INSERT INTO `invoice_items`(`invoice_no`, `item_id`, `item_label`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
+				VALUES (".$invoice_id.", ".prep($row['partid']).", 'partid', ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
 				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
 			
-			if ($GLOBALS['debug']) { echo $insert.'<BR>'; }
-			else { qdb($insert) or die(qe()." ".$insert); }
+			qedb($insert);
 			$invoice_item_id = qid();
+			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) { $invoice_item_id = 999999; }
 
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
-			if ($GLOBALS['debug']) { echo $package_insert.'<BR>'; }
-			else { qdb($package_insert) or die(qe()." ".$package_insert); }
+			qedb($package_insert);
 			if($invoice_id && $invoice_item_id){
 				setCommission($invoice_id,$invoice_item_id);
 			}
@@ -157,19 +149,19 @@
 			foreach ($sales_charge_holder as $sch) {
 				//first check if the sales_charge_id (unique to ref 1 exists) and labeled to sales_charge_id
 				$query = "SELECT * FROM `invoice_items` WHERE ref_1 = ".prep($sch['id'])." AND ref_1_label = 'sales_charge_id';";
-				$result = qdb($query) OR die(qe().": ".$query);
+				$result = qedb($query);
 
 				//If record does no exists at all
 				if (mysqli_num_rows($result) == 0) {
-					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `partid`,`memo`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
-					VALUES (".$invoice_id.", NULL,".prep($sch['memo']).", ".$sch['qty'].", ".prep($sch['price']).",".prep($sch['id']).", 'sales_charge_id');
+					$insert = "INSERT INTO `invoice_items`(`invoice_no`, `item_id`,`item_label`, `memo`, `qty`, `amount`, `ref_1`, `ref_1_label`) 
+					VALUES (".$invoice_id.", NULL, NULL, ".prep($sch['memo']).", ".$sch['qty'].", ".prep($sch['price']).",".prep($sch['id']).", 'sales_charge_id');
 					";
-					if ($GLOBALS['debug']) { echo $insert.'<BR>'; }
-					else { qdb($insert) or die(qe()." ".$insert); }
+					qedb($insert);
 				}
 			}/* end foreach */
 		}
 		if($invoice_id){
+			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
 			setInvoiceCOGS($invoice_id,$type);
 
 			$send_err = sendInvoice($invoice_id);
@@ -188,7 +180,7 @@
         AND `order_type` = ".prep($type)."
 		AND status <> 'Void'
         ;";
-        $results = qdb($select) or die(qe()." $select");
+        $results = qedb($select);
         if (mysqli_num_rows($results) > 0){
             return $results;
         } else {
@@ -196,11 +188,11 @@
         }
     }
 
-	function getInvoice($in_no, $field = ''){
-		$result = qdb("Select * FROM `invoices` WHERE invoice_no = ".prep($invoice_number).";");
+	function getInvoice($invoice_no, $field = ''){
+		$result = qedb("Select * FROM `invoices` WHERE invoice_no = '".res($invoice_no)."';");
 		$row = mysqli_fetch_assoc($result);
 		if ($field){
-			return $row['field'];
+			return $row[$field];
 		} else {
 			return $row;
 		}
@@ -214,10 +206,10 @@
 			WHERE  `invoice_no` = $in_no
 			AND  `invoice_items`.`id` =  `invoice_shipments`.invoice_item_id
 			AND  `invoice_shipments`.`packageid` =  `package_contents`.`packageid` 
-			AND  `inventory`.`partid` = `invoice_items`.`partid`
+			AND  `inventory`.`partid` = `invoice_items`.`item_id` AND (`invoice_items`.`item_label` = 'partid' OR `invoice_items`.`item_label` IS NULL)
 			AND  `package_contents`.`serialid` = `inventory`.`id` 
 	    ;";
-	    $result = qdb($select) or die(qe());
+	    $result = qedb($select);
 	    return $result;
 	}
 	

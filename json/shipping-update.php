@@ -1,8 +1,4 @@
 <?php
-
-//Prepare the page as a JSON type
-// header('Content-Type: application/json');
-
 $rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
@@ -24,13 +20,15 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/setInventory.php';
 
-	$debug = 0;
+	$DEBUG = 0;
+	if (! $DEBUG) {
+		header('Content-Type: application/json');
+	}
 
 	//This is a list of everything
 	$productItems = $_REQUEST['items'];
 	$so_number = grab('so_number');
 
-	if (! isset($debug)) { $debug = 0; }
 	//items = ['partid', 'Already saved serial','serial or array of serials', 'conditionid or array', 'lot', 'qty']
 	function savetoDatabase($productItems, $so_number, $date){
 		$db = array(
@@ -39,9 +37,8 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			"invoice" => "",
 			"error" => ""
 			);
-		$debug = $GLOBALS['debug'];
 		$return_arr = array();
-		if($debug){
+		if($GLOBALS['DEBUG']){
 			$productItems = json_decode($productItems);
 		}
 		//This is splitting each product from mass of items
@@ -53,28 +50,25 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				// would submit ALL the previous boxes to this code, resulting in ALL previously-shipped inventory items getting
 				// updated. WOW is this code bad or what. This is a stop-gap fix...
 				$query = "SELECT * FROM packages WHERE id = '".res($box)."' AND datetime IS NULL; ";
-				$result = qdb($query) OR die(qe().'<BR>'.$query);
+				$result = qedb($query);
 				// package has previously been shipped, don't do anything beyond this point! this code should be only for unshipped boxes
 				if (mysqli_num_rows($result)==0) { continue; }
 
 				//Check and only ship boxes that have something placed into them
 				$query = "SELECT * FROM package_contents WHERE packageid = '".res($box)."';";
-				$data = qdb($query) or die(qe()." | $data");
+				$data = qedb($query);
 				if (mysqli_num_rows($data)>0) {
-					$query = "UPDATE packages SET datetime ='".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
-					if(!$debug){$check = qdb($query) or die(qe()." $query");} 
-					else {echo($query);}
+					$query = "UPDATE packages SET datetime = '".res($date)."' WHERE id = '".res($box)."' AND datetime is NULL;";
+					$check = qedb($query);
 				} else {
 					$db['error'] = 'no package set';
 				}
-				// added by david 6-21-17 to set profits and cogs on each unit being shipped
-				if($debug){continue;}
 				while ($r = mysqli_fetch_assoc($data)) {
 					$inventoryid = $r['serialid'];
 
 					$query2 = "SELECT si.* FROM inventory i, sales_items si ";
 					$query2 .= "WHERE si.so_number = '".res($so_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
-					$result2 = qdb($query2);// OR die(qe().'<BR>'.$query2);
+					$result2 = qedb($query2);// OR die(qe().'<BR>'.$query2);
 					while ($r2 = mysqli_fetch_assoc($result2)) {
 						$partid = $r2['partid'];
 
@@ -94,7 +88,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							// we can't charge the customer, and it's an incurred cost to that original billable sale/repair
 							$ro_number = 0;
 							$query3 = "SELECT ro_number FROM repair_items WHERE id = '".$repair_item_id."'; ";
-							$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+							$result3 = qedb($query3);
 							if (mysqli_num_rows($result3)==0) {
 								// really should never be a case this doesn't come up, but just the same...escape
 								continue;
@@ -106,7 +100,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							/***** GET TERMS FOR THIS REPAIR ORDER TO DETERMINE ITS TYPE - RMA OR REPAIR *****/
 							$NONBILLABLE = true;
 							$query4 = "SELECT termsid FROM repair_orders ro WHERE ro.ro_number = '".res($ro_number)."'; ";
-							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+							$result4 = qedb($query4);
 							// with an existing record, check the terms id for anything other than "N/A" (non-billable)
 							if (mysqli_num_rows($result4)>0) {
 								$r4 = mysqli_fetch_assoc($result4);
@@ -130,7 +124,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							/***** NON-BILLABLE, GET RMA DATA TO PRODUCE ORIGINATING BILLABLE ORDER *****/
 							$query4 = "SELECT ref_1, ref_1_label, ref_2, ref_2_label FROM repair_items ";
 							$query4 .= "WHERE id = '".$repair_item_id."' AND (ref_1_label = 'return_item_id' OR ref_2_label = 'return_item_id'); ";
-							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+							$result4 = qedb($query4);
 							if (mysqli_num_rows($result4)==0) {
 								// RMA doesn't exist, which is admittedly weird and awkward, but let's get out of here
 								continue;
@@ -147,7 +141,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 							// look up the RMA to determine if the originating billable order was a Sale, or Repair
 							$query4 = "SELECT order_number, order_type FROM return_items ri, returns r ";
 							$query4 .= "WHERE ri.id = '".res($return_item_id)."' AND ri.rma_number = r.rma_number; ";
-							$result4 = qdb($query4) OR die(qe().'<BR>'.$query4);
+							$result4 = qedb($query4);
 							if (mysqli_num_rows($result4)==0) {
 								// oops, missing record
 								continue;
@@ -159,7 +153,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$query5 = "SELECT si.id FROM sales_items si, inventory_history h ";
 								$query5 .= "WHERE si.so_number = '".res($r4['order_number'])."' AND h.invid = '".res($inventoryid)."' ";
 								$query5 .= "AND si.id = h.value AND h.field_changed = 'sales_item_id'; ";
-								$result5 = qdb($query5) OR die(qe().'<BR>'.$query5);
+								$result5 = qedb($query5);
 								if (mysqli_num_rows($result5)==0) { continue; }
 								$r5 = mysqli_fetch_assoc($result5);
 
@@ -170,7 +164,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
 							} else if ($r4['order_type']=='Repair') {
 								$query5 = "SELECT ri.id FROM repair_items ri WHERE ri.ro_number = '".res($r4['order_number'])."' AND ri.invid = '".res($inventoryid)."'; ";
-								$result5 = qdb($query5) OR die(qe().'<BR>'.$query5);
+								$result5 = qedb($query5);
 								if (mysqli_num_rows($result5)==0) { continue; }
 								$r5 = mysqli_fetch_assoc($result5);
 
@@ -210,7 +204,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 								// so we treat it as a credit. find out if it was used for a sale, and walk the cogs back
 								$cogs = 0;
 								$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = '".res($inventoryid)."' AND item_id_label = 'sales_item_id' AND cogs_avg > 0; ";
-								$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+								$result3 = qedb($query3);
 								while ($r3 = mysqli_fetch_assoc($result3)) {
 									$cogs += $r3['cogs_avg'];
 								}
@@ -236,7 +230,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		$db = create_invoice($so_number, $date);
 /*commented this in favor of built-in verification within create_invoice() function
 		$query = "SELECT * FROM invoices WHERE order_number = '".res($so_number)."' AND shipmentid = '".res($date)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		// not already invoiced
 		if (mysqli_num_rows($result)==0) {
 			$return_arr = create_invoice($so_number, $date);

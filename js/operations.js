@@ -1924,7 +1924,7 @@
 				dataType: 'json',
 				success: function(data) {
 					$("#loader").hide();
-					console.log('TimeStamp: ' + data['timestamp']);
+					//console.log('TimeStamp: ' + data['timestamp']);
 					console.log("Invoice "+data['invoice']);
 					console.log(data);
 					if(!data['error']){
@@ -3044,10 +3044,10 @@
 	    		// 	//modalAlertShow('<i class="fa fa-times-circle" aria-hidden="true"></i> Missing Fields', "Location can not be empty.", false);
 	    		// }
 		    } else if(serial != '' && page == 'shipping') {
-				//console.log('/json/shipping-update-dynamic.php?'+'partid='+partid+'&serial='+serial+'&so_number='+order_num+'&conditionid='+conditionid+'&package_no='+package_no);
 				//Submit the data from the live scanned boxes
 				qty = parseInt($serial.closest('.infiniteSerials').siblings('.remaining_qty').text());
 
+				console.log('/json/shipping-update-dynamic.php?partid='+partid+'&serial='+escape(serial)+'&so_number='+order_num+'&conditionid='+conditionid+'&package_no='+package_no+'&item_id='+item_id);
 				if(package_no != null) {
 			    	$.ajax({
 						type: "POST",
@@ -3112,7 +3112,7 @@
 							}
 							window.onbeforeunload = null;
 						
-							console.log("Shipping-add-dynamic.php: Success");
+							console.log("shipping-update-dynamic.php: Success");
 						
 							
 						},

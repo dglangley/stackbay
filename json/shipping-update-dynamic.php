@@ -1,8 +1,4 @@
 <?php
-
-//Prepare the page as a JSON type
-header('Content-Type: application/json');
-
 $rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
@@ -19,6 +15,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/setInventory.php';
+
+	if (! $DEBUG) {
+		//Prepare the page as a JSON type
+		header('Content-Type: application/json');
+	}
 
 	//This is a list of everything
 	$partid = grab('partid');
@@ -42,7 +43,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 			
 			//Where there exists a serial number, get serial which is still in stock
 			$query = "SELECT * FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = '". res($serial) ."' AND (status = 'received' OR status = 'in repair') LIMIT 0,1;";
-			$check = qdb($query);
+			$check = qedb($query);
 
 			if (mysqli_num_rows($check)==0) {
 				$result['query'] = false;
@@ -59,18 +60,18 @@ $rootdir = $_SERVER['ROOT_DIR'];
 					
 					//Set the qty shipped for values on a sales order.
 					$query = "UPDATE sales_items SET qty_shipped = qty_shipped + 1 WHERE id = '".$item_id."'; ";//partid='". res($partid) ."' AND so_number = '". res($so_number) ."';";
-					qdb($query);
+					qedb($query);
 					
 					$I = array('id'=>$inventoryid,'status'=>'manifest','sales_item_id'=>$item_id);
 					setInventory($I);
 
 					//Check to see if the aty received and the qty ordered is matching or not
 					$query = "SELECT qty, qty_shipped, CASE WHEN qty = qty_shipped THEN '1' ELSE '0' END AS is_matching FROM sales_items WHERE id = '".$item_id."'; ";//so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
-					$match = qdb($query) or die(qe());
+					$match = qedb($query);
 					
 					//Pair the package to the line item of the inventory number we changed.
 					$package_query = "INSERT INTO package_contents (packageid, serialid) VALUES ('$package','$inventoryid');";
-					$result['package'] = qdb($package_query) OR die(qe());
+					$result['package'] = qedb($package_query);
 					
 					if (mysqli_num_rows($match)>0) {
 						$match = mysqli_fetch_assoc($match);
@@ -79,7 +80,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 						if ($match['is_matching']) {
 					
 							$query = "UPDATE sales_items SET ship_date = CAST('". res(date("Y-m-d")) ."' AS DATE) WHERE id = '".$item_id."'; ";//so_number = ". res($so_number) ." AND partid = ". res($partid) .";";
-							qdb($query);
+							qedb($query);
 						}
 					}
 					
@@ -93,7 +94,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		//Lot item query here
 		} else {
 			$query = "SELECT qty FROM inventory WHERE partid = '". res($partid) ."' AND serial_no = IS NULL;";
-			$check = qdb($query);
+			$check = qedb($query);
 			
 			if (mysqli_num_rows($check)>0) {
 				$row = mysqli_fetch_assoc($check);

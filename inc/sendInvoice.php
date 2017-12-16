@@ -19,6 +19,8 @@
 			if(!$send_success){
 				$err = "Email not sent ".$GLOBALS['SEND_ERR'];
 			}
+		} else if ($GLOBALS['DEBUG']) {
+			echo $attachment.'<BR>';
 		}
 
 		return ($err);

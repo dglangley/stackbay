@@ -19,7 +19,7 @@
 		$credit = $T['je_credit'];
 
 		$jeid = 0;
-		$query2 = "SELECT i.invoice_no, i.order_number, ii.partid, ii.line_number, ii.taskid, ii.task_label, ii.id ";
+		$query2 = "SELECT i.invoice_no, i.order_number, ii.item_id, ii.item_label, ii.line_number, ii.taskid, ii.task_label, ii.id ";
 		$query2 .= "FROM invoices i, invoice_items ii ";
 		$query2 .= "WHERE i.invoice_no = '".$invoice_no."' AND i.invoice_no = ii.invoice_no ";
 		$query2 .= "GROUP BY i.invoice_no; ";
@@ -30,16 +30,15 @@
 
 		$r2 = mysqli_fetch_assoc($result2);
 		$order_number = $r2['order_number'];
-		$partid = $r2['partid'];
+		$partid = $r2['item_id'];
 		$ln = $r2['line_number'];
 
-		if (! $r2['taskid'] OR ! $r2['task_label']) {
 		if ($r2['taskid'] AND $r2['task_label']) {
 			$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs WHERE item_id = '".$r2['taskid']."' AND item_id_label = '".$r2['task_label']."'; ";
 		} else {//legacy support
 			$query2 = "SELECT SUM(sc.cogs_avg) cogs ";
 			$query2 .= "FROM invoice_shipments s, package_contents pc, inventory_history h, ".$T['items']." items, sales_cogs sc ";
-			$query2 .= "AND s.invoice_item_id = '".$r2['id']."' AND s.packageid = pc.packageid AND pc.serialid = h.invid ";
+			$query2 .= "WHERE s.invoice_item_id = '".$r2['id']."' AND s.packageid = pc.packageid AND pc.serialid = h.invid ";
 			$query2 .= "AND h.field_changed = '".$T['inventory_label']."' AND h.value = items.id AND items.id = sc.item_id AND sc.inventoryid = h.invid ";
 			$query2 .= "AND sc.item_id_label = h.field_changed ";
 			$query2 .= "AND items.".$T['order']." = '".$order_number."' AND items.partid = '".$partid."' ";

@@ -25,6 +25,7 @@
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 	include_once $rootdir.'/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	
     function getPackageTracking($invoice_number) {
         $tracking = array();
@@ -78,7 +79,7 @@
     function printLumpedInvoices($lumpid){
             $plumpid = prep($lumpid);
             $select = "
-            SELECT il.date lumpdate, ili.invoice_no, ii.id invoice_item_id, il.id id, i.order_type, i.order_number, ii.partid,
+            SELECT il.date lumpdate, ili.invoice_no, ii.id invoice_item_id, il.id id, i.order_type, i.order_number, ii.item_id partid,
 			  ii.ref_1, ii.ref_1_label, ii.ref_2, ii.ref_2_label, ii.qty, ii.amount/*, p.tracking_no, iss.* */
               FROM `invoice_lumps` il,`invoice_lump_items` ili, `invoices` i, `invoice_items` ii/*, invoice_shipments iss, packages p*/
               WHERE il.id = ili.lumpid 
@@ -215,8 +216,8 @@
 			if ($order_type=='Credit') { $query .= ", order_number "; }
 			$query .= "FROM `".$T['orders']."` ";
 			$query .= "WHERE `".$T['order']."` = $order_number;";
-			$result = qdb($query) or die(qe()." | $query");
-			if (mysqli_num_rows($result) == 0) {
+			$result = qedb($query);
+			if (mysqli_num_rows($result) == 0 AND ! $GLOBALS['DEBUG']) {
 				die("Could not pull record");
 			}
 			$oi = mysqli_fetch_assoc($result);
@@ -225,7 +226,7 @@
 				$T2 = order_type($oi['order_type']);
 				// query corresponding record for address details
 				$query2 = "SELECT * FROM ".$T2['orders']." WHERE ".$T2['order']." = '".$oi['order_number']."'; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				$result2 = qedb($query2);
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$oi[$T2['addressid']] = $r2[$T2['addressid']];
 				}
@@ -240,11 +241,15 @@
 			$orig_order = $oi['order_number'];
 			if ($oi["order_type"]=='Sale') {
 				$query2 = "SELECT * FROM sales_orders, terms WHERE so_number = '".$oi["order_number"]."' AND termsid = terms.id; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				$result2 = qedb($query2);
 			} else if ($oi["order_type"]=='Repair') {
 				$query2 = "SELECT ro.*, t.* FROM repair_orders ro, terms t, repair_items ri ";
 				$query2 .= "WHERE ro.ro_number = '".$oi["order_number"]."' AND t.id = ro.termsid AND ro.ro_number = ri.ro_number; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				$result2 = qedb($query2);
+			} else if ($oi["order_type"]=='Service') {
+				$query2 = "SELECT so.*, t.* FROM service_orders so, terms t ";
+				$query2 .= "WHERE so.so_number = '".$oi["order_number"]."' AND t.id = so.termsid; ";
+				$result2 = qedb($query2);
 			}
 			if (mysqli_num_rows($result2)==0) {
 				die("Could not pull originating ".$oi["order_type"]." record for this invoice: ".$query2);
@@ -310,19 +315,26 @@
 			}
 			$lineTotal = $price*$item['qty'];
 
-			$part_details = current(hecidb($item['partid'],'id'));
-			$part_strs = explode(' ',$part_details['Part']);
 			$charge_descr = '';
-			if ($item['partid']) {
-				$part_details = current(hecidb($item['partid'],'id'));
+			$part_descr = '';
+			if ($item['partid'] OR ($item['item_id'] AND ($item['item_label']=='partid' OR ! $item['item_label']))) {
+				$partid = 0;
+				if ($item['partid']) { $partid = $item['partid']; }
+				else { $partid = $item['item_id']; }
+				$part_details = current(hecidb($partid,'id'));
 				$part_strs = explode(' ',$part_details['Part']);
 				$charge_descr = $part_strs[0].' &nbsp; '.$part_details['HECI'];
-			} else if (isset($item['memo']) AND $item['memo']) {
+				$part_descr = $part_details['manf'].' '.$part_details['system'].' '.$part_details['description'];
+			} else if ($item['item_id'] AND $item['item_label']=='addressid') {
+				$charge_descr = format_address($item['item_id'],', ',true,'',$oi['companyid'],'<br/>');
+			}
+			if (isset($item['memo']) AND $item['memo']) {
 				if ($item['memo']=='Freight') {
 					$freight += $lineTotal;
 					continue;
 				}
-				$charge_descr = $item['memo'];
+				if ($charge_descr) { $charge_descr .= '<br>'; }
+				$charge_descr .= $item['memo'];
 			}
 			$subtotal += $lineTotal;
 			
@@ -330,9 +342,9 @@
 			$item_rows .= '
                 <tr>
                     <td class="text-center">'.(($order_type=='Credit' OR $order_type=='RMA') ? ++$i : $item['line_number']).'</td>
-                    <td>
-        	            '.$charge_descr.'
-                        <div class="description '.$part_details['manf'].' '.$part_details['system'].' '.$part_details['description'].'</div>
+                    <td style="text-align:left !important">
+        	            <div class="text-left">'.$charge_descr.'</div>
+                        <div class="description">'.$part_descr.'</div>
                         <div class="'.($order_type=='RMA' OR $order_type=='Invoice' ? '' : 'remove').'" style = "padding-left:5em;">
 			';
 			if ($serials AND $order_type<>'Credit') {
