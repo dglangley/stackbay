@@ -2007,7 +2007,14 @@ $assigned = true;
 													<td class="text-center col-reimbursement">
 														<input type="checkbox" class="" class="expense[reimbursement]" value="1" data-userset="">
 				                            		</td>
-													<td style="cursor: pointer;">
+													<td style="cursor: pointer;" class="file_container">
+														<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
+
+														<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+														<a href="#" class="upload_link btn btn-default btn-sm">
+															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
+														</a>
+
 														<button class="btn btn-success btn-sm btn-status pull-right" type="submit">
 												        	<i class="fa fa-plus"></i>	
 												        </button>

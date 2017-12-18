@@ -268,6 +268,23 @@
 			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."');";
 
 			qdb($query) OR die(qe().'<BR>'.$query);
+			$expenseid = qid();
+
+			if(! empty($_FILES)) {
+				if(! $_FILES['expense_files']['error']) {
+					$BUCKET = 'ventel.stackbay.com-receipts';
+
+					$name = $_FILES['expense_files']['name'];
+					$temp_name = $_FILES['expense_files']['tmp_name'];
+
+					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
+					$file_url = saveFile($file);
+
+					$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expenseid).";";
+
+					qdb($query) OR die(qe() . ' ' . $query);
+				}
+			}
 	}
 
 	function createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private) {
