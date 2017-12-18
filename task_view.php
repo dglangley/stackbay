@@ -1028,7 +1028,7 @@ $assigned = true;
 		</style>
 	</head>
 	
-	<body class="sub-nav" data-order-type="<?=($quote ? 'quote' : $type)?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
+	<body class="sub-nav" data-scope="<?=$type;?>" data-order-type="<?=($quote ? 'quote' : $type)?>" data-order-number="<?=$order_number?>" data-taskid="<?=$item_id;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 		<div id="loader" class="loader text-muted" style="display: none;">
 			<div>
 				<i class="fa fa-refresh fa-5x fa-spin"></i><br>

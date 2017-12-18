@@ -305,7 +305,8 @@ function calculateTax(object){
 
 		var object = container.clone().find("input").val("").end();
 		object.attr("data-line", line_number);
-		container.find(".os_expense_add").remove();
+//dl 12-18-17 with andrew, found this to be blocking the submit of the Save button
+//		container.find(".os_expense_add").remove();
 		container.find(".os_action").append('<i class="fa fa-trash fa-4 remove_outsourced pull-right" style="cursor: pointer; margin-top: 10px;" aria-hidden="true"></i>');
 
 		object.find("input").each(function(){
@@ -316,44 +317,10 @@ function calculateTax(object){
 	    object.find(".select2_os").empty();
 	    object.find(".select2_os").append('<select name="outsourced['+line_number+'][companyid]" class="form-control input-xs company-selector required"></select>');
 
-	    object.find(".company-selector").select2({
-	    	placeholder: '- Select a Company -',
-	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/companies.php",
-	            dataType: 'json',
-				/*delay: 250,*/
-	            data: function (params) {
-	                return {
-	                    scope: 'sale',
-	                    add_custom: 1,
-	                    q: params.term,//search term
-						page: params.page
-	                };
-	            },
-				allowClear: true,
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-		            return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-/*
-						results: data.results,
-						pagination: {
-							more: (params.page * 30) < data.total_count
-						}
-*/
-					};
-				},
-				cache: true
-	        },
-			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 0
-	    });
+		object.find(".company-selector").selectize("/json/companies.php","- Select a Company -");
 
 		container.after(object);
+		$(this).addClass('hidden');
 	});
 
 	$(document).on("click", ".remove_outsourced", function(){
