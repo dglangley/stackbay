@@ -83,9 +83,13 @@
 
 
 	// These variables are soley used for ICO & CCO
-	$OG_item_id = 0;
-	$OG_component_data = array();
-	$OG_outsourced = array();
+	$CO_item_ids = array();
+	$CO_component_data = array();
+	$CO_outsourced = array();
+	$CO_documentation_data = array();
+	$CO_item_details = array();
+
+	$CO_notes = '';
 
 	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
 	if (! isset($T)) { $T = order_type($type); }
@@ -138,30 +142,32 @@
 
 			$activity_data = grabActivities($order_number, $item_id, $type);
 
-			if($item_details['ref_1_label'] == 'ICO') {
-				$OG_item_id = $item_details['ref_1'];
-				$ico = true;
-			}
+			// Check to see if there are existing line-numbers that link to this order (AKA ICO/CCO)
+			$query = "SELECT id FROM service_items WHERE ref_2_label = 'service_item_id' AND ref_2 = ".fres($item_id).";";
+			$result = qedb($query);
 
-			if($item_details['ref_2_label'] == "ICO") {
-				$OG_item_id = $item_details['ref_2'];
-				$ico = true;
-			}
-
-			if($item_details['ref_1_label'] == 'CCO') {
-				$OG_item_id = $item_details['ref_1'];
-				$cco = true;
-			}
-
-			if($item_details['ref_2_label'] == 'CCO') {
-				$OG_item_id = $item_details['ref_2'];
-				$cco = true;
+			while($r = mysqli_fetch_assoc($result)) {
+				$CO_item_ids[] = $r['id'];
 			}
 
 			// Get Merge Data 
-			if(($ico OR $cco) AND $OG_item_id) {
-				$OG_component_data = getMaterials($order_number, $OG_item_id, $type, 'service_item_id');
-				$OG_outsourced = getOutsourced($OG_item_id, $type);
+			if(! empty($CO_item_ids)) {
+				foreach($CO_item_ids as $CO_item_id) {
+					$CO_item_details = getItemDetails($CO_item_id, 'service_items', 'id');
+					$CO_notes .= '<BR>'.$CO_item_details['description'];
+
+					$CO_component_data = getMaterials($order_number, $CO_item_id, $type, 'service_item_id');
+					$component_data = array_merge($component_data, $CO_component_data);
+
+					$CO_outsourced = getOutsourced($CO_item_id, $type);
+					$outsourced = array_merge($outsourced, $CO_outsourced);
+					// $CO_item_details = getItemDetails($item_id, 'service_items', 'id');
+
+					$expenses_data = array_merge($expenses_data, getExpenses($CO_item_id, 'service_item_id'));
+					$documentation_data =  array_merge($documentation_data, getDocumentation($CO_item_id, 'service_item_id'));
+
+					// print_r($CO_item_details);
+				}
 			}
 
 			getLaborTime($item_id, $type);
@@ -328,10 +334,12 @@
 				UNION
 				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE ro_number = ".prep($ro_number)." AND inventory.id = repair_components.invid AND parts.id = inventory.partid
 				UNION
-				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.ro_number = ".prep($ro_number)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
 				UNION
-				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.ro_number = ".prep($ro_number)."  AND pr.partid = p.id
+				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
 				ORDER BY datetime DESC;";
+
+				echo $query;
 
 		$result = qdb($query) OR die(qe());
 		foreach($result as $row){
@@ -409,7 +417,7 @@
 
 				$query2 = "SELECT * FROM inventory WHERE purchase_item_id = '".$row['purchase_item_id']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-				if (mysqli_num_rows($result2)>0) { continue; }
+				if (mysqli_num_rows($result2)>0) { $purchase_requests[] = $row; continue; }
 
 				$row['po_number'] = '';
 				$row['totalReceived'] = 0;
@@ -1398,7 +1406,9 @@ $assigned = true;
 											<tr>
 												<td><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
 												<td>
-													<?=$item_details['description'];?>		
+													<?=$item_details['description'];?>	
+													<BR>
+													<?=$CO_notes;?>		
 												</td>
 											</tr>
 										<?php } ?>

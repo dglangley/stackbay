@@ -518,7 +518,7 @@
 				zipFiles($filelist, $service_item_id, $item_label);
 			}
 
-			if(! empty($add_expense) AND $add_expense['amount']) {
+			if(! empty($add_expense) AND ($add_expense['amount']) OR $add_expense['units']) {
 				addExpenses($add_expense, $label, $service_item_id);
 				$tab = 'expenses';
 			}
