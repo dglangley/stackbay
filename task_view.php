@@ -339,7 +339,7 @@
 				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
 				ORDER BY datetime DESC;";
 
-				echo $query;
+				// echo $query;
 
 		$result = qdb($query) OR die(qe());
 		foreach($result as $row){
