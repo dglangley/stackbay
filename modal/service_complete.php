@@ -20,7 +20,7 @@
 	}
 
 	foreach($component_data as $material) {
-		if($material['totalOrdered'] > $material['pulled']) {
+		if($material['totalOrdered'] > $material['pulled'] AND $material['status'] != "Void") {
 			$open_materials = true;
 			break;
 		}
