@@ -769,7 +769,7 @@
 		<tr>
 			<td colspan="8"> </td>
 			<td class="col-md-1 text-right">
-				<a href="/quote.php?order_number='.$QUOTE['id'].'" class="btn btn-primary btn-sm" title="Add Line to Quote" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
+				<a href="/quote.php?order_number='.$QUOTE['quoteid'].'" class="btn btn-primary btn-sm" title="Add Line to Quote" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
 			</td>
 		</tr>
 			';
