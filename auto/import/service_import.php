@@ -51,7 +51,9 @@
         $termsid = 15; // Also Known as N/A
         $public_notes = $service['site_access_info_address'];;
         $private_notes;
-        $status = 'Active';
+        $status = '';
+		if ($service['cancelled'] == 1) {
+		}
 
         // Convert the BDB terms to our terms
 		if ($service['invoice_days']) {
@@ -82,12 +84,14 @@
         }
 
         // Insert into Service Orders
-        $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($public_notes).",".fres($private_notes).",".fres($status).");";
+        $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($public_notes).",".fres($private_notes).",'Active');";
         qdb($query) OR die(qe().'<BR>'.$query);
         $so_number = qid();
 
         // Insert into Service Items
-        $query = "INSERT INTO service_items (line_number, so_number, task_name, qty, amount, item_id, item_label, quote_item_id, description, due_date, mileage_rate, ref_1, ref_1_label, ref_2, ref_2_label, closeout_ln) VALUES (".fres($line_number).",".fres($so_number).",".fres($task_name).",".fres($qty).",".fres($amount).",NULL,".fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,NULL,NULL);";
+        $query = "INSERT INTO service_items (line_number, so_number, task_name, qty, amount, item_id, item_label, quote_item_id, description, due_date, mileage_rate, ref_1, ref_1_label, ref_2, ref_2_label, status_code, closeout_ln) ";
+		$query .= "VALUES (".fres($line_number).",".fres($so_number).",".fres($task_name).",".fres($qty).",".fres($amount).",NULL,";
+		$query .= fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,".fres($status).",NULL);";
 
         qdb($query) OR die(qe().'<BR>'.$query);
         $service_item_id = qid();
