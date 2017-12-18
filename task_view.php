@@ -843,6 +843,7 @@ $assigned = true;
 			include_once $_SERVER["ROOT_DIR"].'/modal/materials_request.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/results.php';
 			include_once $_SERVER['ROOT_DIR']. '/modal/service_image.php';
+			include_once $_SERVER["ROOT_DIR"].'/modal/address.php';
 
 			if(! $quote AND ! $new) {
 				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
@@ -2180,6 +2181,13 @@ $assigned = true;
 
 		<!-- End true body -->
 		<?php include_once 'inc/footer.php';?>
+
+<script type="text/javascript">
+	/* placement above the file inclusions below */
+	$(document).ready(function() {
+		companyid = '<?= $ORDER['companyid']; ?>';
+	});
+</script>
 		<script type="text/javascript" src="js/part_search.js"></script>
 		<?php if(! $quote AND ! $new) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>

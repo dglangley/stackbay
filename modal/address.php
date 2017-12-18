@@ -37,7 +37,7 @@
               </div>
             </div>
 
-			<hr>
+			<hr style="margin-top:8px; margin-bottom:8px">
 			<h5>Company-Specific Address Details</h5>
             <div class="row">
               <div class="col-md-12">
