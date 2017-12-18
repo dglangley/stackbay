@@ -421,7 +421,7 @@
 	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
-	if (isset($_REQUEST['addressid'])) { $search = $_REQUEST['addressid']; }
+	if (isset($_REQUEST['fieldid'])) { $search = $_REQUEST['fieldid']; }
 	if (isset($_REQUEST['copZip'])) { $copZip = $_REQUEST['copZip']; }
 
 	if (isset($_REQUEST['search_type'])) { $search_type = $_REQUEST['search_type']; }

@@ -44,6 +44,37 @@ function addMonths(after = 1, now = new Date()) {
     return (after == 1) ? current : addMonths(after - 1, new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()))
 }
 
+function reCalcTotal(){
+	var currency = 0;
+	var total = 0;
+
+	var labor = 0;
+	var material = 0;
+	var outside = 0;
+	var expense = 0;
+
+	if($('.labor_cost')) {
+		currency = $('.labor_cost').text()
+		labor = Number(currency.replace(/[^0-9\.-]+/g,""));
+	}
+	if($('.materials_cost')) {
+		currency = $('.materials_cost').text();
+		material = Number(currency.replace(/[^0-9\.-]+/g,""));
+	}
+	if($('.outside_cost')) {
+		currency = $('.outside_cost').text();
+		outside = Number(currency.replace(/[^0-9\.-]+/g,""));
+	}
+	if($('.expenses_cost')) {
+		currency = $('.expenses_cost').text();
+		expense = Number(currency.replace(/[^0-9\.-]+/g,""));
+	}
+
+	total = labor + material + outside + expense;
+
+	// alert(labor + ' ' + $('.materials_cost').text() + ' ' + outside + ' ' + expense);
+}
+
 // Collision detection between 2 DIVs
 function collision($div1, $div2) {
 	var x1 = $div1.offset().left;
@@ -64,7 +95,7 @@ function collision($div1, $div2) {
 }
 
 function calculateTax(object){
-	var container = object.closest(".part_listing");
+	var container = object.closest("tr");
 
 	var qty = 0;
 	var amount = 0;
@@ -233,6 +264,7 @@ function calculateTax(object){
 		});
 
 		$('.materials_cost').html('$' + priceFormat(parseFloat(total).toFixed(2)));
+		reCalcTotal();
 	});
 
 	$(document).on("change", ".quote_amount", function(){
@@ -241,10 +273,13 @@ function calculateTax(object){
 		var total = 0;
 
 		$('.quote_amount').each(function(){
-			total += parseFloat($(this).val());
+			if($(this).val()) {
+				total += parseFloat($(this).val());
+			}
 		});
 
 		$('.materials_cost').html('$' + priceFormat(parseFloat(total).toFixed(2)));
+		reCalcTotal();
 	});
 
 	$(document).on("change", ".labor_hours, .labor_rate", function(){
@@ -258,6 +293,7 @@ function calculateTax(object){
 		}
 
 		$('.labor_cost').html('$' + priceFormat(parseFloat(total).toFixed(2)));
+		reCalcTotal();
 	});
 
 	$(document).on("click", ".os_expense_add", function(e){

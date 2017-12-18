@@ -958,7 +958,7 @@ $assigned = true;
 				overflow: visible;
 			}
 
-			.part_listing .add_button {
+			.part_listing.hide_add .add_button {
 				display: none;
 			}
 
@@ -1880,7 +1880,7 @@ $assigned = true;
 																</div>
 															</td>
 															<td class="remove_part" style="cursor: pointer;">
-																<i class="fa fa-truck" aria-hidden="true"></i>
+																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
 																<i class="fa fa-trash fa-4" aria-hidden="true"></i>
 															</td>
 														</tr>

@@ -45,7 +45,7 @@ function partSearch(search, filter, cid, order_type) {
 					} 
 
 					if(type == 'quote') {
-						rowHTML += '<tr class="part_listing found_parts found_parts_quote" style="overflow:hidden;">';
+						rowHTML += '<tr class="found_parts found_parts_quote" style="overflow:hidden;">';
 						rowHTML += '	<td class="part">\
 											<div class="remove-pad col-md-1">\
 												<div class="product-img"><img class="img" src="/img/parts/'+row.part+'.jpg" alt="pic" data-part="'+row.part+'"></div>\
@@ -191,7 +191,7 @@ function partSearch(search, filter, cid, order_type) {
 				}
 			});
 		} else {
-			object.removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
+			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
 		}
 	
 		if(! hasElements && ! object) {
