@@ -407,7 +407,7 @@
 		if ($type == 'Repair' OR $type == 'Service') {
 
 			$query = "SELECT r.partid, r.po_number, i.id purchase_item_id, r.status, SUM(r.qty) as totalOrdered FROM purchase_requests r ";
-			$query .= "LEFT JOIN purchase_items i ON r.po_number = i.po_number ";
+			$query .= "LEFT JOIN purchase_items i ON r.po_number = i.po_number AND r.partid = i.partid ";
 			$query .= "WHERE r.item_id = ". prep($item_id) ." AND r.item_id_label = '".res($field)."' ";//GROUP BY partid, po_number ORDER BY requested DESC;";
 			$query .= "GROUP BY partid, po_number ";
 			$query .= "ORDER BY requested DESC; ";
@@ -415,9 +415,15 @@
 
 			while ($row = mysqli_fetch_assoc($result)) {
 
-				$query2 = "SELECT * FROM inventory WHERE purchase_item_id = '".$row['purchase_item_id']."'; ";
+				$query2 = "SELECT * FROM inventory WHERE purchase_item_id = '".$row['purchase_item_id']."' AND partid = '".$row['partid']."'; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-				if (mysqli_num_rows($result2)>0) { $purchase_requests[] = $row; continue; }
+				if (mysqli_num_rows($result2)>0) {
+					while ($r2 = mysqli_fetch_assoc($result2)) {
+						if ($r2['status']=='received') { $row['available'] += $r2['qty']; }
+					}
+					$purchase_requests[] = $row;
+					continue;
+				}
 
 				$row['po_number'] = '';
 				$row['totalReceived'] = 0;

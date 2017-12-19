@@ -334,7 +334,7 @@
 
 		if (in_array("service_item_id", $ref_1_label)  OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label)  OR in_array("repair_item_id", $ref_2_label)) {
 			//print_r($key);
-			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key";
+			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key; ";
 			qedb($query);
 		}
 	}

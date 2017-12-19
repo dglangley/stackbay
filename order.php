@@ -181,9 +181,12 @@
 			}
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
-			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$id.'">';
+
+			$val = $id;
+			if ($T['items']=='purchase_requests') { $val = 0; }
+			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
 			if ($T['record_type']=='quote' OR $GLOBALS['create_invoice']) {
-				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$id.'" checked>';
+				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>';
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
