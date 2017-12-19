@@ -466,15 +466,15 @@
 
 		createNotification($activity_notification, $order, $label, true);
 
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
-//		header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+//		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '-' . $line_number);
 		}
 	// Add permission to a certain user upon the create or quote screen
 	} else if(! empty($service_item_id) AND ($techid OR ! empty($tech_status))) {
@@ -483,7 +483,7 @@
 		}
 
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
-		header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=labor');
+		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=labor');
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save') {
@@ -545,9 +545,9 @@
 		}
 
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&order_number=' . $order . '-' . $line_number . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '-' . $line_number . '&tab=' . $tab);
 		}
 	}
 
