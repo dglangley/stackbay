@@ -32,6 +32,16 @@
         if(mysqli_num_rows($result)) {
             $r = mysqli_fetch_assoc($result);
 
+			$r['outsourced_services'] = 0;
+			if ($T['orders']=='service_quotes') {
+				$query2 = "SELECT SUM(quote) quote FROM service_quote_materials WHERE quote_item_id = '".res($item_id)."'; ";
+				$result2 = qedb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					if ($r2['quote']>0) { $r['outsourced_services'] = $r2['quote']; }
+				}
+			}
+
             $data = $r;
         }
 
@@ -312,7 +322,7 @@ $labor_total = 0;
             $labor_total = $item_details['amount'];
         } else {
             $html_page_str .=   '<td class="text-right">
-                                '.format_price($item_details['labor_hours'] * $item_details['labor_rate']).'
+                                '.format_price(($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services']).'
                             </td>';
 
             $labor_total = ($item_details['labor_hours'] * $item_details['labor_rate']);
