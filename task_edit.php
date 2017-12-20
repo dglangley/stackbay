@@ -298,6 +298,28 @@
 		return $quoteid;
 	}
 
+	function requestQuoteMaterials($quote_materials) {
+		foreach($quote_materials as $request) {
+			// Grab the data pertaining to the material
+			$query = "SELECT * FROM service_quote_materials WHERE id = ".res($request).";";
+			$result = qedb($query);
+
+			if(mysqli_num_rows($result)) {
+				$r = mysqli_fetch_assoc($result);
+
+				$query2 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (";
+				$query2 .= res($GLOBALS['U']['id']) . ", " .res($r['quote_item_id']). ", 'quote_item_id', ".fres($GLOBALS['now']). ", " . fres($r['partid']) . ", " . fres($r['qty']);
+				$query2 .= ");"; 
+
+				qedb($query2);
+
+			} else {
+				// Put in a die statement here as this should never occur
+				continue;
+			}
+		}
+	}
+
 	function createNotification($activityid, $order_number, $label, $email = true) {
 		$message = '';
 		$link = '';
@@ -380,6 +402,7 @@
 	$activity_notification = 0;
 
 	$materials = array();
+	$quote_materials = array();
 	$outsourced = array();
 	$add_expense = array();
 	$search = array();
@@ -408,11 +431,15 @@
 
 	$label = '';
 
+	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
 	if (isset($_REQUEST['repair_item_id'])) { $service_item_id = $_REQUEST['repair_item_id']; }
 
-	if (isset($_REQUEST['quote_item_id'])) { $service_item_id = $_REQUEST['quote_item_id']; }
-	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+	if (isset($_REQUEST['quote_item_id'])) { 
+		$service_item_id = $_REQUEST['quote_item_id']; 
+		$type = 'quote';
+	}
 	//dl 11-30-17 for adding notes
 	if (isset($_REQUEST['repair_item_id']) OR $type=='Repair') { $label = 'repair_item_id'; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; } 
@@ -434,6 +461,8 @@
 	if (isset($_REQUEST['charge'])) { $charge = $_REQUEST['charge']; }
 
 	if (isset($_REQUEST['activity_notification'])) { $activity_notification = $_REQUEST['activity_notification']; }
+
+	if (isset($_REQUEST['quote_request'])) { $quote_materials = $_REQUEST['quote_request']; }
 
 	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
@@ -486,7 +515,7 @@
 		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=labor');
 
 	// Create a quote for the submitted task
-	} else if($create == 'quote' || $create == 'save') {
+	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
@@ -495,7 +524,11 @@
 		editMaterials($materials, $qid, 'service_quote_materials');
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');
 
-		header('Location: /quote.php?order_number=' . $order .'-'. $LINE_NUMBER);
+		if(! empty($quote_materials)) {
+			requestQuoteMaterials($quote_materials);
+		}
+
+		header('Location: /quote.php?taskid=' . $service_item_id);
 
 	// Convert the Quote Item over to an actual Service Item
 	} else if($create == 'create') {
@@ -547,7 +580,7 @@
 		if(! $line_number) {
 			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '-' . $line_number . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
 		}
 	}
 

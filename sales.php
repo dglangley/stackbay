@@ -419,7 +419,7 @@ if (! $r['partid']) { return ($results); }
 					    </div>
 					    <div class="filter-group">
 							<button class="btn btn-xs btn-primary active filter_equipment" type="button" data-type="equipment" data-toggle="tooltip" data-placement="right" title="" data-original-title="Equipments"><i class="fa fa-cube"></i></button><br/>
-							<button class="btn btn-xs btn-default filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-microchip" aria-hidden="true"></i></button>
+							<button class="btn btn-xs btn-primary active filter_equipment" type="button" data-type="component" data-toggle="tooltip" data-placement="right" title="" data-original-title="Components"><i class="fa fa-microchip" aria-hidden="true"></i></button>
 						</div>
 					<!-- </div> -->
 				</div>
@@ -626,7 +626,8 @@ if (! $r['partid']) { return ($results); }
 		}
 
 		//Default show only equipment
-		$results = array_filter($results, function($row) { global $equipment_filter; return ($row['classification'] == 'equipment'); });
+//DL 12-20-17
+//		$results = array_filter($results, function($row) { global $equipment_filter; return ($row['classification'] == 'equipment'); });
 
 		// the LARGE majority of items don't have more than 25 results within a certain group of 7-digit hecis
 		if (count($results)>25) {

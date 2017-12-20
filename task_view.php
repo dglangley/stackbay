@@ -1762,7 +1762,11 @@
 														<th class="col-md-3">Leadtime & Due Date</th>
 														<th>Markup</th>
 														<th>Quoted Price</th>
-														<th></th>
+														<th>
+															<button class="btn btn-default btn-sm" type="submit">
+													        	Request
+													        </button>
+														</th>
 													<?php } else { ?>
 														<th class="col-md-3">Material</th>
 														<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
@@ -1803,6 +1807,18 @@
 																}
 															}
 															$ext = ($price * $ordered);
+														}
+
+														// This is a temporary very vague fix that needs to be fortified eventually
+														// Check if the request has been made for this quoted item based on the quote_item_id and the partid
+														// This will break when the user decides to enter the same partid 2 times on the same order
+														$requested = false;
+
+														$query = "SELECT id FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".fres($item_id)." AND partid = ".fres($row['partid']).";";
+														$result = qedb($query);
+
+														if(mysqli_num_rows($result)) {
+															$requested = true;
 														}
 												?>
 													<?php if(! $quote AND ! $new) { ?>
@@ -1921,9 +1937,14 @@
 																	</div>									
 																</div>
 															</td>
-															<td class="remove_part" style="cursor: pointer;">
+															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
-																<i class="fa fa-trash fa-4" aria-hidden="true"></i>
+															
+																<input type="checkbox" class="pull-right" <?=(! $requested ? 'name="quote_request[]" value="'.$row['id'].'"' : 'checked disabled');?>>
+
+																<?php if(! $requested) { ?>
+																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
+																<?php } ?>
 															</td>
 														</tr>
 													<?php } ?>
