@@ -56,19 +56,27 @@
 		return ($grp);
 	}
 
-	function buildLineCol($ln,$id=0) {
+	function buildLineCol($r,$id=0) {
 		global $EDIT;
 
-		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
+		$ln = $r['line_number'];
+
+		//$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
+		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&taskid='.$id;
 		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
 		else if (isset($GLOBALS['QUOTE'])) { $goto = 'quote.php?order_number='.$GLOBALS['QUOTE']['quoteid'].'-'.$ln; }
 
 		$col = '<div class="pull-left" style="width:7%">';
 		if ($EDIT) {
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
-		} else if ($ln) {
+		} else if ($id) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
-			$col .= '<a href="'.$goto.'" class="btn btn-default btn-xs">'.$ln.'.</a>';
+			$btn_text = '';
+			if ($ln) { $btn_text = $ln.'.'; }
+			else if ($r['task_name'] AND $r['ref_2_label']=='service_item_id') { $btn_text = 'CO '.$r['task_name']; }
+			else { $btn_text = '<i class="fa fa-arrow-right"></i>'; }
+
+			$col .= '<a href="'.$goto.'" class="btn btn-default btn-xs">'.$btn_text.'</a>';
 		}
 		$col .= '&nbsp;</div>';
 
@@ -332,7 +340,7 @@
 		$row = '
 	<tr class="'.$row_cls.'">
 		<td class="col-md-4 part-container">
-			'.buildLineCol($r['line_number'],$id).'
+			'.buildLineCol($r,$id).'
 			'.buildDescrCol($P,$id,$def_type,$items).'
 			'.$r['input-search'].'
 			'.$descr_col.'

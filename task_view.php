@@ -1004,9 +1004,11 @@
 			.upload{
 			    display: none !important;
 			}
+<?php if (! $view_mode) { ?>
 			#pad-wrapper {
 				margin-top:64px;
 			}
+<?php } ?>
 
 			<?php 
 				if($view_mode AND ! $manager_access){
