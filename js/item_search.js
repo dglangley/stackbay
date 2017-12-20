@@ -171,5 +171,9 @@
 			var freight = parseFloat($(this).val().trim());
 			total += freight;
 		});
+		$(".input-tax").each(function() {
+			var tax = parseFloat($(this).val().trim());
+			total += tax;
+		});
 		$("#total").text('$ '+total.formatMoney());
 	}

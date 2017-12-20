@@ -406,50 +406,66 @@
 		
 		if ($type == 'Repair' OR $type == 'Service') {
 
-			$query = "SELECT r.partid, r.po_number, i.id purchase_item_id, r.status, SUM(r.qty) as totalOrdered FROM purchase_requests r ";
-			$query .= "LEFT JOIN purchase_items i ON r.po_number = i.po_number AND r.partid = i.partid ";
-			$query .= "WHERE r.item_id = ". prep($item_id) ." AND r.item_id_label = '".res($field)."' ";//GROUP BY partid, po_number ORDER BY requested DESC;";
-			$query .= "GROUP BY partid, po_number ";
-			$query .= "ORDER BY requested DESC; ";
-			$result = qdb($query) OR die(qe());
+			$ids = array();
+			$query = "SELECT partid, po_number, status, SUM(qty) as totalOrdered FROM purchase_requests ";
+			$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($field)." ";
+			$query .= "GROUP BY partid, po_number, status ORDER BY requested DESC; ";
+			$result = qedb($query);
 
-			while ($row = mysqli_fetch_assoc($result)) {
+			while ($r = mysqli_fetch_assoc($result)) {
+				$r['available'] = 0;
+				$r['pulled'] = 0;
 
-				$query2 = "SELECT * FROM inventory WHERE purchase_item_id = '".$row['purchase_item_id']."' AND partid = '".$row['partid']."'; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-				if (mysqli_num_rows($result2)>0) {
+				if ($r['po_number']) {
+					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
+					$query2 .= "AND ((pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($field)."') OR (pi.ref_2 = '".res($item_id)."' AND pi.ref_2_label = '".res($field)."')); ";
+					$result2 = qedb($query2);
 					while ($r2 = mysqli_fetch_assoc($result2)) {
-						if ($r2['status']=='received') { $row['available'] += $r2['qty']; }
+
+						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+						$result3 = qedb($query3);
+						if (mysqli_num_rows($result3)>0) {
+							while ($r3 = mysqli_fetch_assoc($result3)) {
+								$ids[$r3['id']] = true;
+								if ($r3['status']=='received') {
+									$r['available'] += $r3['qty'];
+								} else if ($r3['status']=='installed') {
+									$r['pulled'] += $r3['qty'];
+								}
+								$cost = getInventoryCost($r3['id']);
+								$materials_total += $cost;
+							}
+						}
 					}
-					$purchase_requests[] = $row;
-					continue;
+//					if ($r['pulled']>0 OR $r['available']>0) {
+//						$purchase_requests[] = $r;
+//						continue;
+//					}
 				}
-
-				$row['po_number'] = '';
-				$row['totalReceived'] = 0;
-				$row['available'] = 0;
-				$row['pulled'] = 0;
-
-				$purchase_requests[] = $row;
+				$purchase_requests[] = $r;
 			}
 
 				// Check to see what has been received and sum it into the total Ordered
+				$id_csv = '';
+				foreach ($ids as $invid => $bool) {
+					if ($id_csv) { $id_csv .= ','; }
+					$id_csv .= $invid;
+				}
 				if ($type=='Repair') {
 					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM repair_components c, inventory i ";
 					$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
-					$query .= "; ";
 				} else if ($type=='Service') {
 					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM service_materials m, inventory i ";
 					if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
 					$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
-					$query .= "; ";
 				}
+				if ($id_csv) { $query .= "AND i.id NOT IN (".$id_csv.") "; }
+				$query .= "; ";
 				$result2 = qdb($query) OR die(qe().' '.$query);
 				while ($row2 = mysqli_fetch_assoc($result2)) {
 					$row = array('partid'=>$row2['partid']);
 
 					$inventoryid = $row2['inventoryid'];
-					$qty = ($row2['totalReceived'] ? $row2['totalReceived'] : 0);
 
 					$row['po_number'] = '';
 					$row['totalOrdered'] = 0;
@@ -465,10 +481,9 @@
 						}
 					}
 
-					$row['totalReceived'] = $qty;
-				
 					// Grab actual available quantity for the requested component
-					$row['available'] = getAvailable($row['partid'], $item_id);
+					if ($row['status']=='received') { $row['available'] = $row['totalReceived']; }
+//					$row['available'] = getAvailable($row['partid'], $item_id);
 					$row['pulled'] = getPulled($row['partid'], $item_id);
 
 					$cost = getInventoryCost($inventoryid);
@@ -800,9 +815,8 @@
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	$assigned = false;
-$assigned = true;
 	if ($item_id AND $item_id_label) {
-		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($userid)."';";
+		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 		if (mysqli_num_rows($result)) { $assigned = true; }
 	}
@@ -1020,10 +1034,38 @@ $assigned = true;
 		</div>
 		<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 
+<?php
+	if ($clock['taskid']==$item_id) {
+		$rp_cls = 'default btn-clock';
+		$rp_title = 'Switch to Regular Pay';
+		$tt_cls = 'default btn-clock';
+		$tt_title = 'Switch to Travel Time';
+		if ($clock['rate']==11) {
+			$tt_cls = 'warning';
+			$tt_title = 'Clocked In';
+		} else {
+			$rp_cls = 'primary';
+			$rp_title = 'Clocked In';
+		}
+		$clockers = '
+			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
+			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
+		';
+	} else if ($clock['taskid']) {
+		$clockers = '
+			<a class="btn btn-default" href="service.php?order_type=Service&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
+		';
+	} else {
+		$clockers = '
+			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
+		';
+	}
+?>
 
 
 			<div class="table table-header table-filter">
 				<div class="col-md-2">
+					<?php echo $clockers; ?>
 					<?php if ($type=='Repair' AND ! $task_edit AND ! $view_mode) { ?>
 						<span class="pull-right">
 							<form action="tasks_log.php" style="display: inline-block;">
@@ -1107,37 +1149,11 @@ $assigned = true;
 					
 					<?php include 'sidebar.php'; ?>
 
-						<div class="hidden-md hidden-lg table-responsive">
+						<div class="table-responsive">
 							<table class="table table-condensed">
 								<tr>
 									<td class="col-xs-4">
-<?php
-	if ($clock['taskid']==$item_id) {
-		$rp_cls = 'default btn-clock';
-		$rp_title = 'Switch to Regular Pay';
-		$tt_cls = 'default btn-clock';
-		$tt_title = 'Switch to Travel Time';
-		if ($clock['rate']==11) {
-			$tt_cls = 'warning';
-			$tt_title = 'Clocked In';
-		} else {
-			$rp_cls = 'primary';
-			$rp_title = 'Clocked In';
-		}
-		echo '
-			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
-			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
-		';
-	} else if ($clock['taskid']) {
-		echo '
-			<a class="btn btn-default" href="service.php?order_type=Service&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
-		';
-	} else {
-		echo '
-			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
-		';
-	}
-?>
+										<?php echo $clockers; ?>
 									</td>
 									<td class="col-xs-4 text-center">
 										<h3><?=$pageTitle;?></h3>
@@ -1770,9 +1786,9 @@ $assigned = true;
 															</td>
 															<td><?=$row['available'];?></td>
 															<td>
-																<?=$row['totalReceived'];?> 
+																<?=$row['pulled'];?> 
 																<?php
-																	if(($row['totalOrdered'] - $row['totalReceived']) > 0 && $row['available']) {
+																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available']) {
 																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 																	}
 																?>

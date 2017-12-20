@@ -50,7 +50,7 @@
 //		$query2 .= "GROUP BY i.invoice_no; ";
 
 		$result2 = qedb($query2);
-		if (mysqli_num_rows($result2)==0) {
+		if (mysqli_num_rows($result2)==0 AND ! $GLOBALS['DEBUG']) {
 			return ($jeid);
 		}
 
@@ -66,7 +66,7 @@
 		}
 
 		$amount = number_format($r2['cogs'],2,'.','');
-		if ($je_amount!==false AND $amount==$je_amount) { return ($jeid); }
+		if ($je_amount!==false AND $amount==$je_amount AND ! $GLOBALS['DEBUG']) { return ($jeid); }
 //		echo $invoice_no.': '.$amount.' COGS, '.$je_amount.' existing JE amount<BR>';
 
 		// if there's a saved JE amount, determine if it makes $amount go negative (i.e., COGS was $500 but now $100, so result should be -$400 on COGS account)
@@ -86,7 +86,6 @@
 
 //			print "<pre>".print_r($r2,true)."</pre>"; return false;
 		}
-
 		$jeid = setJournalEntry(false,$GLOBALS['now'],$debit,$credit,'COGS for Invoice #'.$invoice_no,$amount,$invoice_no,'invoice');
 //		echo '<BR>';
 

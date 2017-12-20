@@ -68,6 +68,10 @@
 	if (isset($_REQUEST['shipmentid']) AND $_REQUEST['shipmentid']) { $shipmentid = $_REQUEST['shipmentid']; }
 	$termsid = 0;
 	if (isset($_REQUEST['termsid']) AND is_numeric($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
+	$tax_rate = 0;
+	if (isset($_REQUEST['tax_rate'])) { $tax_rate = trim($_REQUEST['tax_rate']); }
+	$sales_tax = 0;
+	if (isset($_REQUEST['sales_tax'])) { $sales_tax = trim($_REQUEST['sales_tax']); }
 	$cust_ref = '';
 	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
 	$public_notes = '';
@@ -99,6 +103,7 @@
 		$file_url = saveFile($file);
 	}
 
+	$new_order = false;
 	$datetime = $now;
 	$created_by = $U['id'];
 	$sales_rep_id = $U['id'];//default unless passed in
@@ -109,6 +114,7 @@
 		$sales_rep_id = $ORDER['sales_rep_id'];//retain existing unless passed in below
 		if (! $file_url) { $file_url = $ORDER['ref_ln']; }
 	} else {
+		$new_order = true;
 		if ($create_invoice) {
 			$classid = 0;
 			$datetime = $now;
@@ -156,6 +162,8 @@
 		$query .= "ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, ";
 	}
 	if (array_key_exists('termsid',$ORDER)) { $query .= "termsid, "; }
+	if (array_key_exists('tax_rate',$ORDER)) { $query .= "tax_rate, "; }
+	if (array_key_exists('sales_tax',$ORDER)) { $query .= "sales_tax, "; }
 	$query .= "public_notes, ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= "private_notes, "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= "repair_code_id, "; }
@@ -183,6 +191,7 @@
 		$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
 	}
 	if (array_key_exists('termsid',$ORDER)) { $query .= fres($termsid).", "; }
+	if (array_key_exists('sales_tax',$ORDER)) { $query .= fres($sales_tax).", "; }
 	$query .= fres($public_notes).", ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= fres($repair_code_id).", "; }
@@ -228,6 +237,8 @@
 	if (isset($_REQUEST['warrantyid'])) { $warrantyid = $_REQUEST['warrantyid']; }
 	$conditionid = array();
 	if (isset($_REQUEST['conditionid'])) { $conditionid = $_REQUEST['conditionid']; }
+	$task_name = array();
+	if (isset($_REQUEST['task_name'])) { $task_name = $_REQUEST['task_name']; }
 
 	$email_rows = array();
 	foreach ($items as $key => $id) {//fieldid) {
@@ -246,7 +257,9 @@
 		if (isset($F['partid'])) { $query .= "partid, "; }
 		else if (isset($F['addressid'])) { $query .= "addressid, "; }
 		else if (isset($F['item_id']) AND isset($F['item_label'])) { $query .= "item_id, item_label, "; }
-		$query .= $T['order'].", line_number, qty";
+		$query .= $T['order'].", line_number, ";
+		if (array_key_exists('task_name',$F)) { $query .= "task_name, "; }
+		$query .= "qty";
 		if (array_key_exists('qty_shipped',$F)) { $query .= ", qty_shipped"; }
 		else if (array_key_exists('qty_received',$F)) { $query .= ", qty_received"; }
 		if ($T['amount']) { $query .= ", ".$T['amount']; }
@@ -264,7 +277,9 @@
 			if ($fieldid[$key]) { $query .= "'addressid', "; }
 			else { $query .= "NULL, "; }
 		}
-		$query .= "'".res($order_number)."', ".fres($ln[$key]).", '".res($qty[$key])."'";
+		$query .= "'".res($order_number)."', ".fres($ln[$key]).", ";
+		if (array_key_exists('task_name',$F)) { $query .= fres($task_name[$key]).", "; }
+		$query .= "'".res($qty[$key])."'";
 		if (array_key_exists('qty_shipped',$F)) {
 			$qty_shipped = 0;
 			if (isset($ORDER['items'][$id]['qty_shipped'])) { $qty_shipped = $ORDER['items'][$id]['qty_shipped']; }
@@ -332,8 +347,8 @@
 			}
 		}
 
-		if (in_array("service_item_id", $ref_1_label)  OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label)  OR in_array("repair_item_id", $ref_2_label)) {
-			//print_r($key);
+		if ($order_type=='Purchase' AND $_REQUEST['order_type']=='purchase_request' AND $new_order AND
+		(in_array("service_item_id", $ref_1_label) OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label) OR in_array("repair_item_id", $ref_2_label))) {
 			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key; ";
 			qedb($query);
 		}
@@ -454,11 +469,9 @@
 		}
 	}
 
-	if ($DEBUG) { exit; }
-
 	if ($create_invoice) {
 		if ($order_number) {
-			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
+			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18560; }
 			setInvoiceCOGS($order_number,$ORDER['order_type']);
 
 			$send_err = sendInvoice($order_number);
@@ -467,6 +480,8 @@
 			}
 		}
 	}
+
+	if ($DEBUG) { exit; }
 
 	header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);
 	exit;

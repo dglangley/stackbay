@@ -19,6 +19,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -118,8 +119,9 @@
 	$LN = 1;
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
 	$SUBTOTAL = 0;
+	$MATERIALS_TOTAL = 0;//for tax purposes
 	function addItemRow($id,$T) {
-		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT;
+		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$MATERIALS_TOTAL;
 
 		//randomize id (if no id) so we can repeatedly add new rows in-screen
 		$new = false;
@@ -183,7 +185,14 @@
 			$r['input-search'] = '';
 
 			$val = $id;
-			if ($T['items']=='purchase_requests') { $val = 0; }
+			if ($T['items']=='purchase_requests') {
+				$val = 0;
+			} else {
+				$materials = getMaterials($id,$T['item_label']);
+				foreach ($materials as $m) {
+					$MATERIALS_TOTAL += $m['cost'];
+				}
+			}
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
 			if ($T['record_type']=='quote' OR $GLOBALS['create_invoice']) {
 				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>';
@@ -236,6 +245,10 @@
 		}
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
+
+		if (array_key_exists('task_name',$r)) {
+			$r['save'] .= '<input type="hidden" name="task_name['.$id.']" value="'.$r['task_name'].'">';
+		}
 
 		$delivery_col = '';
 		$condition_col = '';
@@ -795,13 +808,22 @@
 		if ($EDIT) { $charges .= addChargeRow(); }
 	}
 
+	$tax_rate = 0;
+	$sales_tax = 0;
+	if (array_key_exists('tax_rate',$ORDER)) {
+		$tax_rate = 0;
+		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
+
+		$sales_tax = ($MATERIALS_TOTAL*($tax_rate/100));
+	}
+
 	$existing_freight = getFreightAmount($order_number,$order_type);
-	$freight_prop = ' readonly';
 	if (array_key_exists('freight',$ORDER)) {// AND $ORDER['freight']>0) {
 		$existing_freight += $ORDER['freight'];
-		if ($EDIT) { $freight_prop = ''; }
 	}
-	$TOTAL = ($SUBTOTAL+$existing_freight);
+	$aux_prop = ' readonly';
+	if ($EDIT) { $aux_prop = ''; }
+	$TOTAL = ($SUBTOTAL+$sales_tax+$existing_freight);
 ?>
 
 <table class="table table-responsive table-condensed table-striped" style="margin-bottom:150px">
@@ -812,6 +834,38 @@
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
 			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
 		</tr>
+<?php if (array_key_exists('tax_rate',$ORDER)) { ?>
+	<?php if (! $create_invoice) { ?>
+		<tr>
+			<td class="col-md-10"> </td>
+			<td class="col-md-1 text-right"><h5>TAX RATE</h5></td>
+			<td class="col-md-1">
+				<span class="input-group">
+					<input type="text" name="tax_rate" value="<?php echo number_format($tax_rate,2); ?>" class="form-control input-sm text-right" placeholder="0.00"<?=$aux_prop;?>>
+					<span class="input-group-btn">
+						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-percent"></i></button>
+					</span>
+				</span>
+			</td>
+		</tr>
+	<?php } ?>
+	<?php if ($MATERIALS_TOTAL>0 AND (! $EDIT OR $create_invoice)) { ?>
+		<tr>
+			<td class="col-md-10"> </td>
+			<td class="col-md-1 text-right"><h5>SALES TAX</h5></td>
+			<td class="col-md-1">
+				<span class="input-group">
+					<span class="input-group-btn">
+						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
+					</span>
+					<input type="text" name="sales_tax" value="<?php echo number_format($sales_tax,2); ?>" class="form-control input-sm input-tax text-right" placeholder="0.00" readonly>
+				</span>
+			</td>
+		</tr>
+	<?php } ?>
+<?php } ?>
+
+<?php if (array_key_exists('freight',$ORDER)) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>FREIGHT</h5></td>
@@ -820,10 +874,11 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="freight" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm input-freight text-right" placeholder="0.00"<?=$freight_prop;?>>
+					<input type="text" name="freight" value="<?php echo number_format($existing_freight,2); ?>" class="form-control input-sm input-freight text-right" placeholder="0.00"<?=$aux_prop;?>>
 				</span>
 			</td>
 		</tr>
+<?php } ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h3>TOTAL</h3></td>
@@ -964,11 +1019,6 @@
 			$("#order_status").closest("form").submit();
 		});
 
-/* moved to item_search.js
-		$(".item-qty, .item-amount, .input-freight").on('change keyup',function() {
-			updateTotals();
-		});
-*/
 
 		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
@@ -1038,148 +1088,6 @@
 			M.find("#modalCOTitle").html("<i class='fa fa-columns'></i> "+title+" Change Order");
 			M.modal('show');
 		});
-
-/* moved to item_search.js
-		$(".item-row .part-selector").selectize();
-		$(".btn-saveitem").on('click', function() {
-			var row = $(this).closest("tr");
-			var found_parts = $(this).closest("tbody").find(".found_parts");
-			found_parts.each(function() {
-				row.saveItem($(this));
-			});
-			if (found_parts.length==0 && row.find(".search-type").val()=='Site') {
-				row.saveItem(row);
-			}
-
-			$(this).closest("tbody").find(".found_parts").remove();
-			var ln = row.find(".line-number");
-			var new_ln = parseInt(ln.val());
-			//if (! new_ln) { new_ln = 0; }
-			new_ln++;
-			ln.val(new_ln);
-
-			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date").val("");
-		});
-		$("#item-search").on('keyup',function(e) {
-			e.preventDefault();
-			var key = e.which;
-
-			if (key == 13) {
-				$(this).search();
-			}
-		});
-		$("#btn-search").on('click',function() {
-			$("#item-search").search();
-		});
-		$(".dropdown-searchtype li").on('click', function() {
-			var v = $(this).text();
-			var pc = $(this).closest(".part-container");
-
-			if (v=='Site') {
-				$(".input-search").removeClass('hidden').addClass('hidden');
-				pc.find(".address-neighbor").removeClass('hidden');
-				pc.find(".address-selector").selectize();
-				pc.find(".address-selector").removeClass('hidden').addClass('select2');
-				// remove previously-found parts, if any
-				$(this).closest("tbody").find(".found_parts").remove();
-			} else if (v=='Part') {
-				$(".input-search").removeClass('hidden');
-				pc.find(".address-neighbor").removeClass('hidden').addClass('hidden');
-				pc.find(".address-selector").select2("destroy");
-				pc.find(".address-selector").removeClass('select2').addClass('hidden');
-			}
-		});
-
-		jQuery.fn.search = function(e) {
-			var type = $(this).find(".search-type").val();
-			if (! type || type.val()=='Part') {
-				partSearch($("#item-search").val());
-			} else {
-				addressSearch($("#item-search").val());
-			}
-		};
-		jQuery.fn.saveItem = function(e) {
-			var qty_field = e.find(".part_qty");
-			var qty = 1;
-			if (qty_field.length>0) {
-				qty = qty_field.val().trim();
-				if (qty == '' || qty == '0') { return; }
-			}
-
-			var original_row = $(this);
-
-			var orig_cond = original_row.find(".condition-selector");
-			var cond_id = orig_cond.val();
-			var cond_text = orig_cond.text();
-
-			var orig_warr = original_row.find(".warranty-selector");
-			var warr_id = orig_warr.val();
-			var warr_text = orig_warr.text();
-
-			original_row.find("select.form-control:not(.hidden)").each(function() {
-				$(this).select2("destroy");
-			});
-
-			var cloned_row = original_row.clone(true);//'true' carries event triggers over to cloned row
-
-			original_row.find(".address-selector").val(0);//reset selection before selectizing
-			original_row.find(".address-selector").selectize();
-			original_row.find(".condition-selector").selectize();
-			original_row.find(".warranty-selector").selectize();
-
-			original_row.find("textarea.form-control").val('');
-
-			// set qty of new row to qty of user-specified qty on revision found
-			cloned_row.find(".item-qty").val(qty);
-			var part = cloned_row.find(".part-selector");
-			var partid = qty_field.data('partid');
-			var descr = e.find(".part").find(".descr-label").html();
-			part.populateSelected(partid, descr);
-			part.selectize();
-			part.show();
-
-			var addr = cloned_row.find(".address-selector");
-			addr.selectize();
-
-			var cloned_cond = cloned_row.find(".condition-selector");
-			cloned_cond.selectize();
-			cloned_cond.populateSelected(cond_id,cond_text);
-
-			var cloned_warr = cloned_row.find(".warranty-selector");
-			cloned_warr.selectize();
-			cloned_warr.populateSelected(warr_id,warr_text);
-
-			// do not want this new row confused with the original search row
-			cloned_row.removeClass('search-row').addClass('item-row');
-			// remove search field from new cloned row
-			cloned_row.find(".input-search").remove();
-			// remove save button
-			cloned_row.find(".btn-saveitem").remove();
-			// remove readonly status on qty field
-			cloned_row.find(".item-qty").prop('readonly',false);
-
-			cloned_row.find(".dropdown .dropdown-toggle.dropdown-searchtype").addClass('hidden');
-
-			cloned_row.insertBefore(original_row);
-
-			updateTotals();
-//			var row_total = cloned_row.calcRowTotal();
-		};
-		jQuery.fn.calcRowTotal = function() {
-			if ($(this).find(".item-qty:not([readonly])").length==0) {
-				$(this).find(".ext-amount").text('');
-				return;
-			}
-			var qty = $(this).find(".item-qty").val().trim();
-			if (! qty) { qty = 0; }
-			var amount = $(this).find(".item-amount").val().trim();
-			if (! amount) { amount = 0; }
-			var ext_amount = qty*amount;
-
-			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
-			return (ext_amount);
-		};
-*/
 	});
 </script>
 

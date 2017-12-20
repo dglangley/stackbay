@@ -4,7 +4,7 @@
 		global $MATERIALS;
 
 		if (! $item_id) { return false; }
-		if (isset($MATERIALS[$item_id])) { return ($MATERIALS[$item_id]); }
+		if (isset($MATERIALS[$item_id.$item_label])) { return ($MATERIALS[$item_id.$item_label]); }
 
 		$materials = array();
 		$query = "SELECT i.id inventoryid, actual cost FROM purchase_items pi, inventory i ";
@@ -16,7 +16,7 @@
 			$materials[] = array('cost'=>$r['cost']);
 		}
 
-		$MATERIALS[$item_id] = $materials;
+		$MATERIALS[$item_id.$item_label] = $materials;
 		return ($materials);
 	}
 ?>

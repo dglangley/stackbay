@@ -51,8 +51,16 @@
         $termsid = 15; // Also Known as N/A
         $public_notes = $service['site_access_info_address'];;
         $private_notes;
+
         $status = '';
 		if ($service['cancelled'] == 1) {
+		}
+
+		$tax_rate = '';
+		if ($datetime<'2017-01-01 00:00:00') {
+			$tax_rate = '7.5';
+		} else {
+			$tax_rate = '7.75';
 		}
 
         // Convert the BDB terms to our terms
@@ -84,7 +92,7 @@
         }
 
         // Insert into Service Orders
-        $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($public_notes).",".fres($private_notes).",'Active');";
+        $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, tax_rate, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($tax_rate).", ".fres($public_notes).",".fres($private_notes).",'Active');";
         qdb($query) OR die(qe().'<BR>'.$query);
         $so_number = qid();
 

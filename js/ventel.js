@@ -1541,7 +1541,8 @@
 			if (e.keyCode == 13) {
 				e.preventDefault();
 				if ($(this).data('type') == 'INV') {
-					window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+					//window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+					document.location.href = '/invoice.php?invoice='+$(this).val();
 				} else if ($(this).data('type') == 'Bill') {
 					window.open('/docs/Bill'+$(this).val()+'.pdf','_blank');
 				} else if($(this).data('type') != 'RMA' && $(this).data('type') != 'RO') {

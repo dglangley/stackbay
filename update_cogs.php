@@ -2,6 +2,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInvoiceCOGS.php';
 
+exit;
+	$DEBUG = 1;
 	$debug = 1;
 
 /*
