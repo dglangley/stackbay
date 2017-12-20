@@ -330,12 +330,14 @@
     foreach ($results as $row){
 		$id = $row['order_num'];
 		$freight = 0;
+		$sales_tax = 0;
 		$invoiceid = array();
 
-		$query = "SELECT invoice_no, freight FROM invoices WHERE order_number =".prep($id)." AND order_type='".$row['order_type']."';";
+		$query = "SELECT invoice_no, freight, sales_tax FROM invoices WHERE order_number =".prep($id)." AND order_type='".$row['order_type']."';";
 		$result = qdb($query) OR die(qe());
 		while ($rowInvoice = $result->fetch_assoc()) {
 			$freight += $rowInvoice['freight'];
+			$sales_tax += $rowInvoice['sales_tax'];
 			$invoiceid[] = $rowInvoice['invoice_no'];
 		}
 
@@ -435,7 +437,7 @@
 		$summary_rows[$id]['date'] = $row['datetime'];
 		$summary_rows[$id]['cid'] = $row['cid'];
 		$summary_rows[$id]['items'] += $row['qty'];
-		$summary_rows[$id]['summed'] += ($ext_amt+$freight);
+		$summary_rows[$id]['summed'] += ($ext_amt+$freight+$sales_tax);
 		$summary_rows[$id]['company'] = $row['name'];
 		$summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
 		$summary_rows[$id]['invoice'] = $invoiceid;

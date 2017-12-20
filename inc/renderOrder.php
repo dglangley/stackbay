@@ -201,6 +201,8 @@
 		$T = order_type($order_type);
 	    $prep = prep($order_number);
         
+		$tax_rate = 0;
+		$sales_tax = 0;
 		$due_date = "";
 		$subtotal = 0;
 		$freight = 0;
@@ -227,8 +229,10 @@
 				// query corresponding record for address details
 				$query2 = "SELECT * FROM ".$T2['orders']." WHERE ".$T2['order']." = '".$oi['order_number']."'; ";
 				$result2 = qedb($query2);
+				// should be just one record, but whatever...
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$oi[$T2['addressid']] = $r2[$T2['addressid']];
+					$tax_rate = $r2['tax_rate'];
 				}
 			}
 		} else { 
@@ -262,6 +266,7 @@
 
 		if ($order_type=='Invoice') {
 		    $freight = $oi["freight"]; 
+		    $sales_tax = $oi["sales_tax"]; 
 		    if ($oi['days'] < 0){
 		        $due_date = format_date($oi['date_invoiced'],'F j, Y');
 		    } else {
@@ -331,6 +336,9 @@
 			if (isset($item['memo']) AND $item['memo']) {
 				if ($item['memo']=='Freight') {
 					$freight += $lineTotal;
+					continue;
+				} else if (strstr($item['memo'],'Tax')) {
+					$sales_tax += $lineTotal;
 					continue;
 				}
 				if ($charge_descr) { $charge_descr .= '<br>'; }
@@ -661,7 +669,7 @@ $html_page_str .='
 }
 
 	$subtotal = round($subtotal,2);
-	$total = round($subtotal+$freight,2);
+	$total = round($subtotal+$freight+$sales_tax,2);
 if(!$lump){
 	$html_page_str .= '
 <!-- Items Table -->
@@ -691,24 +699,23 @@ if(!$lump){
                     '.format_price($subtotal,true,' ').'
                 </td>
             </tr>
-            <!--  -->
             <tr>
                 <td style="text-align:right;border:none;">Freight</td>
                 <td class="text-price">
-                    '.format_price($freight).'
+                    '.format_price($freight,true,' ').'
                 </td>
             </tr>
             <tr>
-                <td style="text-align:right;border:none;">Tax 0.00%</td>
+                <td style="text-align:right;border:none;">Sales Tax'.($tax_rate ? ' '.$tax_rate.'%' : '').'</td>
                 <td class="text-price">
-                    $0.00
+                    '.format_price($sales_tax,true,' ').'
                 </td>
             </tr>
             <tr class="total">
 				<td> </td>
                 <td style="text-align:right;"><b>Total</b></td>
                 <td id = "total" class="text-price">
-                    <b>'.format_price($total).'</b>
+                    <b>'.format_price($total,true,' ').'</b>
                 </td>
             </tr>
         </table>
