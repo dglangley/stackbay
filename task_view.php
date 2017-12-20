@@ -1743,7 +1743,11 @@
 														<th class="col-md-3">Leadtime & Due Date</th>
 														<th>Markup</th>
 														<th>Quoted Price</th>
-														<th></th>
+														<th>
+															<button class="btn btn-default btn-sm" type="submit">
+													        	Request
+													        </button>
+														</th>
 													<?php } else { ?>
 														<th class="col-md-3">Material</th>
 														<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
@@ -1761,32 +1765,45 @@
 													$total = 0; 
 
 													foreach($component_data as $row){ 
-													$price = 0;
-													$ext = 0;
+														$price = 0;
+														$ext = 0;
 
-													if($row['po_number'] && strtolower($type) == 'repair') {
-														$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
-														$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
-														$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
-														$query .= "WHERE po.po_number = ".prep($row['po_number'])." AND pr.partid = ".prep($row['partid'])." ";
-														$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $order_number ";
-														$query .= "AND rc.ro_number = pr.ro_number ";
-														$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
-														$query .= "GROUP BY i.id; ";
-														$result = qdb($query) OR die(qe().'<BR>'.$query);
+														if($row['po_number'] && strtolower($type) == 'repair') {
+															$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
+															$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
+															$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
+															$query .= "WHERE po.po_number = ".prep($row['po_number'])." AND pr.partid = ".prep($row['partid'])." ";
+															$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $order_number ";
+															$query .= "AND rc.ro_number = pr.ro_number ";
+															$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
+															$query .= "GROUP BY i.id; ";
+															$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-														if (mysqli_num_rows($result)>0) {
-															$query_row = mysqli_fetch_assoc($result);
-															$status = $query_row['status'];
-															$price = $query_row['price'];
-															if($status == 'Active') {
-																$ordered = $query_row['qty'];
+															if (mysqli_num_rows($result)>0) {
+																$query_row = mysqli_fetch_assoc($result);
+																$status = $query_row['status'];
+																$price = $query_row['price'];
+																if($status == 'Active') {
+																	$ordered = $query_row['qty'];
+																}
 															}
+															$ext = ($price * $ordered);
+															// dl 12-11-17 because of addition in getMaterials()
+															//$materials_total += $ext;
+
 														}
-														$ext = ($price * $ordered);
-														// dl 12-11-17 because of addition in getMaterials()
-														//$materials_total += $ext;
-													}
+
+														// This is a temporary very vague fix that needs to be fortified eventually
+														// Check if the request has been made for this quoted item based on the quote_item_id and the partid
+														// This will break when the user decides to enter the same partid 2 times on the same order
+														$requested = false;
+
+														$query = "SELECT id FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".fres($item_id)." AND partid = ".fres($row['partid']).";";
+														$result = qedb($query);
+
+														if(mysqli_num_rows($result)) {
+															$requested = true;
+														}
 												?>
 													<?php if(! $quote AND ! $new) { ?>
 														<tr class="list">
@@ -1904,9 +1921,14 @@
 																	</div>									
 																</div>
 															</td>
-															<td class="remove_part" style="cursor: pointer;">
+															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
-																<i class="fa fa-trash fa-4" aria-hidden="true"></i>
+															
+																<input type="checkbox" class="pull-right" <?=(! $requested ? 'name="quote_request[]" value="'.$row['id'].'"' : 'checked disabled');?>>
+
+																<?php if(! $requested) { ?>
+																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
+																<?php } ?>
 															</td>
 														</tr>
 													<?php } ?>

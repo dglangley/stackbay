@@ -122,9 +122,17 @@ function partSearch(search, filter, cid, order_type) {
 									        </div>\
 										</div></td>';
 
-						rowHTML += '	<td class="add_button"><button class="btn btn-success btn-sm pull-right quote_add">\
-							        		<i class="fa fa-plus"></i>\
-								        </button></td>';
+						rowHTML += '	<td class="add_button">\
+											<button class="btn btn-success btn-sm pull-right quote_add">\
+							        			<i class="fa fa-plus"></i>\
+								        	</button>\
+								        </td>';
+						
+						rowHTML += '	<td class="hidden" style="cursor: pointer;">\
+											<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>\
+										</td>';
+										//<input type="checkbox" class="pull-right" name="quote_request_null[]" value="'+row.id+'">\
+
 						rowHTML += '</tr>';
 					} else {
 						rowHTML += '<tr class="found_parts">';
@@ -177,9 +185,11 @@ function partSearch(search, filter, cid, order_type) {
 
 				if(qty > 0) {
 					if(type == 'quote') {
-						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
+						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").prependTo("#quote_body");
+						//.append('<td style="cursor: pointer;"><i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right 10px; margin-top: 4px; aria-hidden="true"></i></td>')
+						$('#quote_body').find(".hidden").removeClass('hidden');
 					} else {
-						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#search_input");
+						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").append('<td style="cursor: pointer;"><i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right 10px; margin-top: 4px; aria-hidden="true"></i></td>').prependTo("#search_input");
 					}
 
 					$(".part_listing").find(".stock").remove();
@@ -191,7 +201,8 @@ function partSearch(search, filter, cid, order_type) {
 				}
 			});
 		} else {
-			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").append('<td class="remove_part" style="cursor: pointer;"><i class="fa fa-trash fa-4" aria-hidden="true"></i></td>').prependTo("#quote_body");
+			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").prependTo("#quote_body");
+			$('#quote_body').find(".hidden").removeClass('hidden');
 		}
 	
 		if(! hasElements && ! object) {
