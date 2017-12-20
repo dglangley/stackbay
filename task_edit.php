@@ -10,6 +10,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
@@ -298,7 +299,11 @@
 		return $quoteid;
 	}
 
-	function requestQuoteMaterials($quote_materials) {
+	function requestQuoteMaterials($quote_materials, $order_number) {
+		$notes = 'Materials: <BR>';
+
+		$quote_item_id = 0;
+
 		foreach($quote_materials as $request) {
 			// Grab the data pertaining to the material
 			$query = "SELECT * FROM service_quote_materials WHERE id = ".res($request).";";
@@ -306,6 +311,7 @@
 
 			if(mysqli_num_rows($result)) {
 				$r = mysqli_fetch_assoc($result);
+				$quote_item_id = $r['quote_item_id'];
 
 				$query2 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (";
 				$query2 .= res($GLOBALS['U']['id']) . ", " .res($r['quote_item_id']). ", 'quote_item_id', ".fres($GLOBALS['now']). ", " . fres($r['partid']) . ", " . fres($r['qty']);
@@ -313,9 +319,44 @@
 
 				qedb($query2);
 
+				$notes .= getPart($r['partid']) . "<BR>";
+
 			} else {
 				// Put in a die statement here as this should never occur
 				continue;
+			}
+		}
+
+		$title = 'Sourcing Request';
+		$message = $title . ' for Quote# ' . $order_number;
+		$link = '/sourcing_requests.php';
+
+		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+			$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+		qdb($query) OR die(qe() . '<BR>' . $query);
+
+		$messageid = qid();
+
+		$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '8');";
+		$result = qdb($query) or die(qe() . '<BR>' . $query);
+
+		if($result AND ! $DEV_ENV) {
+			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='".$_SERVER['HTTP_HOST']."/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
+			<br>
+			<br>
+			".$notes."
+			<br>
+			<a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>Sourcing Requests View</a> ";
+			$email_subject = $title;
+			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com');
+			//$recipients = 'andrew@ven-tel.com';
+			$bcc = 'david@ven-tel.com';
+			
+			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			if ($send_success) {
+			    // echo json_encode(array('message'=>'Success'));
+			} else {
+			    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 			}
 		}
 	}
@@ -525,7 +566,7 @@
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');
 
 		if(! empty($quote_materials)) {
-			requestQuoteMaterials($quote_materials);
+			requestQuoteMaterials($quote_materials, $order);
 		}
 
 		header('Location: /quote.php?taskid=' . $service_item_id);
