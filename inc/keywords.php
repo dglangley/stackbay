@@ -101,6 +101,8 @@
 	function hecidb($search,$search_type='',$manfid='',$sysid='') {
 		global $keywords,$keyword_manfs;//,$PARTSDB;
 
+		$rank_type = '';//primary,secondary
+
 		// formatted without non-alphanumerics
 		$fsearch = preg_replace('/[^[:alnum:]]*/','',$search);
 
@@ -123,7 +125,9 @@
 			$query .= ", parts_index, keywords ";
 			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
-			$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
+			$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
+			if ($rank_type) { $query .= "AND rank = '".res($rank_type)."' "; }
+			$query .= "AND parts_index.keywordid = keywords.id ";
 			// on non-heci looking strings (not 7-digits), try to limit bogus results by restricting a trailing integer from an ending integer
 			if (strlen($fsearch)<>7 AND is_numeric(substr($fsearch,(strlen($fsearch)-1),1))) { $query .= "AND SUBSTRING(keyword,".(strlen($fsearch)+1).",1) NOT RLIKE '[0-9]' "; }
 			$query .= "AND parts.id = parts_index.partid ";
@@ -154,7 +158,8 @@
 					$query .= "AND heci NOT LIKE '".res($fsearch)."%' ";//LEFT(keyword,7) <> LEFT(heci,7) ";
 				}
 //				$query .= "AND parts.id = parts_index.partid ";
-				$query .= "AND rank = 'primary' AND parts.id = parts_index.partid ";
+				if ($rank_type) { $query .= "AND rank = '".res($rank_type)."' "; }
+				$query .= "AND parts.id = parts_index.partid ";
 				$query .= "GROUP BY parts.id ";
 				$query .= "ORDER BY IF(rank='primary',0,1), part, rel, heci; ";
 				$result = qdb($query);

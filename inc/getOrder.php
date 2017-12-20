@@ -32,12 +32,35 @@
 		$results = mysqli_fetch_assoc($result);
 
 		// get items and add to subarray inside $results
+		$co = array();
 		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."' ";
-		if ($order_type<>'purchase_request') { $query .= "ORDER BY line_number ASC, id ASC "; }
+		if ($order_type<>'purchase_request') {
+			$query .= "ORDER BY IF(ref_1_label='".$T['item_label']."',0,1), IF(ref_2_label='".$T['item_label']."',0,1), line_number ASC, id ASC ";
+		}
 		$query .= "; ";
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			$items[$r['id']] = $r;
+			// place internally-designated items in $co (change orders, or basically just an alternate array)
+			// where they will later get inserted immediately below their corresponding id OR at the end
+			if ($r['ref_1_label']==$T['item_label']) {
+				$co[$r['ref_1']][] = $r;
+			} else if ($r['ref_2_label']==$T['item_label']) {
+				$co[$r['ref_2']][] = $r;
+			} else {
+				$items[$r['id']] = $r;
+				if (isset($co[$r['id']])) {
+					foreach ($co[$r['id']] as $k => $cor) {
+						$items[$cor['id']] = $cor;
+						unset($co[$r['id']][$k]);
+					}
+				}
+			}
+		}
+		foreach ($co as $item_id => $next) {
+			foreach ($next as $k => $cor) {
+				$items[$cor['id']] = $cor;
+				unset($co[$item_id][$k]);
+			}
 		}
 
 		$results['items'] = $items;
