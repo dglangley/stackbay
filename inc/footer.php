@@ -1,6 +1,6 @@
 
 	<!-- scripts -->
-	
+
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery.dataTables.js"></script>
@@ -19,10 +19,6 @@
     <script src="js/select2.min.js"></script>
 
 	<script src="js/dropzone.js"></script>
-<!--
-	<script src="https://api.trello.com/1/client.js?key=f7bebfb52058c4486f6cd4092fdb55a9"></script>
-	<script src="js/trello.js"></script>
--->
 	<script src="js/parts.js"></script>
 
 	<script src="js/jquery.floatThead.min.js"></script>

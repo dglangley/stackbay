@@ -248,7 +248,7 @@ function calculateTax(object){
 
 		total = (amount) + (amount * (tax / 100));
 
-		container.find(".os_amount_total").val(priceFormat(parseFloat(total).toFixed(2)));
+		container.find(".os_amount_total").val(parseFloat(total).toFixed(2));
 	});
 
 	// Calcuate the cost and the profit / qty on the materials view for quotes

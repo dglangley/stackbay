@@ -58,7 +58,8 @@
 	$labor_total = 0;
 	$labor_cost = 0;
 	$expenses_total = 0;
-	$outside_services_total = 0;
+	$os_cost = 0;
+	$os_quote = 0;
 	$total_amount = 0;
 
 	$item_id_label = '';
@@ -104,7 +105,7 @@
 		$labor_cost = $item_details['labor_hours'] * $item_details['labor_rate'];
 		//$labor_total = $labor_cost;
 		$expenses_total = $item_details['expenses'];
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
 	} else if(strtolower($type) == 'service') {
 		$item_id_label = 'service_item_id';
 
@@ -194,7 +195,7 @@
 				$labor_total = $quote_r['labor_hours'] * $quote_r['labor_rate'];
 			}
 		}
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
 
 	} else if(strtolower($type) == 'repair') {
 		$item_id_label = 'repair_item_id';
@@ -237,7 +238,7 @@
 			}
 		}
 
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
+		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
 
 	}
 
@@ -580,7 +581,7 @@
 	}
 
 	function getOutsourced($item_id, $type) {
-		global $outside_services_total, $quote;
+		global $os_quote, $os_cost, $quote;
 		$outsourced = array();
 
 		if($quote) {
@@ -589,15 +590,16 @@
 
 			while($r = mysqli_fetch_assoc($result)){
 				$outsourced[] = $r;
-				$outside_services_total += $r['amount'];
+				$os_cost += $r['amount'];
+				$os_quote += $r['quote'];
 			}
 		} else {
-			$query = "SELECT * FROM outsourced_orders WHERE os_number = ".res($item_id).";";
+			$query = "SELECT * FROM outsourced_items WHERE os_number = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			while($r = mysqli_fetch_assoc($result)){
 				$outsourced[] = $r;
-				$outside_services_total += $r['amount'];
+				$os_quote += $r['qty']*$r['price'];
 			}
 		}
 
@@ -1019,7 +1021,11 @@
 			.upload{
 			    display: none !important;
 			}
-<?php if (! $view_mode) { ?>
+<?php if ($quote) { ?>
+			#pad-wrapper {
+				margin-top:24px;
+			}
+<?php } else if (! $view_mode) { ?>
 			#pad-wrapper {
 				margin-top:64px;
 			}
@@ -1279,7 +1285,7 @@
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
-					                        <span class="number text-black"><?=format_price($outside_services_total);?></span>
+					                        <span class="number text-black"><?=format_price($os_quote);?></span>
 											<span class="info">Outside Services</span>
 					                    </div>
 					                </div>
@@ -1316,7 +1322,7 @@
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access) ?'&nbsp; '.format_price($outside_services_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access) ?'&nbsp; '.format_price($os_quote).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							}
 							if($images) {
 								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-image-o fa-lg" aria-hidden="true"></i> Images</span><span class="hidden-md hidden-lg"><i class="fa fa-file-image-o fa-2x"></i></span></a></li>';
@@ -2082,112 +2088,97 @@
 							<?php if($outside) { ?>
 								<!-- Outside Services pane -->
 								<div class="tab-pane <?=($tab == 'outside' ? 'active' : '');?>" id="outside">
-				                    <div class="table-responsive"><table class="table table-hover table-condensed">
+				                    <div class="table-responsive"><table class="table table-hover table-condensed table-striped">
 				                        <thead class="no-border">
 				                            <tr>
+				                                <th class="col-md-1">
+				                                </th>
 				                                <th class="col-md-2">
 				                                    Vendor
 				                                </th>
-				                                <th class="col-md-3">
+				                                <th class="col-md-4">
 				                                    Description
 				                                </th>
-				                                <th class="col-md-2">
+				                                <th class="col-md-1">
 				                                    Cost
 				                                </th>
-				                                <th class="col-md-2">
+				                                <th class="col-md-1">
 				                                    Markup
 				                                </th>
-				                                <th class="col-md-2">
+				                                <th class="col-md-1">
 				                                    Quoted Price
 				                                </th>
-				                                 <th class="col-md-1 text-right">
+				                                <th class="col-md-1 text-right">
 				                                    Action
+				                                </th>
+				                                <th class="col-md-1">
 				                                </th>
 				                            </tr>
 				                        </thead>
 				                        <tbody id="os_table">
-				                        	<?php $line_number = 1; foreach($outsourced as $list) { ?>
-				                        		<tr class="outsourced_row" data-line="<?=$line_number;?>">
-				                            		<td>
+				                        	<?php
+												$line_number = 1;
+												$outsourced[] = array('id'=>0,'companyid'=>0,'description'=>'','amount'=>'','quote'=>'');
+												foreach($outsourced as $list) {
+													$pct = '';
+													if ($list['amount']>0 AND $list['quote']>0) { $pct = round(($list['quote']-$list['amount'])/$list['amount'],2)*100; }
+													$sel_cls = '';
+													$action = '<i class="fa fa-trash fa-4 remove_outsourced pull-right" style="cursor: pointer; margin-top: 10px;" aria-hidden="true"></i>';
+													if (! $list['id']) {
+														$sel_cls = 'select2_os';
+														$action = '
+													<button class="btn btn-success btn-sm pull-right os_expense_add">
+											        	<i class="fa fa-plus"></i>	
+											        </button>
+														';
+													}
+											?>
+												<tr class="outsourced_row" data-line="<?=$line_number;?>">
+													<td> </td>
+													<td class="<?=$sel_cls;?>">
 				                            			<input type="hidden" name="outsourced[<?=$line_number;?>][quoteid]" value="<?=$list['id'];?>">
 					                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required">
-					                            			<option value="<?=$list['companyid'];?>"><?=getCompany($list['companyid']);?></option>
+					                            			<?php if ($list['companyid']) { echo '<option value="'.$list['companyid'].'">'.getCompany($list['companyid']).'</option>'; } ?>
 					                            		</select>
-				                            		</td>
+													</td>
 													<td>
 														<input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]" value="<?=$list['description'];?>">
 													</td>
 													<td>
-														<div class="input-group">													
-															<span class="input-group-addon">										                
-																<i class="fa fa-usd" aria-hidden="true"></i>										            
-															</span>										            
-															<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="<?=$list['amount'];?>" readonly>
-														</div>
+														<span class="input-group">
+															<span class="input-group-btn"><button class="btn btn-default btn-sm" type="button"><i class="fa fa-usd"></i></button></span>
+															<input class="form-control input-sm os_amount" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="<?=format_price($list['amount'],true,'',true);?>">
+														</span>
 													</td>
 													<td>
-														<div class="input-group">											  
-															<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="" readonly>
-															<span class="input-group-addon">										                
-																<i class="fa fa-percent" aria-hidden="true"></i>										            
-															</span>	
-														</div>
+														<span class="input-group">
+															<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="<?=$pct;?>">
+															<span class="input-group-btn"><button class="btn btn-default btn-sm" type="button"><i class="fa fa-percent"></i></button></span>
+														</span>
 													</td>
 													<td>
-														<div class="input-group">													
-															<span class="input-group-addon">										                
-																<i class="fa fa-usd" aria-hidden="true"></i>										            
-															</span>										            
-															<input class="form-control input-sm os_amount_total" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="<?=$list['amount'];?>">
-														</div>
+														<span class="input-group">
+															<span class="input-group-btn"><button class="btn btn-default btn-sm" type="button"><i class="fa fa-usd"></i></button></span>
+															<input class="form-control input-sm os_amount_total" type="text" name="outsourced[<?=$line_number;?>][quote]" placeholder="0.00" value="<?=format_price($list['quote'],true,'',true);?>">
+														</span>
 													</td>
 													<td class="os_action">
-														<i class="fa fa-trash fa-4 remove_outsourced pull-right" style="cursor: pointer; margin-top: 10px;" aria-hidden="true"></i>
+														<?=$action;?>
 													</td>
+													<td> </td>
 												</tr>
-					                   
-				                        	<?php $line_number ++; } ?>
-				                        	<tr class="outsourced_row" data-line="<?=$line_number;?>">
-			                            		<td class="select2_os">
-				                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required"></select>
-			                            		</td>
-												<td><input class="form-control input-sm" type="text" name="outsourced[<?=$line_number;?>][description]"></td>
-												<td>
-													<div class="input-group">													
-														<span class="input-group-addon">										                
-															<i class="fa fa-usd" aria-hidden="true"></i>										            
-														</span>										            
-														<input class="form-control input-sm os_amount" type="text" name="" placeholder="0.00" value="">
-													</div>
-												</td>
-												<td>
-													<div class="input-group">																		
-														<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="">
-														<span class="input-group-addon">										                
-															<i class="fa fa-percent" aria-hidden="true"></i>										            
-														</span>		
-													</div>
-												</td>
-												<td>
-													<div class="input-group">													
-														<span class="input-group-addon">										                
-															<i class="fa fa-usd" aria-hidden="true"></i>										            
-														</span>										            
-														<input class="form-control input-sm os_amount_total" type="text" name="outsourced[<?=$line_number;?>][amount]" placeholder="0.00" value="">
-													</div>
-												</td>
-												<td class="os_action">
-													<button class="btn btn-success btn-sm pull-right os_expense_add">
-											        	<i class="fa fa-plus"></i>	
-											        </button>
-												</td>
-											</tr>
-				                            <tr class="">
-				                                <td colspan="5">
+											<?php
+													$line_number++;
+												}
+											?>
+				                            <tr class="active">
+				                                <td colspan="4" class="text-right">
+				                                    <h5><span class="outside_cost"><?=format_price($os_cost,true,' ');?></span></h5>
 				                                </td>
-				                                <td class="text-right">
-				                                    <strong><span class="outside_cost"><?=format_price($outside_services_total);?></span></strong>
+				                                <td colspan="2" class="text-right">
+				                                    <h5><span class="outside_quote"><?=format_price($os_quote,true,' ');?></span></h5>
 				                                </td>
+												<td colspan="2"> </td>
 				                            </tr>
 										</tbody>
 									</table></div>

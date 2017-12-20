@@ -130,9 +130,9 @@
 			foreach($outsourced as $line) {
 				//foreach($line_item as $line) {
 					if($line['companyid']) {
-						$query = "REPLACE INTO $table (quote_item_id, companyid, description, amount";
+						$query = "REPLACE INTO $table (quote_item_id, companyid, description, amount, quote";
 						if($line['quoteid'] && $field != 'create') { $query .= " ,id"; }
-						$query .= ") VALUES (".fres($quoteid).", ".fres($line['companyid']).", ".fres($line['description']).", ".fres($line['amount']);
+						$query .= ") VALUES (".fres($quoteid).", ".fres($line['companyid']).", ".fres($line['description']).", ".fres($line['amount']).", ".fres($line['quote']);
 						if($line['quoteid'] && $field != 'create') { $query .= ", " . fres($line['quoteid']); }
 						$query .= ");";
 						//echo $query;
