@@ -270,7 +270,7 @@ $html_page_str .='
             <tr>
                 <td class="text-left">';
 
-$html_page_str .= str_replace("\n","<br />",$item_details['description']);;
+$html_page_str .= str_replace("\n","<br />",$item_details['description']);
 $html_page_str.='</td>';
 $html_page_str .= '
             </tr>

@@ -87,7 +87,7 @@
 	$CO_documentation_data = array();
 	$CO_item_details = array();
 
-	$CO_notes = '';
+	$CO_data = array();
 
 	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
 	if (! isset($T)) { $T = order_type($type); }
@@ -150,10 +150,22 @@
 			// Get Merge Data 
 			if(! empty($CO_item_ids)) {
 				foreach($CO_item_ids as $CO_item_id) {
+					$material_cost = 0;
 					$CO_item_details = getItemDetails($CO_item_id, 'service_items', 'id');
-					$CO_notes .= '<BR>'.$CO_item_details['description'];
+
+					$CO_data[$CO_item_id]['notes'] = str_replace("\n","<br />",$CO_item_details['description']);
+					$CO_data[$CO_item_id]['task_name'] = $CO_item_details['task_name'];
+
+					$CO_data[$CO_item_id]['labor'] = $CO_item_details['amount'];
 
 					$CO_component_data = getMaterials($order_number, $CO_item_id, $type, 'service_item_id');
+
+					foreach($CO_component_data as $component_cost) {
+						$material_cost += $component_cost['cost'];
+					}
+
+					$CO_data[$CO_item_id]['material'] = $material_cost;
+
 					$component_data = array_merge($component_data, $CO_component_data);
 
 					$CO_outsourced = getOutsourced($CO_item_id, $type);
@@ -231,14 +243,14 @@
 		foreach ($labor_data as $user => $cost) {
 				//$labor_cost += $cost['cost'];
 
-				$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
+			$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
-				foreach($timesheet_data as $item) {
-					$userTimesheet = getTimesheet($item['userid']);
+			foreach($timesheet_data as $item) {
+				$userTimesheet = getTimesheet($item['userid']);
 
-					$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
-				}
+				$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
 			}
+		}
 
 		$total_amount = $materials_total + $labor_cost + $expenses_total + $outside_services_total;
 
@@ -431,6 +443,7 @@
 								}
 								$cost = getInventoryCost($r3['id']);
 								$materials_total += $cost;
+								$r['cost'] = $cost;
 							}
 						}
 					}
@@ -485,6 +498,7 @@
 
 					$cost = getInventoryCost($inventoryid);
 					$materials_total += $cost;
+					$r['cost'] = $cost;
 
 //					$row['total'] = $total;
 					$row['status'] = '';
@@ -1377,16 +1391,15 @@
 												<td>
 													<?=$item_details['ref_1_label'].' '.$item_details['ref_1'].'<BR>';?>
 													<?=$item_details['ref_2_label'].' '.$item_details['ref_2'].'<BR>';?>
-												</td>
+												</td>test
 												<td><?=str_replace(chr(10),'<BR>',$item_details['notes']);?></td>
 											</tr>
-										<?php } else if (! $quote && $type == 'Service' && $item_details['item_label']=='addressid') { ?>
+										<?php } else if (! $quote && strtolower($type) == 'service') { ?>
 											<tr>
 												<td><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
 												<td>
 													<?=$item_details['description'];?>	
-													<BR>
-													<?=$CO_notes;?>		
+													<!-- <BR> -->	
 												</td>
 											</tr>
 										<?php } ?>
@@ -1418,6 +1431,30 @@
 											</tr>
 										<?php } ?>
 									</table></div>
+
+									<table class="table table-condensed table-striped table-hover">
+										<thead>
+											<tr>
+												<th>Name</th>
+												<th>Description</th>
+												<th>Materials</th>
+												<th>Outsourced</th>
+												<th>Labor</th>
+											</tr>
+										</thead>
+
+										<tbody>
+											<?php foreach($CO_data as $CO_id => $CO) { ?>
+											<tr>
+												<td>CO# <?=$CO['task_name']?> <a href="/service.php?order_type=Service&taskid=<?=$CO_id;?>"><i class="fa fa-arrow-right"></i></a></td>
+												<td><?=str_replace("\n","<br />",$CO['notes']);?></td>
+												<td><?=format_price($CO['material']);?></td>
+												<td><?=format_price('0');?></td>
+												<td><?=format_price($CO['labor']);?></td>
+											</tr>
+											<?php } ?>
+										</tbody>
+									</table>
 								</div><!-- Details pane -->
 							<?php } ?>
 
