@@ -13,7 +13,6 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
-	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
@@ -75,7 +74,6 @@
 	$outside_services_total = 0;
 	$total_amount = 0;
 
-	$item_id = 0;
 	$item_id_label = '';
 	$item_details = array();
 	$component_data = array();
@@ -105,8 +103,8 @@
 		$task_edit = true; 
 		$expenses = false;
 
-		if(! empty($task_number)) {
-			$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
+		if(! empty($item_id)) {
+			//$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
 			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
 			$component_data = getMaterials($order_number, $item_id, 'service_quote', 'quote_item_id');
 			$outsourced = getOutsourced($item_id, $type);
@@ -125,10 +123,9 @@
 	} else if(strtolower($type) == 'service') {
 		$item_id_label = 'service_item_id';
 
-		if(! empty($task_number)) {
-			$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+		if(! empty($item_id)) {
+			//$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
 			$item_details = getItemDetails($item_id, 'service_items', 'id');
-
 			if($item_details['status_code']) {
 				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
 			}
@@ -206,7 +203,7 @@
 		$item_id_label = 'repair_item_id';
 
 		// Diable Modules for Repair
-		$item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
+		// $item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
 
 		$documentation = false;
 		$closeout = false;
@@ -762,42 +759,29 @@
 		$pageTitle = 'New ';
 	}
 
-	$special = '';
-
-	if($ico) {
-		$special = " (ICO)";
-	}
-
-	if($cco) {
-		$special = " (CCO)";
-	}
-//	if ($item_details['task_name']) { $special .= ' '.$item_details['task_name']; }
-
-	//if(strtolower($type) == "service" AND ($class == "service" OR $class == "FFR")) {
 	if(strtolower($type) == "service" OR $quote) {
 		if($quote) {
-			if ($order_number) {
-				$pageTitle .= $class." Quote ".$order_number.($task_number ? '-'.$task_number : '').$special;
+			if (! $new) {
+				$pageTitle .= $service_class." Quote ". $full_order_number;
 			} else {
 				$pageTitle .= " Quote";
 			}
 		} else if($new) {
-			$pageTitle .= "for Order# ".$order_number.$special;
+			$pageTitle .= "for Order# ".$order_number;
 		} else {
-			if ($item_details['task_name']) {
-				$pageTitle = $item_details['task_name'].' '.$order_number."-".$task_number.$special;
+			if($master_title) {
+				$pageTitle = $master_title . ' CO' . $item_details['task_name'];
+			} else if ($item_details['task_name']) {
+				$pageTitle = $item_details['task_name'].' '. $full_order_number;
 			} else {
-				$pageTitle = getClass($ORDER['classid']).' '.$order_number."-".$task_number.$special;
+				$pageTitle = getClass($ORDER['classid']).' '. $full_order_number;
 			}
 		}
 	} else if(strtolower($type) == "repair" OR $class == "repair") {
 		if($quote) {
-			$pageTitle .= "Repair Quote for Order# ".$order_number.($task_number ? '-'.$task_number : '').$special;
+			$pageTitle .= "Repair Quote for Order# ". $full_order_number;
 		} else {
-			if(! $task_number) {
-				$task_number = 1;
-			}
-			$pageTitle = 'Repair '.$order_number."-".$task_number.$special;
+			$pageTitle = 'Repair '. $full_order_number;
 		}
 	}
 
@@ -815,6 +799,7 @@
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	$assigned = false;
+
 	if ($item_id AND $item_id_label) {
 		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
@@ -1087,6 +1072,9 @@
 					<?php if ($quote) { ?>
 						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
+					<?php if (! empty($master_title) AND $manager_access) { ?>
+						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
+					<?php } ?>
 				</div>
 				<div class="col-md-2">
 					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $edit) { ?>
@@ -1109,18 +1097,18 @@
 						<?php if(! $quote){ ?>
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?=$order_number_details;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+										<option selected><?=$full_order_number;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								<?php } else { ?>
 									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?= $item_details['task_name'].' '.$order_number_details; ?></option>
+										<option selected><?= ($master_title? $pageTitle : $item_details['task_name'].' '.$full_order_number); ?></option>
 									</select>
 								<?php  } ?>
 						<?php } ?>
 				</div>
 				<div class="col-md-1 text-right">
 					<?php if ($quote) { ?>
-						<?php if(empty($task_number)) { ?>
+						<?php if(empty($item_id)) { ?>
 							<a href="#" class="btn btn-success btn-md quote_order pull-right" data-type="quote"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 						<?php } else { ?>
 							<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
@@ -1143,7 +1131,7 @@
 			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
-				<input type="hidden" name="line_number" value="<?=$task_number;?>">
+				<input type="hidden" name="line_number" value="<?=$ORDER['items'][$item_id]['line_number'];?>">
 				<input type="hidden" name="type" value="<?=$type;?>">
 				<div class="row" style="height: 100%; margin: 0;">
 					
@@ -1651,7 +1639,7 @@
 					                            	<td>
 												    </td>
 					                            	<td class="text-right">
-					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote AND empty($task_number)) ? 'disabled' : '');?>>
+					                            		<button type="submit" class="btn btn-success btn-sm add_tech" <?=(($quote AND empty($item_id)) ? 'disabled' : '');?>>
 												        	<i class="fa fa-plus"></i>	
 												        </button>
 													</td>
