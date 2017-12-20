@@ -20,20 +20,7 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';
-
-	function getInventoryCost($inventoryid) {
-
-		// calculate inventory cost
-		$cost = 0;
-		$query3 = "SELECT actual FROM inventory_costs WHERE inventoryid = '".res($inventoryid)."'; ";
-		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-		if (mysqli_num_rows($result3)>0) {
-			$r3 = mysqli_fetch_assoc($result3);
-			$cost = $r3['actual'];//*$row['pulled'];
-		}
-		return ($cost);
-
-	}
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventoryCost.php';
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -49,7 +36,7 @@
 	$details = true;
 	$labor = true;
 	$activity = true;
-	$materials = true;
+	$materials_tab = true;
 	$expenses = true;
 	$closeout = true;
 	$outside = true;
@@ -76,7 +63,7 @@
 
 	$item_id_label = '';
 	$item_details = array();
-	$component_data = array();
+	$materials = array();
 	$outsourced = array();
 
 
@@ -106,10 +93,8 @@
 		if(! empty($item_id)) {
 			//$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
 			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
-			$component_data = getMaterials($order_number, $item_id, 'service_quote', 'quote_item_id');
+			$materials = getMaterials($item_id, 'quote_item_id', 'service_quote');
 			$outsourced = getOutsourced($item_id, $type);
-
-			//print_r($component_data);
 
 			$new = false;
 		} else {
@@ -130,7 +115,7 @@
 				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
 			}
 
-			$component_data = getMaterials($order_number, $item_id, $type, 'service_item_id');
+			$materials = getMaterials($item_id, 'service_item_id', $type);
 			$outsourced = getOutsourced($item_id, $type);
 			$documentation_data = getDocumentation($item_id, 'service_item_id');
 			$expenses_data = getExpenses($item_id, 'service_item_id');
@@ -158,7 +143,7 @@
 
 					$CO_data[$CO_item_id]['labor'] = $CO_item_details['amount'];
 
-					$CO_component_data = getMaterials($order_number, $CO_item_id, $type, 'service_item_id');
+					$CO_component_data = getMaterials($CO_item_id, 'service_item_id', $type);
 
 					foreach($CO_component_data as $component_cost) {
 						$material_cost += $component_cost['cost'];
@@ -166,7 +151,7 @@
 
 					$CO_data[$CO_item_id]['material'] = $material_cost;
 
-					$component_data = array_merge($component_data, $CO_component_data);
+					$materials = array_merge($materials, $CO_component_data);
 
 					$CO_outsourced = getOutsourced($CO_item_id, $type);
 					$outsourced = array_merge($outsourced, $CO_outsourced);
@@ -237,7 +222,7 @@
 		}
 
 		$activity_data = grabActivities($order_number, $item_id, $type);
-		$component_data = getMaterials($order_number, $item_id, $type);
+		$materials = getMaterials($item_id, 'repair_item_id', $type);
 		getLaborTime($item_id, $type);
 
 		foreach ($labor_data as $user => $cost) {
@@ -408,52 +393,80 @@
 	    return preg_match('/"'.$item.'"/i' , json_encode($array));
 	}
 
-	function getMaterials($order_number, $item_id, $type = 'repair', $field = 'repair_item_id') {
+	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
 		global $materials_total;
 
 		$purchase_requests = array();
 		
-		if ($type == 'Repair' OR $type == 'Service') {
-
-			$ids = array();
-			$query = "SELECT partid, po_number, status, SUM(qty) as totalOrdered FROM purchase_requests ";
-			$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($field)." ";
-			$query .= "GROUP BY partid, po_number, status ORDER BY requested DESC; ";
+		if ($order_type == 'Repair' OR $order_type == 'Service') {
+			$bom = array();
+			// first build list of all partids for this task, primarily through `service_bom` (bill of materials)
+			// but also check purchase_requests and repair_components/service_materials for any gaps of data
+			$query = "SELECT partid FROM service_bom WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
+			$query .= "GROUP BY partid; ";
 			$result = qedb($query);
-
 			while ($r = mysqli_fetch_assoc($result)) {
-				$r['available'] = 0;
-				$r['pulled'] = 0;
+				$bom[$r['partid']] = $r['partid'];
+			}
 
-				if ($r['po_number']) {
-					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
-					$query2 .= "AND ((pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($field)."') OR (pi.ref_2 = '".res($item_id)."' AND pi.ref_2_label = '".res($field)."')); ";
-					$result2 = qedb($query2);
-					while ($r2 = mysqli_fetch_assoc($result2)) {
+			$query = "SELECT partid FROM purchase_requests ";
+			$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_id_label)." ";
+			$query .= "GROUP BY partid; ";
+			$result = qedb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$bom[$r['partid']] = $r['partid'];
+			}
 
-						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
-						$result3 = qedb($query3);
-						if (mysqli_num_rows($result3)>0) {
-							while ($r3 = mysqli_fetch_assoc($result3)) {
-								$ids[$r3['id']] = true;
-								if ($r3['status']=='received') {
-									$r['available'] += $r3['qty'];
-								} else if ($r3['status']=='installed') {
-									$r['pulled'] += $r3['qty'];
+			if ($order_type=='Repair') {
+				$query = "SELECT i.partid FROM repair_components c, inventory i ";
+				$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
+			} else if ($order_type=='Service') {
+				$query = "SELECT i.partid FROM service_materials m, inventory i ";
+				$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
+			}
+			$query .= "GROUP BY partid; ";
+			$result = qedb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$bom[$r['partid']] = $r['partid'];
+			}
+
+			foreach ($bom as $partid) {
+				$ids = array();
+				$query = "SELECT partid, po_number, status, SUM(qty) as totalOrdered FROM purchase_requests ";
+				$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_id_label)." AND partid = '".$partid."' ";
+				$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
+				$result = qedb($query);
+
+				while ($r = mysqli_fetch_assoc($result)) {
+					$r['available'] = 0;
+					$r['pulled'] = 0;
+
+					if ($r['po_number']) {
+						$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
+						$query2 .= "AND ((pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($item_id_label)."') ";
+						$query2 .= "OR (pi.ref_2 = '".res($item_id)."' AND pi.ref_2_label = '".res($item_id_label)."')); ";
+						$result2 = qedb($query2);
+						while ($r2 = mysqli_fetch_assoc($result2)) {
+
+							$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+							$result3 = qedb($query3);
+							if (mysqli_num_rows($result3)>0) {
+								while ($r3 = mysqli_fetch_assoc($result3)) {
+									$ids[$r3['id']] = true;
+									if ($r3['status']=='received') {
+										$r['available'] += $r3['qty'];
+									} else if ($r3['status']=='installed') {
+										$r['pulled'] += $r3['qty'];
+									}
+									$cost = getInventoryCost($r3['id']);
+									$materials_total += $cost;
+									$r['cost'] = $cost;
 								}
-								$cost = getInventoryCost($r3['id']);
-								$materials_total += $cost;
-								$r['cost'] = $cost;
 							}
 						}
 					}
-//					if ($r['pulled']>0 OR $r['available']>0) {
-//						$purchase_requests[] = $r;
-//						continue;
-//					}
+					$purchase_requests[] = $r;
 				}
-				$purchase_requests[] = $r;
-			}
 
 				// Check to see what has been received and sum it into the total Ordered
 				$id_csv = '';
@@ -461,15 +474,16 @@
 					if ($id_csv) { $id_csv .= ','; }
 					$id_csv .= $invid;
 				}
-				if ($type=='Repair') {
+				if ($order_type=='Repair') {
 					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM repair_components c, inventory i ";
 					$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
-				} else if ($type=='Service') {
+				} else if ($order_type=='Service') {
 					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM service_materials m, inventory i ";
 					if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
 					$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
 				}
 				if ($id_csv) { $query .= "AND i.id NOT IN (".$id_csv.") "; }
+				$query .= "AND i.partid = '".$partid."' ";
 				$query .= "; ";
 				$result2 = qdb($query) OR die(qe().' '.$query);
 				while ($row2 = mysqli_fetch_assoc($result2)) {
@@ -480,7 +494,7 @@
 					$row['po_number'] = '';
 					$row['totalOrdered'] = 0;
 					$query3 = "SELECT SUM(r.qty) qty, r.po_number FROM purchase_requests r, purchase_items i ";
-					$query3 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($field)."' ";
+					$query3 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
 					$query3 .= "AND r.partid = '".$row2['partid']."' AND r.po_number = i.po_number AND i.id = '".$row2['purchase_item_id']."'; ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					if (mysqli_num_rows($result3)>0) {
@@ -505,9 +519,10 @@
 
 					$purchase_requests[] = $row;
 				}
+			}
 
-		} else if($type == 'service_quote') {
-			$query = "SELECT *, '' status FROM service_quote_materials WHERE $field = ".res($item_id).";";
+		} else if($order_type == 'service_quote') {
+			$query = "SELECT *, '' status FROM service_quote_materials WHERE $item_id_label = ".res($item_id).";";
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			//echo $query;
@@ -1036,30 +1051,32 @@
 		<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
 
 <?php
-	if ($clock['taskid']==$item_id) {
-		$rp_cls = 'default btn-clock';
-		$rp_title = 'Switch to Regular Pay';
-		$tt_cls = 'default btn-clock';
-		$tt_title = 'Switch to Travel Time';
-		if ($clock['rate']==11) {
-			$tt_cls = 'warning';
-			$tt_title = 'Clocked In';
-		} else {
-			$rp_cls = 'primary';
-			$rp_title = 'Clocked In';
-		}
-		$clockers = '
+	if ($U['hourly_rate']) {
+		if ($clock['taskid']==$item_id) {
+			$rp_cls = 'default btn-clock';
+			$rp_title = 'Switch to Regular Pay';
+			$tt_cls = 'default btn-clock';
+			$tt_title = 'Switch to Travel Time';
+			if ($clock['rate']==11) {
+				$tt_cls = 'warning';
+				$tt_title = 'Clocked In';
+			} else {
+				$rp_cls = 'primary';
+				$rp_title = 'Clocked In';
+			}
+			$clockers = '
 			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
 			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
-		';
-	} else if ($clock['taskid']) {
-		$clockers = '
+			';
+		} else if ($clock['taskid']) {
+			$clockers = '
 			<a class="btn btn-default" href="service.php?order_type=Service&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
-		';
-	} else {
-		$clockers = '
+			';
+		} else {
+			$clockers = '
 			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
-		';
+			';
+		}
 	}
 ?>
 
@@ -1292,7 +1309,7 @@
 					        if($labor) {
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
-							if($materials) { 
+							if($materials_tab) { 
 								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
@@ -1719,7 +1736,7 @@
 							<?php } ?>
 
 							<!-- Materials pane -->
-							<?php if($materials) { ?>
+							<?php if($materials_tab) { ?>
 								<div class="tab-pane <?=($tab == 'materials' ? 'active' : '');?>" id="materials">
 									<section>
 										<div class="row">
@@ -1766,11 +1783,11 @@
 												<?php 
 													$total = 0; 
 
-													foreach($component_data as $row){ 
+													foreach($materials as $row){ 
 														$price = 0;
 														$ext = 0;
 
-														if($row['po_number'] && strtolower($type) == 'repair') {
+														if ($row['po_number'] && $type == 'Repair') {
 															$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
 															$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
 															$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
@@ -1790,9 +1807,6 @@
 																}
 															}
 															$ext = ($price * $ordered);
-															// dl 12-11-17 because of addition in getMaterials()
-															//$materials_total += $ext;
-
 														}
 
 														// This is a temporary very vague fix that needs to be fortified eventually

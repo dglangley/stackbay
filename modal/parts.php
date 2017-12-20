@@ -21,6 +21,7 @@
 						<select id='pm-class' name="class[]" class="form-control pm-field" data-field="classid">
 							<option value='equipment'>Equipment</option>
 							<option value='component'>Component</option>
+							<option value='material'>Material</option>
 						</select>
 					</div>
 				</div>

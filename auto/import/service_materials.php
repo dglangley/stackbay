@@ -5,6 +5,7 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
 /*
     $SVCS_PIPE = mysqli_init();
@@ -172,6 +173,7 @@
                         qdb($query) OR die(qe() . '<BR>' . $query);
 
                         $partid = qid();
+						indexer($partid,'id');
 
                     	// Map in the maps_component table
                     	$query = "INSERT INTO maps_component (BDB_cid, partid) VALUES (".fres($BDB_partid).", ".fres($partid).");";
