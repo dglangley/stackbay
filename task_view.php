@@ -589,7 +589,7 @@
 					'type' => 'Material',
 					'id' => $row['id'],
 					'purchase_request_id' => false,
-					'items' => array($row),
+					'items' => array(),
 				);
 				$mat_total += $row['quote'];
 			}
@@ -1053,6 +1053,9 @@
 			}
 			.part_listing.hide_add .add_button {
 				display: none;
+			}
+			.table .material_pulls td .table tr:last-child td {
+				border-bottom:1px solid #888;
 			}
 
 			.labor_user.inactive {
@@ -1841,7 +1844,7 @@
 									        </div>
 										</div>
 
-										<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+										<div class="table-responsive"><table class="table table-condensed table-striped">
 											<?php if (! $view_mode OR ! $U['hourly_rate']) { ?>
 											<thead>
 												<tr>
@@ -1882,20 +1885,21 @@
 																	<span class="descr-label part_description" data-request="<?=$P['qty'];?>"><?=trim(partDescription($partid, true));?></span>
 																</div>
 															</td>
-															<td>										
-																<div class="col-md-4 remove-pad" style="padding-right: 5px;">											
-																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$partid;?>" placeholder="QTY" value="<?=$P['qty'];?>">										
-																</div>										
-																<div class="col-md-8 remove-pad">											
-																	<div class="form-group" style="margin-bottom: 0;">												
-																		<div class="input-group">													
-																			<span class="input-group-addon">										                
-																				<i class="fa fa-usd" aria-hidden="true"></i>										            
-																			</span>										            
-																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>">										        
-																		</div>											
-																	</div>										
-																</div>									
+															<td>
+																<div class="col-md-4 remove-pad" style="padding-right: 5px;">
+																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$partid;?>" placeholder="QTY" value="<?=$P['qty'];?>">
+																</div>
+																<div class="col-md-8 remove-pad">
+																	<div class="form-group" style="margin-bottom: 0;">
+																		<div class="input-group">
+																			<span class="input-group-addon">
+																				<i class="fa fa-usd" aria-hidden="true"></i>
+																			</span>
+																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>">
+				                            								<input type="hidden" name="quoteid" value="<?=$P['id'];?>">
+																		</div>
+																	</div>
+																</div>
 															</td>
 															<td style="background: #FFF;">
 																<div class="table market-table" data-partids="<?=$partid;?>">
@@ -1963,7 +1967,7 @@
 																<?php } ?>
 															</td>
 														</tr>
-														<tr class="">
+														<tr class="material_pulls">
 															<td colspan="7" class="">
 																<table class="table table-condensed table-noborder table-striped">
 												<?php
