@@ -1845,7 +1845,11 @@
 										</div>
 
 										<div class="table-responsive"><table class="table table-condensed table-striped">
-											<?php if (! $view_mode OR ! $U['hourly_rate']) { ?>
+											<?php
+												$show_bom = false;
+												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'])) {
+													$show_bom = true;
+											?>
 											<thead>
 												<tr>
 													<th class="col-md-3">Material</th>
@@ -1872,7 +1876,7 @@
 													$primary_part = getPart($partid,'part');
 													$fpart = format_part($primary_part);
 
-													if (! $view_mode OR ! $U['hourly_rate']) {
+													if ($show_bom) {
 											?>
 														<tr class="part_listing first found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$P['id'];?>">
 															<td>
@@ -1971,7 +1975,7 @@
 															<td colspan="7" class="">
 																<table class="table table-condensed table-noborder table-striped">
 												<?php
-													}/* end if !$view_mode */
+													}/* end if $show_bom */
 
 													foreach ($P['items'] as $row) {
 														$price = 0;
@@ -1992,15 +1996,17 @@
 //														}
 
 														if (! $header_shown OR ! $view_mode) {
-															$col1 = '1';
+															$col1 = '';
+															$col1_cls = '1';
 															$col2 = '<th class="col-md-1"> </th>';
-															if ($view_mode AND $U['hourly_rate']) {
-																$col1 = '2';
+															if (! $show_bom) {
+																$col1 = 'Material';
+																$col1_cls = '2';
 																$col2 = '';
 															}
 															echo '
 																	<thead><tr>
-																		<th class="col-md-'.$col1.'"> </th>
+																		<th class="col-md-'.$col1_cls.'">'.$col1.'</th>
 																		<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
 																		<th class="col-md-1">Date</th>
 																		<th class="col-md-2">Source</th>
@@ -2016,7 +2022,7 @@
 															$header_shown = true;
 														}
 														$part_col = '';
-														if ($view_mode AND $U['hourly_rate']) {
+														if (! $show_bom) {
 															$part_col = '<span class="descr-label part_description" data-request="">'.trim(partDescription($partid, true)).'</span>';
 														}
 												?>
@@ -2056,7 +2062,7 @@
 														</tr>
 													<?php
 														} /* end foreach ($P['items']) */
-														if (! $view_mode OR ! $U['hourly_rate']) {
+														if ($show_bom) {
 													?>
 																	</tbody>
 																</table>
