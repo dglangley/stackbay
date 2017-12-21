@@ -19,7 +19,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsQuote.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServicesQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -154,9 +156,12 @@
 			$r['name'] = '';
 
 			// if converting a quote, prep the item qty and amount
-//			if (isset($r['labor_hours']) AND isset($r['labor_rate']) AND ! $r['amount']) {
-//				$r['amount'] = ($item['labor_hours']*$item['labor_rate'])+$item['expenses']+$sum_materials;
-//			}
+			if ($T['items']=='service_quote_items') {
+				$materials_quote = getMaterialsQuote($id);
+				$outsourced_quote = getOutsideServicesQuote($id);
+
+				$r['amount'] = ($r['labor_hours']*$r['labor_rate'])+$r['expenses']+$materials_quote+$outsourced_quote;
+			}
 
 			// If this is a purchase request, item_id variables need to be converted
 //			if (isset($r['ref_1']) AND isset($r['ref_1_label'])) {
@@ -193,17 +198,20 @@
 			$r['input-search'] = '';
 
 			$val = $id;
-			if ($T['items']=='purchase_requests') {
+//			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
+			if ($T['record_type']=='quote') {
 				$val = 0;
 			} else {
-				$materials = getMaterials($id,$T['item_label']);
+				// get associated materials so we can charge sales tax
+				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
 					$MATERIALS_TOTAL += $m['cost'];
 				}
 			}
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
 			if ($T['record_type']=='quote' OR $GLOBALS['create_invoice']) {
-				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>';
+				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>'.
+							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
@@ -669,7 +677,7 @@
 	?>
 			</select>
 <?php } else if ($T['record_type']=='quote') { ?>
-			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit to Convert</a>
+			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
