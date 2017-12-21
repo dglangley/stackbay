@@ -104,7 +104,7 @@
         // Insert into Service Items
         $query = "INSERT INTO service_items (line_number, so_number, task_name, qty, amount, item_id, item_label, quote_item_id, description, due_date, mileage_rate, ref_1, ref_1_label, ref_2, ref_2_label, status_code, closeout_ln) ";
 		$query .= "VALUES (".fres($line_number).",".fres($so_number).",".fres($task_name).",".fres($qty).",".fres($amount).",NULL,";
-		$query .= fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,".fres($status_code).",NULL);";
+		$query .= fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,NULL,".fres($status_code).",NULL);";
 
         qdb($query) OR die(qe().'<BR>'.$query);
         $service_item_id = qid();
