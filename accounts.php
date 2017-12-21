@@ -12,6 +12,7 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/calcTerms.php';
 	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/cmp.php';
 
 	
 	//=========================================================================================
@@ -322,6 +323,8 @@
 			$results[] = $repair;
 		}
 	}
+
+	uasort($results,'cmp_datetime');
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results

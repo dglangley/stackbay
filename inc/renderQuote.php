@@ -34,7 +34,7 @@
 
 			$r['outsourced_services'] = 0;
 			if ($T['orders']=='service_quotes') {
-				$query2 = "SELECT SUM(quote) quote FROM service_quote_materials WHERE quote_item_id = '".res($item_id)."'; ";
+				$query2 = "SELECT SUM(quote) quote FROM service_quote_outsourced WHERE quote_item_id = '".res($item_id)."'; ";
 				$result2 = qedb($query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
@@ -315,20 +315,16 @@ $labor_total = 0;
         $html_page_str .= '<td></td>';
 
         if($T['orders'] == 'service_orders') {
-            $html_page_str .=   '<td class="text-right">
-                                '.format_price($item_details['amount']).'
-                            </td>';
-
             $labor_total = $item_details['amount'];
+
         } else {
-            $html_page_str .=   '<td class="text-right">
-                                '.format_price(($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services']).'
-                            </td>';
+            $labor_total = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
 
-            $labor_total = ($item_details['labor_hours'] * $item_details['labor_rate']);
         }
-
-        $html_page_str .= '</tr>';
+        $html_page_str .=   '<td class="text-right">
+                                '.format_price($labor_total).'
+                            </td>
+						</tr>';
 
         if($T['orders'] == 'service_orders') {
             foreach($item_materials as $material) {

@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 
+	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
@@ -24,7 +25,7 @@
 		// Does not set another line_number if one is inserted in
 		if(empty($line_number)) {
 			$query = "SELECT line_number FROM service_items WHERE so_number = ".res($service_item_id)." ORDER BY line_number DESC LIMIT 1;";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$result = qedb($query);
 
 			// Get the largest line_number if exists and increment by 1
 			if(mysqli_num_rows($result)){
@@ -40,7 +41,7 @@
 		if($service_item_id) { $query .= ", " . fres($service_item_id); }
 		$query .= ");";
 
-		qdb($query) OR die(qe().'<BR>'.$query);
+		qedb($query);
 		$id = qid();
 
 		$LINE_NUMBER = $line_number;
@@ -62,7 +63,7 @@
 		// Search for the largest line_number for current quoteid
 		if(empty($line_number) && ! $quote_item_id) {
 			$query = "SELECT line_number FROM service_quote_items WHERE quoteid = ".res($quoteid)." ORDER BY line_number DESC LIMIT 1;";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$result = qedb($query);
 
 			// Get the largest line_number if exists and increment by 1
 			if(mysqli_num_rows($result)){
@@ -82,7 +83,7 @@
 
 		// echo $query;
 
-		qdb($query) OR die(qe().'<BR>'.$query);
+		qedb($query);
 		$id = qid();
 
 		$LINE_NUMBER = $line_number;
@@ -95,30 +96,44 @@
 		$quotedItems = array();
 
 		if($field == 'create') {
-			$item_id = 'service_item_id';
+			$item_id_label = 'service_item_id';
+		} else if ($field == 'bom') {
+			$item_id_label = 'item_id_label';
 		} else {
-			$item_id = 'quote_item_id';
+			$item_id_label = 'quote_item_id';
 		}
 
 		if(! empty($materials)){
 			foreach($materials as $partid => $data) {
 				foreach($data as $line) {
 
-					$query = "REPLACE INTO $table ($item_id, partid, qty, amount, leadtime, leadtime_span, profit_pct, quote";
+					$query = "REPLACE INTO $table (";
+					if ($field=='bom') { $query .= "item_id, "; }
+					$query .= "$item_id_label, partid, qty, amount, ";
+					if ($field<>'bom') { $query .= "leadtime, leadtime_span, quote, "; }
+					else { $query .= "charge, "; }
+					$query .= "profit_pct";
 					if($line['quoteid'] && $field != 'create') { $query .= " ,id"; }
-					$query .= ") VALUES (".fres($quoteid).", ".fres($partid).", ".fres($line['qty']).", ".fres($line['amount']).", ".fres($line['leadtime']).", ".fres(ucwords($line['lead_span'])).", ".fres($line['profit']).", ".fres($line['quote']);
+					$query .= ") VALUES (";
+					$query .= fres($quoteid).", ";
+					if ($field=='bom') { $query .= "'service_item_id', "; }
+					$query .= fres($partid).", ".fres($line['qty']).", ".fres($line['amount']).", ";
+					if ($field<>'bom') { $query .= fres($line['leadtime']).", ".fres(ucwords($line['lead_span'])).", "; }
+					$query .= fres($line['quote']).", ".fres($line['profit']);
 					if($line['quoteid'] && $field != 'create') { $query .= ", " . fres($line['quoteid']); }
 					$query .= ");";
 					//echo $query;
-					qdb($query) OR die(qe().'<BR>'.$query);
+					qedb($query);
 
-					$quotedItems[] = qid();
+					if (! $GLOBALS['DEBUG']) { $quotedItems[] = qid(); }
 				}
 			}
 
 			// DELETE all records that did not get pushed back up into the update
-			$query = "DELETE FROM $table WHERE id NOT IN ('".join("','", $quotedItems)."') AND $item_id = ".fres($quoteid).";";
-			qdb($query) OR die(qe().'<BR>'.$query);
+			if (count($quotedItems)>0) {
+				$query = "DELETE FROM $table WHERE id NOT IN ('".join("','", $quotedItems)."') AND $item_id_label = ".fres($quoteid).";";
+				qedb($query);
+			}
 		}
 	}
 
@@ -136,7 +151,7 @@
 						if($line['quoteid'] && $field != 'create') { $query .= ", " . fres($line['quoteid']); }
 						$query .= ");";
 						//echo $query;
-						qdb($query) OR die(qe().'<BR>'.$query);
+						qedb($query);
 
 						$quotedItems[] = qid();
 					}
@@ -145,7 +160,7 @@
 
 			// DELETE all records that did not get pushed back up into the update
 			$query = "DELETE FROM service_quote_outsourced WHERE id NOT IN ('".join("','", $quotedItems)."') AND quote_item_id = ".fres($quoteid).";";
-			qdb($query) OR die(qe().'<BR>'.$query);
+			qedb($query);
 		}
 	}
 
@@ -153,21 +168,21 @@
 		$now = $GLOBALS['now'];
 		
 		$query = ";";
-		qdb($query) OR die(qe().'<BR>'.$query);
+		qedb($query);
 	}
 
 	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id', $order_number, $start_datetime='', $end_datetime='') {
 		if(! empty($status)) {
 			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
-			qdb($query) OR die(qe() . ' ' . $query);
+			qedb($query);
 		} else {
 			// Check first if the user has already been assigned to this job
 			$query = "SELECT * FROM service_assignments WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND userid = ".res($techid).";";
-			$result = qdb($query) OR die(qe() . ' ' . $query);
+			$result = qedb($query);
 
 			if(mysqli_num_rows($result) > 0) {
 				$query = "DELETE FROM service_assignments WHERE userid = ".res($techid)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
-				qdb($query) OR die(qe() . ' ' . $query);
+				qedb($query);
 			}
 
 			if ($start_datetime) { $start_datetime = date("Y-m-d H:i:s", strtotime($start_datetime)); }
@@ -175,7 +190,7 @@
 
 			$query = "REPLACE INTO service_assignments (item_id, item_id_label, userid, start_datetime, end_datetime) ";
 			$query .= "VALUES (".res($item_id).", ".fres($item_id_label).", ".res($techid).", ".fres($start_datetime).", ".fres($end_datetime).");";
-			qdb($query) OR die(qe() . ' ' . $query);
+			qedb($query);
 
 			$message = $item_id_label;
 
@@ -194,12 +209,12 @@
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 				$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($item_id_label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-			qdb($query) OR die(qe() . '<BR>' . $query);
+			qedb($query);
 
 			$messageid = qid();
 
 			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', ".res($techid).");";
-			$result = qdb($query) or die(qe() . '<BR>' . $query);
+			$result = qedb($query);
 		}
 	}
 
@@ -207,7 +222,7 @@
 		//$query = "INSERT INTO activity_log (ro_number, repair_item_id, datetime, techid, notes) VALUES (".fres($order_number).", ".fres($repair_item_id).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
 		$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) VALUES (".fres($item_id).", ".fres($label).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($notes).")";
 		//echo $query;
-		qdb($query) OR die(qe() . ' ' . $query);
+		qedb($query);
 	}
 
 	function addDocs($documents, $item_id, $item_label) {
@@ -216,7 +231,7 @@
 
 			// echo $query;
 
-			qdb($query) OR die(qe() .'<BR>'. $query);
+			qedb($query);
 			$docid = qid();
 
 			if(! empty($_FILES)) {
@@ -231,7 +246,7 @@
 
 					$query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
 
-					qdb($query) OR die(qe() . ' ' . $query);
+					qedb($query);
 				}
 			}
 		//}
@@ -254,7 +269,7 @@
 				if($label == 'repair_item_id') { $table = 'repair_items'; }
 
 				$query = "SELECT mileage_rate FROM $table WHERE id = ".res($item_id).";";
-				$result = qdb($query) OR die(qe() . "<BR>" . $query);
+				$result = qedb($query);
 
 				if(mysqli_num_rows($result)) {
 					$r = mysqli_fetch_assoc($result);
@@ -268,7 +283,7 @@
 			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
 			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."');";
 
-			qdb($query) OR die(qe().'<BR>'.$query);
+			qedb($query);
 			$expenseid = qid();
 
 			if(! empty($_FILES)) {
@@ -283,7 +298,7 @@
 
 					$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expenseid).";";
 
-					qdb($query) OR die(qe() . ' ' . $query);
+					qedb($query);
 				}
 			}
 	}
@@ -292,7 +307,7 @@
 		$quoteid = 0;
 
 		$query = "INSERT INTO service_quotes (classid, companyid, contactid, datetime, userid, public_notes, private_notes) VALUES (".fres($classid).",".fres($companyid).",".fres($contactid).",".fres($GLOBALS['now']).",".fres($GLOBALS['U']['id']).",".fres($public).",".fres($private).");";
-		qdb($query) OR die(qe().'<BR>'.$query);
+		qedb($query);
 
 		$quoteid = qid();
 
@@ -375,7 +390,7 @@
 
 		// Get the activity notes
 		$query = "SELECT notes, userid FROM activity_log WHERE id = ".res($activityid).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
+		$result = qedb($query);
 
 		//echo $query;
 
@@ -400,12 +415,12 @@
 
 		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 			$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", ".res($activityid).", 'activityid', ".prep($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-		qdb($query) OR die(qe() . '<BR>' . $query);
+		qedb($query);
 
 		$messageid = qid();
 
 		$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '8');";
-		$result = qdb($query) or die(qe() . '<BR>' . $query);
+		$result = qedb($query);
 //&& ! $DEV_ENV
 		if($result && ! $DEV_ENV) {
 			$email_body_html = getRep($userid)." has submitted an issue for <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a> " . $issue;
@@ -423,7 +438,7 @@
 		}
 	}
 
-	// print '<pre>' . print_r($_REQUEST, true). '</pre>';
+	if ($DEBUG) { print '<pre>' . print_r($_REQUEST, true). '</pre>'; }
 
 	$order = 0;
 	$line_number = 0; 
@@ -536,10 +551,12 @@
 
 		createNotification($activity_notification, $order, $label, true);
 
+		if ($DEBUG) { exit; }
 		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
+		if ($DEBUG) { exit; }
 //		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 		if(! $line_number) {
 			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
@@ -553,6 +570,7 @@
 		}
 
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
+		if ($DEBUG) { exit; }
 		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=labor');
 
 	// Create a quote for the submitted task
@@ -560,6 +578,7 @@
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
+
 		$qid = quoteTask($order, $line_number, 1, $charge, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
 
 		editMaterials($materials, $qid, 'service_quote_materials');
@@ -569,32 +588,31 @@
 			requestQuoteMaterials($quote_materials, $order);
 		}
 
+		if ($DEBUG) { exit; }
 		header('Location: /quote.php?taskid=' . $service_item_id);
 
 	// Convert the Quote Item over to an actual Service Item
 	} else if($create == 'create') {
 		$service_item_id = editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
+die("Problem here, see admin immediately");
 		editMaterials($materials, $service_item_id, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
+		if ($DEBUG) { exit; }
 		header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER);
 
 	// Else editing the task
 	} else {
-		$tab = 'labor' . $_REQUEST['repair_item_id'];
+		$tab = 'labor' . $service_item_id;
 
-		// print_r($_REQUEST);
 		// If completing
 		if (isset($_REQUEST['repair_code_id'])) {
 			completeTask($service_item_id, $_REQUEST['repair_code_id'], 'activity_log', 'item_id', $label);
-			//completeTask($service_item_id, $order, $_REQUEST['repair_code_id'], $GLOBALS['U']['id']);
 		} else if(strtolower($type) != 'service') {
 			// Editing a Repair Item
-		}
+		} else {
+			editMaterials($materials, $service_item_id, 'service_bom', 'bom');
 
-		//print_r($expenses);
-
-		if(strtolower($type) == 'service') {
 			// If Documentation
 			if($documentation AND $documentation['notes']) {
 				addDocs($documentation, $service_item_id, $label);
@@ -613,11 +631,9 @@
 				addExpenses($add_expense, $label, $service_item_id);
 				$tab = 'expenses';
 			}
-
-			// Editing a service task
-			// editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
 		}
 
+		if ($DEBUG) { exit; }
 		if(! $line_number) {
 			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
 		} else {

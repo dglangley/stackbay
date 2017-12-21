@@ -5,12 +5,13 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getAddresses.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getUser.php';
-	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
@@ -21,6 +22,7 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventoryCost.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getQty.php';
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -43,6 +45,7 @@
 	$images = true;
 
 	$new = false;
+	if (! isset($view_mode)) { $view_mode = false; }
 
 	// Dynamic Variables Used
 	$documentation_data = array();
@@ -54,7 +57,7 @@
 	$service_codes = array();
 	$ticketStatus = '';
 
-	$materials_total = 0;
+	$mat_total = 0;
 	$labor_total = 0;
 	$labor_cost = 0;
 	$expenses_total = 0;
@@ -105,9 +108,13 @@
 		$labor_cost = $item_details['labor_hours'] * $item_details['labor_rate'];
 		//$labor_total = $labor_cost;
 		$expenses_total = $item_details['expenses'];
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
+		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
 	} else if(strtolower($type) == 'service') {
 		$item_id_label = 'service_item_id';
+
+		if (! $U['hourly_rate'] AND ! $view_mode) {
+			$task_edit = true; 
+		}
 
 		if(! empty($item_id)) {
 			//$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
@@ -195,7 +202,7 @@
 				$labor_total = $quote_r['labor_hours'] * $quote_r['labor_rate'];
 			}
 		}
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
+		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
 
 	} else if(strtolower($type) == 'repair') {
 		$item_id_label = 'repair_item_id';
@@ -238,7 +245,7 @@
 			}
 		}
 
-		$total_amount = $materials_total + $labor_cost + $expenses_total + $os_quote;
+		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
 
 	}
 
@@ -395,45 +402,76 @@
 	}
 
 	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
-		global $materials_total;
+		global $mat_total;
 
-		$purchase_requests = array();
+		$materials = array();
 		
 		if ($order_type == 'Repair' OR $order_type == 'Service') {
-			$bom = array();
 			// first build list of all partids for this task, primarily through `service_bom` (bill of materials)
 			// but also check purchase_requests and repair_components/service_materials for any gaps of data
-			$query = "SELECT partid FROM service_bom WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
+			$query = "SELECT *, charge quote FROM service_bom WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
 			$query .= "GROUP BY partid; ";
 			$result = qedb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				$bom[$r['partid']] = $r['partid'];
+				$r['purchase_request_id'] = false;
+				$r['materials_id'] = false;
+				$r['items'] = array();
+
+				$materials[$r['partid']] = $r;
 			}
 
-			$query = "SELECT partid FROM purchase_requests ";
+			$query = "SELECT partid, qty, item_id, item_id_label, id purchase_request_id FROM purchase_requests ";
 			$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_id_label)." ";
 			$query .= "GROUP BY partid; ";
 			$result = qedb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				$bom[$r['partid']] = $r['partid'];
+				$r['materials_id'] = false;
+
+				if (isset($materials[$r['partid']])) {
+					$materials[$r['partid']]['purchase_request_id'] = $r['purchase_request_id'];
+				} else {
+					$r['amount'] = false;
+					$r['profit_pct'] = false;
+					$r['charge'] = false;
+					$r['type'] = false;
+					$r['id'] = false;
+					$r['items'] = array();
+
+					$materials[$r['partid']] = $r;
+				}
 			}
 
 			if ($order_type=='Repair') {
-				$query = "SELECT i.partid FROM repair_components c, inventory i ";
+				$query = "SELECT i.partid, c.qty, c.item_id, c.item_id_label, c.id materials_id ";
+				$query .= "FROM repair_components c, inventory i ";
 				$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
 			} else if ($order_type=='Service') {
-				$query = "SELECT i.partid FROM service_materials m, inventory i ";
+				$query = "SELECT i.partid, m.qty, m.service_item_id item_id, 'service_item_id' item_id_label, m.id materials_id ";
+				$query .= "FROM service_materials m, inventory i ";
 				$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
 			}
 			$query .= "GROUP BY partid; ";
 			$result = qedb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
-				$bom[$r['partid']] = $r['partid'];
+				if (isset($materials[$r['partid']])) {
+					$materials[$r['partid']]['materials_id'] = $r['materials_id'];
+				} else {
+					$r['amount'] = false;
+					$r['profit_pct'] = false;
+					$r['charge'] = false;
+					$r['type'] = false;
+					$r['id'] = false;
+					$r['purchase_request_id'] = false;
+					$r['items'] = array();
+
+					$materials[$r['partid']] = $r;
+				}
 			}
 
-			foreach ($bom as $partid) {
+			foreach ($materials as $partid => $P) {
+//				echo $partid.'<BR>';
 				$ids = array();
-				$query = "SELECT partid, po_number, status, SUM(qty) as totalOrdered FROM purchase_requests ";
+				$query = "SELECT partid, po_number, status, requested datetime, SUM(qty) as totalOrdered FROM purchase_requests ";
 				$query .= "WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_id_label)." AND partid = '".$partid."' ";
 				$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
 				$result = qedb($query);
@@ -460,13 +498,13 @@
 										$r['pulled'] += $r3['qty'];
 									}
 									$cost = getInventoryCost($r3['id']);
-									$materials_total += $cost;
+									$mat_total += $cost;
 									$r['cost'] = $cost;
 								}
 							}
 						}
 					}
-					$purchase_requests[] = $r;
+					$materials[$partid]['items'][] = $r;
 				}
 
 				// Check to see what has been received and sum it into the total Ordered
@@ -476,10 +514,10 @@
 					$id_csv .= $invid;
 				}
 				if ($order_type=='Repair') {
-					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM repair_components c, inventory i ";
+					$query = "SELECT *, c.qty pulled, i.id inventoryid, c.datetime, i.qty as totalReceived FROM repair_components c, inventory i ";
 					$query .= "WHERE c.item_id = '".res($item_id)."' AND c.invid = i.id ";
 				} else if ($order_type=='Service') {
-					$query = "SELECT *, i.id inventoryid, i.qty as totalReceived FROM service_materials m, inventory i ";
+					$query = "SELECT *, m.qty pulled, i.id inventoryid, m.datetime, i.qty as totalReceived FROM service_materials m, inventory i ";
 					if ($po_number) { $query .= "LEFT JOIN purchase_items pi ON pi.id = i.purchase_item_id "; }
 					$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id ";
 				}
@@ -488,39 +526,50 @@
 				$query .= "; ";
 				$result2 = qdb($query) OR die(qe().' '.$query);
 				while ($row2 = mysqli_fetch_assoc($result2)) {
-					$row = array('partid'=>$row2['partid']);
+					$row = array('partid'=>$row2['partid'],'datetime'=>$row2['datetime']);
 
 					$inventoryid = $row2['inventoryid'];
 
 					$row['po_number'] = '';
 					$row['totalOrdered'] = 0;
-					$query3 = "SELECT SUM(r.qty) qty, r.po_number FROM purchase_requests r, purchase_items i ";
-					$query3 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
-					$query3 .= "AND r.partid = '".$row2['partid']."' AND r.po_number = i.po_number AND i.id = '".$row2['purchase_item_id']."'; ";
-					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
-					if (mysqli_num_rows($result3)>0) {
-						$r3 = mysqli_fetch_assoc($result3);
-						if ($r3['qty']>0) {
-							$row['totalOrdered'] = $r3['qty'];
-							$row['po_number'] = $r3['po_number'];
+					// go back and try to re-populate PO info using purchase requests; the above query didn't cover this
+					// because here we're starting with repair_components / service_materials, which the above query assumes
+					// that purchase requests is the starting point
+					if ($row2['purchase_item_id']) {
+						$query3 = "SELECT SUM(r.qty) qty, r.po_number FROM purchase_requests r, purchase_items i ";
+						$query3 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' ";
+						$query3 .= "AND r.partid = '".$row2['partid']."' AND r.po_number = i.po_number AND i.id = '".$row2['purchase_item_id']."'; ";
+						$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+						if (mysqli_num_rows($result3)>0) {
+							$r3 = mysqli_fetch_assoc($result3);
+							if ($r3['qty']>0) {//SUM() in query above always produces a result, so check if qty>0
+								$row['totalOrdered'] = $r3['qty'];
+								$row['po_number'] = $r3['po_number'];
+							}
 						}
 					}
 
 					// Grab actual available quantity for the requested component
-					if ($row['status']=='received') { $row['available'] = $row['totalReceived']; }
+					if ($row['status']=='received') {
+						$row['available'] = $row['totalReceived'];
+					} else {
+						$row['available'] = getQty($row2['partid']);
+					}
 //					$row['available'] = getAvailable($row['partid'], $item_id);
-					$row['pulled'] = getPulled($row['partid'], $item_id);
+					$row['pulled'] = $row2['pulled'];//getPulled($row['partid'], $item_id);
 
 					$cost = getInventoryCost($inventoryid);
-					$materials_total += $cost;
-					$r['cost'] = $cost;
+					$mat_total += $cost;
+					$row['cost'] = $cost;
 
 //					$row['total'] = $total;
 					$row['status'] = '';
 
-					$purchase_requests[] = $row;
+					$materials[$partid]['items'][] = $row;
 				}
 			}
+//			print "<pre>".print_r($materials,true)."</pre>";
+//			exit;
 
 		} else if($order_type == 'service_quote') {
 			$query = "SELECT *, '' status FROM service_quote_materials WHERE $item_id_label = ".res($item_id).";";
@@ -529,12 +578,24 @@
 			//echo $query;
 
 			while($row = mysqli_fetch_assoc($result)) {
-				$purchase_requests[] = $row;
-				$materials_total += $row['quote'];
+				$materials[$row['partid']] = array(
+					'partid' => $row['partid'],
+					'qty' => $row['qty'],
+					'item_id' => $row['quote_item_id'],
+					'item_id_label' => 'quote_item_id',
+					'amount' => $row['amount'],
+					'profit_pct' => $row['profit_pct'],
+					'charge' => $row['quote'],
+					'type' => 'Material',
+					'id' => $row['id'],
+					'purchase_request_id' => false,
+					'items' => array($row),
+				);
+				$mat_total += $row['quote'];
 			}
 		} 
 
-		return $purchase_requests;
+		return $materials;
 	}
 
 	function getDocumentation($item_id, $item_label) {
@@ -946,7 +1007,7 @@
 
 			.market-table .bg-availability:hover .market-results, .market-table .bg-demand:hover .market-results {
 				max-width: 260px;
-				max-height: 300px;
+				max-height: 154px;
 			}
 
 			.market-price {
@@ -971,6 +1032,25 @@
 				overflow: visible;
 			}
 
+			.table-noborder thead, .table-noborder tbody > tr > td {
+				border:0 !important;
+			}
+			.part_listing {
+    border: 0;
+    margin-top: 5px;
+    margin-left:5px;
+    width: 158px;
+/*
+    height: 158px;
+*/
+    padding-top:25px;
+    -webkit-box-shadow: 0px -3px 2px #aaa;
+    -moz-box-shadow:    0px -3px 2px #aaa;
+    box-shadow:         0px -3px 2px #aaa;
+			}
+			.part_listing td {
+				padding-top:12px !important;
+			}
 			.part_listing.hide_add .add_button {
 				display: none;
 			}
@@ -1025,9 +1105,9 @@
 			#pad-wrapper {
 				margin-top:24px;
 			}
-<?php } else if (! $view_mode) { ?>
+<?php } else { /*if (! $view_mode) { */ ?>
 			#pad-wrapper {
-				margin-top:64px;
+				margin-top:24px;/*64px;*/
 			}
 <?php } ?>
 
@@ -1153,7 +1233,10 @@
 							<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 						<?php } ?>
 					<?php } else if($task_edit) { ?>
+						<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="task"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+<!--
 						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
+-->
 					<?php } else if(! $ticketStatus) { ?>
 						<button class="btn btn-success btn-md btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
@@ -1279,7 +1362,7 @@
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data" style="min-height: 35px;">
-				                        	<span class="number text-brown"><?=format_price($materials_total);?></span>
+				                        	<span class="number text-brown"><?=format_price($mat_total);?></span>
 				                        	<span class="info">Materials</span>
 					                    </div>
 					                </div>
@@ -1316,7 +1399,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price($materials_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price($mat_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -1759,80 +1842,186 @@
 										</div>
 
 										<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
+											<?php if (! $view_mode OR ! $U['hourly_rate']) { ?>
 											<thead>
 												<tr>
-													<?php if($quote OR $new){ ?>
-														<th class="col-md-3">Material</th>
-														<th class="col-md-2">QTY & COST</th>
-														<th class="col-md-1">Sourcing</th>
-														<th class="col-md-3">Leadtime & Due Date</th>
-														<th>Markup</th>
-														<th>Quoted Price</th>
-														<th>
-															<button class="btn btn-default btn-sm" type="submit">
-													        	Request
-													        </button>
-														</th>
-													<?php } else { ?>
-														<th class="col-md-3">Material</th>
-														<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
-														<th class="col-md-2">Source</th>
-														<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
-														<th class="col-md-1">Pulled</th>
-														<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Price</span></th>
-														<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Price</span></th>
-													<?php } ?>
+													<th class="col-md-3">Material</th>
+													<th class="col-md-2">Qty & Cost (ea)</th>
+													<th class="col-md-1">Sourcing</th>
+													<th class="col-md-3">Leadtime & Due Date</th>
+													<th>Markup</th>
+													<th>Quoted Total</th>
+													<th class="" style="padding-right:0px !important">
+														<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>
+													</th>
 												</tr>
 											</thead>
+											<?php } ?>
 
 											<tbody <?=($quote ? 'id="quote_body"' : '');?>>
-												<?php 
-													$total = 0; 
+											<?php 
+												$total = 0; 
 
-													foreach($materials as $row){ 
+												$header_shown = false;
+//												print "<pre>".print_r($materials,true)."</pre>";
+												foreach($materials as $k => $P) { 
+													$partid = $P['partid'];
+													$primary_part = getPart($partid,'part');
+													$fpart = format_part($primary_part);
+
+													if (! $view_mode OR ! $U['hourly_rate']) {
+											?>
+														<tr class="part_listing first found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$P['id'];?>">
+															<td>
+																<div class="remove-pad col-md-1">
+																	<div class="product-img">
+																		<img class="img" src="/img/parts/<?=$fpart;?>.jpg" alt="pic" data-part="<?=$fpart;?>">
+																	</div>
+																</div>
+																<div class="col-md-11">
+																	<span class="descr-label part_description" data-request="<?=$P['qty'];?>"><?=trim(partDescription($partid, true));?></span>
+																</div>
+															</td>
+															<td>										
+																<div class="col-md-4 remove-pad" style="padding-right: 5px;">											
+																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$partid;?>" placeholder="QTY" value="<?=$P['qty'];?>">										
+																</div>										
+																<div class="col-md-8 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0;">												
+																		<div class="input-group">													
+																			<span class="input-group-addon">										                
+																				<i class="fa fa-usd" aria-hidden="true"></i>										            
+																			</span>										            
+																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>">										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td style="background: #FFF;">
+																<div class="table market-table" data-partids="<?=$partid;?>">
+																	<div class="bg-availability">
+																		<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">
+																			Supply <i class="fa fa-window-restore"></i>
+																		</a>
+																		<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">
+																			<i class="fa fa-download"></i>
+																		</a>
+																		<div class="market-results" id="<?=$partid;?>" data-ln="0" data-type="supply">
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td class="datetime">										
+																<div class="col-md-2 remove-pad">											
+																	<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="<?=$partid;?>" data-stock="2" placeholder="#" value="<?=$P['leadtime'];?>">
+																</div>
+																<div class="col-md-4">
+																	<select class="form-control input-sm date_span">
+																		<option value="days" <?=($P['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>
+																		<option value="weeks" <?=($P['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>
+																		<option value="months" <?=($P['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>
+																	</select>
+																</div>										
+																<div class="col-md-6 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																			<input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">										            
+																			<span class="input-group-addon">										                
+																				<span class="fa fa-calendar"></span>										            
+																			</span>										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">								            
+																		<input type="text" class="form-control input-sm part_perc" value="<?=number_format((float)$P['profit_pct'], 2, '.', '');?>" placeholder="0">								            
+																		<span class="input-group-addon">
+																			<i class="fa fa-percent" aria-hidden="true"></i>
+																		</span>
+																	</div>									
+																</div>
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">											
+																		<span class="input-group-addon">								                
+																			<i class="fa fa-usd" aria-hidden="true"></i>								           
+																		</span>								            
+																		<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" name="quote" value="<?=number_format((float)$P['quote'], 2, '.', '');?>">								        
+																	</div>									
+																</div>
+															</td>
+															<td style="cursor: pointer;">
+																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
+															
+																<input type="checkbox" class="pull-right" <?=(! $requested ? 'name="quote_request[]" value="'.$row['id'].'"' : 'checked disabled');?>>
+
+																<?php if(! $requested) { ?>
+																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
+																<?php } ?>
+															</td>
+														</tr>
+														<tr class="">
+															<td colspan="7" class="">
+																<table class="table table-condensed table-noborder table-striped">
+												<?php
+													}/* end if !$view_mode */
+
+													foreach ($P['items'] as $row) {
 														$price = 0;
-														$ext = 0;
-
-														if ($row['po_number'] && $type == 'Repair') {
-															$query = "SELECT rc.qty, (c.actual/i.qty) price, po.status ";
-															$query .= "FROM repair_components rc, inventory_history h, purchase_items pi, purchase_orders po, purchase_requests pr, inventory i ";
-															$query .= "LEFT JOIN inventory_costs c ON i.id = c.inventoryid ";
-															$query .= "WHERE po.po_number = ".prep($row['po_number'])." AND pr.partid = ".prep($row['partid'])." ";
-															$query .= "AND po.po_number = pi.po_number AND po.po_number = pr.po_number AND pr.partid = pi.partid AND pr.ro_number = $order_number ";
-															$query .= "AND rc.ro_number = pr.ro_number ";
-															$query .= "AND h.value = pi.id AND h.field_changed = 'purchase_item_id' AND h.invid = i.id AND i.id = rc.invid ";
-															$query .= "GROUP BY i.id; ";
-															$result = qdb($query) OR die(qe().'<BR>'.$query);
-
-															if (mysqli_num_rows($result)>0) {
-																$query_row = mysqli_fetch_assoc($result);
-																$status = $query_row['status'];
-																$price = $query_row['price'];
-																if($status == 'Active') {
-																	$ordered = $query_row['qty'];
-																}
-															}
-															$ext = ($price * $ordered);
-														}
+														if ($row['pulled']>0) { $price = $row['cost']/$row['pulled']; }
+														$ext = $price*$row['pulled'];
 
 														// This is a temporary very vague fix that needs to be fortified eventually
 														// Check if the request has been made for this quoted item based on the quote_item_id and the partid
 														// This will break when the user decides to enter the same partid 2 times on the same order
 														$requested = false;
+														if ($row['purchase_request_id']) { $requested = true; }
 
-														$query = "SELECT id FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".fres($item_id)." AND partid = ".fres($row['partid']).";";
-														$result = qedb($query);
+//														$query = "SELECT id FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".fres($item_id)." AND partid = ".fres($row['partid']).";";
+//														$result = qedb($query);
 
-														if(mysqli_num_rows($result)) {
-															$requested = true;
+//														if(mysqli_num_rows($result)) {
+//															$requested = true;
+//														}
+
+														if (! $header_shown OR ! $view_mode) {
+															$col1 = '1';
+															$col2 = '<th class="col-md-1"> </th>';
+															if ($view_mode AND $U['hourly_rate']) {
+																$col1 = '2';
+																$col2 = '';
+															}
+															echo '
+																	<thead><tr>
+																		<th class="col-md-'.$col1.'"> </th>
+																		<th class="col-md-1"><span class="hidden-md hidden-lg">Reqd</span><span class="hidden-xs hidden-sm">Requested</span></th>
+																		<th class="col-md-1">Date</th>
+																		<th class="col-md-2">Source</th>
+																		<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
+																		<th class="col-md-1">Pulled</th>
+																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
+																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Cost</span></th>
+																		'.$col2.'
+																	</tr></thead>
+																	<tbody>
+															';
+
+															$header_shown = true;
+														}
+														$part_col = '';
+														if ($view_mode AND $U['hourly_rate']) {
+															$part_col = '<span class="descr-label part_description" data-request="">'.trim(partDescription($partid, true)).'</span>';
 														}
 												?>
-													<?php if(! $quote AND ! $new) { ?>
 														<tr class="list">
 															<td>
-																<span class="descr-label part_description" data-request="<?=$row['totalOrdered'];?>"><?=trim(partDescription($row['partid'], true));?></span>
+																<?=$part_col;?>
 															</td>
 															<td><?=$row['totalOrdered'];?></td>
+															<td><?=format_date($row['datetime'],'n/j/y');?></td>
 															<td>
 																<?php
 																	if($row['po_number']) {
@@ -1859,102 +2048,20 @@
 															</td>
 															<td class="text-right"><?=format_price($price)?></td>
 															<td class="text-right"><?=format_price($ext)?></td>
+															<td> </td>
 														</tr>
-													<?php } else { ?>
-														<tr class="part_listing found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$row['id'];?>">
-															<td>
-																<div class="remove-pad col-md-1">
-																	<div class="product-img">
-																		<img class="img" src="/img/parts/ER-B.jpg" alt="pic" data-part="ER-B">
-																	</div>										
-																</div>
-																<div class="col-md-11">
-																	<span class="descr-label part_description" data-request="<?=$row['qty'];?>"><?=trim(partDescription($row['partid'], true));?></span>
-																</div>
-															</td>
-															<td>										
-																<div class="col-md-4 remove-pad" style="padding-right: 5px;">											
-																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$row['partid'];?>" placeholder="QTY" value="<?=$row['qty'];?>">										
-																</div>										
-																<div class="col-md-8 remove-pad">											
-																	<div class="form-group" style="margin-bottom: 0;">												
-																		<div class="input-group">													
-																			<span class="input-group-addon">										                
-																				<i class="fa fa-usd" aria-hidden="true"></i>										            
-																			</span>										            
-																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$row['amount'], 2, '.', '');?>">										        
-																		</div>											
-																	</div>										
-																</div>									
-															</td>
-															<td style="background: #FFF;">
-																<div class="table market-table" data-partids="<?=$row['partid'];?>">
-																	<div class="bg-availability">
-																		<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">
-																			Supply <i class="fa fa-window-restore"></i>
-																		</a>
-																		<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">
-																			<i class="fa fa-download"></i>
-																		</a>
-																		<div class="market-results" id="<?=$row['partid'];?>" data-ln="0" data-type="supply">
-																		</div>
-																	</div>
-																</div>
-															</td>
-															<td class="datetime">										
-																<div class="col-md-2 remove-pad">											
-																	<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="<?=$row['partid'];?>" data-stock="2" placeholder="#" value="<?=$row['leadtime'];?>">										
-																</div>										
-																<div class="col-md-4">											
-																	<select class="form-control input-sm date_span">												
-																		<option value="days" <?=($row['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>												
-																		<option value="weeks" <?=($row['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>												
-																		<option value="months" <?=($row['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>											
-																	</select>										
-																</div>										
-																<div class="col-md-6 remove-pad">											
-																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
-																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																			<input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">										            
-																			<span class="input-group-addon">										                
-																				<span class="fa fa-calendar"></span>										            
-																			</span>										        
-																		</div>											
-																	</div>										
-																</div>									
-															</td>
-															<td>
-																<div class="form-group" style="margin-bottom: 0;">										
-																	<div class="input-group">								            
-																		<input type="text" class="form-control input-sm part_perc" value="<?=number_format((float)$row['profit_pct'], 2, '.', '');?>" placeholder="0">								            
-																		<span class="input-group-addon">								                
-																			<i class="fa fa-percent" aria-hidden="true"></i>								            
-																		</span>								        
-																	</div>									
-																</div>
-															</td>
-															<td>
-																<div class="form-group" style="margin-bottom: 0;">										
-																	<div class="input-group">											
-																		<span class="input-group-addon">								                
-																			<i class="fa fa-usd" aria-hidden="true"></i>								           
-																		</span>								            
-																		<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" value="<?=number_format((float)$row['quote'], 2, '.', '');?>">								        
-																	</div>									
-																</div>
-															</td>
-															<td style="cursor: pointer;">
-																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
-															
-																<input type="checkbox" class="pull-right" <?=(! $requested ? 'name="quote_request[]" value="'.$row['id'].'"' : 'checked disabled');?>>
-
-																<?php if(! $requested) { ?>
-																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
-																<?php } ?>
+													<?php
+														} /* end foreach ($P['items']) */
+														if (! $view_mode OR ! $U['hourly_rate']) {
+													?>
+																	</tbody>
+																</table>
 															</td>
 														</tr>
-													<?php } ?>
-												<?php } ?>
+												<?php
+														}
+													} /* end foreach ($materials) */
+												?>
 
 												<tr id='quote_input'>
 													<?php if($quote OR $new) { ?>
@@ -1972,7 +2079,7 @@
 		                                            <?php } ?>
 													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 														<strong><?=($quote ? 'Quote' : '');?>
-														<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($materials_total).'</span>' : '</strong>');?>
+														<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($mat_total).'</span>' : '</strong>');?>
 													</td>
 												</tr>
 											</tbody>

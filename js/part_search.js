@@ -153,7 +153,7 @@ function partSearch(search, filter, cid, order_type) {
 				if(type == 'quote') {
 					$('#quote_input').after(rowHTML);
 					$(".market-results").each(function() {
-						// $(this).loadResults(0,1);
+						$(this).loadResults(0,1);
 						// $(this).loadResults(1,1);
 					});
 				} else {

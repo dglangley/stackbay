@@ -7,6 +7,13 @@
 		return ($a['timestamp'] > $b['timestamp']) ? 1 : -1;
 	}
 
+	function cmp_datetime($a, $b) {
+		if ($a['datetime'] == $b['datetime']) {
+			return 0;
+		}
+		return ($a['datetime'] < $b['datetime']) ? 1 : -1;
+	}
+
 	// sort by n
 	function cmp_n($a, $b) {
 		if ($a['n'] == $b['n']) {
