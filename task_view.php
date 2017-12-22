@@ -1219,11 +1219,11 @@
 						<?php if(! $quote){ ?>
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?=$full_order_number;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+										<option selected><?=$full_order_number;?> <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								<?php } else { ?>
 									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?= ($master_title? $pageTitle : $item_details['task_name'].' '.$full_order_number); ?></option>
+										<option selected><?=$pageTitle; //($master_title ? $pageTitle : $item_details['task_name'].' '.$full_order_number); ?></option>
 									</select>
 								<?php  } ?>
 						<?php } ?>
@@ -1847,7 +1847,7 @@
 										<div class="table-responsive"><table class="table table-condensed table-striped">
 											<?php
 												$show_bom = false;
-												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'])) {
+												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'] OR $manager_access)) {
 													$show_bom = true;
 											?>
 											<thead>
@@ -2094,6 +2094,141 @@
 												</tr>
 											</tbody>
 										</table></div>
+										<?php if($item_details['quote_item_id']) { 
+												// Get the information of the quote_item_id
+												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
+
+											//	print_r($quote_materials);
+										?>
+											<table class="table table-condensed table-striped">
+												<thead>
+													<tr>
+														<th class="col-md-3">Quoted Material</th>
+														<th class="col-md-2">Qty &amp; Cost (ea)</th>
+														<th class="col-md-1">Sourcing</th>
+														<th class="col-md-3">Leadtime &amp; Due Date</th>
+														<th>Markup</th>
+														<th>Quoted Total</th>
+														<th class="" style="padding-right:0px !important">
+															<button class="btn btn-default btn-sm pull-right" type="submit" name="import_materials" value="true">Import <i class="fa fa-level-down"></i></button>
+														</th>
+													</tr>
+												</thead>
+												<tbody>
+													<?php 
+														foreach($quote_materials as $k => $P) { 
+															$imported = false;
+
+															$partid = $P['partid'];
+															$primary_part = getPart($partid,'part');
+															$fpart = format_part($primary_part); 
+
+															// Check here very vaguely to see if this item has already been imported
+															// Such as requested we need to see if this works generally
+															$query = "SELECT id FROM purchase_requests WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND partid = ".res($partid).";";
+															$result = qedb($query);
+
+															if(mysqli_num_rows($result)) {
+																$imported = true;
+															}
+													?>
+														<tr class="part_listing first found_parts_quote" style="overflow:hidden;">
+															<td>
+																<div class="remove-pad col-md-1">
+																	<div class="product-img">
+																		<img class="img" src="/img/parts/<?=$fpart;?>.jpg" alt="pic" data-part="<?=$fpart;?>">
+																	</div>
+																</div>
+																<div class="col-md-11">
+																	<span class="descr-label part_description"><?=trim(partDescription($partid, true));?></span>
+																</div>
+															</td>
+															<td>
+																<div class="col-md-4 remove-pad" style="padding-right: 5px;">
+																	<input class="form-control input-sm part_qty" type="text" placeholder="QTY" value="<?=$P['qty'];?>" readonly>
+																</div>
+																<div class="col-md-8 remove-pad">
+																	<div class="form-group" style="margin-bottom: 0;">
+																		<div class="input-group">
+																			<span class="input-group-addon">
+																				<i class="fa fa-usd" aria-hidden="true"></i>
+																			</span>
+																			<input class="form-control input-sm part_amount" type="text" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>" readonly>
+				                            								<!-- <input type="hidden" name="quoteid" value="<?=$P['id'];?>"> -->
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td style="background: #FFF;">
+																<div class="table market-table" data-partids="<?=$partid;?>">
+																	<div class="bg-availability">
+																		<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">
+																			Supply <i class="fa fa-window-restore"></i>
+																		</a>
+																		<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">
+																			<i class="fa fa-download"></i>
+																		</a>
+																		<div class="market-results" id="<?=$partid;?>" data-ln="0" data-type="supply">
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td class="datetime">										
+																<div class="col-md-2 remove-pad">											
+																	<input class="form-control input-sm" type="text" data-partid="<?=$partid;?>" data-stock="2" placeholder="#" value="<?=$P['leadtime'];?>" readonly>
+																</div>
+																<div class="col-md-4">
+																	<select class="form-control input-sm" disabled>
+																		<option value="days" <?=($P['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>
+																		<option value="weeks" <?=($P['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>
+																		<option value="months" <?=($P['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>
+																	</select>
+																</div>										
+																<div class="col-md-6 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																			<input type="text" class="form-control input-sm delivery_date" value="" readonly>										            
+																			<span class="input-group-addon">										                
+																				<span class="fa fa-calendar"></span>										            
+																			</span>										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">								            
+																		<input type="text" class="form-control input-sm" value="<?=number_format((float)$P['profit_pct'], 2, '.', '');?>" placeholder="0" readonly>								            
+																		<span class="input-group-addon">
+																			<i class="fa fa-percent" aria-hidden="true"></i>
+																		</span>
+																	</div>									
+																</div>
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">											
+																		<span class="input-group-addon">								                
+																			<i class="fa fa-usd" aria-hidden="true"></i>								           
+																		</span>								            
+																		<input type="text" placeholder="0.00" class="form-control input-sm" value="<?=number_format((float)$P['quote'], 2, '.', '');?>" readonly>								        
+																	</div>									
+																</div>
+															</td>
+															<td style="cursor: pointer;">
+																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
+															
+																<input type="checkbox" class="pull-right" <?=(! $imported ? 'name="quote_import[]" value="'.$P['id'].'"' : 'checked disabled');?>>
+
+																<?php if(! $imported) { ?>
+																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
+																<?php } ?>
+															</td>
+														</tr>
+													<?php } // End the foreach statement ?>
+												</tbody>
+											</table>
+										<?php } // End the if statement ?>
 
 									</section>
 								</div><!-- Materials pane -->
