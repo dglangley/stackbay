@@ -7,6 +7,10 @@
 	$quote = false;
 
 	$type = isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Service';
+
+	// Fear the power of scalability
+	$T = order_type($type);
+
 	$type = ucwords($type);
 	$order_number_details = (isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '');
 	$task_edit = (isset($_REQUEST['edit']) ? $_REQUEST['edit'] : false);
@@ -27,7 +31,7 @@
 	}
 
 	if(empty($order_number) AND ! empty($item_id)) {
-		preg_match_all("/\d+/", getItemOrder($item_id, 'service_items'), $order_number_split);
+		preg_match_all("/\d+/", getItemOrder($item_id, $T['items']), $order_number_split);
 
 		$order_number_split = reset($order_number_split);
 		$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
@@ -51,16 +55,28 @@
 		}
 	}
 
+	$item_details = $ORDER['items'][$item_id];
+
 	// Popluate the order_number
-	$full_order_number = ($ORDER['items'][$item_id]['so_number'] ?: $ORDER['items'][$item_id]['ro_number']) . ($ORDER['items'][$item_id]['line_number'] ? '-' . $ORDER['items'][$item_id]['line_number'] : '');
+	$full_order_number = ($item_details['so_number'] ?: $item_details['ro_number']) . ($item_details['line_number'] ? '-' . $item_details['line_number'] : '');
 
 	// Determine here what kind of line item this is...
-	if($ORDER['items'][$item_id]['ref_2_label'] == 'service_item_id') {
-		$co_name = $ORDER['items'][$item_id]['task_name'];
-		$masterid = $ORDER['items'][$item_id]['ref_2'];
+	if($item_details['os_number']) {
+		// If it has this then it must be an Outsourced Order
+		$full_order_number = 'Outside Order# ' . $item_details['os_number'] .($item_details['line_number'] ? '-' . $item_details['line_number'] : '');
+	} else if($item_details['ref_2_label'] == 'service_item_id') {
+		$co_name = $item_details['task_name'];
+		$masterid = $item_details['ref_2'];
 
 		// Get the master information here
 		$master_title = $ORDER['items'][$masterid]['task_name'] . ' ' . $ORDER['items'][$masterid]['so_number'] . '-' . $ORDER['items'][$masterid]['line_number'];
+	}
+
+	// echo $full_order_number;
+
+	// We want Service Details from Outsourced
+	if($type == "Outsourced") {
+		$type = 'Service';
 	}
 
 	include 'task_view.php';

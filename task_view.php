@@ -67,7 +67,9 @@
 	$total_amount = 0;
 
 	$item_id_label = '';
-	$item_details = array();
+	if(empty($item_details)) {
+		$item_details = array();
+	}
 	$materials = array();
 	$outsourced = array();
 
@@ -96,8 +98,8 @@
 		$expenses = false;
 
 		if(! empty($item_id)) {
-			//$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
-			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
+			// $item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
+			// $item_details = getItemDetails($item_id, 'service_quote_items', 'id');
 			$materials = getMaterials($item_id, 'quote_item_id', 'service_quote');
 			$outsourced = getOutsourcedQuotes($item_id);
 
@@ -118,16 +120,18 @@
 		}
 
 		if(! empty($item_id)) {
-			//$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
-			$item_details = getItemDetails($item_id, 'service_items', 'id');
+			// $item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+			// $item_details = getItemDetails($item_id, $T['items'], 'id');
+
 			if($item_details['status_code']) {
 				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
 			}
 
-			$materials = getMaterials($item_id, 'service_item_id', $type);
+			$materials = getMaterials($item_id, $T['item_label'], $type);
 			$outsourced = getOutsourced($item_id);
-			$documentation_data = getDocumentation($item_id, 'service_item_id');
-			$expenses_data = getExpenses($item_id, 'service_item_id');
+
+			$documentation_data = getDocumentation($item_id, $T['item_label']);
+			$expenses_data = getExpenses($item_id, $T['item_label']);
 
 			// get associated quotes
 			$outsourced_quotes = getOutsourcedQuotes($item_details['quote_item_id'],false);
@@ -318,14 +322,18 @@
 		return $item_id;
 	}
 
+	// THis function needs some loving as it has quite a lot of legacy code that could better be optimized
 	function grabActivities($ro_number, $item_id, $type = 'Repair'){
 		$activities = array();
 		$invid = '';
 		$label = '';
-		if ($type=='Repair') { $label = 'repair_item_id'; }
-		else if ($type=='Service') { $label = 'service_item_id'; }
 
-		$query = "
+		$query = '';
+
+		if ($type=='Repair') { 
+			$label = 'repair_item_id'; 
+
+			$query = "
 				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
 				UNION
 				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
@@ -342,6 +350,18 @@
 				UNION
 				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
 				ORDER BY datetime DESC;";
+		}
+		else if ($type=='Service') { 
+			$label = 'service_item_id'; 
+
+			$query = "
+				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
+				UNION
+				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+				UNION
+				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
+				ORDER BY datetime DESC;";
+		}
 
 				// echo $query;
 
@@ -644,12 +664,13 @@
 	}
 
 	function getOutsourced($item_id) {
-		global $os_quote, $os_cost;
+		global $os_quote, $os_cost, $T;
 		$outsourced = array();
 
-		$query = "SELECT * FROM outsourced_items ";
-		$query .= "WHERE ((ref_1 = '".res($item_id)."' AND ref_1_label = 'service_item_id') ";
-		$query .= "OR (ref_2 = '".res($item_id)."' AND ref_2_label = 'service_item_id')); ";
+		$query = "SELECT * FROM outsourced_items i, outsourced_orders o ";
+		$query .= "WHERE ((ref_1 = '".res($item_id)."' AND ref_1_label = '".$T['item_label']."') ";
+		$query .= "OR (ref_2 = '".res($item_id)."' AND ref_2_label = '".$T['item_label']."')) ";
+		$query .= "AND i.os_number = o.os_number; ";
 		$result = qedb($query);
 		while($r = mysqli_fetch_assoc($result)){
 			$outsourced[] = $r;
@@ -1228,11 +1249,11 @@
 						<?php if(! $quote){ ?>
 								<?php if(strtolower($type) == 'repair'){ ?>
 									<select name="task" class="form-control repair-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?=$full_order_number;?>-<?=$item_details['line_number'];?> <?=getCompany($ORDER['companyid']);?></option>
+										<option selected><?=$full_order_number;?> <?=getCompany($ORDER['companyid']);?></option>
 									</select>
 								<?php } else { ?>
 									<select name="task" class="form-control service-task-selector task_selection pull-right" data-noreset="true">
-										<option selected><?= ($master_title? $pageTitle : $item_details['task_name'].' '.$full_order_number); ?></option>
+										<option selected><?=$pageTitle; //($master_title ? $pageTitle : $item_details['task_name'].' '.$full_order_number); ?></option>
 									</select>
 								<?php  } ?>
 						<?php } ?>
@@ -1489,7 +1510,7 @@
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
 										<tr>
-											<th class="col-sm-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site')?> &nbsp;</th>
+											<th class="col-sm-3"><?=((strtolower($type) == 'repair' OR $item_details['partid']) ? 'Description' : 'Site')?> &nbsp;</th>
 											<?php if (strtolower($type)=='repair') { ?>
 											<th class="col-sm-2"><span class="line"></span> Serial(s)</th>
 											<th class="col-sm-2"><span class="line"></span> RMA#</th>
@@ -1516,7 +1537,13 @@
 											</tr>
 										<?php } else if (! $quote && strtolower($type) == 'service') { ?>
 											<tr>
-												<td><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
+												<td>
+													<?php if(! $item_details['partid']) { ?>
+														<?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?>
+													<?php } else if($item_details['partid']) { ?>
+														<?=trim(partDescription($item_details['partid'], true));?>
+													<?php } ?>
+												</td>
 												<td>
 													<?=$item_details['description'];?>	
 													<!-- <BR> -->	
@@ -1552,29 +1579,31 @@
 										<?php } ?>
 									</table></div>
 
-									<table class="table table-condensed table-striped table-hover">
-										<thead>
-											<tr>
-												<th>Name</th>
-												<th>Description</th>
-												<th>Materials</th>
-												<th>Outsourced</th>
-												<th>Labor</th>
-											</tr>
-										</thead>
+									<?php if(! empty($CO_data)) { ?>
+										<table class="table table-condensed table-striped table-hover">
+											<thead>
+												<tr>
+													<th>Name</th>
+													<th>Description</th>
+													<th>Materials</th>
+													<th>Outsourced</th>
+													<th>Labor</th>
+												</tr>
+											</thead>
 
-										<tbody>
-											<?php foreach($CO_data as $CO_id => $CO) { ?>
-											<tr>
-												<td>CO# <?=$CO['task_name']?> <a href="/service.php?order_type=Service&taskid=<?=$CO_id;?>"><i class="fa fa-arrow-right"></i></a></td>
-												<td><?=str_replace("\n","<br />",$CO['notes']);?></td>
-												<td><?=format_price($CO['material']);?></td>
-												<td><?=format_price('0');?></td>
-												<td><?=format_price($CO['labor']);?></td>
-											</tr>
-											<?php } ?>
-										</tbody>
-									</table>
+											<tbody>
+												<?php foreach($CO_data as $CO_id => $CO) { ?>
+												<tr>
+													<td>CO# <?=$CO['task_name']?> <a href="/service.php?order_type=Service&taskid=<?=$CO_id;?>"><i class="fa fa-arrow-right"></i></a></td>
+													<td><?=str_replace("\n","<br />",$CO['notes']);?></td>
+													<td><?=format_price($CO['material']);?></td>
+													<td><?=format_price('0');?></td>
+													<td><?=format_price($CO['labor']);?></td>
+												</tr>
+												<?php } ?>
+											</tbody>
+										</table>
+									<?php } ?>
 								</div><!-- Details pane -->
 							<?php } ?>
 
@@ -1856,7 +1885,7 @@
 										<div class="table-responsive"><table class="table table-condensed table-striped">
 											<?php
 												$show_bom = false;
-												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'])) {
+												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'] OR $manager_access)) {
 													$show_bom = true;
 											?>
 											<thead>
@@ -2103,6 +2132,141 @@
 												</tr>
 											</tbody>
 										</table></div>
+										<?php if($item_details['quote_item_id']) { 
+												// Get the information of the quote_item_id
+												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
+
+											//	print_r($quote_materials);
+										?>
+											<table class="table table-condensed table-striped">
+												<thead>
+													<tr>
+														<th class="col-md-3">Quoted Material</th>
+														<th class="col-md-2">Qty &amp; Cost (ea)</th>
+														<th class="col-md-1">Sourcing</th>
+														<th class="col-md-3">Leadtime &amp; Due Date</th>
+														<th>Markup</th>
+														<th>Quoted Total</th>
+														<th class="" style="padding-right:0px !important">
+															<button class="btn btn-default btn-sm pull-right" type="submit" name="import_materials" value="true">Import <i class="fa fa-level-down"></i></button>
+														</th>
+													</tr>
+												</thead>
+												<tbody>
+													<?php 
+														foreach($quote_materials as $k => $P) { 
+															$imported = false;
+
+															$partid = $P['partid'];
+															$primary_part = getPart($partid,'part');
+															$fpart = format_part($primary_part); 
+
+															// Check here very vaguely to see if this item has already been imported
+															// Such as requested we need to see if this works generally
+															$query = "SELECT id FROM purchase_requests WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND partid = ".res($partid).";";
+															$result = qedb($query);
+
+															if(mysqli_num_rows($result)) {
+																$imported = true;
+															}
+													?>
+														<tr class="part_listing first found_parts_quote" style="overflow:hidden;">
+															<td>
+																<div class="remove-pad col-md-1">
+																	<div class="product-img">
+																		<img class="img" src="/img/parts/<?=$fpart;?>.jpg" alt="pic" data-part="<?=$fpart;?>">
+																	</div>
+																</div>
+																<div class="col-md-11">
+																	<span class="descr-label part_description"><?=trim(partDescription($partid, true));?></span>
+																</div>
+															</td>
+															<td>
+																<div class="col-md-4 remove-pad" style="padding-right: 5px;">
+																	<input class="form-control input-sm part_qty" type="text" placeholder="QTY" value="<?=$P['qty'];?>" readonly>
+																</div>
+																<div class="col-md-8 remove-pad">
+																	<div class="form-group" style="margin-bottom: 0;">
+																		<div class="input-group">
+																			<span class="input-group-addon">
+																				<i class="fa fa-usd" aria-hidden="true"></i>
+																			</span>
+																			<input class="form-control input-sm part_amount" type="text" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>" readonly>
+				                            								<!-- <input type="hidden" name="quoteid" value="<?=$P['id'];?>"> -->
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td style="background: #FFF;">
+																<div class="table market-table" data-partids="<?=$partid;?>">
+																	<div class="bg-availability">
+																		<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" data-title="Supply Results" data-type="supply">
+																			Supply <i class="fa fa-window-restore"></i>
+																		</a>
+																		<a href="javascript:void(0);" class="market-download" data-toggle="tooltip" data-placement="top" title="" data-original-title="force re-download">
+																			<i class="fa fa-download"></i>
+																		</a>
+																		<div class="market-results" id="<?=$partid;?>" data-ln="0" data-type="supply">
+																		</div>
+																	</div>
+																</div>
+															</td>
+															<td class="datetime">										
+																<div class="col-md-2 remove-pad">											
+																	<input class="form-control input-sm" type="text" data-partid="<?=$partid;?>" data-stock="2" placeholder="#" value="<?=$P['leadtime'];?>" readonly>
+																</div>
+																<div class="col-md-4">
+																	<select class="form-control input-sm" disabled>
+																		<option value="days" <?=($P['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>
+																		<option value="weeks" <?=($P['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>
+																		<option value="months" <?=($P['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>
+																	</select>
+																</div>										
+																<div class="col-md-6 remove-pad">											
+																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+																			<input type="text" class="form-control input-sm delivery_date" value="" readonly>										            
+																			<span class="input-group-addon">										                
+																				<span class="fa fa-calendar"></span>										            
+																			</span>										        
+																		</div>											
+																	</div>										
+																</div>									
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">								            
+																		<input type="text" class="form-control input-sm" value="<?=number_format((float)$P['profit_pct'], 2, '.', '');?>" placeholder="0" readonly>								            
+																		<span class="input-group-addon">
+																			<i class="fa fa-percent" aria-hidden="true"></i>
+																		</span>
+																	</div>									
+																</div>
+															</td>
+															<td>
+																<div class="form-group" style="margin-bottom: 0;">										
+																	<div class="input-group">											
+																		<span class="input-group-addon">								                
+																			<i class="fa fa-usd" aria-hidden="true"></i>								           
+																		</span>								            
+																		<input type="text" placeholder="0.00" class="form-control input-sm" value="<?=number_format((float)$P['quote'], 2, '.', '');?>" readonly>								        
+																	</div>									
+																</div>
+															</td>
+															<td style="cursor: pointer;">
+																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
+															
+																<input type="checkbox" class="pull-right" <?=(! $imported ? 'name="quote_import[]" value="'.$P['id'].'"' : 'checked disabled');?>>
+
+																<?php if(! $imported) { ?>
+																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
+																<?php } ?>
+															</td>
+														</tr>
+													<?php } // End the foreach statement ?>
+												</tbody>
+											</table>
+										<?php } // End the if statement ?>
 
 									</section>
 								</div><!-- Materials pane -->
@@ -2243,6 +2407,7 @@
 				                        <tbody id="os_table">
 			                        	<?php
 												$line_number = 1;
+												// print_r($outsourced);
 												$outsourced[] = array('id'=>0,'companyid'=>0,'description'=>'','amount'=>'','quote'=>'');
 
 												foreach($outsourced as $list) {
@@ -2253,9 +2418,9 @@
 													if (! $list['id']) {
 														$sel_cls = 'select2_os';
 														$action = '
-													<button class="btn btn-success btn-sm pull-right os_expense_add">
-											        	<i class="fa fa-plus"></i>	
-											        </button>
+															<button class="btn btn-success btn-sm pull-right os_expense_add">
+													        	<i class="fa fa-plus"></i>	
+													        </button>
 														';
 													}
 										?>

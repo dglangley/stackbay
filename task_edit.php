@@ -364,7 +364,7 @@
 			<br>
 			<a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>Sourcing Requests View</a> ";
 			$email_subject = $title;
-			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com');
+			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com', 'joe@ven-tel.com');
 			//$recipients = 'andrew@ven-tel.com';
 			$bcc = 'david@ven-tel.com';
 			
@@ -373,6 +373,36 @@
 			    // echo json_encode(array('message'=>'Success'));
 			} else {
 			    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+			}
+		}
+	}
+
+	function importQuoteMaterials($quote_materials, $item_id, $item_label) {
+		if(! empty($quote_materials)) {
+			foreach($quote_materials as $quote_material_id) {
+
+				//fetch the information from the quoteid
+				$query = "SELECT * FROM service_quote_materials WHERE id =".res($quote_material_id).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result)) {
+					$r = mysqli_fetch_assoc($result);
+
+					// Insert statement into BOM
+					$query2 = "INSERT INTO service_bom (partid, qty, amount, profit_pct, charge, type, item_id, item_id_label) VALUES (".fres($r['partid']).", ".fres($r['qty']).", ".fres($r['amount']).", ".fres($r['profit_pct']).", ".fres($r['quote']).", 'Material', ".fres($item_id).", ".fres($item_label).");";
+					qedb($query2);
+
+					echo $query2;
+					//$service_bom_id = qid();
+
+					// Insert statement into Materials
+					// $query3 = "INSERT INTO service_materials (service_item_id, datetime, qty, ) VALUES ();";
+					// qedb($query3);
+
+					// Insert as a purchase request
+					$query3 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (".fres($GLOBALS['U']['id']).", ".fres($item_id).", ".fres($item_label).", ".fres($GLOBALS['now']).", ".fres($r['partid']).", ".fres($r['qty']).");";
+					qedb($query3);
+				}
 			}
 		}
 	}
@@ -488,6 +518,10 @@
 
 	$label = '';
 
+	$import_materials = false;
+	if (isset($_REQUEST['import_materials'])) { $import_materials = $_REQUEST['import_materials']; }
+	if (isset($_REQUEST['import_materials']) AND $import_materials) { $quote_materials = $_REQUEST['quote_import']; }
+
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 
 	if (isset($_REQUEST['service_item_id'])) { $service_item_id = $_REQUEST['service_item_id']; $label = 'service_item_id'; }
@@ -544,6 +578,13 @@
 
 	if (isset($_REQUEST['start_datetime'])) { $start_datetime = trim($_REQUEST['start_datetime']); }
 	if (isset($_REQUEST['end_datetime'])) { $end_datetime = trim($_REQUEST['end_datetime']); }
+
+	// Import Materials should only import and do nothing else to save the form
+	if($import_materials) {
+		print_r($_REQUEST);
+		importQuoteMaterials($quote_materials, $service_item_id, $label);
+		die();
+	}
 
 	if(! empty($activity_notification)) {
 		if($line_number) {
