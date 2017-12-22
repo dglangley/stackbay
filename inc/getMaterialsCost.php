@@ -1,6 +1,6 @@
 <?php
 	$MATERIALS = array();
-	function getMaterials($item_id,$item_label='service_item_id') {
+	function getMaterialsCost($item_id,$item_label='service_item_id') {
 		global $MATERIALS;
 
 		if (! $item_id) { return false; }

@@ -68,10 +68,10 @@
 	if (isset($_REQUEST['shipmentid']) AND $_REQUEST['shipmentid']) { $shipmentid = $_REQUEST['shipmentid']; }
 	$termsid = 0;
 	if (isset($_REQUEST['termsid']) AND is_numeric($_REQUEST['termsid'])) { $termsid = $_REQUEST['termsid']; }
-	$tax_rate = 0;
-	if (isset($_REQUEST['tax_rate'])) { $tax_rate = trim($_REQUEST['tax_rate']); }
+	$tax_rate = false;
+	if (isset($_REQUEST['tax_rate']) AND $_REQUEST['tax_rate']>0) { $tax_rate = trim($_REQUEST['tax_rate']); }
 	$sales_tax = 0;
-	if (isset($_REQUEST['sales_tax'])) { $sales_tax = trim($_REQUEST['sales_tax']); }
+	if (isset($_REQUEST['sales_tax']) AND $_REQUEST['sales_tax']>0) { $sales_tax = trim($_REQUEST['sales_tax']); }
 	$cust_ref = '';
 	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
 	$public_notes = '';
@@ -191,6 +191,7 @@
 		$query .= fres($freight_carrier_id).", ".fres($freight_services_id).", ".fres($freight_account_id).", ";
 	}
 	if (array_key_exists('termsid',$ORDER)) { $query .= fres($termsid).", "; }
+	if (array_key_exists('tax_rate',$ORDER)) { $query .= fres($tax_rate).", "; }
 	if (array_key_exists('sales_tax',$ORDER)) { $query .= fres($sales_tax).", "; }
 	$query .= fres($public_notes).", ";
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
@@ -239,6 +240,8 @@
 	if (isset($_REQUEST['conditionid'])) { $conditionid = $_REQUEST['conditionid']; }
 	$task_name = array();
 	if (isset($_REQUEST['task_name'])) { $task_name = $_REQUEST['task_name']; }
+	$quote_item_id = array();
+	if (isset($_REQUEST['quote_item_id'])) { $quote_item_id = $_REQUEST['quote_item_id']; }
 
 	$email_rows = array();
 	foreach ($items as $key => $id) {//fieldid) {
@@ -257,6 +260,7 @@
 		if (isset($F['partid'])) { $query .= "partid, "; }
 		else if (isset($F['addressid'])) { $query .= "addressid, "; }
 		else if (isset($F['item_id']) AND isset($F['item_label'])) { $query .= "item_id, item_label, "; }
+		if (array_key_exists('quote_item_id',$F)) { $query .= "quote_item_id, "; }
 		$query .= $T['order'].", line_number, ";
 		if (array_key_exists('task_name',$F)) { $query .= "task_name, "; }
 		$query .= "qty";
@@ -277,6 +281,7 @@
 			if ($fieldid[$key]) { $query .= "'addressid', "; }
 			else { $query .= "NULL, "; }
 		}
+		if (array_key_exists('quote_item_id',$F)) { $query .= fres($quote_item_id[$key]).", "; }
 		$query .= "'".res($order_number)."', ".fres($ln[$key]).", ";
 		if (array_key_exists('task_name',$F)) { $query .= fres($task_name[$key]).", "; }
 		$query .= "'".res($qty[$key])."'";

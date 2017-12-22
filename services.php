@@ -61,7 +61,7 @@
 	$WORKDAY_START = 19;//workday end is set automatically in newTimesheet.php based on this
 	include_once $_SERVER["ROOT_DIR"].'/inc/newTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
 
 	//=========================================================================================
@@ -427,7 +427,7 @@
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }
 
 			$materialsTotal = 0;
-			$materials = getMaterials($job['id'],'service_item_id');
+			$materials = getMaterialsCost($job['id'],'service_item_id');
 			foreach ($materials as $m) { $materialsTotal += $m['cost']; }
 
 			$outsideTotal = 0;

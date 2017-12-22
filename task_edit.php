@@ -12,7 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 
-	$DEBUG = 0;
+	$DEBUG = 1;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
@@ -37,7 +37,8 @@
 
 		$query = "REPLACE INTO service_items (so_number, line_number, qty, amount, item_id, item_label, description, ref_1, ref_1_label, ref_2, ref_2_label";
 		if($service_item_id) { $query .= " ,id"; }
-		$query .= ") VALUES (".fres($so_number).", ".fres($line_number).", ".fres($qty).", ".fres($amount).", ".fres('').", ".fres($item_label).", ".fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label);
+		$query .= ") VALUES (".fres($so_number).", ".fres($line_number).", ".fres($qty).", ".fres($amount).", ".fres('').", ".fres($item_label).", ";
+		$query .= fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label);
 		if($service_item_id) { $query .= ", " . fres($service_item_id); }
 		$query .= ");";
 
@@ -644,7 +645,7 @@ die("Problem here, see admin immediately");
 
 	// Else editing the task
 	} else {
-		$tab = 'labor' . $service_item_id;
+		$tab = 'labor';// . $service_item_id;
 
 		// If completing
 		if (isset($_REQUEST['repair_code_id'])) {
@@ -652,12 +653,15 @@ die("Problem here, see admin immediately");
 		} else if(strtolower($type) != 'service') {
 			// Editing a Repair Item
 		} else {
-			editMaterials($materials, $service_item_id, 'service_bom', 'bom');
-
 			// If Documentation
 			if($documentation AND $documentation['notes']) {
 				addDocs($documentation, $service_item_id, $label);
 				$tab = 'documentation';
+			}
+
+			if ($materials) {
+				editMaterials($materials, $service_item_id, 'service_bom', 'bom');
+				$tab = 'materials';
 			}
 
 			// Generate the COP Zip if the copZip array has something inside it

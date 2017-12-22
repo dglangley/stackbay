@@ -392,7 +392,7 @@
 				$query .= sFilter("o.companyid",$f['coid'])."
 				".dFilter("created",$f['start'],$f['end'])."
 				ORDER BY ".$o['order_by']." 
-				DESC LIMIT 0, 300;";
+				DESC LIMIT 0, 500;";
 				//echo $query;
 				$results = qdb($query) or die(qe()." | $query");
 

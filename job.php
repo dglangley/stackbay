@@ -28,7 +28,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getProfile.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
 
 	$db_path = 'https://db.ven-tel.com:10086/service/usermedia/';
@@ -121,7 +121,7 @@
 	/***** MATERIALS DATA *****/
 	$material_rows = '';
 	$materialsTotal = 0;
-	$materials = getMaterials($job['id']);
+	$materials = getMaterialsCost($job['id']);
 	foreach ($materials as $r) {
 		// truncate to 2-decimals if not more than 2 are used
 		$cost = format_price($r['cost'],true,' ');
