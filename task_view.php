@@ -134,7 +134,9 @@
 			$expenses_data = getExpenses($item_id, $T['item_label']);
 
 			// get associated quotes
-			$outsourced_quotes = getOutsourcedQuotes($item_details['quote_item_id'],false);
+			if($item_details['quote_item_id']){
+				$outsourced_quotes = getOutsourcedQuotes($item_details['quote_item_id'],false);
+			}
 
 			$activity_data = grabActivities($order_number, $item_id, $type);
 
