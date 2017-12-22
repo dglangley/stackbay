@@ -2001,11 +2001,16 @@
 									        </div>
 										</div>
 
-										<div class="table-responsive"><table class="table table-condensed table-striped">
-											<?php
-												$show_bom = false;
+										<?php
+											$show_bom = false;
+											if (count($materials)>0) {
 												if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'] OR $manager_access)) {
 													$show_bom = true;
+												}
+										?>
+										<div class="table-responsive"><table class="table table-condensed table-striped">
+											<?php
+												if ($show_bom) {
 											?>
 											<thead>
 												<tr>
@@ -2251,6 +2256,8 @@
 												</tr>
 											</tbody>
 										</table></div>
+										<?php } /* end if (count($materials)>0) */ ?>
+
 										<?php if($item_details['quote_item_id']) { 
 												// Get the information of the quote_item_id
 												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
@@ -2302,7 +2309,7 @@
 															</td>
 															<td>
 																<div class="col-md-4 remove-pad" style="padding-right: 5px;">
-																	<input class="form-control input-sm part_qty" type="text" placeholder="QTY" value="<?=$P['qty'];?>" readonly>
+																	<input class="form-control input-sm part_qty" data-partid="<?=$partid;?>" type="text" placeholder="QTY" value="<?=$P['qty'];?>" readonly>
 																</div>
 																<div class="col-md-8 remove-pad">
 																	<div class="form-group" style="margin-bottom: 0;">
