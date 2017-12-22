@@ -581,9 +581,9 @@
 
 	// Import Materials should only import and do nothing else to save the form
 	if($import_materials) {
-		print_r($_REQUEST);
 		importQuoteMaterials($quote_materials, $service_item_id, $label);
-		die();
+
+		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 	}
 
 	if(! empty($activity_notification)) {

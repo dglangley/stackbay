@@ -61,7 +61,7 @@
 
 	// echo $full_order_number;
 	// print_r($ORDER);
-	$item_details = $ORDER['items'];
+	$item_details = $ORDER['items'][$item_id];
 
 	include 'task_view.php';
 	exit;

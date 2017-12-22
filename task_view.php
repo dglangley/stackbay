@@ -1523,7 +1523,7 @@
 												<td>
 													<?=$item_details['ref_1_label'].' '.$item_details['ref_1'].'<BR>';?>
 													<?=$item_details['ref_2_label'].' '.$item_details['ref_2'].'<BR>';?>
-												</td>test
+												</td>
 												<td><?=str_replace(chr(10),'<BR>',$item_details['notes']);?></td>
 											</tr>
 										<?php } else if (! $quote && strtolower($type) == 'service') { ?>
@@ -1677,7 +1677,16 @@
 							<?php if($labor) { ?>
 								<!-- Labor pane -->
 								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
-									<?php if($task_edit){ ?>
+									<?php 
+										if($task_edit OR $item_details['quote_item_id']){ 
+											$labor_amount = number_format((float)$item_details['labor_rate'] * (float)$item_details['labor_hours'], 2, '.', '');
+
+											if($item_details['quote_item_id']) {
+												$quote_details = getItemDetails($item_details['quote_item_id'], 'service_quote_items', 'id');
+
+												$labor_amount = number_format((float)$quote_details['labor_rate'] * (float)$quote_details['labor_hours'], 2, '.', '');
+											}
+									?>
 										<div class="row">
 											<div class="col-md-6">
 												<table class="table table-condensed table-striped table-hover">
@@ -1693,19 +1702,19 @@
 															<td>
 																<div class="input-group pull-left" style="margin-bottom: 10px; margin-right: 15px; max-width: 200px">
 										  							<!-- <span class="input-group-addon">$</span> -->
-																	<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=$item_details['labor_hours'];?>">
+																	<input class="form-control input-sm labor_hours" name="labor_hours" type="text" placeholder="Hours" value="<?=($quote_details['labor_hours'] ?:$item_details['labor_hours']);?>" <?=($item_details['quote_item_id'] ? 'disabled' : '');?>>
 																	<span class="input-group-addon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
 																</div>
 															</td>
 															<td>
 																<div class="input-group" style="margin-bottom: 10px; max-width: 200px">
 										  							<span class="input-group-addon">$</span>
-																	<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)$item_details['labor_rate'], 2, '.', '');?>">
+																	<input class="form-control input-sm labor_rate" name="labor_rate"  type="text" placeholder="Rate" value="<?=number_format((float)($quote_details['labor_rate'] ?: $item_details['labor_rate']), 2, '.', '');?>" <?=($item_details['quote_item_id'] ? 'disabled' : '');?>>
 																</div>
 															</td>
 															<td>
 																<span style="border: 1px solid #468847; display: block; padding: 3px 10px;">
-																	<?=format_price(number_format((float)$item_details['labor_rate'] * (float)$item_details['labor_hours'], 2, '.', ''));?>
+																	<?=format_price($labor_amount);?>
 																</span>
 															</td>
 														</tr>
@@ -1823,7 +1832,7 @@
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
-				                            <?php if($manager_access AND $labor_total>0){ ?>
+				                            <?php if($manager_access AND ($labor_total>0) OR $item_details['quote_item_id']){ ?>
 											<?php
 												$labor_profit = ($labor_total-$labor_cost);
 												$labor_progress = 100*round(($labor_cost/$labor_total),2);

@@ -7,42 +7,11 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
-    function companyMap($service_companyid,$customer='') {
-        $companyid = 0;
-        $customer = trim($customer);
+    $query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
 
-        $query = "SELECT companyid FROM company_maps WHERE service_companyid = ".res($service_companyid).";";
-        $result = qedb($query);
-
-        //echo $query . '<BR><BR>';
-
-        if(mysqli_num_rows($result)) {
-            $r = mysqli_fetch_assoc($result);
-            $companyid = $r['companyid'];
-        } else if ($customer) {
-            $query = "SELECT * FROM companies WHERE name = '".res($customer)."'; ";
-            $result = qedb($query);
-            if (mysqli_num_rows($result)>0) {
-                $r = mysqli_fetch_assoc($result);
-                $companyid = $r['id'];
-            } else {
-                $query = "INSERT INTO companies (name) VALUES ('".res($customer)."'); ";
-                $result = qedb($query);
-                $companyid = qid();
-            }
-
-            $query = "INSERT INTO company_maps (companyid, service_companyid) VALUES ('".res($companyid)."','".res($service_companyid)."'); ";
-            $result = qedb($query);
-        }
-
-        return $companyid;
-    }
-
-    // $query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
-    // $result = qdb($query) OR die(qe().'<BR>'.$query);
-
-    // $query = "DELETE FROM maps_component; ";
-    // $result = qdb($query) OR die(qe().'<BR>'.$query);
+    $query = "DELETE FROM maps_component; ";
+    $result = qdb($query) OR die(qe().'<BR>'.$query);
 
 
 
@@ -60,13 +29,13 @@
         $partid = 0;
         $manfid = 0;
 
-        $BDB_partid = trim($material['component_id']);
+        $BDB_partid = trim($material['id']);
         $BDB_manfid = trim($material['manufacturer_id']);
 
         $partid = getPartId($part);
 
         if ($partid) {
-    //                        echo $partid . '<BR><BR>';
+                           echo $partid . '<BR><BR>';
         } else {
             // Get the manf name from BDB
             if($BDB_manfid) {
