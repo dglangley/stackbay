@@ -66,7 +66,9 @@
 	$total_amount = 0;
 
 	$item_id_label = '';
-	$item_details = array();
+	if(empty($item_details)) {
+		$item_details = array();
+	}
 	$materials = array();
 	$outsourced = array();
 
@@ -95,8 +97,8 @@
 		$expenses = false;
 
 		if(! empty($item_id)) {
-			//$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
-			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
+			// $item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
+			// $item_details = getItemDetails($item_id, 'service_quote_items', 'id');
 			$materials = getMaterials($item_id, 'quote_item_id', 'service_quote');
 			$outsourced = getOutsourced($item_id, $type);
 
@@ -117,16 +119,18 @@
 		}
 
 		if(! empty($item_id)) {
-			//$item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
-			$item_details = getItemDetails($item_id, 'service_items', 'id');
+			// $item_id = getItemID($order_number, $task_number, 'service_items', 'so_number');
+			// $item_details = getItemDetails($item_id, $T['items'], 'id');
+
 			if($item_details['status_code']) {
 				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
 			}
 
-			$materials = getMaterials($item_id, 'service_item_id', $type);
+			$materials = getMaterials($item_id, $T['item_label'], $type);
 			$outsourced = getOutsourced($item_id, $type);
-			$documentation_data = getDocumentation($item_id, 'service_item_id');
-			$expenses_data = getExpenses($item_id, 'service_item_id');
+
+			$documentation_data = getDocumentation($item_id, $T['item_label']);
+			$expenses_data = getExpenses($item_id, $T['item_label']);
 
 			// print_r($documentation_data);
 
@@ -316,14 +320,18 @@
 		return $item_id;
 	}
 
+	// THis function needs some loving as it has quite a lot of legacy code that could better be optimized
 	function grabActivities($ro_number, $item_id, $type = 'Repair'){
 		$activities = array();
 		$invid = '';
 		$label = '';
-		if ($type=='Repair') { $label = 'repair_item_id'; }
-		else if ($type=='Service') { $label = 'service_item_id'; }
 
-		$query = "
+		$query = '';
+
+		if ($type=='Repair') { 
+			$label = 'repair_item_id'; 
+
+			$query = "
 				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
 				UNION
 				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".prep($repair_item_id)." AND serial_no IS NULL
@@ -340,6 +348,18 @@
 				UNION
 				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
 				ORDER BY datetime DESC;";
+		}
+		else if ($type=='Service') { 
+			$label = 'service_item_id'; 
+
+			$query = "
+				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($label)."'
+				UNION
+				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+				UNION
+				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".prep($item_id)." AND pr.item_id_label = ".fres($label)." AND pr.partid = p.id
+				ORDER BY datetime DESC;";
+		}
 
 				// echo $query;
 
@@ -642,7 +662,7 @@
 	}
 
 	function getOutsourced($item_id, $type) {
-		global $os_quote, $os_cost, $quote;
+		global $os_quote, $os_cost, $quote, $T;
 		$outsourced = array();
 
 		if($quote) {
@@ -655,7 +675,7 @@
 				$os_quote += $r['quote'];
 			}
 		} else {
-			$query = "SELECT * FROM outsourced_items WHERE os_number = ".res($item_id).";";
+			$query = "SELECT * FROM outsourced_items i, outsourced_orders o WHERE ref_2 = ".res($item_id)." AND ref_2_label=".fres($T['item_label'])." AND i.os_number = o.os_number;";
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			while($r = mysqli_fetch_assoc($result)){
@@ -663,6 +683,7 @@
 				$os_quote += $r['qty']*$r['price'];
 			}
 		}
+
 
 		return $outsourced;
 	}
@@ -1480,7 +1501,7 @@
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
 										<tr>
-											<th class="col-sm-3"><?=(strtolower($type) == 'repair' ? 'Description' : 'Site')?> &nbsp;</th>
+											<th class="col-sm-3"><?=((strtolower($type) == 'repair' OR $item_details['partid']) ? 'Description' : 'Site')?> &nbsp;</th>
 											<?php if (strtolower($type)=='repair') { ?>
 											<th class="col-sm-2"><span class="line"></span> Serial(s)</th>
 											<th class="col-sm-2"><span class="line"></span> RMA#</th>
@@ -1507,7 +1528,13 @@
 											</tr>
 										<?php } else if (! $quote && strtolower($type) == 'service') { ?>
 											<tr>
-												<td><?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?></td>
+												<td>
+													<?php if(! $item_details['partid']) { ?>
+														<?=format_address($item_details['item_id'], '<br/>', true, '', $ORDER['companyid']);?>
+													<?php } else if($item_details['partid']) { ?>
+														<?=trim(partDescription($item_details['partid'], true));?>
+													<?php } ?>
+												</td>
 												<td>
 													<?=$item_details['description'];?>	
 													<!-- <BR> -->	
@@ -1543,29 +1570,31 @@
 										<?php } ?>
 									</table></div>
 
-									<table class="table table-condensed table-striped table-hover">
-										<thead>
-											<tr>
-												<th>Name</th>
-												<th>Description</th>
-												<th>Materials</th>
-												<th>Outsourced</th>
-												<th>Labor</th>
-											</tr>
-										</thead>
+									<?php if(! empty($CO_data)) { ?>
+										<table class="table table-condensed table-striped table-hover">
+											<thead>
+												<tr>
+													<th>Name</th>
+													<th>Description</th>
+													<th>Materials</th>
+													<th>Outsourced</th>
+													<th>Labor</th>
+												</tr>
+											</thead>
 
-										<tbody>
-											<?php foreach($CO_data as $CO_id => $CO) { ?>
-											<tr>
-												<td>CO# <?=$CO['task_name']?> <a href="/service.php?order_type=Service&taskid=<?=$CO_id;?>"><i class="fa fa-arrow-right"></i></a></td>
-												<td><?=str_replace("\n","<br />",$CO['notes']);?></td>
-												<td><?=format_price($CO['material']);?></td>
-												<td><?=format_price('0');?></td>
-												<td><?=format_price($CO['labor']);?></td>
-											</tr>
-											<?php } ?>
-										</tbody>
-									</table>
+											<tbody>
+												<?php foreach($CO_data as $CO_id => $CO) { ?>
+												<tr>
+													<td>CO# <?=$CO['task_name']?> <a href="/service.php?order_type=Service&taskid=<?=$CO_id;?>"><i class="fa fa-arrow-right"></i></a></td>
+													<td><?=str_replace("\n","<br />",$CO['notes']);?></td>
+													<td><?=format_price($CO['material']);?></td>
+													<td><?=format_price('0');?></td>
+													<td><?=format_price($CO['labor']);?></td>
+												</tr>
+												<?php } ?>
+											</tbody>
+										</table>
+									<?php } ?>
 								</div><!-- Details pane -->
 							<?php } ?>
 
@@ -2370,6 +2399,7 @@
 				                        <tbody id="os_table">
 				                        	<?php
 												$line_number = 1;
+												// print_r($outsourced);
 												$outsourced[] = array('id'=>0,'companyid'=>0,'description'=>'','amount'=>'','quote'=>'');
 												foreach($outsourced as $list) {
 													$pct = '';
@@ -2379,9 +2409,9 @@
 													if (! $list['id']) {
 														$sel_cls = 'select2_os';
 														$action = '
-													<button class="btn btn-success btn-sm pull-right os_expense_add">
-											        	<i class="fa fa-plus"></i>	
-											        </button>
+															<button class="btn btn-success btn-sm pull-right os_expense_add">
+													        	<i class="fa fa-plus"></i>	
+													        </button>
 														';
 													}
 											?>
