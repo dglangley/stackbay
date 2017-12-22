@@ -56,6 +56,7 @@
 	$labor_data = array();
 	$service_codes = array();
 	$ticketStatus = '';
+	$outsourced_quotes = array();
 
 	$mat_total = 0;
 	$labor_total = 0;
@@ -98,7 +99,7 @@
 			//$item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');
 			$item_details = getItemDetails($item_id, 'service_quote_items', 'id');
 			$materials = getMaterials($item_id, 'quote_item_id', 'service_quote');
-			$outsourced = getOutsourced($item_id, $type);
+			$outsourced = getOutsourcedQuotes($item_id);
 
 			$new = false;
 		} else {
@@ -124,11 +125,12 @@
 			}
 
 			$materials = getMaterials($item_id, 'service_item_id', $type);
-			$outsourced = getOutsourced($item_id, $type);
+			$outsourced = getOutsourced($item_id);
 			$documentation_data = getDocumentation($item_id, 'service_item_id');
 			$expenses_data = getExpenses($item_id, 'service_item_id');
 
-			// print_r($documentation_data);
+			// get associated quotes
+			$outsourced_quotes = getOutsourcedQuotes($item_details['quote_item_id'],false);
 
 			$activity_data = grabActivities($order_number, $item_id, $type);
 
@@ -161,7 +163,7 @@
 
 					$materials = array_merge($materials, $CO_component_data);
 
-					$CO_outsourced = getOutsourced($CO_item_id, $type);
+					$CO_outsourced = getOutsourced($CO_item_id);
 					$outsourced = array_merge($outsourced, $CO_outsourced);
 					// $CO_item_details = getItemDetails($item_id, 'service_items', 'id');
 
@@ -641,30 +643,37 @@
 		return $qty;
 	}
 
-	function getOutsourced($item_id, $type) {
-		global $os_quote, $os_cost, $quote;
+	function getOutsourced($item_id) {
+		global $os_quote, $os_cost;
 		$outsourced = array();
 
-		if($quote) {
-			$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($item_id).";";
-			$result = qdb($query) OR die(qe().' '.$query);
+		$query = "SELECT * FROM outsourced_items ";
+		$query .= "WHERE ((ref_1 = '".res($item_id)."' AND ref_1_label = 'service_item_id') ";
+		$query .= "OR (ref_2 = '".res($item_id)."' AND ref_2_label = 'service_item_id')); ";
+		$result = qedb($query);
+		while($r = mysqli_fetch_assoc($result)){
+			$outsourced[] = $r;
+			$os_quote += $r['qty']*$r['price'];
+		}
 
-			while($r = mysqli_fetch_assoc($result)){
-				$outsourced[] = $r;
+		return ($outsourced);
+	}
+	function getOutsourcedQuotes($quote_item_id,$sum_quotes=true) {
+		global $os_quote, $os_cost;
+		$quotes = array();
+
+		$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($quote_item_id).";";
+		$result = qedb($query);
+		while($r = mysqli_fetch_assoc($result)){
+			$quotes[] = $r;
+
+			if ($sum_quotes) {
 				$os_cost += $r['amount'];
 				$os_quote += $r['quote'];
 			}
-		} else {
-			$query = "SELECT * FROM outsourced_items WHERE os_number = ".res($item_id).";";
-			$result = qdb($query) OR die(qe().' '.$query);
-
-			while($r = mysqli_fetch_assoc($result)){
-				$outsourced[] = $r;
-				$os_quote += $r['qty']*$r['price'];
-			}
 		}
 
-		return $outsourced;
+		return ($quotes);
 	}
 
 	function getExpenses($item_id, $label) {
@@ -1654,7 +1663,7 @@
 												<table class="table table-condensed table-striped table-hover">
 													<thead>
 														<tr>
-															<th>EST. Hours</th>
+															<th>Est. Hours</th>
 															<th>Bill Rate</th>
 															<th>Quoted Price</th>
 														</tr>
@@ -2206,14 +2215,15 @@
 								<!-- Outside Services pane -->
 								<div class="tab-pane <?=($tab == 'outside' ? 'active' : '');?>" id="outside">
 				                    <div class="table-responsive"><table class="table table-hover table-condensed table-striped">
+										<?php
+											if ($quote) {
+										?>
 				                        <thead class="no-border">
 				                            <tr>
-				                                <th class="col-md-1">
-				                                </th>
-				                                <th class="col-md-2">
+				                                <th class="col-md-3">
 				                                    Vendor
 				                                </th>
-				                                <th class="col-md-4">
+				                                <th class="col-md-5">
 				                                    Description
 				                                </th>
 				                                <th class="col-md-1">
@@ -2228,14 +2238,13 @@
 				                                <th class="col-md-1 text-right">
 				                                    Action
 				                                </th>
-				                                <th class="col-md-1">
-				                                </th>
 				                            </tr>
 				                        </thead>
 				                        <tbody id="os_table">
-				                        	<?php
+			                        	<?php
 												$line_number = 1;
 												$outsourced[] = array('id'=>0,'companyid'=>0,'description'=>'','amount'=>'','quote'=>'');
+
 												foreach($outsourced as $list) {
 													$pct = '';
 													if ($list['amount']>0 AND $list['quote']>0) { $pct = round(($list['quote']-$list['amount'])/$list['amount'],2)*100; }
@@ -2249,9 +2258,8 @@
 											        </button>
 														';
 													}
-											?>
+										?>
 												<tr class="outsourced_row" data-line="<?=$line_number;?>">
-													<td> </td>
 													<td class="<?=$sel_cls;?>">
 				                            			<input type="hidden" name="outsourced[<?=$line_number;?>][quoteid]" value="<?=$list['id'];?>">
 					                            		<select name="outsourced[<?=$line_number;?>][companyid]" class="form-control input-xs company-selector required">
@@ -2282,23 +2290,76 @@
 													<td class="os_action">
 														<?=$action;?>
 													</td>
-													<td> </td>
 												</tr>
-											<?php
+										<?php
 													$line_number++;
-												}
-											?>
+												}/* end foreach ($outsourced) */
+										?>
 				                            <tr class="active">
-				                                <td colspan="4" class="text-right">
+				                                <td colspan="3" class="text-right">
 				                                    <h5><span class="outside_cost"><?=format_price($os_cost,true,' ');?></span></h5>
 				                                </td>
 				                                <td colspan="2" class="text-right">
 				                                    <h5><span class="outside_quote"><?=format_price($os_quote,true,' ');?></span></h5>
 				                                </td>
-												<td colspan="2"> </td>
+												<td> </td>
 				                            </tr>
 										</tbody>
-									</table></div>
+									</table>
+									<?php
+										}/* end if ($quote) */
+
+										if (count($outsourced_quotes)>0) {
+											echo '
+									<a href="/manage_outsourced.php?order_type=Service&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label=service_item_id" class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
+									<h5>Quoted Outsourced Services</h5>
+									<table class="table table-condensed">
+										<thead>
+											<tr class="info">
+												<th class="col-sm-3">Vendor</th>
+												<th class="col-sm-5">Description</th>
+												<th class="col-sm-1">Cost</th>
+												<th class="col-sm-1">Markup</th>
+												<th class="col-sm-1">Quoted Price</th>
+												<th class="col-sm-1"> </th>
+											</tr>
+										</thead>
+										<tbody>
+											';
+											$quote_cost = 0;
+											$quote_price = 0;
+											foreach ($outsourced_quotes as $quote) {
+												$pct = '';
+												if ($quote['amount']>0 AND $quote['quote']>0) { $pct = round(($quote['quote']-$quote['amount'])/$quote['amount'],2)*100; }
+												$quote_cost += $quote['amount'];
+												$quote_price += $quote['quote'];
+												echo '
+											<tr>
+												<td>'.getCompany($quote['companyid']).'</td>
+												<td>'.$quote['description'].'</td>
+												<td class="text-right">'.format_price($quote['amount'],true,' ').'</td>
+												<td class="text-right">'.$pct.'%</td>
+												<td class="text-right">'.format_price($quote['quote'],true,' ').'</td>
+												<td> </td>
+											</tr>
+												';
+											}
+											echo '
+				                            <tr class="active">
+				                                <td colspan="3" class="text-right">
+				                                    <h5><span class="outside_cost">'.format_price($quote_cost,true,' ').'</span></h5>
+				                                </td>
+				                                <td colspan="2" class="text-right">
+				                                    <h5><span class="outside_quote">'.format_price($quote_price,true,' ').'</span></h5>
+				                                </td>
+												<td> </td>
+				                            </tr>
+										</tbody>
+									</table>
+											';
+										}
+									?>
+									</div>
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 

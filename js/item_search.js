@@ -23,7 +23,8 @@
 			new_ln++;
 			ln.val(new_ln);
 
-			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date").val("");
+			// reset values in all fields in row besides line number and delivery date
+			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date,input[readonly]").val("");
 		});
 		$("#item-search").on('keyup',function(e) {
 			e.preventDefault();

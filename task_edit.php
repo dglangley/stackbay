@@ -12,7 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
